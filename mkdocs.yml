@@ -1,0 +1,29 @@
+site_name: Elegy
+repo_name: cgarciae/elegy
+repo_url: https://github.com/cgarciae/elegy
+site_url: https://cgarciae.github.io/elegy
+
+theme:
+  name: material
+
+nav:
+  - Introduction: index.md
+
+extra:
+  search:
+    language: en
+#   social:
+#     - type: github
+#       link: https://github.com/cgarciae
+#     - type: twitter
+#       link: https://twitter.com/cgarciae88
+#     - type: linkedin
+#       link: https://www.linkedin.com/in/cgarciae
+
+markdown_extensions:
+  - admonition
+  - codehilite
+
+plugins:
+  # - search
+  - mkdocstrings
