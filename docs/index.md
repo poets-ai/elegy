@@ -9,11 +9,11 @@ _Elegy is a Neural Networks framework based on Jax and Haiku._
 * **Easy-to-use**: ...
 * **Flexible**: ...
 
-For more information take a look at the [Documentation](https://cgarciae.github.io/pypeln).
+For more information take a look at the [Documentation](https://cgarciae.github.io/elegy).
 
 ## Installation
 
-Install Pypeln using pip:
+Install Elegy using pip:
 ```bash
-pip install pypeln
+pip install elegy
 ```

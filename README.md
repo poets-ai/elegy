@@ -13,7 +13,7 @@ For more information take a look at the [Documentation](https://cgarciae.github.
 
 ## Installation
 
-Install Pypeln using pip:
+Install Elegy using pip:
 ```bash
-pip install pypeln
+pip install elegy
 ```
