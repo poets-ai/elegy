@@ -5,6 +5,9 @@ site_url: https://cgarciae.github.io/elegy
 
 theme:
   name: material
+  icon:
+    logo: fontawesome/solid/infinity
+    repo: octicons/mark-github-16
 
 nav:
   - Introduction: index.md
@@ -12,18 +15,18 @@ nav:
 extra:
   search:
     language: en
-#   social:
-#     - type: github
-#       link: https://github.com/cgarciae
-#     - type: twitter
-#       link: https://twitter.com/cgarciae88
-#     - type: linkedin
-#       link: https://www.linkedin.com/in/cgarciae
+  social:
+    - icon: octicons/mark-github-16
+      link: https://github.com/cgarciae
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/cgarciae88
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/cgarciae
 
 markdown_extensions:
   - admonition
   - codehilite
 
 plugins:
-  # - search
+  - search
   - mkdocstrings
