@@ -7,14 +7,15 @@ import numpy as np
 from jax.experimental import optix
 
 from . import utils
+from . import dependency_injection
 
 OptState = tp.Union[optix.OptState]
 
 
 class Model:
-    net_fn: utils.DIFunction
+    net_fn: dependency_injection.DIFunction
     net: hk.Transformed
-    loss_fn: utils.DIFunction
+    loss_fn: dependency_injection.DIFunction
     optimizer: optix.GradientTransformation
     rngs: hk.PRNGSequence
     params: tp.Optional[hk.Params]
@@ -35,9 +36,9 @@ class Model:
         if net_fn is None:
             raise ValueError("Must define either self.call or net_fn")
 
-        self.net_fn = utils.DIFunction.create(net_fn)
+        self.net_fn = dependency_injection.DIFunction.create(net_fn)
         self.net = hk.transform(self.net_fn, apply_rng=True)
-        self.loss_op = utils.DIFunction.create(loss)
+        self.loss_op = dependency_injection.DIFunction.create(loss)
         self.loss_fn = self.loss
         self.optimizer = optimizer
         self.rngs = hk.PRNGSequence(seed)

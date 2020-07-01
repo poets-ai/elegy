@@ -9,6 +9,8 @@ python = "^3.8"
 jaxlib = "^0.1.50"
 dm-haiku = "^0.0.1"
 numpy = "^1.19.0"
+pytest = "^5.4.3"
+pytest-sugar = "^0.9.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
