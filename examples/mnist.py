@@ -78,6 +78,7 @@ def main(debug: bool = False):
         labels = jax.nn.one_hot(y_true, 10)
 
         l2_loss = 0.5 * sum(jnp.sum(jnp.square(p)) for p in jax.tree_leaves(params))
+
         softmax_xent = -jnp.sum(labels * jax.nn.log_softmax(y_pred))
         softmax_xent /= labels.shape[0]
 
@@ -146,7 +147,7 @@ def main(debug: bool = False):
         x = sample["image"]
         y = sample["label"]
 
-        loss_val, _0, _1 = model.train_on_batch(x=x, y=y)
+        loss_val, _0, _1, _2 = model.train_on_batch(x=x, y=y)
 
         # loss_val, params, opt_state = update(params, opt_state, sample)
         # avg_params = ema_update(avg_params, params)
