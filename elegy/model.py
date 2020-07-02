@@ -13,9 +13,9 @@ OptState = tp.Union[optix.OptState]
 
 
 class Model:
-    net_fn: dependency_injection.DIFunction
+    net_fn: tp.Callable
     net: hk.Transformed
-    loss_fn: dependency_injection.DIFunction
+    loss_fn: tp.Callable
     optimizer: optix.GradientTransformation
     rngs: hk.PRNGSequence
     params: tp.Optional[hk.Params]
@@ -26,8 +26,8 @@ class Model:
         loss: tp.Callable[..., jnp.ndarray],
         net_fn: tp.Optional[tp.Callable] = None,
         optimizer: optix.GradientTransformation = optix.adam(1e-3),
-        seed: tp.Union[jax.random.PRNGKey, int] = jax.random.PRNGKey(42),
-        use_jit: bool = False,
+        seed: tp.Union[jnp.ndarray, int] = jax.random.PRNGKey(42),
+        run_eagerly: bool = False,
     ):
 
         if hasattr(self, "call"):
@@ -44,7 +44,7 @@ class Model:
         self.rngs = hk.PRNGSequence(seed)
         self.params = None
         self.optimizer_state = None
-        self.update_fn = jax.jit(self.update) if use_jit else self.update
+        self.update_fn = self.update if run_eagerly else jax.jit(self.update)
 
     def __call__(self, *args, **kwargs):
         return self.net_fn(*args, **kwargs)
@@ -64,7 +64,7 @@ class Model:
             self.params = params
 
         if self.params is None:
-            self.params = self.net.init(next(self.rngs), x=x, y=y, params=params)
+            self.params = self.net.init(next(self.rngs), x, y=y, params=params)
 
         if self.optimizer_state is None:
             self.optimizer_state = self.optimizer.init(self.params)

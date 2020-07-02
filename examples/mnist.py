@@ -122,7 +122,7 @@ def main(debug: bool = False):
     # opt_state = opt.init(params)
     loss_acc = 0
 
-    model = elegy.Model(net_fn=net_fn, loss=loss, use_jit=True)
+    model = elegy.Model(net_fn=net_fn, loss=loss, run_eagerly=False)
 
     # Train/eval loop.
     for step in range(10001):
