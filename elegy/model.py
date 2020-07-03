@@ -47,7 +47,11 @@ class Model:
         self.net = hk.transform_with_state(self.net_fn)
         self.loss_fn = dependency_injection.DIFunction.create(loss)
         self.metrics = (
-            hk.transform_with_state(dependency_injection.DIFunction.create(metrics))
+            hk.transform_with_state(
+                dependency_injection.DIFunction.create(
+                    metrics, rename={"__params": "params"}
+                )
+            )
             if metrics
             else None
         )
@@ -139,16 +143,25 @@ class Model:
             x_args, x_kwargs = self.get_input_args(x, y)
 
             y_pred, state = self.net.apply(
-                self.params, self.state, next(self.rngs), *x_args, **x_kwargs
+                # required by apply
+                self.params,
+                self.state,
+                next(self.rngs),
+                # net inputs + DI
+                *x_args,
+                **x_kwargs,
             )
             _, self.train_metrics_state = self.metrics.init(
+                # required by init
                 next(self.rngs),
+                # required by metric API
                 y,
                 y_pred,
+                # DI
                 x=x,
-                params=params,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
+                __params=self.params,
             )
 
         (
@@ -198,7 +211,7 @@ class Model:
         optix.OptState,
         tp.Optional[hk.State],
     ]:
-        (loss, y_pred, state), grads = jax.value_and_grad(self._loss, has_aux=True)(
+        (loss, (y_pred, state)), grads = jax.value_and_grad(self._loss, has_aux=True)(
             params,
             state=state,
             net_rng=net_rng,
@@ -216,15 +229,18 @@ class Model:
 
         if self.metrics is not None:
             metrics, train_metrics_state = self.metrics.apply(
+                # required by apply
                 {},  # params
                 train_metrics_state,  # state
                 metrics_rng,  # rng
+                # required by metric API
                 y,
                 y_pred,
+                # DI
                 x=x,
-                params=params,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
+                __params=params,
             )
 
             logs.update(metrics)
@@ -234,18 +250,28 @@ class Model:
     def _loss(self, params, state, net_rng, x, y, sample_weight, class_weight):
 
         x_args, x_kwargs = self.get_input_args(x, y)
-        y_pred, state = self.net.apply(params, state, net_rng, *x_args, **x_kwargs)
+        y_pred, state = self.net.apply(
+            # required by apply
+            params,
+            state,
+            net_rng,
+            # new inputs + DI
+            *x_args,
+            **x_kwargs,
+        )
 
         loss = self.loss_fn(
+            # required by loss API
             y,
             y_pred,
+            # DI
             x=x,
             sample_weight=sample_weight,
             class_weight=class_weight,
             params=params,
         )
 
-        return loss, y_pred, state
+        return loss, (y_pred, state)
 
     def get_input_args(
         self,

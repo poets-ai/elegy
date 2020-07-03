@@ -30,9 +30,9 @@ OptState = Any
 Batch = Mapping[str, np.ndarray]
 
 
-def net_fn(x) -> jnp.ndarray:
+def net_fn(image) -> jnp.ndarray:
     """Standard LeNet-300-100 MLP network."""
-    x = x.astype(jnp.float32) / 255.0
+    image = image.astype(jnp.float32) / 255.0
 
     mlp = hk.Sequential(
         [
@@ -44,7 +44,7 @@ def net_fn(x) -> jnp.ndarray:
             hk.Linear(10),
         ]
     )
-    return mlp(x)
+    return mlp(image)
 
 
 def load_dataset(
@@ -58,7 +58,7 @@ def load_dataset(
     return tfds.as_numpy(ds)
 
 
-def main(debug: bool = False):
+def main(debug: bool = False, eager: bool = False):
 
     if debug:
         import debugpy
@@ -72,7 +72,7 @@ def main(debug: bool = False):
     # opt = optix.adam(1e-3)
 
     # Training loss (cross-entropy).
-    def loss(x, y_true, y_pred, params) -> jnp.ndarray:
+    def loss(y_true, y_pred, params) -> jnp.ndarray:
         """Compute the loss of the network, including L2."""
         # logits = net.apply(params, x)
         labels = jax.nn.one_hot(y_true, 10)
@@ -85,10 +85,8 @@ def main(debug: bool = False):
         return softmax_xent + 1e-4 * l2_loss
 
     # Evaluation metric (classification accuracy).
-    # @jax.jit
-    # def accuracy(params: hk.Params, batch: Batch) -> jnp.ndarray:
-    #     predictions = net.apply(params, batch)
-    #     return jnp.mean(jnp.argmax(predictions, axis=-1) == batch["label"])
+    def accuracy(y_true, y_pred, params):
+        return dict(acc=jnp.mean(jnp.argmax(y_pred, axis=-1) == y_true))
 
     # @jax.jit
     # def update(
@@ -123,7 +121,7 @@ def main(debug: bool = False):
     # opt_state = opt.init(params)
     loss_acc = 0
 
-    model = elegy.Model(net_fn=net_fn, loss=loss, run_eagerly=False)
+    model = elegy.Model(net_fn=net_fn, loss=loss, metrics=accuracy, run_eagerly=eager)
 
     # Train/eval loop.
     for step in range(10001):
@@ -135,8 +133,8 @@ def main(debug: bool = False):
             #     (train_accuracy, test_accuracy)
             # )
             print(
-                # f"[Step {step}] Train / Test accuracy: "
-                # f"{train_accuracy:.3f} / {test_accuracy:.3f} - "
+                f"[Step {step}] Train / Test accuracy: "
+                f"{logs['acc']} - "
                 f"Train Loss: {loss_acc/1000:.3f}"
             )
             loss_acc = 0
@@ -144,15 +142,12 @@ def main(debug: bool = False):
         # Do SGD on a batch of training examples.
         sample = next(train)
 
-        x = sample["image"]
-        y = sample["label"]
-
-        loss_val, _0, _1, _2 = model.train_on_batch(x=x, y=y)
+        logs, _0, _1, _2, _3 = model.train_on_batch(x=sample, y=sample["label"])
 
         # loss_val, params, opt_state = update(params, opt_state, sample)
         # avg_params = ema_update(avg_params, params)
 
-        loss_acc += loss_val
+        loss_acc += logs["loss"]
 
         # print(step, loss_val)
 
