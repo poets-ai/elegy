@@ -161,7 +161,7 @@ class Model:
                 x=x,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
-                __params=self.params,
+                __params=self.params,  # renamed
             )
 
         (
@@ -220,7 +220,6 @@ class Model:
             sample_weight=sample_weight,
             class_weight=class_weight,
         )
-        # , grads = outputs
 
         updates, optimizer_state = self.optimizer.update(grads, optimizer_state)
         params = optix.apply_updates(params, updates)
@@ -240,14 +239,22 @@ class Model:
                 x=x,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
-                __params=params,
+                __params=params,  # renamed
             )
-
             logs.update(metrics)
 
         return logs, params, state, optimizer_state, train_metrics_state
 
-    def _loss(self, params, state, net_rng, x, y, sample_weight, class_weight):
+    def _loss(
+        self,
+        params: hk.Params,
+        state: hk.State,
+        net_rng: jnp.ndarray,
+        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
+        sample_weight: tp.Optional[jnp.ndarray],
+        class_weight: tp.Optional[jnp.ndarray],
+    ):
 
         x_args, x_kwargs = self.get_input_args(x, y)
         y_pred, state = self.net.apply(
@@ -293,4 +300,35 @@ class Model:
         apply_kwargs.update(kwargs)
 
         return args, kwargs
+
+
+def many_to_many(
+    modules_fn: tp.Callable[
+        [],
+        tp.Union[
+            tp.Dict[str, tp.Callable],
+            tp.List[tp.Union[hk.Module, tp.Tuple[str, tp.Callable]]],
+        ],
+    ]
+):
+    def _metrics_fn(y_true, y_pred, **kwargs):
+
+        metrics = modules_fn()
+
+        if isinstance(metrics, tp.Dict):
+            metrics = metrics.items()
+        else:
+            metrics = (
+                (metric.module_name, metric)
+                if isinstance(metric, hk.Module)
+                else metric
+                for metric in metrics
+            )
+
+        metrics = (
+            (name, dependency_injection.DIFunction.create(metric))
+            for name, metric in metrics
+        )
+
+        return {name: metric(y_true, y_pred, **kwargs) for name, metric in metrics}
 
