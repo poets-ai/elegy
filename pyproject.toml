@@ -5,7 +5,7 @@ description = ""
 authors = ["Cristian Garcia <cgarcia.e88@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.6"
 jaxlib = "^0.1.50"
 dm-haiku = "^0.0.1"
 numpy = "^1.19.0"
