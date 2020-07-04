@@ -92,7 +92,7 @@ def get_mode_function(mode: str) -> tp.Callable:
         return match_outputs_and_labels
     elif mode == "forward_all":
         return forward_all
-    elif mode == "basic":
+    elif mode == "manual":
         return lambda x: x
     else:
         raise ValueError(f"Mode '{mode}' not supported.")

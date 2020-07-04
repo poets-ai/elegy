@@ -87,7 +87,11 @@ def main(debug: bool = False, eager: bool = False):
     logs = None
 
     model = elegy.Model(
-        net_fn=net_fn, loss=loss_fn, metrics=metrics_fn, run_eagerly=eager,
+        model_fn=net_fn,
+        loss=loss_fn,
+        metrics=metrics_fn,
+        metrics_mode="manual",
+        run_eagerly=eager,
     )
 
     # Train/eval loop.

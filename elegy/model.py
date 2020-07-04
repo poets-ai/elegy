@@ -20,7 +20,8 @@ class Model:
     _params: tp.Optional[hk.Params]
     _state: tp.Optional[hk.State]
     _optimizer_state: tp.Optional[optix.OptState]
-    _train_metrics_state: tp.Optional[hk.State]
+    _metrics_state: tp.Optional[hk.State]
+    _initial_metrics_state: tp.Optional[hk.State]
     _run_eagerly: bool
 
     def __init__(
@@ -28,13 +29,14 @@ class Model:
         model_fn: tp.Optional[tp.Callable],
         loss: tp.Callable[..., jnp.ndarray],
         metrics: tp.Optional[tp.Callable] = None,
-        metrics_mode: tp.Union[str, tp.Callable] = "basic",
+        metrics_mode: tp.Union[str, tp.Callable] = "match_outputs_and_labels",
         optimizer: optix.GradientTransformation = optix.adam(1e-3),
         run_eagerly: bool = False,
         params: tp.Optional[hk.Params] = None,
         state: tp.Optional[hk.State] = None,
         optimizer_state: tp.Optional[optix.OptState] = None,
-        train_metrics_state: tp.Optional[hk.State] = None,
+        metrics_state: tp.Optional[hk.State] = None,
+        initial_metrics_state: tp.Optional[hk.State] = None,
         seed: tp.Union[jnp.ndarray, int] = jax.random.PRNGKey(42),
     ):
 
@@ -65,98 +67,26 @@ class Model:
         self._params = params
         self._state = state
         self._optimizer_state = optimizer_state
-        self._train_metrics_state = train_metrics_state
+        self._metrics_state = metrics_state
+        self._initial_metrics_state = initial_metrics_state
         self._run_eagerly = run_eagerly
 
     def __call__(self, *args, **kwargs):
         return self._model_fn(*args, **kwargs)
 
-    def _initialize(
+    def _maybe_initialize(
         self,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
-        sample_weight: tp.Optional[jnp.ndarray] = None,
-        class_weight: tp.Optional[jnp.ndarray] = None,
-    ):
-
-        if self._params is None or self._state is None:
-            x_args, x_kwargs = self._get_input_args(x, y)
-
-            self._params, self._state = self._model_transform.init(
-                next(self._rngs), *x_args, **x_kwargs
-            )
-
-        if self._optimizer_state is None:
-            self._optimizer_state = self._optimizer.init(self._params)
-
-        if self._metrics_transform is not None and self._train_metrics_state is None:
-            x_args, x_kwargs = self._get_input_args(x, y)
-
-            y_pred, state = self._model_transform.apply(
-                # required by apply
-                self._params,
-                self._state,
-                next(self._rngs),
-                # model_transform inputs + DI
-                *x_args,
-                **x_kwargs,
-            )
-            _, self._train_metrics_state = self._metrics_transform.init(
-                # required by init
-                next(self._rngs),
-                # required by metric API
-                y_true=y,
-                y_pred=y_pred,
-                # DI
-                x=x,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                __params=self._params,  # renamed
-            )
-
-    def train_on_batch(
-        self,
-        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
+        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray] = None,
         class_weight: tp.Optional[jnp.ndarray] = None,
         seed: tp.Union[jnp.ndarray, int, None] = None,
         params: tp.Optional[hk.Params] = None,
         state: tp.Optional[hk.State] = None,
         optimizer_state: tp.Optional[optix.OptState] = None,
-        train_metrics_state: tp.Optional[hk.State] = None,
-    ) -> tp.Dict[str, jnp.ndarray]:
-        def block():
-            return self._train_on_batch(
-                x=x,
-                y=y,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                seed=seed,
-                params=params,
-                state=state,
-                optimizer_state=optimizer_state,
-                train_metrics_state=train_metrics_state,
-            )
-
-        if self._run_eagerly:
-            with jax.disable_jit():
-                return block()
-        else:
-            return block()
-
-    def _train_on_batch(
-        self,
-        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
-        sample_weight: tp.Optional[jnp.ndarray],
-        class_weight: tp.Optional[jnp.ndarray],
-        seed: tp.Union[jnp.ndarray, int, None],
-        params: tp.Optional[hk.Params],
-        state: tp.Optional[hk.State],
-        optimizer_state: tp.Optional[optix.OptState],
-        train_metrics_state: tp.Optional[hk.State],
-    ) -> tp.Dict[str, jnp.ndarray]:
+        metrics_state: tp.Optional[hk.State] = None,
+        initial_metrics_state: tp.Optional[hk.State] = None,
+    ):
 
         if seed is not None:
             self._rngs = hk.PRNGSequence(key_or_seed=seed)
@@ -170,8 +100,11 @@ class Model:
         if optimizer_state is not None:
             self._optimizer_state = optimizer_state
 
-        if train_metrics_state is not None:
-            self._train_metrics_state = train_metrics_state
+        if metrics_state is not None:
+            self._metrics_state = metrics_state
+
+        if initial_metrics_state is not None:
+            self._initial_metrics_state = initial_metrics_state
 
         if self._params is None or self._state is None:
             x_args, x_kwargs = self._get_input_args(x, y)
@@ -183,7 +116,7 @@ class Model:
         if self._optimizer_state is None:
             self._optimizer_state = self._optimizer.init(self._params)
 
-        if self._metrics_transform is not None and self._train_metrics_state is None:
+        if self._metrics_transform is not None and self._metrics_state is None:
             x_args, x_kwargs = self._get_input_args(x, y)
 
             y_pred, state = self._model_transform.apply(
@@ -191,29 +124,100 @@ class Model:
                 self._params,
                 self._state,
                 next(self._rngs),
-                # model_transform inputs + DI
+                # model_transform inputs + dependency injection
                 *x_args,
                 **x_kwargs,
             )
-            _, self._train_metrics_state = self._metrics_transform.init(
+            _, self._metrics_state = self._metrics_transform.init(
                 # required by init
                 next(self._rngs),
                 # required by metric API
                 y_true=y,
                 y_pred=y_pred,
-                # DI
+                # dependency injection
                 x=x,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 __params=self._params,  # renamed
             )
-        self._ini
+
+            self._initial_metrics_state = self._metrics_state
+
+    def train_on_batch(
+        self,
+        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
+        sample_weight: tp.Optional[jnp.ndarray] = None,
+        class_weight: tp.Optional[jnp.ndarray] = None,
+        reset_metrics: bool = False,
+        seed: tp.Union[jnp.ndarray, int, None] = None,
+        params: tp.Optional[hk.Params] = None,
+        state: tp.Optional[hk.State] = None,
+        optimizer_state: tp.Optional[optix.OptState] = None,
+        metrics_state: tp.Optional[hk.State] = None,
+        initial_metrics_state: tp.Optional[hk.State] = None,
+    ) -> tp.Dict[str, jnp.ndarray]:
+        def block():
+            return self._train_on_batch(
+                x=x,
+                y=y,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+                seed=seed,
+                params=params,
+                state=state,
+                optimizer_state=optimizer_state,
+                metrics_state=metrics_state,
+                initial_metrics_state=initial_metrics_state,
+            )
+
+        if self._run_eagerly:
+            with jax.disable_jit():
+                return block()
+        else:
+            return block()
+
+    def reset_metrics(self, hard: bool = False):
+
+        if hard:
+            self._metrics_state = None
+            self._initial_metrics_state = None
+        else:
+            self._metrics_state = self._initial_metrics_state
+
+    def _train_on_batch(
+        self,
+        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
+        sample_weight: tp.Optional[jnp.ndarray],
+        class_weight: tp.Optional[jnp.ndarray],
+        seed: tp.Union[jnp.ndarray, int, None],
+        params: tp.Optional[hk.Params],
+        state: tp.Optional[hk.State],
+        optimizer_state: tp.Optional[optix.OptState],
+        metrics_state: tp.Optional[hk.State],
+        initial_metrics_state: tp.Optional[hk.State],
+    ) -> tp.Dict[str, jnp.ndarray]:
+
+        self._maybe_initialize(
+            x=x,
+            y=y,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            seed=seed,
+            params=params,
+            state=state,
+            optimizer_state=optimizer_state,
+            metrics_state=metrics_state,
+            initial_metrics_state=initial_metrics_state,
+        )
+
         (
             logs,
             self._params,
             self._state,
             self._optimizer_state,
-            self._train_metrics_state,
+            self._metrics_state,
         ) = self._update(
             x=x,
             y=y,
@@ -222,7 +226,7 @@ class Model:
             params=self._params,
             state=self._state,
             optimizer_state=self._optimizer_state,
-            train_metrics_state=self._train_metrics_state,
+            metrics_state=self._metrics_state,
             net_rng=next(self._rngs),
             metrics_rng=next(self._rngs),
         )
@@ -239,7 +243,7 @@ class Model:
         params: hk.Params,
         state: hk.State,
         optimizer_state: optix.OptState,
-        train_metrics_state: tp.Optional[hk.State],
+        metrics_state: tp.Optional[hk.State],
         net_rng: jnp.ndarray,
         metrics_rng: jnp.ndarray,
     ) -> tp.Tuple[
@@ -265,15 +269,15 @@ class Model:
         logs = dict(loss=loss)
 
         if self._metrics_transform is not None:
-            metrics, train_metrics_state = self._metrics_transform.apply(
+            metrics, metrics_state = self._metrics_transform.apply(
                 # required by apply
                 {},  # params
-                train_metrics_state,  # state
+                metrics_state,  # state
                 metrics_rng,  # rng
                 # required by metric API
                 y_true=y,
                 y_pred=y_pred,
-                # DI
+                # dependency injection
                 x=x,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
@@ -281,7 +285,7 @@ class Model:
             )
             logs.update(metrics)
 
-        return logs, params, state, optimizer_state, train_metrics_state
+        return logs, params, state, optimizer_state, metrics_state
 
     def _loss(
         self,
@@ -300,7 +304,7 @@ class Model:
             params,
             state,
             net_rng,
-            # new inputs + DI
+            # new inputs + dependency injection
             *x_args,
             **x_kwargs,
         )
@@ -309,7 +313,7 @@ class Model:
             # required by loss API
             y,
             y_pred,
-            # DI
+            # dependency injection
             x=x,
             sample_weight=sample_weight,
             class_weight=class_weight,
