@@ -1,6 +1,6 @@
 import typing as tp
 import haiku as hk
-from elegy.utils.dependency_injection import DIFunction
+from elegy.utils import DIFunction
 
 KeyValueLike = tp.Union[hk.Module, tp.Tuple[str, tp.Callable]]
 DictLike = tp.Union[tp.Dict[str, tp.Callable], tp.List[KeyValueLike]]

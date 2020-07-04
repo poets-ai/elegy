@@ -41,9 +41,14 @@ def net_fn(image) -> jnp.ndarray:
     return mlp(image)
 
 
+def accuracy(y_true, y_pred):
+    """"""
+    return jnp.mean(jnp.argmax(y_pred, axis=-1) == y_true)
+
+
 def metrics_fn(y_true, y_pred):
     """"""
-    return dict(accuracy=jnp.mean(jnp.argmax(y_pred, axis=-1) == y_true))
+    return dict(accuracy=accuracy(y_true, y_pred))
 
 
 def loss_fn(y_true, y_pred, params) -> jnp.ndarray:
@@ -89,8 +94,8 @@ def main(debug: bool = False, eager: bool = False):
     model = elegy.Model(
         model_fn=net_fn,
         loss=loss_fn,
-        metrics=metrics_fn,
-        metrics_mode="manual",
+        metrics=lambda: ("accuracy", accuracy),
+        metrics_mode="forward_all",
         run_eagerly=eager,
     )
 

@@ -107,7 +107,7 @@ class Model:
             self._initial_metrics_state = initial_metrics_state
 
         if self._params is None or self._state is None:
-            x_args, x_kwargs = self._get_input_args(x, y)
+            x_args, x_kwargs = utils.get_input_args(x, y)
 
             self._params, self._state = self._model_transform.init(
                 next(self._rngs), *x_args, **x_kwargs
@@ -117,7 +117,7 @@ class Model:
             self._optimizer_state = self._optimizer.init(self._params)
 
         if self._metrics_transform is not None and self._metrics_state is None:
-            x_args, x_kwargs = self._get_input_args(x, y)
+            x_args, x_kwargs = utils.get_input_args(x, y)
 
             y_pred, state = self._model_transform.apply(
                 # required by apply
@@ -149,7 +149,6 @@ class Model:
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
         sample_weight: tp.Optional[jnp.ndarray] = None,
         class_weight: tp.Optional[jnp.ndarray] = None,
-        reset_metrics: bool = False,
         seed: tp.Union[jnp.ndarray, int, None] = None,
         params: tp.Optional[hk.Params] = None,
         state: tp.Optional[hk.State] = None,
@@ -298,7 +297,7 @@ class Model:
         class_weight: tp.Optional[jnp.ndarray],
     ):
 
-        x_args, x_kwargs = self._get_input_args(x, y)
+        x_args, x_kwargs = utils.get_input_args(x, y)
         y_pred, state = self._model_transform.apply(
             # required by apply
             params,
@@ -321,25 +320,4 @@ class Model:
         )
 
         return loss, (y_pred, state)
-
-    def _get_input_args(
-        self,
-        x: tp.Union[np.ndarray, jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        y: tp.Any,
-    ) -> tp.Tuple[tp.Tuple, tp.Mapping[str, tp.Any]]:
-
-        if isinstance(x, tp.Tuple):
-            args = x
-            kwargs = {}
-        elif isinstance(x, tp.Mapping):
-            args = ()
-            kwargs = x
-        else:
-            args = (x,)
-            kwargs = {}
-
-        apply_kwargs = dict(y=y)
-        apply_kwargs.update(kwargs)
-
-        return args, kwargs
 

@@ -1,5 +1,8 @@
-import typing as tp
 import inspect
+import typing as tp
+
+import jax.numpy as jnp
+import numpy as np
 
 
 class DIFunction(tp.NamedTuple):
@@ -37,3 +40,24 @@ class DIFunction(tp.NamedTuple):
 
 def get_function_args(f) -> tp.List[inspect.Parameter]:
     return list(inspect.signature(f).parameters.values())
+
+
+def get_input_args(
+    x: tp.Union[np.ndarray, jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple], y: tp.Any,
+) -> tp.Tuple[tp.Tuple, tp.Mapping[str, tp.Any]]:
+
+    if isinstance(x, tp.Tuple):
+        args = x
+        kwargs = {}
+    elif isinstance(x, tp.Mapping):
+        args = ()
+        kwargs = x
+    else:
+        args = (x,)
+        kwargs = {}
+
+    apply_kwargs = dict(y=y)
+    apply_kwargs.update(kwargs)
+
+    return args, kwargs
+
