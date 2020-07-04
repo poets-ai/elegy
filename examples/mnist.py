@@ -3,6 +3,7 @@ from typing import Any, Generator, Mapping, Tuple
 import haiku as hk
 import jax
 import jax.numpy as jnp
+import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow_datasets as tfds
 import typer
@@ -86,7 +87,7 @@ def main(debug: bool = False, eager: bool = False):
     # Make datasets.
     train = load_dataset("train", is_training=True, batch_size=64)
     train_eval = load_dataset("train", is_training=False, batch_size=1000)
-    # test_eval = load_dataset("test", is_training=False, batch_size=1000)
+    test_eval = load_dataset("test", is_training=False, batch_size=10)
 
     loss_acc = 0
     logs = None
@@ -119,6 +120,16 @@ def main(debug: bool = False, eager: bool = False):
         sample = next(train)
 
         model.train_on_batch(x=sample, y=sample["label"])
+
+    sample = next(test_eval)
+    y_pred = model.predict_on_batch(x=sample)
+
+    for i in range(5):
+        plt.figure()
+        plt.title(f"{np.argmax(y_pred[i])}")
+        plt.imshow(sample["image"][i, ..., 0], cmap="gray")
+
+    plt.show()
 
 
 if __name__ == "__main__":

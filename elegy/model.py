@@ -107,7 +107,7 @@ class Model:
             self._initial_metrics_state = initial_metrics_state
 
         if self._params is None or self._state is None:
-            x_args, x_kwargs = utils.get_input_args(x, y)
+            x_args, x_kwargs = utils.get_input_args(x, y, is_training=False)
 
             self._params, self._state = self._model_transform.init(
                 next(self._rngs), *x_args, **x_kwargs
@@ -117,7 +117,7 @@ class Model:
             self._optimizer_state = self._optimizer.init(self._params)
 
         if self._metrics_transform is not None and self._metrics_state is None:
-            x_args, x_kwargs = utils.get_input_args(x, y)
+            x_args, x_kwargs = utils.get_input_args(x, y, is_training=False)
 
             y_pred, state = self._model_transform.apply(
                 # required by apply
@@ -260,6 +260,7 @@ class Model:
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
+            is_training=True,
         )
 
         updates, optimizer_state = self._optimizer.update(grads, optimizer_state)
@@ -295,17 +296,11 @@ class Model:
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
+        is_training: bool,
     ):
 
-        x_args, x_kwargs = utils.get_input_args(x, y)
-        y_pred, state = self._model_transform.apply(
-            # required by apply
-            params,
-            state,
-            net_rng,
-            # new inputs + dependency injection
-            *x_args,
-            **x_kwargs,
+        y_pred, state = self._predict(
+            x=x, params=params, state=state, net_rng=net_rng, is_training=is_training,
         )
 
         loss = self._loss_fn(
@@ -417,6 +412,7 @@ class Model:
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
+            is_training=False,
         )
 
         logs = dict(loss=loss)
@@ -440,3 +436,77 @@ class Model:
 
         return logs, metrics_state
 
+    # ----------------------------------------------------------------
+    # predict
+    # ----------------------------------------------------------------
+
+    def predict_on_batch(
+        self,
+        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        seed: tp.Union[jnp.ndarray, int, None] = None,
+        params: tp.Optional[hk.Params] = None,
+        state: tp.Optional[hk.State] = None,
+    ) -> tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]:
+        def block():
+            return self._predict_on_batch(x=x, seed=seed, params=params, state=state,)
+
+        if self._run_eagerly:
+            with jax.disable_jit():
+                return block()
+        else:
+            return block()
+
+    def _predict_on_batch(
+        self,
+        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        seed: tp.Union[jnp.ndarray, int, None],
+        params: tp.Optional[hk.Params],
+        state: tp.Optional[hk.State],
+    ) -> tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]:
+
+        self._maybe_initialize(
+            x=x,
+            y=None,
+            sample_weight=None,
+            class_weight=None,
+            seed=seed,
+            params=params,
+            state=state,
+            optimizer_state=None,
+            metrics_state=None,
+            initial_metrics_state=None,
+        )
+
+        y_pred, _ = self._predict(
+            x=x,
+            params=self._params,
+            state=self._state,
+            net_rng=next(self._rngs),
+            is_training=False,
+        )
+
+        return y_pred
+
+    @partial(jax.jit, static_argnums=(0,))
+    def _predict(
+        self,
+        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        params: hk.Params,
+        state: hk.State,
+        net_rng: jnp.ndarray,
+        is_training: bool,
+    ) -> tp.Tuple[
+        tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple], hk.State,
+    ]:
+        x_args, x_kwargs = utils.get_input_args(x, None, is_training=is_training)
+        y_pred, state = self._model_transform.apply(
+            # required by apply
+            params,
+            state,
+            net_rng,
+            # new inputs + dependency injection
+            *x_args,
+            **x_kwargs,
+        )
+
+        return y_pred, state
