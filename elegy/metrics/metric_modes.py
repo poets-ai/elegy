@@ -2,34 +2,18 @@ import typing as tp
 import haiku as hk
 from elegy.utils.dependency_injection import DIFunction
 
-
-def get_mode_function(mode: str) -> tp.Callable:
-
-    if mode == "match_outputs_and_labels":
-        return match_outputs_and_labels
-    elif mode == "forward_all":
-        return forward_all
-    elif mode == "manual":
-        return lambda x: x
-    else:
-        raise ValueError(f"Mode '{mode}' not supported.")
+KeyValueLike = tp.Union[hk.Module, tp.Tuple[str, tp.Callable]]
+DictLike = tp.Union[tp.Dict[str, tp.Callable], tp.List[KeyValueLike]]
 
 
 def forward_all(
-    modules_fn: tp.Callable[
-        [],
-        tp.Union[
-            hk.Module,
-            tp.List[tp.Union[hk.Module, tp.Tuple[str, tp.Callable]]],
-            tp.Dict[str, tp.Callable],
-        ],
-    ]
+    modules_fn: tp.Callable[[], tp.Union[KeyValueLike, DictLike],]
 ):
     def _metrics_fn(y_true, y_pred, **kwargs):
 
         metrics = modules_fn()
 
-        if isinstance(metrics, hk.Module):
+        if isinstance(metrics, (hk.Module, tp.Tuple)):
             metrics = [metrics]
 
         if isinstance(metrics, tp.Dict):
@@ -48,10 +32,6 @@ def forward_all(
         }
 
     return _metrics_fn
-
-
-KeyValueLike = tp.Union[hk.Module, tp.Tuple[str, tp.Callable]]
-DictLike = tp.Union[tp.Dict[str, tp.Callable], tp.List[KeyValueLike]]
 
 
 def match_outputs_and_labels(
@@ -105,3 +85,14 @@ def parse_structures(prefix, y_true, y_pred, metrics):
             f"Invalid type for inputs or metrics, inputs {type(y_true)}, metrics {type(metrics)},"
         )
 
+
+def get_mode_function(mode: str) -> tp.Callable:
+
+    if mode == "match_outputs_and_labels":
+        return match_outputs_and_labels
+    elif mode == "forward_all":
+        return forward_all
+    elif mode == "basic":
+        return lambda x: x
+    else:
+        raise ValueError(f"Mode '{mode}' not supported.")

@@ -1,33 +1,27 @@
-# Lint as: python3
-# Copyright 2020 DeepMind Technologies Limited. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
-"""MNIST classifier example."""
-
 from typing import Any, Generator, Mapping, Tuple
 
-import typer
 import haiku as hk
 import jax
-from jax.experimental import optix
 import jax.numpy as jnp
 import numpy as np
 import tensorflow_datasets as tfds
+import typer
+
 import elegy
 
 OptState = Any
 Batch = Mapping[str, np.ndarray]
+
+
+def load_dataset(
+    split: str, *, is_training: bool, batch_size: int,
+) -> Generator[Batch, None, None]:
+    """Loads the dataset as a generator of batches."""
+    ds = tfds.load("mnist:3.*.*", split=split).cache().repeat()
+    if is_training:
+        ds = ds.shuffle(10 * batch_size, seed=0)
+    ds = ds.batch(batch_size)
+    return tfds.as_numpy(ds)
 
 
 def net_fn(image) -> jnp.ndarray:
@@ -47,19 +41,21 @@ def net_fn(image) -> jnp.ndarray:
     return mlp(image)
 
 
-def load_dataset(
-    split: str, *, is_training: bool, batch_size: int,
-) -> Generator[Batch, None, None]:
-    """Loads the dataset as a generator of batches."""
-    ds = tfds.load("mnist:3.*.*", split=split).cache().repeat()
-    if is_training:
-        ds = ds.shuffle(10 * batch_size, seed=0)
-    ds = ds.batch(batch_size)
-    return tfds.as_numpy(ds)
+def metrics_fn(y_true, y_pred):
+    """"""
+    return dict(accuracy=jnp.mean(jnp.argmax(y_pred, axis=-1) == y_true))
 
 
-def accuracy(y_true, y_pred):
-    return jnp.mean(jnp.argmax(y_pred, axis=-1) == y_true)
+def loss_fn(y_true, y_pred, params) -> jnp.ndarray:
+    """"""
+    labels = jax.nn.one_hot(y_true, 10)
+
+    l2_loss = 0.5 * sum(jnp.sum(jnp.square(p)) for p in jax.tree_leaves(params))
+
+    softmax_xent = -jnp.sum(labels * jax.nn.log_softmax(y_pred))
+    softmax_xent /= labels.shape[0]
+
+    return softmax_xent + 1e-4 * l2_loss
 
 
 def main(debug: bool = False, eager: bool = False):
@@ -70,35 +66,6 @@ def main(debug: bool = False, eager: bool = False):
         print("Waiting for debugger...")
         debugpy.listen(5678)
         debugpy.wait_for_client()
-
-    # Make the network and optimiser.
-    # net = hk.transform(net_fn)
-    # opt = optix.adam(1e-3)
-
-    # Training loss (cross-entropy).
-    def loss(y_true, y_pred, params) -> jnp.ndarray:
-        """Compute the loss of the network, including L2."""
-        # logits = net.apply(params, x)
-        labels = jax.nn.one_hot(y_true, 10)
-
-        l2_loss = 0.5 * sum(jnp.sum(jnp.square(p)) for p in jax.tree_leaves(params))
-
-        softmax_xent = -jnp.sum(labels * jax.nn.log_softmax(y_pred))
-        softmax_xent /= labels.shape[0]
-
-        return softmax_xent + 1e-4 * l2_loss
-
-    # Evaluation metric (classification accuracy).
-
-    # @jax.jit
-    # def update(
-    #     params: hk.Params, opt_state: OptState, batch: Batch,
-    # ) -> Tuple[jnp.array, hk.Params, OptState]:
-    #     """Learning rule (stochastic gradient descent)."""
-    #     loss_val, grads = jax.value_and_grad(loss)(params, batch)
-    #     updates, opt_state = opt.update(grads, opt_state)
-    #     new_params = optix.apply_updates(params, updates)
-    #     return loss_val, new_params, opt_state
 
     # We maintain avg_params, the exponential moving average of the "live" params.
     # avg_params is used only for evaluation.
@@ -113,22 +80,14 @@ def main(debug: bool = False, eager: bool = False):
 
     # Make datasets.
     train = load_dataset("train", is_training=True, batch_size=64)
-    train_eval = load_dataset("train", is_training=False, batch_size=1000)
-    test_eval = load_dataset("test", is_training=False, batch_size=1000)
+    # train_eval = load_dataset("train", is_training=False, batch_size=1000)
+    # test_eval = load_dataset("test", is_training=False, batch_size=1000)
 
-    # Initialize network and optimiser; note we draw an input to get shapes.
-    # sample = next(train)
-    # print(sample["image"].shape)
-    # params = avg_params = net.init(jax.random.PRNGKey(42), sample)
-    # opt_state = opt.init(params)
     loss_acc = 0
     logs = None
 
     model = elegy.Model(
-        net_fn=net_fn,
-        loss=loss,
-        metrics=lambda: [("accuracy", accuracy)],
-        run_eagerly=eager,
+        net_fn=net_fn, loss=loss_fn, metrics=metrics_fn, run_eagerly=eager,
     )
 
     # Train/eval loop.
@@ -147,17 +106,11 @@ def main(debug: bool = False, eager: bool = False):
             )
             loss_acc = 0
 
-        # Do SGD on a batch of training examples.
         sample = next(train)
 
-        logs, _0, _1, _2, _3 = model.train_on_batch(x=sample, y=sample["label"])
-
-        # loss_val, params, opt_state = update(params, opt_state, sample)
-        # avg_params = ema_update(avg_params, params)
+        logs = model.train_on_batch(x=sample, y=sample["label"])
 
         loss_acc += logs["loss"]
-
-        # print(step, loss_val)
 
 
 if __name__ == "__main__":
