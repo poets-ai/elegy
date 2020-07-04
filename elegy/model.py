@@ -7,7 +7,7 @@ import numpy as np
 from jax.experimental import optix
 
 from . import utils
-from . import dependency_injection
+from .metrics.metric_modes import get_mode_function
 
 
 class Model:
@@ -28,6 +28,7 @@ class Model:
         net_fn: tp.Optional[tp.Callable],
         loss: tp.Callable[..., jnp.ndarray],
         metrics: tp.Optional[tp.Callable] = None,
+        metrics_mode: tp.Union[str, tp.Callable] = "match_outputs_and_labels",
         optimizer: optix.GradientTransformation = optix.adam(1e-3),
         run_eagerly: bool = False,
         params: tp.Optional[hk.Params] = None,
@@ -43,14 +44,18 @@ class Model:
         if net_fn is None:
             raise ValueError("Must define either self.call or net_fn")
 
-        self.net_fn = dependency_injection.DIFunction.create(net_fn)
+        if metrics is not None:
+            if isinstance(metrics_mode, tp.Callable):
+                metrics = metrics_mode(metrics)
+            else:
+                metrics = get_mode_function(metrics_mode)(metrics)
+
+        self.net_fn = utils.DIFunction.create(net_fn)
         self.net = hk.transform_with_state(self.net_fn)
-        self.loss_fn = dependency_injection.DIFunction.create(loss)
+        self.loss_fn = utils.DIFunction.create(loss)
         self.metrics = (
             hk.transform_with_state(
-                dependency_injection.DIFunction.create(
-                    metrics, rename={"__params": "params"}
-                )
+                utils.DIFunction.create(metrics, rename={"__params": "params"})
             )
             if metrics
             else None
@@ -155,8 +160,8 @@ class Model:
                 # required by init
                 next(self.rngs),
                 # required by metric API
-                y,
-                y_pred,
+                y_true=y,
+                y_pred=y_pred,
                 # DI
                 x=x,
                 sample_weight=sample_weight,
@@ -184,7 +189,7 @@ class Model:
         )
 
         return (
-            logs,
+            {key: np.asarray(value) for key, value in logs.items()},
             self.params,
             self.state,
             self.optimizer_state,
@@ -233,8 +238,8 @@ class Model:
                 train_metrics_state,  # state
                 metrics_rng,  # rng
                 # required by metric API
-                y,
-                y_pred,
+                y_true=y,
+                y_pred=y_pred,
                 # DI
                 x=x,
                 sample_weight=sample_weight,
@@ -300,35 +305,4 @@ class Model:
         apply_kwargs.update(kwargs)
 
         return args, kwargs
-
-
-def many_to_many(
-    modules_fn: tp.Callable[
-        [],
-        tp.Union[
-            tp.Dict[str, tp.Callable],
-            tp.List[tp.Union[hk.Module, tp.Tuple[str, tp.Callable]]],
-        ],
-    ]
-):
-    def _metrics_fn(y_true, y_pred, **kwargs):
-
-        metrics = modules_fn()
-
-        if isinstance(metrics, tp.Dict):
-            metrics = metrics.items()
-        else:
-            metrics = (
-                (metric.module_name, metric)
-                if isinstance(metric, hk.Module)
-                else metric
-                for metric in metrics
-            )
-
-        metrics = (
-            (name, dependency_injection.DIFunction.create(metric))
-            for name, metric in metrics
-        )
-
-        return {name: metric(y_true, y_pred, **kwargs) for name, metric in metrics}
 

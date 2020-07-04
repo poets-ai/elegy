@@ -4,7 +4,7 @@ import inspect
 
 class DIFunction(tp.NamedTuple):
     f: tp.Callable
-    f_params: tp.List[str]
+    f_params: tp.List[inspect.Parameter]
     rename: tp.Optional[tp.Dict[str, str]]
 
     @classmethod
@@ -15,8 +15,8 @@ class DIFunction(tp.NamedTuple):
 
     def __call__(self, *args, **kwargs):
         n_args = len(args)
-        arg_names = self.f_params[:n_args]
-        kwarg_names = self.f_params[n_args:]
+        arg_names = [arg.name for arg in self.f_params[:n_args]]
+        kwarg_names = [arg.name for arg in self.f_params[n_args:]]
 
         if self.rename:
             for old, new in self.rename.items():
@@ -24,9 +24,16 @@ class DIFunction(tp.NamedTuple):
                     kwargs[new] = kwargs.pop(old)
 
         return self.f(
-            *args, **{arg: kwargs[arg] for arg in kwarg_names if arg not in arg_names}
+            *args,
+            **(
+                kwargs
+                if any(
+                    arg.kind == inspect.Parameter.VAR_KEYWORD for arg in self.f_params
+                )
+                else {arg: kwargs[arg] for arg in kwarg_names if arg not in arg_names}
+            )
         )
 
 
-def get_function_args(f) -> tp.List[str]:
-    return list(inspect.signature(f).parameters.keys())
+def get_function_args(f) -> tp.List[inspect.Parameter]:
+    return list(inspect.signature(f).parameters.values())

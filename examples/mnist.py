@@ -58,6 +58,10 @@ def load_dataset(
     return tfds.as_numpy(ds)
 
 
+def accuracy(y_true, y_pred):
+    return jnp.mean(jnp.argmax(y_pred, axis=-1) == y_true)
+
+
 def main(debug: bool = False, eager: bool = False):
 
     if debug:
@@ -85,8 +89,6 @@ def main(debug: bool = False, eager: bool = False):
         return softmax_xent + 1e-4 * l2_loss
 
     # Evaluation metric (classification accuracy).
-    def accuracy(y_true, y_pred, params):
-        return dict(acc=jnp.mean(jnp.argmax(y_pred, axis=-1) == y_true))
 
     # @jax.jit
     # def update(
@@ -120,8 +122,14 @@ def main(debug: bool = False, eager: bool = False):
     # params = avg_params = net.init(jax.random.PRNGKey(42), sample)
     # opt_state = opt.init(params)
     loss_acc = 0
+    logs = None
 
-    model = elegy.Model(net_fn=net_fn, loss=loss, metrics=accuracy, run_eagerly=eager)
+    model = elegy.Model(
+        net_fn=net_fn,
+        loss=loss,
+        metrics=lambda: [("accuracy", accuracy)],
+        run_eagerly=eager,
+    )
 
     # Train/eval loop.
     for step in range(10001):
@@ -134,7 +142,7 @@ def main(debug: bool = False, eager: bool = False):
             # )
             print(
                 f"[Step {step}] Train / Test accuracy: "
-                f"{logs['acc']} - "
+                f"{logs['accuracy']} - "
                 f"Train Loss: {loss_acc/1000:.3f}"
             )
             loss_acc = 0
