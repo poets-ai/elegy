@@ -85,7 +85,7 @@ def main(debug: bool = False, eager: bool = False):
 
     # Make datasets.
     train = load_dataset("train", is_training=True, batch_size=64)
-    # train_eval = load_dataset("train", is_training=False, batch_size=1000)
+    train_eval = load_dataset("train", is_training=False, batch_size=1000)
     # test_eval = load_dataset("test", is_training=False, batch_size=1000)
 
     loss_acc = 0
@@ -102,24 +102,23 @@ def main(debug: bool = False, eager: bool = False):
     # Train/eval loop.
     for step in range(10001):
         if step > 0 and step % 1000 == 0:
-            # Periodically evaluate classification accuracy on train & test sets.
-            # train_accuracy = accuracy(avg_params, next(train_eval))
-            # test_accuracy = accuracy(avg_params, next(test_eval))
-            # train_accuracy, test_accuracy = jax.device_get(
-            #     (train_accuracy, test_accuracy)
-            # )
+            model.reset_metrics()
+
+            sample = next(train_eval)
+
+            metrics = model.test_on_batch(x=sample, y=sample["label"])
+
             print(
-                f"[Step {step}] Train / Test accuracy: "
-                f"{logs['accuracy']} - "
-                f"Train Loss: {loss_acc/1000:.3f}"
+                f"[Step {step}] - "
+                f"Test accuracy: {metrics['accuracy']:.3f} - "
+                f"Test Loss: {metrics['loss']:.3f}"
             )
-            loss_acc = 0
+
+            model.reset_metrics()
 
         sample = next(train)
 
-        logs = model.train_on_batch(x=sample, y=sample["label"])
-
-        loss_acc += logs["loss"]
+        model.train_on_batch(x=sample, y=sample["label"])
 
 
 if __name__ == "__main__":
