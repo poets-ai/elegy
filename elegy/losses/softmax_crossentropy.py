@@ -7,7 +7,7 @@ from elegy import utils
 from elegy.losses.loss import Loss, Reduction
 
 
-class CategoricalCrossentropy(Loss):
+class SoftmaxCrossentropy(Loss):
     """Computes the crossentropy loss between the labels and predictions.
     Use this crossentropy loss function when there are two or more label classes.
     We expect labels to be provided in a `one_hot` representation. If you want to
@@ -20,26 +20,26 @@ class CategoricalCrossentropy(Loss):
     >>> y_true = [[0, 1, 0], [0, 0, 1]]
     >>> y_pred = [[0.05, 0.95, 0], [0.1, 0.8, 0.1]]
     >>> # Using 'auto'/'sum_over_batch_size' reduction type.
-    >>> cce = tf.keras.losses.CategoricalCrossentropy()
+    >>> cce = tf.keras.losses.SoftmaxCrossentropy()
     >>> cce(y_true, y_pred).numpy()
     1.177
     >>> # Calling with 'sample_weight'.
     >>> cce(y_true, y_pred, sample_weight=tf.constant([0.3, 0.7])).numpy()
     0.814
     >>> # Using 'sum' reduction type.
-    >>> cce = tf.keras.losses.CategoricalCrossentropy(
+    >>> cce = tf.keras.losses.SoftmaxCrossentropy(
     ...     reduction=tf.keras.losses.Reduction.SUM)
     >>> cce(y_true, y_pred).numpy()
     2.354
     >>> # Using 'none' reduction type.
-    >>> cce = tf.keras.losses.CategoricalCrossentropy(
+    >>> cce = tf.keras.losses.SoftmaxCrossentropy(
     ...     reduction=tf.keras.losses.Reduction.NONE)
     >>> cce(y_true, y_pred).numpy()
     array([0.0513, 2.303], dtype=float32)
     Usage with the `compile` API:
     ```python
     model = tf.keras.Model(inputs, outputs)
-    model.compile('sgd', loss=tf.keras.losses.CategoricalCrossentropy())
+    model.compile('sgd', loss=tf.keras.losses.SoftmaxCrossentropy())
     ```
     """
 
@@ -51,7 +51,7 @@ class CategoricalCrossentropy(Loss):
         reduction: tp.Optional[Reduction] = None,
         name: tp.Optional[str] = None,
     ):
-        """Initializes `CategoricalCrossentropy` instance.
+        """Initializes `SoftmaxCrossentropy` instance.
         Args:
         from_logits: Whether `y_pred` is expected to be a logits tensor. By
             default, we assume that `y_pred` encodes a probability distribution.

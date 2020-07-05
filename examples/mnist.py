@@ -42,23 +42,10 @@ def net_fn(image) -> jnp.ndarray:
     return mlp(image)
 
 
-def accuracy(y_true, y_pred):
-    """"""
-    return jnp.mean(jnp.argmax(y_pred, axis=-1) == y_true)
-
-
-def metrics_fn(y_true, y_pred):
-    """"""
-
-    return dict(accuracy=elegy.metrics.Accuracy()(y_true, y_pred))
-
-
 def loss_fn(y_true, y_pred, params) -> jnp.ndarray:
-    """"""
 
-    l2_loss = 0.5 * sum(jnp.sum(jnp.square(p)) for p in jax.tree_leaves(params))
-
-    softmax_xent = elegy.losses.CategoricalCrossentropy()(y_true, y_pred)
+    l2_loss = elegy.losses.L2Regularization()(params)
+    softmax_xent = elegy.losses.SoftmaxCrossentropy()(y_true, y_pred)
 
     return softmax_xent + 1e-4 * l2_loss
 

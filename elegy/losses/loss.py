@@ -26,7 +26,7 @@ class Reduction(Enum):
         You can implement 'SUM_OVER_BATCH_SIZE' using global batch size like:
         ```
         with strategy.scope():
-        loss_obj = tf.keras.losses.CategoricalCrossentropy(
+        loss_obj = tf.keras.losses.SoftmaxCrossentropy(
             reduction=tf.keras.losses.Reduction.NONE)
         ....
         loss = tf.reduce_sum(loss_object(labels, predictions)) *
@@ -79,7 +79,7 @@ class Loss:
         name: (Optional) name for the loss.
         **kwargs: The keyword arguments that are passed on to `fn`.
         """
-        self._name = name
+        self._name = name if name is not None else self.__class__.__name__
         self._reduction = (
             reduction if reduction is not None else Reduction.SUM_OVER_BATCH_SIZE
         )
