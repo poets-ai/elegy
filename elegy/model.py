@@ -394,10 +394,20 @@ class Model:
                 sample_weight = batch[2] if len(batch) == 3 else None
                 # print(batch[0].shape)
                 # exit()
+                # import matplotlib.pyplot as plt
+
+                # label = batch[1]
+                # image = batch[0]
+                # for i in range(5):
+                #     plt.figure()
+                #     plt.title(f"{label[i]}")
+                #     plt.imshow(image[i, ..., 0], cmap="gray")
+                #     plt.show()
+
                 tmp_logs = self.train_on_batch(
                     x=batch[0],
                     y=batch[1],
-                    sample_weight=None,
+                    sample_weight=sample_weight,
                     class_weight=class_weight,
                     # seed=None,
                     # params=None,

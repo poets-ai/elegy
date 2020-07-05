@@ -11,6 +11,8 @@ dm-haiku = "^0.0.1"
 numpy = "^1.19.0"
 pytest = "^5.4.3"
 pytest-sugar = "^0.9.3"
+typing_extensions = { version = "^3.7.4", markers = "python_version < '3.8'" }
+dataclasses =  { version = "^0.7", markers = "python_version >= '3.6' and python_version < '3.7'" }
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

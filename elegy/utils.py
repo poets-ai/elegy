@@ -1,10 +1,17 @@
+from dataclasses import dataclass
 import functools
 import inspect
+import sys
 import typing as tp
 
 import jax.numpy as jnp
 import numpy as np
-from dataclasses import dataclass
+
+if sys.version_info >= (3, 8):
+    from typing import Protocol, runtime_checkable
+else:
+    from typing_extensions import Protocol, runtime_checkable
+
 
 EPSILON = 1e-7
 

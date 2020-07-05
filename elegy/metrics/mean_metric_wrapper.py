@@ -6,7 +6,7 @@ from elegy.metrics.mean import Mean
 from elegy import utils
 
 
-class MetricFn(tp.Protocol):
+class MetricFn(utils.Protocol):
     def __call__(
         self, y_true: jnp.ndarray, y_pred: jnp.ndarray, **kwargs
     ) -> jnp.ndarray:
