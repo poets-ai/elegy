@@ -52,12 +52,12 @@ class Model:
             else:
                 metrics = get_mode_function(metrics_mode)(metrics)
 
-        self._model_fn = utils.DIFunction.create(model_fn)
+        self._model_fn = utils.inject_dependencies(model_fn)
         self._model_transform = hk.transform_with_state(self._model_fn)
-        self._loss_fn = utils.DIFunction.create(loss)
+        self._loss_fn = utils.inject_dependencies(loss)
         self._metrics_transform = (
             hk.transform_with_state(
-                utils.DIFunction.create(metrics, rename={"__params": "params"})
+                utils.inject_dependencies(metrics, rename={"__params": "params"})
             )
             if metrics
             else None

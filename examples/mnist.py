@@ -42,24 +42,10 @@ def net_fn(image) -> jnp.ndarray:
     return mlp(image)
 
 
-def accuracy(y_true, y_pred):
-    """"""
-    return jnp.mean(jnp.argmax(y_pred, axis=-1) == y_true)
-
-
-def metrics_fn(y_true, y_pred):
-    """"""
-    return dict(accuracy=accuracy(y_true, y_pred))
-
-
 def loss_fn(y_true, y_pred, params) -> jnp.ndarray:
-    """"""
-    labels = jax.nn.one_hot(y_true, 10)
 
-    l2_loss = 0.5 * sum(jnp.sum(jnp.square(p)) for p in jax.tree_leaves(params))
-
-    softmax_xent = -jnp.sum(labels * jax.nn.log_softmax(y_pred))
-    softmax_xent /= labels.shape[0]
+    l2_loss = elegy.losses.L2Regularization()(params)
+    softmax_xent = elegy.losses.SoftmaxCrossentropy()(y_true, y_pred)
 
     return softmax_xent + 1e-4 * l2_loss
 
@@ -86,14 +72,13 @@ def main(debug: bool = False, eager: bool = False):
 
     # Make datasets.
     train = load_dataset("train", is_training=True, batch_size=64)
-    train_eval = load_dataset("train", is_training=False, batch_size=1000)
+    train_eval = load_dataset("train", is_training=False, batch_size=100)
     test_eval = load_dataset("test", is_training=False, batch_size=100)
 
     model = elegy.Model(
         model_fn=net_fn,
         loss=loss_fn,
-        metrics=lambda: ("accuracy", accuracy),
-        metrics_mode="forward_all",
+        metrics=lambda: elegy.metrics.Accuracy(),
         run_eagerly=eager,
     )
 
@@ -102,9 +87,11 @@ def main(debug: bool = False, eager: bool = False):
         if step > 0 and step % 1000 == 0:
             model.reset_metrics()
 
-            sample = next(train_eval)
+            metrics = {}
 
-            metrics = model.test_on_batch(x=sample, y=sample["label"])
+            for _ in range(10):
+                sample = next(train_eval)
+                metrics = model.test_on_batch(x=sample, y=sample["label"])
 
             print(
                 f"[Step {step}] - "
