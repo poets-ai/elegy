@@ -3,6 +3,7 @@ from typing import Any, Generator, Mapping, Tuple
 import haiku as hk
 import jax
 import jax.numpy as jnp
+import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow_datasets as tfds
 import typer
@@ -41,24 +42,10 @@ def net_fn(image) -> jnp.ndarray:
     return mlp(image)
 
 
-def accuracy(y_true, y_pred):
-    """"""
-    return jnp.mean(jnp.argmax(y_pred, axis=-1) == y_true)
-
-
-def metrics_fn(y_true, y_pred):
-    """"""
-    return dict(accuracy=accuracy(y_true, y_pred))
-
-
 def loss_fn(y_true, y_pred, params) -> jnp.ndarray:
-    """"""
-    labels = jax.nn.one_hot(y_true, 10)
 
-    l2_loss = 0.5 * sum(jnp.sum(jnp.square(p)) for p in jax.tree_leaves(params))
-
-    softmax_xent = -jnp.sum(labels * jax.nn.log_softmax(y_pred))
-    softmax_xent /= labels.shape[0]
+    l2_loss = elegy.losses.L2Regularization()(params)
+    softmax_xent = elegy.losses.SoftmaxCrossentropy()(y_true, y_pred)
 
     return softmax_xent + 1e-4 * l2_loss
 
@@ -85,41 +72,48 @@ def main(debug: bool = False, eager: bool = False):
 
     # Make datasets.
     train = load_dataset("train", is_training=True, batch_size=64)
-    # train_eval = load_dataset("train", is_training=False, batch_size=1000)
-    # test_eval = load_dataset("test", is_training=False, batch_size=1000)
-
-    loss_acc = 0
-    logs = None
+    train_eval = load_dataset("train", is_training=False, batch_size=100)
+    test_eval = load_dataset("test", is_training=False, batch_size=100)
 
     model = elegy.Model(
         model_fn=net_fn,
         loss=loss_fn,
-        metrics=lambda: ("accuracy", accuracy),
-        metrics_mode="forward_all",
+        metrics=lambda: elegy.metrics.Accuracy(),
         run_eagerly=eager,
     )
 
     # Train/eval loop.
     for step in range(10001):
         if step > 0 and step % 1000 == 0:
-            # Periodically evaluate classification accuracy on train & test sets.
-            # train_accuracy = accuracy(avg_params, next(train_eval))
-            # test_accuracy = accuracy(avg_params, next(test_eval))
-            # train_accuracy, test_accuracy = jax.device_get(
-            #     (train_accuracy, test_accuracy)
-            # )
+            model.reset_metrics()
+
+            metrics = {}
+
+            for _ in range(10):
+                sample = next(train_eval)
+                metrics = model.test_on_batch(x=sample, y=sample["label"])
+
             print(
-                f"[Step {step}] Train / Test accuracy: "
-                f"{logs['accuracy']} - "
-                f"Train Loss: {loss_acc/1000:.3f}"
+                f"[Step {step}] - "
+                f"Test accuracy: {metrics['accuracy']:.3f} - "
+                f"Test Loss: {metrics['loss']:.3f}"
             )
-            loss_acc = 0
+
+            model.reset_metrics()
 
         sample = next(train)
 
-        logs = model.train_on_batch(x=sample, y=sample["label"])
+        model.train_on_batch(x=sample, y=sample["label"])
 
-        loss_acc += logs["loss"]
+    sample = next(test_eval)
+    y_pred = model.predict_on_batch(x=sample)
+
+    for i in range(5):
+        plt.figure()
+        plt.title(f"{np.argmax(y_pred[i])}")
+        plt.imshow(sample["image"][i, ..., 0], cmap="gray")
+
+    plt.show()
 
 
 if __name__ == "__main__":

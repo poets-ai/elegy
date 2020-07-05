@@ -1,7 +1,7 @@
 site_name: Elegy
-repo_name: cgarciae/elegy
-repo_url: https://github.com/cgarciae/elegy
-site_url: https://cgarciae.github.io/elegy
+repo_name: poets-ai/elegy
+repo_url: https://github.com/poets-ai/elegy
+site_url: https://poets-ai.github.io/elegy
 
 theme:
   name: material

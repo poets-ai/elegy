@@ -52,12 +52,12 @@ class Model:
             else:
                 metrics = get_mode_function(metrics_mode)(metrics)
 
-        self._model_fn = utils.DIFunction.create(model_fn)
+        self._model_fn = utils.inject_dependencies(model_fn)
         self._model_transform = hk.transform_with_state(self._model_fn)
-        self._loss_fn = utils.DIFunction.create(loss)
+        self._loss_fn = utils.inject_dependencies(loss)
         self._metrics_transform = (
             hk.transform_with_state(
-                utils.DIFunction.create(metrics, rename={"__params": "params"})
+                utils.inject_dependencies(metrics, rename={"__params": "params"})
             )
             if metrics
             else None
@@ -78,14 +78,14 @@ class Model:
         self,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
-        sample_weight: tp.Optional[jnp.ndarray] = None,
-        class_weight: tp.Optional[jnp.ndarray] = None,
-        seed: tp.Union[jnp.ndarray, int, None] = None,
-        params: tp.Optional[hk.Params] = None,
-        state: tp.Optional[hk.State] = None,
-        optimizer_state: tp.Optional[optix.OptState] = None,
-        metrics_state: tp.Optional[hk.State] = None,
-        initial_metrics_state: tp.Optional[hk.State] = None,
+        sample_weight: tp.Optional[jnp.ndarray],
+        class_weight: tp.Optional[jnp.ndarray],
+        seed: tp.Union[jnp.ndarray, int, None],
+        params: tp.Optional[hk.Params],
+        state: tp.Optional[hk.State],
+        optimizer_state: tp.Optional[optix.OptState],
+        metrics_state: tp.Optional[hk.State],
+        initial_metrics_state: tp.Optional[hk.State],
     ):
 
         if seed is not None:
@@ -107,7 +107,7 @@ class Model:
             self._initial_metrics_state = initial_metrics_state
 
         if self._params is None or self._state is None:
-            x_args, x_kwargs = utils.get_input_args(x, y)
+            x_args, x_kwargs = utils.get_input_args(x, y, is_training=False)
 
             self._params, self._state = self._model_transform.init(
                 next(self._rngs), *x_args, **x_kwargs
@@ -117,7 +117,7 @@ class Model:
             self._optimizer_state = self._optimizer.init(self._params)
 
         if self._metrics_transform is not None and self._metrics_state is None:
-            x_args, x_kwargs = utils.get_input_args(x, y)
+            x_args, x_kwargs = utils.get_input_args(x, y, is_training=False)
 
             y_pred, state = self._model_transform.apply(
                 # required by apply
@@ -260,6 +260,7 @@ class Model:
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
+            is_training=True,
         )
 
         updates, optimizer_state = self._optimizer.update(grads, optimizer_state)
@@ -295,17 +296,11 @@ class Model:
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
+        is_training: bool,
     ):
 
-        x_args, x_kwargs = utils.get_input_args(x, y)
-        y_pred, state = self._model_transform.apply(
-            # required by apply
-            params,
-            state,
-            net_rng,
-            # new inputs + dependency injection
-            *x_args,
-            **x_kwargs,
+        y_pred, state = self._predict(
+            x=x, params=params, state=state, net_rng=net_rng, is_training=is_training,
         )
 
         loss = self._loss_fn(
@@ -446,3 +441,198 @@ class Model:
         # callbacks.on_train_end()
         history = None
         return history
+
+    def test_on_batch(
+        self,
+        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
+        sample_weight: tp.Optional[jnp.ndarray] = None,
+        class_weight: tp.Optional[jnp.ndarray] = None,
+        seed: tp.Union[jnp.ndarray, int, None] = None,
+        params: tp.Optional[hk.Params] = None,
+        state: tp.Optional[hk.State] = None,
+        metrics_state: tp.Optional[hk.State] = None,
+        initial_metrics_state: tp.Optional[hk.State] = None,
+    ) -> tp.Dict[str, jnp.ndarray]:
+        def block():
+            return self._test_on_batch(
+                x=x,
+                y=y,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+                seed=seed,
+                params=params,
+                state=state,
+                metrics_state=metrics_state,
+                initial_metrics_state=initial_metrics_state,
+            )
+
+        if self._run_eagerly:
+            with jax.disable_jit():
+                return block()
+        else:
+            return block()
+
+    def _test_on_batch(
+        self,
+        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
+        sample_weight: tp.Optional[jnp.ndarray],
+        class_weight: tp.Optional[jnp.ndarray],
+        seed: tp.Union[jnp.ndarray, int, None],
+        params: tp.Optional[hk.Params],
+        state: tp.Optional[hk.State],
+        metrics_state: tp.Optional[hk.State],
+        initial_metrics_state: tp.Optional[hk.State],
+    ) -> tp.Dict[str, jnp.ndarray]:
+
+        self._maybe_initialize(
+            x=x,
+            y=y,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            seed=seed,
+            params=params,
+            state=state,
+            optimizer_state=None,
+            metrics_state=metrics_state,
+            initial_metrics_state=initial_metrics_state,
+        )
+
+        (logs, self._metrics_state,) = self._test(
+            x=x,
+            y=y,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            params=self._params,
+            state=self._state,
+            optimizer_state=self._optimizer_state,
+            metrics_state=self._metrics_state,
+            net_rng=next(self._rngs),
+            metrics_rng=next(self._rngs),
+        )
+
+        return {key: np.asarray(value) for key, value in logs.items()}
+
+    @partial(jax.jit, static_argnums=(0,))
+    def _test(
+        self,
+        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
+        sample_weight: tp.Optional[jnp.ndarray],
+        class_weight: tp.Optional[jnp.ndarray],
+        params: hk.Params,
+        state: hk.State,
+        optimizer_state: optix.OptState,
+        metrics_state: tp.Optional[hk.State],
+        net_rng: jnp.ndarray,
+        metrics_rng: jnp.ndarray,
+    ) -> tp.Tuple[
+        tp.Dict[str, jnp.ndarray], tp.Optional[hk.State],
+    ]:
+        loss, (y_pred, _state) = self._loss(
+            params,
+            state=state,
+            net_rng=net_rng,
+            x=x,
+            y=y,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            is_training=False,
+        )
+
+        logs = dict(loss=loss)
+
+        if self._metrics_transform is not None:
+            metrics, metrics_state = self._metrics_transform.apply(
+                # required by apply
+                {},  # params
+                metrics_state,  # state
+                metrics_rng,  # rng
+                # required by metric API
+                y_true=y,
+                y_pred=y_pred,
+                # dependency injection
+                x=x,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+                __params=params,  # renamed
+            )
+            logs.update(metrics)
+
+        return logs, metrics_state
+
+    # ----------------------------------------------------------------
+    # predict
+    # ----------------------------------------------------------------
+
+    def predict_on_batch(
+        self,
+        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        seed: tp.Union[jnp.ndarray, int, None] = None,
+        params: tp.Optional[hk.Params] = None,
+        state: tp.Optional[hk.State] = None,
+    ) -> tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]:
+        def block():
+            return self._predict_on_batch(x=x, seed=seed, params=params, state=state,)
+
+        if self._run_eagerly:
+            with jax.disable_jit():
+                return block()
+        else:
+            return block()
+
+    def _predict_on_batch(
+        self,
+        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        seed: tp.Union[jnp.ndarray, int, None],
+        params: tp.Optional[hk.Params],
+        state: tp.Optional[hk.State],
+    ) -> tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]:
+
+        self._maybe_initialize(
+            x=x,
+            y=None,
+            sample_weight=None,
+            class_weight=None,
+            seed=seed,
+            params=params,
+            state=state,
+            optimizer_state=None,
+            metrics_state=None,
+            initial_metrics_state=None,
+        )
+
+        y_pred, _ = self._predict(
+            x=x,
+            params=self._params,
+            state=self._state,
+            net_rng=next(self._rngs),
+            is_training=False,
+        )
+
+        return y_pred
+
+    @partial(jax.jit, static_argnums=(0,))
+    def _predict(
+        self,
+        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        params: hk.Params,
+        state: hk.State,
+        net_rng: jnp.ndarray,
+        is_training: bool,
+    ) -> tp.Tuple[
+        tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple], hk.State,
+    ]:
+        x_args, x_kwargs = utils.get_input_args(x, None, is_training=is_training)
+        y_pred, state = self._model_transform.apply(
+            # required by apply
+            params,
+            state,
+            net_rng,
+            # new inputs + dependency injection
+            *x_args,
+            **x_kwargs,
+        )
+
+        return y_pred, state
