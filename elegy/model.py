@@ -6,7 +6,7 @@ import jax.numpy as jnp
 import numpy as np
 from jax.experimental import optix
 
-from . import utils
+from . import utils, data_adapter
 from .metrics.metric_modes import get_mode_function
 
 
@@ -321,3 +321,128 @@ class Model:
 
         return loss, (y_pred, state)
 
+    def fit(
+        self,
+        x: tp.Union[
+            jnp.ndarray,
+            np.ndarray,
+            tp.Mapping[str, tp.Union[np.ndarray, jnp.ndarray]],
+            tp.Tuple[tp.Union[np.ndarray, jnp.ndarray]],
+            tp.Iterable,
+        ],
+        y: tp.Union[
+            jnp.ndarray,
+            np.ndarray,
+            tp.Mapping[str, tp.Union[np.ndarray, jnp.ndarray]],
+            tp.Tuple[tp.Union[np.ndarray, jnp.ndarray]],
+            None,
+        ] = None,
+        batch_size: tp.Optional[int] = None,
+        epochs: int = 1,
+        # verbose=1,
+        callbacks=None,
+        validation_split: float = 0.0,
+        validation_data: tp.Union[tp.Tuple, tp.Iterable, None] = None,
+        shuffle: bool = True,
+        class_weight: tp.Optional[tp.Mapping[str, float]] = None,
+        sample_weight: tp.Optional[tp.Union[np.ndarray, jnp.ndarray]] = None,
+        initial_epoch: int = 0,
+        steps_per_epoch: tp.Optional[int] = None,
+        validation_steps: tp.Optional[int] = None,
+        validation_batch_size: tp.Optional[int] = None,
+        validation_freq: int = 1,
+    ):
+        # if validation_split:
+        #     # Create the validation data using the training data. Only supported for
+        #     # `Tensor` and `NumPy` input.
+        #     (
+        #         (x, y, sample_weight),
+        #         validation_data,
+        #     ) = data_adapter.train_validation_split(
+        #         (x, y, sample_weight), validation_split=validation_split, shuffle=False
+        #     )
+
+        data_handler = data_adapter.ArrayDataAdapter(
+            x=x,
+            y=y,
+            sample_weight=sample_weight,
+            batch_size=batch_size,
+            epochs=epochs,
+            shuffle=shuffle,
+        )
+
+        # # Container that configures and calls `tf.keras.Callback`s.
+        # if not isinstance(callbacks, callbacks_module.CallbackList):
+        #     callbacks = callbacks_module.CallbackList(
+        #         callbacks,
+        #         add_history=True,
+        #         add_progbar=verbose != 0,
+        #         model=self,
+        #         verbose=verbose,
+        #         epochs=epochs,
+        #         steps=data_handler.inferred_steps,
+        #     )
+
+        # callbacks.on_train_begin()
+        # data_handler._initial_epoch = (  # pylint: disable=protected-access
+        #     self._maybe_load_initial_epoch_from_ckpt(initial_epoch))
+        self.stop_training = False
+        data_gen = data_handler.get_dataset()
+        # for epoch, iterator in data_handler.enumerate_epochs():
+        for epoch in range(epochs):
+            # self.reset_metrics()
+            # callbacks.on_epoch_begin(epoch)
+            # with data_handler.catch_stop_iteration():
+            # for step in data_handler.steps():
+            for batch in data_gen:
+                # callbacks.on_train_batch_begin(step)
+                sample_weight = batch[2] if len(batch) == 3 else None
+                # print(batch[0].shape)
+                # exit()
+                tmp_logs = self.train_on_batch(
+                    x=batch[0],
+                    y=batch[1],
+                    sample_weight=None,
+                    class_weight=class_weight,
+                    # seed=None,
+                    # params=None,
+                    # state=None,
+                    # optimizer_state=None,
+                    # metrics_state=None,
+                    # initial_metrics_state=None,
+                )
+                print(tmp_logs)
+
+                # logs = tmp_logs  # No error, now safe to assign to logs.
+                # callbacks.on_train_batch_end(step, logs)
+
+            # epoch_logs = copy.copy(logs)
+
+            # Run validation.
+            # if validation_data and self._should_eval(epoch, validation_freq):
+            #     val_x, val_y, val_sample_weight = data_adapter.unpack_x_y_sample_weight(
+            #         validation_data
+            #     )
+            #     val_logs = self.evaluate(
+            #         x=val_x,
+            #         y=val_y,
+            #         sample_weight=val_sample_weight,
+            #         batch_size=validation_batch_size or batch_size,
+            #         steps=validation_steps,
+            #         callbacks=callbacks,
+            #         max_queue_size=max_queue_size,
+            #         workers=workers,
+            #         use_multiprocessing=use_multiprocessing,
+            #         return_dict=True,
+            #     )
+            #     val_logs = {"val_" + name: val for name, val in val_logs.items()}
+            #     epoch_logs.update(val_logs)
+
+            # callbacks.on_epoch_end(epoch, epoch_logs)
+
+            if self.stop_training:
+                break
+
+        # callbacks.on_train_end()
+        history = None
+        return history
