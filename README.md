@@ -9,7 +9,7 @@ _Elegy is a Neural Networks framework based on Jax and Haiku._
 * **Easy-to-use**: ...
 * **Flexible**: ...
 
-For more information take a look at the [Documentation](https://cgarciae.github.io/elegy).
+For more information take a look at the [Documentation](https://poets-ai.github.io/elegy).
 
 ## Installation
 
