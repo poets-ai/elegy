@@ -87,10 +87,7 @@ def main(debug: bool = False, eager: bool = False):
     # Make datasets.
     train = load_dataset("train", is_training=True, batch_size=64)
     train_eval = load_dataset("train", is_training=False, batch_size=1000)
-    test_eval = load_dataset("test", is_training=False, batch_size=10)
-
-    loss_acc = 0
-    logs = None
+    test_eval = load_dataset("test", is_training=False, batch_size=100)
 
     model = elegy.Model(
         model_fn=net_fn,
