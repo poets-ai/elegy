@@ -27,3 +27,4 @@ RUN python3.8 -m pip install poetry && \
 ENV BASE_URL="https://storage.googleapis.com/jax-releases"
 RUN pip install --upgrade $BASE_URL/cuda102/jaxlib-0.1.50-cp38-none-manylinux2010_x86_64.whl
 RUN pip install --upgrade jax
+ENV XLA_PYTHON_CLIENT_ALLOCATOR="platform"
