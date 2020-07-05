@@ -1,37 +1,10 @@
 import typing as tp
 import haiku as hk
-from elegy.utils import DIFunction
+
+from elegy import utils
 
 KeyValueLike = tp.Union[hk.Module, tp.Tuple[str, tp.Callable]]
 DictLike = tp.Union[tp.Dict[str, tp.Callable], tp.List[KeyValueLike]]
-
-
-def forward_all(
-    modules_fn: tp.Callable[[], tp.Union[KeyValueLike, DictLike],]
-):
-    def _metrics_fn(y_true, y_pred, **kwargs):
-
-        metrics = modules_fn()
-
-        if isinstance(metrics, (hk.Module, tp.Tuple)):
-            metrics = [metrics]
-
-        if isinstance(metrics, tp.Dict):
-            metrics = metrics.items()
-        else:
-            metrics = (
-                (metric.module_name, metric)
-                if isinstance(metric, hk.Module)
-                else metric
-                for metric in metrics
-            )
-
-        return {
-            name: DIFunction.create(metric)(y_true, y_pred, **kwargs)
-            for name, metric in metrics
-        }
-
-    return _metrics_fn
 
 
 def match_outputs_and_labels(
@@ -49,7 +22,9 @@ def match_outputs_and_labels(
         metrics = modules_fn()
 
         return {
-            name: DIFunction.create(metric)(y_true, y_pred, **kwargs)
+            name: utils.inject_dependencies(metric)(
+                y_true=y_true, y_pred=y_pred, **kwargs
+            )
             for name, y_true, y_pred, metric in parse_structures(
                 "", y_true, y_pred, metrics
             )
