@@ -1,3 +1,4 @@
+from elegy import utils
 import jax
 from elegy.losses.loss import Loss
 import jax.numpy as jnp
@@ -23,7 +24,8 @@ class L1L2Regularization(Loss):
         self.l1 = l1
         self.l2 = l2
 
-    def __call__(self, params: hk.Params):
+    @utils.inject_dependencies
+    def call(self, params: hk.Params):
 
         if not self.l1 and not self.l2:
             return jnp.array(0.0)
@@ -43,7 +45,7 @@ class L1L2Regularization(Loss):
         return regularization
 
 
-def L1Regularization(l=0.01) -> L1L2Regularization:
+def L1Regularization(l=0.01, name="l1_regularization", **kwargs) -> L1L2Regularization:
     r"""Create a regularizer that applies an L1 regularization penalty.
   The L1 regularization penalty is computed as:
   $$\ell_1\,\,penalty =\ell_1\sum_{i=0}^n|x_i|$$
@@ -52,10 +54,10 @@ def L1Regularization(l=0.01) -> L1L2Regularization:
   Returns:
     An L1 Regularizer with the given regularization factor.
   """
-    return L1L2Regularization(l1=l)
+    return L1L2Regularization(l1=l, name=name, **kwargs)
 
 
-def L2Regularization(l=0.01) -> L1L2Regularization:
+def L2Regularization(l=0.01, name="l2_regularization", **kwargs) -> L1L2Regularization:
     r"""Create a regularizer that applies an L2 regularization penalty.
   The L2 regularization penalty is computed as:
   $$\ell_2\,\,penalty =\ell_2\sum_{i=0}^nx_i^2$$
@@ -64,5 +66,5 @@ def L2Regularization(l=0.01) -> L1L2Regularization:
   Returns:
     An L2 Regularizer with the given regularization factor.
   """
-    return L1L2Regularization(l2=l)
+    return L1L2Regularization(l2=l, name=name, **kwargs)
 

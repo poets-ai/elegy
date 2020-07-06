@@ -14,42 +14,6 @@ OptState = Any
 Batch = Mapping[str, np.ndarray]
 
 
-def load_dataset(
-    split: str, *, is_training: bool, batch_size: int,
-) -> Generator[Batch, None, None]:
-    """Loads the dataset as a generator of batches."""
-    ds = tfds.load("mnist:3.*.*", split=split).cache().repeat()
-    if is_training:
-        ds = ds.shuffle(10 * batch_size, seed=0)
-    ds = ds.batch(batch_size)
-    return tfds.as_numpy(ds)
-
-
-def net_fn(image) -> jnp.ndarray:
-    """Standard LeNet-300-100 MLP network."""
-    image = image.astype(jnp.float32) / 255.0
-
-    mlp = hk.Sequential(
-        [
-            hk.Flatten(),
-            hk.Linear(300),
-            jax.nn.relu,
-            hk.Linear(100),
-            jax.nn.relu,
-            hk.Linear(10),
-        ]
-    )
-    return mlp(image)
-
-
-def loss_fn(y_true, y_pred, params) -> jnp.ndarray:
-
-    l2_loss = elegy.losses.L2Regularization()(params)
-    softmax_xent = elegy.losses.SoftmaxCrossentropy()(y_true, y_pred)
-
-    return softmax_xent + 1e-4 * l2_loss
-
-
 def main(debug: bool = False, eager: bool = False):
 
     if debug:
@@ -70,14 +34,41 @@ def main(debug: bool = False, eager: bool = False):
     #         lambda p1, p2: (1 - epsilon) * p1 + epsilon * p2, avg_params, new_params
     #     )
 
+    def load_dataset(
+        split: str, *, is_training: bool, batch_size: int,
+    ) -> Generator[Batch, None, None]:
+        """Loads the dataset as a generator of batches."""
+        ds = tfds.load("mnist:3.*.*", split=split).repeat()
+        if is_training:
+            ds = ds.shuffle(10 * batch_size, seed=0)
+        ds = ds.batch(batch_size)
+        return tfds.as_numpy(ds)
+
     # Make datasets.
     train = load_dataset("train", is_training=True, batch_size=64)
     train_eval = load_dataset("train", is_training=False, batch_size=100)
     test_eval = load_dataset("test", is_training=False, batch_size=100)
 
+    def net_fn(image) -> jnp.ndarray:
+        """Standard LeNet-300-100 MLP network."""
+        image = image.astype(jnp.float32) / 255.0
+
+        mlp = hk.Sequential(
+            [
+                hk.Flatten(),
+                hk.Linear(300),
+                jax.nn.relu,
+                hk.Linear(100),
+                jax.nn.relu,
+                hk.Linear(10),
+            ]
+        )
+        return mlp(image)
+
     model = elegy.Model(
         model_fn=net_fn,
-        loss=loss_fn,
+        loss=lambda: elegy.losses.SoftmaxCrossentropy(),
+        aux_losses=lambda: elegy.losses.L2Regularization(l=1e-4),
         metrics=lambda: elegy.metrics.Accuracy(),
         run_eagerly=eager,
     )
@@ -95,8 +86,7 @@ def main(debug: bool = False, eager: bool = False):
 
             print(
                 f"[Step {step}] - "
-                f"Test accuracy: {metrics['accuracy']:.3f} - "
-                f"Test Loss: {metrics['loss']:.3f}"
+                + " - ".join(f"{key}: {value:.3f}" for key, value in metrics.items())
             )
 
             model.reset_metrics()

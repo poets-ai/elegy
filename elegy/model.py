@@ -7,7 +7,8 @@ import numpy as np
 from jax.experimental import optix
 
 from . import utils
-from .metrics.metric_modes import get_mode_function
+from elegy.metrics import metric_modes
+from elegy.losses import loss_modes
 
 
 class Model:
@@ -27,9 +28,13 @@ class Model:
     def __init__(
         self,
         model_fn: tp.Optional[tp.Callable],
-        loss: tp.Callable[..., jnp.ndarray],
+        loss: tp.Callable,
+        loss_mode: str = "match_outputs_and_labels",
+        aux_losses: tp.Optional[
+            tp.Callable[[], tp.Union[tp.List[tp.Callable], tp.Callable]]
+        ] = None,
         metrics: tp.Optional[tp.Callable] = None,
-        metrics_mode: tp.Union[str, tp.Callable] = "match_outputs_and_labels",
+        metrics_mode: str = "match_outputs_and_labels",
         optimizer: optix.GradientTransformation = optix.adam(1e-3),
         run_eagerly: bool = False,
         params: tp.Optional[hk.Params] = None,
@@ -47,14 +52,16 @@ class Model:
             raise ValueError("Must define either self.call or model_fn")
 
         if metrics is not None:
-            if isinstance(metrics_mode, tp.Callable):
-                metrics = metrics_mode(metrics)
-            else:
-                metrics = get_mode_function(metrics_mode)(metrics)
+            metrics = metric_modes.get_mode_function(metrics_mode)(metrics)
+
+        loss = loss_modes.get_mode_function(loss_mode)(loss)
 
         self._model_fn = utils.inject_dependencies(model_fn)
         self._model_transform = hk.transform_with_state(self._model_fn)
         self._loss_fn = utils.inject_dependencies(loss)
+        self._aux_losses = (
+            loss_modes.get_aux_losses_fn(aux_losses) if aux_losses is not None else None
+        )
         self._metrics_transform = (
             hk.transform_with_state(
                 utils.inject_dependencies(metrics, rename={"__params": "params"})
@@ -220,7 +227,9 @@ class Model:
         optix.OptState,
         tp.Optional[hk.State],
     ]:
-        (loss, (y_pred, state)), grads = jax.value_and_grad(self._loss, has_aux=True)(
+        (loss, (y_pred, state, logs)), grads = jax.value_and_grad(
+            self._loss, has_aux=True
+        )(
             params,
             state=state,
             net_rng=net_rng,
@@ -233,8 +242,6 @@ class Model:
 
         updates, optimizer_state = self._optimizer.update(grads, optimizer_state)
         params = optix.apply_updates(params, updates)
-
-        logs = dict(loss=loss)
 
         if self._metrics_transform is not None:
             metrics, metrics_state = self._metrics_transform.apply(
@@ -273,10 +280,10 @@ class Model:
             x=x, params=params, state=state, net_rng=net_rng, is_training=is_training,
         )
 
-        loss = self._loss_fn(
+        logs = self._loss_fn(
             # required by loss API
-            y,
-            y_pred,
+            y_true=y,
+            y_pred=y_pred,
             # dependency injection
             x=x,
             sample_weight=sample_weight,
@@ -284,7 +291,28 @@ class Model:
             params=params,
         )
 
-        return loss, (y_pred, state)
+        if self._aux_losses is not None:
+            aux_losses = self._aux_losses(
+                y_true=y,
+                y_pred=y_pred,
+                x=x,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+                params=params,
+            )
+
+        else:
+            aux_losses = None
+
+        if aux_losses:
+            temp_logs = logs.copy()
+            logs = aux_losses
+            logs.update(temp_logs)
+
+        # get total loss
+        loss = logs["loss"] = sum(logs.values())
+
+        return loss, (y_pred, state, logs)
 
     def test_on_batch(
         self,
@@ -344,7 +372,7 @@ class Model:
     ) -> tp.Tuple[
         tp.Dict[str, jnp.ndarray], tp.Optional[hk.State],
     ]:
-        loss, (y_pred, _state) = self._loss(
+        loss, (y_pred, _state, logs) = self._loss(
             params,
             state=state,
             net_rng=net_rng,
@@ -354,8 +382,6 @@ class Model:
             class_weight=class_weight,
             is_training=False,
         )
-
-        logs = dict(loss=loss)
 
         if self._metrics_transform is not None:
             metrics, metrics_state = self._metrics_transform.apply(

@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from enum import Enum
+import re
 import typing as tp
 
 import haiku as hk
@@ -61,7 +62,10 @@ class Loss:
     """Wraps a loss function in the `Loss` class."""
 
     def __init__(
-        self, reduction: tp.Optional[Reduction] = None, name: tp.Optional[str] = None
+        self,
+        reduction: tp.Optional[Reduction] = None,
+        name: tp.Optional[str] = None,
+        weight: float = 1.0,
     ):
         """Initializes `Loss` class.
         Args:
@@ -79,7 +83,12 @@ class Loss:
         name: (Optional) name for the loss.
         **kwargs: The keyword arguments that are passed on to `fn`.
         """
-        self._name = name if name is not None else self.__class__.__name__
+        self.name = (
+            name
+            if name is not None
+            else re.sub(r"(?<!^)(?=[A-Z])", "_", self.__class__.__name__).lower()
+        )
+        self.weight = weight
         self._reduction = (
             reduction if reduction is not None else Reduction.SUM_OVER_BATCH_SIZE
         )
@@ -91,11 +100,15 @@ class Loss:
             values *= sample_weight
 
         if self._reduction == Reduction.NONE:
-            return values
+            loss = values
         elif self._reduction == Reduction.SUM:
-            return values.sum()
+            loss = values.sum()
         elif self._reduction == Reduction.SUM_OVER_BATCH_SIZE:
-            return values.sum() / jnp.prod(values.shape)
+            loss = values.sum() / jnp.prod(values.shape)
+        else:
+            raise ValueError(f"Invalid reduction '{self._reduction}'")
+
+        return loss * self.weight
 
     @abstractmethod
     def call(self, *args, **kwargs):
