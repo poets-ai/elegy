@@ -22,7 +22,7 @@ class Model:
     _optimizer_state: tp.Optional[optix.OptState]
     _metrics_state: tp.Optional[hk.State]
     _initial_metrics_state: tp.Optional[hk.State]
-    _run_eagerly: bool
+    run_eagerly: bool
 
     def __init__(
         self,
@@ -69,7 +69,7 @@ class Model:
         self._optimizer_state = optimizer_state
         self._metrics_state = metrics_state
         self._initial_metrics_state = initial_metrics_state
-        self._run_eagerly = run_eagerly
+        self.run_eagerly = run_eagerly
 
     def __call__(self, *args, **kwargs):
         return self._model_fn(*args, **kwargs)
@@ -143,6 +143,14 @@ class Model:
 
             self._initial_metrics_state = self._metrics_state
 
+    def reset_metrics(self, hard: bool = False):
+
+        if hard:
+            self._metrics_state = None
+            self._initial_metrics_state = None
+        else:
+            self._metrics_state = self._initial_metrics_state
+
     def train_on_batch(
         self,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
@@ -155,47 +163,6 @@ class Model:
         optimizer_state: tp.Optional[optix.OptState] = None,
         metrics_state: tp.Optional[hk.State] = None,
         initial_metrics_state: tp.Optional[hk.State] = None,
-    ) -> tp.Dict[str, jnp.ndarray]:
-        def block():
-            return self._train_on_batch(
-                x=x,
-                y=y,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                seed=seed,
-                params=params,
-                state=state,
-                optimizer_state=optimizer_state,
-                metrics_state=metrics_state,
-                initial_metrics_state=initial_metrics_state,
-            )
-
-        if self._run_eagerly:
-            with jax.disable_jit():
-                return block()
-        else:
-            return block()
-
-    def reset_metrics(self, hard: bool = False):
-
-        if hard:
-            self._metrics_state = None
-            self._initial_metrics_state = None
-        else:
-            self._metrics_state = self._initial_metrics_state
-
-    def _train_on_batch(
-        self,
-        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
-        sample_weight: tp.Optional[jnp.ndarray],
-        class_weight: tp.Optional[jnp.ndarray],
-        seed: tp.Union[jnp.ndarray, int, None],
-        params: tp.Optional[hk.Params],
-        state: tp.Optional[hk.State],
-        optimizer_state: tp.Optional[optix.OptState],
-        metrics_state: tp.Optional[hk.State],
-        initial_metrics_state: tp.Optional[hk.State],
     ) -> tp.Dict[str, jnp.ndarray]:
 
         self._maybe_initialize(
@@ -211,13 +178,15 @@ class Model:
             initial_metrics_state=initial_metrics_state,
         )
 
+        update_fn = self._update if self.run_eagerly else self._update_jit
+
         (
             logs,
             self._params,
             self._state,
             self._optimizer_state,
             self._metrics_state,
-        ) = self._update(
+        ) = update_fn(
             x=x,
             y=y,
             sample_weight=sample_weight,
@@ -232,7 +201,6 @@ class Model:
 
         return {key: np.asarray(value) for key, value in logs.items()}
 
-    @partial(jax.jit, static_argnums=(0,))
     def _update(
         self,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
@@ -287,6 +255,8 @@ class Model:
 
         return logs, params, state, optimizer_state, metrics_state
 
+    _update_jit = jax.jit(_update, static_argnums=(0,))
+
     def _loss(
         self,
         params: hk.Params,
@@ -328,37 +298,6 @@ class Model:
         metrics_state: tp.Optional[hk.State] = None,
         initial_metrics_state: tp.Optional[hk.State] = None,
     ) -> tp.Dict[str, jnp.ndarray]:
-        def block():
-            return self._test_on_batch(
-                x=x,
-                y=y,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                seed=seed,
-                params=params,
-                state=state,
-                metrics_state=metrics_state,
-                initial_metrics_state=initial_metrics_state,
-            )
-
-        if self._run_eagerly:
-            with jax.disable_jit():
-                return block()
-        else:
-            return block()
-
-    def _test_on_batch(
-        self,
-        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
-        sample_weight: tp.Optional[jnp.ndarray],
-        class_weight: tp.Optional[jnp.ndarray],
-        seed: tp.Union[jnp.ndarray, int, None],
-        params: tp.Optional[hk.Params],
-        state: tp.Optional[hk.State],
-        metrics_state: tp.Optional[hk.State],
-        initial_metrics_state: tp.Optional[hk.State],
-    ) -> tp.Dict[str, jnp.ndarray]:
 
         self._maybe_initialize(
             x=x,
@@ -373,7 +312,9 @@ class Model:
             initial_metrics_state=initial_metrics_state,
         )
 
-        (logs, self._metrics_state,) = self._test(
+        test_fn = self._test if self.run_eagerly else self._test_jit
+
+        (logs, self._metrics_state,) = test_fn(
             x=x,
             y=y,
             sample_weight=sample_weight,
@@ -388,7 +329,6 @@ class Model:
 
         return {key: np.asarray(value) for key, value in logs.items()}
 
-    @partial(jax.jit, static_argnums=(0,))
     def _test(
         self,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
@@ -436,6 +376,7 @@ class Model:
 
         return logs, metrics_state
 
+    _test_jit = jax.jit(_test, static_argnums=(0,))
     # ----------------------------------------------------------------
     # predict
     # ----------------------------------------------------------------
@@ -446,22 +387,6 @@ class Model:
         seed: tp.Union[jnp.ndarray, int, None] = None,
         params: tp.Optional[hk.Params] = None,
         state: tp.Optional[hk.State] = None,
-    ) -> tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]:
-        def block():
-            return self._predict_on_batch(x=x, seed=seed, params=params, state=state,)
-
-        if self._run_eagerly:
-            with jax.disable_jit():
-                return block()
-        else:
-            return block()
-
-    def _predict_on_batch(
-        self,
-        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        seed: tp.Union[jnp.ndarray, int, None],
-        params: tp.Optional[hk.Params],
-        state: tp.Optional[hk.State],
     ) -> tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]:
 
         self._maybe_initialize(
@@ -477,7 +402,9 @@ class Model:
             initial_metrics_state=None,
         )
 
-        y_pred, _ = self._predict(
+        predict_fn = self._predict if self.run_eagerly else self._predict_jit
+
+        y_pred, _ = predict_fn(
             x=x,
             params=self._params,
             state=self._state,
@@ -487,7 +414,6 @@ class Model:
 
         return y_pred
 
-    @partial(jax.jit, static_argnums=(0,))
     def _predict(
         self,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
@@ -510,3 +436,5 @@ class Model:
         )
 
         return y_pred, state
+
+    _predict_jit = jax.jit(_predict, static_argnums=(0,))
