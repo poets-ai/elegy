@@ -35,7 +35,7 @@ def match_outputs_and_labels(
 
 def parse_structures(prefix, y_true, y_pred, metrics):
 
-    if isinstance(y_true, tp.Tuple):
+    if isinstance(y_true, (tp.Tuple, tp.List)):
         for i in range(len(y_true)):
             yield from parse_structures(
                 f"{prefix}{i}/", y_true[i], y_pred[i], metrics[i]
@@ -65,8 +65,6 @@ def get_mode_function(mode: str) -> tp.Callable:
 
     if mode == "match_outputs_and_labels":
         return match_outputs_and_labels
-    elif mode == "forward_all":
-        return forward_all
     elif mode == "manual":
         return lambda x: x
     else:
