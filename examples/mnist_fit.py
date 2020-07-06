@@ -89,6 +89,7 @@ def main(debug: bool = False, eager: bool = False):
     model = elegy.Model(
         model_fn=net_fn,
         loss=loss_fn,
+        loss_mode="manual",
         metrics=lambda: elegy.metrics.Accuracy(),
         run_eagerly=eager,
     )

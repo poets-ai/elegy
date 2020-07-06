@@ -295,6 +295,9 @@ class Model:
             params=params,
         )
 
+        if not isinstance(logs, dict):
+            logs = dict(loss=logs)
+
         if self._aux_losses is not None:
             aux_losses = self._aux_losses(
                 y_true=y,
