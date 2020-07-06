@@ -3,6 +3,10 @@
 
 
 import abc
+import collections
+import contextlib
+import itertools
+import logging
 import math
 import typing as tp
 
@@ -166,6 +170,20 @@ def pack_x_y_sample_weight(x, y=None, sample_weight=None):
         return (x, y, sample_weight)
 
 
+def unpack_x_y_sample_weight(data):
+    """Unpacks user-provided data tuple."""
+    if not isinstance(data, tuple):
+        return (data, None, None)
+    elif len(data) == 1:
+        return (data[0], None, None)
+    elif len(data) == 2:
+        return (data[0], data[1], None)
+    elif len(data) == 3:
+        return (data[0], data[1], data[2])
+
+    raise ValueError("Data not understood.")
+
+
 def list_to_tuple(maybe_list):
     """Datasets will stack the list of tensor, so switch them to tuples."""
     if isinstance(maybe_list, list):
@@ -191,8 +209,6 @@ class ArrayDataAdapter(DataAdapter):
 
     @staticmethod
     def can_handle(x, y=None):
-        # TODO(kaftan): Check performance implications of using a flatten
-        #  here for other types of inputs.
         data = [x]
         if y is not None:
             data += [y]
@@ -217,7 +233,8 @@ class ArrayDataAdapter(DataAdapter):
         epochs: int = 1,
         steps: tp.Optional[int] = None,
         shuffle: bool = False,
-        **kwargs
+        drop_remainder: bool = False,
+        **kwargs,
     ):
         super(ArrayDataAdapter, self).__init__(x, y, **kwargs)
         # x, y, sample_weights = _process_tensorlike((x, y, sample_weights))
@@ -262,7 +279,7 @@ class ArrayDataAdapter(DataAdapter):
         dataset_indices = np.arange(num_samples)
 
         def dataset_generator():
-            for epoch in range(epochs):
+            while True:
                 if shuffle:
                     np.random.shuffle(dataset_indices)
 
@@ -272,10 +289,11 @@ class ArrayDataAdapter(DataAdapter):
                     indices = dataset_indices[
                         batch * batch_size : (batch + 1) * batch_size
                     ]
-                    # Complete missing last batch
-                    if len(indices) < batch_size:
-                        fill_indices = batch_size - len(indices)
-                        indices = np.append(indices, dataset_indices[:fill_indices])
+
+                    # # Drop last batch
+                    # if drop_remainder and len(indices) < batch_size:
+                    #     print("Droping!")
+                    #     continue
 
                     data_x = inputs[0][indices]
                     data_y = inputs[1][indices]
@@ -284,7 +302,7 @@ class ArrayDataAdapter(DataAdapter):
                     else:
                         yield (data_x, data_y)
 
-        self._dataset = dataset_generator()
+        self._dataset = dataset_generator
 
     def get_dataset(self):
         return self._dataset
@@ -304,4 +322,298 @@ class ArrayDataAdapter(DataAdapter):
     def should_recreate_iterator(self):
         # An infinite dataset is always created here.
         return False
+
+
+def is_none_or_empty(inputs):
+    # util method to check if the input is a None or a empty list.
+    # the python "not" check will raise an error like below if the input is a
+    # numpy array
+    # "The truth value of an array with more than one element is ambiguous.
+    # Use a.any() or a.all()"
+    # return inputs is None or not nest.flatten(inputs)
+    return inputs is None or not inputs
+
+
+def assert_not_namedtuple(x):
+    if (
+        isinstance(x, tuple)
+        and
+        # TODO(b/144192902): Use a namedtuple checking utility.
+        hasattr(x, "_fields")
+        and isinstance(x._fields, collections.Sequence)
+        and all(isinstance(f, six.string_types) for f in x._fields)
+    ):
+        raise ValueError(
+            "Received namedtuple ({}) with fields `{}` as input. namedtuples "
+            "cannot, in general, be unambiguously resolved into `x`, `y`, "
+            "and `sample_weight`. For this reason Keras has elected not to "
+            "support them. If you would like the value to be unpacked, "
+            "please explicitly convert it to a tuple before passing it to "
+            "Keras.".format(x.__class__, x._fields)
+        )
+
+
+class GeneratorDataAdapter(DataAdapter):
+    """Adapter that handles python generators and iterators."""
+
+    @staticmethod
+    def can_handle(x, y=None):
+        return (hasattr(x, "__next__") or hasattr(x, "next")) and hasattr(x, "__iter__")
+
+    def __init__(
+        self, x: tp.Union[tp.Iterable], y=None, sample_weights=None, **kwargs,
+    ):
+        # Generators should never shuffle as exhausting the generator in order to
+        # shuffle the batches is inefficient.
+        kwargs.pop("shuffle", None)
+
+        if not is_none_or_empty(y):
+            raise ValueError(
+                "`y` argument is not supported when using " "python generator as input."
+            )
+        if not is_none_or_empty(sample_weights):
+            raise ValueError(
+                "`sample_weight` argument is not supported when using "
+                "python generator as input."
+            )
+
+        super(GeneratorDataAdapter, self).__init__(x, y, **kwargs)
+
+        # Since we have to know the dtype of the python generator when we build the
+        # dataset, we have to look at a batch to infer the structure.
+        peek, x = self._peek_and_restore(x)
+        assert_not_namedtuple(peek)
+        peek = self._standardize_batch(peek)
+        # peek = _process_tensorlike(peek)
+
+        # self._first_batch_size = int(nest.flatten(peek)[0].shape[0])
+        self._first_batch_size = int(peek[0].shape[0])
+
+        # Note that dataset API takes a callable that creates a generator object,
+        # rather than generator itself, which is why we define a function here.
+        generator_fn = lambda: x
+
+        def wrapped_generator():
+            for data in generator_fn():
+                yield self._standardize_batch(data)
+
+        dataset = generator_fn
+
+        self._dataset = dataset
+
+    def _standardize_batch(self, data):
+        """Standardizes a batch output by a generator."""
+        # Removes `None`s.
+        x, y, sample_weight = unpack_x_y_sample_weight(data)
+        data = pack_x_y_sample_weight(x, y, sample_weight)
+
+        # data = nest._list_to_tuple(data)  # pylint: disable=protected-access
+
+        # def _convert_dtype(t):
+        #     if isinstance(t, np.ndarray) and issubclass(t.dtype.type, np.floating):
+        #         return np.array(t, dtype=backend.floatx())
+        #     return t
+
+        # data = nest.map_structure(_convert_dtype, data)
+        return data
+
+    @staticmethod
+    def _peek_and_restore(x):
+        peek = next(x)
+        return peek, itertools.chain([peek], x)
+
+    def get_dataset(self):
+        return self._dataset
+
+    def get_size(self):
+        return None
+
+    def batch_size(self):
+        return None
+
+    def representative_batch_size(self):
+        return self._first_batch_size
+
+    def has_partial_batch(self):
+        return False
+
+    def partial_batch_size(self):
+        return
+
+    def should_recreate_iterator(self):
+        return False
+
+
+ALL_ADAPTER_CLS = [ArrayDataAdapter, GeneratorDataAdapter]
+# ALL_ADAPTER_CLS = [
+#     ListsOfScalarsDataAdapter,
+#     TensorLikeDataAdapter,
+#     GenericArrayLikeDataAdapter,
+#     DatasetAdapter,
+#     GeneratorDataAdapter,
+#     KerasSequenceAdapter,
+#     CompositeTensorDataAdapter,
+# ]
+
+
+def _type_name(x):
+    """Generates a description of the type of an object."""
+    if isinstance(x, dict):
+        key_types = set(_type_name(key) for key in x.keys())
+        val_types = set(_type_name(key) for key in x.values())
+        return "({} containing {} keys and {} values)".format(
+            type(x), key_types, val_types
+        )
+    if isinstance(x, (list, tuple)):
+        types = set(_type_name(val) for val in x)
+        return "({} containing values of types {})".format(type(x), types)
+    return str(type(x))
+
+
+def select_data_adapter(x, y):
+    """Selects a data adapter than can handle a given x and y."""
+    adapter_cls = [cls for cls in ALL_ADAPTER_CLS if cls.can_handle(x, y)]
+    if not adapter_cls:
+        raise ValueError(
+            "Failed to find data adapter that can handle "
+            "input: {}, {}".format(_type_name(x), _type_name(y))
+        )
+    elif len(adapter_cls) > 1:
+        raise RuntimeError(
+            "Data adapters should be mutually exclusive for "
+            "handling inputs. Found multiple adapters {} to handle "
+            "input: {}, {}".format(adapter_cls, _type_name(x), _type_name(y))
+        )
+    return adapter_cls[0]
+
+
+# from tensorflow.python.eager import context
+# from tensorflow.python.framework import errors
+
+
+class DataHandler(object):
+    """Handles iterating over epoch-level `tf.data.Iterator` objects."""
+
+    def __init__(
+        self,
+        x,
+        y=None,
+        sample_weight=None,
+        batch_size=None,
+        steps_per_epoch=None,
+        initial_epoch=0,
+        epochs=1,
+        shuffle=False,
+        class_weight=None,
+        **kwargs,
+    ):
+
+        self._initial_epoch = initial_epoch
+        self._epochs = epochs
+        self._insufficient_data = False
+
+        adapter_cls = select_data_adapter(x, y)
+        self._adapter = adapter_cls(
+            x,
+            y,
+            batch_size=batch_size,
+            steps=steps_per_epoch,
+            epochs=epochs - initial_epoch,
+            sample_weights=sample_weight,
+            shuffle=shuffle,
+            **kwargs,
+        )
+
+        dataset = self._adapter.get_dataset()
+
+        self._inferred_steps = self._infer_steps(steps_per_epoch, dataset)
+        self._dataset = dataset
+
+    def enumerate_epochs(self):
+        """Yields `(epoch, tf.data.Iterator)`."""
+        data_iterator = self._dataset()
+        for epoch in range(self._initial_epoch, self._epochs):
+            if self._insufficient_data:  # Set by `catch_stop_iteration`.
+                break
+            if self._adapter.should_recreate_iterator():
+                data_iterator = self._dataset()
+            yield epoch, data_iterator
+            self._adapter.on_epoch_end()
+
+    @contextlib.contextmanager
+    def catch_stop_iteration(self):
+        """Catches errors when an iterator runs out of data."""
+        try:
+            yield
+            # context.async_wait()
+        except (StopIteration):
+            if (
+                self._adapter.get_size() is None
+                and self._inferred_steps is None
+                and self._current_step > 0
+            ):
+                # The input passed by the user ran out of batches.
+                # Now we know the cardinality of the input(dataset or generator).
+                self._inferred_steps = self._current_step
+            else:
+                self._insufficient_data = True
+                total_epochs = self._epochs - self._initial_epoch
+                logging.warning(
+                    "Your input ran out of data; interrupting training. "
+                    "Make sure that your dataset or generator can generate at "
+                    "least `steps_per_epoch * epochs` batches (in this case, "
+                    "{} batches). You may need to use the repeat() function "
+                    "when building your dataset.".format(
+                        total_epochs * self._inferred_steps
+                    )
+                )
+
+    def steps(self):
+        """Yields steps for the current epoch."""
+        self._current_step = 0
+        # `self._inferred_steps` can be changed by `catch_stop_iteration`.
+        while self._inferred_steps is None or self._current_step < self._inferred_steps:
+            if self._insufficient_data:  # Set by `catch_stop_iteration`.
+                break
+            yield self._current_step
+            self._current_step += 1
+
+    @property
+    def inferred_steps(self):
+        """The inferred steps per epoch of the created `Dataset`.
+            This will be `None` in the case where:
+            (1) A `Dataset` of unknown cardinality was passed to the `DataHandler`, and
+            (2) `steps_per_epoch` was not provided, and
+            (3) The first epoch of iteration has not yet completed.
+            Returns:
+            The inferred steps per epoch of the created `Dataset`.
+        """
+        return self._inferred_steps
+
+    def _infer_steps(self, steps, dataset):
+        """Infers steps_per_epoch needed to loop through a dataset."""
+        if steps is not None:
+            return steps
+
+        adapter_steps = self._adapter.get_size()
+        if adapter_steps is not None:
+            return adapter_steps
+
+        raise ValueError(
+            "When passing an infinitely repeating dataset, you "
+            "must specify how many steps to draw."
+        )
+        # size = cardinality.cardinality(dataset)
+        # if size == cardinality.INFINITE and steps is None:
+        #     raise ValueError(
+        #         "When passing an infinitely repeating dataset, you "
+        #         "must specify how many steps to draw."
+        #     )
+        # if size >= 0:
+        #     return size.numpy().item()
+        # return None
+
+    @property
+    def _samples(self):
+        return self._adapter.get_samples()
 

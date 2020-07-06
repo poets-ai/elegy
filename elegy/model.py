@@ -1,12 +1,14 @@
-from functools import partial
+import copy
 import typing as tp
+from functools import partial
+
 import haiku as hk
 import jax
 import jax.numpy as jnp
 import numpy as np
 from jax.experimental import optix
 
-from . import utils, data_adapter
+from . import data_adapter, utils
 from .metrics.metric_modes import get_mode_function
 
 
@@ -357,15 +359,6 @@ class Model:
         #         (x, y, sample_weight), validation_split=validation_split, shuffle=False
         #     )
 
-        data_handler = data_adapter.ArrayDataAdapter(
-            x=x,
-            y=y,
-            sample_weight=sample_weight,
-            batch_size=batch_size,
-            epochs=epochs,
-            shuffle=shuffle,
-        )
-
         # # Container that configures and calls `tf.keras.Callback`s.
         # if not isinstance(callbacks, callbacks_module.CallbackList):
         #     callbacks = callbacks_module.CallbackList(
@@ -382,75 +375,154 @@ class Model:
         # data_handler._initial_epoch = (  # pylint: disable=protected-access
         #     self._maybe_load_initial_epoch_from_ckpt(initial_epoch))
         self.stop_training = False
-        data_gen = data_handler.get_dataset()
-        # for epoch, iterator in data_handler.enumerate_epochs():
-        for epoch in range(epochs):
-            # self.reset_metrics()
+        data_handler = data_adapter.DataHandler(
+            x=x,
+            y=y,
+            sample_weight=sample_weight,
+            batch_size=batch_size,
+            steps_per_epoch=steps_per_epoch,
+            initial_epoch=initial_epoch,
+            epochs=epochs,
+            shuffle=shuffle,
+            class_weight=class_weight,
+        )
+        for epoch, iterator in data_handler.enumerate_epochs():
+            self.reset_metrics()
             # callbacks.on_epoch_begin(epoch)
-            # with data_handler.catch_stop_iteration():
-            # for step in data_handler.steps():
-            for batch in data_gen:
-                # callbacks.on_train_batch_begin(step)
-                sample_weight = batch[2] if len(batch) == 3 else None
-                # print(batch[0].shape)
-                # exit()
-                # import matplotlib.pyplot as plt
+            logs = {}
+            with data_handler.catch_stop_iteration():
+                for step in data_handler.steps():
+                    # callbacks.on_train_batch_begin(step)
+                    batch = next(iterator)
+                    sample_weight = batch[2] if len(batch) == 3 else None
 
-                # label = batch[1]
-                # image = batch[0]
-                # for i in range(5):
-                #     plt.figure()
-                #     plt.title(f"{label[i]}")
-                #     plt.imshow(image[i, ..., 0], cmap="gray")
-                #     plt.show()
+                    tmp_logs = self.train_on_batch(
+                        x=batch[0],
+                        y=batch[1],
+                        sample_weight=sample_weight,
+                        class_weight=class_weight,
+                        # seed=None,
+                        # params=None,
+                        # state=None,
+                        # optimizer_state=None,
+                        # metrics_state=None,
+                        # initial_metrics_state=None,
+                    )
+                    # print(epoch, step, tmp_logs, batch[0].shape)
 
-                tmp_logs = self.train_on_batch(
-                    x=batch[0],
-                    y=batch[1],
-                    sample_weight=sample_weight,
-                    class_weight=class_weight,
-                    # seed=None,
-                    # params=None,
-                    # state=None,
-                    # optimizer_state=None,
-                    # metrics_state=None,
-                    # initial_metrics_state=None,
-                )
-                print(tmp_logs)
+                    logs = tmp_logs
+                    # callbacks.on_train_batch_end(step, logs)
 
-                # logs = tmp_logs  # No error, now safe to assign to logs.
-                # callbacks.on_train_batch_end(step, logs)
-
-            # epoch_logs = copy.copy(logs)
+            epoch_logs = copy.copy(logs)
 
             # Run validation.
-            # if validation_data and self._should_eval(epoch, validation_freq):
-            #     val_x, val_y, val_sample_weight = data_adapter.unpack_x_y_sample_weight(
-            #         validation_data
-            #     )
-            #     val_logs = self.evaluate(
-            #         x=val_x,
-            #         y=val_y,
-            #         sample_weight=val_sample_weight,
-            #         batch_size=validation_batch_size or batch_size,
-            #         steps=validation_steps,
-            #         callbacks=callbacks,
-            #         max_queue_size=max_queue_size,
-            #         workers=workers,
-            #         use_multiprocessing=use_multiprocessing,
-            #         return_dict=True,
-            #     )
-            #     val_logs = {"val_" + name: val for name, val in val_logs.items()}
-            #     epoch_logs.update(val_logs)
+            if validation_data and self._should_eval(epoch, validation_freq):
+                val_x, val_y, val_sample_weight = data_adapter.unpack_x_y_sample_weight(
+                    validation_data
+                )
+                val_logs = self.evaluate(
+                    x=val_x,
+                    y=val_y,
+                    sample_weight=val_sample_weight,
+                    batch_size=validation_batch_size or batch_size,
+                    steps=validation_steps,
+                    callbacks=callbacks,
+                    # return_dict=True,
+                )
+                val_logs = {"val_" + name: val for name, val in val_logs.items()}
+                epoch_logs.update(val_logs)
 
             # callbacks.on_epoch_end(epoch, epoch_logs)
-
+            print(epoch, epoch_logs)
             if self.stop_training:
                 break
 
         # callbacks.on_train_end()
         history = None
         return history
+
+    def evaluate(
+        self,
+        x: tp.Union[
+            jnp.ndarray,
+            np.ndarray,
+            tp.Mapping[str, tp.Union[np.ndarray, jnp.ndarray]],
+            tp.Tuple[tp.Union[np.ndarray, jnp.ndarray]],
+            tp.Iterable,
+        ],
+        y: tp.Union[
+            jnp.ndarray,
+            np.ndarray,
+            tp.Mapping[str, tp.Union[np.ndarray, jnp.ndarray]],
+            tp.Tuple[tp.Union[np.ndarray, jnp.ndarray]],
+            None,
+        ] = None,
+        batch_size: tp.Optional[int] = None,
+        sample_weight: tp.Optional[tp.Union[np.ndarray, jnp.ndarray]] = None,
+        steps: tp.Optional[int] = None,
+        callbacks=None,
+    ):
+
+        # # Container that configures and calls `tf.keras.Callback`s.
+        # if not isinstance(callbacks, callbacks_module.CallbackList):
+        #     callbacks = callbacks_module.CallbackList(
+        #         callbacks,
+        #         add_history=True,
+        #         add_progbar=verbose != 0,
+        #         model=self,
+        #         verbose=verbose,
+        #         epochs=epochs,
+        #         steps=data_handler.inferred_steps,
+        #     )
+
+        # callbacks.on_test_begin()
+
+        data_handler = data_adapter.DataHandler(
+            x=x,
+            y=y,
+            sample_weight=sample_weight,
+            batch_size=batch_size,
+            steps_per_epoch=steps,
+            initial_epoch=0,
+            epochs=1,
+            shuffle=False,
+        )
+        logs = {}
+        for _, iterator in data_handler.enumerate_epochs():
+            self.reset_metrics()
+            with data_handler.catch_stop_iteration():
+                for step in data_handler.steps():
+                    # callbacks.on_test_batch_begin(step)
+                    batch = next(iterator)
+                    sample_weight = batch[2] if len(batch) == 3 else None
+
+                    tmp_logs = self.test_on_batch(
+                        x=batch[0],
+                        y=batch[1],
+                        sample_weight=sample_weight,
+                        # seed=None,
+                        # params=None,
+                        # state=None,
+                        # optimizer_state=None,
+                        # metrics_state=None,
+                        # initial_metrics_state=None,
+                    )
+
+                    logs = tmp_logs
+                    # callbacks.on_test_batch_end(step, logs)
+
+        # callbacks.on_test_end(epoch, epoch_logs)
+
+        return logs
+
+    def _should_eval(self, epoch, validation_freq):
+        epoch = epoch + 1  # one-index the user-facing epoch.
+        if isinstance(validation_freq, int):
+            return epoch % validation_freq == 0
+        elif isinstance(validation_freq, list):
+            return epoch in validation_freq
+        else:
+            raise ValueError("Expected `validation_freq` to be a list or int.")
 
     def test_on_batch(
         self,
