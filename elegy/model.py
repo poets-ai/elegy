@@ -1,14 +1,19 @@
-from functools import partial
+import copy
 import typing as tp
+from functools import partial
+
 import haiku as hk
 import jax
 import jax.numpy as jnp
 import numpy as np
 from jax.experimental import optix
 
-from . import utils
-from elegy.metrics import metric_modes
 from elegy.losses import loss_modes
+from elegy.metrics import metric_modes
+
+from . import utils
+from .data import DataHandler, unpack_x_y_sample_weight
+from .metrics.metric_modes import get_mode_function
 
 
 class Model:
@@ -291,6 +296,9 @@ class Model:
             params=params,
         )
 
+        if not isinstance(logs, dict):
+            logs = dict(loss=logs)
+
         aux_losses = (
             self._aux_losses(
                 y_true=y,
@@ -313,6 +321,212 @@ class Model:
         loss = logs["loss"] = sum(logs.values())
 
         return loss, (y_pred, state, logs)
+
+    def fit(
+        self,
+        x: tp.Union[
+            jnp.ndarray,
+            np.ndarray,
+            tp.Mapping[str, tp.Union[np.ndarray, jnp.ndarray]],
+            tp.Tuple[tp.Union[np.ndarray, jnp.ndarray]],
+            tp.Iterable,
+        ],
+        y: tp.Union[
+            jnp.ndarray,
+            np.ndarray,
+            tp.Mapping[str, tp.Union[np.ndarray, jnp.ndarray]],
+            tp.Tuple[tp.Union[np.ndarray, jnp.ndarray]],
+            None,
+        ] = None,
+        batch_size: tp.Optional[int] = None,
+        epochs: int = 1,
+        # verbose=1,
+        callbacks=None,
+        validation_split: float = 0.0,
+        validation_data: tp.Union[tp.Tuple, tp.Iterable, None] = None,
+        shuffle: bool = True,
+        class_weight: tp.Optional[tp.Mapping[str, float]] = None,
+        sample_weight: tp.Optional[tp.Union[np.ndarray, jnp.ndarray]] = None,
+        initial_epoch: int = 0,
+        steps_per_epoch: tp.Optional[int] = None,
+        validation_steps: tp.Optional[int] = None,
+        validation_batch_size: tp.Optional[int] = None,
+        validation_freq: int = 1,
+    ):
+        # if validation_split:
+        #     # Create the validation data using the training data. Only supported for
+        #     # `Tensor` and `NumPy` input.
+        #     (
+        #         (x, y, sample_weight),
+        #         validation_data,
+        #     ) = data_adapter.train_validation_split(
+        #         (x, y, sample_weight), validation_split=validation_split, shuffle=False
+        #     )
+
+        # # Container that configures and calls `tf.keras.Callback`s.
+        # if not isinstance(callbacks, callbacks_module.CallbackList):
+        #     callbacks = callbacks_module.CallbackList(
+        #         callbacks,
+        #         add_history=True,
+        #         add_progbar=verbose != 0,
+        #         model=self,
+        #         verbose=verbose,
+        #         epochs=epochs,
+        #         steps=data_handler.inferred_steps,
+        #     )
+
+        # callbacks.on_train_begin()
+        # data_handler._initial_epoch = (  # pylint: disable=protected-access
+        #     self._maybe_load_initial_epoch_from_ckpt(initial_epoch))
+        self.stop_training = False
+        data_handler = DataHandler(
+            x=x,
+            y=y,
+            sample_weight=sample_weight,
+            batch_size=batch_size,
+            steps_per_epoch=steps_per_epoch,
+            initial_epoch=initial_epoch,
+            epochs=epochs,
+            shuffle=shuffle,
+            class_weight=class_weight,
+        )
+        for epoch, iterator in data_handler.enumerate_epochs():
+            self.reset_metrics()
+            # callbacks.on_epoch_begin(epoch)
+            logs = {}
+            with data_handler.catch_stop_iteration():
+                for step in data_handler.steps():
+                    # callbacks.on_train_batch_begin(step)
+                    batch = next(iterator)
+                    sample_weight = batch[2] if len(batch) == 3 else None
+
+                    tmp_logs = self.train_on_batch(
+                        x=batch[0],
+                        y=batch[1],
+                        sample_weight=sample_weight,
+                        class_weight=class_weight,
+                        # seed=None,
+                        # params=None,
+                        # state=None,
+                        # optimizer_state=None,
+                        # metrics_state=None,
+                        # initial_metrics_state=None,
+                    )
+                    # print(epoch, step, tmp_logs, batch[0].shape)
+
+                    logs = tmp_logs
+                    # callbacks.on_train_batch_end(step, logs)
+
+            epoch_logs = copy.copy(logs)
+
+            # Run validation.
+            if validation_data and self._should_eval(epoch, validation_freq):
+                val_x, val_y, val_sample_weight = unpack_x_y_sample_weight(
+                    validation_data
+                )
+                val_logs = self.evaluate(
+                    x=val_x,
+                    y=val_y,
+                    sample_weight=val_sample_weight,
+                    batch_size=validation_batch_size or batch_size,
+                    steps=validation_steps,
+                    callbacks=callbacks,
+                    # return_dict=True,
+                )
+                val_logs = {"val_" + name: val for name, val in val_logs.items()}
+                epoch_logs.update(val_logs)
+
+            # callbacks.on_epoch_end(epoch, epoch_logs)
+            print(epoch, epoch_logs)
+            if self.stop_training:
+                break
+
+        # callbacks.on_train_end()
+        history = None
+        return history
+
+    def evaluate(
+        self,
+        x: tp.Union[
+            jnp.ndarray,
+            np.ndarray,
+            tp.Mapping[str, tp.Union[np.ndarray, jnp.ndarray]],
+            tp.Tuple[tp.Union[np.ndarray, jnp.ndarray]],
+            tp.Iterable,
+        ],
+        y: tp.Union[
+            jnp.ndarray,
+            np.ndarray,
+            tp.Mapping[str, tp.Union[np.ndarray, jnp.ndarray]],
+            tp.Tuple[tp.Union[np.ndarray, jnp.ndarray]],
+            None,
+        ] = None,
+        batch_size: tp.Optional[int] = None,
+        sample_weight: tp.Optional[tp.Union[np.ndarray, jnp.ndarray]] = None,
+        steps: tp.Optional[int] = None,
+        callbacks=None,
+    ):
+
+        # # Container that configures and calls `tf.keras.Callback`s.
+        # if not isinstance(callbacks, callbacks_module.CallbackList):
+        #     callbacks = callbacks_module.CallbackList(
+        #         callbacks,
+        #         add_history=True,
+        #         add_progbar=verbose != 0,
+        #         model=self,
+        #         verbose=verbose,
+        #         epochs=epochs,
+        #         steps=data_handler.inferred_steps,
+        #     )
+
+        # callbacks.on_test_begin()
+
+        data_handler = DataHandler(
+            x=x,
+            y=y,
+            sample_weight=sample_weight,
+            batch_size=batch_size,
+            steps_per_epoch=steps,
+            initial_epoch=0,
+            epochs=1,
+            shuffle=False,
+        )
+        logs = {}
+        for _, iterator in data_handler.enumerate_epochs():
+            self.reset_metrics()
+            with data_handler.catch_stop_iteration():
+                for step in data_handler.steps():
+                    # callbacks.on_test_batch_begin(step)
+                    batch = next(iterator)
+                    sample_weight = batch[2] if len(batch) == 3 else None
+
+                    tmp_logs = self.test_on_batch(
+                        x=batch[0],
+                        y=batch[1],
+                        sample_weight=sample_weight,
+                        # seed=None,
+                        # params=None,
+                        # state=None,
+                        # optimizer_state=None,
+                        # metrics_state=None,
+                        # initial_metrics_state=None,
+                    )
+
+                    logs = tmp_logs
+                    # callbacks.on_test_batch_end(step, logs)
+
+        # callbacks.on_test_end(epoch, epoch_logs)
+
+        return logs
+
+    def _should_eval(self, epoch, validation_freq):
+        epoch = epoch + 1  # one-index the user-facing epoch.
+        if isinstance(validation_freq, int):
+            return epoch % validation_freq == 0
+        elif isinstance(validation_freq, list):
+            return epoch in validation_freq
+        else:
+            raise ValueError("Expected `validation_freq` to be a list or int.")
 
     def test_on_batch(
         self,
