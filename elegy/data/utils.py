@@ -1,5 +1,9 @@
 import collections
+import functools
+import math
 
+import jax.numpy as jnp
+import numpy as np
 import six
 
 
@@ -74,3 +78,62 @@ def assert_not_namedtuple(x):
             "please explicitly convert it to a tuple before passing it to "
             "Keras.".format(x.__class__, x._fields)
         )
+
+
+def train_validation_split(arrays, validation_split, shuffle=True):
+    """
+    Split arrays into random train and validation subsets.
+    Arguments:
+        arrays: Tensors to split. Allowed inputs are arbitrarily nested structures
+            of Tensors and NumPy arrays.
+        validation_split: Float between 0 and 1. The proportion of the dataset to
+            include in the validation split. The rest of the dataset will be included
+            in the training split.
+        shuffle: Bool. Whether to shuffle the data before performing a split. If
+            `False`, the last `validation_split` fraction of that training data will
+            become the validation split.
+    Returns:
+        `(train_arrays, validation_arrays)`
+  """
+
+    def _can_split(t):
+        tensor_types = (jnp.ndarray, np.ndarray)
+        # if pd:
+        #     tensor_types = (ops.Tensor, np.ndarray, pd.Series, pd.DataFrame)
+        return isinstance(t, tensor_types) or t is None
+
+    # flat_arrays = nest.flatten(arrays)
+    flat_arrays = arrays
+    if not all(_can_split(t) for t in arrays):
+        raise ValueError(
+            "`validation_split` is only supported for Tensors or NumPy "
+            "arrays, found: {}".format(arrays)
+        )
+
+    if all(t is None for t in flat_arrays):
+        return arrays, arrays
+
+    first_non_none = None
+    for t in flat_arrays:
+        if t is not None:
+            first_non_none = t
+            break
+
+    # Assumes all arrays have the same batch shape or are `None`.
+    batch_dim = int(first_non_none.shape[0])
+    indices = np.arange(batch_dim)
+    if shuffle:
+        indices = np.random.shuffle(indices)
+    split_at = int(math.floor(batch_dim * (1.0 - validation_split)))
+    train_indices = indices[:split_at]
+    val_indices = indices[split_at:]
+
+    def _split(t, indices):
+        if t is None:
+            return t
+        return t[indices]
+
+    train_arrays = (_split(array, indices=train_indices) for array in arrays)
+    val_arrays = (_split(array, indices=val_indices) for array in arrays)
+
+    return train_arrays, val_arrays

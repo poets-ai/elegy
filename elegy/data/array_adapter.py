@@ -113,12 +113,14 @@ class ArrayDataAdapter(DataAdapter):
     def get_size(self):
         return self._size
 
+    @property
     def batch_size(self):
         return self._batch_size
 
     def has_partial_batch(self):
         return self._partial_batch_size > 0
 
+    @property
     def partial_batch_size(self):
         return self._partial_batch_size or None
 

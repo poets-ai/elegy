@@ -56,7 +56,7 @@ class GeneratorDataAdapter(DataAdapter):
             for data in generator_fn():
                 yield self._standardize_batch(data)
 
-        dataset = generator_fn
+        dataset = wrapped_generator
 
         self._dataset = dataset
 
@@ -87,15 +87,18 @@ class GeneratorDataAdapter(DataAdapter):
     def get_size(self):
         return None
 
+    @property
     def batch_size(self):
         return None
 
+    @property
     def representative_batch_size(self):
         return self._first_batch_size
 
     def has_partial_batch(self):
         return False
 
+    @property
     def partial_batch_size(self):
         return
 

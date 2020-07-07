@@ -412,7 +412,7 @@ class Model:
                         # metrics_state=None,
                         # initial_metrics_state=None,
                     )
-                    # print(epoch, step, tmp_logs, batch[0].shape)
+                    # print(epoch, step, tmp_logs["accuracy"], batch[0].shape)
 
                     logs = tmp_logs
                     # callbacks.on_train_batch_end(step, logs)

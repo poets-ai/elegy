@@ -59,7 +59,7 @@ def main(debug: bool = False, eager: bool = False):
     # train_eval = load_dataset("train", is_training=False, batch_size=1000)
     test_eval = load_dataset("test", is_training=False, batch_size=1000)
 
-    n_iters = 100
+    n_iters = 1000
     x = []
     y = []
     for _, ex in zip(range(n_iters), train):
@@ -87,10 +87,16 @@ def main(debug: bool = False, eager: bool = False):
     )
 
     # Fit with datasets in memory
-    model.fit(
-        x=x, y=y, epochs=10, batch_size=60, validation_data=(x_val, y_val), shuffle=True
-    )
-    exit()
+    # model.fit(
+    #     x=x,
+    #     y=y,
+    #     epochs=10,
+    #     batch_size=64,
+    #     steps_per_epoch=100,
+    #     validation_data=(x_val, y_val),
+    #     shuffle=True,
+    # )
+    # exit()
 
     # Fit with generators
     x = load_dataset("train", is_training=True, batch_size=64, for_fit=True)
@@ -98,8 +104,8 @@ def main(debug: bool = False, eager: bool = False):
 
     model.fit(
         x,
-        epochs=10,
-        steps_per_epoch=106,
+        epochs=2,
+        steps_per_epoch=100,
         validation_data=validation,
         validation_steps=2,
     )
