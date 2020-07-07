@@ -11,7 +11,8 @@ from jax.experimental import optix
 from elegy.losses import loss_modes
 from elegy.metrics import metric_modes
 
-from . import data_adapter, utils
+from . import utils
+from .data import DataHandler, unpack_x_y_sample_weight
 from .metrics.metric_modes import get_mode_function
 
 
@@ -378,7 +379,7 @@ class Model:
         # data_handler._initial_epoch = (  # pylint: disable=protected-access
         #     self._maybe_load_initial_epoch_from_ckpt(initial_epoch))
         self.stop_training = False
-        data_handler = data_adapter.DataHandler(
+        data_handler = DataHandler(
             x=x,
             y=y,
             sample_weight=sample_weight,
@@ -420,7 +421,7 @@ class Model:
 
             # Run validation.
             if validation_data and self._should_eval(epoch, validation_freq):
-                val_x, val_y, val_sample_weight = data_adapter.unpack_x_y_sample_weight(
+                val_x, val_y, val_sample_weight = unpack_x_y_sample_weight(
                     validation_data
                 )
                 val_logs = self.evaluate(
@@ -480,7 +481,7 @@ class Model:
 
         # callbacks.on_test_begin()
 
-        data_handler = data_adapter.DataHandler(
+        data_handler = DataHandler(
             x=x,
             y=y,
             sample_weight=sample_weight,

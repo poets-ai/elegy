@@ -45,14 +45,6 @@ def net_fn(image) -> jnp.ndarray:
     return mlp(image)
 
 
-def loss_fn(y_true, y_pred, params) -> jnp.ndarray:
-
-    l2_loss = elegy.losses.L2Regularization()(params)
-    softmax_xent = elegy.losses.SoftmaxCrossentropy()(y_true, y_pred)
-
-    return softmax_xent + 1e-4 * l2_loss
-
-
 def main(debug: bool = False, eager: bool = False):
 
     if debug:
@@ -88,17 +80,17 @@ def main(debug: bool = False, eager: bool = False):
 
     model = elegy.Model(
         model_fn=net_fn,
-        loss=loss_fn,
-        loss_mode="manual",
+        loss=lambda: elegy.losses.SoftmaxCrossentropy(),
+        aux_losses=lambda: elegy.losses.L2Regularization(l=1e-4),
         metrics=lambda: elegy.metrics.Accuracy(),
         run_eagerly=eager,
     )
 
     # Fit with datasets in memory
-    # model.fit(
-    #     x=x, y=y, epochs=10, batch_size=60, validation_data=(x_val, y_val),
-    # )
-    # exit()
+    model.fit(
+        x=x, y=y, epochs=10, batch_size=60, validation_data=(x_val, y_val), shuffle=True
+    )
+    exit()
 
     # Fit with generators
     x = load_dataset("train", is_training=True, batch_size=64, for_fit=True)
