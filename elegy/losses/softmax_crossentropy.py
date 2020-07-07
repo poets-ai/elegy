@@ -49,7 +49,7 @@ class SoftmaxCrossentropy(Loss):
         sparse_labels: bool = True,
         label_smoothing: float = 0,
         reduction: tp.Optional[Reduction] = None,
-        name: tp.Optional[str] = None,
+        **kwargs
     ):
         """Initializes `SoftmaxCrossentropy` instance.
         Args:
@@ -71,9 +71,7 @@ class SoftmaxCrossentropy(Loss):
             for more details.
         name: Optional name for the op. Defaults to 'categorical_crossentropy'.
         """
-        super().__init__(
-            name=name, reduction=reduction,
-        )
+        super().__init__(reduction=reduction, **kwargs)
 
         self._from_logits = from_logits
         self._label_smoothing = label_smoothing

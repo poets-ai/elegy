@@ -22,13 +22,11 @@ class Sum(reduce.Reduce):
   ```
   """
 
-    def __init__(self, name=None, dtype=None):
+    def __init__(self, **kwargs):
         """Creates a `Sum` instance.
     Args:
       name: (Optional) string name of the metric instance.
       dtype: (Optional) data type of the metric result.
     """
-        super(Sum, self).__init__(
-            reduction=reduce.Reduction.SUM, name=name, dtype=dtype
-        )
+        super(Sum, self).__init__(reduction=reduce.Reduction.SUM, **kwargs)
 

@@ -81,13 +81,8 @@ def reduce(
 class Reduce(Metric):
     """Encapsulates metrics that perform a reduce operation on the values."""
 
-    def __init__(
-        self,
-        reduction: Reduction,
-        name: tp.Optional[str] = None,
-        dtype: tp.Optional[jnp.dtype] = None,
-    ):
-        super().__init__(name=name, dtype=dtype)
+    def __init__(self, reduction: Reduction, **kwargs):
+        super().__init__(**kwargs)
 
         self._reduction = reduction
 

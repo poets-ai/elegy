@@ -26,8 +26,6 @@ class MeanSquaredError(MeanMetricWrapper):
   ```
   """
 
-    def __init__(
-        self, name: tp.Optional[str] = None, dtype: tp.Optional[jnp.dtype] = None
-    ):
-        super().__init__(mean_squared_error, name=name, dtype=dtype)
+    def __init__(self, **kwargs):
+        super().__init__(mean_squared_error, **kwargs)
 
