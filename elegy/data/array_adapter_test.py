@@ -4,7 +4,9 @@ from unittest import TestCase
 import numpy as np
 import jax.numpy as jnp
 
-from elegy.data.array_adapter import ArrayDataAdapter
+import pytest
+
+# from elegy.data_adapter import ArrayDataAdapter
 
 
 class ArrayDataAdapterTest(TestCase):

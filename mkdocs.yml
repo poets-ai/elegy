@@ -11,6 +11,10 @@ theme:
 
 nav:
   - Introduction: index.md
+  - API Reference:
+      metrics:
+        Accuracy: api/metrics/accuracy.md
+        MeanMetricsWrapper: api/metrics/mean_metrics_wrapper.md
 
 extra:
   search:
