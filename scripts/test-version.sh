@@ -15,11 +15,11 @@ container_runner () {
     fi
 
     if hash podman 2>/dev/null; then
-        podman build --build-arg PY_VERSION="$py_version" -t pypeln .
-        podman run -it --rm  -v "$(pwd)":/usr/src/app:Z pypeln:latest
+        podman build --build-arg PY_VERSION="$py_version" -t elegy .
+        podman run -it --rm  -v "$(pwd)":/usr/src/app:Z elegy:latest
     else
-        docker build --build-arg PY_VERSION="$py_version" -t pypeln .
-        docker run -it --rm  -v "$(pwd)":/usr/src/app:Z pypeln:latest
+        docker build --build-arg PY_VERSION="$py_version" -t elegy .
+        docker run -it --rm  -v "$(pwd)":/usr/src/app:Z elegy:latest
     fi
 }
 
