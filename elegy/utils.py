@@ -33,7 +33,13 @@ def inject_dependencies(
                     kwargs[new] = kwargs.pop(old)
 
         if not any(arg.kind == inspect.Parameter.VAR_KEYWORD for arg in f_params):
-            kwargs = {arg: kwargs[arg] for arg in kwarg_names if arg not in arg_names}
+            print(list(kwargs.keys()))
+            print(kwarg_names)
+            kwargs = {
+                arg: kwargs[arg]
+                for arg in kwarg_names
+                if arg not in arg_names and arg in kwargs
+            }
 
         return f(*args, **kwargs)
 

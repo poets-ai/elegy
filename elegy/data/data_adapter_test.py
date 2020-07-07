@@ -6,7 +6,7 @@ import jax.numpy as jnp
 
 import pytest
 
-from elegy.data_adapter import ArrayDataAdapter
+# from elegy.data_adapter import ArrayDataAdapter
 
 
 class ArrayDataAdapterTest(TestCase):
