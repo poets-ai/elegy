@@ -97,10 +97,10 @@ def train_validation_split(arrays, validation_split, shuffle=True):
   """
 
     def _can_split(t):
-        tensor_types = (jnp.ndarray, np.ndarray)
+        supported_types = (jnp.ndarray, np.ndarray)
         # if pd:
-        #     tensor_types = (ops.Tensor, np.ndarray, pd.Series, pd.DataFrame)
-        return isinstance(t, tensor_types) or t is None
+        #     supported_types = (jnp.ndarray, np.ndarray, pd.Series, pd.DataFrame)
+        return isinstance(t, supported_types) or t is None
 
     # flat_arrays = nest.flatten(arrays)
     flat_arrays = arrays
@@ -133,7 +133,7 @@ def train_validation_split(arrays, validation_split, shuffle=True):
             return t
         return t[indices]
 
-    train_arrays = (_split(array, indices=train_indices) for array in arrays)
-    val_arrays = (_split(array, indices=val_indices) for array in arrays)
+    train_arrays = tuple([_split(array, indices=train_indices) for array in arrays])
+    val_arrays = tuple([_split(array, indices=val_indices) for array in arrays])
 
     return train_arrays, val_arrays

@@ -12,7 +12,7 @@ from elegy.losses import loss_modes
 from elegy.metrics import metric_modes
 
 from . import utils
-from .data import DataHandler, unpack_x_y_sample_weight
+from .data import DataHandler, unpack_x_y_sample_weight, train_validation_split
 from .metrics.metric_modes import get_mode_function
 
 
@@ -353,15 +353,12 @@ class Model:
         validation_batch_size: tp.Optional[int] = None,
         validation_freq: int = 1,
     ):
-        # if validation_split:
-        #     # Create the validation data using the training data. Only supported for
-        #     # `Tensor` and `NumPy` input.
-        #     (
-        #         (x, y, sample_weight),
-        #         validation_data,
-        #     ) = data_adapter.train_validation_split(
-        #         (x, y, sample_weight), validation_split=validation_split, shuffle=False
-        #     )
+        if validation_split:
+            # Create the validation data using the training data. Only supported for
+            # `Jax Numpy` and `NumPy` input.
+            (x, y, sample_weight), validation_data = train_validation_split(
+                (x, y, sample_weight), validation_split=validation_split, shuffle=False
+            )
 
         # # Container that configures and calls `tf.keras.Callback`s.
         # if not isinstance(callbacks, callbacks_module.CallbackList):
@@ -491,6 +488,7 @@ class Model:
             epochs=1,
             shuffle=False,
         )
+
         logs = {}
         for _, iterator in data_handler.enumerate_epochs():
             self.reset_metrics()
