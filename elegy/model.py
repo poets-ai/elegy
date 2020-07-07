@@ -340,7 +340,7 @@ class Model:
         ] = None,
         batch_size: tp.Optional[int] = None,
         epochs: int = 1,
-        # verbose=1,
+        verbose: int = 1,
         callbacks=None,
         validation_split: float = 0.0,
         validation_data: tp.Union[tp.Tuple, tp.Iterable, None] = None,
@@ -353,6 +353,182 @@ class Model:
         validation_batch_size: tp.Optional[int] = None,
         validation_freq: int = 1,
     ):
+        """Trains the model for a fixed number of epochs (iterations on a dataset).
+        Arguments:
+            x: Input data. It could be:
+            - A Numpy array (or array-like), or a list of arrays
+                (in case the model has multiple inputs).
+            - A TensorFlow tensor, or a list of tensors
+                (in case the model has multiple inputs).
+            - A dict mapping input names to the corresponding array/tensors,
+                if the model has named inputs.
+            - A `tf.data` dataset. Should return a tuple
+                of either `(inputs, targets)` or
+                `(inputs, targets, sample_weights)`.
+            - A generator or `keras.utils.Sequence` returning `(inputs, targets)`
+                or `(inputs, targets, sample_weights)`.
+            A more detailed description of unpacking behavior for iterator types
+            (Dataset, generator, Sequence) is given below.
+            y: Target data. Like the input data `x`,
+            it could be either Numpy array(s) or TensorFlow tensor(s).
+            It should be consistent with `x` (you cannot have Numpy inputs and
+            tensor targets, or inversely). If `x` is a dataset, generator,
+            or `keras.utils.Sequence` instance, `y` should
+            not be specified (since targets will be obtained from `x`).
+            batch_size: Integer or `None`.
+                Number of samples per gradient update.
+                If unspecified, `batch_size` will default to 32.
+                Do not specify the `batch_size` if your data is in the
+                form of datasets, generators, or `keras.utils.Sequence` instances
+                (since they generate batches).
+            epochs: Integer. Number of epochs to train the model.
+                An epoch is an iteration over the entire `x` and `y`
+                data provided.
+                Note that in conjunction with `initial_epoch`,
+                `epochs` is to be understood as "final epoch".
+                The model is not trained for a number of iterations
+                given by `epochs`, but merely until the epoch
+                of index `epochs` is reached.
+            verbose: 0, 1, or 2. Verbosity mode.
+                0 = silent, 1 = progress bar, 2 = one line per epoch.
+                Note that the progress bar is not particularly useful when
+                logged to a file, so verbose=2 is recommended when not running
+                interactively (eg, in a production environment).
+            callbacks: List of `keras.callbacks.Callback` instances.
+                List of callbacks to apply during training.
+                See `tf.keras.callbacks`.
+            validation_split: Float between 0 and 1.
+                Fraction of the training data to be used as validation data.
+                The model will set apart this fraction of the training data,
+                will not train on it, and will evaluate
+                the loss and any model metrics
+                on this data at the end of each epoch.
+                The validation data is selected from the last samples
+                in the `x` and `y` data provided, before shuffling. This argument is
+                not supported when `x` is a dataset, generator or
+            `keras.utils.Sequence` instance.
+            validation_data: Data on which to evaluate
+                the loss and any model metrics at the end of each epoch.
+                The model will not be trained on this data.
+                `validation_data` will override `validation_split`.
+                `validation_data` could be:
+                - tuple `(x_val, y_val)` of Numpy arrays or tensors
+                - tuple `(x_val, y_val, val_sample_weights)` of Numpy arrays
+                - dataset
+                For the first two cases, `batch_size` must be provided.
+                For the last case, `validation_steps` could be provided.
+                Note that `validation_data` does not support all the data types that
+                are supported in `x`, eg, dict, generator or `keras.utils.Sequence`.
+            shuffle: Boolean (whether to shuffle the training data
+                before each epoch) or str (for 'batch'). This argument is ignored
+                when `x` is a generator. 'batch' is a special option for dealing
+                with the limitations of HDF5 data; it shuffles in batch-sized
+                chunks. Has no effect when `steps_per_epoch` is not `None`.
+            class_weight: Optional dictionary mapping class indices (integers)
+                to a weight (float) value, used for weighting the loss function
+                (during training only).
+                This can be useful to tell the model to
+                "pay more attention" to samples from
+                an under-represented class.
+            sample_weight: Optional Numpy array of weights for
+                the training samples, used for weighting the loss function
+                (during training only). You can either pass a flat (1D)
+                Numpy array with the same length as the input samples
+                (1:1 mapping between weights and samples),
+                or in the case of temporal data,
+                you can pass a 2D array with shape
+                `(samples, sequence_length)`,
+                to apply a different weight to every timestep of every sample.
+                In this case you should make sure to specify
+                `sample_weight_mode="temporal"` in `compile()`. This argument is not
+                supported when `x` is a dataset, generator, or
+            `keras.utils.Sequence` instance, instead provide the sample_weights
+                as the third element of `x`.
+            initial_epoch: Integer.
+                Epoch at which to start training
+                (useful for resuming a previous training run).
+            steps_per_epoch: Integer or `None`.
+                Total number of steps (batches of samples)
+                before declaring one epoch finished and starting the
+                next epoch. When training with input tensors such as
+                TensorFlow data tensors, the default `None` is equal to
+                the number of samples in your dataset divided by
+                the batch size, or 1 if that cannot be determined. If x is a
+                `tf.data` dataset, and 'steps_per_epoch'
+                is None, the epoch will run until the input dataset is exhausted.
+                When passing an infinitely repeating dataset, you must specify the
+                `steps_per_epoch` argument. This argument is not supported with
+                array inputs.
+            validation_steps: Only relevant if `validation_data` is provided and
+                is a `tf.data` dataset. Total number of steps (batches of
+                samples) to draw before stopping when performing validation
+                at the end of every epoch. If 'validation_steps' is None, validation
+                will run until the `validation_data` dataset is exhausted. In the
+                case of an infinitely repeated dataset, it will run into an
+                infinite loop. If 'validation_steps' is specified and only part of
+                the dataset will be consumed, the evaluation will start from the
+                beginning of the dataset at each epoch. This ensures that the same
+                validation samples are used every time.
+            validation_batch_size: Integer or `None`.
+                Number of samples per validation batch.
+                If unspecified, will default to `batch_size`.
+                Do not specify the `validation_batch_size` if your data is in the
+                form of datasets, generators, or `keras.utils.Sequence` instances
+                (since they generate batches).
+            validation_freq: Only relevant if validation data is provided. Integer
+                or `collections_abc.Container` instance (e.g. list, tuple, etc.).
+                If an integer, specifies how many training epochs to run before a
+                new validation run is performed, e.g. `validation_freq=2` runs
+                validation every 2 epochs. If a Container, specifies the epochs on
+                which to run validation, e.g. `validation_freq=[1, 2, 10]` runs
+                validation at the end of the 1st, 2nd, and 10th epochs.
+            max_queue_size: Integer. Used for generator or `keras.utils.Sequence`
+                input only. Maximum size for the generator queue.
+                If unspecified, `max_queue_size` will default to 10.
+            workers: Integer. Used for generator or `keras.utils.Sequence` input
+                only. Maximum number of processes to spin up
+                when using process-based threading. If unspecified, `workers`
+                will default to 1. If 0, will execute the generator on the main
+                thread.
+            use_multiprocessing: Boolean. Used for generator or
+                `keras.utils.Sequence` input only. If `True`, use process-based
+                threading. If unspecified, `use_multiprocessing` will default to
+                `False`. Note that because this implementation relies on
+                multiprocessing, you should not pass non-picklable arguments to
+                the generator as they can't be passed easily to children processes.
+        Unpacking behavior for iterator-like inputs:
+            A common pattern is to pass a tf.data.Dataset, generator, or
+        tf.keras.utils.Sequence to the `x` argument of fit, which will in fact
+        yield not only features (x) but optionally targets (y) and sample weights.
+        Keras requires that the output of such iterator-likes be unambiguous. The
+        iterator should return a tuple of length 1, 2, or 3, where the optional
+        second and third elements will be used for y and sample_weight
+        respectively. Any other type provided will be wrapped in a length one
+        tuple, effectively treating everything as 'x'. When yielding dicts, they
+        should still adhere to the top-level tuple structure.
+        e.g. `({"x0": x0, "x1": x1}, y)`. Keras will not attempt to separate
+        features, targets, and weights from the keys of a single dict.
+            A notable unsupported data type is the namedtuple. The reason is that
+        it behaves like both an ordered datatype (tuple) and a mapping
+        datatype (dict). So given a namedtuple of the form:
+            `namedtuple("example_tuple", ["y", "x"])`
+        it is ambiguous whether to reverse the order of the elements when
+        interpreting the value. Even worse is a tuple of the form:
+            `namedtuple("other_tuple", ["x", "y", "z"])`
+        where it is unclear if the tuple was intended to be unpacked into x, y,
+        and sample_weight or passed through as a single element to `x`. As a
+        result the data processing code will simply raise a ValueError if it
+        encounters a namedtuple. (Along with instructions to remedy the issue.)
+        Returns:
+            A `History` object. Its `History.history` attribute is
+            a record of training loss values and metrics values
+            at successive epochs, as well as validation loss values
+            and validation metrics values (if applicable).
+        Raises:
+            RuntimeError: If the model was never compiled.
+            ValueError: In case of mismatch between the provided input data
+                and what the model expects.
+        """
         if validation_split:
             # Create the validation data using the training data. Only supported for
             # `Jax Numpy` and `NumPy` input.
@@ -402,12 +578,6 @@ class Model:
                         y=batch[1],
                         sample_weight=sample_weight,
                         class_weight=class_weight,
-                        # seed=None,
-                        # params=None,
-                        # state=None,
-                        # optimizer_state=None,
-                        # metrics_state=None,
-                        # initial_metrics_state=None,
                     )
                     # print(epoch, step, tmp_logs["accuracy"], batch[0].shape)
 
@@ -463,6 +633,73 @@ class Model:
         steps: tp.Optional[int] = None,
         callbacks=None,
     ):
+        """Returns the loss value & metrics values for the model in test mode.
+            Computation is done in batches.
+            Arguments:
+                x: Input data. It could be: - A Numpy array (or array-like), or a list
+                of arrays (in case the model has multiple inputs). - A TensorFlow
+                tensor, or a list of tensors (in case the model has multiple inputs).
+                - A dict mapping input names to the corresponding array/tensors, if
+                the model has named inputs. - A `tf.data` dataset. - A generator or
+                `keras.utils.Sequence` instance. A more detailed description of
+                unpacking behavior for iterator types (Dataset, generator, Sequence)
+                is given in the `Unpacking behavior for iterator-like inputs` section
+                of `Model.fit`.
+                y: Target data. Like the input data `x`, it could be either Numpy
+                array(s) or TensorFlow tensor(s). It should be consistent with `x`
+                (you cannot have Numpy inputs and tensor targets, or inversely). If
+                `x` is a dataset, generator or `keras.utils.Sequence` instance, `y`
+                should not be specified (since targets will be obtained from the
+                iterator/dataset).
+                batch_size: Integer or `None`. Number of samples per gradient update. If
+                unspecified, `batch_size` will default to 32. Do not specify the
+                `batch_size` if your data is in the form of a dataset, generators,
+                or `keras.utils.Sequence` instances (since they generate batches).
+                verbose: 0 or 1. Verbosity mode. 0 = silent, 1 = progress bar.
+                sample_weight: Optional Numpy array of weights for the test samples,
+                used for weighting the loss function. You can either pass a flat (1D)
+                Numpy array with the same length as the input samples
+                    (1:1 mapping between weights and samples), or in the case of
+                    temporal data, you can pass a 2D array with shape `(samples,
+                    sequence_length)`, to apply a different weight to every timestep
+                    of every sample. In this case you should make sure to specify
+                    `sample_weight_mode="temporal"` in `compile()`. This argument is
+                    not supported when `x` is a dataset, instead pass sample weights
+                    as the third element of `x`.
+                steps: Integer or `None`. Total number of steps (batches of samples)
+                before declaring the evaluation round finished. Ignored with the
+                default value of `None`. If x is a `tf.data` dataset and `steps` is
+                None, 'evaluate' will run until the dataset is exhausted. This
+                argument is not supported with array inputs.
+                callbacks: List of `keras.callbacks.Callback` instances. List of
+                callbacks to apply during evaluation. See
+                [callbacks](/api_docs/python/tf/keras/callbacks).
+                max_queue_size: Integer. Used for generator or `keras.utils.Sequence`
+                input only. Maximum size for the generator queue. If unspecified,
+                `max_queue_size` will default to 10.
+                workers: Integer. Used for generator or `keras.utils.Sequence` input
+                only. Maximum number of processes to spin up when using process-based
+                threading. If unspecified, `workers` will default to 1. If 0, will
+                execute the generator on the main thread.
+                use_multiprocessing: Boolean. Used for generator or
+                `keras.utils.Sequence` input only. If `True`, use process-based
+                threading. If unspecified, `use_multiprocessing` will default to
+                `False`. Note that because this implementation relies on
+                multiprocessing, you should not pass non-picklable arguments to the
+                generator as they can't be passed easily to children processes.
+                return_dict: If `True`, loss and metric results are returned as a dict,
+                with each key being the name of the metric. If `False`, they are
+                returned as a list.
+            See the discussion of `Unpacking behavior for iterator-like inputs` for
+            `Model.fit`.
+            Returns:
+                Scalar test loss (if the model has a single output and no metrics)
+                or list of scalars (if the model has multiple outputs
+                and/or metrics). The attribute `model.metrics_names` will give you
+                the display labels for the scalar outputs.
+            Raises:
+                ValueError: in case of invalid arguments.
+            """
 
         # # Container that configures and calls `tf.keras.Callback`s.
         # if not isinstance(callbacks, callbacks_module.CallbackList):
@@ -499,15 +736,7 @@ class Model:
                     sample_weight = batch[2] if len(batch) == 3 else None
 
                     tmp_logs = self.test_on_batch(
-                        x=batch[0],
-                        y=batch[1],
-                        sample_weight=sample_weight,
-                        # seed=None,
-                        # params=None,
-                        # state=None,
-                        # optimizer_state=None,
-                        # metrics_state=None,
-                        # initial_metrics_state=None,
+                        x=batch[0], y=batch[1], sample_weight=sample_weight,
                     )
 
                     logs = tmp_logs
