@@ -291,8 +291,8 @@ class Model:
             params=params,
         )
 
-        if self._aux_losses is not None:
-            aux_losses = self._aux_losses(
+        aux_losses = (
+            self._aux_losses(
                 y_true=y,
                 y_pred=y_pred,
                 x=x,
@@ -300,9 +300,9 @@ class Model:
                 class_weight=class_weight,
                 params=params,
             )
-
-        else:
-            aux_losses = None
+            if self._aux_losses is not None
+            else None
+        )
 
         if aux_losses:
             temp_logs = logs.copy()

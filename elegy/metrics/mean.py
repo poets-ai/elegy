@@ -27,13 +27,11 @@ class Mean(reduce.Reduce):
   ```
   """
 
-    def __init__(self, name=None, dtype=None):
+    def __init__(self, **kwargs):
         """Creates a `Mean` instance.
-    Args:
-      name: (Optional) string name of the metric instance.
-      dtype: (Optional) data type of the metric result.
-    """
-        super().__init__(
-            reduction=reduce.Reduction.WEIGHTED_MEAN, name=name, dtype=dtype
-        )
+        Args:
+          name: (Optional) string name of the metric instance.
+          dtype: (Optional) data type of the metric result.
+        """
+        super().__init__(reduction=reduce.Reduction.WEIGHTED_MEAN, **kwargs)
 

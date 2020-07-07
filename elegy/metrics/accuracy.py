@@ -45,8 +45,6 @@ class Accuracy(MeanMetricWrapper):
     ```
     """
 
-    def __init__(
-        self, name: tp.Optional[str] = None, dtype: tp.Optional[jnp.dtype] = None
-    ):
-        super().__init__(accuracy, name, dtype=dtype)
+    def __init__(self, **kwargs):
+        super().__init__(accuracy, **kwargs)
 
