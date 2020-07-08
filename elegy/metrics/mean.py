@@ -1,3 +1,7 @@
+import typing as tp
+
+import jax.numpy as jnp
+
 from elegy.metrics import reduce
 
 
@@ -27,11 +31,15 @@ class Mean(reduce.Reduce):
   ```
   """
 
-    def __init__(self, **kwargs):
+    def __init__(
+        self, name: tp.Optional[str] = None, dtype: tp.Optional[jnp.dtype] = None,
+    ):
         """Creates a `Mean` instance.
         Args:
           name: (Optional) string name of the metric instance.
           dtype: (Optional) data type of the metric result.
         """
-        super().__init__(reduction=reduce.Reduction.WEIGHTED_MEAN, **kwargs)
+        super().__init__(
+            reduction=reduce.Reduction.WEIGHTED_MEAN, name=name, dtype=dtype
+        )
 

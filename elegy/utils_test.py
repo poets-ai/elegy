@@ -20,7 +20,7 @@ class DIFunctionTests(TestCase):
 
         g = inject_dependencies(f)
 
-        with pytest.raises(KeyError):
+        with pytest.raises(TypeError):
             g("a", "b")
 
     def test_positional_error_remaining(self):
@@ -68,7 +68,7 @@ class DIFunctionTests(TestCase):
 
         g = inject_dependencies(f)
 
-        with pytest.raises(KeyError):
+        with pytest.raises(TypeError):
             g(b="b", c="c")
 
     def test_mixed(self):

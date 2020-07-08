@@ -81,8 +81,15 @@ def reduce(
 class Reduce(Metric):
     """Encapsulates metrics that perform a reduce operation on the values."""
 
-    def __init__(self, reduction: Reduction, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        reduction: Reduction,
+        name: tp.Optional[str] = None,
+        dtype: tp.Optional[jnp.dtype] = None,
+    ):
+        super().__init__(
+            name=name, dtype=dtype,
+        )
 
         self._reduction = reduction
 
@@ -115,7 +122,7 @@ class Reduce(Metric):
 
         if self._reduction in (Reduction.SUM_OVER_BATCH_SIZE, Reduction.WEIGHTED_MEAN,):
             count = hk.get_state(
-                "count", shape=[], dtype=jnp.int64, init=hk.initializers.Constant(0)
+                "count", shape=[], dtype=jnp.int32, init=hk.initializers.Constant(0)
             )
         else:
             count = None
