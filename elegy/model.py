@@ -604,7 +604,10 @@ class Model:
                 epoch_logs.update(val_logs)
 
             # callbacks.on_epoch_end(epoch, epoch_logs)
-            print(epoch, epoch_logs)
+            print(
+                f"epoch: {epoch} - "
+                + " - ".join(f"{key}: {value:.3f}" for key, value in epoch_logs.items())
+            )
             if self.stop_training:
                 break
 

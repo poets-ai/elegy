@@ -16,10 +16,6 @@ ALL_ADAPTER_CLS = [ArrayDataAdapter, GeneratorDataAdapter]
 # ]
 
 
-# from tensorflow.python.eager import context
-# from tensorflow.python.framework import errors
-
-
 class DataHandler(object):
     """Handles iterating over epoch-level `tf.data.Iterator` objects."""
 

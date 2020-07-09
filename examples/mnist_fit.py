@@ -99,16 +99,16 @@ def main(debug: bool = False, eager: bool = False):
     # exit()
 
     # Fit with validation from train
-    # model.fit(
-    #     x=x,
-    #     y=y,
-    #     epochs=10,
-    #     batch_size=64,
-    #     steps_per_epoch=100,
-    #     validation_split=0.2,
-    #     shuffle=True,
-    # )
-    # exit()
+    model.fit(
+        x=x,
+        y=y,
+        epochs=100,
+        batch_size=64,
+        steps_per_epoch=100,
+        validation_split=0.2,
+        shuffle=True,
+    )
+    exit()
 
     # Fit with generators
     x = load_dataset("train", is_training=True, batch_size=64, for_fit=True)

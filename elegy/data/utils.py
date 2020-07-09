@@ -1,10 +1,43 @@
 import collections
+from elegy.types import ArrayHolder
 import functools
 import math
 
 import jax.numpy as jnp
 import numpy as np
 import six
+import typing as tp
+
+from elegy import types
+
+
+def map_structure(
+    f: tp.Callable[[types.ArrayLike], types.T],
+    structure: tp.Union[types.ArrayHolder, None],
+) -> types.Container[tp.Union[types.T, None]]:
+
+    if isinstance(structure, (jnp.ndarray, np.ndarray)):
+        return f(structure)
+    elif isinstance(structure, tp.Tuple):
+        return tuple(map_structure(f, x) for x in structure)
+    elif isinstance(structure, tp.Dict):
+        return {key: map_structure(f, x) for key, x in structure.items()}
+    else:
+        return structure
+
+
+def flatten(inputs: types.ArrayHolder) -> tp.Iterable[types.ArrayLike]:
+
+    if isinstance(inputs, (jnp.ndarray, np.ndarray)):
+        yield inputs
+    elif isinstance(inputs, tp.Tuple):
+        for x in inputs:
+            yield from flatten(x)
+    elif isinstance(inputs, tp.Dict):
+        for x in inputs.values():
+            yield from flatten(x)
+    else:
+        raise ValueError(f"Unsupported type '{type(inputs)}'")
 
 
 def pack_x_y_sample_weight(x, y=None, sample_weight=None):
