@@ -45,8 +45,8 @@ class GeneratorDataAdapter(DataAdapter):
         assert_not_namedtuple(peek)
         peek = self._standardize_batch(peek)
 
-        # self._first_batch_size = int(flatten(peek)[0].shape[0])
-        self._first_batch_size = int(peek[0].shape[0])
+        self._first_batch_size = int(list(flatten(peek))[0].shape[0])
+        # self._first_batch_size = int(peek[0].shape[0])
 
         # Note that dataset API takes a callable that creates a generator object,
         # rather than generator itself, which is why we define a function here.

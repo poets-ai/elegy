@@ -3,17 +3,9 @@ import contextlib
 
 from .generator_adapter import GeneratorDataAdapter
 from .array_adapter import ArrayDataAdapter
+from .list_adapter import ListsOfScalarsDataAdapter
 
-ALL_ADAPTER_CLS = [ArrayDataAdapter, GeneratorDataAdapter]
-# ALL_ADAPTER_CLS = [
-#     ListsOfScalarsDataAdapter,
-#     TensorLikeDataAdapter,
-#     GenericArrayLikeDataAdapter,
-#     DatasetAdapter,
-#     GeneratorDataAdapter,
-#     KerasSequenceAdapter,
-#     CompositeTensorDataAdapter,
-# ]
+ALL_ADAPTER_CLS = [ArrayDataAdapter, GeneratorDataAdapter, ListsOfScalarsDataAdapter]
 
 
 class DataHandler(object):
