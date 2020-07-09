@@ -87,27 +87,27 @@ def main(debug: bool = False, eager: bool = False):
     )
 
     # Fit with datasets in memory
-    # model.fit(
-    #     x=x,
-    #     y=y,
-    #     epochs=10,
-    #     batch_size=64,
-    #     steps_per_epoch=100,
-    #     validation_data=(x_val, y_val),
-    #     shuffle=True,
-    # )
+    model.fit(
+        x=x,
+        y=y,
+        epochs=10,
+        batch_size=64,
+        steps_per_epoch=100,
+        validation_data=(x_val, y_val),
+        shuffle=True,
+    )
     # exit()
 
     # Fit with validation from train
-    # model.fit(
-    #     x=x,
-    #     y=y,
-    #     epochs=100,
-    #     batch_size=64,
-    #     steps_per_epoch=100,
-    #     validation_split=0.2,
-    #     shuffle=True,
-    # )
+    model.fit(
+        x=x,
+        y=y,
+        epochs=10,
+        batch_size=64,
+        steps_per_epoch=100,
+        validation_split=0.2,
+        shuffle=True,
+    )
     # exit()
 
     # Fit with generators

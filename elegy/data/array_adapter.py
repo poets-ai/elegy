@@ -13,9 +13,9 @@ class ArrayDataAdapter(DataAdapter):
 
     @staticmethod
     def can_handle(x, y=None):
-        data = [x]
+        flat_inputs = list(flatten(x))
         if y is not None:
-            data += [y]
+            flat_inputs += list(flatten(y))
 
         supported_types = (jnp.ndarray, np.ndarray)
         # if pd:
@@ -26,7 +26,7 @@ class ArrayDataAdapter(DataAdapter):
                 return True
             return False
 
-        return all(_is_array(v) for v in data)
+        return all(_is_array(v) for v in flat_inputs)
 
     def __init__(
         self,
