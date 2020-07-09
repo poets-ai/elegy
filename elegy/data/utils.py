@@ -16,11 +16,11 @@ def map_structure(
     structure: tp.Union[types.ArrayHolder, None],
 ) -> types.Container[tp.Union[types.T, None]]:
 
-    if isinstance(structure, types.ArrayLike):
+    if isinstance(structure, (jnp.ndarray, np.ndarray)):
         return f(structure)
-    elif isinstance(structure, tp.Tuple[types.ArrayHolder]):
+    elif isinstance(structure, tp.Tuple):
         return tuple(map_structure(f, x) for x in structure)
-    elif isinstance(structure, tp.Dict[str, types.ArrayHolder]):
+    elif isinstance(structure, tp.Dict):
         return {key: map_structure(f, x) for key, x in structure.items()}
     else:
         return structure
