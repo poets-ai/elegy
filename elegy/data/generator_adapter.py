@@ -44,7 +44,6 @@ class GeneratorDataAdapter(DataAdapter):
         peek, x = self._peek_and_restore(x)
         assert_not_namedtuple(peek)
         peek = self._standardize_batch(peek)
-        # peek = _process_tensorlike(peek)
 
         # self._first_batch_size = int(flatten(peek)[0].shape[0])
         self._first_batch_size = int(peek[0].shape[0])
