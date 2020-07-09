@@ -9,6 +9,7 @@ from .utils import (
     is_none_or_empty,
     pack_x_y_sample_weight,
     unpack_x_y_sample_weight,
+    flatten,
 )
 
 
@@ -45,7 +46,7 @@ class GeneratorDataAdapter(DataAdapter):
         peek = self._standardize_batch(peek)
         # peek = _process_tensorlike(peek)
 
-        # self._first_batch_size = int(nest.flatten(peek)[0].shape[0])
+        # self._first_batch_size = int(flatten(peek)[0].shape[0])
         self._first_batch_size = int(peek[0].shape[0])
 
         # Note that dataset API takes a callable that creates a generator object,
@@ -66,14 +67,6 @@ class GeneratorDataAdapter(DataAdapter):
         x, y, sample_weight = unpack_x_y_sample_weight(data)
         data = pack_x_y_sample_weight(x, y, sample_weight)
 
-        # data = nest._list_to_tuple(data)  # pylint: disable=protected-access
-
-        # def _convert_dtype(t):
-        #     if isinstance(t, np.ndarray) and issubclass(t.dtype.type, np.floating):
-        #         return np.array(t, dtype=backend.floatx())
-        #     return t
-
-        # data = nest.map_structure(_convert_dtype, data)
         return data
 
     @staticmethod
