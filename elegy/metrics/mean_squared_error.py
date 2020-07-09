@@ -9,7 +9,7 @@ from elegy.metrics.mean_metric_wrapper import MeanMetricWrapper
 class MeanSquaredError(MeanMetricWrapper):
     """Computes the mean squared error between `y_true` and `y_pred`.
   Usage:
-  >>> m = tf.keras.metrics.MeanSquaredError()
+  >>> m = elegy.metrics.MeanSquaredError()
   >>> _ = m.update_state([[0, 1], [0, 0]], [[1, 1], [0, 0]])
   >>> m.result().numpy()
   0.25
@@ -18,11 +18,11 @@ class MeanSquaredError(MeanMetricWrapper):
   ...                    sample_weight=[1, 0])
   >>> m.result().numpy()
   0.5
-  Usage with tf.keras API:
+  Usage with elegy API:
   ```python
-  model = tf.keras.Model(inputs, outputs)
+  model = elegy.Model(inputs, outputs)
   model.compile(
-      'sgd', loss='mse', metrics=[tf.keras.metrics.MeanSquaredError()])
+      'sgd', loss='mse', metrics=[elegy.metrics.MeanSquaredError()])
   ```
   """
 

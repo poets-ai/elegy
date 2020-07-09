@@ -67,9 +67,9 @@ def main(debug: bool = False, eager: bool = False):
 
     model = elegy.Model(
         model_fn=net_fn,
-        loss=lambda: elegy.losses.SoftmaxCrossentropy(),
+        loss=lambda: elegy.losses.CategoricalCrossentropy(),
         aux_losses=lambda: elegy.losses.L2Regularization(l=1e-4),
-        metrics=lambda: elegy.metrics.Accuracy(),
+        metrics=lambda: elegy.metrics.SparseCategoricalAccuracy(),
         run_eagerly=eager,
     )
 

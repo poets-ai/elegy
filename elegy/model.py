@@ -396,7 +396,7 @@ class Model:
                 interactively (eg, in a production environment).
             callbacks: List of `keras.callbacks.Callback` instances.
                 List of callbacks to apply during training.
-                See `tf.keras.callbacks`.
+                See `elegy.callbacks`.
             validation_split: Float between 0 and 1.
                 Fraction of the training data to be used as validation data.
                 The model will set apart this fraction of the training data,
@@ -498,7 +498,7 @@ class Model:
                 the generator as they can't be passed easily to children processes.
         Unpacking behavior for iterator-like inputs:
             A common pattern is to pass a tf.data.Dataset, generator, or
-        tf.keras.utils.Sequence to the `x` argument of fit, which will in fact
+        elegy.utils.Sequence to the `x` argument of fit, which will in fact
         yield not only features (x) but optionally targets (y) and sample weights.
         Keras requires that the output of such iterator-likes be unambiguous. The
         iterator should return a tuple of length 1, 2, or 3, where the optional
@@ -536,7 +536,7 @@ class Model:
                 (x, y, sample_weight), validation_split=validation_split, shuffle=False
             )
 
-        # # Container that configures and calls `tf.keras.Callback`s.
+        # # Container that configures and calls `elegy.Callback`s.
         # if not isinstance(callbacks, callbacks_module.CallbackList):
         #     callbacks = callbacks_module.CallbackList(
         #         callbacks,
@@ -704,7 +704,7 @@ class Model:
                 ValueError: in case of invalid arguments.
             """
 
-        # # Container that configures and calls `tf.keras.Callback`s.
+        # # Container that configures and calls `elegy.Callback`s.
         # if not isinstance(callbacks, callbacks_module.CallbackList):
         #     callbacks = callbacks_module.CallbackList(
         #         callbacks,

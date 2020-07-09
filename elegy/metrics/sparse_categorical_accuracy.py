@@ -4,21 +4,19 @@ import typing as tp
 import jax.numpy as jnp
 
 from elegy.metrics.mean import Mean
+from elegy.metrics.accuracy import accuracy
 
 
-def accuracy(y_true: jnp.ndarray, y_pred: jnp.ndarray) -> jnp.ndarray:
-    # [y_pred, y_true], _ = metrics_utils.ragged_assert_compatible_and_get_flat_values(
-    #     [y_pred, y_true]
-    # )
-    # y_pred.shape.assert_is_compatible_with(y_true.shape)
+def sparse_categorical_accuracy(
+    y_true: jnp.ndarray, y_pred: jnp.ndarray
+) -> jnp.ndarray:
 
-    if y_true.dtype != y_pred.dtype:
-        y_pred = y_pred.astype(y_true.dtype)
+    y_pred = jnp.argmax(y_pred, axis=-1)
 
-    return (y_true == y_pred).astype(jnp.float32)
+    return accuracy(y_true, y_pred)
 
 
-class Accuracy(Mean):
+class SparseCategoricalAccuracy(Mean):
     """
     Calculates how often predictions equals labels. This metric creates two local variables, 
     `total` and `count` that are used to compute the frequency with which `y_pred` matches `y_true`. This frequency is
@@ -27,7 +25,7 @@ class Accuracy(Mean):
     Use `sample_weight` of 0 to mask values.
 
     ```python
-    m = elegy.metrics.Accuracy()
+    m = elegy.metrics.SparseCategoricalAccuracy()
 
     result = m(
         y_true=jnp.array([1, 1, 1, 1]), 
@@ -48,7 +46,7 @@ class Accuracy(Mean):
     model = elegy.Model(
         model_fn,
         loss=lambda: [elegy.losses.CategoricalCrossentropy()]
-        metrics=lambda: [elegy.metrics.Accuracy()]
+        metrics=lambda: [elegy.metrics.SparseCategoricalAccuracy()]
     )
     ```
     """
@@ -92,6 +90,7 @@ class Accuracy(Mean):
     """
 
         return super().call(
-            values=accuracy(y_true=y_true, y_pred=y_pred), sample_weight=sample_weight,
+            values=sparse_categorical_accuracy(y_true=y_true, y_pred=y_pred),
+            sample_weight=sample_weight,
         )
 

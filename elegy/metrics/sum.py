@@ -10,21 +10,21 @@ class Sum(reduce.Reduce):
   If `sample_weight` is `None`, weights default to 1.  Use `sample_weight` of 0
   to mask values.
   Usage:
-  >>> m = tf.keras.metrics.Sum()
+  >>> m = elegy.metrics.Sum()
   >>> _ = m.update_state([1, 3, 5, 7])
   >>> m.result().numpy()
   16.0
-  Usage with tf.keras API:
+  Usage with elegy API:
   ```python
-  model = tf.keras.Model(inputs, outputs)
-  model.add_metric(tf.keras.metrics.Sum(name='sum_1')(outputs))
+  model = elegy.Model(inputs, outputs)
+  model.add_metric(elegy.metrics.Sum(name='sum_1')(outputs))
   model.compile('sgd', loss='mse')
   ```
   """
 
     def __init__(self, **kwargs):
         """Creates a `Sum` instance.
-    Args:
+    Arguments:
       name: (Optional) string name of the metric instance.
       dtype: (Optional) data type of the metric result.
     """

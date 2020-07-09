@@ -13,7 +13,7 @@ class Reduction(Enum):
     * `AUTO`: Indicates that the reduction option will be determined by the usage
         context. For almost all cases this defaults to `SUM_OVER_BATCH_SIZE`. When
         used with `tf.distribute.Strategy`, outside of built-in training loops such
-        as `tf.keras` `compile` and `fit`, we expect reduction value to be
+        as `elegy` `compile` and `fit`, we expect reduction value to be
         `SUM` or `NONE`. Using `AUTO` in that case will raise an error.
     * `NONE`: Weighted losses with one dimension reduced (axis=-1, or axis
         specified by loss function). When this reduction type used with built-in
@@ -22,13 +22,13 @@ class Reduction(Enum):
     * `SUM`: Scalar sum of weighted losses.
     * `SUM_OVER_BATCH_SIZE`: Scalar `SUM` divided by number of elements in losses.
         This reduction type is not supported when used with
-        `tf.distribute.Strategy` outside of built-in training loops like `tf.keras`
+        `tf.distribute.Strategy` outside of built-in training loops like `elegy`
         `compile`/`fit`.
         You can implement 'SUM_OVER_BATCH_SIZE' using global batch size like:
         ```
         with strategy.scope():
-        loss_obj = tf.keras.losses.SoftmaxCrossentropy(
-            reduction=tf.keras.losses.Reduction.NONE)
+        loss_obj = elegy.losses.CategoricalCrossentropy(
+            reduction=elegy.losses.Reduction.NONE)
         ....
         loss = tf.reduce_sum(loss_object(labels, predictions)) *
             (1. / global_batch_size)
@@ -68,15 +68,15 @@ class Loss:
         weight: float = 1.0,
     ):
         """Initializes `Loss` class.
-        Args:
+        Arguments:
         fn: The loss function to wrap, with signature `fn(y_true, y_pred,
             **kwargs)`.
-        reduction: (Optional) Type of `tf.keras.losses.Reduction` to apply to
+        reduction: (Optional) Type of `elegy.losses.Reduction` to apply to
             loss. Default value is `AUTO`. `AUTO` indicates that the reduction
             option will be determined by the usage context. For almost all cases
             this defaults to `SUM_OVER_BATCH_SIZE`. When used with
             `tf.distribute.Strategy`, outside of built-in training loops such as
-            `tf.keras` `compile` and `fit`, using `AUTO` or `SUM_OVER_BATCH_SIZE`
+            `elegy` `compile` and `fit`, using `AUTO` or `SUM_OVER_BATCH_SIZE`
             will raise an error. Please see this custom training [tutorial]
             (https://www.tensorflow.org/tutorials/distribute/custom_training)
             for more details.

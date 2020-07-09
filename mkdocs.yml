@@ -14,6 +14,7 @@ nav:
   - API Reference:
       metrics:
         Accuracy: api/metrics/accuracy.md
+        Mean: api/metrics/mean.md
 
 extra:
   search:

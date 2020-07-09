@@ -26,7 +26,7 @@ class MeanMetricWrapper(Mean):
         """
         Creates a `MeanMetricWrapper` instance.
         
-        Args:
+        Arguments:
             fn: The metric function to wrap, with signature `fn(y_true, y_pred, **kwargs)`.
             name: string name of the metric instance.
             dtype: data type of the metric result.
@@ -46,7 +46,7 @@ class MeanMetricWrapper(Mean):
         """
     Accumulates metric statistics. `y_true` and `y_pred` should have the same shape.
 
-    Args:
+    Arguments:
         y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
         y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
         sample_weight: Optional `sample_weight` acts as a
