@@ -105,15 +105,15 @@ class ListsOfScalarsDataAdapterTest(TestCase):
         )
         num_steps = math.ceil(x.shape[0] / batch_size) * epochs
 
-    #     iterator_fn = data_adapter.get_dataset()
-    #     for i, batch in zip(range(num_steps), iterator_fn()):
-    #         batch_x, batch_y = batch
-    #         if i < num_steps - 1:
-    #             assert batch_x.shape == (batch_size, *x.shape[1:])
-    #             assert batch_y.shape == (batch_size, *y.shape[1:])
-    #         else:
-    #             assert batch_x.shape == (x.shape[0] % batch_size, *x.shape[1:])
-    #             assert batch_y.shape == (x.shape[0] % batch_size, *y.shape[1:])
+        iterator_fn = data_adapter.get_dataset()
+        for i, batch in zip(range(num_steps), iterator_fn()):
+            batch_x, batch_y = batch
+            if i < num_steps - 1:
+                assert batch_x.shape == (batch_size, *x.shape[1:])
+                assert batch_y.shape == (batch_size, *y.shape[1:])
+            else:
+                assert batch_x.shape == (x.shape[0] % batch_size, *x.shape[1:])
+                assert batch_y.shape == (x.shape[0] % batch_size, *y.shape[1:])
 
-    #     data_adapter.get_size() == x.shape[0]
-    #     data_adapter.partial_batch_size == x.shape[0] % batch_size
+        data_adapter.get_size() == x.shape[0]
+        data_adapter.partial_batch_size == x.shape[0] % batch_size
