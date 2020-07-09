@@ -102,7 +102,7 @@ def main(debug: bool = False, eager: bool = False):
     model.fit(
         x=x,
         y=y,
-        epochs=10,
+        epochs=100,
         batch_size=64,
         steps_per_epoch=100,
         validation_split=0.2,
