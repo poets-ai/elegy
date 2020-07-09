@@ -4,7 +4,8 @@ import numpy as np
 import typing as tp
 
 from .data_adapter import DataAdapter
-from .utils import pack_x_y_sample_weight
+from .utils import pack_x_y_sample_weight, flatten, map_structure
+from elegy.types import ArrayLike, ArrayHolder
 
 
 class ArrayDataAdapter(DataAdapter):
@@ -29,8 +30,8 @@ class ArrayDataAdapter(DataAdapter):
 
     def __init__(
         self,
-        x: tp.Union[jnp.ndarray, np.ndarray],
-        y: tp.Union[jnp.ndarray, np.ndarray, None] = None,
+        x: ArrayHolder,
+        y: tp.Union[ArrayHolder, None] = None,
         sample_weights: tp.Union[jnp.ndarray, np.ndarray, None] = None,
         batch_size: tp.Optional[int] = None,
         epochs: int = 1,
@@ -53,8 +54,8 @@ class ArrayDataAdapter(DataAdapter):
 
         inputs = pack_x_y_sample_weight(x, y, sample_weights)
 
-        # num_samples = set(int(i.shape[0]) for i in nest.flatten(inputs))
-        num_samples = set(int(i.shape[0]) for i in inputs)
+        num_samples = set(int(i.shape[0]) for i in flatten(inputs))
+        # num_samples = set(int(i.shape[0]) for i in inputs)
         if len(num_samples) > 1:
             msg = "Data cardinality is ambiguous:\n"
             for label, data in zip(["x", "y", "sample_weight"], inputs):
@@ -97,13 +98,9 @@ class ArrayDataAdapter(DataAdapter):
                     # if drop_remainder and len(indices) < batch_size:
                     #     print("Droping!")
                     #     continue
+                    inputs_slices = map_structure(lambda x: x[indices], inputs)
 
-                    data_x = inputs[0][indices]
-                    data_y = inputs[1][indices]
-                    if len(inputs) == 3:
-                        yield (data_x, data_y, inputs[2][indices])
-                    else:
-                        yield (data_x, data_y)
+                    yield inputs_slices
 
         self._dataset = dataset_generator
 
