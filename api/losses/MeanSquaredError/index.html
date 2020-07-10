@@ -369,7 +369,7 @@ functions reduce by 1 dimension, usually axis=-1.)</p>
 </thead>
 <tbody>
 <tr>
-<td><code></code></td>
+<td><code>ndarray</code></td>
 <td>
 <p>Weighted loss float <code>Tensor</code>. If <code>reduction</code> is <code>NONE</code>, this has
     shape <code>[batch_size, d0, .. dN-1]</code>; otherwise, it is scalar. (Note <code>dN-1</code>
@@ -449,7 +449,7 @@ functions reduce by 1 dimension, usually axis=-1.)</p>
     <span class="n">sample_weight</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span>
         <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span>
     <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># not used, __call__ handles it, left for documentation purposes.</span>
-<span class="p">):</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
     <span class="sd">"""</span>
 <span class="sd">    Invokes the `MeanSquaredError` instance.</span>
 
