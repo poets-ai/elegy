@@ -20,6 +20,7 @@ nav:
       losses:
         MeanSquaredError: api/losses/MeanSquaredError.md
         mean_squared_error: api/losses/mean_squared_error.md
+        GlobalL2Regularization: api/losses/GlobalL2Regularization.md
 
 extra:
   search:

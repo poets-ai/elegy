@@ -7,14 +7,20 @@ import typing as tp
 
 
 class GlobalL1L2Regularization(Loss):
-    r"""A regularizer that applies both L1 and L2 regularization penalties.
-  The L1 regularization penalty is computed as:
-  $$\ell_1\,\,penalty =\ell_1\sum_{i=0}^n|x_i|$$
-  The L2 regularization penalty is computed as
-  $$\ell_2\,\,penalty =\ell_2\sum_{i=0}^nx_i^2$$
-  Attributes:
-      l1: Float; L1 regularization factor.
-      l2: Float; L2 regularization factor.
+    r"""
+    A regularizer that applies both L1 and L2 regularization penalties.
+
+    The L1 regularization penalty is computed as:
+    
+    $$\ell_1\,\,penalty =\ell_1\sum_{i=0}^n|x_i|$$
+    
+    The L2 regularization penalty is computed as
+    
+    $$\ell_2\,\,penalty =\ell_2\sum_{i=0}^nx_i^2$$
+    
+    Attributes:
+        l1: Float; L1 regularization factor.
+        l2: Float; L2 regularization factor.
   """
 
     def __init__(
@@ -30,7 +36,7 @@ class GlobalL1L2Regularization(Loss):
         self.l1 = l1
         self.l2 = l2
 
-    def call(self, params: hk.Params):
+    def call(self, params: hk.Params) -> jnp.ndarray:
 
         if not self.l1 and not self.l2:
             return jnp.array(0.0)
@@ -51,7 +57,9 @@ class GlobalL1L2Regularization(Loss):
 
 
 def GlobalL1Regularization(
-    l=0.01, reduction: tp.Optional[Reduction] = None, name: str = "l1_regularization",
+    l: float = 0.01,
+    reduction: tp.Optional[Reduction] = None,
+    name: str = "l1_regularization",
 ) -> GlobalL1L2Regularization:
     r"""
     Create a regularizer that applies an L1 regularization penalty.
@@ -66,11 +74,11 @@ def GlobalL1Regularization(
     Returns:
         An L1 Regularizer with the given regularization factor.
   """
-    return GlobalL1L2Regularization(l1=l, reduction=reduction, name=name)
+    return GlobalL1L2Regularization(l1=l, reduction=reduction, name=name, weight=weight)
 
 
 def GlobalL2Regularization(
-    l=0.01, reduction: tp.Optional[Reduction] = None, name="l2_regularization",
+    l: float = 0.01, reduction: tp.Optional[Reduction] = None, name="l2_regularization",
 ) -> GlobalL1L2Regularization:
     r"""
     Create a regularizer that applies an L2 regularization penalty.
