@@ -319,7 +319,7 @@ the last dimension is returned.</p>
 </thead>
 <tbody>
 <tr>
-<td><code></code></td>
+<td><code>ndarray</code></td>
 <td>
 <p>Mean squared error values. shape = <code>[batch_size, d0, .. dN-1]</code>.</p>
 </td>
@@ -373,7 +373,7 @@ the last dimension is returned.</p>
 </td>
 <td class="code">
 <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">mean_squared_error</span><span class="p">(</span><span class="n">y_true</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+<pre><span></span><code><span class="k">def</span> <span class="nf">mean_squared_error</span><span class="p">(</span><span class="n">y_true</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
     <span class="sd">"""</span>
 <span class="sd">    Computes the mean squared error between labels and predictions.</span>
 
