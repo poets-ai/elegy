@@ -49,6 +49,7 @@ class Accuracy(Mean):
         model_fn,
         loss=lambda: [elegy.losses.CategoricalCrossentropy()]
         metrics=lambda: [elegy.metrics.Accuracy()]
+        optimizer=optix.adam(1e-3),
     )
     ```
     """
@@ -57,7 +58,7 @@ class Accuracy(Mean):
         self, name: tp.Optional[str] = None, dtype: tp.Optional[jnp.dtype] = None,
     ):
         """
-        Creates a `Mean` instance.
+        Creates a `Accuracy` instance.
 
         Arguments:
             name: string name of the metric instance.

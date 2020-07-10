@@ -17,35 +17,45 @@ def categorical_accuracy(y_true: jnp.ndarray, y_pred: jnp.ndarray) -> jnp.ndarra
 
 class CategoricalAccuracy(Mean):
     """
-    Calculates how often predictions equals labels. This metric creates two local variables, 
-    `total` and `count` that are used to compute the frequency with which `y_pred` matches `y_true`. This frequency is
-    ultimately returned as `binary accuracy`: an idempotent operation that simply
-    divides `total` by `count`. If `sample_weight` is `None`, weights default to 1. 
+    Calculates how often predictions matches one-hot labels.
+    You can provide logits of classes as `y_pred`, since argmax of
+    logits and probabilities are same.
+    
+    This metric creates two local variables, `total` and `count` that are used to
+    compute the frequency with which `y_pred` matches `y_true`. This frequency is
+    ultimately returned as `categorical accuracy`: an idempotent operation that
+    simply divides `total` by `count`.
+    
+    `y_pred` and `y_true` should be passed in as vectors of probabilities, rather
+    than as labels. If necessary, use `tf.one_hot` to expand `y_true` as a vector.
+    If `sample_weight` is `None`, weights default to 1.
     Use `sample_weight` of 0 to mask values.
+    
+    Usage:
 
     ```python
     m = elegy.metrics.CategoricalAccuracy()
 
     result = m(
-        y_true=jnp.array([1, 1, 1, 1]), 
-        y_pred=jnp.array([0, 1, 1, 1])
-    ) 
-    assert result == 0.75  # 3 / 4
+        y_true=jnp.array([[0, 0, 1], [0, 1, 0]]), 
+        y_pred=jnp.array([[0.1, 0.9, 0.8], [0.05, 0.95, 0]]),
+    )
+    assert result == 0.5  # 1/2
 
     result = m(
-        y_true=jnp.array([1, 1, 1, 1]), 
-        y_pred=jnp.array([1, 0, 0, 0])
-    ) 
-    assert result == 0.5  # 4 / 8
+        y_true=jnp.array([[0, 1, 0], [0, 1, 0]]), 
+        y_pred=jnp.array([[0.1, 0.9, 0.8], [0.05, 0.95, 0]]),
+    )
+    assert result ==  0.75  # 3/4
     ```
 
     Usage with elegy API:
-
     ```python
     model = elegy.Model(
         model_fn,
-        loss=lambda: [elegy.losses.CategoricalCrossentropy()]
-        metrics=lambda: [elegy.metrics.CategoricalAccuracy()]
+        loss=lambda: [elegy.losses.CategoricalCrossentropy()],
+        metrics=lambda: [elegy.metrics.CategoricalAccuracy()])
+        optimizer=optix.adam(1e-3),
     )
     ```
     """
@@ -54,8 +64,8 @@ class CategoricalAccuracy(Mean):
         self, name: tp.Optional[str] = None, dtype: tp.Optional[jnp.dtype] = None,
     ):
         """
-        Creates a `Mean` instance.
-
+        Creates a `CategoricalAccuracy` instance.
+        
         Arguments:
             name: string name of the metric instance.
             dtype: data type of the metric result.

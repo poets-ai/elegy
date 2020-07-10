@@ -18,35 +18,42 @@ def sparse_categorical_accuracy(
 
 class SparseCategoricalAccuracy(Mean):
     """
-    Calculates how often predictions equals labels. This metric creates two local variables, 
-    `total` and `count` that are used to compute the frequency with which `y_pred` matches `y_true`. This frequency is
-    ultimately returned as `binary accuracy`: an idempotent operation that simply
-    divides `total` by `count`. If `sample_weight` is `None`, weights default to 1. 
+    Calculates how often predictions matches integer labels.
+    
+    You can provide logits of classes as `y_pred`, since argmax of
+    logits and probabilities are same.
+    This metric creates two local variables, `total` and `count` that are used to
+    compute the frequency with which `y_pred` matches `y_true`. This frequency is
+    ultimately returned as `sparse categorical accuracy`: an idempotent operation
+    that simply divides `total` by `count`.
+    If `sample_weight` is `None`, weights default to 1.
     Use `sample_weight` of 0 to mask values.
-
+    
+    Usage:
     ```python
     m = elegy.metrics.SparseCategoricalAccuracy()
 
     result = m(
-        y_true=jnp.array([1, 1, 1, 1]), 
-        y_pred=jnp.array([0, 1, 1, 1])
-    ) 
-    assert result == 0.75  # 3 / 4
+        y_true=jnp.array([2, 1]), 
+        y_pred=jnp.array([[0.1, 0.9, 0.8], [0.05, 0.95, 0]])
+    )
+    assert result == 0.5  # 1/2
 
     result = m(
-        y_true=jnp.array([1, 1, 1, 1]), 
-        y_pred=jnp.array([1, 0, 0, 0])
-    ) 
-    assert result == 0.5  # 4 / 8
+        y_true=jnp.array([1, 1]),
+        y_pred=jnp.array([[0.1, 0.9, 0.8], [0.05, 0.95, 0]]),
+    )
+    assert result == 0.75  # 3/4
     ```
-
+    
     Usage with elegy API:
 
     ```python
     model = elegy.Model(
         model_fn,
-        loss=lambda: [elegy.losses.CategoricalCrossentropy()]
-        metrics=lambda: [elegy.metrics.SparseCategoricalAccuracy()]
+        loss=lambda: [elegy.losses.CategoricalCrossentropy()],
+        metrics=lambda: [elegy.metrics.SparseCategoricalAccuracy()])
+        optimizer=optix.adam(1e-3),
     )
     ```
     """
@@ -55,7 +62,7 @@ class SparseCategoricalAccuracy(Mean):
         self, name: tp.Optional[str] = None, dtype: tp.Optional[jnp.dtype] = None,
     ):
         """
-        Creates a `Mean` instance.
+        Creates a `SparseCategoricalAccuracy` instance.
 
         Arguments:
             name: string name of the metric instance.
@@ -71,11 +78,12 @@ class SparseCategoricalAccuracy(Mean):
         sample_weight: tp.Optional[jnp.ndarray] = None,
     ) -> jnp.ndarray:
         """
-        Accumulates metric statistics. `y_true` and `y_pred` should have the same shape.
+        Accumulates metric statistics. `y_true` and `y_pred` should have the same shape except
+        `y_true` should not have the last dimension of `y_pred`.
         
         Arguments:
-            y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
-            y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
+            y_true: Sparse ground truth values. shape = `[batch_size, d0, .. dN-1]`.
+            y_pred: The predicted values. shape = `[batch_size, d0, .. dN-1, dN]`.
             sample_weight: Optional `sample_weight` acts as a
                 coefficient for the metric. If a scalar is provided, then the metric is
                 simply scaled by the given value. If `sample_weight` is a tensor of size

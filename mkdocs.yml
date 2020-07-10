@@ -13,8 +13,13 @@ nav:
   - Introduction: index.md
   - API Reference:
       metrics:
-        Accuracy: api/metrics/accuracy.md
-        Mean: api/metrics/mean.md
+        Accuracy: api/metrics/Accuracy.md
+        CategoricalAccuracy: api/metrics/CategoricalAccuracy.md
+        SparseCategoricalAccuracy: api/metrics/SparseCategoricalAccuracy.md
+        Mean: api/metrics/Mean.md
+      losses:
+        MeanSquaredError: api/losses/MeanSquaredError.md
+        mean_squared_error: api/losses/mean_squared_error.md
 
 extra:
   search:
