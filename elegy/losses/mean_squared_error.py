@@ -6,7 +6,7 @@ from elegy import utils
 from elegy.losses.loss import Loss, Reduction
 
 
-def mean_squared_error(y_true: jnp.ndarray, y_pred: jnp.ndarray):
+def mean_squared_error(y_true: jnp.ndarray, y_pred: jnp.ndarray) -> jnp.ndarray:
     """
     Computes the mean squared error between labels and predictions.
     
@@ -94,7 +94,7 @@ class MeanSquaredError(Loss):
         sample_weight: tp.Optional[
             jnp.ndarray
         ] = None,  # not used, __call__ handles it, left for documentation purposes.
-    ):
+    ) -> jnp.ndarray:
         """
         Invokes the `MeanSquaredError` instance.
 

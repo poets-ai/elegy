@@ -10,8 +10,8 @@ class Mean(reduce.Reduce):
     """
     Computes the (weighted) mean of the given values.
     
-    For example, if values is [1, 3, 5, 7] then the mean is 4.
-    If the weights were specified as [1, 1, 0, 0] then the mean would be 2.
+    For example, if values is `[1, 3, 5, 7]` then the mean is `4`.
+    If the weights were specified as `[1, 1, 0, 0]` then the mean would be `2`.
     This metric creates two variables, `total` and `count` that are used to
     compute the average of `values`. This average is ultimately returned as `mean`
     which is an idempotent operation that simply divides `total` by `count`.

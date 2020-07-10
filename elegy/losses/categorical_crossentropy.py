@@ -8,7 +8,8 @@ from elegy.losses.loss import Loss, Reduction
 
 
 class CategoricalCrossentropy(Loss):
-    """Computes the crossentropy loss between the labels and predictions.
+    """
+    Computes the crossentropy loss between the labels and predictions.
     Use this crossentropy loss function when there are two or more label classes.
     We expect labels to be provided in a `one_hot` representation. If you want to
     provide labels as integers, please use `SparseCategoricalCrossentropy` loss.
@@ -18,25 +19,29 @@ class CategoricalCrossentropy(Loss):
     `[batch_size, num_classes]`.
     
     Usage:
-    >>> y_true = [[0, 1, 0], [0, 0, 1]]
-    >>> y_pred = [[0.05, 0.95, 0], [0.1, 0.8, 0.1]]
-    >>> # Using 'auto'/'sum_over_batch_size' reduction type.
-    >>> cce = elegy.losses.CategoricalCrossentropy()
-    >>> cce(y_true, y_pred).numpy()
-    1.177
-    >>> # Calling with 'sample_weight'.
-    >>> cce(y_true, y_pred, sample_weight=tf.constant([0.3, 0.7])).numpy()
-    0.814
-    >>> # Using 'sum' reduction type.
-    >>> cce = elegy.losses.CategoricalCrossentropy(
-    ...     reduction=elegy.losses.Reduction.SUM)
-    >>> cce(y_true, y_pred).numpy()
-    2.354
-    >>> # Using 'none' reduction type.
-    >>> cce = elegy.losses.CategoricalCrossentropy(
-    ...     reduction=elegy.losses.Reduction.NONE)
-    >>> cce(y_true, y_pred).numpy()
-    array([0.0513, 2.303], dtype=float32)
+    ```python
+    y_true = jnp.array([[0, 1, 0], [0, 0, 1]])
+    y_pred = jnp.array([[0.05, 0.95, 0], [0.1, 0.8, 0.1]])
+
+    # Using 'auto'/'sum_over_batch_size' reduction type.
+    cce = elegy.losses.CategoricalCrossentropy()
+
+    assert cce(y_true, y_pred) == 1.177
+    # Calling with 'sample_weight'.
+    assert cce(y_true, y_pred, sample_weight=tf.constant([0.3, 0.7])) == 0.814
+    # Using 'sum' reduction type.
+    cce = elegy.losses.CategoricalCrossentropy(
+        reduction=elegy.losses.Reduction.SUM
+    )
+    assert cce(y_true, y_pred) == 2.354
+    # Using 'none' reduction type.
+    cce = elegy.losses.CategoricalCrossentropy(
+        reduction=elegy.losses.Reduction.NONE
+    )
+
+    assert list(cce(y_true, y_pred)) == [0.0513, 2.303]
+    ```
+
     Usage with the `compile` API:
     ```python
     model = elegy.Model(inputs, outputs)
@@ -90,7 +95,7 @@ class CategoricalCrossentropy(Loss):
             y_pred = jax.nn.log_softmax(y_pred)
 
         else:
-            y_pred = jnp.max(y_pred, utils.EPSILON)
+            y_pred = jnp.maximum(y_pred, utils.EPSILON)
             y_pred = jnp.log(y_pred)
 
         # TODO: support label smoothing
