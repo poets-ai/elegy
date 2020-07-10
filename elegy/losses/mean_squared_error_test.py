@@ -49,4 +49,3 @@ def test_function():
     assert loss.shape == (2,)
 
     assert jnp.array_equal(loss, jnp.mean(jnp.square(y_true - y_pred), axis=-1))
-

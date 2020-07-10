@@ -21,4 +21,3 @@ def test_basic():
 
     result = m(y_true=jnp.array([1, 1, 1, 1]), y_pred=jnp.array([1, 0, 0, 0]))
     assert result == 0.5
-

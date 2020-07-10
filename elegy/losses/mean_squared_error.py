@@ -86,7 +86,6 @@ class MeanSquaredError(Loss):
     ```
     """
 
-    @utils.inject_dependencies
     def call(
         self,
         y_true: jnp.ndarray,

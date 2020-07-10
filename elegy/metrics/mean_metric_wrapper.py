@@ -36,7 +36,6 @@ class MeanMetricWrapper(Mean):
         self._fn = fn
         self._fn_kwargs = kwargs
 
-    @utils.inject_dependencies
     def call(
         self,
         y_true: jnp.ndarray,
@@ -82,4 +81,3 @@ class MeanMetricWrapper(Mean):
         matches = self._fn(y_true, y_pred, **self._fn_kwargs)
 
         return super().call(matches, sample_weight=sample_weight)
-

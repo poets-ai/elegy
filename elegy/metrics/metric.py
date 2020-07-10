@@ -83,6 +83,7 @@ class Metric(hk.Module):
         super().__init__(name=name)
 
         self._dtype = self._dtype = dtype if dtype is not None else jnp.float32
+        self.call = utils.inject_dependencies(self.call)
 
     def __call__(self, *args, **kwargs):
         return self.call(*args, **kwargs)
@@ -90,4 +91,3 @@ class Metric(hk.Module):
     @abstractmethod
     def call(self, *args, **kwargs):
         ...
-

@@ -104,7 +104,6 @@ class Reduce(Metric):
                 )
             )
 
-    @utils.inject_dependencies
     def call(
         self, values: jnp.ndarray, sample_weight: tp.Optional[jnp.ndarray] = None
     ) -> jnp.ndarray:
@@ -146,4 +145,3 @@ class Reduce(Metric):
             hk.set_state("count", count)
 
         return value
-

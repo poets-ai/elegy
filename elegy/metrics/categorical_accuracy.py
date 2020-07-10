@@ -72,7 +72,6 @@ class CategoricalAccuracy(Mean):
         """
         super().__init__(name=name, dtype=dtype)
 
-    @utils.inject_dependencies
     def call(
         self,
         y_true: jnp.ndarray,
@@ -102,4 +101,3 @@ class CategoricalAccuracy(Mean):
             values=categorical_accuracy(y_true=y_true, y_pred=y_pred),
             sample_weight=sample_weight,
         )
-

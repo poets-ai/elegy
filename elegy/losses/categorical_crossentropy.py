@@ -7,6 +7,23 @@ from elegy import utils
 from elegy.losses.loss import Loss, Reduction
 
 
+def categorical_crossentropy(
+    y_true: jnp.ndarray, y_pred: jnp.ndarray, from_logits: bool = False
+) -> jnp.ndarray:
+
+    # if self._sparse_labels:
+    #     y_true = jax.nn.one_hot(y_true, y_pred.shape[-1])
+
+    if from_logits:
+        y_pred = jax.nn.log_softmax(y_pred)
+
+    else:
+        y_pred = jnp.maximum(y_pred, utils.EPSILON)
+        y_pred = jnp.log(y_pred)
+
+    return -jnp.sum(y_true * y_pred, axis=-1)
+
+
 class CategoricalCrossentropy(Loss):
     """
     Computes the crossentropy loss between the labels and predictions.
@@ -44,18 +61,22 @@ class CategoricalCrossentropy(Loss):
 
     Usage with the `compile` API:
     ```python
-    model = elegy.Model(inputs, outputs)
-    model.compile('sgd', loss=elegy.losses.CategoricalCrossentropy())
+    model = elegy.Model(
+        model_fn,
+        loss=lambda: [elegy.losses.CategoricalCrossentropy()]
+        metrics=lambda: [elegy.metrics.Accuracy()]
+        optimizer=optix.adam(1e-3),
+    )
     ```
     """
 
     def __init__(
         self,
-        from_logits: bool = True,
-        sparse_labels: bool = True,
+        from_logits: bool = False,
         label_smoothing: float = 0,
         reduction: tp.Optional[Reduction] = None,
-        **kwargs
+        name: tp.Optional[str] = None,
+        weight: tp.Optional[float] = None,
     ):
         """Initializes `CategoricalCrossentropy` instance.
         Arguments:
@@ -77,26 +98,13 @@ class CategoricalCrossentropy(Loss):
             for more details.
         name: Optional name for the op. Defaults to 'categorical_crossentropy'.
         """
-        super().__init__(reduction=reduction, **kwargs)
+        super().__init__(reduction=reduction, name=name, weight=weight)
 
         self._from_logits = from_logits
         self._label_smoothing = label_smoothing
-        self._sparse_labels = sparse_labels
 
-    @utils.inject_dependencies
     def call(
         self, y_true, y_pred, sample_weight: tp.Optional[jnp.ndarray] = None
     ) -> jnp.ndarray:
 
-        if self._sparse_labels:
-            y_true = jax.nn.one_hot(y_true, y_pred.shape[-1])
-
-        if self._from_logits:
-            y_pred = jax.nn.log_softmax(y_pred)
-
-        else:
-            y_pred = jnp.maximum(y_pred, utils.EPSILON)
-            y_pred = jnp.log(y_pred)
-
-        # TODO: support label smoothing
-        return -jnp.sum(y_true * y_pred, axis=-1)
+        return categorical_crossentropy(y_true, y_pred, from_logits=self._from_logits)

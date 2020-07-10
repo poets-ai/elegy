@@ -66,7 +66,6 @@ class Accuracy(Mean):
         """
         super().__init__(name=name, dtype=dtype)
 
-    @utils.inject_dependencies
     def call(
         self,
         y_true: jnp.ndarray,
@@ -95,4 +94,3 @@ class Accuracy(Mean):
         return super().call(
             values=accuracy(y_true=y_true, y_pred=y_pred), sample_weight=sample_weight,
         )
-

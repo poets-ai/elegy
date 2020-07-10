@@ -29,4 +29,3 @@ class Sum(reduce.Reduce):
       dtype: (Optional) data type of the metric result.
     """
         super(Sum, self).__init__(reduction=reduce.Reduction.SUM, **kwargs)
-

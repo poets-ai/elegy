@@ -1,8 +1,9 @@
 from elegy import utils
 import jax
-from elegy.losses.loss import Loss
+from elegy.losses.loss import Loss, Reduction
 import jax.numpy as jnp
 import haiku as hk
+import typing as tp
 
 
 class L1L2Regularization(Loss):
@@ -17,14 +18,18 @@ class L1L2Regularization(Loss):
   """
 
     def __init__(
-        self, l1=0.0, l2=0.0, **kwargs
+        self,
+        l1=0.0,
+        l2=0.0,
+        reduction: tp.Optional[Reduction] = None,
+        name: tp.Optional[str] = None,
+        weight: tp.Optional[float] = None,
     ):  # pylint: disable=redefined-outer-name
-        super().__init__(**kwargs)
+        super().__init__(reduction=reduction, name=name, weight=weight)
 
         self.l1 = l1
         self.l2 = l2
 
-    @utils.inject_dependencies
     def call(self, params: hk.Params):
 
         if not self.l1 and not self.l2:
@@ -45,7 +50,12 @@ class L1L2Regularization(Loss):
         return regularization
 
 
-def L1Regularization(l=0.01, name="l1_regularization", **kwargs) -> L1L2Regularization:
+def L1Regularization(
+    l=0.01,
+    reduction: tp.Optional[Reduction] = None,
+    name: str = "l1_regularization",
+    weight: tp.Optional[float] = None,
+) -> L1L2Regularization:
     r"""Create a regularizer that applies an L1 regularization penalty.
   The L1 regularization penalty is computed as:
   $$\ell_1\,\,penalty =\ell_1\sum_{i=0}^n|x_i|$$
@@ -54,10 +64,15 @@ def L1Regularization(l=0.01, name="l1_regularization", **kwargs) -> L1L2Regulari
   Returns:
     An L1 Regularizer with the given regularization factor.
   """
-    return L1L2Regularization(l1=l, name=name, **kwargs)
+    return L1L2Regularization(l1=l, reduction=reduction, name=name, weight=weight)
 
 
-def L2Regularization(l=0.01, name="l2_regularization", **kwargs) -> L1L2Regularization:
+def L2Regularization(
+    l=0.01,
+    reduction: tp.Optional[Reduction] = None,
+    name="l2_regularization",
+    weight: tp.Optional[float] = None,
+) -> L1L2Regularization:
     r"""Create a regularizer that applies an L2 regularization penalty.
   The L2 regularization penalty is computed as:
   $$\ell_2\,\,penalty =\ell_2\sum_{i=0}^nx_i^2$$
@@ -66,5 +81,5 @@ def L2Regularization(l=0.01, name="l2_regularization", **kwargs) -> L1L2Regulari
   Returns:
     An L2 Regularizer with the given regularization factor.
   """
-    return L1L2Regularization(l2=l, name=name, **kwargs)
+    return L1L2Regularization(l2=l, reduction=reduction, name=name, weight=weight)
 

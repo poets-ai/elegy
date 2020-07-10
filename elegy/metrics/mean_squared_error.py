@@ -28,4 +28,3 @@ class MeanSquaredError(MeanMetricWrapper):
 
     def __init__(self, **kwargs):
         super().__init__(mean_squared_error, **kwargs)
-

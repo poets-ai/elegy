@@ -53,7 +53,6 @@ class Mean(reduce.Reduce):
             reduction=reduce.Reduction.WEIGHTED_MEAN, name=name, dtype=dtype
         )
 
-    @utils.inject_dependencies
     def call(
         self, values: jnp.ndarray, sample_weight: tp.Optional[jnp.ndarray] = None
     ) -> jnp.ndarray:
@@ -68,4 +67,3 @@ class Mean(reduce.Reduce):
             Array with the cumulative mean.
         """
         return super().call(values=values, sample_weight=sample_weight)
-

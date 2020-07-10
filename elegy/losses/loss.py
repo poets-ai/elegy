@@ -3,8 +3,11 @@ from enum import Enum
 import re
 import typing as tp
 
+
 import haiku as hk
 import jax.numpy as jnp
+
+from elegy import utils
 
 
 class Reduction(Enum):
@@ -65,7 +68,7 @@ class Loss:
         self,
         reduction: tp.Optional[Reduction] = None,
         name: tp.Optional[str] = None,
-        weight: float = 1.0,
+        weight: tp.Optional[float] = None,
     ):
         """Initializes `Loss` class.
         Arguments:
@@ -88,10 +91,11 @@ class Loss:
             if name is not None
             else re.sub(r"(?<!^)(?=[A-Z])", "_", self.__class__.__name__).lower()
         )
-        self.weight = weight
+        self.weight = weight if weight is not None else 1.0
         self._reduction = (
             reduction if reduction is not None else Reduction.SUM_OVER_BATCH_SIZE
         )
+        self.call = utils.inject_dependencies(self.call)
 
     def __call__(self, *args, sample_weight: tp.Optional[jnp.ndarray] = None, **kwargs):
         values = self.call(*args, sample_weight=sample_weight, **kwargs)
@@ -113,4 +117,3 @@ class Loss:
     @abstractmethod
     def call(self, *args, **kwargs):
         ...
-

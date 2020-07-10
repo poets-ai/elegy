@@ -25,4 +25,3 @@ def test_basic():
         y_true=jnp.array([1, 1]), y_pred=jnp.array([[0.1, 0.9, 0.8], [0.05, 0.95, 0]]),
     )
     assert result == 0.75  # 3/4
-
