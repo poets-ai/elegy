@@ -1,14 +1,18 @@
+# Implementation based on tf.keras.engine.data_adapter.py
+# https://github.com/tensorflow/tensorflow/blob/2b96f3662bd776e277f86997659e61046b56c315/tensorflow/python/keras/engine/data_adapter.py
+
+
 import collections
-from elegy.types import ArrayHolder
 import functools
 import math
+import typing as tp
 
 import jax.numpy as jnp
 import numpy as np
 import six
-import typing as tp
 
 from elegy import types
+from elegy.types import ArrayHolder
 
 
 def map_structure(
@@ -36,6 +40,8 @@ def flatten(inputs: types.ArrayHolder) -> tp.Iterable[types.ArrayLike]:
     elif isinstance(inputs, tp.Dict):
         for x in inputs.values():
             yield from flatten(x)
+    elif isinstance(inputs, tp.Generator):
+        yield inputs
     else:
         raise TypeError(f"Unsupported type '{type(inputs)}'")
 
@@ -90,8 +96,8 @@ def is_none_or_empty(inputs):
     # numpy array
     # "The truth value of an array with more than one element is ambiguous.
     # Use a.any() or a.all()"
-    # return inputs is None or not nest.flatten(inputs)
-    return inputs is None or not inputs
+    return inputs is None or not list(flatten(inputs))
+    # return inputs is None or not inputs
 
 
 def assert_not_namedtuple(x):
@@ -135,8 +141,8 @@ def train_validation_split(arrays, validation_split, shuffle=True):
         #     supported_types = (jnp.ndarray, np.ndarray, pd.Series, pd.DataFrame)
         return isinstance(t, supported_types) or t is None
 
-    # flat_arrays = nest.flatten(arrays)
-    flat_arrays = arrays
+    flat_arrays = flatten(arrays)
+    # flat_arrays = arrays
     if not all(_can_split(t) for t in arrays):
         raise ValueError(
             "`validation_split` is only supported for Tensors or NumPy "
@@ -166,7 +172,8 @@ def train_validation_split(arrays, validation_split, shuffle=True):
             return t
         return t[indices]
 
-    train_arrays = tuple([_split(array, indices=train_indices) for array in arrays])
-    val_arrays = tuple([_split(array, indices=val_indices) for array in arrays])
-
+    train_arrays = map_structure(
+        functools.partial(_split, indices=train_indices), arrays
+    )
+    val_arrays = map_structure(functools.partial(_split, indices=val_indices), arrays)
     return train_arrays, val_arrays

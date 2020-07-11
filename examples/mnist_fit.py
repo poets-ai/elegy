@@ -3,6 +3,7 @@ from typing import Any, Generator, Mapping, Tuple
 import haiku as hk
 import jax
 import jax.numpy as jnp
+import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow_datasets as tfds
 import typer
@@ -26,6 +27,23 @@ def load_dataset(
         ds = ds.map(lambda row: (row["image"], row["label"]))
     ds = ds.batch(batch_size)
     return tfds.as_numpy(ds)
+
+
+def plot_history(history):
+    n_plots = len(history.history.keys()) // 2
+    plt.figure(figsize=(8, 12))
+    for i, key in enumerate(list(history.history.keys())[:n_plots]):
+        metric = history.history[key]
+        val_metric = history.history[f"val_{key}"]
+
+        plt.subplot(n_plots, 1, i + 1)
+        plt.plot(metric, label=f"Training {key}")
+        plt.plot(val_metric, label=f"Validation {key}")
+        plt.legend(loc="lower right")
+        plt.ylabel(key)
+        plt.ylim([min(plt.ylim()), 1])
+        plt.title(f"Training and Validation {key}")
+    plt.show()
 
 
 def main(debug: bool = False, eager: bool = False):
@@ -84,38 +102,42 @@ def main(debug: bool = False, eager: bool = False):
         metrics=lambda: elegy.metrics.SparseCategoricalAccuracy(),
         run_eagerly=eager,
     )
-
+    epochs = 10
     # Fit with datasets in memory
-    # model.fit(
-    #     x=x,
-    #     y=y,
-    #     epochs=10,
-    #     batch_size=64,
-    #     steps_per_epoch=100,
-    #     validation_data=(x_val, y_val),
-    #     shuffle=True,
-    # )
+    history = model.fit(
+        x=x,
+        y=y,
+        epochs=epochs,
+        batch_size=64,
+        initial_epoch=epochs * 0,
+        steps_per_epoch=100,
+        validation_data=(x_val, y_val),
+        shuffle=True,
+    )
+    plot_history(history)
     # exit()
 
     # Fit with validation from train
-    model.fit(
+    history = model.fit(
         x=x,
         y=y,
-        epochs=100,
+        epochs=2 * epochs,
+        initial_epoch=epochs * 1,
         batch_size=64,
         steps_per_epoch=100,
         validation_split=0.2,
         shuffle=True,
     )
-    exit()
+    # exit()
 
     # Fit with generators
     x = load_dataset("train", is_training=True, batch_size=64, for_fit=True)
     validation = load_dataset("train", is_training=False, batch_size=1000, for_fit=True)
 
-    model.fit(
+    history = model.fit(
         x,
-        epochs=10,
+        epochs=3 * epochs,
+        initial_epoch=epochs * 2,
         steps_per_epoch=100,
         validation_data=validation,
         validation_steps=2,

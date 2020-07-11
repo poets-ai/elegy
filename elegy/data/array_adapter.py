@@ -1,11 +1,17 @@
+# Implementation based on tf.keras.engine.data_adapter.py
+# https://github.com/tensorflow/tensorflow/blob/2b96f3662bd776e277f86997659e61046b56c315/tensorflow/python/keras/engine/data_adapter.py
+
+
 import math
-import jax.numpy as jnp
-import numpy as np
 import typing as tp
 
+import jax.numpy as jnp
+import numpy as np
+
+from elegy.types import ArrayHolder, ArrayLike
+
 from .data_adapter import DataAdapter
-from .utils import pack_x_y_sample_weight, flatten, map_structure
-from elegy.types import ArrayLike, ArrayHolder
+from .utils import flatten, map_structure, pack_x_y_sample_weight
 
 
 class ArrayDataAdapter(DataAdapter):
@@ -13,9 +19,9 @@ class ArrayDataAdapter(DataAdapter):
 
     @staticmethod
     def can_handle(x, y=None):
-        data = [x]
+        flat_inputs = list(flatten(x))
         if y is not None:
-            data += [y]
+            flat_inputs += list(flatten(y))
 
         supported_types = (jnp.ndarray, np.ndarray)
         # if pd:
@@ -26,7 +32,7 @@ class ArrayDataAdapter(DataAdapter):
                 return True
             return False
 
-        return all(_is_array(v) for v in data)
+        return all(_is_array(v) for v in flat_inputs)
 
     def __init__(
         self,
