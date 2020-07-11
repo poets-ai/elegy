@@ -31,15 +31,15 @@ class SparseCategoricalAccuracy(Mean):
     
     Usage:
     ```python
-    m = elegy.metrics.SparseCategoricalAccuracy()
+    accuracy = elegy.metrics.SparseCategoricalAccuracy()
 
-    result = m(
+    result = accuracy(
         y_true=jnp.array([2, 1]), 
         y_pred=jnp.array([[0.1, 0.9, 0.8], [0.05, 0.95, 0]])
     )
     assert result == 0.5  # 1/2
 
-    result = m(
+    result = accuracy(
         y_true=jnp.array([1, 1]),
         y_pred=jnp.array([[0.1, 0.9, 0.8], [0.05, 0.95, 0]]),
     )
@@ -52,7 +52,7 @@ class SparseCategoricalAccuracy(Mean):
     model = elegy.Model(
         model_fn,
         loss=lambda: [elegy.losses.CategoricalCrossentropy()],
-        metrics=lambda: [elegy.metrics.SparseCategoricalAccuracy()])
+        metrics=lambda: [elegy.metrics.SparseCategoricalAccuracy()],
         optimizer=optix.adam(1e-3),
     )
     ```

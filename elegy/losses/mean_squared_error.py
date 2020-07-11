@@ -80,8 +80,8 @@ class MeanSquaredError(Loss):
     ```python
     model = elegy.Model(
         model_fn,
-        loss=lambda: [elegy.losses.MeanSquaredError()]
-        metrics=lambda: [elegy.metrics.Mean()]
+        loss=lambda: [elegy.losses.MeanSquaredError()],
+        metrics=lambda: [elegy.metrics.Mean()],
     )
     ```
     """

@@ -27,15 +27,15 @@ class Accuracy(Mean):
     Use `sample_weight` of 0 to mask values.
 
     ```python
-    m = elegy.metrics.Accuracy()
+    accuracy = elegy.metrics.Accuracy()
 
-    result = m(
+    result = accuracy(
         y_true=jnp.array([1, 1, 1, 1]), 
         y_pred=jnp.array([0, 1, 1, 1])
     ) 
     assert result == 0.75  # 3 / 4
 
-    result = m(
+    result = accuracy(
         y_true=jnp.array([1, 1, 1, 1]), 
         y_pred=jnp.array([1, 0, 0, 0])
     ) 
@@ -47,8 +47,8 @@ class Accuracy(Mean):
     ```python
     model = elegy.Model(
         model_fn,
-        loss=lambda: [elegy.losses.CategoricalCrossentropy()]
-        metrics=lambda: [elegy.metrics.Accuracy()]
+        loss=lambda: [elegy.losses.CategoricalCrossentropy()],
+        metrics=lambda: [elegy.metrics.Accuracy()],
         optimizer=optix.adam(1e-3),
     )
     ```

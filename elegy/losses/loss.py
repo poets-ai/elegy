@@ -11,7 +11,9 @@ from elegy import utils
 
 
 class Reduction(Enum):
-    """Types of loss reduction.
+    """
+    Types of loss reduction.
+    
     Contains the following values:
     * `NONE`: Weighted losses with one dimension reduced (axis=-1, or axis
         specified by loss function). When this reduction type used with built-in
@@ -19,21 +21,6 @@ class Reduction(Enum):
         passed to the optimizer but the reported loss will be a scalar value.
     * `SUM`: Scalar sum of weighted losses.
     * `SUM_OVER_BATCH_SIZE`: Scalar `SUM` divided by number of elements in losses.
-        This reduction type is not supported when used with
-        `tf.distribute.Strategy` outside of built-in training loops like `elegy`
-        `compile`/`fit`.
-        You can implement 'SUM_OVER_BATCH_SIZE' using global batch size like:
-        ```
-        with strategy.scope():
-        loss_obj = elegy.losses.CategoricalCrossentropy(
-            reduction=elegy.losses.Reduction.NONE)
-        ....
-        loss = tf.reduce_sum(loss_object(labels, predictions)) *
-            (1. / global_batch_size)
-        ```
-    Please see the
-    [custom training guide](https://www.tensorflow.org/tutorials/distribute/custom_training)  # pylint: disable=line-too-long
-    for more details on this.
     """
 
     # AUTO = "auto"

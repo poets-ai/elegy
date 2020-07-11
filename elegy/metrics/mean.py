@@ -21,12 +21,12 @@ class Mean(reduce.Reduce):
     Usage:
 
     ```python
-    m = elegy.metrics.Mean()
-    result = m([1, 3, 5, 7])  # 16 / 4
+    mean = elegy.metrics.Mean()
+    result = mean([1, 3, 5, 7])  # 16 / 4
     assert result == 4.0
 
 
-    result = m([4, 10])  # 30 / 6
+    result = mean([4, 10])  # 30 / 6
     assert result == 5.0
     ```
 
@@ -35,8 +35,8 @@ class Mean(reduce.Reduce):
     ```python
     model = elegy.Model(
         model_fn,
-        loss=lambda: [elegy.losses.MeanSquaredError()]
-        metrics=lambda: [elegy.metrics.Mean()]
+        loss=lambda: [elegy.losses.MeanSquaredError()],
+        metrics=lambda: [elegy.metrics.Mean()],
     )
     ```
     """

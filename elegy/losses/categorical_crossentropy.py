@@ -63,8 +63,8 @@ class CategoricalCrossentropy(Loss):
     ```python
     model = elegy.Model(
         model_fn,
-        loss=lambda: [elegy.losses.CategoricalCrossentropy()]
-        metrics=lambda: [elegy.metrics.Accuracy()]
+        loss=lambda: [elegy.losses.CategoricalCrossentropy()],
+        metrics=lambda: [elegy.metrics.Accuracy()],
         optimizer=optix.adam(1e-3),
     )
     ```

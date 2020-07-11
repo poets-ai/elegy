@@ -34,15 +34,15 @@ class CategoricalAccuracy(Mean):
     Usage:
 
     ```python
-    m = elegy.metrics.CategoricalAccuracy()
+    accuracy = elegy.metrics.CategoricalAccuracy()
 
-    result = m(
+    result = accuracy(
         y_true=jnp.array([[0, 0, 1], [0, 1, 0]]), 
         y_pred=jnp.array([[0.1, 0.9, 0.8], [0.05, 0.95, 0]]),
     )
     assert result == 0.5  # 1/2
 
-    result = m(
+    result = accuracy(
         y_true=jnp.array([[0, 1, 0], [0, 1, 0]]), 
         y_pred=jnp.array([[0.1, 0.9, 0.8], [0.05, 0.95, 0]]),
     )
@@ -54,7 +54,7 @@ class CategoricalAccuracy(Mean):
     model = elegy.Model(
         model_fn,
         loss=lambda: [elegy.losses.CategoricalCrossentropy()],
-        metrics=lambda: [elegy.metrics.CategoricalAccuracy()])
+        metrics=lambda: [elegy.metrics.CategoricalAccuracy()],
         optimizer=optix.adam(1e-3),
     )
     ```

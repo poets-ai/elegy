@@ -14,15 +14,15 @@ import jax.numpy as jnp
 @transform_and_run
 def test_basic():
 
-    m = elegy.metrics.CategoricalAccuracy()
+    accuracy = elegy.metrics.CategoricalAccuracy()
 
-    result = m(
+    result = accuracy(
         y_true=jnp.array([[0, 0, 1], [0, 1, 0]]),
         y_pred=jnp.array([[0.1, 0.9, 0.8], [0.05, 0.95, 0]]),
     )
     assert result == 0.5  # 1/2
 
-    result = m(
+    result = accuracy(
         y_true=jnp.array([[0, 1, 0], [0, 1, 0]]),
         y_pred=jnp.array([[0.1, 0.9, 0.8], [0.05, 0.95, 0]]),
     )

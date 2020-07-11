@@ -8,27 +8,27 @@ from elegy.metrics.mean import Mean
 
 class MeanSquaredError(Mean):
     """
-    Computes the mean squared error between `y_true` and `y_pred`.
+    Computes the cumulative mean squared error between `y_true` and `y_pred`.
     
     Usage:
     ```python
-    >>> m = elegy.metrics.MeanSquaredError()
-    >>> _ = m.update_state([[0, 1], [0, 0]], [[1, 1], [0, 0]])
-    >>> m.result().numpy()
-    0.25
-    >>> m.reset_states()
-    >>> _ = m.update_state([[0, 1], [0, 0]], [[1, 1], [0, 0]],
-    ...                    sample_weight=[1, 0])
-    >>> m.result().numpy()
-    0.5
+    mse = elegy.metrics.MeanSquaredError()
+
+    result = mse(y_true=jnp.array([1, 1, 1, 1]), y_pred=jnp.array([0, 1, 1, 1]))
+    assert result == 0.25
+
+    result = mse(y_true=jnp.array([1, 1, 1, 1]), y_pred=jnp.array([1, 0, 0, 0]))
+    assert result == 0.5
     ```
 
     Usage with elegy API:
     
     ```python
-    model = elegy.Model(inputs, outputs)
-    model.compile(
-        'sgd', loss='mse', metrics=[elegy.metrics.MeanSquaredError()])
+    model = elegy.Model(
+        model_fn,
+        loss=lambda: [elegy.losses.CategoricalCrossentropy()],
+        metrics=lambda: [elegy.metrics.MeanSquaredError()],
+    )
     ```
     """
 

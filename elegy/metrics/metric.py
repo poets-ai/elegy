@@ -36,8 +36,8 @@ class Metric(hk.Module):
     model = elegy.Model(
         model_fn,
         optimizer=optix.rmsprop(0.01)
-        loss=lambda: [elegy.losses.CategoricalCrossentropy()]
-        metrics=lambda: [elegy.metrics.Accuracy()]
+        loss=lambda: [elegy.losses.CategoricalCrossentropy()],
+        metrics=lambda: [elegy.metrics.Accuracy()],
     )
     ```
     model.compile(optimizer=elegy.optimizers.RMSprop(0.01),
