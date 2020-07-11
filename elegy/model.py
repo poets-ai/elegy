@@ -860,7 +860,6 @@ class Model(object):
 
         callbacks.on_predict_begin()
 
-        logs = {}
         for _, iterator in data_handler.enumerate_epochs():
             self.reset_metrics()
             with data_handler.catch_stop_iteration():
