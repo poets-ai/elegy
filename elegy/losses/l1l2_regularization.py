@@ -12,7 +12,9 @@ class GlobalL1L2Regularization(Loss):
 
     The L1 regularization penalty is computed as:
     
-    $$\ell_1\,\,penalty =\ell_1\sum_{i=0}^n|x_i|$$
+    $$
+    \ell_1\,\,penalty =\ell_1\sum_{i=0}^n|x_i|
+    $$
     
     The L2 regularization penalty is computed as
     
@@ -21,7 +23,7 @@ class GlobalL1L2Regularization(Loss):
     Attributes:
         l1: Float; L1 regularization factor.
         l2: Float; L2 regularization factor.
-  """
+    """
 
     def __init__(
         self,
@@ -92,6 +94,6 @@ def GlobalL2Regularization(
   
     Returns:
         An L2 Regularizer with the given regularization factor.
-  """
+    """
     return GlobalL1L2Regularization(l2=l, reduction=reduction, name=name)
 

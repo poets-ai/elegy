@@ -28,23 +28,6 @@ def load_dataset(
     return tfds.as_numpy(ds)
 
 
-def net_fn(image) -> jnp.ndarray:
-    """Standard LeNet-300-100 MLP network."""
-    image = image.astype(jnp.float32) / 255.0
-
-    mlp = hk.Sequential(
-        [
-            hk.Flatten(),
-            hk.Linear(300),
-            jax.nn.relu,
-            hk.Linear(100),
-            jax.nn.relu,
-            hk.Linear(10),
-        ]
-    )
-    return mlp(image)
-
-
 def main(debug: bool = False, eager: bool = False):
 
     if debug:
@@ -77,6 +60,22 @@ def main(debug: bool = False, eager: bool = False):
     y_val = np.concatenate(y_val, axis=0)
     x_val = np.vstack(x_val)
     print(x_val.shape, y_val.shape)
+
+    def net_fn(image) -> jnp.ndarray:
+        """Standard LeNet-300-100 MLP network."""
+        image = image.astype(jnp.float32) / 255.0
+
+        mlp = hk.Sequential(
+            [
+                hk.Flatten(),
+                hk.Linear(300),
+                jax.nn.relu,
+                hk.Linear(100),
+                jax.nn.relu,
+                hk.Linear(10),
+            ]
+        )
+        return mlp(image)
 
     model = elegy.Model(
         model_fn=net_fn,
