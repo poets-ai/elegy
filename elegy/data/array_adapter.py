@@ -74,7 +74,7 @@ class ArrayDataAdapter(DataAdapter):
 
         # If batch_size is not passed but steps is, calculate from the input data.
         if not batch_size:
-            batch_size = int(math.ceil(num_samples / steps)) if steps else None
+            batch_size = int(math.ceil(num_samples / steps)) if steps else 32
             if batch_size is None:
                 raise ValueError("Please provide either batch_size or steps")
 
