@@ -20,6 +20,7 @@ from .data import (
     unpack_x_y_sample_weight,
     train_validation_split,
     map_structure,
+    map_append,
 )
 from .metrics.metric_modes import get_mode_function
 from .callbacks import CallbackList, Callback
@@ -880,10 +881,6 @@ class Model(object):
                             lambda batch_output: [batch_output], batch_outputs
                         )
                     else:
-
-                        def map_append(output, batch_output):
-                            output.append(batch_output)
-                            return output
 
                         outputs = map_structure(map_append, outputs, batch_outputs,)
 

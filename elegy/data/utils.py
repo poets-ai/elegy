@@ -21,6 +21,11 @@ class Multimap(utils.Protocol):
         ...
 
 
+def map_append(output, batch_output):
+    output.append(batch_output)
+    return output
+
+
 def map_structure(
     f: Multimap, *structure: tp.Union[types.ArrayHolder, None],
 ) -> types.Container[tp.Union[types.T, None]]:
