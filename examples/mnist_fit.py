@@ -103,6 +103,7 @@ def main(debug: bool = False, eager: bool = False):
         metrics=lambda: elegy.metrics.Accuracy(),
         run_eagerly=eager,
     )
+
     epochs = 10
     # Fit with datasets in memory
     history = model.fit(
@@ -115,6 +116,9 @@ def main(debug: bool = False, eager: bool = False):
         validation_data=(x_val, y_val),
         shuffle=True,
     )
+    predictions = model.predict(x_val)
+    print(predictions)
+    print(predictions.shape)
     plot_history(history)
     # exit()
 

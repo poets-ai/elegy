@@ -13,21 +13,29 @@ import six
 
 from elegy import types
 from elegy.types import ArrayHolder
+from elegy import utils
+
+
+class Multimap(utils.Protocol):
+    def __call__(self, *args: types.ArrayLike) -> types.T:
+        ...
 
 
 def map_structure(
-    f: tp.Callable[[types.ArrayLike], types.T],
-    structure: tp.Union[types.ArrayHolder, None],
+    f: Multimap, *structure: tp.Union[types.ArrayHolder, None],
 ) -> types.Container[tp.Union[types.T, None]]:
 
-    if isinstance(structure, (jnp.ndarray, np.ndarray)):
-        return f(structure)
-    elif isinstance(structure, tp.Tuple):
-        return tuple(map_structure(f, x) for x in structure)
-    elif isinstance(structure, tp.Dict):
-        return {key: map_structure(f, x) for key, x in structure.items()}
-    else:
-        return structure
+    if isinstance(structure[0], tp.Tuple):
+        return tuple(map_structure(f, *x) for x in zip(*structure))
+    elif isinstance(structure[0], tp.Dict):
+        return {
+            key: map_structure(f, *(elem[key] for elem in structure))
+            for key in structure[0]
+        }
+    elif structure[0] is not None:
+        return f(*structure)
+    else:  # if it is tuple of None
+        return None
 
 
 def flatten(inputs: types.ArrayHolder) -> tp.Iterable[types.ArrayLike]:

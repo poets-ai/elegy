@@ -15,9 +15,14 @@ from elegy.losses import loss_modes
 from elegy.metrics import metric_modes
 
 from . import utils
-from .data import DataHandler, unpack_x_y_sample_weight, train_validation_split
+from .data import (
+    DataHandler,
+    unpack_x_y_sample_weight,
+    train_validation_split,
+    map_structure,
+)
 from .metrics.metric_modes import get_mode_function
-from .callbacks import CallbackList
+from .callbacks import CallbackList, Callback
 
 
 class Model(object):
@@ -345,7 +350,7 @@ class Model(object):
         batch_size: tp.Optional[int] = None,
         epochs: int = 1,
         verbose: int = 1,
-        callbacks=None,
+        callbacks: tp.Union[tp.List[Callback], CallbackList, None] = None,
         validation_split: float = 0.0,
         validation_data: tp.Union[tp.Tuple, tp.Iterable, None] = None,
         shuffle: bool = True,
@@ -642,7 +647,7 @@ class Model(object):
         batch_size: tp.Optional[int] = None,
         sample_weight: tp.Optional[tp.Union[np.ndarray, jnp.ndarray]] = None,
         steps: tp.Optional[int] = None,
-        callbacks=None,
+        callbacks: tp.Union[tp.List[Callback], CallbackList, None] = None,
     ):
         """Returns the loss value & metrics values for the model in test mode.
             Computation is done in batches.
@@ -756,6 +761,137 @@ class Model(object):
         callbacks.on_test_end()
 
         return logs
+
+    def predict(
+        self,
+        x: tp.Union[
+            jnp.ndarray,
+            np.ndarray,
+            tp.Mapping[str, tp.Union[np.ndarray, jnp.ndarray]],
+            tp.Tuple[tp.Union[np.ndarray, jnp.ndarray]],
+            tp.Iterable,
+        ],
+        verbose: int = 0,
+        batch_size: tp.Optional[int] = None,
+        steps: tp.Optional[int] = None,
+        callbacks: tp.Union[tp.List[Callback], CallbackList, None] = None,
+    ):
+        """Generates output predictions for the input samples.
+        Computation is done in batches. This method is designed for performance in
+        large scale inputs. For small amount of inputs that fit in one batch,
+        directly using `__call__` is recommended for faster execution, e.g.,
+        `model(x)`, or `model(x, training=False)` if you have layers such as
+        `tf.keras.layers.BatchNormalization` that behaves differently during
+        inference.
+        Arguments:
+            x: Input samples. It could be:
+            - A Numpy array (or array-like), or a list of arrays
+                (in case the model has multiple inputs).
+            - A TensorFlow tensor, or a list of tensors
+                (in case the model has multiple inputs).
+            - A `tf.data` dataset.
+            - A generator or `keras.utils.Sequence` instance.
+            A more detailed description of unpacking behavior for iterator types
+            (Dataset, generator, Sequence) is given in the `Unpacking behavior
+            for iterator-like inputs` section of `Model.fit`.
+            batch_size: Integer or `None`.
+                Number of samples per batch.
+                If unspecified, `batch_size` will default to 32.
+                Do not specify the `batch_size` if your data is in the
+                form of dataset, generators, or `keras.utils.Sequence` instances
+                (since they generate batches).
+            verbose: Verbosity mode, 0 or 1.
+            steps: Total number of steps (batches of samples)
+                before declaring the prediction round finished.
+                Ignored with the default value of `None`. If x is a `tf.data`
+                dataset and `steps` is None, `predict` will
+                run until the input dataset is exhausted.
+            callbacks: List of `keras.callbacks.Callback` instances.
+                List of callbacks to apply during prediction.
+                See [callbacks](/api_docs/python/tf/keras/callbacks).
+            max_queue_size: Integer. Used for generator or `keras.utils.Sequence`
+                input only. Maximum size for the generator queue.
+                If unspecified, `max_queue_size` will default to 10.
+            workers: Integer. Used for generator or `keras.utils.Sequence` input
+                only. Maximum number of processes to spin up when using
+                process-based threading. If unspecified, `workers` will default
+                to 1. If 0, will execute the generator on the main thread.
+            use_multiprocessing: Boolean. Used for generator or
+                `keras.utils.Sequence` input only. If `True`, use process-based
+                threading. If unspecified, `use_multiprocessing` will default to
+                `False`. Note that because this implementation relies on
+                multiprocessing, you should not pass non-picklable arguments to
+                the generator as they can't be passed easily to children processes.
+        See the discussion of `Unpacking behavior for iterator-like inputs` for
+        `Model.fit`. Note that Model.predict uses the same interpretation rules as
+        `Model.fit` and `Model.evaluate`, so inputs must be unambiguous for all
+        three methods.
+        Returns:
+            Numpy array(s) of predictions.
+        Raises:
+            ValueError: In case of mismatch between the provided
+                input data and the model's expectations,
+                or in case a stateful model receives a number of samples
+                that is not a multiple of the batch size.
+        """
+
+        outputs = None
+
+        data_handler = DataHandler(
+            x=x,
+            batch_size=batch_size,
+            steps_per_epoch=steps,
+            initial_epoch=0,
+            epochs=1,
+            shuffle=False,
+        )
+
+        # Container that configures and calls `tf.keras.Callback`s.
+        if not isinstance(callbacks, CallbackList):
+            callbacks = CallbackList(
+                callbacks,
+                add_history=True,
+                add_progbar=verbose != 0,
+                model=self,
+                verbose=verbose,
+                epochs=1,
+                steps=data_handler.inferred_steps,
+            )
+
+        callbacks.on_predict_begin()
+
+        logs = {}
+        for _, iterator in data_handler.enumerate_epochs():
+            self.reset_metrics()
+            with data_handler.catch_stop_iteration():
+                for step in data_handler.steps():
+                    callbacks.on_predict_batch_begin(step)
+                    batch = next(iterator)
+                    tmp_batch_outputs = self.predict_on_batch(x=batch[0])
+                    batch_outputs = tmp_batch_outputs
+
+                    if outputs is None:
+                        outputs = map_structure(
+                            lambda batch_output: [batch_output], batch_outputs
+                        )
+                    else:
+
+                        def map_append(output, batch_output):
+                            output.append(batch_output)
+                            return output
+
+                        outputs = map_structure(map_append, outputs, batch_outputs,)
+
+                    callbacks.on_predict_batch_end(
+                        step,
+                        {"outputs": batch_outputs, "size": data_handler.batch_size},
+                    )
+
+        callbacks.on_predict_end()
+
+        all_outputs = map_structure(jnp.concatenate, outputs)
+
+        return all_outputs
 
     def _should_eval(self, epoch, validation_freq):
         epoch = epoch + 1  # one-index the user-facing epoch.
