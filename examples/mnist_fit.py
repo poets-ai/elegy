@@ -102,6 +102,11 @@ def main(debug: bool = False, eager: bool = False):
         metrics=lambda: elegy.metrics.SparseCategoricalAccuracy(),
         run_eagerly=eager,
     )
+
+    predictions = model.predict(x_val)
+    print(predictions)
+    print(predictions.shape)
+    # exit()
     epochs = 10
     # Fit with datasets in memory
     history = model.fit(
