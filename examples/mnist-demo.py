@@ -30,7 +30,7 @@ OptState = Any
 Batch = Mapping[str, np.ndarray]
 
 
-def net_fn(x) -> jnp.ndarray:
+def model_fn(x) -> jnp.ndarray:
     """Standard LeNet-300-100 MLP network."""
     x = x.astype(jnp.float32) / 255.0
 
@@ -66,7 +66,7 @@ def main(debug: bool = False):
     test_eval = load_dataset("test", is_training=False, batch_size=1000)
 
     model = elegy.Model(
-        net_fn=net_fn,
+        model_fn=model_fn,
         loss=SoftmaxCrossEntropy(),
         metrics=[Accuracy()],
         run_eagerly=False,

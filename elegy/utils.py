@@ -70,4 +70,3 @@ def get_input_args(
     apply_kwargs.update(kwargs)
 
     return args, kwargs
-

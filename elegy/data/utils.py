@@ -43,7 +43,7 @@ def flatten(inputs: types.ArrayHolder) -> tp.Iterable[types.ArrayLike]:
     elif isinstance(inputs, tp.Generator):
         yield inputs
     else:
-        raise ValueError(f"Unsupported type '{type(inputs)}'")
+        raise TypeError(f"Unsupported type '{type(inputs)}'")
 
 
 def pack_x_y_sample_weight(x, y=None, sample_weight=None):

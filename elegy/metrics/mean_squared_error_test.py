@@ -14,10 +14,10 @@ import jax.numpy as jnp
 @transform_and_run
 def test_basic():
 
-    accuracy = elegy.metrics.Accuracy()
+    mse = elegy.metrics.MeanSquaredError()
 
-    result = accuracy(y_true=jnp.array([1, 1, 1, 1]), y_pred=jnp.array([0, 1, 1, 1]))
-    assert result == 0.75
+    result = mse(y_true=jnp.array([1, 1, 1, 1]), y_pred=jnp.array([0, 1, 1, 1]))
+    assert result == 0.25
 
-    result = accuracy(y_true=jnp.array([1, 1, 1, 1]), y_pred=jnp.array([1, 0, 0, 0]))
+    result = mse(y_true=jnp.array([1, 1, 1, 1]), y_pred=jnp.array([1, 0, 0, 0]))
     assert result == 0.5

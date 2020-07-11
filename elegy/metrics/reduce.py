@@ -20,7 +20,7 @@ def reduce(
     reduction: Reduction,
     sample_weight: tp.Optional[jnp.ndarray],
     dtype: jnp.dtype,
-):
+) -> tp.Tuple[jnp.ndarray, jnp.ndarray, tp.Optional[jnp.ndarray]]:
 
     if sample_weight is not None:
         sample_weight = sample_weight.astype(dtype)
@@ -104,18 +104,21 @@ class Reduce(Metric):
                 )
             )
 
-    @utils.inject_dependencies
-    def call(self, values, sample_weight: tp.Optional[jnp.ndarray] = None):
-        """Accumulates statistics for computing the reduction metric.
-    For example, if `values` is [1, 3, 5, 7] and reduction=SUM_OVER_BATCH_SIZE,
-    then the value of `result()` is 4. If the `sample_weight` is specified as
-    [1, 1, 0, 0] then value of `result()` would be 2.
-    Args:
-      values: Per-example value.
-      sample_weight: Optional weighting of each example. Defaults to 1.
-    Returns:
-      Update op.
-    """
+    def call(
+        self, values: jnp.ndarray, sample_weight: tp.Optional[jnp.ndarray] = None
+    ) -> jnp.ndarray:
+        """
+        Accumulates statistics for computing the reduction metric. For example, if `values` is [1, 3, 5, 7] 
+        and reduction=SUM_OVER_BATCH_SIZE, then the value of `result()` is 4. If the `sample_weight` 
+        is specified as [1, 1, 0, 0] then value of `result()` would be 2.
+        
+        Arguments:
+            values: Per-example value.
+            sample_weight: Optional weighting of each example. Defaults to 1.
+        
+        Returns:
+            Array with the cummulative reduce.
+        """
         total = hk.get_state(
             "total", shape=[], dtype=self._dtype, init=hk.initializers.Constant(0)
         )
@@ -142,4 +145,3 @@ class Reduce(Metric):
             hk.set_state("count", count)
 
         return value
-

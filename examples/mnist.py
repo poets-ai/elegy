@@ -49,7 +49,7 @@ def main(debug: bool = False, eager: bool = False):
     train_eval = load_dataset("train", is_training=False, batch_size=100)
     test_eval = load_dataset("test", is_training=False, batch_size=100)
 
-    def net_fn(image) -> jnp.ndarray:
+    def model_fn(image) -> jnp.ndarray:
         """Standard LeNet-300-100 MLP network."""
         image = image.astype(jnp.float32) / 255.0
 
@@ -66,10 +66,10 @@ def main(debug: bool = False, eager: bool = False):
         return mlp(image)
 
     model = elegy.Model(
-        model_fn=net_fn,
-        loss=lambda: elegy.losses.SoftmaxCrossentropy(),
-        aux_losses=lambda: elegy.losses.L2Regularization(l=1e-4),
-        metrics=lambda: elegy.metrics.Accuracy(),
+        model_fn=model_fn,
+        loss=lambda: elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
+        aux_losses=lambda: elegy.regularizers.GlobalL2Regularization(l=1e-4),
+        metrics=lambda: elegy.metrics.SparseCategoricalAccuracy(),
         run_eagerly=eager,
     )
 
