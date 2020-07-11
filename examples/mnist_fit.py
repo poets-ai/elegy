@@ -104,6 +104,10 @@ def main(debug: bool = False, eager: bool = False):
         run_eagerly=eager,
     )
 
+    predictions = model.predict(x_val)
+    print(predictions)
+    print(predictions.shape)
+    exit()
     epochs = 10
     # Fit with datasets in memory
     history = model.fit(
@@ -116,9 +120,6 @@ def main(debug: bool = False, eager: bool = False):
         validation_data=(x_val, y_val),
         shuffle=True,
     )
-    predictions = model.predict(x_val)
-    print(predictions)
-    print(predictions.shape)
     plot_history(history)
     # exit()
 
