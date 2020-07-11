@@ -28,4 +28,3 @@ class TrainValidationSplitTest(TestCase):
         assert x.shape[0] == int(x_all.shape[0] * split)
         assert y.shape[0] == int(y_all.shape[0] * split)
         assert sample_weight is None
-

@@ -223,7 +223,7 @@ if __name__ == "__main__":
             else:
                 yield name, value.shape
 
-    def net_fn(query):
+    def model_fn(query):
         return MultiHeadAttention(head_size=16, num_heads=12)(query)
 
     rngs = hk.PRNGSequence(42)
@@ -231,7 +231,7 @@ if __name__ == "__main__":
     query = jax.random.uniform(next(rngs), shape=[10, 20, 32])
     print(query.shape)
 
-    net = hk.transform(net_fn, apply_rng=True)
+    net = hk.transform(model_fn, apply_rng=True)
     params = net.init(next(rngs), query)
 
     output = net.apply(params, next(rngs), query)

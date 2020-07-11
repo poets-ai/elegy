@@ -1,4 +1,4 @@
-# Implementation based on tf.keras.engine.data_adapter.py
+# Implementation based on elegy.engine.data_adapter.py
 # https://github.com/tensorflow/tensorflow/blob/2b96f3662bd776e277f86997659e61046b56c315/tensorflow/python/keras/engine/data_adapter.py
 
 
@@ -40,7 +40,7 @@ class DataAdapter(object):
     Structure wise, x and y can be single object, or list of objects if there
     multiple input/output, or dictionary of objects when the intput/output are
     named.
-    Args:
+    Arguments:
       x: input features.
       y: target labels. Note that y could be None in the case of prediction.
     Returns:
@@ -53,7 +53,7 @@ class DataAdapter(object):
         """Create a DataAdapter based on data inputs.
     The caller must make sure to call `can_handle()` first before invoking this
     method. Provide unsupported data type will result into unexpected behavior.
-    Args:
+    Arguments:
       x: input features.
       y: target labels. Note that y could be None in the case of prediction.
       **kwargs: Other keyword arguments for DataAdapter during the construction

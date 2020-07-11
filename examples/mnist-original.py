@@ -29,7 +29,7 @@ OptState = Any
 Batch = Mapping[str, np.ndarray]
 
 
-def net_fn(batch: Batch) -> jnp.ndarray:
+def model_fn(batch: Batch) -> jnp.ndarray:
     """Standard LeNet-300-100 MLP network."""
     x = batch["image"].astype(jnp.float32) / 255.0
     mlp = hk.Sequential(
@@ -58,7 +58,7 @@ def load_dataset(
 
 def main(_):
     # Make the network and optimiser.
-    net = hk.transform(net_fn)
+    net = hk.transform(model_fn)
     opt = optix.adam(1e-3)
 
     # Training loss (cross-entropy).

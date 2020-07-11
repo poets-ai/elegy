@@ -137,7 +137,11 @@ class Model(object):
         if self._optimizer_state is None:
             self._optimizer_state = self._optimizer.init(self._params)
 
-        if self._metrics_transform is not None and self._metrics_state is None:
+        if (
+            y is not None
+            and self._metrics_transform is not None
+            and self._metrics_state is None
+        ):
             x_args, x_kwargs = utils.get_input_args(x, y, is_training=False)
 
             y_pred, state = self._model_transform.apply(
@@ -362,7 +366,8 @@ class Model(object):
         validation_batch_size: tp.Optional[int] = None,
         validation_freq: int = 1,
     ):
-        """Trains the model for a fixed number of epochs (iterations on a dataset).
+        """
+        Trains the model for a fixed number of epochs (iterations on a dataset).
         Arguments:
             x: Input data. It could be:
             - A Numpy array (or array-like), or a list of arrays
@@ -405,7 +410,7 @@ class Model(object):
                 interactively (eg, in a production environment).
             callbacks: List of `keras.callbacks.Callback` instances.
                 List of callbacks to apply during training.
-                See `tf.keras.callbacks`.
+                See `elegy.callbacks`.
             validation_split: Float between 0 and 1.
                 Fraction of the training data to be used as validation data.
                 The model will set apart this fraction of the training data,
@@ -505,9 +510,10 @@ class Model(object):
                 `False`. Note that because this implementation relies on
                 multiprocessing, you should not pass non-picklable arguments to
                 the generator as they can't be passed easily to children processes.
+        
         Unpacking behavior for iterator-like inputs:
             A common pattern is to pass a tf.data.Dataset, generator, or
-        tf.keras.utils.Sequence to the `x` argument of fit, which will in fact
+        elegy.utils.Sequence to the `x` argument of fit, which will in fact
         yield not only features (x) but optionally targets (y) and sample weights.
         Keras requires that the output of such iterator-likes be unambiguous. The
         iterator should return a tuple of length 1, 2, or 3, where the optional

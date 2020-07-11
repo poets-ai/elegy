@@ -13,7 +13,20 @@ nav:
   - Introduction: index.md
   - API Reference:
       metrics:
-        Accuracy: api/metrics/accuracy.md
+        Accuracy: api/metrics/Accuracy.md
+        CategoricalAccuracy: api/metrics/CategoricalAccuracy.md
+        SparseCategoricalAccuracy: api/metrics/SparseCategoricalAccuracy.md
+        Mean: api/metrics/Mean.md
+        MeanSquaredError: api/metrics/MeanSquaredError.md
+      losses:
+        CategoricalCrossentropy: api/losses/CategoricalCrossentropy.md
+        SparseCategoricalCrossentropy: api/losses/SparseCategoricalCrossentropy.md
+        MeanSquaredError: api/losses/MeanSquaredError.md
+        mean_squared_error: api/losses/mean_squared_error.md
+      regularizers:
+        GlobalL1Regularization: api/regularizers/GlobalL1Regularization.md
+        GlobalL2Regularization: api/regularizers/GlobalL2Regularization.md
+        GlobalL1L2Regularization: api/regularizers/GlobalL1L2Regularization.md
 
 extra:
   search:
@@ -29,7 +42,11 @@ extra:
 markdown_extensions:
   - admonition
   - codehilite
+  - pymdownx.arithmatex
 
 plugins:
   - search
   - mkdocstrings
+
+extra_javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML
