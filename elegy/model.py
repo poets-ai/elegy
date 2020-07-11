@@ -552,7 +552,7 @@ class Model(object):
             shuffle=shuffle,
             class_weight=class_weight,
         )
-        # # Container that configures and calls `tf.keras.Callback`s.
+        # Container that configures and calls `tf.keras.Callback`s.
         if not isinstance(callbacks, CallbackList):
             callbacks = CallbackList(
                 callbacks,
@@ -638,6 +638,7 @@ class Model(object):
             tp.Tuple[tp.Union[np.ndarray, jnp.ndarray]],
             None,
         ] = None,
+        verbose: int = 1,
         batch_size: tp.Optional[int] = None,
         sample_weight: tp.Optional[tp.Union[np.ndarray, jnp.ndarray]] = None,
         steps: tp.Optional[int] = None,
@@ -711,20 +712,6 @@ class Model(object):
                 ValueError: in case of invalid arguments.
             """
 
-        # # Container that configures and calls `tf.keras.Callback`s.
-        # if not isinstance(callbacks, CallbackList):
-        #     callbacks = CallbackList(
-        #         callbacks,
-        #         add_history=True,
-        #         add_progbar=verbose != 0,
-        #         model=self,
-        #         verbose=verbose,
-        #         epochs=epochs,
-        #         steps=data_handler.inferred_steps,
-        #     )
-
-        # callbacks.on_test_begin()
-
         data_handler = DataHandler(
             x=x,
             y=y,
@@ -736,23 +723,37 @@ class Model(object):
             shuffle=False,
         )
 
+        # Container that configures and calls `tf.keras.Callback`s.
+        if not isinstance(callbacks, CallbackList):
+            callbacks = CallbackList(
+                callbacks,
+                add_history=True,
+                add_progbar=verbose != 0,
+                model=self,
+                verbose=verbose,
+                epochs=1,
+                steps=data_handler.inferred_steps,
+            )
+
+        callbacks.on_test_begin()
+
         logs = {}
         for _, iterator in data_handler.enumerate_epochs():
             self.reset_metrics()
             with data_handler.catch_stop_iteration():
                 for step in data_handler.steps():
-                    # callbacks.on_test_batch_begin(step)
+                    callbacks.on_test_batch_begin(step)
                     batch = next(iterator)
                     sample_weight = batch[2] if len(batch) == 3 else None
 
                     tmp_logs = self.test_on_batch(
                         x=batch[0], y=batch[1], sample_weight=sample_weight,
                     )
-
+                    tmp_logs.update({"size": data_handler.batch_size})
                     logs = tmp_logs
-                    # callbacks.on_test_batch_end(step, logs)
+                    callbacks.on_test_batch_end(step, logs)
 
-        # callbacks.on_test_end(epoch, epoch_logs)
+        callbacks.on_test_end()
 
         return logs
 

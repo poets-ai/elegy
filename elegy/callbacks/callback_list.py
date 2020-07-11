@@ -12,7 +12,6 @@ import numpy as np
 from .callback import Callback
 from .history import History
 from .progbar_logger import ProgbarLogger
-from elegy.model import Model
 
 
 class ModeKeys(object):
@@ -38,7 +37,7 @@ class CallbackList(object):
         callbacks: tp.Optional[tp.List[Callback]] = None,
         add_history: bool = False,
         add_progbar: bool = False,
-        model: tp.Optional[Model] = None,
+        model: tp.Optional[tp.Any] = None,
         **params
     ):
         """Creates a container for `Callbacks`.
