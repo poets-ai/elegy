@@ -132,7 +132,11 @@ class Model(object):
         if self._optimizer_state is None:
             self._optimizer_state = self._optimizer.init(self._params)
 
-        if self._metrics_transform is not None and self._metrics_state is None:
+        if (
+            y is not None
+            and self._metrics_transform is not None
+            and self._metrics_state is None
+        ):
             x_args, x_kwargs = utils.get_input_args(x, y, is_training=False)
 
             y_pred, state = self._model_transform.apply(
