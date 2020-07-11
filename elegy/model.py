@@ -102,6 +102,7 @@ class Model(object):
         optimizer_state: tp.Optional[optix.OptState],
         metrics_state: tp.Optional[hk.State],
         initial_metrics_state: tp.Optional[hk.State],
+        is_training: bool,
     ):
 
         if seed is not None:
@@ -129,14 +130,13 @@ class Model(object):
                 next(self._rngs), *x_args, **x_kwargs
             )
 
+        if not is_training:
+            return
+
         if self._optimizer_state is None:
             self._optimizer_state = self._optimizer.init(self._params)
 
-        if (
-            y is not None
-            and self._metrics_transform is not None
-            and self._metrics_state is None
-        ):
+        if self._metrics_transform is not None and self._metrics_state is None:
             x_args, x_kwargs = utils.get_input_args(x, y, is_training=False)
 
             y_pred, state = self._model_transform.apply(
@@ -196,6 +196,7 @@ class Model(object):
             optimizer_state=optimizer_state,
             metrics_state=metrics_state,
             initial_metrics_state=initial_metrics_state,
+            is_training=True,
         )
 
         update_fn = self._update if self.run_eagerly else self._update_jit
@@ -796,6 +797,7 @@ class Model(object):
             optimizer_state=None,
             metrics_state=metrics_state,
             initial_metrics_state=initial_metrics_state,
+            is_training=False,
         )
 
         test_fn = self._test if self.run_eagerly else self._test_jit
@@ -884,6 +886,7 @@ class Model(object):
             optimizer_state=None,
             metrics_state=None,
             initial_metrics_state=None,
+            is_training=False,
         )
 
         predict_fn = self._predict if self.run_eagerly else self._predict_jit
