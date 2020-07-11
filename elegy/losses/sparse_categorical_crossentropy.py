@@ -81,7 +81,9 @@ class SparseCategoricalCrossentropy(Loss):
         name: tp.Optional[str] = None,
         weight: tp.Optional[float] = None,
     ):
-        """Initializes `SparseCategoricalCrossentropy` instance.
+        """
+        Initializes `SparseCategoricalCrossentropy` instance.
+        
         Arguments:
             from_logits: Whether `y_pred` is expected to be a logits tensor. By
                 default, we assume that `y_pred` encodes a probability distribution.
@@ -91,14 +93,11 @@ class SparseCategoricalCrossentropy(Loss):
                 `label_smoothing=0.2` means that we will use a value of `0.1` for label
                 `0` and `0.9` for label `1`"
             reduction: (Optional) Type of `elegy.losses.Reduction` to apply to
-                loss. Default value is `AUTO`. `AUTO` indicates that the reduction
-                option will be determined by the usage context. For almost all cases
+                loss. Default value is `SUM_OVER_BATCH_SIZE`. For almost all cases
                 this defaults to `SUM_OVER_BATCH_SIZE`. When used with
                 `tf.distribute.Strategy`, outside of built-in training loops such as
-                `elegy` `compile` and `fit`, using `AUTO` or `SUM_OVER_BATCH_SIZE`
-                will raise an error. Please see this custom training [tutorial]
-                (https://www.tensorflow.org/tutorials/distribute/custom_training)
-                for more details.
+                `elegy` `compile` and `fit`, or `SUM_OVER_BATCH_SIZE`
+                will raise an error.
             name: Optional name for the op. Defaults to 'sparse_categorical_crossentropy'.
             weight: Optional weight contribution for the total loss. Defaults to `1`.
         """
@@ -110,6 +109,25 @@ class SparseCategoricalCrossentropy(Loss):
     def call(
         self, y_true, y_pred, sample_weight: tp.Optional[jnp.ndarray] = None
     ) -> jnp.ndarray:
+        """
+        Invokes the `SparseCategoricalCrossentropy` instance.
+        
+        Arguments:
+            y_true: Ground truth values.
+            y_pred: The predicted values.
+            sample_weight: Acts as a
+                coefficient for the loss. If a scalar is provided, then the loss is
+                simply scaled by the given value. If `sample_weight` is a tensor of size
+                `[batch_size]`, then the total loss for each sample of the batch is
+                rescaled by the corresponding element in the `sample_weight` vector. If
+                the shape of `sample_weight` is `[batch_size, d0, .. dN-1]` (or can be
+                broadcasted to this shape), then each loss element of `y_pred` is scaled
+                by the corresponding value of `sample_weight`. (Note on`dN-1`: all loss
+                functions reduce by 1 dimension, usually axis=-1.)
+        
+        Returns:
+            Loss values per sample.
+        """
 
         return sparse_categorical_crossentropy(
             y_true, y_pred, from_logits=self._from_logits

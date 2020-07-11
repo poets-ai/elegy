@@ -18,9 +18,14 @@ nav:
         SparseCategoricalAccuracy: api/metrics/SparseCategoricalAccuracy.md
         Mean: api/metrics/Mean.md
       losses:
+        CategoricalCrossentropy: api/losses/CategoricalCrossentropy.md
+        SparseCategoricalCrossentropy: api/losses/SparseCategoricalCrossentropy.md
         MeanSquaredError: api/losses/MeanSquaredError.md
         mean_squared_error: api/losses/mean_squared_error.md
-        GlobalL2Regularization: api/losses/GlobalL2Regularization.md
+      regularizers:
+        GlobalL1Regularization: api/regularizers/GlobalL1Regularization.md
+        GlobalL2Regularization: api/regularizers/GlobalL2Regularization.md
+        GlobalL1L2Regularization: api/regularizers/GlobalL1L2Regularization.md
 
 extra:
   search:

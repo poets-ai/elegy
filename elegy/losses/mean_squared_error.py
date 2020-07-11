@@ -86,6 +86,29 @@ class MeanSquaredError(Loss):
     ```
     """
 
+    def __init__(
+        self,
+        reduction: tp.Optional[Reduction] = None,
+        name: tp.Optional[str] = None,
+        weight: tp.Optional[float] = None,
+    ):
+        """
+        Initializes `Mean` class.
+
+        Arguments:
+            reduction: (Optional) Type of `elegy.losses.Reduction` to apply to
+                loss. Default value is `SUM_OVER_BATCH_SIZE`. For almost all cases
+                this defaults to `SUM_OVER_BATCH_SIZE`. When used with
+                `tf.distribute.Strategy`, outside of built-in training loops such as
+                `elegy` `compile` and `fit`, or `SUM_OVER_BATCH_SIZE`
+                will raise an error.
+                for more details.
+            name: Optional name for the loss.
+            weight: Optional weight contribution for the total loss. Defaults to `1`.
+        """
+
+        return super().__init__(reduction=reduction, name=name, weight=weight)
+
     def call(
         self,
         y_true: jnp.ndarray,
