@@ -1,8 +1,12 @@
-import logging
-import contextlib
+# Implementation based on tf.keras.engine.data_adapter.py
+# https://github.com/tensorflow/tensorflow/blob/2b96f3662bd776e277f86997659e61046b56c315/tensorflow/python/keras/engine/data_adapter.py
 
-from .generator_adapter import GeneratorDataAdapter
+
+import contextlib
+import logging
+
 from .array_adapter import ArrayDataAdapter
+from .generator_adapter import GeneratorDataAdapter
 from .list_adapter import ListsOfScalarsDataAdapter
 
 ALL_ADAPTER_CLS = [ArrayDataAdapter, GeneratorDataAdapter, ListsOfScalarsDataAdapter]
@@ -133,6 +137,10 @@ class DataHandler(object):
     @property
     def _samples(self):
         return self._adapter.get_samples()
+
+    @property
+    def batch_size(self):
+        return self._adapter.batch_size
 
 
 def _type_name(x):
