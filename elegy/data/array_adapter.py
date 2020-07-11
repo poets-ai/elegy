@@ -1,11 +1,17 @@
+# Implementation based on tf.keras.engine.data_adapter.py
+# https://github.com/tensorflow/tensorflow/blob/2b96f3662bd776e277f86997659e61046b56c315/tensorflow/python/keras/engine/data_adapter.py
+
+
 import math
-import jax.numpy as jnp
-import numpy as np
 import typing as tp
 
+import jax.numpy as jnp
+import numpy as np
+
+from elegy.types import ArrayHolder, ArrayLike
+
 from .data_adapter import DataAdapter
-from .utils import pack_x_y_sample_weight, flatten, map_structure
-from elegy.types import ArrayLike, ArrayHolder
+from .utils import flatten, map_structure, pack_x_y_sample_weight
 
 
 class ArrayDataAdapter(DataAdapter):

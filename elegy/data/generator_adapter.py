@@ -81,7 +81,7 @@ class GeneratorDataAdapter(DataAdapter):
 
     @property
     def batch_size(self):
-        return None
+        return self.representative_batch_size
 
     @property
     def representative_batch_size(self):

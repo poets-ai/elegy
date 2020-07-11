@@ -1,3 +1,6 @@
+# Implementation based on tf.keras.engine.training.py
+# https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
+
 import copy
 import typing as tp
 from functools import partial
@@ -14,9 +17,10 @@ from elegy.metrics import metric_modes
 from . import utils
 from .data import DataHandler, unpack_x_y_sample_weight, train_validation_split
 from .metrics.metric_modes import get_mode_function
+from .callbacks import CallbackList
 
 
-class Model:
+class Model(object):
     _model_fn: tp.Callable
     _model_transform: hk.TransformedWithState
     _loss_fn: tp.Callable
@@ -536,21 +540,6 @@ class Model:
                 (x, y, sample_weight), validation_split=validation_split, shuffle=False
             )
 
-        # # Container that configures and calls `tf.keras.Callback`s.
-        # if not isinstance(callbacks, callbacks_module.CallbackList):
-        #     callbacks = callbacks_module.CallbackList(
-        #         callbacks,
-        #         add_history=True,
-        #         add_progbar=verbose != 0,
-        #         model=self,
-        #         verbose=verbose,
-        #         epochs=epochs,
-        #         steps=data_handler.inferred_steps,
-        #     )
-
-        # callbacks.on_train_begin()
-        # data_handler._initial_epoch = (  # pylint: disable=protected-access
-        #     self._maybe_load_initial_epoch_from_ckpt(initial_epoch))
         self.stop_training = False
         data_handler = DataHandler(
             x=x,
@@ -563,13 +552,29 @@ class Model:
             shuffle=shuffle,
             class_weight=class_weight,
         )
+        # # Container that configures and calls `tf.keras.Callback`s.
+        if not isinstance(callbacks, CallbackList):
+            callbacks = CallbackList(
+                callbacks,
+                add_history=True,
+                add_progbar=verbose != 0,
+                model=self,
+                verbose=verbose,
+                epochs=epochs,
+                steps=data_handler.inferred_steps,
+            )
+
+        callbacks.on_train_begin()
+        # data_handler._initial_epoch = (  # pylint: disable=protected-access
+        #     self._maybe_load_initial_epoch_from_ckpt(initial_epoch))
+
         for epoch, iterator in data_handler.enumerate_epochs():
             self.reset_metrics()
-            # callbacks.on_epoch_begin(epoch)
+            callbacks.on_epoch_begin(epoch)
             logs = {}
             with data_handler.catch_stop_iteration():
                 for step in data_handler.steps():
-                    # callbacks.on_train_batch_begin(step)
+                    callbacks.on_train_batch_begin(step)
                     batch = next(iterator)
                     sample_weight = batch[2] if len(batch) == 3 else None
 
@@ -579,12 +584,14 @@ class Model:
                         sample_weight=sample_weight,
                         class_weight=class_weight,
                     )
+                    tmp_logs.update({"size": data_handler.batch_size})
                     # print(epoch, step, tmp_logs["accuracy"], batch[0].shape)
 
                     logs = tmp_logs
-                    # callbacks.on_train_batch_end(step, logs)
+                    callbacks.on_train_batch_end(step, logs)
 
             epoch_logs = copy.copy(logs)
+            epoch_logs.update({"size": data_handler.batch_size})
 
             # Run validation.
             if validation_data and self._should_eval(epoch, validation_freq):
@@ -603,17 +610,17 @@ class Model:
                 val_logs = {"val_" + name: val for name, val in val_logs.items()}
                 epoch_logs.update(val_logs)
 
-            # callbacks.on_epoch_end(epoch, epoch_logs)
-            print(
-                f"epoch: {epoch} - "
-                + " - ".join(f"{key}: {value:.3f}" for key, value in epoch_logs.items())
-            )
+            callbacks.on_epoch_end(epoch, epoch_logs)
+            # print(
+            #     f"epoch: {epoch} - "
+            #     + " - ".join(f"{key}: {value:.3f}" for key, value in epoch_logs.items())
+            # )
             if self.stop_training:
                 break
 
-        # callbacks.on_train_end()
-        history = None
-        return history
+        callbacks.on_train_end()
+
+        return self.history
 
     def evaluate(
         self,
@@ -705,8 +712,8 @@ class Model:
             """
 
         # # Container that configures and calls `tf.keras.Callback`s.
-        # if not isinstance(callbacks, callbacks_module.CallbackList):
-        #     callbacks = callbacks_module.CallbackList(
+        # if not isinstance(callbacks, CallbackList):
+        #     callbacks = CallbackList(
         #         callbacks,
         #         add_history=True,
         #         add_progbar=verbose != 0,
@@ -908,3 +915,40 @@ class Model:
         return y_pred, state
 
     _predict_jit = jax.jit(_predict, static_argnums=(0,))
+
+    @property
+    def metrics_names(self):
+        """Returns the model's display labels for all outputs.
+        Note: `metrics_names` are available only after a `keras.Model` has been
+        trained/evaluated on actual data.
+        Examples:
+        >>> inputs = tf.keras.layers.Input(shape=(3,))
+        >>> outputs = tf.keras.layers.Dense(2)(inputs)
+        >>> model = tf.keras.models.Model(inputs=inputs, outputs=outputs)
+        >>> model.compile(optimizer="Adam", loss="mse", metrics=["mae"])
+        >>> model.metrics_names
+        []
+        >>> x = np.random.random((2, 3))
+        >>> y = np.random.randint(0, 2, (2, 2))
+        >>> _ = model.fit(x, y, verbose=0)
+        >>> model.metrics_names
+        ['loss', 'mae']
+        >>> inputs = tf.keras.layers.Input(shape=(3,))
+        >>> d = tf.keras.layers.Dense(2, name='out')
+        >>> output_1 = d(inputs)
+        >>> output_2 = d(inputs)
+        >>> model = tf.keras.models.Model(
+        ...    inputs=inputs, outputs=[output_1, output_2])
+        >>> model.compile(optimizer="Adam", loss="mse", metrics=["mae", "acc"])
+        >>> _ = model.fit(x, (y, y), verbose=0)
+        >>> model.metrics_names
+        ['loss', 'out_loss', 'out_1_loss', 'out_mae', 'out_acc', 'out_1_mae',
+        'out_1_acc']
+        """
+
+        # This property includes all output names including `loss` and per-output
+        # losses for backward compatibility.
+        return [m.name for m in self.metrics]
+
+    def _get_callback_model(self):
+        return self

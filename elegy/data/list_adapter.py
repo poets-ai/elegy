@@ -1,9 +1,13 @@
+# Implementation based on tf.keras.engine.data_adapter.py
+# https://github.com/tensorflow/tensorflow/blob/2b96f3662bd776e277f86997659e61046b56c315/tensorflow/python/keras/engine/data_adapter.py
+
+
 import typing as tp
 
 import numpy as np
 
-from .data_adapter import DataAdapter
 from .array_adapter import ArrayDataAdapter
+from .data_adapter import DataAdapter
 
 scalar_types = (float, int, str)
 
@@ -68,4 +72,3 @@ class ListsOfScalarsDataAdapter(DataAdapter):
 
     def should_recreate_iterator(self):
         return True
-

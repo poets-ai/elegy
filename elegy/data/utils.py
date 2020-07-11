@@ -1,14 +1,18 @@
+# Implementation based on tf.keras.engine.data_adapter.py
+# https://github.com/tensorflow/tensorflow/blob/2b96f3662bd776e277f86997659e61046b56c315/tensorflow/python/keras/engine/data_adapter.py
+
+
 import collections
-from elegy.types import ArrayHolder
 import functools
 import math
+import typing as tp
 
 import jax.numpy as jnp
 import numpy as np
 import six
-import typing as tp
 
 from elegy import types
+from elegy.types import ArrayHolder
 
 
 def map_structure(
