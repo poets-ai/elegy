@@ -41,7 +41,7 @@ def plot_history(history):
         plt.plot(val_metric, label=f"Validation {key}")
         plt.legend(loc="lower right")
         plt.ylabel(key)
-        plt.ylim([min(plt.ylim()), 1])
+        # plt.ylim([min(plt.ylim()), 1])
         plt.title(f"Training and Validation {key}")
     plt.show()
 
