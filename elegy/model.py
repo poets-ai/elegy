@@ -2,6 +2,7 @@
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
 import copy
+from enum import Enum
 import typing as tp
 from functools import partial
 
@@ -24,6 +25,12 @@ from .data import (
 )
 from .metrics.metric_modes import get_mode_function
 from .callbacks import CallbackList, Callback
+
+
+class Mode(Enum):
+    predict = 1
+    test = 2
+    train = 3
 
 
 class Model(object):
@@ -108,7 +115,7 @@ class Model(object):
         optimizer_state: tp.Optional[optix.OptState],
         metrics_state: tp.Optional[hk.State],
         initial_metrics_state: tp.Optional[hk.State],
-        is_training: bool,
+        mode: Mode,
     ):
 
         if seed is not None:
@@ -136,11 +143,8 @@ class Model(object):
                 next(self._rngs), *x_args, **x_kwargs
             )
 
-        if not is_training:
+        if mode == Mode.predict:
             return
-
-        if self._optimizer_state is None:
-            self._optimizer_state = self._optimizer.init(self._params)
 
         if self._metrics_transform is not None and self._metrics_state is None:
             x_args, x_kwargs = utils.get_input_args(x, y, is_training=False)
@@ -168,6 +172,12 @@ class Model(object):
             )
 
             self._initial_metrics_state = self._metrics_state
+
+        if mode == Mode.test:
+            return
+
+        if self._optimizer_state is None:
+            self._optimizer_state = self._optimizer.init(self._params)
 
     def reset_metrics(self, hard: bool = False):
 
@@ -202,7 +212,7 @@ class Model(object):
             optimizer_state=optimizer_state,
             metrics_state=metrics_state,
             initial_metrics_state=initial_metrics_state,
-            is_training=True,
+            mode=Mode.train,
         )
 
         update_fn = self._update if self.run_eagerly else self._update_jit
@@ -929,7 +939,7 @@ class Model(object):
             optimizer_state=None,
             metrics_state=metrics_state,
             initial_metrics_state=initial_metrics_state,
-            is_training=False,
+            mode=Mode.test,
         )
 
         test_fn = self._test if self.run_eagerly else self._test_jit
@@ -1018,7 +1028,7 @@ class Model(object):
             optimizer_state=None,
             metrics_state=None,
             initial_metrics_state=None,
-            is_training=False,
+            mode=Mode.predict,
         )
 
         predict_fn = self._predict if self.run_eagerly else self._predict_jit
