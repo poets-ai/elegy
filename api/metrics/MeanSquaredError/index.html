@@ -5,10 +5,10 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<link href="https://poets-ai.github.io/elegy/api/metrics/SparseCategoricalAccuracy/" rel="canonical"/>
+<link href="https://poets-ai.github.io/elegy/api/metrics/MeanSquaredError/" rel="canonical"/>
 <link href="../../../assets/images/favicon.png" rel="shortcut icon"/>
 <meta content="mkdocs-1.1.2, mkdocs-material-5.4.0" name="generator"/>
-<title>SparseCategoricalAccuracy - Elegy</title>
+<title>MeanSquaredError - Elegy</title>
 <link href="../../../assets/stylesheets/main.fe0cca5b.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
@@ -19,7 +19,7 @@
 <input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
 <label class="md-overlay" for="__drawer"></label>
 <div data-md-component="skip">
-<a class="md-skip" href="#elegymetricssparsecategoricalaccuracy">
+<a class="md-skip" href="#elegymetricsmeansquarederror">
           Skip to content
         </a>
 </div>
@@ -40,7 +40,7 @@
           </span>
 <span class="md-header-nav__topic md-ellipsis">
             
-              SparseCategoricalAccuracy
+              MeanSquaredError
             
           </span>
 </div>
@@ -161,16 +161,26 @@
       CategoricalAccuracy
     </a>
 </li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../SparseCategoricalAccuracy/" title="SparseCategoricalAccuracy">
+      SparseCategoricalAccuracy
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../Mean/" title="Mean">
+      Mean
+    </a>
+</li>
 <li class="md-nav__item md-nav__item--active">
 <input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
 <label class="md-nav__link md-nav__link--active" for="__toc">
-        SparseCategoricalAccuracy
+        MeanSquaredError
         <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
 </span>
 </label>
-<a class="md-nav__link md-nav__link--active" href="./" title="SparseCategoricalAccuracy">
-      SparseCategoricalAccuracy
+<a class="md-nav__link md-nav__link--active" href="./" title="MeanSquaredError">
+      MeanSquaredError
     </a>
 <nav aria-label="Table of contents" class="md-nav md-nav--secondary">
 <label class="md-nav__title" for="__toc">
@@ -181,32 +191,22 @@
     </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy">
-    elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy
+<a class="md-nav__link" href="#elegy.metrics.mean_squared_error.MeanSquaredError">
+    elegy.metrics.mean_squared_error.MeanSquaredError
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy.__init__">
+<a class="md-nav__link" href="#elegy.metrics.mean_squared_error.MeanSquaredError.__init__">
     __init__()
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy.call">
+<a class="md-nav__link" href="#elegy.metrics.mean_squared_error.MeanSquaredError.call">
     call()
   </a>
 </li>
 </ul>
 </nav>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../Mean/" title="Mean">
-      Mean
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../MeanSquaredError/" title="MeanSquaredError">
-      MeanSquaredError
-    </a>
 </li>
 </ul>
 </nav>
@@ -304,17 +304,17 @@
     </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy">
-    elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy
+<a class="md-nav__link" href="#elegy.metrics.mean_squared_error.MeanSquaredError">
+    elegy.metrics.mean_squared_error.MeanSquaredError
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy.__init__">
+<a class="md-nav__link" href="#elegy.metrics.mean_squared_error.MeanSquaredError.__init__">
     __init__()
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy.call">
+<a class="md-nav__link" href="#elegy.metrics.mean_squared_error.MeanSquaredError.call">
     call()
   </a>
 </li>
@@ -325,38 +325,24 @@
 </div>
 <div class="md-content">
 <article class="md-content__inner md-typeset">
-<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/metrics/SparseCategoricalAccuracy.md" title="Edit this page">
+<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/metrics/MeanSquaredError.md" title="Edit this page">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
 </a>
-<h1 id="elegymetricssparsecategoricalaccuracy">elegy.metrics.SparseCategoricalAccuracy</h1>
+<h1 id="elegymetricsmeansquarederror">elegy.metrics.MeanSquaredError</h1>
 <div class="doc doc-object doc-class">
-<h2 class="hidden-toc" href="#elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy" id="elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy" style="visibility: hidden; width: 0; height: 0;">
+<h2 class="hidden-toc" href="#elegy.metrics.mean_squared_error.MeanSquaredError" id="elegy.metrics.mean_squared_error.MeanSquaredError" style="visibility: hidden; width: 0; height: 0;">
 </h2>
 <div class="doc doc-contents first">
-<p>Calculates how often predictions matches integer labels.</p>
-<p>You can provide logits of classes as <code>y_pred</code>, since argmax of
-logits and probabilities are same.
-This metric creates two local variables, <code>total</code> and <code>count</code> that are used to
-compute the frequency with which <code>y_pred</code> matches <code>y_true</code>. This frequency is
-ultimately returned as <code>sparse categorical accuracy</code>: an idempotent operation
-that simply divides <code>total</code> by <code>count</code>.
-If <code>sample_weight</code> is <code>None</code>, weights default to 1.
-Use <code>sample_weight</code> of 0 to mask values.</p>
+<p>Computes the cumulative mean squared error between <code>y_true</code> and <code>y_pred</code>.</p>
 <p>Usage:</p>
 <div class="codehilite">
-<pre><span></span><code><span class="n">accuracy</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">SparseCategoricalAccuracy</span><span class="p">()</span>
+<pre><span></span><code><span class="n">mse</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">()</span>
 
-<span class="n">result</span> <span class="o">=</span> <span class="n">accuracy</span><span class="p">(</span>
-    <span class="n">y_true</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span> 
-    <span class="n">y_pred</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
-<span class="p">)</span>
-<span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="mf">0.5</span>  <span class="c1"># 1/2</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">mse</span><span class="p">(</span><span class="n">y_true</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">y_pred</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
+<span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="mf">0.25</span>
 
-<span class="n">result</span> <span class="o">=</span> <span class="n">accuracy</span><span class="p">(</span>
-    <span class="n">y_true</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span>
-    <span class="n">y_pred</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]),</span>
-<span class="p">)</span>
-<span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="mf">0.75</span>  <span class="c1"># 3/4</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">mse</span><span class="p">(</span><span class="n">y_true</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">y_pred</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))</span>
+<span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="mf">0.5</span>
 </code></pre>
 </div>
 <p>Usage with elegy API:</p>
@@ -364,14 +350,13 @@ Use <code>sample_weight</code> of 0 to mask values.</p>
 <pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
     <span class="n">model_fn</span><span class="p">,</span>
     <span class="n">loss</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">CategoricalCrossentropy</span><span class="p">()],</span>
-    <span class="n">metrics</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">SparseCategoricalAccuracy</span><span class="p">()],</span>
-    <span class="n">optimizer</span><span class="o">=</span><span class="n">optix</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">),</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">()],</span>
 <span class="p">)</span>
 </code></pre>
 </div>
 <div class="doc doc-children">
 <div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy.__init__">
+<h2 class="doc doc-heading" id="elegy.metrics.mean_squared_error.MeanSquaredError.__init__">
 <code class="highlight language-python">
 __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
 <span class="doc doc-properties">
@@ -379,7 +364,7 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 </span>
 </h2>
 <div class="doc doc-contents">
-<p>Creates a <code>SparseCategoricalAccuracy</code> instance.</p>
+<p>Creates a <code>MeanSquaredError</code> instance.</p>
 <p><strong>Parameters:</strong></p>
 <table>
 <thead>
@@ -410,22 +395,22 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 </tbody>
 </table>
 <details class="quote">
-<summary>Source code in <code>elegy/metrics/sparse_categorical_accuracy.py</code></summary>
+<summary>Source code in <code>elegy/metrics/mean_squared_error.py</code></summary>
 <table class="highlighttable">
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>61
-62
-63
-64
-65
-66
-67
-68
-69
-70
-71</pre>
+<pre><span></span>35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45</pre>
 </div>
 </td>
 <td class="code">
@@ -434,7 +419,7 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
     <span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="sd">"""</span>
-<span class="sd">    Creates a `SparseCategoricalAccuracy` instance.</span>
+<span class="sd">    Creates a `MeanSquaredError` instance.</span>
 
 <span class="sd">    Arguments:</span>
 <span class="sd">        name: string name of the metric instance.</span>
@@ -450,13 +435,12 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 </div>
 </div>
 <div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy.call">
+<h2 class="doc doc-heading" id="elegy.metrics.mean_squared_error.MeanSquaredError.call">
 <code class="highlight language-python">
 call<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
 </h2>
 <div class="doc doc-contents">
-<p>Accumulates metric statistics. <code>y_true</code> and <code>y_pred</code> should have the same shape except
-<code>y_true</code> should not have the last dimension of <code>y_pred</code>.</p>
+<p>Accumulates metric statistics. <code>y_true</code> and <code>y_pred</code> should have the same shape.</p>
 <p><strong>Parameters:</strong></p>
 <table>
 <thead>
@@ -472,7 +456,7 @@ call<span class="p">(</span><span class="bp">self</span><span class="p">,</span>
 <td><code>y_true</code></td>
 <td><code>ndarray</code></td>
 <td>
-<p>Sparse ground truth values. shape = <code>[batch_size, d0, .. dN-1]</code>.</p>
+<p>Ground truth values. shape = <code>[batch_size, d0, .. dN]</code>.</p>
 </td>
 <td><em>required</em></td>
 </tr>
@@ -480,7 +464,7 @@ call<span class="p">(</span><span class="bp">self</span><span class="p">,</span>
 <td><code>y_pred</code></td>
 <td><code>ndarray</code></td>
 <td>
-<p>The predicted values. shape = <code>[batch_size, d0, .. dN-1, dN]</code>.</p>
+<p>The predicted values. shape = <code>[batch_size, d0, .. dN]</code>.</p>
 </td>
 <td><em>required</em></td>
 </tr>
@@ -520,41 +504,37 @@ functions reduce by 1 dimension, usually the last axis (-1)).</p>
 </tbody>
 </table>
 <details class="quote">
-<summary>Source code in <code>elegy/metrics/sparse_categorical_accuracy.py</code></summary>
+<summary>Source code in <code>elegy/metrics/mean_squared_error.py</code></summary>
 <table class="highlighttable">
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span> 73
- 74
- 75
- 76
- 77
- 78
- 79
- 80
- 81
- 82
- 83
- 84
- 85
- 86
- 87
- 88
- 89
- 90
- 91
- 92
- 93
- 94
- 95
- 96
- 97
- 98
- 99
-100
-101
-102</pre>
+<pre><span></span>47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72</pre>
 </div>
 </td>
 <td class="code">
@@ -566,12 +546,11 @@ functions reduce by 1 dimension, usually the last axis (-1)).</p>
     <span class="n">sample_weight</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
     <span class="sd">"""</span>
-<span class="sd">    Accumulates metric statistics. `y_true` and `y_pred` should have the same shape except</span>
-<span class="sd">    `y_true` should not have the last dimension of `y_pred`.</span>
+<span class="sd">    Accumulates metric statistics. `y_true` and `y_pred` should have the same shape.</span>
 
 <span class="sd">    Arguments:</span>
-<span class="sd">        y_true: Sparse ground truth values. shape = `[batch_size, d0, .. dN-1]`.</span>
-<span class="sd">        y_pred: The predicted values. shape = `[batch_size, d0, .. dN-1, dN]`.</span>
+<span class="sd">        y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.</span>
+<span class="sd">        y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.</span>
 <span class="sd">        sample_weight: Optional `sample_weight` acts as a</span>
 <span class="sd">            coefficient for the metric. If a scalar is provided, then the metric is</span>
 <span class="sd">            simply scaled by the given value. If `sample_weight` is a tensor of size</span>
@@ -585,10 +564,7 @@ functions reduce by 1 dimension, usually the last axis (-1)).</p>
 <span class="sd">        Array with the cumulative accuracy.</span>
 <span class="sd">"""</span>
 
-    <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">call</span><span class="p">(</span>
-        <span class="n">values</span><span class="o">=</span><span class="n">sparse_categorical_accuracy</span><span class="p">(</span><span class="n">y_true</span><span class="o">=</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="o">=</span><span class="n">y_pred</span><span class="p">),</span>
-        <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="n">mean_squared_error</span><span class="p">(</span><span class="n">y_true</span><span class="o">=</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="o">=</span><span class="n">y_pred</span><span class="p">))</span>
 </code></pre>
 </div>
 </td>
@@ -607,7 +583,7 @@ functions reduce by 1 dimension, usually the last axis (-1)).</p>
 <footer class="md-footer">
 <div class="md-footer-nav">
 <nav aria-label="Footer" class="md-footer-nav__inner md-grid">
-<a class="md-footer-nav__link md-footer-nav__link--prev" href="../CategoricalAccuracy/" rel="prev" title="CategoricalAccuracy">
+<a class="md-footer-nav__link md-footer-nav__link--prev" href="../Mean/" rel="prev" title="Mean">
 <div class="md-footer-nav__button md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </div>
@@ -616,17 +592,17 @@ functions reduce by 1 dimension, usually the last axis (-1)).</p>
 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                CategoricalAccuracy
+                Mean
               </div>
 </div>
 </a>
-<a class="md-footer-nav__link md-footer-nav__link--next" href="../Mean/" rel="next" title="Mean">
+<a class="md-footer-nav__link md-footer-nav__link--next" href="../../losses/CategoricalCrossentropy/" rel="next" title="CategoricalCrossentropy">
 <div class="md-footer-nav__title">
 <div class="md-ellipsis">
 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Mean
+                CategoricalCrossentropy
               </div>
 </div>
 <div class="md-footer-nav__button md-icon">

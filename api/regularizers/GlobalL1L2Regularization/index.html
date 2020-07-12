@@ -5,10 +5,10 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<link href="https://poets-ai.github.io/elegy/api/metrics/SparseCategoricalAccuracy/" rel="canonical"/>
+<link href="https://poets-ai.github.io/elegy/api/regularizers/GlobalL1L2Regularization/" rel="canonical"/>
 <link href="../../../assets/images/favicon.png" rel="shortcut icon"/>
 <meta content="mkdocs-1.1.2, mkdocs-material-5.4.0" name="generator"/>
-<title>SparseCategoricalAccuracy - Elegy</title>
+<title>GlobalL1L2Regularization - Elegy</title>
 <link href="../../../assets/stylesheets/main.fe0cca5b.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
@@ -19,7 +19,7 @@
 <input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
 <label class="md-overlay" for="__drawer"></label>
 <div data-md-component="skip">
-<a class="md-skip" href="#elegymetricssparsecategoricalaccuracy">
+<a class="md-skip" href="#elegyregularizersgloball1l2regularization">
           Skip to content
         </a>
 </div>
@@ -40,7 +40,7 @@
           </span>
 <span class="md-header-nav__topic md-ellipsis">
             
-              SparseCategoricalAccuracy
+              GlobalL1L2Regularization
             
           </span>
 </div>
@@ -135,8 +135,8 @@
         API Reference
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item md-nav__item--active md-nav__item--nested">
-<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-3-1" id="nav-3-1" type="checkbox"/>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-1" id="nav-3-1" type="checkbox"/>
 <label class="md-nav__link" for="nav-3-1">
       metrics
       <span class="md-nav__icon md-icon">
@@ -152,59 +152,27 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../Accuracy/" title="Accuracy">
+<a class="md-nav__link" href="../../metrics/Accuracy/" title="Accuracy">
       Accuracy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../CategoricalAccuracy/" title="CategoricalAccuracy">
+<a class="md-nav__link" href="../../metrics/CategoricalAccuracy/" title="CategoricalAccuracy">
       CategoricalAccuracy
     </a>
 </li>
-<li class="md-nav__item md-nav__item--active">
-<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
-<label class="md-nav__link md-nav__link--active" for="__toc">
-        SparseCategoricalAccuracy
-        <span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
-</span>
-</label>
-<a class="md-nav__link md-nav__link--active" href="./" title="SparseCategoricalAccuracy">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../metrics/SparseCategoricalAccuracy/" title="SparseCategoricalAccuracy">
       SparseCategoricalAccuracy
     </a>
-<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
-<label class="md-nav__title" for="__toc">
-<span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
-</span>
-      Table of contents
-    </label>
-<ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy">
-    elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy
-  </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy.__init__">
-    __init__()
-  </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy.call">
-    call()
-  </a>
-</li>
-</ul>
-</nav>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../Mean/" title="Mean">
+<a class="md-nav__link" href="../../metrics/Mean/" title="Mean">
       Mean
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../MeanSquaredError/" title="MeanSquaredError">
+<a class="md-nav__link" href="../../metrics/MeanSquaredError/" title="MeanSquaredError">
       MeanSquaredError
     </a>
 </li>
@@ -250,8 +218,8 @@
 </ul>
 </nav>
 </li>
-<li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-3" id="nav-3-3" type="checkbox"/>
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-3-3" id="nav-3-3" type="checkbox"/>
 <label class="md-nav__link" for="nav-3-3">
       regularizers
       <span class="md-nav__icon md-icon">
@@ -267,19 +235,46 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../regularizers/GlobalL1Regularization/" title="GlobalL1Regularization">
+<a class="md-nav__link" href="../GlobalL1Regularization/" title="GlobalL1Regularization">
       GlobalL1Regularization
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../regularizers/GlobalL2Regularization/" title="GlobalL2Regularization">
+<a class="md-nav__link" href="../GlobalL2Regularization/" title="GlobalL2Regularization">
       GlobalL2Regularization
     </a>
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../regularizers/GlobalL1L2Regularization/" title="GlobalL1L2Regularization">
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+        GlobalL1L2Regularization
+        <span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
+</span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./" title="GlobalL1L2Regularization">
       GlobalL1L2Regularization
     </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.regularizers.global_l1l2_regularization.GlobalL1L2Regularization">
+    elegy.regularizers.global_l1l2_regularization.GlobalL1L2Regularization
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.regularizers.global_l1l2_regularization.GlobalL1L2Regularization.call">
+    call()
+  </a>
+</li>
+</ul>
+</nav>
 </li>
 </ul>
 </nav>
@@ -304,17 +299,12 @@
     </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy">
-    elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy
+<a class="md-nav__link" href="#elegy.regularizers.global_l1l2_regularization.GlobalL1L2Regularization">
+    elegy.regularizers.global_l1l2_regularization.GlobalL1L2Regularization
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy.__init__">
-    __init__()
-  </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy.call">
+<a class="md-nav__link" href="#elegy.regularizers.global_l1l2_regularization.GlobalL1L2Regularization.call">
     call()
   </a>
 </li>
@@ -325,61 +315,73 @@
 </div>
 <div class="md-content">
 <article class="md-content__inner md-typeset">
-<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/metrics/SparseCategoricalAccuracy.md" title="Edit this page">
+<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/regularizers/GlobalL1L2Regularization.md" title="Edit this page">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
 </a>
-<h1 id="elegymetricssparsecategoricalaccuracy">elegy.metrics.SparseCategoricalAccuracy</h1>
+<h1 id="elegyregularizersgloball1l2regularization">elegy.regularizers.GlobalL1L2Regularization</h1>
 <div class="doc doc-object doc-class">
-<h2 class="hidden-toc" href="#elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy" id="elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy" style="visibility: hidden; width: 0; height: 0;">
+<h2 class="hidden-toc" href="#elegy.regularizers.global_l1l2_regularization.GlobalL1L2Regularization" id="elegy.regularizers.global_l1l2_regularization.GlobalL1L2Regularization" style="visibility: hidden; width: 0; height: 0;">
 </h2>
 <div class="doc doc-contents first">
-<p>Calculates how often predictions matches integer labels.</p>
-<p>You can provide logits of classes as <code>y_pred</code>, since argmax of
-logits and probabilities are same.
-This metric creates two local variables, <code>total</code> and <code>count</code> that are used to
-compute the frequency with which <code>y_pred</code> matches <code>y_true</code>. This frequency is
-ultimately returned as <code>sparse categorical accuracy</code>: an idempotent operation
-that simply divides <code>total</code> by <code>count</code>.
-If <code>sample_weight</code> is <code>None</code>, weights default to 1.
-Use <code>sample_weight</code> of 0 to mask values.</p>
+<p>A regularizer that applies both L1 and L2 regularization penalties.</p>
+<p>The L1 regularization penalty is computed as:</p>
+<div>
+<div class="MathJax_Preview">
+\ell_1\,\,penalty =\ell_1\sum_{i=0}^n|x_i|
+</div>
+<script type="math/tex; mode=display">
+\ell_1\,\,penalty =\ell_1\sum_{i=0}^n|x_i|
+</script>
+</div>
+<p>The L2 regularization penalty is computed as</p>
+<div>
+<div class="MathJax_Preview">\ell_2\,\,penalty =\ell_2\sum_{i=0}^nx_i^2</div>
+<script type="math/tex; mode=display">\ell_2\,\,penalty =\ell_2\sum_{i=0}^nx_i^2</script>
+</div>
 <p>Usage:</p>
 <div class="codehilite">
-<pre><span></span><code><span class="n">accuracy</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">SparseCategoricalAccuracy</span><span class="p">()</span>
-
-<span class="n">result</span> <span class="o">=</span> <span class="n">accuracy</span><span class="p">(</span>
-    <span class="n">y_true</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span> 
-    <span class="n">y_pred</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
-<span class="p">)</span>
-<span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="mf">0.5</span>  <span class="c1"># 1/2</span>
-
-<span class="n">result</span> <span class="o">=</span> <span class="n">accuracy</span><span class="p">(</span>
-    <span class="n">y_true</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span>
-    <span class="n">y_pred</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]),</span>
-<span class="p">)</span>
-<span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="mf">0.75</span>  <span class="c1"># 3/4</span>
-</code></pre>
-</div>
-<p>Usage with elegy API:</p>
-<div class="codehilite">
 <pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
-    <span class="n">model_fn</span><span class="p">,</span>
-    <span class="n">loss</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">CategoricalCrossentropy</span><span class="p">()],</span>
-    <span class="n">metrics</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">SparseCategoricalAccuracy</span><span class="p">()],</span>
-    <span class="n">optimizer</span><span class="o">=</span><span class="n">optix</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">),</span>
+    <span class="n">model_fn</span><span class="o">=</span><span class="n">model_fn</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">SparseCategoricalCrossentropy</span><span class="p">()],</span>
+    <span class="n">aux_losses</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="n">elegy</span><span class="o">.</span><span class="n">regularizers</span><span class="o">.</span><span class="n">GlobalL1L2Regularization</span><span class="p">(</span><span class="n">l1</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">l2</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)],</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">SparseCategoricalAccuracy</span><span class="p">(),</span>
 <span class="p">)</span>
 </code></pre>
 </div>
+<p><strong>Attributes:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>l1</code></td>
+<td><code></code></td>
+<td>
+<p>L1 regularization factor.</p>
+</td>
+</tr>
+<tr>
+<td><code>l2</code></td>
+<td><code></code></td>
+<td>
+<p>L2 regularization factor.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <div class="doc doc-children">
 <div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy.__init__">
+<h2 class="doc doc-heading" id="elegy.regularizers.global_l1l2_regularization.GlobalL1L2Regularization.call">
 <code class="highlight language-python">
-__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
-<span class="doc doc-properties">
-<small class="doc doc-property doc-property-special"><code>special</code></small>
-</span>
+call<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> </code>
 </h2>
 <div class="doc doc-contents">
-<p>Creates a <code>SparseCategoricalAccuracy</code> instance.</p>
+<p>Computes the L1 and L2 regularization penalty simultaneously.</p>
 <p><strong>Parameters:</strong></p>
 <table>
 <thead>
@@ -392,30 +394,30 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 </thead>
 <tbody>
 <tr>
-<td><code>name</code></td>
-<td><code>Optional[str]</code></td>
+<td><code>params</code></td>
+<td><code>Mapping[str, Mapping[str, jax.numpy.lax_numpy.ndarray]]</code></td>
 <td>
-<p>string name of the metric instance.</p>
+<p>A structure with all the parameters of the model.</p>
 </td>
-<td><code>None</code></td>
-</tr>
-<tr>
-<td><code>dtype</code></td>
-<td><code>Optional[numpy.dtype]</code></td>
-<td>
-<p>data type of the metric result.</p>
-</td>
-<td><code>None</code></td>
+<td><em>required</em></td>
 </tr>
 </tbody>
 </table>
 <details class="quote">
-<summary>Source code in <code>elegy/metrics/sparse_categorical_accuracy.py</code></summary>
+<summary>Source code in <code>elegy/regularizers/global_l1l2_regularization.py</code></summary>
 <table class="highlighttable">
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>61
+<pre><span></span>53
+54
+55
+56
+57
+58
+59
+60
+61
 62
 63
 64
@@ -425,170 +427,40 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 68
 69
 70
-71</pre>
+71
+72
+73
+74
+75
+76</pre>
 </div>
 </td>
 <td class="code">
 <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-    <span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">):</span>
+<pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">hk</span><span class="o">.</span><span class="n">Params</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
     <span class="sd">"""</span>
-<span class="sd">    Creates a `SparseCategoricalAccuracy` instance.</span>
+<span class="sd">    Computes the L1 and L2 regularization penalty simultaneously.</span>
 
 <span class="sd">    Arguments:</span>
-<span class="sd">        name: string name of the metric instance.</span>
-<span class="sd">        dtype: data type of the metric result.</span>
+<span class="sd">        params: A structure with all the parameters of the model.</span>
 <span class="sd">    """</span>
-    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
-</code></pre>
-</div>
-</td>
-</tr>
-</table>
-</details>
-</div>
-</div>
-<div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy.call">
-<code class="highlight language-python">
-call<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
-</h2>
-<div class="doc doc-contents">
-<p>Accumulates metric statistics. <code>y_true</code> and <code>y_pred</code> should have the same shape except
-<code>y_true</code> should not have the last dimension of <code>y_pred</code>.</p>
-<p><strong>Parameters:</strong></p>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>y_true</code></td>
-<td><code>ndarray</code></td>
-<td>
-<p>Sparse ground truth values. shape = <code>[batch_size, d0, .. dN-1]</code>.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-<tr>
-<td><code>y_pred</code></td>
-<td><code>ndarray</code></td>
-<td>
-<p>The predicted values. shape = <code>[batch_size, d0, .. dN-1, dN]</code>.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-<tr>
-<td><code>sample_weight</code></td>
-<td><code>Optional[jax.numpy.lax_numpy.ndarray]</code></td>
-<td>
-<p>Optional <code>sample_weight</code> acts as a
-coefficient for the metric. If a scalar is provided, then the metric is
-simply scaled by the given value. If <code>sample_weight</code> is a tensor of size
-<code>[batch_size]</code>, then the metric for each sample of the batch is rescaled
-by the corresponding element in the <code>sample_weight</code> vector. If the shape
-of <code>sample_weight</code> is <code>[batch_size, d0, .. dN-1]</code> (or can be broadcasted
-to this shape), then each metric element of <code>y_pred</code> is scaled by the
-corresponding value of <code>sample_weight</code>. (Note on <code>dN-1</code>: all metric
-functions reduce by 1 dimension, usually the last axis (-1)).</p>
-</td>
-<td><code>None</code></td>
-</tr>
-</tbody>
-</table>
-<p><strong>Returns:</strong></p>
-<table>
-<thead>
-<tr>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>ndarray</code></td>
-<td>
-<p>Array with the cumulative accuracy.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<details class="quote">
-<summary>Source code in <code>elegy/metrics/sparse_categorical_accuracy.py</code></summary>
-<table class="highlighttable">
-<tr>
-<td class="linenos">
-<div class="linenodiv">
-<pre><span></span> 73
- 74
- 75
- 76
- 77
- 78
- 79
- 80
- 81
- 82
- 83
- 84
- 85
- 86
- 87
- 88
- 89
- 90
- 91
- 92
- 93
- 94
- 95
- 96
- 97
- 98
- 99
-100
-101
-102</pre>
-</div>
-</td>
-<td class="code">
-<div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span>
-    <span class="bp">self</span><span class="p">,</span>
-    <span class="n">y_true</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-    <span class="n">y_pred</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-    <span class="n">sample_weight</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-    <span class="sd">"""</span>
-<span class="sd">    Accumulates metric statistics. `y_true` and `y_pred` should have the same shape except</span>
-<span class="sd">    `y_true` should not have the last dimension of `y_pred`.</span>
 
-<span class="sd">    Arguments:</span>
-<span class="sd">        y_true: Sparse ground truth values. shape = `[batch_size, d0, .. dN-1]`.</span>
-<span class="sd">        y_pred: The predicted values. shape = `[batch_size, d0, .. dN-1, dN]`.</span>
-<span class="sd">        sample_weight: Optional `sample_weight` acts as a</span>
-<span class="sd">            coefficient for the metric. If a scalar is provided, then the metric is</span>
-<span class="sd">            simply scaled by the given value. If `sample_weight` is a tensor of size</span>
-<span class="sd">            `[batch_size]`, then the metric for each sample of the batch is rescaled</span>
-<span class="sd">            by the corresponding element in the `sample_weight` vector. If the shape</span>
-<span class="sd">            of `sample_weight` is `[batch_size, d0, .. dN-1]` (or can be broadcasted</span>
-<span class="sd">            to this shape), then each metric element of `y_pred` is scaled by the</span>
-<span class="sd">            corresponding value of `sample_weight`. (Note on `dN-1`: all metric</span>
-<span class="sd">            functions reduce by 1 dimension, usually the last axis (-1)).</span>
-<span class="sd">    Returns:</span>
-<span class="sd">        Array with the cumulative accuracy.</span>
-<span class="sd">"""</span>
+    <span class="n">regularization</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">call</span><span class="p">(</span>
-        <span class="n">values</span><span class="o">=</span><span class="n">sparse_categorical_accuracy</span><span class="p">(</span><span class="n">y_true</span><span class="o">=</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="o">=</span><span class="n">y_pred</span><span class="p">),</span>
-        <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">l1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">l2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">regularization</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">l1</span><span class="p">:</span>
+        <span class="n">regularization</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">l1</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">jnp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">p</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_leaves</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">l2</span><span class="p">:</span>
+        <span class="n">regularization</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">l2</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">jnp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">p</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_leaves</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">regularization</span>
 </code></pre>
 </div>
 </td>
@@ -607,7 +479,7 @@ functions reduce by 1 dimension, usually the last axis (-1)).</p>
 <footer class="md-footer">
 <div class="md-footer-nav">
 <nav aria-label="Footer" class="md-footer-nav__inner md-grid">
-<a class="md-footer-nav__link md-footer-nav__link--prev" href="../CategoricalAccuracy/" rel="prev" title="CategoricalAccuracy">
+<a class="md-footer-nav__link md-footer-nav__link--prev" href="../GlobalL2Regularization/" rel="prev" title="GlobalL2Regularization">
 <div class="md-footer-nav__button md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </div>
@@ -616,21 +488,8 @@ functions reduce by 1 dimension, usually the last axis (-1)).</p>
 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                CategoricalAccuracy
+                GlobalL2Regularization
               </div>
-</div>
-</a>
-<a class="md-footer-nav__link md-footer-nav__link--next" href="../Mean/" rel="next" title="Mean">
-<div class="md-footer-nav__title">
-<div class="md-ellipsis">
-<span class="md-footer-nav__direction">
-                  Next
-                </span>
-                Mean
-              </div>
-</div>
-<div class="md-footer-nav__button md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"></path></svg>
 </div>
 </a>
 </nav>
