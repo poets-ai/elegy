@@ -128,6 +128,9 @@ class ProgbarLogger(Callback):
             self.target = self.seen
             self.progbar.target = self.seen
         logs = logs or {}
+        # remove size or val_size for displaying
+        logs.pop("size")
+        logs.pop("val_size")
         self.progbar.update(self.seen, list(logs.items()), finalize=True)
 
 

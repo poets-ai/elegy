@@ -57,7 +57,7 @@ class Model(object):
         ] = None,
         metrics: tp.Optional[tp.Callable] = None,
         metrics_mode: str = "match_outputs_and_labels",
-        optimizer: optix.GradientTransformation = optix.adam(1e-3),
+        optimizer: tp.Optional[optix.GradientTransformation] = None,
         run_eagerly: bool = False,
         params: tp.Optional[hk.Params] = None,
         state: tp.Optional[hk.State] = None,
@@ -66,6 +66,27 @@ class Model(object):
         initial_metrics_state: tp.Optional[hk.State] = None,
         seed: tp.Union[jnp.ndarray, int] = jax.random.PRNGKey(42),
     ):
+        """[summary]
+
+        Args:
+            model_fn (tp.Optional[tp.Callable]): [description]
+            loss (tp.Callable): [description]
+            loss_mode (str, optional): [description]. Defaults to "match_outputs_and_labels".
+            aux_losses (tp.Optional[ tp.Callable[[], tp.Union[tp.List[tp.Callable], tp.Callable]] ], optional): [description]. Defaults to None.
+            metrics (tp.Optional[tp.Callable], optional): [description]. Defaults to None.
+            metrics_mode (str, optional): [description]. Defaults to "match_outputs_and_labels".
+            optimizer (optix.GradientTransformation, optional): [description]. Defaults to optix.adam(1e-3).
+            run_eagerly (bool, optional): [description]. Defaults to False.
+            params (tp.Optional[hk.Params], optional): [description]. Defaults to None.
+            state (tp.Optional[hk.State], optional): [description]. Defaults to None.
+            optimizer_state (tp.Optional[optix.OptState], optional): [description]. Defaults to None.
+            metrics_state (tp.Optional[hk.State], optional): [description]. Defaults to None.
+            initial_metrics_state (tp.Optional[hk.State], optional): [description]. Defaults to None.
+            seed (tp.Union[jnp.ndarray, int], optional): [description]. Defaults to jax.random.PRNGKey(42).
+
+        Raises:
+            ValueError: [description]
+        """
 
         if hasattr(self, "call"):
             model_fn = getattr(self, "call")
@@ -91,7 +112,7 @@ class Model(object):
             if metrics
             else None
         )
-        self._optimizer = optimizer
+        self._optimizer = optimizer if optimizer is not None else optix.adam(1e-3)
         self._rngs = hk.PRNGSequence(seed)
         self._params = params
         self._state = state
