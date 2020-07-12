@@ -11,7 +11,7 @@ theme:
 
 nav:
   - Introduction: index.md
-  - Getting Started: mnist.ipynb
+  - Getting Started: getting-started.ipynb
   - API Reference:
       metrics:
         Accuracy: api/metrics/Accuracy.md
