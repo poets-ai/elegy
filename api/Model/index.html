@@ -1,0 +1,2584 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<link href="https://poets-ai.github.io/elegy/api/Model/" rel="canonical"/>
+<link href="../../assets/images/favicon.png" rel="shortcut icon"/>
+<meta content="mkdocs-1.1.2, mkdocs-material-5.4.0" name="generator"/>
+<title>Model - Elegy</title>
+<link href="../../assets/stylesheets/main.fe0cca5b.min.css" rel="stylesheet"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
+<style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
+</head>
+<body dir="ltr">
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#elegymodel">
+          Skip to content
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<header class="md-header" data-md-component="header">
+<nav aria-label="Header" class="md-header-nav md-grid">
+<a aria-label="Elegy" class="md-header-nav__button md-logo" href="https://poets-ai.github.io/elegy" title="Elegy">
+<svg viewbox="0 0 640 512" xmlns="http://www.w3.org/2000/svg"><path d="M471.1 96C405 96 353.3 137.3 320 174.6 286.7 137.3 235 96 168.9 96 75.8 96 0 167.8 0 256s75.8 160 168.9 160c66.1 0 117.8-41.3 151.1-78.6 33.3 37.3 85 78.6 151.1 78.6 93.1 0 168.9-71.8 168.9-160S564.2 96 471.1 96zM168.9 320c-40.2 0-72.9-28.7-72.9-64s32.7-64 72.9-64c38.2 0 73.4 36.1 94 64-20.4 27.6-55.9 64-94 64zm302.2 0c-38.2 0-73.4-36.1-94-64 20.4-27.6 55.9-64 94-64 40.2 0 72.9 28.7 72.9 64s-32.7 64-72.9 64z"></path></svg>
+</a>
+<label class="md-header-nav__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"></path></svg>
+</label>
+<div class="md-header-nav__title" data-md-component="header-title">
+<div class="md-header-nav__ellipsis">
+<span class="md-header-nav__topic md-ellipsis">
+            Elegy
+          </span>
+<span class="md-header-nav__topic md-ellipsis">
+            
+              Model
+            
+          </span>
+</div>
+</div>
+<label class="md-header-nav__button md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"></path></svg>
+</label>
+<div class="md-search" data-md-component="search" role="dialog">
+<label class="md-search__overlay" for="__search"></label>
+<div class="md-search__inner" role="search">
+<form class="md-search__form" name="search">
+<input aria-label="Search" autocapitalize="off" autocomplete="off" autocorrect="off" class="md-search__input" data-md-component="search-query" data-md-state="active" name="query" placeholder="Search" spellcheck="false" type="text"/>
+<label class="md-search__icon md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"></path></svg>
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</label>
+<button aria-label="Clear" class="md-search__icon md-icon" data-md-component="search-reset" tabindex="-1" type="reset">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg>
+</button>
+</form>
+<div class="md-search__output">
+<div class="md-search__scrollwrap" data-md-scrollfix="">
+<div class="md-search-result" data-md-component="search-result">
+<div class="md-search-result__meta">
+            Initializing search
+          </div>
+<ol class="md-search-result__list"></ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="md-header-nav__source">
+<a class="md-source" href="https://github.com/poets-ai/elegy/" title="Go to repository">
+<div class="md-source__icon md-icon">
+<svg viewbox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" fill-rule="evenodd"></path></svg>
+</div>
+<div class="md-source__repository">
+    poets-ai/elegy
+  </div>
+</a>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Navigation" class="md-nav md-nav--primary" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="Elegy" class="md-nav__button md-logo" href="https://poets-ai.github.io/elegy" title="Elegy">
+<svg viewbox="0 0 640 512" xmlns="http://www.w3.org/2000/svg"><path d="M471.1 96C405 96 353.3 137.3 320 174.6 286.7 137.3 235 96 168.9 96 75.8 96 0 167.8 0 256s75.8 160 168.9 160c66.1 0 117.8-41.3 151.1-78.6 33.3 37.3 85 78.6 151.1 78.6 93.1 0 168.9-71.8 168.9-160S564.2 96 471.1 96zM168.9 320c-40.2 0-72.9-28.7-72.9-64s32.7-64 72.9-64c38.2 0 73.4 36.1 94 64-20.4 27.6-55.9 64-94 64zm302.2 0c-38.2 0-73.4-36.1-94-64 20.4-27.6 55.9-64 94-64 40.2 0 72.9 28.7 72.9 64s-32.7 64-72.9 64z"></path></svg>
+</a>
+    Elegy
+  </label>
+<div class="md-nav__source">
+<a class="md-source" href="https://github.com/poets-ai/elegy/" title="Go to repository">
+<div class="md-source__icon md-icon">
+<svg viewbox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" fill-rule="evenodd"></path></svg>
+</div>
+<div class="md-source__repository">
+    poets-ai/elegy
+  </div>
+</a>
+</div>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../.." title="Introduction">
+      Introduction
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../getting-started/" title="Getting Started">
+      Getting Started
+    </a>
+</li>
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-3" id="nav-3" type="checkbox"/>
+<label class="md-nav__link" for="nav-3">
+      API Reference
+      <span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
+</span>
+</label>
+<nav aria-label="API Reference" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="nav-3">
+<span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</span>
+        API Reference
+      </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+        Model
+        <span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
+</span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./" title="Model">
+      Model
+    </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.model.Model">
+    elegy.model.Model
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.model.Model.__init__">
+    __init__()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.model.Model.evaluate">
+    evaluate()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.model.Model.fit">
+    fit()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.model.Model.predict">
+    predict()
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-2" id="nav-3-2" type="checkbox"/>
+<label class="md-nav__link" for="nav-3-2">
+      metrics
+      <span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
+</span>
+</label>
+<nav aria-label="metrics" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="nav-3-2">
+<span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</span>
+        metrics
+      </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../metrics/Accuracy/" title="Accuracy">
+      Accuracy
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../metrics/CategoricalAccuracy/" title="CategoricalAccuracy">
+      CategoricalAccuracy
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../metrics/SparseCategoricalAccuracy/" title="SparseCategoricalAccuracy">
+      SparseCategoricalAccuracy
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../metrics/Mean/" title="Mean">
+      Mean
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../metrics/MeanSquaredError/" title="MeanSquaredError">
+      MeanSquaredError
+    </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-3" id="nav-3-3" type="checkbox"/>
+<label class="md-nav__link" for="nav-3-3">
+      losses
+      <span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
+</span>
+</label>
+<nav aria-label="losses" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="nav-3-3">
+<span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</span>
+        losses
+      </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../losses/CategoricalCrossentropy/" title="CategoricalCrossentropy">
+      CategoricalCrossentropy
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../losses/SparseCategoricalCrossentropy/" title="SparseCategoricalCrossentropy">
+      SparseCategoricalCrossentropy
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../losses/MeanSquaredError/" title="MeanSquaredError">
+      MeanSquaredError
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../losses/mean_squared_error/" title="mean_squared_error">
+      mean_squared_error
+    </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-4" id="nav-3-4" type="checkbox"/>
+<label class="md-nav__link" for="nav-3-4">
+      regularizers
+      <span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
+</span>
+</label>
+<nav aria-label="regularizers" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="nav-3-4">
+<span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</span>
+        regularizers
+      </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../regularizers/GlobalL1/" title="GlobalL1">
+      GlobalL1
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../regularizers/GlobalL2/" title="GlobalL2">
+      GlobalL2
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../regularizers/GlobalL1L2/" title="GlobalL1L2">
+      GlobalL1L2
+    </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.model.Model">
+    elegy.model.Model
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.model.Model.__init__">
+    __init__()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.model.Model.evaluate">
+    evaluate()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.model.Model.fit">
+    fit()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.model.Model.predict">
+    predict()
+  </a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content">
+<article class="md-content__inner md-typeset">
+<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/Model.md" title="Edit this page">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
+</a>
+<h1 id="elegymodel">elegy.Model</h1>
+<div class="doc doc-object doc-class">
+<h2 class="hidden-toc" href="#elegy.model.Model" id="elegy.model.Model" style="visibility: hidden; width: 0; height: 0;">
+</h2>
+<div class="doc doc-contents first">
+<div class="doc doc-children">
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.model.Model.__init__">
+<code class="highlight language-python">
+__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">loss_mode</span><span class="o">=</span><span class="s1">'match_outputs_and_labels'</span><span class="p">,</span> <span class="n">aux_losses</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metrics_mode</span><span class="o">=</span><span class="s1">'match_outputs_and_labels'</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">run_eagerly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">optimizer_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metrics_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">initial_metrics_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">DeviceArray</span><span class="p">([</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">42</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint32</span><span class="p">))</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-special"><code>special</code></small>
+</span>
+</h2>
+<div class="doc doc-contents">
+<p>[summary]</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>module</code></td>
+<td><code>Callable</code></td>
+<td>
+<p>[description]</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>loss</code></td>
+<td><code>Optional[Union[Callable, List, Dict]]</code></td>
+<td>
+<p>[description]</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>loss_mode</code></td>
+<td><code>str</code></td>
+<td>
+<p>[description]. Defaults to "match_outputs_and_labels".</p>
+</td>
+<td><code>'match_outputs_and_labels'</code></td>
+</tr>
+<tr>
+<td><code>aux_losses</code></td>
+<td><code>Optional[Callable[[], Union[List[Callable], Callable]]]</code></td>
+<td>
+<p>[description]. Defaults to None.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>metrics</code></td>
+<td><code>Optional[Union[Callable, List, Dict]]</code></td>
+<td>
+<p>[description]. Defaults to None.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>metrics_mode</code></td>
+<td><code>str</code></td>
+<td>
+<p>[description]. Defaults to "match_outputs_and_labels".</p>
+</td>
+<td><code>'match_outputs_and_labels'</code></td>
+</tr>
+<tr>
+<td><code>optimizer</code></td>
+<td><code>Optional[jax.experimental.optix.GradientTransformation]</code></td>
+<td>
+<p>[description]. Defaults to optix.adam(1e-3).</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>run_eagerly</code></td>
+<td><code>bool</code></td>
+<td>
+<p>[description]. Defaults to False.</p>
+</td>
+<td><code>False</code></td>
+</tr>
+<tr>
+<td><code>params</code></td>
+<td><code>Optional[Mapping[str, Mapping[str, jax.numpy.lax_numpy.ndarray]]]</code></td>
+<td>
+<p>[description]. Defaults to None.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>state</code></td>
+<td><code>Optional[Mapping[str, Mapping[str, jax.numpy.lax_numpy.ndarray]]]</code></td>
+<td>
+<p>[description]. Defaults to None.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>optimizer_state</code></td>
+<td><code>Optional[NamedTuple]</code></td>
+<td>
+<p>[description]. Defaults to None.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>metrics_state</code></td>
+<td><code>Optional[Mapping[str, Mapping[str, jax.numpy.lax_numpy.ndarray]]]</code></td>
+<td>
+<p>[description]. Defaults to None.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>initial_metrics_state</code></td>
+<td><code>Optional[Mapping[str, Mapping[str, jax.numpy.lax_numpy.ndarray]]]</code></td>
+<td>
+<p>[description]. Defaults to None.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>seed</code></td>
+<td><code>Union[jax.numpy.lax_numpy.ndarray, int]</code></td>
+<td>
+<p>[description]. Defaults to jax.random.PRNGKey(42).</p>
+</td>
+<td><code>DeviceArray([ 0, 42], dtype=uint32)</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exceptions:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ValueError</code></td>
+<td>
+<p>[description]</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+<summary>Source code in <code>elegy/model.py</code></summary>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span> 50
+ 51
+ 52
+ 53
+ 54
+ 55
+ 56
+ 57
+ 58
+ 59
+ 60
+ 61
+ 62
+ 63
+ 64
+ 65
+ 66
+ 67
+ 68
+ 69
+ 70
+ 71
+ 72
+ 73
+ 74
+ 75
+ 76
+ 77
+ 78
+ 79
+ 80
+ 81
+ 82
+ 83
+ 84
+ 85
+ 86
+ 87
+ 88
+ 89
+ 90
+ 91
+ 92
+ 93
+ 94
+ 95
+ 96
+ 97
+ 98
+ 99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127</pre>
+</div>
+</td>
+<td class="code">
+<div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">module</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">,</span>
+    <span class="n">loss</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">List</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Dict</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">loss_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"match_outputs_and_labels"</span><span class="p">,</span>
+    <span class="n">aux_losses</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">],</span> <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">]]</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">metrics</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">List</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Dict</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">metrics_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"match_outputs_and_labels"</span><span class="p">,</span>
+    <span class="n">optimizer</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">optix</span><span class="o">.</span><span class="n">GradientTransformation</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">run_eagerly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">params</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">hk</span><span class="o">.</span><span class="n">Params</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">hk</span><span class="o">.</span><span class="n">State</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">optimizer_state</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">optix</span><span class="o">.</span><span class="n">OptState</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">metrics_state</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">hk</span><span class="o">.</span><span class="n">State</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">initial_metrics_state</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">hk</span><span class="o">.</span><span class="n">State</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="mi">42</span><span class="p">),</span>
+<span class="p">):</span>
+    <span class="sd">"""[summary]</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        module (tp.Optional[tp.Callable]): [description]</span>
+<span class="sd">        loss (tp.Callable): [description]</span>
+<span class="sd">        loss_mode (str, optional): [description]. Defaults to "match_outputs_and_labels".</span>
+<span class="sd">        aux_losses (tp.Optional[ tp.Callable[[], tp.Union[tp.List[tp.Callable], tp.Callable]] ], optional): [description]. Defaults to None.</span>
+<span class="sd">        metrics (tp.Optional[tp.Callable], optional): [description]. Defaults to None.</span>
+<span class="sd">        metrics_mode (str, optional): [description]. Defaults to "match_outputs_and_labels".</span>
+<span class="sd">        optimizer (optix.GradientTransformation, optional): [description]. Defaults to optix.adam(1e-3).</span>
+<span class="sd">        run_eagerly (bool, optional): [description]. Defaults to False.</span>
+<span class="sd">        params (tp.Optional[hk.Params], optional): [description]. Defaults to None.</span>
+<span class="sd">        state (tp.Optional[hk.State], optional): [description]. Defaults to None.</span>
+<span class="sd">        optimizer_state (tp.Optional[optix.OptState], optional): [description]. Defaults to None.</span>
+<span class="sd">        metrics_state (tp.Optional[hk.State], optional): [description]. Defaults to None.</span>
+<span class="sd">        initial_metrics_state (tp.Optional[hk.State], optional): [description]. Defaults to None.</span>
+<span class="sd">        seed (tp.Union[jnp.ndarray, int], optional): [description]. Defaults to jax.random.PRNGKey(42).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: [description]</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="n">metrics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="n">metric_modes</span><span class="o">.</span><span class="n">get_mode_function</span><span class="p">(</span><span class="n">metrics_mode</span><span class="p">)(</span><span class="n">metrics</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">loss</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="k">def</span> <span class="nf">_loss</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">_loss</span>
+
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_modes</span><span class="o">.</span><span class="n">get_mode_function</span><span class="p">(</span><span class="n">loss_mode</span><span class="p">)(</span><span class="n">loss</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">model_fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">module</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_fn</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">inject_dependencies</span><span class="p">(</span><span class="n">module</span><span class="p">)(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_module_fn</span> <span class="o">=</span> <span class="n">module</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_model_transform</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">transform_with_state</span><span class="p">(</span><span class="n">model_fn</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_loss_fn</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">inject_dependencies</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_aux_losses</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">loss_modes</span><span class="o">.</span><span class="n">get_aux_losses_fn</span><span class="p">(</span><span class="n">aux_losses</span><span class="p">)</span> <span class="k">if</span> <span class="n">aux_losses</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_metrics_transform</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">hk</span><span class="o">.</span><span class="n">transform_with_state</span><span class="p">(</span>
+            <span class="n">utils</span><span class="o">.</span><span class="n">inject_dependencies</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">rename</span><span class="o">=</span><span class="p">{</span><span class="s2">"__params"</span><span class="p">:</span> <span class="s2">"params"</span><span class="p">})</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">metrics</span>
+        <span class="k">else</span> <span class="kc">None</span>
+    <span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span> <span class="o">=</span> <span class="n">optimizer</span> <span class="k">if</span> <span class="n">optimizer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">optix</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_rngs</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">PRNGSequence</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_params</span> <span class="o">=</span> <span class="n">params</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">=</span> <span class="n">state</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_optimizer_state</span> <span class="o">=</span> <span class="n">optimizer_state</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_metrics_state</span> <span class="o">=</span> <span class="n">metrics_state</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_initial_metrics_state</span> <span class="o">=</span> <span class="n">initial_metrics_state</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">run_eagerly</span> <span class="o">=</span> <span class="n">run_eagerly</span>
+</code></pre>
+</div>
+</td>
+</tr>
+</table>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.model.Model.evaluate">
+<code class="highlight language-python">
+evaluate<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
+</h2>
+<div class="doc doc-contents">
+<p>Returns the loss value &amp; metrics values for the model in test mode.
+Computation is done in batches.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>x</code></td>
+<td><code>Union[jax.numpy.lax_numpy.ndarray, numpy.ndarray, Mapping[str, Union[numpy.ndarray, jax.numpy.lax_numpy.ndarray]], Tuple[Union[numpy.ndarray, jax.numpy.lax_numpy.ndarray]], Iterable]</code></td>
+<td>
+<p>Input data. It could be: - A Numpy array (or array-like), or a list</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>y</code></td>
+<td><code>Optional[Union[jax.numpy.lax_numpy.ndarray, numpy.ndarray, Mapping[str, Union[numpy.ndarray, jax.numpy.lax_numpy.ndarray]], Tuple[Union[numpy.ndarray, jax.numpy.lax_numpy.ndarray]]]]</code></td>
+<td>
+<p>Target data. Like the input data <code>x</code>, it could be either Numpy</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>batch_size</code></td>
+<td><code>Optional[int]</code></td>
+<td>
+<p>Integer or <code>None</code>. Number of samples per gradient update. If</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>verbose</code></td>
+<td><code>int</code></td>
+<td>
+<p>0 or 1. Verbosity mode. 0 = silent, 1 = progress bar.</p>
+</td>
+<td><code>1</code></td>
+</tr>
+<tr>
+<td><code>sample_weight</code></td>
+<td><code>Optional[Union[numpy.ndarray, jax.numpy.lax_numpy.ndarray]]</code></td>
+<td>
+<p>Optional Numpy array of weights for the test samples,</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>Numpy</code></td>
+<td><code>array with the same length as the input samples
+(1</code></td>
+<td>
+<p>1 mapping between weights and samples), or in the case of
+temporal data, you can pass a 2D array with shape <code>(samples,
+sequence_length)</code>, to apply a different weight to every timestep
+of every sample. In this case you should make sure to specify
+<code>sample_weight_mode="temporal"</code> in <code>compile()</code>. This argument is
+not supported when <code>x</code> is a dataset, instead pass sample weights
+as the third element of <code>x</code>.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>steps</code></td>
+<td><code>Optional[int]</code></td>
+<td>
+<p>Integer or <code>None</code>. Total number of steps (batches of samples)</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>callbacks</code></td>
+<td><code>Optional[Union[List[elegy.callbacks.callback.Callback], elegy.callbacks.callback_list.CallbackList]]</code></td>
+<td>
+<p>List of <code>keras.callbacks.Callback</code> instances. List of</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>max_queue_size</code></td>
+<td><code></code></td>
+<td>
+<p>Integer. Used for generator or <code>keras.utils.Sequence</code></p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>workers</code></td>
+<td><code></code></td>
+<td>
+<p>Integer. Used for generator or <code>keras.utils.Sequence</code> input</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>use_multiprocessing</code></td>
+<td><code></code></td>
+<td>
+<p>Boolean. Used for generator or</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>return_dict</code></td>
+<td><code></code></td>
+<td>
+<p>If <code>True</code>, loss and metric results are returned as a dict,</p>
+</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+<p>See the discussion of <code>Unpacking behavior for iterator-like inputs</code> for
+<code>Model.fit</code>.</p>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code></code></td>
+<td>
+<p>Scalar test loss (if the model has a single output and no metrics)
+or list of scalars (if the model has multiple outputs
+and/or metrics). The attribute <code>model.metrics_names</code> will give you
+the display labels for the scalar outputs.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exceptions:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ValueError</code></td>
+<td>
+<p>in case of invalid arguments.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+<summary>Source code in <code>elegy/model.py</code></summary>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span>674
+675
+676
+677
+678
+679
+680
+681
+682
+683
+684
+685
+686
+687
+688
+689
+690
+691
+692
+693
+694
+695
+696
+697
+698
+699
+700
+701
+702
+703
+704
+705
+706
+707
+708
+709
+710
+711
+712
+713
+714
+715
+716
+717
+718
+719
+720
+721
+722
+723
+724
+725
+726
+727
+728
+729
+730
+731
+732
+733
+734
+735
+736
+737
+738
+739
+740
+741
+742
+743
+744
+745
+746
+747
+748
+749
+750
+751
+752
+753
+754
+755
+756
+757
+758
+759
+760
+761
+762
+763
+764
+765
+766
+767
+768
+769
+770
+771
+772
+773
+774
+775
+776
+777
+778
+779
+780
+781
+782
+783
+784
+785
+786
+787
+788
+789
+790
+791
+792
+793
+794
+795
+796
+797
+798
+799
+800
+801
+802
+803
+804
+805
+806
+807</pre>
+</div>
+</td>
+<td class="code">
+<div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span>
+        <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Iterable</span><span class="p">,</span>
+    <span class="p">],</span>
+    <span class="n">y</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span>
+        <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span>
+        <span class="kc">None</span><span class="p">,</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">sample_weight</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">steps</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">callbacks</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">Callback</span><span class="p">],</span> <span class="n">CallbackList</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">"""Returns the loss value &amp; metrics values for the model in test mode.</span>
+<span class="sd">        Computation is done in batches.</span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            x: Input data. It could be: - A Numpy array (or array-like), or a list</span>
+<span class="sd">            of arrays (in case the model has multiple inputs). - A TensorFlow</span>
+<span class="sd">            tensor, or a list of tensors (in case the model has multiple inputs).</span>
+<span class="sd">            - A dict mapping input names to the corresponding array/tensors, if</span>
+<span class="sd">            the model has named inputs. - A `tf.data` dataset. - A generator or</span>
+<span class="sd">            `keras.utils.Sequence` instance. A more detailed description of</span>
+<span class="sd">            unpacking behavior for iterator types (Dataset, generator, Sequence)</span>
+<span class="sd">            is given in the `Unpacking behavior for iterator-like inputs` section</span>
+<span class="sd">            of `Model.fit`.</span>
+<span class="sd">            y: Target data. Like the input data `x`, it could be either Numpy</span>
+<span class="sd">            array(s) or TensorFlow tensor(s). It should be consistent with `x`</span>
+<span class="sd">            (you cannot have Numpy inputs and tensor targets, or inversely). If</span>
+<span class="sd">            `x` is a dataset, generator or `keras.utils.Sequence` instance, `y`</span>
+<span class="sd">            should not be specified (since targets will be obtained from the</span>
+<span class="sd">            iterator/dataset).</span>
+<span class="sd">            batch_size: Integer or `None`. Number of samples per gradient update. If</span>
+<span class="sd">            unspecified, `batch_size` will default to 32. Do not specify the</span>
+<span class="sd">            `batch_size` if your data is in the form of a dataset, generators,</span>
+<span class="sd">            or `keras.utils.Sequence` instances (since they generate batches).</span>
+<span class="sd">            verbose: 0 or 1. Verbosity mode. 0 = silent, 1 = progress bar.</span>
+<span class="sd">            sample_weight: Optional Numpy array of weights for the test samples,</span>
+<span class="sd">            used for weighting the loss function. You can either pass a flat (1D)</span>
+<span class="sd">            Numpy array with the same length as the input samples</span>
+<span class="sd">                (1:1 mapping between weights and samples), or in the case of</span>
+<span class="sd">                temporal data, you can pass a 2D array with shape `(samples,</span>
+<span class="sd">                sequence_length)`, to apply a different weight to every timestep</span>
+<span class="sd">                of every sample. In this case you should make sure to specify</span>
+<span class="sd">                `sample_weight_mode="temporal"` in `compile()`. This argument is</span>
+<span class="sd">                not supported when `x` is a dataset, instead pass sample weights</span>
+<span class="sd">                as the third element of `x`.</span>
+<span class="sd">            steps: Integer or `None`. Total number of steps (batches of samples)</span>
+<span class="sd">            before declaring the evaluation round finished. Ignored with the</span>
+<span class="sd">            default value of `None`. If x is a `tf.data` dataset and `steps` is</span>
+<span class="sd">            None, 'evaluate' will run until the dataset is exhausted. This</span>
+<span class="sd">            argument is not supported with array inputs.</span>
+<span class="sd">            callbacks: List of `keras.callbacks.Callback` instances. List of</span>
+<span class="sd">            callbacks to apply during evaluation. See</span>
+<span class="sd">            [callbacks](/api_docs/python/tf/keras/callbacks).</span>
+<span class="sd">            max_queue_size: Integer. Used for generator or `keras.utils.Sequence`</span>
+<span class="sd">            input only. Maximum size for the generator queue. If unspecified,</span>
+<span class="sd">            `max_queue_size` will default to 10.</span>
+<span class="sd">            workers: Integer. Used for generator or `keras.utils.Sequence` input</span>
+<span class="sd">            only. Maximum number of processes to spin up when using process-based</span>
+<span class="sd">            threading. If unspecified, `workers` will default to 1. If 0, will</span>
+<span class="sd">            execute the generator on the main thread.</span>
+<span class="sd">            use_multiprocessing: Boolean. Used for generator or</span>
+<span class="sd">            `keras.utils.Sequence` input only. If `True`, use process-based</span>
+<span class="sd">            threading. If unspecified, `use_multiprocessing` will default to</span>
+<span class="sd">            `False`. Note that because this implementation relies on</span>
+<span class="sd">            multiprocessing, you should not pass non-picklable arguments to the</span>
+<span class="sd">            generator as they can't be passed easily to children processes.</span>
+<span class="sd">            return_dict: If `True`, loss and metric results are returned as a dict,</span>
+<span class="sd">            with each key being the name of the metric. If `False`, they are</span>
+<span class="sd">            returned as a list.</span>
+<span class="sd">        See the discussion of `Unpacking behavior for iterator-like inputs` for</span>
+<span class="sd">        `Model.fit`.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Scalar test loss (if the model has a single output and no metrics)</span>
+<span class="sd">            or list of scalars (if the model has multiple outputs</span>
+<span class="sd">            and/or metrics). The attribute `model.metrics_names` will give you</span>
+<span class="sd">            the display labels for the scalar outputs.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: in case of invalid arguments.</span>
+<span class="sd">        """</span>
+
+    <span class="n">data_handler</span> <span class="o">=</span> <span class="n">DataHandler</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+        <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">steps_per_epoch</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span>
+        <span class="n">initial_epoch</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Container that configures and calls `tf.keras.Callback`s.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">callbacks</span><span class="p">,</span> <span class="n">CallbackList</span><span class="p">):</span>
+        <span class="n">callbacks</span> <span class="o">=</span> <span class="n">CallbackList</span><span class="p">(</span>
+            <span class="n">callbacks</span><span class="p">,</span>
+            <span class="n">add_history</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">add_progbar</span><span class="o">=</span><span class="n">verbose</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">steps</span><span class="o">=</span><span class="n">data_handler</span><span class="o">.</span><span class="n">inferred_steps</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">callbacks</span><span class="o">.</span><span class="n">on_test_begin</span><span class="p">()</span>
+
+    <span class="n">logs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">iterator</span> <span class="ow">in</span> <span class="n">data_handler</span><span class="o">.</span><span class="n">enumerate_epochs</span><span class="p">():</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset_metrics</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">data_handler</span><span class="o">.</span><span class="n">catch_stop_iteration</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">data_handler</span><span class="o">.</span><span class="n">steps</span><span class="p">():</span>
+                <span class="n">callbacks</span><span class="o">.</span><span class="n">on_test_batch_begin</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+                <span class="n">batch</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">iterator</span><span class="p">)</span>
+                <span class="n">sample_weight</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="k">else</span> <span class="kc">None</span>
+
+                <span class="n">tmp_logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_on_batch</span><span class="p">(</span>
+                    <span class="n">x</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">tmp_logs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">"size"</span><span class="p">:</span> <span class="n">data_handler</span><span class="o">.</span><span class="n">batch_size</span><span class="p">})</span>
+                <span class="n">logs</span> <span class="o">=</span> <span class="n">tmp_logs</span>
+                <span class="n">callbacks</span><span class="o">.</span><span class="n">on_test_batch_end</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">logs</span><span class="p">)</span>
+
+    <span class="n">callbacks</span><span class="o">.</span><span class="n">on_test_end</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">logs</span>
+</code></pre>
+</div>
+</td>
+</tr>
+</table>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.model.Model.fit">
+<code class="highlight language-python">
+fit<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validation_split</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">validation_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">class_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">initial_epoch</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">steps_per_epoch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validation_steps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validation_batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validation_freq</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> </code>
+</h2>
+<div class="doc doc-contents">
+<p>Trains the model for a fixed number of epochs (iterations on a dataset).</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>x</code></td>
+<td><code>Union[jax.numpy.lax_numpy.ndarray, numpy.ndarray, Mapping[str, Union[numpy.ndarray, jax.numpy.lax_numpy.ndarray]], Tuple[Union[numpy.ndarray, jax.numpy.lax_numpy.ndarray]], Iterable]</code></td>
+<td>
+<p>Input data. It could be:</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>y</code></td>
+<td><code>Optional[Union[jax.numpy.lax_numpy.ndarray, numpy.ndarray, Mapping[str, Union[numpy.ndarray, jax.numpy.lax_numpy.ndarray]], Tuple[Union[numpy.ndarray, jax.numpy.lax_numpy.ndarray]]]]</code></td>
+<td>
+<p>Target data. Like the input data <code>x</code>,</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>batch_size</code></td>
+<td><code>Optional[int]</code></td>
+<td>
+<p>Integer or <code>None</code>.
+Number of samples per gradient update.
+If unspecified, <code>batch_size</code> will default to 32.
+Do not specify the <code>batch_size</code> if your data is in the
+form of datasets, generators, or <code>keras.utils.Sequence</code> instances
+(since they generate batches).</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>epochs</code></td>
+<td><code>int</code></td>
+<td>
+<p>Integer. Number of epochs to train the model.
+An epoch is an iteration over the entire <code>x</code> and <code>y</code>
+data provided.
+Note that in conjunction with <code>initial_epoch</code>,
+<code>epochs</code> is to be understood as "final epoch".
+The model is not trained for a number of iterations
+given by <code>epochs</code>, but merely until the epoch
+of index <code>epochs</code> is reached.</p>
+</td>
+<td><code>1</code></td>
+</tr>
+<tr>
+<td><code>verbose</code></td>
+<td><code>int</code></td>
+<td>
+<p>0, 1, or 2. Verbosity mode.
+0 = silent, 1 = progress bar, 2 = one line per epoch.
+Note that the progress bar is not particularly useful when
+logged to a file, so verbose=2 is recommended when not running
+interactively (eg, in a production environment).</p>
+</td>
+<td><code>1</code></td>
+</tr>
+<tr>
+<td><code>callbacks</code></td>
+<td><code>Optional[Union[List[elegy.callbacks.callback.Callback], elegy.callbacks.callback_list.CallbackList]]</code></td>
+<td>
+<p>List of <code>keras.callbacks.Callback</code> instances.
+List of callbacks to apply during training.
+See <code>elegy.callbacks</code>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>validation_split</code></td>
+<td><code>float</code></td>
+<td>
+<p>Float between 0 and 1.
+Fraction of the training data to be used as validation data.
+The model will set apart this fraction of the training data,
+will not train on it, and will evaluate
+the loss and any model metrics
+on this data at the end of each epoch.
+The validation data is selected from the last samples
+in the <code>x</code> and <code>y</code> data provided, before shuffling. This argument is
+not supported when <code>x</code> is a dataset, generator or</p>
+</td>
+<td><code>0.0</code></td>
+</tr>
+<tr>
+<td><code>validation_data</code></td>
+<td><code>Optional[Union[Tuple, Iterable]]</code></td>
+<td>
+<p>Data on which to evaluate
+the loss and any model metrics at the end of each epoch.
+The model will not be trained on this data.
+<code>validation_data</code> will override <code>validation_split</code>.
+<code>validation_data</code> could be:
+- tuple <code>(x_val, y_val)</code> of Numpy arrays or tensors
+- tuple <code>(x_val, y_val, val_sample_weights)</code> of Numpy arrays
+- dataset
+For the first two cases, <code>batch_size</code> must be provided.
+For the last case, <code>validation_steps</code> could be provided.
+Note that <code>validation_data</code> does not support all the data types that
+are supported in <code>x</code>, eg, dict, generator or <code>keras.utils.Sequence</code>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>shuffle</code></td>
+<td><code>bool</code></td>
+<td>
+<p>Boolean (whether to shuffle the training data
+before each epoch) or str (for 'batch'). This argument is ignored
+when <code>x</code> is a generator. 'batch' is a special option for dealing
+with the limitations of HDF5 data; it shuffles in batch-sized
+chunks. Has no effect when <code>steps_per_epoch</code> is not <code>None</code>.</p>
+</td>
+<td><code>True</code></td>
+</tr>
+<tr>
+<td><code>class_weight</code></td>
+<td><code>Optional[Mapping[str, float]]</code></td>
+<td>
+<p>Optional dictionary mapping class indices (integers)
+to a weight (float) value, used for weighting the loss function
+(during training only).
+This can be useful to tell the model to
+"pay more attention" to samples from
+an under-represented class.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>sample_weight</code></td>
+<td><code>Optional[Union[numpy.ndarray, jax.numpy.lax_numpy.ndarray]]</code></td>
+<td>
+<p>Optional Numpy array of weights for
+the training samples, used for weighting the loss function
+(during training only). You can either pass a flat (1D)
+Numpy array with the same length as the input samples
+(1:1 mapping between weights and samples),
+or in the case of temporal data,
+you can pass a 2D array with shape
+<code>(samples, sequence_length)</code>,
+to apply a different weight to every timestep of every sample.
+In this case you should make sure to specify
+<code>sample_weight_mode="temporal"</code> in <code>compile()</code>. This argument is not
+supported when <code>x</code> is a dataset, generator, or</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>initial_epoch</code></td>
+<td><code>int</code></td>
+<td>
+<p>Integer.
+Epoch at which to start training
+(useful for resuming a previous training run).</p>
+</td>
+<td><code>0</code></td>
+</tr>
+<tr>
+<td><code>steps_per_epoch</code></td>
+<td><code>Optional[int]</code></td>
+<td>
+<p>Integer or <code>None</code>.
+Total number of steps (batches of samples)
+before declaring one epoch finished and starting the
+next epoch. When training with input tensors such as
+TensorFlow data tensors, the default <code>None</code> is equal to
+the number of samples in your dataset divided by
+the batch size, or 1 if that cannot be determined. If x is a
+<code>tf.data</code> dataset, and 'steps_per_epoch'
+is None, the epoch will run until the input dataset is exhausted.
+When passing an infinitely repeating dataset, you must specify the
+<code>steps_per_epoch</code> argument. This argument is not supported with
+array inputs.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>validation_steps</code></td>
+<td><code>Optional[int]</code></td>
+<td>
+<p>Only relevant if <code>validation_data</code> is provided and
+is a <code>tf.data</code> dataset. Total number of steps (batches of
+samples) to draw before stopping when performing validation
+at the end of every epoch. If 'validation_steps' is None, validation
+will run until the <code>validation_data</code> dataset is exhausted. In the
+case of an infinitely repeated dataset, it will run into an
+infinite loop. If 'validation_steps' is specified and only part of
+the dataset will be consumed, the evaluation will start from the
+beginning of the dataset at each epoch. This ensures that the same
+validation samples are used every time.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>validation_batch_size</code></td>
+<td><code>Optional[int]</code></td>
+<td>
+<p>Integer or <code>None</code>.
+Number of samples per validation batch.
+If unspecified, will default to <code>batch_size</code>.
+Do not specify the <code>validation_batch_size</code> if your data is in the
+form of datasets, generators, or <code>keras.utils.Sequence</code> instances
+(since they generate batches).</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>validation_freq</code></td>
+<td><code>int</code></td>
+<td>
+<p>Only relevant if validation data is provided. Integer
+or <code>collections_abc.Container</code> instance (e.g. list, tuple, etc.).
+If an integer, specifies how many training epochs to run before a
+new validation run is performed, e.g. <code>validation_freq=2</code> runs
+validation every 2 epochs. If a Container, specifies the epochs on
+which to run validation, e.g. <code>validation_freq=[1, 2, 10]</code> runs
+validation at the end of the 1st, 2nd, and 10th epochs.</p>
+</td>
+<td><code>1</code></td>
+</tr>
+<tr>
+<td><code>max_queue_size</code></td>
+<td><code></code></td>
+<td>
+<p>Integer. Used for generator or <code>keras.utils.Sequence</code>
+input only. Maximum size for the generator queue.
+If unspecified, <code>max_queue_size</code> will default to 10.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>workers</code></td>
+<td><code></code></td>
+<td>
+<p>Integer. Used for generator or <code>keras.utils.Sequence</code> input
+only. Maximum number of processes to spin up
+when using process-based threading. If unspecified, <code>workers</code>
+will default to 1. If 0, will execute the generator on the main
+thread.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>use_multiprocessing</code></td>
+<td><code></code></td>
+<td>
+<p>Boolean. Used for generator or
+<code>keras.utils.Sequence</code> input only. If <code>True</code>, use process-based
+threading. If unspecified, <code>use_multiprocessing</code> will default to
+<code>False</code>. Note that because this implementation relies on
+multiprocessing, you should not pass non-picklable arguments to
+the generator as they can't be passed easily to children processes.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+<p>Unpacking behavior for iterator-like inputs:
+    A common pattern is to pass a tf.data.Dataset, generator, or
+elegy.utils.Sequence to the <code>x</code> argument of fit, which will in fact
+yield not only features (x) but optionally targets (y) and sample weights.
+Keras requires that the output of such iterator-likes be unambiguous. The
+iterator should return a tuple of length 1, 2, or 3, where the optional
+second and third elements will be used for y and sample_weight
+respectively. Any other type provided will be wrapped in a length one
+tuple, effectively treating everything as 'x'. When yielding dicts, they
+should still adhere to the top-level tuple structure.
+e.g. <code>({"x0": x0, "x1": x1}, y)</code>. Keras will not attempt to separate
+features, targets, and weights from the keys of a single dict.
+    A notable unsupported data type is the namedtuple. The reason is that
+it behaves like both an ordered datatype (tuple) and a mapping
+datatype (dict). So given a namedtuple of the form:
+    <code>namedtuple("example_tuple", ["y", "x"])</code>
+it is ambiguous whether to reverse the order of the elements when
+interpreting the value. Even worse is a tuple of the form:
+    <code>namedtuple("other_tuple", ["x", "y", "z"])</code>
+where it is unclear if the tuple was intended to be unpacked into x, y,
+and sample_weight or passed through as a single element to <code>x</code>. As a
+result the data processing code will simply raise a ValueError if it
+encounters a namedtuple. (Along with instructions to remedy the issue.)</p>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code></code></td>
+<td>
+<p>A <code>History</code> object. Its <code>History.history</code> attribute is
+a record of training loss values and metrics values
+at successive epochs, as well as validation loss values
+and validation metrics values (if applicable).</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exceptions:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>RuntimeError</code></td>
+<td>
+<p>If the model was never compiled.</p>
+</td>
+</tr>
+<tr>
+<td><code>ValueError</code></td>
+<td>
+<p>In case of mismatch between the provided input data
+and what the model expects.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+<summary>Source code in <code>elegy/model.py</code></summary>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span>376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+418
+419
+420
+421
+422
+423
+424
+425
+426
+427
+428
+429
+430
+431
+432
+433
+434
+435
+436
+437
+438
+439
+440
+441
+442
+443
+444
+445
+446
+447
+448
+449
+450
+451
+452
+453
+454
+455
+456
+457
+458
+459
+460
+461
+462
+463
+464
+465
+466
+467
+468
+469
+470
+471
+472
+473
+474
+475
+476
+477
+478
+479
+480
+481
+482
+483
+484
+485
+486
+487
+488
+489
+490
+491
+492
+493
+494
+495
+496
+497
+498
+499
+500
+501
+502
+503
+504
+505
+506
+507
+508
+509
+510
+511
+512
+513
+514
+515
+516
+517
+518
+519
+520
+521
+522
+523
+524
+525
+526
+527
+528
+529
+530
+531
+532
+533
+534
+535
+536
+537
+538
+539
+540
+541
+542
+543
+544
+545
+546
+547
+548
+549
+550
+551
+552
+553
+554
+555
+556
+557
+558
+559
+560
+561
+562
+563
+564
+565
+566
+567
+568
+569
+570
+571
+572
+573
+574
+575
+576
+577
+578
+579
+580
+581
+582
+583
+584
+585
+586
+587
+588
+589
+590
+591
+592
+593
+594
+595
+596
+597
+598
+599
+600
+601
+602
+603
+604
+605
+606
+607
+608
+609
+610
+611
+612
+613
+614
+615
+616
+617
+618
+619
+620
+621
+622
+623
+624
+625
+626
+627
+628
+629
+630
+631
+632
+633
+634
+635
+636
+637
+638
+639
+640
+641
+642
+643
+644
+645
+646
+647
+648
+649
+650
+651
+652
+653
+654
+655
+656
+657
+658
+659
+660
+661
+662
+663
+664
+665
+666
+667
+668
+669
+670
+671
+672</pre>
+</div>
+</td>
+<td class="code">
+<div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">fit</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span>
+        <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Iterable</span><span class="p">,</span>
+    <span class="p">],</span>
+    <span class="n">y</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span>
+        <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span>
+        <span class="kc">None</span><span class="p">,</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">epochs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">callbacks</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">Callback</span><span class="p">],</span> <span class="n">CallbackList</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">validation_split</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">validation_data</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Iterable</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">shuffle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">class_weight</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">sample_weight</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">initial_epoch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">steps_per_epoch</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">validation_steps</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">validation_batch_size</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">validation_freq</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Trains the model for a fixed number of epochs (iterations on a dataset).</span>
+<span class="sd">    Arguments:</span>
+<span class="sd">        x: Input data. It could be:</span>
+<span class="sd">        - A Numpy array (or array-like), or a list of arrays</span>
+<span class="sd">            (in case the model has multiple inputs).</span>
+<span class="sd">        - A TensorFlow tensor, or a list of tensors</span>
+<span class="sd">            (in case the model has multiple inputs).</span>
+<span class="sd">        - A dict mapping input names to the corresponding array/tensors,</span>
+<span class="sd">            if the model has named inputs.</span>
+<span class="sd">        - A `tf.data` dataset. Should return a tuple</span>
+<span class="sd">            of either `(inputs, targets)` or</span>
+<span class="sd">            `(inputs, targets, sample_weights)`.</span>
+<span class="sd">        - A generator or `keras.utils.Sequence` returning `(inputs, targets)`</span>
+<span class="sd">            or `(inputs, targets, sample_weights)`.</span>
+<span class="sd">        A more detailed description of unpacking behavior for iterator types</span>
+<span class="sd">        (Dataset, generator, Sequence) is given below.</span>
+<span class="sd">        y: Target data. Like the input data `x`,</span>
+<span class="sd">        it could be either Numpy array(s) or TensorFlow tensor(s).</span>
+<span class="sd">        It should be consistent with `x` (you cannot have Numpy inputs and</span>
+<span class="sd">        tensor targets, or inversely). If `x` is a dataset, generator,</span>
+<span class="sd">        or `keras.utils.Sequence` instance, `y` should</span>
+<span class="sd">        not be specified (since targets will be obtained from `x`).</span>
+<span class="sd">        batch_size: Integer or `None`.</span>
+<span class="sd">            Number of samples per gradient update.</span>
+<span class="sd">            If unspecified, `batch_size` will default to 32.</span>
+<span class="sd">            Do not specify the `batch_size` if your data is in the</span>
+<span class="sd">            form of datasets, generators, or `keras.utils.Sequence` instances</span>
+<span class="sd">            (since they generate batches).</span>
+<span class="sd">        epochs: Integer. Number of epochs to train the model.</span>
+<span class="sd">            An epoch is an iteration over the entire `x` and `y`</span>
+<span class="sd">            data provided.</span>
+<span class="sd">            Note that in conjunction with `initial_epoch`,</span>
+<span class="sd">            `epochs` is to be understood as "final epoch".</span>
+<span class="sd">            The model is not trained for a number of iterations</span>
+<span class="sd">            given by `epochs`, but merely until the epoch</span>
+<span class="sd">            of index `epochs` is reached.</span>
+<span class="sd">        verbose: 0, 1, or 2. Verbosity mode.</span>
+<span class="sd">            0 = silent, 1 = progress bar, 2 = one line per epoch.</span>
+<span class="sd">            Note that the progress bar is not particularly useful when</span>
+<span class="sd">            logged to a file, so verbose=2 is recommended when not running</span>
+<span class="sd">            interactively (eg, in a production environment).</span>
+<span class="sd">        callbacks: List of `keras.callbacks.Callback` instances.</span>
+<span class="sd">            List of callbacks to apply during training.</span>
+<span class="sd">            See `elegy.callbacks`.</span>
+<span class="sd">        validation_split: Float between 0 and 1.</span>
+<span class="sd">            Fraction of the training data to be used as validation data.</span>
+<span class="sd">            The model will set apart this fraction of the training data,</span>
+<span class="sd">            will not train on it, and will evaluate</span>
+<span class="sd">            the loss and any model metrics</span>
+<span class="sd">            on this data at the end of each epoch.</span>
+<span class="sd">            The validation data is selected from the last samples</span>
+<span class="sd">            in the `x` and `y` data provided, before shuffling. This argument is</span>
+<span class="sd">            not supported when `x` is a dataset, generator or</span>
+<span class="sd">        `keras.utils.Sequence` instance.</span>
+<span class="sd">        validation_data: Data on which to evaluate</span>
+<span class="sd">            the loss and any model metrics at the end of each epoch.</span>
+<span class="sd">            The model will not be trained on this data.</span>
+<span class="sd">            `validation_data` will override `validation_split`.</span>
+<span class="sd">            `validation_data` could be:</span>
+<span class="sd">            - tuple `(x_val, y_val)` of Numpy arrays or tensors</span>
+<span class="sd">            - tuple `(x_val, y_val, val_sample_weights)` of Numpy arrays</span>
+<span class="sd">            - dataset</span>
+<span class="sd">            For the first two cases, `batch_size` must be provided.</span>
+<span class="sd">            For the last case, `validation_steps` could be provided.</span>
+<span class="sd">            Note that `validation_data` does not support all the data types that</span>
+<span class="sd">            are supported in `x`, eg, dict, generator or `keras.utils.Sequence`.</span>
+<span class="sd">        shuffle: Boolean (whether to shuffle the training data</span>
+<span class="sd">            before each epoch) or str (for 'batch'). This argument is ignored</span>
+<span class="sd">            when `x` is a generator. 'batch' is a special option for dealing</span>
+<span class="sd">            with the limitations of HDF5 data; it shuffles in batch-sized</span>
+<span class="sd">            chunks. Has no effect when `steps_per_epoch` is not `None`.</span>
+<span class="sd">        class_weight: Optional dictionary mapping class indices (integers)</span>
+<span class="sd">            to a weight (float) value, used for weighting the loss function</span>
+<span class="sd">            (during training only).</span>
+<span class="sd">            This can be useful to tell the model to</span>
+<span class="sd">            "pay more attention" to samples from</span>
+<span class="sd">            an under-represented class.</span>
+<span class="sd">        sample_weight: Optional Numpy array of weights for</span>
+<span class="sd">            the training samples, used for weighting the loss function</span>
+<span class="sd">            (during training only). You can either pass a flat (1D)</span>
+<span class="sd">            Numpy array with the same length as the input samples</span>
+<span class="sd">            (1:1 mapping between weights and samples),</span>
+<span class="sd">            or in the case of temporal data,</span>
+<span class="sd">            you can pass a 2D array with shape</span>
+<span class="sd">            `(samples, sequence_length)`,</span>
+<span class="sd">            to apply a different weight to every timestep of every sample.</span>
+<span class="sd">            In this case you should make sure to specify</span>
+<span class="sd">            `sample_weight_mode="temporal"` in `compile()`. This argument is not</span>
+<span class="sd">            supported when `x` is a dataset, generator, or</span>
+<span class="sd">        `keras.utils.Sequence` instance, instead provide the sample_weights</span>
+<span class="sd">            as the third element of `x`.</span>
+<span class="sd">        initial_epoch: Integer.</span>
+<span class="sd">            Epoch at which to start training</span>
+<span class="sd">            (useful for resuming a previous training run).</span>
+<span class="sd">        steps_per_epoch: Integer or `None`.</span>
+<span class="sd">            Total number of steps (batches of samples)</span>
+<span class="sd">            before declaring one epoch finished and starting the</span>
+<span class="sd">            next epoch. When training with input tensors such as</span>
+<span class="sd">            TensorFlow data tensors, the default `None` is equal to</span>
+<span class="sd">            the number of samples in your dataset divided by</span>
+<span class="sd">            the batch size, or 1 if that cannot be determined. If x is a</span>
+<span class="sd">            `tf.data` dataset, and 'steps_per_epoch'</span>
+<span class="sd">            is None, the epoch will run until the input dataset is exhausted.</span>
+<span class="sd">            When passing an infinitely repeating dataset, you must specify the</span>
+<span class="sd">            `steps_per_epoch` argument. This argument is not supported with</span>
+<span class="sd">            array inputs.</span>
+<span class="sd">        validation_steps: Only relevant if `validation_data` is provided and</span>
+<span class="sd">            is a `tf.data` dataset. Total number of steps (batches of</span>
+<span class="sd">            samples) to draw before stopping when performing validation</span>
+<span class="sd">            at the end of every epoch. If 'validation_steps' is None, validation</span>
+<span class="sd">            will run until the `validation_data` dataset is exhausted. In the</span>
+<span class="sd">            case of an infinitely repeated dataset, it will run into an</span>
+<span class="sd">            infinite loop. If 'validation_steps' is specified and only part of</span>
+<span class="sd">            the dataset will be consumed, the evaluation will start from the</span>
+<span class="sd">            beginning of the dataset at each epoch. This ensures that the same</span>
+<span class="sd">            validation samples are used every time.</span>
+<span class="sd">        validation_batch_size: Integer or `None`.</span>
+<span class="sd">            Number of samples per validation batch.</span>
+<span class="sd">            If unspecified, will default to `batch_size`.</span>
+<span class="sd">            Do not specify the `validation_batch_size` if your data is in the</span>
+<span class="sd">            form of datasets, generators, or `keras.utils.Sequence` instances</span>
+<span class="sd">            (since they generate batches).</span>
+<span class="sd">        validation_freq: Only relevant if validation data is provided. Integer</span>
+<span class="sd">            or `collections_abc.Container` instance (e.g. list, tuple, etc.).</span>
+<span class="sd">            If an integer, specifies how many training epochs to run before a</span>
+<span class="sd">            new validation run is performed, e.g. `validation_freq=2` runs</span>
+<span class="sd">            validation every 2 epochs. If a Container, specifies the epochs on</span>
+<span class="sd">            which to run validation, e.g. `validation_freq=[1, 2, 10]` runs</span>
+<span class="sd">            validation at the end of the 1st, 2nd, and 10th epochs.</span>
+<span class="sd">        max_queue_size: Integer. Used for generator or `keras.utils.Sequence`</span>
+<span class="sd">            input only. Maximum size for the generator queue.</span>
+<span class="sd">            If unspecified, `max_queue_size` will default to 10.</span>
+<span class="sd">        workers: Integer. Used for generator or `keras.utils.Sequence` input</span>
+<span class="sd">            only. Maximum number of processes to spin up</span>
+<span class="sd">            when using process-based threading. If unspecified, `workers`</span>
+<span class="sd">            will default to 1. If 0, will execute the generator on the main</span>
+<span class="sd">            thread.</span>
+<span class="sd">        use_multiprocessing: Boolean. Used for generator or</span>
+<span class="sd">            `keras.utils.Sequence` input only. If `True`, use process-based</span>
+<span class="sd">            threading. If unspecified, `use_multiprocessing` will default to</span>
+<span class="sd">            `False`. Note that because this implementation relies on</span>
+<span class="sd">            multiprocessing, you should not pass non-picklable arguments to</span>
+<span class="sd">            the generator as they can't be passed easily to children processes.</span>
+
+<span class="sd">    Unpacking behavior for iterator-like inputs:</span>
+<span class="sd">        A common pattern is to pass a tf.data.Dataset, generator, or</span>
+<span class="sd">    elegy.utils.Sequence to the `x` argument of fit, which will in fact</span>
+<span class="sd">    yield not only features (x) but optionally targets (y) and sample weights.</span>
+<span class="sd">    Keras requires that the output of such iterator-likes be unambiguous. The</span>
+<span class="sd">    iterator should return a tuple of length 1, 2, or 3, where the optional</span>
+<span class="sd">    second and third elements will be used for y and sample_weight</span>
+<span class="sd">    respectively. Any other type provided will be wrapped in a length one</span>
+<span class="sd">    tuple, effectively treating everything as 'x'. When yielding dicts, they</span>
+<span class="sd">    should still adhere to the top-level tuple structure.</span>
+<span class="sd">    e.g. `({"x0": x0, "x1": x1}, y)`. Keras will not attempt to separate</span>
+<span class="sd">    features, targets, and weights from the keys of a single dict.</span>
+<span class="sd">        A notable unsupported data type is the namedtuple. The reason is that</span>
+<span class="sd">    it behaves like both an ordered datatype (tuple) and a mapping</span>
+<span class="sd">    datatype (dict). So given a namedtuple of the form:</span>
+<span class="sd">        `namedtuple("example_tuple", ["y", "x"])`</span>
+<span class="sd">    it is ambiguous whether to reverse the order of the elements when</span>
+<span class="sd">    interpreting the value. Even worse is a tuple of the form:</span>
+<span class="sd">        `namedtuple("other_tuple", ["x", "y", "z"])`</span>
+<span class="sd">    where it is unclear if the tuple was intended to be unpacked into x, y,</span>
+<span class="sd">    and sample_weight or passed through as a single element to `x`. As a</span>
+<span class="sd">    result the data processing code will simply raise a ValueError if it</span>
+<span class="sd">    encounters a namedtuple. (Along with instructions to remedy the issue.)</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        A `History` object. Its `History.history` attribute is</span>
+<span class="sd">        a record of training loss values and metrics values</span>
+<span class="sd">        at successive epochs, as well as validation loss values</span>
+<span class="sd">        and validation metrics values (if applicable).</span>
+<span class="sd">    Raises:</span>
+<span class="sd">        RuntimeError: If the model was never compiled.</span>
+<span class="sd">        ValueError: In case of mismatch between the provided input data</span>
+<span class="sd">            and what the model expects.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">validation_split</span><span class="p">:</span>
+        <span class="c1"># Create the validation data using the training data. Only supported for</span>
+        <span class="c1"># `Jax Numpy` and `NumPy` input.</span>
+        <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="p">),</span> <span class="n">validation_data</span> <span class="o">=</span> <span class="n">train_validation_split</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="p">),</span> <span class="n">validation_split</span><span class="o">=</span><span class="n">validation_split</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">stop_training</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">data_handler</span> <span class="o">=</span> <span class="n">DataHandler</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+        <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">steps_per_epoch</span><span class="o">=</span><span class="n">steps_per_epoch</span><span class="p">,</span>
+        <span class="n">initial_epoch</span><span class="o">=</span><span class="n">initial_epoch</span><span class="p">,</span>
+        <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle</span><span class="p">,</span>
+        <span class="n">class_weight</span><span class="o">=</span><span class="n">class_weight</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="c1"># Container that configures and calls `tf.keras.Callback`s.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">callbacks</span><span class="p">,</span> <span class="n">CallbackList</span><span class="p">):</span>
+        <span class="n">callbacks</span> <span class="o">=</span> <span class="n">CallbackList</span><span class="p">(</span>
+            <span class="n">callbacks</span><span class="p">,</span>
+            <span class="n">add_history</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">add_progbar</span><span class="o">=</span><span class="n">verbose</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span>
+            <span class="n">steps</span><span class="o">=</span><span class="n">data_handler</span><span class="o">.</span><span class="n">inferred_steps</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">callbacks</span><span class="o">.</span><span class="n">on_train_begin</span><span class="p">()</span>
+    <span class="c1"># data_handler._initial_epoch = (  # pylint: disable=protected-access</span>
+    <span class="c1">#     self._maybe_load_initial_epoch_from_ckpt(initial_epoch))</span>
+
+    <span class="k">for</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">iterator</span> <span class="ow">in</span> <span class="n">data_handler</span><span class="o">.</span><span class="n">enumerate_epochs</span><span class="p">():</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset_metrics</span><span class="p">()</span>
+        <span class="n">callbacks</span><span class="o">.</span><span class="n">on_epoch_begin</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span>
+        <span class="n">logs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">with</span> <span class="n">data_handler</span><span class="o">.</span><span class="n">catch_stop_iteration</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">data_handler</span><span class="o">.</span><span class="n">steps</span><span class="p">():</span>
+                <span class="n">callbacks</span><span class="o">.</span><span class="n">on_train_batch_begin</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+                <span class="n">batch</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">iterator</span><span class="p">)</span>
+                <span class="n">sample_weight</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="k">else</span> <span class="kc">None</span>
+
+                <span class="n">tmp_logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_on_batch</span><span class="p">(</span>
+                    <span class="n">x</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="n">y</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span>
+                    <span class="n">class_weight</span><span class="o">=</span><span class="n">class_weight</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">tmp_logs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">"size"</span><span class="p">:</span> <span class="n">data_handler</span><span class="o">.</span><span class="n">batch_size</span><span class="p">})</span>
+                <span class="c1"># print(epoch, step, tmp_logs["accuracy"], batch[0].shape)</span>
+
+                <span class="n">logs</span> <span class="o">=</span> <span class="n">tmp_logs</span>
+                <span class="n">callbacks</span><span class="o">.</span><span class="n">on_train_batch_end</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">logs</span><span class="p">)</span>
+
+        <span class="n">epoch_logs</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+        <span class="n">epoch_logs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">"size"</span><span class="p">:</span> <span class="n">data_handler</span><span class="o">.</span><span class="n">batch_size</span><span class="p">})</span>
+
+        <span class="c1"># Run validation.</span>
+        <span class="k">if</span> <span class="n">validation_data</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_should_eval</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">validation_freq</span><span class="p">):</span>
+            <span class="n">val_x</span><span class="p">,</span> <span class="n">val_y</span><span class="p">,</span> <span class="n">val_sample_weight</span> <span class="o">=</span> <span class="n">unpack_x_y_sample_weight</span><span class="p">(</span>
+                <span class="n">validation_data</span>
+            <span class="p">)</span>
+            <span class="n">val_logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+                <span class="n">x</span><span class="o">=</span><span class="n">val_x</span><span class="p">,</span>
+                <span class="n">y</span><span class="o">=</span><span class="n">val_y</span><span class="p">,</span>
+                <span class="n">sample_weight</span><span class="o">=</span><span class="n">val_sample_weight</span><span class="p">,</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="n">validation_batch_size</span> <span class="ow">or</span> <span class="n">batch_size</span><span class="p">,</span>
+                <span class="n">steps</span><span class="o">=</span><span class="n">validation_steps</span><span class="p">,</span>
+                <span class="n">callbacks</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span>
+                <span class="c1"># return_dict=True,</span>
+            <span class="p">)</span>
+            <span class="n">val_logs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"val_"</span> <span class="o">+</span> <span class="n">name</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">val_logs</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+            <span class="n">epoch_logs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">val_logs</span><span class="p">)</span>
+
+        <span class="n">callbacks</span><span class="o">.</span><span class="n">on_epoch_end</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">epoch_logs</span><span class="p">)</span>
+        <span class="c1"># print(</span>
+        <span class="c1">#     f"epoch: {epoch} - "</span>
+        <span class="c1">#     + " - ".join(f"{key}: {value:.3f}" for key, value in epoch_logs.items())</span>
+        <span class="c1"># )</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop_training</span><span class="p">:</span>
+            <span class="k">break</span>
+
+    <span class="n">callbacks</span><span class="o">.</span><span class="n">on_train_end</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">history</span>
+</code></pre>
+</div>
+</td>
+</tr>
+</table>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.model.Model.predict">
+<code class="highlight language-python">
+predict<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
+</h2>
+<div class="doc doc-contents">
+<p>Generates output predictions for the input samples.
+Computation is done in batches. This method is designed for performance in
+large scale inputs. For small amount of inputs that fit in one batch,
+directly using <code>__call__</code> is recommended for faster execution, e.g.,
+<code>model(x)</code>, or <code>model(x, training=False)</code> if you have layers such as
+<code>tf.keras.layers.BatchNormalization</code> that behaves differently during
+inference.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>x</code></td>
+<td><code>Union[jax.numpy.lax_numpy.ndarray, numpy.ndarray, Mapping[str, Union[numpy.ndarray, jax.numpy.lax_numpy.ndarray]], Tuple[Union[numpy.ndarray, jax.numpy.lax_numpy.ndarray]], Iterable]</code></td>
+<td>
+<p>Input samples. It could be:</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>batch_size</code></td>
+<td><code>Optional[int]</code></td>
+<td>
+<p>Integer or <code>None</code>.
+Number of samples per batch.
+If unspecified, <code>batch_size</code> will default to 32.
+Do not specify the <code>batch_size</code> if your data is in the
+form of dataset, generators, or <code>keras.utils.Sequence</code> instances
+(since they generate batches).</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>verbose</code></td>
+<td><code>int</code></td>
+<td>
+<p>Verbosity mode, 0 or 1.</p>
+</td>
+<td><code>0</code></td>
+</tr>
+<tr>
+<td><code>steps</code></td>
+<td><code>Optional[int]</code></td>
+<td>
+<p>Total number of steps (batches of samples)
+before declaring the prediction round finished.
+Ignored with the default value of <code>None</code>. If x is a <code>tf.data</code>
+dataset and <code>steps</code> is None, <code>predict</code> will
+run until the input dataset is exhausted.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>callbacks</code></td>
+<td><code>Optional[Union[List[elegy.callbacks.callback.Callback], elegy.callbacks.callback_list.CallbackList]]</code></td>
+<td>
+<p>List of <code>keras.callbacks.Callback</code> instances.
+List of callbacks to apply during prediction.
+See <a href="/api_docs/python/tf/keras/callbacks">callbacks</a>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>max_queue_size</code></td>
+<td><code></code></td>
+<td>
+<p>Integer. Used for generator or <code>keras.utils.Sequence</code>
+input only. Maximum size for the generator queue.
+If unspecified, <code>max_queue_size</code> will default to 10.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>workers</code></td>
+<td><code></code></td>
+<td>
+<p>Integer. Used for generator or <code>keras.utils.Sequence</code> input
+only. Maximum number of processes to spin up when using
+process-based threading. If unspecified, <code>workers</code> will default
+to 1. If 0, will execute the generator on the main thread.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>use_multiprocessing</code></td>
+<td><code></code></td>
+<td>
+<p>Boolean. Used for generator or
+<code>keras.utils.Sequence</code> input only. If <code>True</code>, use process-based
+threading. If unspecified, <code>use_multiprocessing</code> will default to
+<code>False</code>. Note that because this implementation relies on
+multiprocessing, you should not pass non-picklable arguments to
+the generator as they can't be passed easily to children processes.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+<p>See the discussion of <code>Unpacking behavior for iterator-like inputs</code> for
+<code>Model.fit</code>. Note that Model.predict uses the same interpretation rules as
+<code>Model.fit</code> and <code>Model.evaluate</code>, so inputs must be unambiguous for all
+three methods.</p>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code></code></td>
+<td>
+<p>Numpy array(s) of predictions.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exceptions:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ValueError</code></td>
+<td>
+<p>In case of mismatch between the provided
+input data and the model's expectations,
+or in case a stateful model receives a number of samples
+that is not a multiple of the batch size.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+<summary>Source code in <code>elegy/model.py</code></summary>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span>809
+810
+811
+812
+813
+814
+815
+816
+817
+818
+819
+820
+821
+822
+823
+824
+825
+826
+827
+828
+829
+830
+831
+832
+833
+834
+835
+836
+837
+838
+839
+840
+841
+842
+843
+844
+845
+846
+847
+848
+849
+850
+851
+852
+853
+854
+855
+856
+857
+858
+859
+860
+861
+862
+863
+864
+865
+866
+867
+868
+869
+870
+871
+872
+873
+874
+875
+876
+877
+878
+879
+880
+881
+882
+883
+884
+885
+886
+887
+888
+889
+890
+891
+892
+893
+894
+895
+896
+897
+898
+899
+900
+901
+902
+903
+904
+905
+906
+907
+908
+909
+910
+911
+912
+913
+914
+915
+916
+917
+918
+919
+920
+921
+922
+923
+924
+925
+926
+927
+928
+929
+930
+931
+932
+933</pre>
+</div>
+</td>
+<td class="code">
+<div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">predict</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span>
+        <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Iterable</span><span class="p">,</span>
+    <span class="p">],</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">steps</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">callbacks</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">Callback</span><span class="p">],</span> <span class="n">CallbackList</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">"""Generates output predictions for the input samples.</span>
+<span class="sd">    Computation is done in batches. This method is designed for performance in</span>
+<span class="sd">    large scale inputs. For small amount of inputs that fit in one batch,</span>
+<span class="sd">    directly using `__call__` is recommended for faster execution, e.g.,</span>
+<span class="sd">    `model(x)`, or `model(x, training=False)` if you have layers such as</span>
+<span class="sd">    `tf.keras.layers.BatchNormalization` that behaves differently during</span>
+<span class="sd">    inference.</span>
+<span class="sd">    Arguments:</span>
+<span class="sd">        x: Input samples. It could be:</span>
+<span class="sd">        - A Numpy array (or array-like), or a list of arrays</span>
+<span class="sd">            (in case the model has multiple inputs).</span>
+<span class="sd">        - A TensorFlow tensor, or a list of tensors</span>
+<span class="sd">            (in case the model has multiple inputs).</span>
+<span class="sd">        - A `tf.data` dataset.</span>
+<span class="sd">        - A generator or `keras.utils.Sequence` instance.</span>
+<span class="sd">        A more detailed description of unpacking behavior for iterator types</span>
+<span class="sd">        (Dataset, generator, Sequence) is given in the `Unpacking behavior</span>
+<span class="sd">        for iterator-like inputs` section of `Model.fit`.</span>
+<span class="sd">        batch_size: Integer or `None`.</span>
+<span class="sd">            Number of samples per batch.</span>
+<span class="sd">            If unspecified, `batch_size` will default to 32.</span>
+<span class="sd">            Do not specify the `batch_size` if your data is in the</span>
+<span class="sd">            form of dataset, generators, or `keras.utils.Sequence` instances</span>
+<span class="sd">            (since they generate batches).</span>
+<span class="sd">        verbose: Verbosity mode, 0 or 1.</span>
+<span class="sd">        steps: Total number of steps (batches of samples)</span>
+<span class="sd">            before declaring the prediction round finished.</span>
+<span class="sd">            Ignored with the default value of `None`. If x is a `tf.data`</span>
+<span class="sd">            dataset and `steps` is None, `predict` will</span>
+<span class="sd">            run until the input dataset is exhausted.</span>
+<span class="sd">        callbacks: List of `keras.callbacks.Callback` instances.</span>
+<span class="sd">            List of callbacks to apply during prediction.</span>
+<span class="sd">            See [callbacks](/api_docs/python/tf/keras/callbacks).</span>
+<span class="sd">        max_queue_size: Integer. Used for generator or `keras.utils.Sequence`</span>
+<span class="sd">            input only. Maximum size for the generator queue.</span>
+<span class="sd">            If unspecified, `max_queue_size` will default to 10.</span>
+<span class="sd">        workers: Integer. Used for generator or `keras.utils.Sequence` input</span>
+<span class="sd">            only. Maximum number of processes to spin up when using</span>
+<span class="sd">            process-based threading. If unspecified, `workers` will default</span>
+<span class="sd">            to 1. If 0, will execute the generator on the main thread.</span>
+<span class="sd">        use_multiprocessing: Boolean. Used for generator or</span>
+<span class="sd">            `keras.utils.Sequence` input only. If `True`, use process-based</span>
+<span class="sd">            threading. If unspecified, `use_multiprocessing` will default to</span>
+<span class="sd">            `False`. Note that because this implementation relies on</span>
+<span class="sd">            multiprocessing, you should not pass non-picklable arguments to</span>
+<span class="sd">            the generator as they can't be passed easily to children processes.</span>
+<span class="sd">    See the discussion of `Unpacking behavior for iterator-like inputs` for</span>
+<span class="sd">    `Model.fit`. Note that Model.predict uses the same interpretation rules as</span>
+<span class="sd">    `Model.fit` and `Model.evaluate`, so inputs must be unambiguous for all</span>
+<span class="sd">    three methods.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Numpy array(s) of predictions.</span>
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: In case of mismatch between the provided</span>
+<span class="sd">            input data and the model's expectations,</span>
+<span class="sd">            or in case a stateful model receives a number of samples</span>
+<span class="sd">            that is not a multiple of the batch size.</span>
+<span class="sd">    """</span>
+
+    <span class="n">outputs</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">data_handler</span> <span class="o">=</span> <span class="n">DataHandler</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">steps_per_epoch</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span>
+        <span class="n">initial_epoch</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Container that configures and calls `tf.keras.Callback`s.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">callbacks</span><span class="p">,</span> <span class="n">CallbackList</span><span class="p">):</span>
+        <span class="n">callbacks</span> <span class="o">=</span> <span class="n">CallbackList</span><span class="p">(</span>
+            <span class="n">callbacks</span><span class="p">,</span>
+            <span class="n">add_history</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">add_progbar</span><span class="o">=</span><span class="n">verbose</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">steps</span><span class="o">=</span><span class="n">data_handler</span><span class="o">.</span><span class="n">inferred_steps</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">callbacks</span><span class="o">.</span><span class="n">on_predict_begin</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">iterator</span> <span class="ow">in</span> <span class="n">data_handler</span><span class="o">.</span><span class="n">enumerate_epochs</span><span class="p">():</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset_metrics</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">data_handler</span><span class="o">.</span><span class="n">catch_stop_iteration</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">data_handler</span><span class="o">.</span><span class="n">steps</span><span class="p">():</span>
+                <span class="n">callbacks</span><span class="o">.</span><span class="n">on_predict_batch_begin</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+                <span class="n">batch</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">iterator</span><span class="p">)</span>
+                <span class="n">tmp_batch_outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_on_batch</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">batch_outputs</span> <span class="o">=</span> <span class="n">tmp_batch_outputs</span>
+
+                <span class="k">if</span> <span class="n">outputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">outputs</span> <span class="o">=</span> <span class="n">map_structure</span><span class="p">(</span>
+                        <span class="k">lambda</span> <span class="n">batch_output</span><span class="p">:</span> <span class="p">[</span><span class="n">batch_output</span><span class="p">],</span> <span class="n">batch_outputs</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+
+                    <span class="n">outputs</span> <span class="o">=</span> <span class="n">map_structure</span><span class="p">(</span><span class="n">map_append</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">batch_outputs</span><span class="p">,)</span>
+
+                <span class="n">callbacks</span><span class="o">.</span><span class="n">on_predict_batch_end</span><span class="p">(</span>
+                    <span class="n">step</span><span class="p">,</span>
+                    <span class="p">{</span><span class="s2">"outputs"</span><span class="p">:</span> <span class="n">batch_outputs</span><span class="p">,</span> <span class="s2">"size"</span><span class="p">:</span> <span class="n">data_handler</span><span class="o">.</span><span class="n">batch_size</span><span class="p">},</span>
+                <span class="p">)</span>
+
+    <span class="n">callbacks</span><span class="o">.</span><span class="n">on_predict_end</span><span class="p">()</span>
+
+    <span class="n">all_outputs</span> <span class="o">=</span> <span class="n">map_structure</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">concatenate</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">all_outputs</span>
+</code></pre>
+</div>
+</td>
+</tr>
+</table>
+</details>
+</div>
+</div>
+</div>
+</div>
+</div>
+</article>
+</div>
+</div>
+</main>
+<footer class="md-footer">
+<div class="md-footer-nav">
+<nav aria-label="Footer" class="md-footer-nav__inner md-grid">
+<a class="md-footer-nav__link md-footer-nav__link--prev" href="../../getting-started/" rel="prev" title="Getting Started">
+<div class="md-footer-nav__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</div>
+<div class="md-footer-nav__title">
+<div class="md-ellipsis">
+<span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                Getting Started
+              </div>
+</div>
+</a>
+<a class="md-footer-nav__link md-footer-nav__link--next" href="../metrics/Accuracy/" rel="next" title="Accuracy">
+<div class="md-footer-nav__title">
+<div class="md-ellipsis">
+<span class="md-footer-nav__direction">
+                  Next
+                </span>
+                Accuracy
+              </div>
+</div>
+<div class="md-footer-nav__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"></path></svg>
+</div>
+</a>
+</nav>
+</div>
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" rel="noopener" target="_blank">
+          Material for MkDocs
+        </a>
+</div>
+<div class="md-footer-social">
+<a class="md-footer-social__link" href="https://github.com/cgarciae" rel="noopener" target="_blank" title="github.com">
+<svg viewbox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" fill-rule="evenodd"></path></svg>
+</a>
+<a class="md-footer-social__link" href="https://twitter.com/cgarciae88" rel="noopener" target="_blank" title="twitter.com">
+<svg viewbox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"></path></svg>
+</a>
+<a class="md-footer-social__link" href="https://www.linkedin.com/in/cgarciae" rel="noopener" target="_blank" title="www.linkedin.com">
+<svg viewbox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"></path></svg>
+</a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<script src="../../assets/javascripts/vendor.d710d30a.min.js"></script>
+<script src="../../assets/javascripts/bundle.b39636ac.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+<script>
+        app = initialize({
+          base: "../..",
+          features: [],
+          search: Object.assign({
+            worker: "../../assets/javascripts/worker/search.a68abb33.min.js"
+          }, typeof search !== "undefined" && search)
+        })
+      </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+</body>
+</html>
