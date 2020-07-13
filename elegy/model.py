@@ -34,7 +34,7 @@ class Mode(Enum):
 
 
 class Model(object):
-    _model_fn: tp.Callable
+    _module_fn: tp.Callable
     _model_transform: hk.TransformedWithState
     _loss_fn: tp.Callable
     _metrics: tp.Optional[hk.TransformedWithState]
@@ -49,13 +49,13 @@ class Model(object):
 
     def __init__(
         self,
-        model_fn: tp.Optional[tp.Callable],
-        loss: tp.Callable,
+        module: tp.Callable,
+        loss: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
         loss_mode: str = "match_outputs_and_labels",
         aux_losses: tp.Optional[
             tp.Callable[[], tp.Union[tp.List[tp.Callable], tp.Callable]]
         ] = None,
-        metrics: tp.Optional[tp.Callable] = None,
+        metrics: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
         metrics_mode: str = "match_outputs_and_labels",
         optimizer: tp.Optional[optix.GradientTransformation] = None,
         run_eagerly: bool = False,
@@ -69,7 +69,7 @@ class Model(object):
         """[summary]
 
         Args:
-            model_fn (tp.Optional[tp.Callable]): [description]
+            module (tp.Optional[tp.Callable]): [description]
             loss (tp.Callable): [description]
             loss_mode (str, optional): [description]. Defaults to "match_outputs_and_labels".
             aux_losses (tp.Optional[ tp.Callable[[], tp.Union[tp.List[tp.Callable], tp.Callable]] ], optional): [description]. Defaults to None.
@@ -88,19 +88,24 @@ class Model(object):
             ValueError: [description]
         """
 
-        if hasattr(self, "call"):
-            model_fn = getattr(self, "call")
-
-        if model_fn is None:
-            raise ValueError("Must define either self.call or model_fn")
-
         if metrics is not None:
             metrics = metric_modes.get_mode_function(metrics_mode)(metrics)
 
+        if loss is None:
+
+            def _loss(y_true, y_pred):
+                return 0.0
+
+            loss = _loss
+
         loss = loss_modes.get_mode_function(loss_mode)(loss)
 
-        self._model_fn = utils.inject_dependencies(model_fn)
-        self._model_transform = hk.transform_with_state(self._model_fn)
+        def model_fn(*args, **kwargs):
+            module = self._module_fn()
+            return utils.inject_dependencies(module)(*args, **kwargs)
+
+        self._module_fn = module
+        self._model_transform = hk.transform_with_state(model_fn)
         self._loss_fn = utils.inject_dependencies(loss)
         self._aux_losses = (
             loss_modes.get_aux_losses_fn(aux_losses) if aux_losses is not None else None
@@ -122,7 +127,7 @@ class Model(object):
         self.run_eagerly = run_eagerly
 
     def __call__(self, *args, **kwargs):
-        return self._model_fn(*args, **kwargs)
+        return self._module_fn(*args, **kwargs)
 
     def _maybe_initialize(
         self,

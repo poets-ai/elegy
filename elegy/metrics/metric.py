@@ -1,3 +1,4 @@
+from elegy.utils import Deferable
 import typing as tp
 import haiku as hk
 import jax.numpy as jnp
@@ -5,7 +6,7 @@ from abc import abstractmethod
 from elegy import utils
 
 
-class Metric(hk.Module):
+class Metric(hk.Module, Deferable):
     """Encapsulates metric logic and state.
     
     Usage:

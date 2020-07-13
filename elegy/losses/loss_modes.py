@@ -8,19 +8,8 @@ KeyValueLike = tp.Union[hk.Module, tp.Tuple[str, tp.Callable]]
 DictLike = tp.Union[tp.Dict[str, tp.Callable], tp.List[KeyValueLike]]
 
 
-def match_outputs_and_labels(
-    modules_fn: tp.Callable[
-        [],
-        tp.Union[
-            KeyValueLike,
-            tp.List[tp.Union[KeyValueLike, DictLike]],
-            tp.Dict[str, tp.Union[KeyValueLike, DictLike]],
-        ],
-    ]
-):
+def match_outputs_and_labels(loss_fns):
     def _losses_fn(y_true, y_pred, **kwargs):
-
-        loss_fns = modules_fn()
 
         logs = {}
 
@@ -89,11 +78,11 @@ def get_mode_function(mode: str) -> tp.Callable:
         raise ValueError(f"Mode '{mode}' not supported.")
 
 
-def get_aux_losses_fn(aux_losses_fn):
+def get_aux_losses_fn(loss_fns_):
     def _aux_losses(*args, **kwargs):
 
+        loss_fns = loss_fns_
         aux_losses = {}
-        loss_fns = aux_losses_fn()
 
         if not isinstance(loss_fns, (tp.List, tp.Tuple)):
             loss_fns = [loss_fns]

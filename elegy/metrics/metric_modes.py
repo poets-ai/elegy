@@ -2,24 +2,16 @@ import typing as tp
 import haiku as hk
 
 from elegy import utils
-
-KeyValueLike = tp.Union[hk.Module, tp.Tuple[str, tp.Callable]]
-DictLike = tp.Union[tp.Dict[str, tp.Callable], tp.List[KeyValueLike]]
+import jax
 
 
-def match_outputs_and_labels(
-    modules_fn: tp.Callable[
-        [],
-        tp.Union[
-            KeyValueLike,
-            tp.List[tp.Union[KeyValueLike, DictLike]],
-            tp.Dict[str, tp.Union[KeyValueLike, DictLike]],
-        ],
-    ]
-):
+def match_outputs_and_labels(metrics_fn):
     def _metrics_fn(y_true, y_pred, **kwargs):
 
-        metrics = modules_fn()
+        if isinstance(metrics_fn, (tp.List, tp.Dict)):
+            metrics = jax.tree_multimap(lambda f: f(), metrics_fn)
+        else:
+            metrics = [metrics_fn()]
 
         return {
             name: utils.inject_dependencies(metric)(
@@ -48,8 +40,8 @@ def parse_structures(prefix, y_true, y_pred, metrics):
     elif isinstance(metrics, hk.Module):
         yield f"{prefix}{metrics.module_name}", y_true, y_pred, metrics
 
-    elif isinstance(metrics, tp.Tuple):
-        yield f"{prefix}{metrics[0]}", y_true, y_pred, metrics[1]
+    elif isinstance(metrics, tp.Callable):
+        yield f"{prefix}{metrics.__name__}", y_true, y_pred, metrics
 
     elif isinstance(metrics, tp.List):
         for metric in metrics:

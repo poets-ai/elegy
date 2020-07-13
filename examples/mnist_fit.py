@@ -79,24 +79,25 @@ def main(debug: bool = False, eager: bool = False):
     x_val = np.vstack(x_val)
     print(x_val.shape, y_val.shape)
 
-    def model_fn(image) -> jnp.ndarray:
-        """Standard LeNet-300-100 MLP network."""
-        image = image.astype(jnp.float32) / 255.0
+    class MLP(elegy.Module):
+        def call(self, image):
+            """Standard LeNet-300-100 MLP network."""
+            image = image.astype(jnp.float32) / 255.0
 
-        mlp = hk.Sequential(
-            [
-                hk.Flatten(),
-                hk.Linear(300),
-                jax.nn.relu,
-                hk.Linear(100),
-                jax.nn.relu,
-                hk.Linear(10),
-            ]
-        )
-        return mlp(image)
+            mlp = hk.Sequential(
+                [
+                    hk.Flatten(),
+                    hk.Linear(300),
+                    jax.nn.relu,
+                    hk.Linear(100),
+                    jax.nn.relu,
+                    hk.Linear(10),
+                ]
+            )
+            return mlp(image)
 
     model = elegy.Model(
-        model_fn=model_fn,
+        module=MLP.defer(),
         loss=lambda: elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
         aux_losses=lambda: elegy.regularizers.GlobalL2(l=1e-4),
         metrics=lambda: elegy.metrics.SparseCategoricalAccuracy(),
