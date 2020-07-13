@@ -140,3 +140,4 @@ cython_debug/
 # custom
 /.vscode
 **/data/**
+/test.*
