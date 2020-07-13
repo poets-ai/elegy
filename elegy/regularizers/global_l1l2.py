@@ -6,7 +6,7 @@ import haiku as hk
 import typing as tp
 
 
-class GlobalL1L2Regularization(Loss):
+class GlobalL1L2(Loss):
     r"""
     A regularizer that applies both L1 and L2 regularization penalties.
 
@@ -27,7 +27,7 @@ class GlobalL1L2Regularization(Loss):
     model = elegy.Model(
         model_fn=model_fn,
         loss=lambda: [elegy.losses.SparseCategoricalCrossentropy()],
-        aux_losses=lambda: [elegy.regularizers.GlobalL1L2Regularization(l1=1e-5, l2=1e-4)],
+        aux_losses=lambda: [elegy.regularizers.GlobalL1L2(l1=1e-5, l2=1e-4)],
         metrics=lambda: elegy.metrics.SparseCategoricalAccuracy(),
     )
     ```

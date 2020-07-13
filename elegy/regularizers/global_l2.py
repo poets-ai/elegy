@@ -1,14 +1,14 @@
 import typing as tp
 
 from elegy.losses.loss import Reduction
-from elegy.regularizers.global_l1l2_regularization import GlobalL1L2Regularization
+from elegy.regularizers.global_l1l2 import GlobalL1L2
 
 
-def GlobalL2Regularization(
+def GlobalL2(
     l: float = 0.01,
     reduction: tp.Optional[Reduction] = None,
     name: str = "l2_regularization",
-) -> GlobalL1L2Regularization:
+) -> GlobalL1L2:
     r"""
     Create a regularizer that applies an L2 regularization penalty.
   
@@ -33,4 +33,4 @@ def GlobalL2Regularization(
     Returns:
         An L2 Regularizer with the given regularization factor.
     """
-    return GlobalL1L2Regularization(l2=l, reduction=reduction, name=name)
+    return GlobalL1L2(l2=l, reduction=reduction, name=name)
