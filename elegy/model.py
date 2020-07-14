@@ -93,10 +93,10 @@ class Model(object):
 
         if loss is None:
 
-            def _loss(y_true, y_pred):
+            def loss_(y_true, y_pred):
                 return 0.0
 
-            loss = _loss
+            loss = loss_
 
         loss = loss_modes.get_mode_function(loss_mode)(loss)
 
