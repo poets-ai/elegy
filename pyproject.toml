@@ -6,10 +6,11 @@ authors = ["Cristian Garcia <cgarcia.e88@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.6"
-jaxlib = "^0.1.50"
+jaxlib = "^0.1.51"
 dm-haiku = "^0.0.1"
 numpy = "^1.19.0"
 pytest = "^5.4.3"
+deepdish = "^0.3.6"
 typing_extensions = { version = "^3.7.4", markers = "python_version < '3.8'" }
 dataclasses =  { version = "^0.7", markers = "python_version >= '3.6' and python_version < '3.7'" }
 

@@ -2,29 +2,30 @@
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
 import copy
-from enum import Enum
 import typing as tp
+from enum import Enum
 from functools import partial
 
+import deepdish
 import haiku as hk
+import numpy as np
+
 import jax
 import jax.numpy as jnp
-import numpy as np
-from jax.experimental import optix
-
 from elegy.losses import loss_modes
 from elegy.metrics import metric_modes
+from jax.experimental import optix
 
 from . import utils
+from .callbacks import Callback, CallbackList
 from .data import (
     DataHandler,
-    unpack_x_y_sample_weight,
-    train_validation_split,
-    map_structure,
     map_append,
+    map_structure,
+    train_validation_split,
+    unpack_x_y_sample_weight,
 )
 from .metrics.metric_modes import get_mode_function
-from .callbacks import CallbackList, Callback
 
 
 class Mode(Enum):
@@ -1094,3 +1095,36 @@ class Model(object):
 
     _predict_jit = jax.jit(_predict, static_argnums=(0,))
 
+    def save(self, path: str) -> None:
+        state: tp.Dict = {"rng": self._rngs.internal_state[0]}
+
+        if self._params is not None:
+            state["params"] = self._params
+
+        if self._state is not None:
+            state["state"] = self._state
+
+        if self._metrics_state is not None:
+            state["metrics_state"] = self._metrics_state
+
+        if self._optimizer_state is not None:
+            state["optimizer_state"] = self._optimizer_state
+
+        deepdish.io.save(path, state)
+
+    def load(self, path: str) -> None:
+        state: tp.Dict = deepdish.io.load(path)
+
+        self._rngs = hk.PRNGSequence(state["rng"])
+
+        if "params" in state:
+            self._params = state["params"]
+
+        if "state" in state:
+            self._state = state["state"]
+
+        if "metrics_state" in state:
+            self._metrics_state = state["metrics_state"]
+
+        # if "optimizer_state" in state:
+        #     self._optimizer_state = state["optimizer_state"]
