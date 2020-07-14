@@ -2,19 +2,21 @@
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
 import copy
+import pickle
 import typing as tp
 from enum import Enum
 from functools import partial
+from pathlib import Path
 
 import deepdish
 import haiku as hk
-import numpy as np
-
 import jax
 import jax.numpy as jnp
+import numpy as np
+from jax.experimental import optix
+
 from elegy.losses import loss_modes
 from elegy.metrics import metric_modes
-from jax.experimental import optix
 
 from . import utils
 from .callbacks import Callback, CallbackList
@@ -1095,7 +1097,8 @@ class Model(object):
 
     _predict_jit = jax.jit(_predict, static_argnums=(0,))
 
-    def save(self, path: str) -> None:
+    @property
+    def full_state(self) -> tp.Dict:
         state: tp.Dict = {"rng": self._rngs.internal_state[0]}
 
         if self._params is not None:
@@ -1110,11 +1113,10 @@ class Model(object):
         if self._optimizer_state is not None:
             state["optimizer_state"] = self._optimizer_state
 
-        deepdish.io.save(path, state)
+        return state
 
-    def load(self, path: str) -> None:
-        state: tp.Dict = deepdish.io.load(path)
-
+    @full_state.setter
+    def full_state(self, state):
         self._rngs = hk.PRNGSequence(state["rng"])
 
         if "params" in state:
@@ -1126,5 +1128,49 @@ class Model(object):
         if "metrics_state" in state:
             self._metrics_state = state["metrics_state"]
 
-        # if "optimizer_state" in state:
-        #     self._optimizer_state = state["optimizer_state"]
+        if "optimizer_state" in state:
+            self._optimizer_state = state["optimizer_state"]
+
+    def clear_state(self):
+        self._params = None
+        self._state = None
+        self._metrics_state = None
+        self._optimizer_state = None
+
+    def save(self, path: tp.Union[str, Path]) -> None:
+        if isinstance(path, str):
+            path = Path(path)
+
+        path.mkdir(parents=True, exist_ok=True)
+
+        state = self.full_state
+
+        deepdish.io.save(path / "states.h5", state)
+
+        # getting pickle errors
+        # self.clear_state()
+        # with open(path / "model.pkl", "wb") as f:
+        #     pickle.dump(self, f)
+
+        self.full_state = state
+
+    def load(self, path: tp.Union[str, Path]) -> None:
+        if isinstance(path, str):
+            path = Path(path)
+
+        state: tp.Dict = deepdish.io.load(path / "states.h5")
+        state.pop("optimizer_state", None)
+
+        self.full_state = state
+
+
+def load(path: tp.Union[str, Path]) -> Model:
+    if isinstance(path, str):
+        path = Path(path)
+
+    with open(path / "model.pkl", "rb") as f:
+        model = pickle.load(f)
+
+    model.load(path)
+
+    return model
