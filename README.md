@@ -2,7 +2,7 @@
 
 _Elegy is a Neural Networks framework based on Jax and Haiku._ 
 
-Elegy implements the Keras API but makes changes to play better with Jax & Haiku and give more flexibility around losses and metrics (more on this soon).
+Elegy implements the Keras API but makes changes to play better with Jax & Haiku and give more flexibility around losses and metrics (more on this soon). Elegy is still in _beta_, feel free to test it and send us your feedback!
 
 #### Main Features
 
