@@ -1517,7 +1517,7 @@ h6:hover .anchor-link {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>In this tutorial we will see the explore the basic feature of <strong>Elegy</strong>. If you are a Keras user you should feel at home, are currently using Jax or Haiku things will appear much simpler. To get started you will first need to install the following dependencies:</p>
+<p>In this tutorial we will see the explore the basic feature of <strong>Elegy</strong>. If you are a Keras user you should feel at home, if you are currently using Jax or Haiku things will appear much more streamlined. To get started you will first need to install the following dependencies:</p>
 </div>
 </div>
 </div>
@@ -1535,7 +1535,8 @@ h6:hover .anchor-link {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="loading-the-data">Loading the Data<a class="anchor-link" href="#Loading-the-Data">¶</a></h2><p>In this tutorial we will train a Neural Network on the MNIST dataset, for this we will first need download and load the data into memory. Here we will use <code>dataget</code> for simplicity but you can probably use you favorite datasets library.</p>
+<p>Note that Elegy doesn't depend on <code>jax</code> since there are both <code>cpu</code> and <code>gpu</code> version you can choose from so you will need to install it separately.</p>
+<h2 id="loading-the-data">Loading the Data<a class="anchor-link" href="#Loading-the-Data">¶</a></h2><p>In this tutorial we will train a Neural Network on the MNIST dataset, for this we will first need download and load the data into memory. Here we will use <code>dataget</code> for simplicity but you can use you favorite datasets library.</p>
 </div>
 </div>
 </div>
@@ -1574,8 +1575,8 @@ y_test: (10000,) uint8
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>In this case <code>dataget</code> loads is the <em>official</em> from Yann LeCun's website.</p>
-<h2 id="creating-the-model">Creating the Model<a class="anchor-link" href="#Creating-the-Model">¶</a></h2><p>Now that we have the data we can define our model. In Elegy you can do this by inheriting from <code>elegy.Module</code> and defining a <code>call</code> function that should take in some inputs, perform a series of transformation using Jax and Haiku expressions, and returns some outputs. In this example we will create a simple 2 layer MLP using Haiku modules:</p>
+<p>In this case <code>dataget</code> loads the data from Yann LeCun's website.</p>
+<h2 id="creating-the-model">Creating the Model<a class="anchor-link" href="#Creating-the-Model">¶</a></h2><p>Now that we have the data we can define our model. In Elegy you can do this by inheriting from <code>elegy.Module</code> and defining a <code>call</code> method. This method should take in some inputs, perform a series of transformation using Jax and Haiku expressions, and returns the outputs of the network. In this example we will create a simple 2 layer MLP using Haiku modules:</p>
 </div>
 </div>
 </div>
@@ -1593,7 +1594,6 @@ y_test: (10000,) uint8
     <span class="sd">"""Standard LeNet-300-100 MLP network."""</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n1</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300</span><span class="p">,</span> <span class="n">n2</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
             <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
             <span class="bp">self</span><span class="o">.</span><span class="n">n1</span> <span class="o">=</span> <span class="n">n1</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">n2</span> <span class="o">=</span> <span class="n">n2</span>
     
@@ -1620,8 +1620,9 @@ y_test: (10000,) uint8
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Here we are using <code>Sequential</code> to stack two layers with <code>relu</code> activations and a final <code>Linear</code> layer with <code>10</code> units that represents the logits of the network. This code should feel familiar to most Keras / PyTorch users, the main difference here is that instead of assigning layers/modules as fields inside <code>__init__</code> and later using them in <code>call</code> / <code>forward</code>, here we can just use them inplace since Haiku tracks the state for us "behind the scenes". Writing model code in Elegy / Haiku often feels easier since there tends to be a lot less boilerplate. For a premier on Haiku please refer to this <a href="https://github.com/deepmind/dm-haiku#quickstart">Quick Start</a>.</p>
-<p><strong>Note:</strong> <code>elegy.Module</code> is just a thin wrapper over <code>haiku.Module</code> that adds certain Elegy-related functionalities, you can inherit from from <code>haiku.Module</code> instead if you wish, just remember to also rename <code>call</code> to <code>__call__</code></p>
+<p>Here we are using <code>Sequential</code> to stack two layers with <code>relu</code> activations and a final <code>Linear</code> layer with <code>10</code> units that represents the logits of the network. This code should feel familiar to most Keras / PyTorch users, the main difference here is that instead of assigning layers / modules as fields inside <code>__init__</code> and later using them in <code>call</code> / <code>forward</code>, here we can just use them inplace since Haiku tracks the state for us "behind the scenes". Writing model code in Elegy / Haiku often feels easier since there tends to be a lot less boilerplate thanks to Haiku hooks. For a premier on Haiku please refer to this <a href="https://github.com/deepmind/dm-haiku#quickstart">Quick Start</a>.</p>
+<p><strong>Note</strong> <br/>
+<code>elegy.Module</code> is just a thin wrapper over <code>haiku.Module</code> that adds certain Elegy-related functionalities, you can inherit from from <code>haiku.Module</code> instead if you wish, just remember to also rename <code>call</code> to <code>__call__</code></p>
 <p>Now that we have this module we can create an Elegy <code>Model</code>.</p>
 </div>
 </div>
@@ -1653,7 +1654,7 @@ y_test: (10000,) uint8
 <li>It requires you to pass a <code>module</code> as first argument </li>
 <li>It accepts additional arguments not present in Keras like <code>aux_losses</code></li>
 </ol>
-<p>You might have also notice some weird <code>lambda</code> expressions around <code>module</code> and <code>metrics</code>, these arise because Haiku prohibits the creation of <code>haiku.Module</code>s outside of a <code>haiku.transform</code>. To go around this restriction we just defer instantiation of these object by wrapping them inside a <code>lambda</code> and actually creating them later. For convenience, both the <code>elegy.Module</code> and <code>elegy.Metric</code> classes define a <code>defer</code> class method that which you can use to avoid using lambdas:</p>
+<p>You might have also notice some weird <code>lambda</code> expressions around <code>module</code> and <code>metrics</code>, these arise because Haiku prohibits the creation of <code>haiku.Module</code>s outside of a <code>haiku.transform</code>. To go around this restriction we just defer instantiation of these object by wrapping them inside a <code>lambda</code> and calling them later. For convenience both the <code>elegy.Module</code> and <code>elegy.Metric</code> classes define a <code>defer</code> classmethod that which you can use to make things more readable:</p>
 </div>
 </div>
 </div>
@@ -1677,7 +1678,7 @@ y_test: (10000,) uint8
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="training-the-model">Training the Model<a class="anchor-link" href="#Training-the-Model">¶</a></h2><p>Having our <code>model</code> instance ready we now need to pass it some data to start training, which is super easy. Like in Keras this is done via the <code>fit</code> method which contains more or less the same signature. We try to be as compatible with Keras as possible here but also remove a lot of the Tensorflow specific stuff. The following code will train our model for <code>100</code> epochs while limiting each epoch to <code>200</code> steps and using a batch size of <code>64</code>:</p>
+<h2 id="training-the-model">Training the Model<a class="anchor-link" href="#Training-the-Model">¶</a></h2><p>Having our <code>model</code> instance ready we now need to pass it some data to start training. Like in Keras this is done via the <code>fit</code> method which contains more or less the same signature. We try to be as compatible with Keras as possible here but also remove a lot of the Tensorflow specific stuff. The following code will train our model for <code>100</code> epochs while limiting each epoch to <code>200</code> steps and using a batch size of <code>64</code>:</p>
 </div>
 </div>
 </div>
