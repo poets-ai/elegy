@@ -58,28 +58,3 @@ def apply_recursive(context: tp.Tuple[str, ...], losses, **kwargs):
     else:
         raise TypeError(f"Invalid type {type(losses)}")
 
-
-def get_aux_losses_fn(loss_fns_):
-    def _aux_losses(*args, **kwargs):
-
-        loss_fns = loss_fns_
-        logs = {}
-
-        if not isinstance(loss_fns, (tp.List, tp.Tuple)):
-            loss_fns = [loss_fns]
-
-        # TODO: refactor this into a single function
-        for aux_loss in loss_fns:
-
-            if isinstance(aux_loss, tp.Tuple):
-                name, aux_loss = aux_loss
-            else:
-                name = aux_loss.name
-
-            name = get_unique_name(context=(name,), logs=logs)
-
-            logs[name] = aux_loss(*args, **kwargs)
-
-        return logs
-
-    return _aux_losses

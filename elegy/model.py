@@ -53,7 +53,6 @@ class Model(object):
         self,
         module: tp.Callable,
         loss: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
-        aux_losses: tp.Union[tp.Callable, tp.List[tp.Callable], None] = None,
         metrics: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
         optimizer: tp.Optional[optix.GradientTransformation] = None,
         run_eagerly: bool = False,
@@ -69,7 +68,6 @@ class Model(object):
         Args:
             module (tp.Optional[tp.Callable]): [description]
             loss (tp.Callable): [description]
-            aux_losses (tp.Optional[ tp.Callable[[], tp.Union[tp.List[tp.Callable], tp.Callable]] ], optional): [description]. Defaults to None.
             metrics (tp.Optional[tp.Callable], optional): [description]. Defaults to None.
             optimizer (optix.GradientTransformation, optional): [description]. Defaults to optix.adam(1e-3).
             run_eagerly (bool, optional): [description]. Defaults to False.
@@ -103,9 +101,6 @@ class Model(object):
         self._module_fn = module
         self._model_transform = hk.transform_with_state(model_fn)
         self._loss_fn = utils.inject_dependencies(loss)
-        self._aux_losses = (
-            loss_modes.get_aux_losses_fn(aux_losses) if aux_losses is not None else None
-        )
         self._metrics_transform = (
             hk.transform_with_state(
                 utils.inject_dependencies(metrics, rename={"__params": "params"})
@@ -341,27 +336,6 @@ class Model(object):
             class_weight=class_weight,
             params=params,
         )
-
-        if not isinstance(logs, dict):
-            logs = dict(loss=logs)
-
-        aux_losses = (
-            self._aux_losses(
-                y_true=y,
-                y_pred=y_pred,
-                x=x,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                params=params,
-            )
-            if self._aux_losses is not None
-            else None
-        )
-
-        if aux_losses:
-            temp_logs = logs.copy()
-            logs = aux_losses
-            logs.update(temp_logs)
 
         # get total loss
         loss = logs["loss"] = sum(logs.values())

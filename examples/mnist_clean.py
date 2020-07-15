@@ -56,9 +56,9 @@ def main(debug: bool = False, eager: bool = False):
     model = elegy.Model(
         module=MLP.defer(),
         loss=[
-            elegy.losses.SparseCategoricalCrossentropy(from_logits=True, on="outputs")
+            elegy.losses.SparseCategoricalCrossentropy(from_logits=True, on="outputs"),
+            elegy.regularizers.GlobalL2(l=1e-5)
         ],
-        aux_losses=elegy.regularizers.GlobalL2(l=1e-5),
         metrics=elegy.metrics.SparseCategoricalAccuracy.defer(on="outputs"),
         optimizer=optix.rmsprop(0.001),
         run_eagerly=eager,

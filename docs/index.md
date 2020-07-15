@@ -39,8 +39,10 @@ class MLP(elegy.Module):
 ```python
 model = elegy.Model(
     module=MLP.defer(),
-    loss=elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-    aux_losses=elegy.regularizers.GlobalL2(l=1e-5),
+    loss=[
+        elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
+        elegy.regularizers.GlobalL2(l=1e-5),
+    ],
     metrics=elegy.metrics.SparseCategoricalAccuracy.defer(),
     optimizer=optix.rmsprop(1e-3),
 )

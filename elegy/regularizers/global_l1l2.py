@@ -26,8 +26,10 @@ class GlobalL1L2(Loss):
     ```python
     model = elegy.Model(
         model_fn=model_fn,
-        loss=lambda: [elegy.losses.SparseCategoricalCrossentropy()],
-        aux_losses=lambda: [elegy.regularizers.GlobalL1L2(l1=1e-5, l2=1e-4)],
+        loss=[
+            elegy.losses.SparseCategoricalCrossentropy(),
+            elegy.regularizers.GlobalL1L2(l1=1e-5, l2=1e-4),
+        ],
         metrics=lambda: elegy.metrics.SparseCategoricalAccuracy(),
     )
     ```
