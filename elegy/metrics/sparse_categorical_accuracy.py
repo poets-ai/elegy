@@ -1,3 +1,4 @@
+from elegy import types
 from elegy import utils
 import typing as tp
 
@@ -59,7 +60,10 @@ class SparseCategoricalAccuracy(Mean):
     """
 
     def __init__(
-        self, name: tp.Optional[str] = None, dtype: tp.Optional[jnp.dtype] = None,
+        self,
+        name: tp.Optional[str] = None,
+        dtype: tp.Optional[jnp.dtype] = None,
+        on: tp.Optional[types.IndexLike] = None,
     ):
         """
         Creates a `SparseCategoricalAccuracy` instance.
@@ -68,7 +72,7 @@ class SparseCategoricalAccuracy(Mean):
             name: string name of the metric instance.
             dtype: data type of the metric result.
         """
-        super().__init__(name=name, dtype=dtype)
+        super().__init__(name=name, dtype=dtype, on=on)
 
     def call(
         self,

@@ -52,7 +52,6 @@ def get_function_args(f) -> tp.List[inspect.Parameter]:
 
 def get_input_args(
     x: tp.Union[np.ndarray, jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-    y: tp.Any,
     is_training: bool,
 ) -> tp.Tuple[tp.Tuple, tp.Mapping[str, tp.Any]]:
 
@@ -66,7 +65,7 @@ def get_input_args(
         args = (x,)
         kwargs = {}
 
-    apply_kwargs = dict(y=y, is_training=is_training)
+    apply_kwargs = dict(is_training=is_training)
     apply_kwargs.update(kwargs)
 
     return args, kwargs

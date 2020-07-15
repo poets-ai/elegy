@@ -36,7 +36,7 @@ def main(debug: bool = False, eager: bool = False):
             self.n1 = n1
             self.n2 = n2
 
-        def call(self, image: jnp.ndarray) -> jnp.ndarray:
+        def call(self, image: jnp.ndarray):
             image = image.astype(jnp.float32) / 255.0
             x = hk.Flatten()(image)
             x = hk.Sequential(
@@ -53,9 +53,9 @@ def main(debug: bool = False, eager: bool = False):
             )(x)
             return x.reshape(image.shape) * 255
 
-    class MeanSquaredError(elegy.losses.MeanSquaredError):
+    class MeanSquaredError(elegy.Loss):
         def call(self, x, y_pred):
-            return super().call(y_true=x, y_pred=y_pred)
+            return dict(a=jnp.mean(jnp.square(x - y_pred), axis=-1), b=1.0)
 
     model = elegy.Model(
         module=MLP.defer(n1=256, n2=64),
@@ -65,11 +65,7 @@ def main(debug: bool = False, eager: bool = False):
     )
 
     history = model.fit(
-        x=X_train,
-        epochs=20,
-        batch_size=64,
-        validation_data=(X_test, y_test),
-        shuffle=True,
+        x=X_train, epochs=20, batch_size=64, validation_data=(X_test,), shuffle=True,
     )
 
     def plot_history(history):

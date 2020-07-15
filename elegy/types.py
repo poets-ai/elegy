@@ -8,3 +8,5 @@ Container = tp.Union[
     T, tp.Tuple["Container", ...], tp.Dict[str, "Container"],
 ]
 ArrayHolder = Container[ArrayLike]
+
+IndexLike = tp.Union[str, int, tp.Iterable[tp.Union[str, int]]]

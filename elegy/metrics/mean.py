@@ -1,3 +1,4 @@
+from elegy import types
 from elegy import utils
 import typing as tp
 
@@ -42,7 +43,10 @@ class Mean(reduce.Reduce):
     """
 
     def __init__(
-        self, name: tp.Optional[str] = None, dtype: tp.Optional[jnp.dtype] = None,
+        self,
+        name: tp.Optional[str] = None,
+        dtype: tp.Optional[jnp.dtype] = None,
+        on: tp.Optional[types.IndexLike] = None,
     ):
         """Creates a `Mean` instance.
         Arguments:
@@ -50,7 +54,7 @@ class Mean(reduce.Reduce):
           dtype: (Optional) data type of the metric result.
         """
         super().__init__(
-            reduction=reduce.Reduction.WEIGHTED_MEAN, name=name, dtype=dtype
+            reduction=reduce.Reduction.WEIGHTED_MEAN, name=name, dtype=dtype, on=on
         )
 
     def call(

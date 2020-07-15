@@ -1,88 +1,69 @@
 import typing as tp
+from typing import List, Tuple
 import haiku as hk
 
 from elegy import utils
 from elegy.losses.loss import Loss
 
-KeyValueLike = tp.Union[hk.Module, tp.Tuple[str, tp.Callable]]
-DictLike = tp.Union[tp.Dict[str, tp.Callable], tp.List[KeyValueLike]]
+
+def get_unique_name(context, logs):
+    context = list(context)
+    context[0] += "_loss"
+
+    name = "/".join(context)
+
+    if name not in logs:
+        return name
+
+    i = 1
+    while f"{name}_{i}" in logs:
+        i += 1
+
+    return f"{name}_{i}"
 
 
-def match_outputs_and_labels(loss_fns):
-    def _losses_fn(y_true, y_pred, **kwargs):
+def forward_all(losses):
+    def _losses_fn(**kwargs):
 
         logs = {}
 
-        for name, y_true, y_pred, loss in parse_structures(
-            "", y_true, y_pred, loss_fns
-        ):
-            loss_name = get_unique_name(logs, name)
-
-            logs[loss_name] = utils.inject_dependencies(loss)(
-                y_true=y_true, y_pred=y_pred, **kwargs
-            )
+        for context, loss_val in apply_recursive((), losses, **kwargs):
+            loss_name = get_unique_name(context, logs)
+            logs[loss_name] = loss_val
 
         return logs
 
     return _losses_fn
 
 
-def get_unique_name(losses, name):
-    loss_name = f"{name}_loss"
+def apply_recursive(context: tp.Tuple[str, ...], losses, **kwargs):
 
-    if loss_name not in losses:
-        return loss_name
+    if isinstance(losses, tp.Callable):
+        name = losses.name if isinstance(losses, Loss) else losses.__name__
+        context += (name,)
+        loss_val = utils.inject_dependencies(losses)(**kwargs)
 
-    i = 1
-    while f"{loss_name}_{i}" in losses:
-        i += 1
+        if isinstance(loss_val, tp.Dict):
+            for name, loss_val in loss_val.items():
+                yield context + (name,), loss_val
+        else:
+            yield context, loss_val
 
-    return f"{loss_name}_{i}"
-
-
-def parse_structures(prefix, y_true, y_pred, losses):
-
-    if isinstance(y_true, (tp.Tuple, tp.List)):
-        for i in range(len(y_true)):
-            yield from parse_structures(
-                f"{prefix}{i}/", y_true[i], y_pred[i], losses[i]
-            )
-    elif isinstance(y_true, tp.Dict):
-        for key in y_true:
-            yield from parse_structures(
-                f"{prefix}{key}/", y_true[key], y_pred[key], losses[key]
-            )
-    elif isinstance(losses, Loss):
-        yield f"{prefix}{losses.name}", y_true, y_pred, losses
-
-    elif isinstance(losses, tp.Tuple):
-        yield f"{prefix}{losses[0]}", y_true, y_pred, losses[1]
-
-    elif isinstance(losses, tp.List):
-        for metric in losses:
-            yield from parse_structures(prefix, y_true, y_pred, metric)
-
+    elif isinstance(losses, (tp.Tuple, tp.List)):
+        for loss in losses:
+            yield from apply_recursive(context, loss, **kwargs)
+    elif isinstance(losses, tp.Dict):
+        for name, loss in losses.items():
+            yield from apply_recursive(context + (name,), loss, **kwargs)
     else:
-        raise ValueError(
-            f"Invalid type for inputs or losses, inputs {type(y_true)}, losses {type(losses)},"
-        )
-
-
-def get_mode_function(mode: str) -> tp.Callable:
-
-    if mode == "match_outputs_and_labels":
-        return match_outputs_and_labels
-    elif mode == "manual":
-        return lambda x: x
-    else:
-        raise ValueError(f"Mode '{mode}' not supported.")
+        raise TypeError(f"Invalid type {type(losses)}")
 
 
 def get_aux_losses_fn(loss_fns_):
     def _aux_losses(*args, **kwargs):
 
         loss_fns = loss_fns_
-        aux_losses = {}
+        logs = {}
 
         if not isinstance(loss_fns, (tp.List, tp.Tuple)):
             loss_fns = [loss_fns]
@@ -95,10 +76,10 @@ def get_aux_losses_fn(loss_fns_):
             else:
                 name = aux_loss.name
 
-            name = get_unique_name(aux_losses, name)
+            name = get_unique_name(context=(name,), logs=logs)
 
-            aux_losses[name] = aux_loss(*args, **kwargs)
+            logs[name] = aux_loss(*args, **kwargs)
 
-        return aux_losses
+        return logs
 
     return _aux_losses

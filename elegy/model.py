@@ -54,12 +54,8 @@ class Model(object):
         self,
         module: tp.Callable,
         loss: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
-        loss_mode: str = "match_outputs_and_labels",
-        aux_losses: tp.Optional[
-            tp.Callable[[], tp.Union[tp.List[tp.Callable], tp.Callable]]
-        ] = None,
+        aux_losses: tp.Union[tp.Callable, tp.List[tp.Callable], None] = None,
         metrics: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
-        metrics_mode: str = "match_outputs_and_labels",
         optimizer: tp.Optional[optix.GradientTransformation] = None,
         run_eagerly: bool = False,
         params: tp.Optional[hk.Params] = None,
@@ -74,10 +70,8 @@ class Model(object):
         Args:
             module (tp.Optional[tp.Callable]): [description]
             loss (tp.Callable): [description]
-            loss_mode (str, optional): [description]. Defaults to "match_outputs_and_labels".
             aux_losses (tp.Optional[ tp.Callable[[], tp.Union[tp.List[tp.Callable], tp.Callable]] ], optional): [description]. Defaults to None.
             metrics (tp.Optional[tp.Callable], optional): [description]. Defaults to None.
-            metrics_mode (str, optional): [description]. Defaults to "match_outputs_and_labels".
             optimizer (optix.GradientTransformation, optional): [description]. Defaults to optix.adam(1e-3).
             run_eagerly (bool, optional): [description]. Defaults to False.
             params (tp.Optional[hk.Params], optional): [description]. Defaults to None.
@@ -92,7 +86,7 @@ class Model(object):
         """
 
         if metrics is not None:
-            metrics = metric_modes.get_mode_function(metrics_mode)(metrics)
+            metrics = metric_modes.forward_all(metrics)
 
         if loss is None:
 
@@ -101,7 +95,7 @@ class Model(object):
 
             loss = loss_
 
-        loss = loss_modes.get_mode_function(loss_mode)(loss)
+        loss = loss_modes.forward_all(loss)
 
         def model_fn(*args, **kwargs):
             module = self._module_fn()
@@ -166,7 +160,7 @@ class Model(object):
             self._initial_metrics_state = initial_metrics_state
 
         if self._params is None or self._state is None:
-            x_args, x_kwargs = utils.get_input_args(x, y, is_training=False)
+            x_args, x_kwargs = utils.get_input_args(x, is_training=False)
 
             self._params, self._state = self._model_transform.init(
                 next(self._rngs), *x_args, **x_kwargs
@@ -176,7 +170,7 @@ class Model(object):
             return
 
         if self._metrics_transform is not None and self._metrics_state is None:
-            x_args, x_kwargs = utils.get_input_args(x, y, is_training=False)
+            x_args, x_kwargs = utils.get_input_args(x, is_training=False)
 
             y_pred, state = self._model_transform.apply(
                 # required by apply
@@ -334,7 +328,6 @@ class Model(object):
         class_weight: tp.Optional[jnp.ndarray],
         is_training: bool,
     ):
-
         y_pred, state = self._predict(
             x=x, params=params, state=state, net_rng=net_rng, is_training=is_training,
         )
@@ -799,7 +792,9 @@ class Model(object):
                     sample_weight = batch[2] if len(batch) == 3 else None
 
                     tmp_logs = self.test_on_batch(
-                        x=batch[0], y=batch[1], sample_weight=sample_weight,
+                        x=batch[0],
+                        y=batch[1] if len(batch) > 1 else None,
+                        sample_weight=sample_weight,
                     )
                     tmp_logs.update({"size": data_handler.batch_size})
                     logs = tmp_logs
@@ -1003,6 +998,7 @@ class Model(object):
     ) -> tp.Tuple[
         tp.Dict[str, jnp.ndarray], tp.Optional[hk.State],
     ]:
+
         loss, (y_pred, _state, logs) = self._loss(
             params,
             state=state,
@@ -1082,7 +1078,7 @@ class Model(object):
     ) -> tp.Tuple[
         tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple], hk.State,
     ]:
-        x_args, x_kwargs = utils.get_input_args(x, None, is_training=is_training)
+        x_args, x_kwargs = utils.get_input_args(x, is_training=is_training)
         y_pred, state = self._model_transform.apply(
             # required by apply
             params,

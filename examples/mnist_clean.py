@@ -5,7 +5,6 @@ import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow_datasets as tfds
 import typer
 from jax.experimental import optix
 import dataget
@@ -38,7 +37,7 @@ def main(debug: bool = False, eager: bool = False):
             self.n1 = n1
             self.n2 = n2
 
-        def call(self, image: jnp.ndarray) -> jnp.ndarray:
+        def call(self, image: jnp.ndarray):
 
             image = image.astype(jnp.float32) / 255.0
 
@@ -52,24 +51,26 @@ def main(debug: bool = False, eager: bool = False):
                     hk.Linear(10),
                 ]
             )
-            return mlp(image)
+            return dict(outputs=mlp(image))
 
     model = elegy.Model(
         module=MLP.defer(),
-        loss=[elegy.losses.SparseCategoricalCrossentropy(from_logits=True)],
+        loss=[
+            elegy.losses.SparseCategoricalCrossentropy(from_logits=True, on="outputs")
+        ],
         aux_losses=elegy.regularizers.GlobalL2(l=1e-5),
-        metrics=elegy.metrics.SparseCategoricalAccuracy.defer(),
+        metrics=elegy.metrics.SparseCategoricalAccuracy.defer(on="outputs"),
         optimizer=optix.rmsprop(0.001),
         run_eagerly=eager,
     )
 
     history = model.fit(
         x=X_train,
-        y=y_train,
+        y=dict(outputs=y_train),
         epochs=10,
         steps_per_epoch=10,
         batch_size=64,
-        validation_data=(X_test, y_test),
+        validation_data=(X_test, dict(outputs=y_test)),
         shuffle=True,
     )
 
@@ -109,7 +110,7 @@ def main(debug: bool = False, eager: bool = False):
             k = 3 * i + j
             plt.subplot(3, 3, k + 1)
 
-            plt.title(f"{np.argmax(y_pred[k])}")
+            plt.title(f"{np.argmax(y_pred['outputs'][k])}")
             plt.imshow(x_sample[k], cmap="gray")
 
     plt.show()
