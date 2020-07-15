@@ -36,10 +36,10 @@ class Metric(hk.Module, Deferable):
 
     ```python
     model = elegy.Model(
-        model_fn,
+        module_fn,
         optimizer=optix.rmsprop(0.01)
-        loss=lambda: [elegy.losses.CategoricalCrossentropy()],
-        metrics=lambda: [elegy.metrics.Accuracy()],
+        loss=elegy.losses.CategoricalCrossentropy(),
+        metrics=elegy.metrics.Accuracy.defer(),
     )
     ```
     model.compile(optimizer=elegy.optimizers.RMSprop(0.01),

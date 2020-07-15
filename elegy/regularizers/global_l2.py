@@ -20,7 +20,7 @@ def GlobalL2(
 
     ```python
     model = elegy.Model(
-        model_fn,
+        module_fn,
         loss=[
             elegy.losses.SparseCategoricalCrossentropy(),
             elegy.losses.GlobaL2Regularization(l=1e-4),

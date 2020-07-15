@@ -51,9 +51,9 @@ class SparseCategoricalAccuracy(Mean):
 
     ```python
     model = elegy.Model(
-        model_fn,
-        loss=lambda: [elegy.losses.CategoricalCrossentropy()],
-        metrics=lambda: [elegy.metrics.SparseCategoricalAccuracy()],
+        module_fn,
+        loss=elegy.losses.CategoricalCrossentropy(),
+        metrics=elegy.metrics.SparseCategoricalAccuracy.defer(),
         optimizer=optix.adam(1e-3),
     )
     ```

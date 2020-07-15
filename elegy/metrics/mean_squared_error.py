@@ -26,9 +26,9 @@ class MeanSquaredError(Mean):
     
     ```python
     model = elegy.Model(
-        model_fn,
-        loss=lambda: [elegy.losses.CategoricalCrossentropy()],
-        metrics=lambda: [elegy.metrics.MeanSquaredError()],
+        module_fn,
+        loss=elegy.losses.CategoricalCrossentropy(),
+        metrics=elegy.metrics.MeanSquaredError.defer(),
     )
     ```
     """
