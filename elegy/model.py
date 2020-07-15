@@ -27,7 +27,6 @@ from .data import (
     train_validation_split,
     unpack_x_y_sample_weight,
 )
-from .metrics.metric_modes import get_mode_function
 
 
 class Mode(Enum):

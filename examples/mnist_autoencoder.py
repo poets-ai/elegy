@@ -55,7 +55,7 @@ def main(debug: bool = False, eager: bool = False):
 
     class MeanSquaredError(elegy.Loss):
         def call(self, x, y_pred):
-            return dict(a=jnp.mean(jnp.square(x - y_pred), axis=-1), b=1.0)
+            return jnp.mean(jnp.square(x - y_pred), axis=-1)
 
     model = elegy.Model(
         module=MLP.defer(n1=256, n2=64),
