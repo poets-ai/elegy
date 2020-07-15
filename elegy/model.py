@@ -632,7 +632,7 @@ class Model(object):
 
                     tmp_logs = self.train_on_batch(
                         x=batch[0],
-                        y=batch[1],
+                        y=batch[1] if len(batch) > 1 else None,
                         sample_weight=sample_weight,
                         class_weight=class_weight,
                     )
