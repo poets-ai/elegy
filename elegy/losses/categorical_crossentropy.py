@@ -1,3 +1,4 @@
+from elegy import types
 import typing as tp
 
 import jax
@@ -77,6 +78,7 @@ class CategoricalCrossentropy(Loss):
         reduction: tp.Optional[Reduction] = None,
         name: tp.Optional[str] = None,
         weight: tp.Optional[float] = None,
+        on: tp.Optional[types.IndexLike] = None,
     ):
         """
         Initializes `CategoricalCrossentropy` instance.
@@ -99,7 +101,7 @@ class CategoricalCrossentropy(Loss):
             name: Optional name for the op.
             weight: Optional weight contribution for the total loss. Defaults to `1`.
         """
-        super().__init__(reduction=reduction, name=name, weight=weight)
+        super().__init__(reduction=reduction, name=name, weight=weight, on=on)
 
         self._from_logits = from_logits
         self._label_smoothing = label_smoothing

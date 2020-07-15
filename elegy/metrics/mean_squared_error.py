@@ -1,3 +1,4 @@
+from elegy import types
 import typing as tp
 
 import jax.numpy as jnp
@@ -33,7 +34,10 @@ class MeanSquaredError(Mean):
     """
 
     def __init__(
-        self, name: tp.Optional[str] = None, dtype: tp.Optional[jnp.dtype] = None,
+        self,
+        name: tp.Optional[str] = None,
+        dtype: tp.Optional[jnp.dtype] = None,
+        on: tp.Optional[types.IndexLike] = None,
     ):
         """
         Creates a `MeanSquaredError` instance.
@@ -42,7 +46,7 @@ class MeanSquaredError(Mean):
             name: string name of the metric instance.
             dtype: data type of the metric result.
         """
-        super().__init__(name=name, dtype=dtype)
+        super().__init__(name=name, dtype=dtype, on=on)
 
     def call(
         self,
