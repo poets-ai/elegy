@@ -21,12 +21,10 @@ def main(debug: bool = False, eager: bool = False):
         debugpy.listen(5678)
         debugpy.wait_for_client()
 
-    X_train, y_train, X_test, y_test = dataget.image.mnist(global_cache=True).get()
+    X_train, _1, X_test, _2 = dataget.image.mnist(global_cache=True).get()
 
     print("X_train:", X_train.shape, X_train.dtype)
-    print("y_train:", y_train.shape, y_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
-    print("y_test:", y_test.shape, y_test.dtype)
 
     class MLP(elegy.Module):
         """Standard LeNet-300-100 MLP network."""
@@ -54,6 +52,7 @@ def main(debug: bool = False, eager: bool = False):
             return x.reshape(image.shape) * 255
 
     class MeanSquaredError(elegy.Loss):
+        # we request `x` instead of `y_true` since we are don't require labels in autoencoders
         def call(self, x, y_pred):
             return jnp.mean(jnp.square(x - y_pred), axis=-1)
 
@@ -64,6 +63,7 @@ def main(debug: bool = False, eager: bool = False):
         run_eagerly=eager,
     )
 
+    # Notice we are not passing `y`
     history = model.fit(
         x=X_train, epochs=20, batch_size=64, validation_data=(X_test,), shuffle=True,
     )
@@ -84,7 +84,6 @@ def main(debug: bool = False, eager: bool = False):
             plt.plot(val_metric, label=f"Validation {key}")
             plt.legend(loc="lower right")
             plt.ylabel(key)
-            #         plt.ylim([min(plt.ylim()), 1])
             plt.title(f"Training and Validation {key}")
         plt.show()
 
