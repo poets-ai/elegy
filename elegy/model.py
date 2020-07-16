@@ -398,23 +398,32 @@ class Model(object):
         validation_steps: tp.Optional[int] = None,
         validation_batch_size: tp.Optional[int] = None,
         validation_freq: int = 1,
+        seed: tp.Union[jnp.ndarray, int, None] = None,
+        params: tp.Optional[hk.Params] = None,
+        state: tp.Optional[hk.State] = None,
+        optimizer_state: tp.Optional[optix.OptState] = None,
+        metrics_state: tp.Optional[hk.State] = None,
+        initial_metrics_state: tp.Optional[hk.State] = None,
     ):
         """
         Trains the model for a fixed number of epochs (iterations on a dataset).
+
         Arguments:
             x: Input data. It could be:
-            - A Numpy or Jax array (or array-like), or a list of arrays
-                (in case the model has multiple inputs).
-            - A dict mapping input names to the corresponding arrays,
-                if the model has named inputs.
-            - A generator returning `(inputs,)`, `(inputs, targets)`
-                or `(inputs, targets, sample_weights)`.
-            A more detailed description of unpacking behavior for generator type
-            is given below.
+
+                - A Numpy or Jax array (or array-like), or a list of arrays
+                    (in case the model has multiple inputs).
+                - A dict mapping input names to the corresponding arrays,
+                    if the model has named inputs.
+                - A generator returning `(inputs,)`, `(inputs, targets)`
+                    or `(inputs, targets, sample_weights)`.
+
+                A more detailed description of unpacking behavior for generator type
+                is given below.
             y: Target data. Like the input data `x`,
-            it could be either Numpy or Jax array(s).
-            It should be consistent with `x`. If `x` is a generator,
-            `y` should not be specified (since targets will be obtained from `x`).
+                it could be either Numpy or Jax array(s).
+                It should be consistent with `x`. If `x` is a generator,
+                `y` should not be specified (since targets will be obtained from `x`).
             batch_size: Integer or `None`.
                 Number of samples per gradient update.
                 If unspecified, `batch_size` will default to 32.
@@ -433,9 +442,9 @@ class Model(object):
                 Note that the progress bar is not particularly useful when
                 logged to a file, so verbose=2 is recommended when not running
                 interactively (eg, in a production environment).
-            callbacks: List of `elegy.callbacks.Callback` instances.
+            callbacks: List of [elegy.callbacks.Callback][] instances.
                 List of callbacks to apply during training.
-                See `elegy.callbacks`.
+                See [elegy.callbacks][].
             validation_split: Float between 0 and 1.
                 Fraction of the training data to be used as validation data.
                 The model will set apart this fraction of the training data,
@@ -450,11 +459,15 @@ class Model(object):
                 The model will not be trained on this data.
                 `validation_data` will override `validation_split`.
                 `validation_data` could be:
-                - tuple `(x_val, y_val)` of Numpy or Jax arrays
-                - tuple `(x_val, y_val, val_sample_weights)` of Numpy/Jax arrays
+
+                - tuple `(x_val, y_val)` of Numpy/Jax arrays, list of arrays or mappings
+                - tuple `(x_val, y_val, val_sample_weights)` of Numpy/Jax arrays, list
+                of arrays or mappings
                 - generator
+
                 For the first two cases, `batch_size` must be provided.
-                For the last case, `validation_steps` could be provided.
+                For the last case, `validation_steps` should be provided, and should
+                follow the same convention for yielding data as `x`.
                 Note that `validation_data` does not support all the data types that
                 are supported in `x`, eg, dict.
             shuffle: Boolean (whether to shuffle the training data
@@ -532,6 +545,7 @@ class Model(object):
         and sample_weight or passed through as a single element to `x`. As a
         result the data processing code will simply raise a ValueError if it
         encounters a namedtuple. (Along with instructions to remedy the issue.)
+        [elegy.model.Model.evaluate][] [elegy.model.Model][]
         Returns:
             A `History` object. Its `History.history` attribute is
             a record of training loss values and metrics values
@@ -584,11 +598,12 @@ class Model(object):
                 for step in data_handler.steps():
                     callbacks.on_train_batch_begin(step)
                     batch = next(iterator)
-                    sample_weight = batch[2] if len(batch) == 3 else None
+                    # sample_weight = batch[2] if len(batch) == 3 else None
+                    x_batch, y_batch, sample_weight = unpack_x_y_sample_weight(batch)
 
                     tmp_logs = self.train_on_batch(
-                        x=batch[0],
-                        y=batch[1],
+                        x=x_batch,
+                        y=y_batch,
                         sample_weight=sample_weight,
                         class_weight=class_weight,
                     )
@@ -729,6 +744,7 @@ class Model(object):
             initial_epoch=0,
             epochs=1,
             shuffle=False,
+            is_training=False,
         )
 
         # Container that configures and calls `tf.keras.Callback`s.
@@ -752,10 +768,10 @@ class Model(object):
                 for step in data_handler.steps():
                     callbacks.on_test_batch_begin(step)
                     batch = next(iterator)
-                    sample_weight = batch[2] if len(batch) == 3 else None
+                    x_batch, y_batch, sample_weight = unpack_x_y_sample_weight(batch)
 
                     tmp_logs = self.test_on_batch(
-                        x=batch[0], y=batch[1], sample_weight=sample_weight,
+                        x=x_batch, y=y_batch, sample_weight=sample_weight,
                     )
                     tmp_logs.update({"size": data_handler.batch_size})
                     logs = tmp_logs
