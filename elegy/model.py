@@ -4,10 +4,12 @@
 import copy
 import pickle
 import typing as tp
+from copy import copy
 from enum import Enum
 from functools import partial
 from pathlib import Path
 
+import cloudpickle
 import deepdish
 import haiku as hk
 import jax
@@ -36,18 +38,21 @@ class Mode(Enum):
 
 
 class Model(object):
+    # public fields
+    params: tp.Optional[hk.Params]
+    state: tp.Optional[hk.State]
+    optimizer_state: tp.Optional[optix.OptState]
+    metrics_state: tp.Optional[hk.State]
+    initial_metrics_state: tp.Optional[hk.State]
+    run_eagerly: bool
+
+    # private fields
     _module_fn: tp.Callable
     _model_transform: hk.TransformedWithState
     _loss_fn: tp.Callable
     _metrics: tp.Optional[hk.TransformedWithState]
     _optimizer: optix.GradientTransformation
     _rngs: hk.PRNGSequence
-    _params: tp.Optional[hk.Params]
-    _state: tp.Optional[hk.State]
-    _optimizer_state: tp.Optional[optix.OptState]
-    _metrics_state: tp.Optional[hk.State]
-    _initial_metrics_state: tp.Optional[hk.State]
-    run_eagerly: bool
 
     def __init__(
         self,
@@ -110,11 +115,11 @@ class Model(object):
         )
         self._optimizer = optimizer if optimizer is not None else optix.adam(1e-3)
         self._rngs = hk.PRNGSequence(seed)
-        self._params = params
-        self._state = state
-        self._optimizer_state = optimizer_state
-        self._metrics_state = metrics_state
-        self._initial_metrics_state = initial_metrics_state
+        self.params = params
+        self.state = state
+        self.optimizer_state = optimizer_state
+        self.metrics_state = metrics_state
+        self.initial_metrics_state = initial_metrics_state
         self.run_eagerly = run_eagerly
 
     def __call__(self, *args, **kwargs):
@@ -139,43 +144,43 @@ class Model(object):
             self._rngs = hk.PRNGSequence(key_or_seed=seed)
 
         if params is not None:
-            self._params = params
+            self.params = params
 
         if state is not None:
-            self._state = state
+            self.state = state
 
         if optimizer_state is not None:
-            self._optimizer_state = optimizer_state
+            self.optimizer_state = optimizer_state
 
         if metrics_state is not None:
-            self._metrics_state = metrics_state
+            self.metrics_state = metrics_state
 
         if initial_metrics_state is not None:
-            self._initial_metrics_state = initial_metrics_state
+            self.initial_metrics_state = initial_metrics_state
 
-        if self._params is None or self._state is None:
+        if self.params is None or self.state is None:
             x_args, x_kwargs = utils.get_input_args(x, is_training=False)
 
-            self._params, self._state = self._model_transform.init(
+            self.params, self.state = self._model_transform.init(
                 next(self._rngs), *x_args, **x_kwargs
             )
 
         if mode == Mode.predict:
             return
 
-        if self._metrics_transform is not None and self._metrics_state is None:
+        if self._metrics_transform is not None and self.metrics_state is None:
             x_args, x_kwargs = utils.get_input_args(x, is_training=False)
 
             y_pred, state = self._model_transform.apply(
                 # required by apply
-                self._params,
-                self._state,
+                self.params,
+                self.state,
                 next(self._rngs),
                 # model_transform inputs + dependency injection
                 *x_args,
                 **x_kwargs,
             )
-            _, self._metrics_state = self._metrics_transform.init(
+            _, self.metrics_state = self._metrics_transform.init(
                 # required by init
                 next(self._rngs),
                 # required by metric API
@@ -185,24 +190,24 @@ class Model(object):
                 x=x,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
-                __params=self._params,  # renamed
+                __params=self.params,  # renamed
             )
 
-            self._initial_metrics_state = self._metrics_state
+            self.initial_metrics_state = self.metrics_state
 
         if mode == Mode.test:
             return
 
-        if self._optimizer_state is None:
-            self._optimizer_state = self._optimizer.init(self._params)
+        if self.optimizer_state is None:
+            self.optimizer_state = self._optimizer.init(self.params)
 
     def reset_metrics(self, hard: bool = False):
 
         if hard:
-            self._metrics_state = None
-            self._initial_metrics_state = None
+            self.metrics_state = None
+            self.initial_metrics_state = None
         else:
-            self._metrics_state = self._initial_metrics_state
+            self.metrics_state = self.initial_metrics_state
 
     def train_on_batch(
         self,
@@ -236,19 +241,19 @@ class Model(object):
 
         (
             logs,
-            self._params,
-            self._state,
-            self._optimizer_state,
-            self._metrics_state,
+            self.params,
+            self.state,
+            self.optimizer_state,
+            self.metrics_state,
         ) = update_fn(
             x=x,
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            params=self._params,
-            state=self._state,
-            optimizer_state=self._optimizer_state,
-            metrics_state=self._metrics_state,
+            params=self.params,
+            state=self.state,
+            optimizer_state=self.optimizer_state,
+            metrics_state=self.metrics_state,
             net_rng=next(self._rngs),
             metrics_rng=next(self._rngs),
         )
@@ -941,15 +946,15 @@ class Model(object):
 
         test_fn = self._test if self.run_eagerly else self._test_jit
 
-        (logs, self._metrics_state,) = test_fn(
+        (logs, self.metrics_state,) = test_fn(
             x=x,
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            params=self._params,
-            state=self._state,
-            optimizer_state=self._optimizer_state,
-            metrics_state=self._metrics_state,
+            params=self.params,
+            state=self.state,
+            optimizer_state=self.optimizer_state,
+            metrics_state=self.metrics_state,
             net_rng=next(self._rngs),
             metrics_rng=next(self._rngs),
         )
@@ -1033,8 +1038,8 @@ class Model(object):
 
         y_pred, _ = predict_fn(
             x=x,
-            params=self._params,
-            state=self._state,
+            params=self.params,
+            state=self.state,
             net_rng=next(self._rngs),
             is_training=False,
         )
@@ -1067,46 +1072,60 @@ class Model(object):
     _predict_jit = jax.jit(_predict, static_argnums=(0,))
 
     @property
+    def seed(self) -> np.ndarray:
+        return self._rngs.internal_state[0]
+
+    @seed.setter
+    def seed(self, seed: np.ndarray):
+        self._rngs = hk.PRNGSequence(seed)
+
+    @property
     def full_state(self) -> tp.Dict:
-        state: tp.Dict = {"rng": self._rngs.internal_state[0]}
+        state: tp.Dict = {"seed": self.seed}
 
-        if self._params is not None:
-            state["params"] = self._params
+        if self.params is not None:
+            state["params"] = self.params
 
-        if self._state is not None:
-            state["state"] = self._state
+        if self.state is not None:
+            state["state"] = self.state
 
-        if self._metrics_state is not None:
-            state["metrics_state"] = self._metrics_state
+        if self.metrics_state is not None:
+            state["metrics_state"] = self.metrics_state
 
-        if self._optimizer_state is not None:
-            state["optimizer_state"] = self._optimizer_state
+        if self.initial_metrics_state is not None:
+            state["initial_metrics_state"] = self.initial_metrics_state
+
+        if self.optimizer_state is not None:
+            state["optimizer_state"] = self.optimizer_state
 
         return state
 
     @full_state.setter
     def full_state(self, state):
-        self._rngs = hk.PRNGSequence(state["rng"])
+        self.seed = state["seed"]
 
         if "params" in state:
-            self._params = state["params"]
+            self.params = state["params"]
 
         if "state" in state:
-            self._state = state["state"]
+            self.state = state["state"]
 
         if "metrics_state" in state:
-            self._metrics_state = state["metrics_state"]
+            self.metrics_state = state["metrics_state"]
+
+        if "initial_metrics_state" in state:
+            self.initial_metrics_state = state["initial_metrics_state"]
 
         if "optimizer_state" in state:
-            self._optimizer_state = state["optimizer_state"]
+            self.optimizer_state = state["optimizer_state"]
 
     def clear_state(self):
-        self._params = None
-        self._state = None
-        self._metrics_state = None
-        self._optimizer_state = None
+        self.params = None
+        self.state = None
+        self.metrics_state = None
+        self.optimizer_state = None
 
-    def save(self, path: tp.Union[str, Path]) -> None:
+    def save(self, path: tp.Union[str, Path], include_optimizer: bool = True) -> None:
         if isinstance(path, str):
             path = Path(path)
 
@@ -1114,21 +1133,36 @@ class Model(object):
 
         state = self.full_state
 
+        original_state = copy(state)
+
+        state.pop("metrics_state", None)
+        state.pop("initial_metrics_state", None)
+
+        optimizer_state = state.pop("optimizer_state", None)
+
         deepdish.io.save(path / "states.h5", state)
 
-        # getting pickle errors
-        # self.clear_state()
-        # with open(path / "model.pkl", "wb") as f:
-        #     pickle.dump(self, f)
+        if include_optimizer and optimizer_state is not None:
+            with open(path / "optimizer_state.pkl", "wb") as f:
+                pickle.dump(optimizer_state, f)
 
-        self.full_state = state
+        # getting pickle errors
+        self.clear_state()
+
+        with open(path / "model.pkl", "wb") as f:
+            cloudpickle.dump(self, f)
+
+        self.full_state = original_state
 
     def load(self, path: tp.Union[str, Path]) -> None:
         if isinstance(path, str):
             path = Path(path)
 
         state: tp.Dict = deepdish.io.load(path / "states.h5")
-        state.pop("optimizer_state", None)
+
+        if (path / "optimizer_state.pkl").exists():
+            with open(path / "optimizer_state.pkl", "rb") as f:
+                state["optimizer_state"] = pickle.load(f)
 
         self.full_state = state
 
