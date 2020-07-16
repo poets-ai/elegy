@@ -202,13 +202,13 @@ class Model(object):
             _, self.metrics_state = self._metrics_transform.init(
                 # required by init
                 next(self._rngs),
-                # required by metric API
-                y_true=y,
-                y_pred=y_pred,
                 # dependency injection
                 x=x,
+                y_true=y,
+                y_pred=y_pred,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
+                is_training=False,
                 __params=self.params,  # renamed
             )
 
@@ -308,13 +308,13 @@ class Model(object):
                 {},  # params
                 metrics_state,  # state
                 metrics_rng,  # rng
-                # required by metric API
+                # dependency injection
                 y_true=y,
                 y_pred=y_pred,
-                # dependency injection
                 x=x,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
+                is_training=True,
                 __params=params,  # renamed
             )
             logs.update(metrics)
@@ -347,6 +347,7 @@ class Model(object):
             sample_weight=sample_weight,
             class_weight=class_weight,
             params=params,
+            is_training=is_training,
         )
 
         # get total loss
@@ -990,13 +991,13 @@ class Model(object):
                 {},  # params
                 metrics_state,  # state
                 metrics_rng,  # rng
-                # required by metric API
+                # dependency injection
                 y_true=y,
                 y_pred=y_pred,
-                # dependency injection
                 x=x,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
+                is_training=False,
                 __params=params,  # renamed
             )
             logs.update(metrics)
