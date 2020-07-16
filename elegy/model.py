@@ -2,10 +2,13 @@
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
 import copy
-from enum import Enum
+import pickle
 import typing as tp
+from enum import Enum
 from functools import partial
+from pathlib import Path
 
+import deepdish
 import haiku as hk
 import jax
 import jax.numpy as jnp
@@ -16,15 +19,14 @@ from elegy.losses import loss_modes
 from elegy.metrics import metric_modes
 
 from . import utils
+from .callbacks import Callback, CallbackList
 from .data import (
     DataHandler,
-    unpack_x_y_sample_weight,
-    train_validation_split,
-    map_structure,
     map_append,
+    map_structure,
+    train_validation_split,
+    unpack_x_y_sample_weight,
 )
-from .metrics.metric_modes import get_mode_function
-from .callbacks import CallbackList, Callback
 
 
 class Mode(Enum):
@@ -34,7 +36,7 @@ class Mode(Enum):
 
 
 class Model(object):
-    _model_fn: tp.Callable
+    _module_fn: tp.Callable
     _model_transform: hk.TransformedWithState
     _loss_fn: tp.Callable
     _metrics: tp.Optional[hk.TransformedWithState]
@@ -49,14 +51,9 @@ class Model(object):
 
     def __init__(
         self,
-        model_fn: tp.Optional[tp.Callable],
-        loss: tp.Callable,
-        loss_mode: str = "match_outputs_and_labels",
-        aux_losses: tp.Optional[
-            tp.Callable[[], tp.Union[tp.List[tp.Callable], tp.Callable]]
-        ] = None,
-        metrics: tp.Optional[tp.Callable] = None,
-        metrics_mode: str = "match_outputs_and_labels",
+        module: tp.Callable,
+        loss: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
+        metrics: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
         optimizer: tp.Optional[optix.GradientTransformation] = None,
         run_eagerly: bool = False,
         params: tp.Optional[hk.Params] = None,
@@ -69,12 +66,9 @@ class Model(object):
         """[summary]
 
         Args:
-            model_fn (tp.Optional[tp.Callable]): [description]
+            module (tp.Optional[tp.Callable]): [description]
             loss (tp.Callable): [description]
-            loss_mode (str, optional): [description]. Defaults to "match_outputs_and_labels".
-            aux_losses (tp.Optional[ tp.Callable[[], tp.Union[tp.List[tp.Callable], tp.Callable]] ], optional): [description]. Defaults to None.
             metrics (tp.Optional[tp.Callable], optional): [description]. Defaults to None.
-            metrics_mode (str, optional): [description]. Defaults to "match_outputs_and_labels".
             optimizer (optix.GradientTransformation, optional): [description]. Defaults to optix.adam(1e-3).
             run_eagerly (bool, optional): [description]. Defaults to False.
             params (tp.Optional[hk.Params], optional): [description]. Defaults to None.
@@ -88,23 +82,25 @@ class Model(object):
             ValueError: [description]
         """
 
-        if hasattr(self, "call"):
-            model_fn = getattr(self, "call")
-
-        if model_fn is None:
-            raise ValueError("Must define either self.call or model_fn")
-
         if metrics is not None:
-            metrics = metric_modes.get_mode_function(metrics_mode)(metrics)
+            metrics = metric_modes.forward_all(metrics)
 
-        loss = loss_modes.get_mode_function(loss_mode)(loss)
+        if loss is None:
 
-        self._model_fn = utils.inject_dependencies(model_fn)
-        self._model_transform = hk.transform_with_state(self._model_fn)
+            def loss_(y_true, y_pred):
+                return 0.0
+
+            loss = loss_
+
+        loss = loss_modes.forward_all(loss)
+
+        def model_fn(*args, **kwargs):
+            module = self._module_fn()
+            return utils.inject_dependencies(module)(*args, **kwargs)
+
+        self._module_fn = module
+        self._model_transform = hk.transform_with_state(model_fn)
         self._loss_fn = utils.inject_dependencies(loss)
-        self._aux_losses = (
-            loss_modes.get_aux_losses_fn(aux_losses) if aux_losses is not None else None
-        )
         self._metrics_transform = (
             hk.transform_with_state(
                 utils.inject_dependencies(metrics, rename={"__params": "params"})
@@ -122,7 +118,7 @@ class Model(object):
         self.run_eagerly = run_eagerly
 
     def __call__(self, *args, **kwargs):
-        return self._model_fn(*args, **kwargs)
+        return self._module_fn(*args, **kwargs)
 
     def _maybe_initialize(
         self,
@@ -158,7 +154,7 @@ class Model(object):
             self._initial_metrics_state = initial_metrics_state
 
         if self._params is None or self._state is None:
-            x_args, x_kwargs = utils.get_input_args(x, y, is_training=False)
+            x_args, x_kwargs = utils.get_input_args(x, is_training=False)
 
             self._params, self._state = self._model_transform.init(
                 next(self._rngs), *x_args, **x_kwargs
@@ -168,7 +164,7 @@ class Model(object):
             return
 
         if self._metrics_transform is not None and self._metrics_state is None:
-            x_args, x_kwargs = utils.get_input_args(x, y, is_training=False)
+            x_args, x_kwargs = utils.get_input_args(x, is_training=False)
 
             y_pred, state = self._model_transform.apply(
                 # required by apply
@@ -326,7 +322,6 @@ class Model(object):
         class_weight: tp.Optional[jnp.ndarray],
         is_training: bool,
     ):
-
         y_pred, state = self._predict(
             x=x, params=params, state=state, net_rng=net_rng, is_training=is_training,
         )
@@ -341,27 +336,6 @@ class Model(object):
             class_weight=class_weight,
             params=params,
         )
-
-        if not isinstance(logs, dict):
-            logs = dict(loss=logs)
-
-        aux_losses = (
-            self._aux_losses(
-                y_true=y,
-                y_pred=y_pred,
-                x=x,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                params=params,
-            )
-            if self._aux_losses is not None
-            else None
-        )
-
-        if aux_losses:
-            temp_logs = logs.copy()
-            logs = aux_losses
-            logs.update(temp_logs)
 
         # get total loss
         loss = logs["loss"] = sum(logs.values())
@@ -398,12 +372,6 @@ class Model(object):
         validation_steps: tp.Optional[int] = None,
         validation_batch_size: tp.Optional[int] = None,
         validation_freq: int = 1,
-        seed: tp.Union[jnp.ndarray, int, None] = None,
-        params: tp.Optional[hk.Params] = None,
-        state: tp.Optional[hk.State] = None,
-        optimizer_state: tp.Optional[optix.OptState] = None,
-        metrics_state: tp.Optional[hk.State] = None,
-        initial_metrics_state: tp.Optional[hk.State] = None,
     ):
         """
         Trains the model for a fixed number of epochs (iterations on a dataset).
@@ -975,6 +943,7 @@ class Model(object):
     ) -> tp.Tuple[
         tp.Dict[str, jnp.ndarray], tp.Optional[hk.State],
     ]:
+
         loss, (y_pred, _state, logs) = self._loss(
             params,
             state=state,
@@ -1054,7 +1023,7 @@ class Model(object):
     ) -> tp.Tuple[
         tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple], hk.State,
     ]:
-        x_args, x_kwargs = utils.get_input_args(x, None, is_training=is_training)
+        x_args, x_kwargs = utils.get_input_args(x, is_training=is_training)
         y_pred, state = self._model_transform.apply(
             # required by apply
             params,
@@ -1069,3 +1038,80 @@ class Model(object):
 
     _predict_jit = jax.jit(_predict, static_argnums=(0,))
 
+    @property
+    def full_state(self) -> tp.Dict:
+        state: tp.Dict = {"rng": self._rngs.internal_state[0]}
+
+        if self._params is not None:
+            state["params"] = self._params
+
+        if self._state is not None:
+            state["state"] = self._state
+
+        if self._metrics_state is not None:
+            state["metrics_state"] = self._metrics_state
+
+        if self._optimizer_state is not None:
+            state["optimizer_state"] = self._optimizer_state
+
+        return state
+
+    @full_state.setter
+    def full_state(self, state):
+        self._rngs = hk.PRNGSequence(state["rng"])
+
+        if "params" in state:
+            self._params = state["params"]
+
+        if "state" in state:
+            self._state = state["state"]
+
+        if "metrics_state" in state:
+            self._metrics_state = state["metrics_state"]
+
+        if "optimizer_state" in state:
+            self._optimizer_state = state["optimizer_state"]
+
+    def clear_state(self):
+        self._params = None
+        self._state = None
+        self._metrics_state = None
+        self._optimizer_state = None
+
+    def save(self, path: tp.Union[str, Path]) -> None:
+        if isinstance(path, str):
+            path = Path(path)
+
+        path.mkdir(parents=True, exist_ok=True)
+
+        state = self.full_state
+
+        deepdish.io.save(path / "states.h5", state)
+
+        # getting pickle errors
+        # self.clear_state()
+        # with open(path / "model.pkl", "wb") as f:
+        #     pickle.dump(self, f)
+
+        self.full_state = state
+
+    def load(self, path: tp.Union[str, Path]) -> None:
+        if isinstance(path, str):
+            path = Path(path)
+
+        state: tp.Dict = deepdish.io.load(path / "states.h5")
+        state.pop("optimizer_state", None)
+
+        self.full_state = state
+
+
+def load(path: tp.Union[str, Path]) -> Model:
+    if isinstance(path, str):
+        path = Path(path)
+
+    with open(path / "model.pkl", "rb") as f:
+        model = pickle.load(f)
+
+    model.load(path)
+
+    return model

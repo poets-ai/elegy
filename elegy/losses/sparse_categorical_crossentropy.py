@@ -1,3 +1,4 @@
+from elegy import types
 import typing as tp
 
 import jax
@@ -64,9 +65,9 @@ class SparseCategoricalCrossentropy(Loss):
     
     ```python
     model = elegy.Model(
-        model_fn,
-        loss=lambda: [elegy.losses.SparseCategoricalCrossentropy()],
-        metrics=lambda: [elegy.metrics.Accuracy()],
+        module_fn,
+        loss=lelegy.losses.SparseCategoricalCrossentropy(),
+        metrics=lelegy.metrics.Accuracy.defer(),
         optimizer=optix.adam(1e-3),
     )
     
@@ -80,6 +81,7 @@ class SparseCategoricalCrossentropy(Loss):
         reduction: tp.Optional[Reduction] = None,
         name: tp.Optional[str] = None,
         weight: tp.Optional[float] = None,
+        on: tp.Optional[types.IndexLike] = None,
     ):
         """
         Initializes `SparseCategoricalCrossentropy` instance.
@@ -101,7 +103,7 @@ class SparseCategoricalCrossentropy(Loss):
             name: Optional name for the op. Defaults to 'sparse_categorical_crossentropy'.
             weight: Optional weight contribution for the total loss. Defaults to `1`.
         """
-        super().__init__(reduction=reduction, name=name, weight=weight)
+        super().__init__(reduction=reduction, name=name, weight=weight, on=on)
 
         self._from_logits = from_logits
         self._label_smoothing = label_smoothing

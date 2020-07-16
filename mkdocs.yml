@@ -13,22 +13,26 @@ nav:
   - Introduction: index.md
   - Getting Started: getting-started.ipynb
   - API Reference:
+      Overview: api/Overview.md
       Model: api/Model.md
       metrics:
+        Overview: api/metrics/Overview.md
         Accuracy: api/metrics/Accuracy.md
         CategoricalAccuracy: api/metrics/CategoricalAccuracy.md
         SparseCategoricalAccuracy: api/metrics/SparseCategoricalAccuracy.md
         Mean: api/metrics/Mean.md
         MeanSquaredError: api/metrics/MeanSquaredError.md
       losses:
+        Overview: api/losses/Overview.md
         CategoricalCrossentropy: api/losses/CategoricalCrossentropy.md
         SparseCategoricalCrossentropy: api/losses/SparseCategoricalCrossentropy.md
         MeanSquaredError: api/losses/MeanSquaredError.md
         mean_squared_error: api/losses/mean_squared_error.md
       regularizers:
-        GlobalL1Regularization: api/regularizers/GlobalL1Regularization.md
-        GlobalL2Regularization: api/regularizers/GlobalL2Regularization.md
-        GlobalL1L2Regularization: api/regularizers/GlobalL1L2Regularization.md
+        Overview: api/regularizers/Overview.md
+        GlobalL1: api/regularizers/GlobalL1.md
+        GlobalL2: api/regularizers/GlobalL2.md
+        GlobalL1L2: api/regularizers/GlobalL1L2.md
 
 extra:
   search:

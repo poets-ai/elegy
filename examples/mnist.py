@@ -66,9 +66,11 @@ def main(debug: bool = False, eager: bool = False):
         return mlp(image)
 
     model = elegy.Model(
-        model_fn=model_fn,
-        loss=lambda: elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-        aux_losses=lambda: elegy.regularizers.GlobalL2Regularization(l=1e-4),
+        module=model_fn,
+        loss=[
+            elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
+            elegy.regularizers.GlobalL2(l=1e-4),
+        ],
         metrics=lambda: elegy.metrics.SparseCategoricalAccuracy(),
         run_eagerly=eager,
     )

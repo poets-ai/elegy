@@ -1,3 +1,4 @@
+from elegy import types
 from elegy import utils
 from enum import Enum
 import typing as tp
@@ -86,10 +87,9 @@ class Reduce(Metric):
         reduction: Reduction,
         name: tp.Optional[str] = None,
         dtype: tp.Optional[jnp.dtype] = None,
+        on: tp.Optional[types.IndexLike] = None,
     ):
-        super().__init__(
-            name=name, dtype=dtype,
-        )
+        super().__init__(name=name, dtype=dtype, on=on)
 
         self._reduction = reduction
 

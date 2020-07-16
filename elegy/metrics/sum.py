@@ -1,3 +1,4 @@
+from elegy import types
 import typing as tp
 
 import jax.numpy as jnp
@@ -32,7 +33,10 @@ class Sum(reduce.Reduce):
     """
 
     def __init__(
-        self, name: tp.Optional[str] = None, dtype: tp.Optional[jnp.dtype] = None,
+        self,
+        name: tp.Optional[str] = None,
+        dtype: tp.Optional[jnp.dtype] = None,
+        on: tp.Optional[types.IndexLike] = None,
     ):
         """Creates a `Sum` instance.
 
@@ -40,4 +44,4 @@ class Sum(reduce.Reduce):
           name: (Optional) string name of the metric instance.
           dtype: (Optional) data type of the metric result.
         """
-        super().__init__(reduction=reduce.Reduction.SUM, name=name, dtype=dtype)
+        super().__init__(reduction=reduce.Reduction.SUM, name=name, dtype=dtype, on=on)

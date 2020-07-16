@@ -1,3 +1,4 @@
+from elegy import types
 import typing as tp
 
 import jax.numpy as jnp
@@ -79,9 +80,9 @@ class MeanSquaredError(Loss):
 
     ```python
     model = elegy.Model(
-        model_fn,
-        loss=lambda: [elegy.losses.MeanSquaredError()],
-        metrics=lambda: [elegy.metrics.Mean()],
+        module_fn,
+        loss=elegy.losses.MeanSquaredError(),
+        metrics=elegy.metrics.Mean.defer(),
     )
     ```
     """
@@ -91,6 +92,7 @@ class MeanSquaredError(Loss):
         reduction: tp.Optional[Reduction] = None,
         name: tp.Optional[str] = None,
         weight: tp.Optional[float] = None,
+        on: tp.Optional[types.IndexLike] = None,
     ):
         """
         Initializes `Mean` class.
@@ -107,7 +109,7 @@ class MeanSquaredError(Loss):
             weight: Optional weight contribution for the total loss. Defaults to `1`.
         """
 
-        return super().__init__(reduction=reduction, name=name, weight=weight)
+        return super().__init__(reduction=reduction, name=name, weight=weight, on=on)
 
     def call(
         self,
