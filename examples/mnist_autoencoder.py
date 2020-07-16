@@ -21,12 +21,10 @@ def main(debug: bool = False, eager: bool = False):
         debugpy.listen(5678)
         debugpy.wait_for_client()
 
-    X_train, y_train, X_test, y_test = dataget.image.mnist(global_cache=True).get()
+    X_train, _1, X_test, _2 = dataget.image.mnist(global_cache=True).get()
 
     print("X_train:", X_train.shape, X_train.dtype)
-    print("y_train:", y_train.shape, y_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
-    print("y_test:", y_test.shape, y_test.dtype)
 
     class MLP(elegy.Module):
         """Standard LeNet-300-100 MLP network."""
@@ -36,7 +34,7 @@ def main(debug: bool = False, eager: bool = False):
             self.n1 = n1
             self.n2 = n2
 
-        def call(self, image: jnp.ndarray) -> jnp.ndarray:
+        def call(self, image: jnp.ndarray):
             image = image.astype(jnp.float32) / 255.0
             x = hk.Flatten()(image)
             x = hk.Sequential(
@@ -53,9 +51,10 @@ def main(debug: bool = False, eager: bool = False):
             )(x)
             return x.reshape(image.shape) * 255
 
-    class MeanSquaredError(elegy.losses.MeanSquaredError):
+    class MeanSquaredError(elegy.Loss):
+        # we request `x` instead of `y_true` since we are don't require labels in autoencoders
         def call(self, x, y_pred):
-            return super().call(y_true=x, y_pred=y_pred)
+            return jnp.mean(jnp.square(x - y_pred), axis=-1)
 
     model = elegy.Model(
         module=MLP.defer(n1=256, n2=64),
@@ -64,12 +63,9 @@ def main(debug: bool = False, eager: bool = False):
         run_eagerly=eager,
     )
 
+    # Notice we are not passing `y`
     history = model.fit(
-        x=X_train,
-        epochs=20,
-        batch_size=64,
-        validation_data=(X_test, y_test),
-        shuffle=True,
+        x=X_train, epochs=20, batch_size=64, validation_data=(X_test,), shuffle=True,
     )
 
     def plot_history(history):
@@ -88,7 +84,6 @@ def main(debug: bool = False, eager: bool = False):
             plt.plot(val_metric, label=f"Validation {key}")
             plt.legend(loc="lower right")
             plt.ylabel(key)
-            #         plt.ylim([min(plt.ylim()), 1])
             plt.title(f"Training and Validation {key}")
         plt.show()
 

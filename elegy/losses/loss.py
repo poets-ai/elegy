@@ -1,4 +1,7 @@
 from abc import abstractmethod
+
+from numpy.lib.arraysetops import isin
+from elegy import types
 from enum import Enum
 import re
 import typing as tp
@@ -51,6 +54,7 @@ class Loss:
         reduction: tp.Optional[Reduction] = None,
         name: tp.Optional[str] = None,
         weight: tp.Optional[float] = None,
+        on: tp.Optional[types.IndexLike] = None,
     ):
         """
         Initializes `Loss` class.
@@ -75,25 +79,57 @@ class Loss:
         self._reduction = (
             reduction if reduction is not None else Reduction.SUM_OVER_BATCH_SIZE
         )
+        self._labels_filter = (on,) if isinstance(on, (str, int)) else on
         self.call = utils.inject_dependencies(self.call)
 
-    def __call__(self, *args, sample_weight: tp.Optional[jnp.ndarray] = None, **kwargs):
-        values = self.call(*args, sample_weight=sample_weight, **kwargs)
+    def __call__(
+        self,
+        y_true=None,
+        y_pred=None,
+        sample_weight: tp.Optional[jnp.ndarray] = None,
+        **kwargs,
+    ):
 
-        if sample_weight is not None:
-            values *= sample_weight
+        if self._labels_filter is not None:
+            if y_true is not None:
+                for index in self._labels_filter:
+                    y_true = y_true[index]
 
-        if self._reduction == Reduction.NONE:
-            loss = values
-        elif self._reduction == Reduction.SUM:
-            loss = values.sum()
-        elif self._reduction == Reduction.SUM_OVER_BATCH_SIZE:
-            loss = values.sum() / jnp.prod(values.shape)
+            if y_pred is not None:
+                for index in self._labels_filter:
+                    y_pred = y_pred[index]
+
+        values = self.call(
+            y_true=y_true, y_pred=y_pred, sample_weight=sample_weight, **kwargs
+        )
+
+        if isinstance(values, tp.Dict):
+            return {
+                key: reduce_loss(values, sample_weight, self.weight, self._reduction)
+                for key, values in values.items()
+            }
         else:
-            raise ValueError(f"Invalid reduction '{self._reduction}'")
-
-        return loss * self.weight
+            return reduce_loss(values, sample_weight, self.weight, self._reduction)
 
     @abstractmethod
     def call(self, *args, **kwargs):
         ...
+
+
+def reduce_loss(values, sample_weight, weight, reduction):
+
+    values = jnp.asarray(values)
+
+    if sample_weight is not None:
+        values *= sample_weight
+
+    if reduction == Reduction.NONE:
+        loss = values
+    elif reduction == Reduction.SUM:
+        loss = values.sum()
+    elif reduction == Reduction.SUM_OVER_BATCH_SIZE:
+        loss = values.sum() / jnp.prod(values.shape)
+    else:
+        raise ValueError(f"Invalid reduction '{reduction}'")
+
+    return loss * weight

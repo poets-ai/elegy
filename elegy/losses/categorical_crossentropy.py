@@ -1,3 +1,4 @@
+from elegy import types
 import typing as tp
 
 import jax
@@ -62,9 +63,9 @@ class CategoricalCrossentropy(Loss):
     Usage with the `compile` API:
     ```python
     model = elegy.Model(
-        model_fn,
-        loss=lambda: [elegy.losses.CategoricalCrossentropy()],
-        metrics=lambda: [elegy.metrics.Accuracy()],
+        module_fn,
+        loss=elegy.losses.CategoricalCrossentropy(),
+        metrics=elegy.metrics.Accuracy.defer(),
         optimizer=optix.adam(1e-3),
     )
     ```
@@ -77,6 +78,7 @@ class CategoricalCrossentropy(Loss):
         reduction: tp.Optional[Reduction] = None,
         name: tp.Optional[str] = None,
         weight: tp.Optional[float] = None,
+        on: tp.Optional[types.IndexLike] = None,
     ):
         """
         Initializes `CategoricalCrossentropy` instance.
@@ -99,7 +101,7 @@ class CategoricalCrossentropy(Loss):
             name: Optional name for the op.
             weight: Optional weight contribution for the total loss. Defaults to `1`.
         """
-        super().__init__(reduction=reduction, name=name, weight=weight)
+        super().__init__(reduction=reduction, name=name, weight=weight, on=on)
 
         self._from_logits = from_logits
         self._label_smoothing = label_smoothing
