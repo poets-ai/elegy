@@ -2,7 +2,7 @@
 
 _Elegy is a Neural Networks framework based on Jax and Haiku._ 
 
-Elegy implements the Keras API but makes changes to play better with Jax & Haiku and give more flexibility around losses and metrics (more on this soon). Elegy is still in _beta_, feel free to test it and send us your feedback!
+Elegy implements the Keras API but makes changes to play better with Jax & Haiku and give more flexibility around losses and metrics (more on this soon). Elegy is still in a very early stage, feel free to test it and send us your feedback!
 
 #### Main Features
 
@@ -42,7 +42,7 @@ model = elegy.Model(
     loss=[
         elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
         elegy.regularizers.GlobalL2(l=1e-5),
-    ],
+    ]
     metrics=elegy.metrics.SparseCategoricalAccuracy.defer(),
     optimizer=optix.rmsprop(1e-3),
 )
