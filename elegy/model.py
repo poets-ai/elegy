@@ -230,12 +230,43 @@ class Model(object):
 
     def train_on_batch(
         self,
-        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
-        sample_weight: tp.Optional[jnp.ndarray] = None,
-        class_weight: tp.Optional[jnp.ndarray] = None,
-    ) -> tp.Dict[str, jnp.ndarray]:
+        x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        y: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
+        sample_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[np.ndarray] = None,
+    ) -> tp.Dict[str, np.ndarray]:
+        """
+        Runs a single gradient update on a single batch of data.
 
+        Arguments:
+            x: Input data. It could be:
+
+                - A Numpy array (or array-like), or a iterable of arrays
+                    (in case the model has multiple inputs).
+                - A dict mapping input names to the corresponding arrays,
+                    if the model has named inputs.
+            
+            y: Target data. Like the input data `x`, it could be either Numpy
+                array(s) or Jax array(s). It should be consistent with `x`
+                (you cannot have Numpy inputs and array targets, or inversely).
+            sample_weight: Optional array of the same length as x, containing
+                weights to apply to the model's loss for each sample. In the case of
+                temporal data, you can pass a 2D array with shape (samples,
+                sequence_length), to apply a different weight to every timestep of
+                every sample. In this case you should make sure to specify
+                sample_weight_mode="temporal" in compile().
+            class_weight: Optional dictionary mapping class indices (integers) to a
+                weight (float) to apply to the model's loss for the samples from this
+                class during training. This can be useful to tell the model to "pay
+                more attention" to samples from an under-represented class.
+        
+        Returns:
+            A `logs` dictionary of containing the main `loss` as well as all
+            other losses and metrics. 
+        
+        Raises:
+            ValueError: In case of invalid user-provided arguments.
+        """
         self._maybe_initialize(
             x=x,
             y=y,
@@ -390,11 +421,9 @@ class Model(object):
         Trains the model for a fixed number of epochs (iterations on a dataset).
         Arguments:
             x: Input data. It could be:
-            - A Numpy array (or array-like), or a list of arrays
+            - A Numpy/Jax array (or array-like), or a list of arrays
                 (in case the model has multiple inputs).
-            - A TensorFlow tensor, or a list of tensors
-                (in case the model has multiple inputs).
-            - A dict mapping input names to the corresponding array/tensors,
+            - A dict mapping input names to the corresponding array,
                 if the model has named inputs.
             - A `tf.data` dataset. Should return a tuple
                 of either `(inputs, targets)` or
@@ -404,9 +433,8 @@ class Model(object):
             A more detailed description of unpacking behavior for iterator types
             (Dataset, generator, Sequence) is given below.
             y: Target data. Like the input data `x`,
-            it could be either Numpy array(s) or TensorFlow tensor(s).
-            It should be consistent with `x` (you cannot have Numpy inputs and
-            tensor targets, or inversely). If `x` is a dataset, generator,
+            it could be either Numpy or Jax array(s). 
+            If `x` is a dataset, generator,
             or `keras.utils.Sequence` instance, `y` should
             not be specified (since targets will be obtained from `x`).
             batch_size: Integer or `None`.
@@ -446,7 +474,7 @@ class Model(object):
                 The model will not be trained on this data.
                 `validation_data` will override `validation_split`.
                 `validation_data` could be:
-                - tuple `(x_val, y_val)` of Numpy arrays or tensors
+                - tuple `(x_val, y_val)` of Numpy/Jax arrays.
                 - tuple `(x_val, y_val, val_sample_weights)` of Numpy arrays
                 - dataset
                 For the first two cases, `batch_size` must be provided.
@@ -484,8 +512,7 @@ class Model(object):
             steps_per_epoch: Integer or `None`.
                 Total number of steps (batches of samples)
                 before declaring one epoch finished and starting the
-                next epoch. When training with input tensors such as
-                TensorFlow data tensors, the default `None` is equal to
+                next epoch. When training with input arrays, the default `None` is equal to
                 the number of samples in your dataset divided by
                 the batch size, or 1 if that cannot be determined. If x is a
                 `tf.data` dataset, and 'steps_per_epoch'
@@ -678,29 +705,26 @@ class Model(object):
         """Returns the loss value & metrics values for the model in test mode.
             Computation is done in batches.
             Arguments:
-                x: Input data. It could be: - A Numpy array (or array-like), or a list
-                of arrays (in case the model has multiple inputs). - A TensorFlow
-                tensor, or a list of tensors (in case the model has multiple inputs).
-                - A dict mapping input names to the corresponding array/tensors, if
-                the model has named inputs. - A `tf.data` dataset. - A generator or
-                `keras.utils.Sequence` instance. A more detailed description of
-                unpacking behavior for iterator types (Dataset, generator, Sequence)
-                is given in the `Unpacking behavior for iterator-like inputs` section
-                of `Model.fit`.
+                x: Input data. It could be: 
+                    - A Numpy/Array array (or array-like), or a list
+                        of arrays (in case the model has multiple inputs).
+                    - A dict mapping input names to the corresponding arrays, if
+                        the model has named inputs. 
+                    - A generator function or arrays or possibly nested python structures 
+                        or dict, list, tuple that contain arrays as leafs.
                 y: Target data. Like the input data `x`, it could be either Numpy
-                array(s) or TensorFlow tensor(s). It should be consistent with `x`
-                (you cannot have Numpy inputs and tensor targets, or inversely). If
-                `x` is a dataset, generator or `keras.utils.Sequence` instance, `y`
-                should not be specified (since targets will be obtained from the
-                iterator/dataset).
+                    array(s) or Jax arrays(s). If
+                    `x` is a dataset, generator or `keras.utils.Sequence` instance, `y`
+                    should not be specified (since targets will be obtained from the
+                    iterator/dataset).
                 batch_size: Integer or `None`. Number of samples per gradient update. If
-                unspecified, `batch_size` will default to 32. Do not specify the
-                `batch_size` if your data is in the form of a dataset, generators,
-                or `keras.utils.Sequence` instances (since they generate batches).
+                    unspecified, `batch_size` will default to 32. Do not specify the
+                    `batch_size` if your data is in the form of a dataset, generators,
+                    or `keras.utils.Sequence` instances (since they generate batches).
                 verbose: 0 or 1. Verbosity mode. 0 = silent, 1 = progress bar.
                 sample_weight: Optional Numpy array of weights for the test samples,
-                used for weighting the loss function. You can either pass a flat (1D)
-                Numpy array with the same length as the input samples
+                    used for weighting the loss function. You can either pass a flat (1D)
+                    Numpy array with the same length as the input samples
                     (1:1 mapping between weights and samples), or in the case of
                     temporal data, you can pass a 2D array with shape `(samples,
                     sequence_length)`, to apply a different weight to every timestep
@@ -813,9 +837,7 @@ class Model(object):
         inference.
         Arguments:
             x: Input samples. It could be:
-            - A Numpy array (or array-like), or a list of arrays
-                (in case the model has multiple inputs).
-            - A TensorFlow tensor, or a list of tensors
+            - A Numpy/Jax array (or array-like), or a list of arrays
                 (in case the model has multiple inputs).
             - A `tf.data` dataset.
             - A generator or `keras.utils.Sequence` instance.
@@ -932,7 +954,32 @@ class Model(object):
         sample_weight: tp.Optional[jnp.ndarray] = None,
         class_weight: tp.Optional[jnp.ndarray] = None,
     ) -> tp.Dict[str, jnp.ndarray]:
+        """
+        Test the model on a single batch of samples.
 
+        Arguments:
+            x: Input data. It could be: 
+
+                - A Numpy array (or array-like), or a list
+                    of arrays (in case the model has multiple inputs). 
+                - A dict mapping input names to the corresponding arrays, if
+                    the model has named inputs.
+            
+            y: Target data. Like the input data `x`, it could be either Numpy
+                array(s) or Jax array(s).
+            sample_weight: Optional array of the same length as x, containing
+                weights to apply to the model's loss for each sample. In the case of
+                temporal data, you can pass a 2D array with shape (samples,
+                sequence_length), to apply a different weight to every timestep of
+                every sample.
+        
+        Returns:
+            A `logs` dictionary of containing the main `loss` as well as all
+            other losses and metrics. 
+        
+        Raises:
+            ValueError: In case of invalid user-provided arguments.
+        """
         self._maybe_initialize(
             x=x,
             y=y,
@@ -1014,7 +1061,21 @@ class Model(object):
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         seed: tp.Union[jnp.ndarray, int, None] = None,
     ) -> tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]:
-
+        """
+        Returns predictions for a single batch of samples.
+        
+        Arguments:
+            x: Input data. A Numpy/Jax array (or array-like), or possibly 
+                nested python structure of dict, list, tuple that contain 
+                arrays as leafs.
+        
+        Returns:
+            Jax array(s) of predictions.
+        
+        Raises:
+            ValueError: In case of mismatch between given number of inputs and
+            expectations of the model.
+        """
         self._maybe_initialize(
             x=x, y=None, sample_weight=None, class_weight=None, mode=Mode.predict,
         )
@@ -1057,15 +1118,21 @@ class Model(object):
     _predict_jit = jax.jit(_predict, static_argnums=(0,))
 
     @property
-    def seed(self) -> np.ndarray:
+    def seed(self) -> tp.Union[np.ndarray, int]:
+        """
+        Current random state of the model.
+        """
         return self._rngs.internal_state[0]
 
     @seed.setter
-    def seed(self, seed: np.ndarray):
+    def seed(self, seed: tp.Union[np.ndarray, int]):
         self._rngs = hk.PRNGSequence(seed)
 
     @property
     def full_state(self) -> tp.Dict:
+        """
+        """
+
         state: tp.Dict = {"seed": self.seed}
 
         if self.params is not None:
@@ -1104,10 +1171,11 @@ class Model(object):
         if "optimizer_state" in state:
             self.optimizer_state = state["optimizer_state"]
 
-    def clear_state(self):
+    def _clear_state(self):
         self.params = None
         self.state = None
         self.metrics_state = None
+        self.initial_metrics_state = None
         self.optimizer_state = None
 
     def save(self, path: tp.Union[str, Path], include_optimizer: bool = True) -> None:
@@ -1132,7 +1200,7 @@ class Model(object):
                 pickle.dump(optimizer_state, f)
 
         # getting pickle errors
-        self.clear_state()
+        self._clear_state()
 
         with open(path / "model.pkl", "wb") as f:
             cloudpickle.dump(self, f)
