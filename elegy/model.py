@@ -1,7 +1,6 @@
 # Implementation based on tf.keras.engine.training.py
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
-import copy
 import pickle
 import typing as tp
 from copy import copy
@@ -38,6 +37,50 @@ class Mode(Enum):
 
 
 class Model(object):
+    """
+    `Model` is tasked with performing training, evaluation, and inference for a given
+    `elegy.Module` or `haiku.Module`.
+
+    To create a `Model` you first have to define its architecture in a `Module`:
+    ```python
+    class MLP(elegy.Module):
+        def call(self, image: jnp.ndarray) -> jnp.ndarray:
+            mlp = hk.Sequential([
+                hk.Flatten(),
+                hk.Linear(300),
+                jax.nn.relu,
+                hk.Linear(10),
+            ])
+            return mlp(image)
+    ```
+    
+    Then you can pass this `Module` to the `Model`'s constructor and specify additional things like losses, metrics, optimizer, and callbacks:
+    ```python
+    model = elegy.Model(
+        module=MLP.defer(),
+        loss=[
+            elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
+            elegy.regularizers.GlobalL2(l=1e-5),
+        ],
+        metrics=elegy.metrics.SparseCategoricalAccuracy.defer(),
+        optimizer=optix.rmsprop(1e-3),
+    )
+    ```
+    
+    Once the model is created, you can train the model with `model.fit()`, or use the model
+    to do prediction with `model.predict()`.
+    Checkout [Getting Started](https://poets-ai.github.io/elegy/getting-started) for
+    additional details.
+
+    Attributes:
+        params: An `haiku.Params` structure with the weights of the model.
+        state: An `haiku.State` structure with non-trainable parameters of the model.
+        optimizer_state:  An `optix.OptState` structure with state of the optimizer.
+        metrics_state: An `haiku.State` structure with the state of the metrics.
+        initial_metrics_state: An `haiku.State` structure with the initial state of the metrics.
+        run_eagerly: if `True` it will use `jax.jit` internally on all `{train|test|predict}_on_batch` operations.
+    """
+
     # public fields
     params: tp.Optional[hk.Params]
     state: tp.Optional[hk.State]
@@ -66,22 +109,22 @@ class Model(object):
         optimizer_state: tp.Optional[optix.OptState] = None,
         metrics_state: tp.Optional[hk.State] = None,
         initial_metrics_state: tp.Optional[hk.State] = None,
-        seed: tp.Union[jnp.ndarray, int] = jax.random.PRNGKey(42),
+        seed: tp.Union[np.ndarray, int] = 42,
     ):
         """[summary]
 
-        Args:
-            module (tp.Optional[tp.Callable]): [description]
-            loss (tp.Callable): [description]
-            metrics (tp.Optional[tp.Callable], optional): [description]. Defaults to None.
-            optimizer (optix.GradientTransformation, optional): [description]. Defaults to optix.adam(1e-3).
-            run_eagerly (bool, optional): [description]. Defaults to False.
-            params (tp.Optional[hk.Params], optional): [description]. Defaults to None.
-            state (tp.Optional[hk.State], optional): [description]. Defaults to None.
-            optimizer_state (tp.Optional[optix.OptState], optional): [description]. Defaults to None.
-            metrics_state (tp.Optional[hk.State], optional): [description]. Defaults to None.
-            initial_metrics_state (tp.Optional[hk.State], optional): [description]. Defaults to None.
-            seed (tp.Union[jnp.ndarray, int], optional): [description]. Defaults to jax.random.PRNGKey(42).
+        Arguments:
+            module: [description].
+            loss: [description].
+            metrics: [description].
+            optimizer: [description].
+            run_eagerly: [description].
+            params: [description].
+            state: [description].
+            optimizer_state: [description].
+            metrics_state: [description].
+            initial_metrics_state: [description].
+            seed: [description].
 
         Raises:
             ValueError: [description]
@@ -131,32 +174,8 @@ class Model(object):
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
-        seed: tp.Union[jnp.ndarray, int, None],
-        params: tp.Optional[hk.Params],
-        state: tp.Optional[hk.State],
-        optimizer_state: tp.Optional[optix.OptState],
-        metrics_state: tp.Optional[hk.State],
-        initial_metrics_state: tp.Optional[hk.State],
         mode: Mode,
     ):
-
-        if seed is not None:
-            self._rngs = hk.PRNGSequence(key_or_seed=seed)
-
-        if params is not None:
-            self.params = params
-
-        if state is not None:
-            self.state = state
-
-        if optimizer_state is not None:
-            self.optimizer_state = optimizer_state
-
-        if metrics_state is not None:
-            self.metrics_state = metrics_state
-
-        if initial_metrics_state is not None:
-            self.initial_metrics_state = initial_metrics_state
 
         if self.params is None or self.state is None:
             x_args, x_kwargs = utils.get_input_args(x, is_training=False)
@@ -215,12 +234,6 @@ class Model(object):
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
         sample_weight: tp.Optional[jnp.ndarray] = None,
         class_weight: tp.Optional[jnp.ndarray] = None,
-        seed: tp.Union[jnp.ndarray, int, None] = None,
-        params: tp.Optional[hk.Params] = None,
-        state: tp.Optional[hk.State] = None,
-        optimizer_state: tp.Optional[optix.OptState] = None,
-        metrics_state: tp.Optional[hk.State] = None,
-        initial_metrics_state: tp.Optional[hk.State] = None,
     ) -> tp.Dict[str, jnp.ndarray]:
 
         self._maybe_initialize(
@@ -228,12 +241,6 @@ class Model(object):
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            seed=seed,
-            params=params,
-            state=state,
-            optimizer_state=optimizer_state,
-            metrics_state=metrics_state,
-            initial_metrics_state=initial_metrics_state,
             mode=Mode.train,
         )
 
@@ -613,7 +620,7 @@ class Model(object):
                     logs = tmp_logs
                     callbacks.on_train_batch_end(step, logs)
 
-            epoch_logs = copy.copy(logs)
+            epoch_logs = copy(logs)
             epoch_logs.update({"size": data_handler.batch_size})
 
             # Run validation.
@@ -923,11 +930,6 @@ class Model(object):
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
         sample_weight: tp.Optional[jnp.ndarray] = None,
         class_weight: tp.Optional[jnp.ndarray] = None,
-        seed: tp.Union[jnp.ndarray, int, None] = None,
-        params: tp.Optional[hk.Params] = None,
-        state: tp.Optional[hk.State] = None,
-        metrics_state: tp.Optional[hk.State] = None,
-        initial_metrics_state: tp.Optional[hk.State] = None,
     ) -> tp.Dict[str, jnp.ndarray]:
 
         self._maybe_initialize(
@@ -935,12 +937,6 @@ class Model(object):
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            seed=seed,
-            params=params,
-            state=state,
-            optimizer_state=None,
-            metrics_state=metrics_state,
-            initial_metrics_state=initial_metrics_state,
             mode=Mode.test,
         )
 
@@ -1016,22 +1012,10 @@ class Model(object):
         self,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         seed: tp.Union[jnp.ndarray, int, None] = None,
-        params: tp.Optional[hk.Params] = None,
-        state: tp.Optional[hk.State] = None,
     ) -> tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]:
 
         self._maybe_initialize(
-            x=x,
-            y=None,
-            sample_weight=None,
-            class_weight=None,
-            seed=seed,
-            params=params,
-            state=state,
-            optimizer_state=None,
-            metrics_state=None,
-            initial_metrics_state=None,
-            mode=Mode.predict,
+            x=x, y=None, sample_weight=None, class_weight=None, mode=Mode.predict,
         )
 
         predict_fn = self._predict if self.run_eagerly else self._predict_jit
