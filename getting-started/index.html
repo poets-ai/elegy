@@ -1636,10 +1636,12 @@ y_test: (10000,) uint8
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
     <span class="n">module</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">MLP</span><span class="p">(</span><span class="n">n1</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">n2</span><span class="o">=</span><span class="mi">100</span><span class="p">),</span>
-    <span class="n">loss</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">SparseCategoricalCrossentropy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-    <span class="n">aux_losses</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">regularizers</span><span class="o">.</span><span class="n">GlobalL2</span><span class="p">(</span><span class="n">l</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">),</span>
+    <span class="n">loss</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">SparseCategoricalCrossentropy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">elegy</span><span class="o">.</span><span class="n">regularizers</span><span class="o">.</span><span class="n">GlobalL2</span><span class="p">(</span><span class="n">l</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">),</span>
+    <span class="p">],</span>
     <span class="n">metrics</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">SparseCategoricalAccuracy</span><span class="p">(),</span>
-    <span class="n">optimizer</span><span class="o">=</span><span class="n">optix</span><span class="o">.</span><span class="n">rmsprop</span><span class="p">(</span><span class="mf">0.0002</span><span class="p">),</span>
+    <span class="n">optimizer</span><span class="o">=</span><span class="n">optix</span><span class="o">.</span><span class="n">rmsprop</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">),</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -1649,12 +1651,12 @@ y_test: (10000,) uint8
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Much like <code>keras.Model</code>, an Elegy Model is tasked with performing training, evalaution, and inference. The constructor of this class accepts most of the arguments accepted by <code>keras.Model.compile</code> as you might have seen but there are some notable differences in this example:</p>
+<p>Much like <code>keras.Model</code>, an Elegy Model is tasked with performing training, evalaution, and inference. The constructor of this class accepts most of the arguments accepted by <code>keras.Model.compile</code> as you might have seen but there are some notable differences:</p>
 <ol>
-<li>It requires you to pass a <code>module</code> as first argument </li>
-<li>It accepts additional arguments not present in Keras like <code>aux_losses</code></li>
+<li>It requires you to pass a <code>module</code> as first argument.</li>
+<li>Loss can be a list even if we don't have multiple corresponding outputs/labels, this is because Elegy exposes a more flexible system for defining losses and metrics based on Dependency Injection.</li>
 </ol>
-<p>You might have also notice some weird <code>lambda</code> expressions around <code>module</code> and <code>metrics</code>, these arise because Haiku prohibits the creation of <code>haiku.Module</code>s outside of a <code>haiku.transform</code>. To go around this restriction we just defer instantiation of these object by wrapping them inside a <code>lambda</code> and calling them later. For convenience both the <code>elegy.Module</code> and <code>elegy.Metric</code> classes define a <code>defer</code> classmethod that which you can use to make things more readable:</p>
+<p>You might have notice some weird <code>lambda</code> expressions around <code>module</code> and <code>metrics</code>, these arise because Haiku prohibits the creation of <code>haiku.Module</code>s outside of a <code>haiku.transform</code>. To go around this restriction we just defer instantiation of these object by wrapping them inside a <code>lambda</code> and calling them later. For convenience both the <code>elegy.Module</code> and <code>elegy.Metric</code> classes define a <code>defer</code> classmethod that which you can use to make things more readable:</p>
 </div>
 </div>
 </div>
@@ -1665,10 +1667,12 @@ y_test: (10000,) uint8
 <div class="input_area">
 <div class="highlight highlight-ipynb hl-python"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
     <span class="n">module</span><span class="o">=</span><span class="n">MLP</span><span class="o">.</span><span class="n">defer</span><span class="p">(</span><span class="n">n1</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">n2</span><span class="o">=</span><span class="mi">100</span><span class="p">),</span>
-    <span class="n">loss</span><span class="o">=</span><span class="p">[</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">SparseCategoricalCrossentropy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">)],</span>
-    <span class="n">aux_losses</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">regularizers</span><span class="o">.</span><span class="n">GlobalL2</span><span class="p">(</span><span class="n">l</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">),</span>
+    <span class="n">loss</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">SparseCategoricalCrossentropy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> 
+        <span class="n">elegy</span><span class="o">.</span><span class="n">regularizers</span><span class="o">.</span><span class="n">GlobalL2</span><span class="p">(</span><span class="n">l</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">),</span>
+    <span class="p">],</span>
     <span class="n">metrics</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">SparseCategoricalAccuracy</span><span class="o">.</span><span class="n">defer</span><span class="p">(),</span>
-    <span class="n">optimizer</span><span class="o">=</span><span class="n">optix</span><span class="o">.</span><span class="n">rmsprop</span><span class="p">(</span><span class="mf">0.0002</span><span class="p">),</span>
+    <span class="n">optimizer</span><span class="o">=</span><span class="n">optix</span><span class="o">.</span><span class="n">rmsprop</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">),</span>
 <span class="p">)</span>
 </pre></div>
 </div>

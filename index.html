@@ -405,7 +405,7 @@
 </a>
 <h1 id="elegy">Elegy</h1>
 <p><em>Elegy is a Neural Networks framework based on Jax and Haiku.</em> </p>
-<p>Elegy implements the Keras API but makes changes to play better with Jax &amp; Haiku and give more flexibility around losses and metrics (more on this soon). Elegy is still in <em>beta</em>, feel free to test it and send us your feedback!</p>
+<p>Elegy implements the Keras API but makes changes to play better with Jax &amp; Haiku and give more flexibility around losses and metrics (more on this soon). Elegy is still in a very early stage, feel free to test it and send us your feedback!</p>
 <h4 id="main-features">Main Features</h4>
 <ul>
 <li><strong>Familiar</strong>: Elegy should feel very familiar to Keras users.</li>
@@ -434,8 +434,10 @@
 <p><strong>2.</strong> Create a <code>Model</code> from this module and specify additional things like losses, metrics, optimizers, and callbacks:</p>
 <div class="codehilite"><pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
     <span class="n">module</span><span class="o">=</span><span class="n">MLP</span><span class="o">.</span><span class="n">defer</span><span class="p">(),</span>
-    <span class="n">loss</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">SparseCategoricalCrossentropy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-    <span class="n">aux_losses</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">regularizers</span><span class="o">.</span><span class="n">GlobalL2</span><span class="p">(</span><span class="n">l</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">),</span>
+    <span class="n">loss</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">SparseCategoricalCrossentropy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">elegy</span><span class="o">.</span><span class="n">regularizers</span><span class="o">.</span><span class="n">GlobalL2</span><span class="p">(</span><span class="n">l</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">),</span>
+    <span class="p">]</span>
     <span class="n">metrics</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">SparseCategoricalAccuracy</span><span class="o">.</span><span class="n">defer</span><span class="p">(),</span>
     <span class="n">optimizer</span><span class="o">=</span><span class="n">optix</span><span class="o">.</span><span class="n">rmsprop</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">),</span>
 <span class="p">)</span>

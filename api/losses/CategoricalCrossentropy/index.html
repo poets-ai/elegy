@@ -393,9 +393,9 @@ example. The shape of both <code>y_pred</code> and <code>y_true</code> are
 <p>Usage with the <code>compile</code> API:</p>
 <div class="codehilite">
 <pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
-    <span class="n">model_fn</span><span class="p">,</span>
-    <span class="n">loss</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">CategoricalCrossentropy</span><span class="p">()],</span>
-    <span class="n">metrics</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">Accuracy</span><span class="p">()],</span>
+    <span class="n">module_fn</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">CategoricalCrossentropy</span><span class="p">(),</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">Accuracy</span><span class="o">.</span><span class="n">defer</span><span class="p">(),</span>
     <span class="n">optimizer</span><span class="o">=</span><span class="n">optix</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">),</span>
 <span class="p">)</span>
 </code></pre>
@@ -404,7 +404,7 @@ example. The shape of both <code>y_pred</code> and <code>y_true</code> are
 <div class="doc doc-object doc-method">
 <h2 class="doc doc-heading" id="elegy.losses.categorical_crossentropy.CategoricalCrossentropy.__init__">
 <code class="highlight language-python">
-__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_logits</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">label_smoothing</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
+__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_logits</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">label_smoothing</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
 <span class="doc doc-properties">
 <small class="doc doc-property doc-property-special"><code>special</code></small>
 </span>
@@ -481,8 +481,7 @@ will raise an error.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span> 73
- 74
+<pre><span></span> 74
  75
  76
  77
@@ -513,7 +512,9 @@ will raise an error.</p>
 102
 103
 104
-105</pre>
+105
+106
+107</pre>
 </div>
 </td>
 <td class="code">
@@ -525,6 +526,7 @@ will raise an error.</p>
     <span class="n">reduction</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">Reduction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">name</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">weight</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">on</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">IndexLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="sd">"""</span>
 <span class="sd">    Initializes `CategoricalCrossentropy` instance.</span>
@@ -547,7 +549,7 @@ will raise an error.</p>
 <span class="sd">        name: Optional name for the op.</span>
 <span class="sd">        weight: Optional weight contribution for the total loss. Defaults to `1`.</span>
 <span class="sd">    """</span>
-    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="n">reduction</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="n">reduction</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">on</span><span class="p">)</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">_from_logits</span> <span class="o">=</span> <span class="n">from_logits</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_label_smoothing</span> <span class="o">=</span> <span class="n">label_smoothing</span>
@@ -634,9 +636,7 @@ functions reduce by 1 dimension, usually axis=-1.)</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>107
-108
-109
+<pre><span></span>109
 110
 111
 112
@@ -659,7 +659,9 @@ functions reduce by 1 dimension, usually axis=-1.)</p>
 129
 130
 131
-132</pre>
+132
+133
+134</pre>
 </div>
 </td>
 <td class="code">

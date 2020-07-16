@@ -382,7 +382,7 @@
 <div class="doc doc-object doc-method">
 <h2 class="doc doc-heading" id="elegy.model.Model.__init__">
 <code class="highlight language-python">
-__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">loss_mode</span><span class="o">=</span><span class="s1">'match_outputs_and_labels'</span><span class="p">,</span> <span class="n">aux_losses</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metrics_mode</span><span class="o">=</span><span class="s1">'match_outputs_and_labels'</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">run_eagerly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">optimizer_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metrics_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">initial_metrics_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">DeviceArray</span><span class="p">([</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">42</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint32</span><span class="p">))</span> </code>
+__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">run_eagerly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">optimizer_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metrics_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">initial_metrics_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">DeviceArray</span><span class="p">([</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">42</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint32</span><span class="p">))</span> </code>
 <span class="doc doc-properties">
 <small class="doc doc-property doc-property-special"><code>special</code></small>
 </span>
@@ -417,36 +417,12 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 <td><code>None</code></td>
 </tr>
 <tr>
-<td><code>loss_mode</code></td>
-<td><code>str</code></td>
-<td>
-<p>[description]. Defaults to "match_outputs_and_labels".</p>
-</td>
-<td><code>'match_outputs_and_labels'</code></td>
-</tr>
-<tr>
-<td><code>aux_losses</code></td>
-<td><code>Optional[Callable[[], Union[List[Callable], Callable]]]</code></td>
-<td>
-<p>[description]. Defaults to None.</p>
-</td>
-<td><code>None</code></td>
-</tr>
-<tr>
 <td><code>metrics</code></td>
 <td><code>Optional[Union[Callable, List, Dict]]</code></td>
 <td>
 <p>[description]. Defaults to None.</p>
 </td>
 <td><code>None</code></td>
-</tr>
-<tr>
-<td><code>metrics_mode</code></td>
-<td><code>str</code></td>
-<td>
-<p>[description]. Defaults to "match_outputs_and_labels".</p>
-</td>
-<td><code>'match_outputs_and_labels'</code></td>
 </tr>
 <tr>
 <td><code>optimizer</code></td>
@@ -537,9 +513,7 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span> 50
- 51
- 52
+<pre><span></span> 52
  53
  54
  55
@@ -605,16 +579,7 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 115
 116
 117
-118
-119
-120
-121
-122
-123
-124
-125
-126
-127</pre>
+118</pre>
 </div>
 </td>
 <td class="code">
@@ -623,12 +588,7 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">module</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">,</span>
     <span class="n">loss</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">List</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Dict</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">loss_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"match_outputs_and_labels"</span><span class="p">,</span>
-    <span class="n">aux_losses</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span>
-        <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">],</span> <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">]]</span>
-    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">metrics</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">List</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Dict</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">metrics_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"match_outputs_and_labels"</span><span class="p">,</span>
     <span class="n">optimizer</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">optix</span><span class="o">.</span><span class="n">GradientTransformation</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">run_eagerly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">params</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">hk</span><span class="o">.</span><span class="n">Params</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -643,10 +603,7 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 <span class="sd">    Args:</span>
 <span class="sd">        module (tp.Optional[tp.Callable]): [description]</span>
 <span class="sd">        loss (tp.Callable): [description]</span>
-<span class="sd">        loss_mode (str, optional): [description]. Defaults to "match_outputs_and_labels".</span>
-<span class="sd">        aux_losses (tp.Optional[ tp.Callable[[], tp.Union[tp.List[tp.Callable], tp.Callable]] ], optional): [description]. Defaults to None.</span>
 <span class="sd">        metrics (tp.Optional[tp.Callable], optional): [description]. Defaults to None.</span>
-<span class="sd">        metrics_mode (str, optional): [description]. Defaults to "match_outputs_and_labels".</span>
 <span class="sd">        optimizer (optix.GradientTransformation, optional): [description]. Defaults to optix.adam(1e-3).</span>
 <span class="sd">        run_eagerly (bool, optional): [description]. Defaults to False.</span>
 <span class="sd">        params (tp.Optional[hk.Params], optional): [description]. Defaults to None.</span>
@@ -661,7 +618,7 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 <span class="sd">    """</span>
 
     <span class="k">if</span> <span class="n">metrics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">metrics</span> <span class="o">=</span> <span class="n">metric_modes</span><span class="o">.</span><span class="n">get_mode_function</span><span class="p">(</span><span class="n">metrics_mode</span><span class="p">)(</span><span class="n">metrics</span><span class="p">)</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="n">metric_modes</span><span class="o">.</span><span class="n">forward_all</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">loss</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 
@@ -670,7 +627,7 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 
         <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_</span>
 
-    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_modes</span><span class="o">.</span><span class="n">get_mode_function</span><span class="p">(</span><span class="n">loss_mode</span><span class="p">)(</span><span class="n">loss</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_modes</span><span class="o">.</span><span class="n">forward_all</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">model_fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">module</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_fn</span><span class="p">()</span>
@@ -679,9 +636,6 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
     <span class="bp">self</span><span class="o">.</span><span class="n">_module_fn</span> <span class="o">=</span> <span class="n">module</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_model_transform</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">transform_with_state</span><span class="p">(</span><span class="n">model_fn</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_loss_fn</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">inject_dependencies</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_aux_losses</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">loss_modes</span><span class="o">.</span><span class="n">get_aux_losses_fn</span><span class="p">(</span><span class="n">aux_losses</span><span class="p">)</span> <span class="k">if</span> <span class="n">aux_losses</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
-    <span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_metrics_transform</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">hk</span><span class="o">.</span><span class="n">transform_with_state</span><span class="p">(</span>
             <span class="n">utils</span><span class="o">.</span><span class="n">inject_dependencies</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">rename</span><span class="o">=</span><span class="p">{</span><span class="s2">"__params"</span><span class="p">:</span> <span class="s2">"params"</span><span class="p">})</span>
@@ -874,7 +828,38 @@ the display labels for the scalar outputs.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>674
+<pre><span></span>643
+644
+645
+646
+647
+648
+649
+650
+651
+652
+653
+654
+655
+656
+657
+658
+659
+660
+661
+662
+663
+664
+665
+666
+667
+668
+669
+670
+671
+672
+673
+674
 675
 676
 677
@@ -978,36 +963,7 @@ the display labels for the scalar outputs.</p>
 775
 776
 777
-778
-779
-780
-781
-782
-783
-784
-785
-786
-787
-788
-789
-790
-791
-792
-793
-794
-795
-796
-797
-798
-799
-800
-801
-802
-803
-804
-805
-806
-807</pre>
+778</pre>
 </div>
 </td>
 <td class="code">
@@ -1137,7 +1093,9 @@ the display labels for the scalar outputs.</p>
                 <span class="n">sample_weight</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="k">else</span> <span class="kc">None</span>
 
                 <span class="n">tmp_logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_on_batch</span><span class="p">(</span>
-                    <span class="n">x</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span>
+                    <span class="n">x</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="n">y</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">tmp_logs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">"size"</span><span class="p">:</span> <span class="n">data_handler</span><span class="o">.</span><span class="n">batch_size</span><span class="p">})</span>
                 <span class="n">logs</span> <span class="o">=</span> <span class="n">tmp_logs</span>
@@ -1500,7 +1458,38 @@ and what the model expects.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>376
+<pre><span></span>345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
 377
 378
 379
@@ -1765,38 +1754,7 @@ and what the model expects.</p>
 638
 639
 640
-641
-642
-643
-644
-645
-646
-647
-648
-649
-650
-651
-652
-653
-654
-655
-656
-657
-658
-659
-660
-661
-662
-663
-664
-665
-666
-667
-668
-669
-670
-671
-672</pre>
+641</pre>
 </div>
 </td>
 <td class="code">
@@ -2057,7 +2015,7 @@ and what the model expects.</p>
 
                 <span class="n">tmp_logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_on_batch</span><span class="p">(</span>
                     <span class="n">x</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-                    <span class="n">y</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="n">y</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
                     <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span>
                     <span class="n">class_weight</span><span class="o">=</span><span class="n">class_weight</span><span class="p">,</span>
                 <span class="p">)</span>
@@ -2264,7 +2222,36 @@ that is not a multiple of the batch size.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>809
+<pre><span></span>780
+781
+782
+783
+784
+785
+786
+787
+788
+789
+790
+791
+792
+793
+794
+795
+796
+797
+798
+799
+800
+801
+802
+803
+804
+805
+806
+807
+808
+809
 810
 811
 812
@@ -2359,36 +2346,7 @@ that is not a multiple of the batch size.</p>
 901
 902
 903
-904
-905
-906
-907
-908
-909
-910
-911
-912
-913
-914
-915
-916
-917
-918
-919
-920
-921
-922
-923
-924
-925
-926
-927
-928
-929
-930
-931
-932
-933</pre>
+904</pre>
 </div>
 </td>
 <td class="code">

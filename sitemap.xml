@@ -1,79 +1,79 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url>
      <loc>https://poets-ai.github.io/elegy/</loc>
-     <lastmod>2020-07-14</lastmod>
+     <lastmod>2020-07-16</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/getting-started/</loc>
-     <lastmod>2020-07-14</lastmod>
+     <lastmod>2020-07-16</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/Overview/</loc>
-     <lastmod>2020-07-14</lastmod>
+     <lastmod>2020-07-16</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/Model/</loc>
-     <lastmod>2020-07-14</lastmod>
+     <lastmod>2020-07-16</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/Overview/</loc>
-     <lastmod>2020-07-14</lastmod>
+     <lastmod>2020-07-16</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/Accuracy/</loc>
-     <lastmod>2020-07-14</lastmod>
+     <lastmod>2020-07-16</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/CategoricalAccuracy/</loc>
-     <lastmod>2020-07-14</lastmod>
+     <lastmod>2020-07-16</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/SparseCategoricalAccuracy/</loc>
-     <lastmod>2020-07-14</lastmod>
+     <lastmod>2020-07-16</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/Mean/</loc>
-     <lastmod>2020-07-14</lastmod>
+     <lastmod>2020-07-16</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/MeanSquaredError/</loc>
-     <lastmod>2020-07-14</lastmod>
+     <lastmod>2020-07-16</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/Overview/</loc>
-     <lastmod>2020-07-14</lastmod>
+     <lastmod>2020-07-16</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/CategoricalCrossentropy/</loc>
-     <lastmod>2020-07-14</lastmod>
+     <lastmod>2020-07-16</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/SparseCategoricalCrossentropy/</loc>
-     <lastmod>2020-07-14</lastmod>
+     <lastmod>2020-07-16</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/MeanSquaredError/</loc>
-     <lastmod>2020-07-14</lastmod>
+     <lastmod>2020-07-16</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/mean_squared_error/</loc>
-     <lastmod>2020-07-14</lastmod>
+     <lastmod>2020-07-16</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/regularizers/Overview/</loc>
-     <lastmod>2020-07-14</lastmod>
+     <lastmod>2020-07-16</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/regularizers/GlobalL1/</loc>
-     <lastmod>2020-07-14</lastmod>
+     <lastmod>2020-07-16</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/regularizers/GlobalL2/</loc>
-     <lastmod>2020-07-14</lastmod>
+     <lastmod>2020-07-16</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/regularizers/GlobalL1L2/</loc>
-     <lastmod>2020-07-14</lastmod>
+     <lastmod>2020-07-16</lastmod>
      <changefreq>daily</changefreq>
     </url>
 </urlset>

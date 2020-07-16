@@ -347,9 +347,11 @@
 <p>Usage:</p>
 <div class="codehilite">
 <pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
-    <span class="n">model_fn</span><span class="p">,</span>
-    <span class="n">loss</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">SparseCategoricalCrossentropy</span><span class="p">()],</span>
-    <span class="n">aux_losses</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">GlobaL2Regularization</span><span class="p">(</span><span class="n">l</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)],</span>
+    <span class="n">module_fn</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">SparseCategoricalCrossentropy</span><span class="p">(),</span>
+        <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">GlobaL2Regularization</span><span class="p">(</span><span class="n">l</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">),</span>
+    <span class="p">],</span>
     <span class="n">metrics</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">SparseCategoricalAccuracy</span><span class="p">(),</span>
 <span class="p">)</span>
 </code></pre>
@@ -427,7 +429,9 @@
 33
 34
 35
-36</pre>
+36
+37
+38</pre>
 </div>
 </td>
 <td class="code">
@@ -448,9 +452,11 @@
 
 <span class="sd">    ```python</span>
 <span class="sd">    model = elegy.Model(</span>
-<span class="sd">        model_fn,</span>
-<span class="sd">        loss=lambda: [elegy.losses.SparseCategoricalCrossentropy()],</span>
-<span class="sd">        aux_losses=lambda: [elegy.losses.GlobaL2Regularization(l=1e-4)],</span>
+<span class="sd">        module_fn,</span>
+<span class="sd">        loss=[</span>
+<span class="sd">            elegy.losses.SparseCategoricalCrossentropy(),</span>
+<span class="sd">            elegy.losses.GlobaL2Regularization(l=1e-4),</span>
+<span class="sd">        ],</span>
 <span class="sd">        metrics=lambda: elegy.metrics.SparseCategoricalAccuracy(),</span>
 <span class="sd">    )</span>
 <span class="sd">    ```</span>
