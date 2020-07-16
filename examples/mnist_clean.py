@@ -33,7 +33,6 @@ def main(debug: bool = False, eager: bool = False):
 
         def __init__(self, n1: int = 300, n2: int = 100, **kwargs):
             super().__init__(**kwargs)
-
             self.n1 = n1
             self.n2 = n2
 
@@ -54,21 +53,21 @@ def main(debug: bool = False, eager: bool = False):
             return dict(outputs=mlp(image))
 
     model = elegy.Model(
-        module=MLP.defer(),
+        module=MLP.defer(n1=300, n2=100),
         loss=[
             elegy.losses.SparseCategoricalCrossentropy(from_logits=True, on="outputs"),
-            elegy.regularizers.GlobalL2(l=1e-5)
+            elegy.regularizers.GlobalL2(l=1e-4),
         ],
         metrics=elegy.metrics.SparseCategoricalAccuracy.defer(on="outputs"),
-        optimizer=optix.rmsprop(0.001),
+        optimizer=optix.rmsprop(1e-3),
         run_eagerly=eager,
     )
 
     history = model.fit(
         x=X_train,
         y=dict(outputs=y_train),
-        epochs=10,
-        steps_per_epoch=10,
+        epochs=100,
+        steps_per_epoch=200,
         batch_size=64,
         validation_data=(X_test, dict(outputs=y_test)),
         shuffle=True,
