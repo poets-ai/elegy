@@ -121,8 +121,7 @@ class DataHandler(object):
             return adapter_steps
 
         raise ValueError(
-            "When passing an infinitely repeating dataset, you "
-            "must specify how many steps to draw."
+            "When passing a generator, you " "must specify how many steps to draw."
         )
         # size = cardinality.cardinality(dataset)
         # if size == cardinality.INFINITE and steps is None:

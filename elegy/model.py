@@ -20,7 +20,7 @@ from elegy.losses import loss_modes
 from elegy.metrics import metric_modes
 
 from . import utils
-from .callbacks import Callback, CallbackList
+from .callbacks import Callback, CallbackList, History
 from .data import (
     DataHandler,
     map_append,
@@ -389,18 +389,10 @@ class Model(object):
     def fit(
         self,
         x: tp.Union[
-            jnp.ndarray,
-            np.ndarray,
-            tp.Mapping[str, tp.Union[np.ndarray, jnp.ndarray]],
-            tp.Tuple[tp.Union[np.ndarray, jnp.ndarray]],
-            tp.Iterable,
+            np.ndarray, tp.Mapping[str, np.ndarray], tp.Tuple[np.ndarray], tp.Iterable,
         ],
         y: tp.Union[
-            jnp.ndarray,
-            np.ndarray,
-            tp.Mapping[str, tp.Union[np.ndarray, jnp.ndarray]],
-            tp.Tuple[tp.Union[np.ndarray, jnp.ndarray]],
-            None,
+            np.ndarray, tp.Mapping[str, np.ndarray], tp.Tuple[np.ndarray], None,
         ] = None,
         batch_size: tp.Optional[int] = None,
         epochs: int = 1,
@@ -410,39 +402,37 @@ class Model(object):
         validation_data: tp.Union[tp.Tuple, tp.Iterable, None] = None,
         shuffle: bool = True,
         class_weight: tp.Optional[tp.Mapping[str, float]] = None,
-        sample_weight: tp.Optional[tp.Union[np.ndarray, jnp.ndarray]] = None,
+        sample_weight: tp.Optional[np.ndarray] = None,
         initial_epoch: int = 0,
         steps_per_epoch: tp.Optional[int] = None,
         validation_steps: tp.Optional[int] = None,
         validation_batch_size: tp.Optional[int] = None,
         validation_freq: int = 1,
-    ):
+    ) -> History:
         """
         Trains the model for a fixed number of epochs (iterations on a dataset).
+
         Arguments:
             x: Input data. It could be:
-            - A Numpy/Jax array (or array-like), or a list of arrays
-                (in case the model has multiple inputs).
-            - A dict mapping input names to the corresponding array,
-                if the model has named inputs.
-            - A `tf.data` dataset. Should return a tuple
-                of either `(inputs, targets)` or
-                `(inputs, targets, sample_weights)`.
-            - A generator or `keras.utils.Sequence` returning `(inputs, targets)`
-                or `(inputs, targets, sample_weights)`.
-            A more detailed description of unpacking behavior for iterator types
-            (Dataset, generator, Sequence) is given below.
+                
+                - A Numpy or Jax array (or array-like), or a list of arrays
+                    (in case the model has multiple inputs).
+                - A dict mapping input names to the corresponding arrays,
+                    if the model has named inputs.
+                - A generator returning `(inputs,)`, `(inputs, targets)`
+                    or `(inputs, targets, sample_weights)`.
+
+                A more detailed description of unpacking behavior for generator type
+                is given below.
             y: Target data. Like the input data `x`,
-            it could be either Numpy or Jax array(s). 
-            If `x` is a dataset, generator,
-            or `keras.utils.Sequence` instance, `y` should
-            not be specified (since targets will be obtained from `x`).
+                it could be either Numpy or Jax array(s).
+                It should be consistent with `x`. If `x` is a generator,
+                `y` should not be specified (since targets will be obtained from `x`).
             batch_size: Integer or `None`.
                 Number of samples per gradient update.
                 If unspecified, `batch_size` will default to 32.
                 Do not specify the `batch_size` if your data is in the
-                form of datasets, generators, or `keras.utils.Sequence` instances
-                (since they generate batches).
+                form of generator (since they generate batches).
             epochs: Integer. Number of epochs to train the model.
                 An epoch is an iteration over the entire `x` and `y`
                 data provided.
@@ -456,9 +446,9 @@ class Model(object):
                 Note that the progress bar is not particularly useful when
                 logged to a file, so verbose=2 is recommended when not running
                 interactively (eg, in a production environment).
-            callbacks: List of `keras.callbacks.Callback` instances.
+            callbacks: List of [elegy.callbacks.Callback][] instances.
                 List of callbacks to apply during training.
-                See `elegy.callbacks`.
+                See [elegy.callbacks][].
             validation_split: Float between 0 and 1.
                 Fraction of the training data to be used as validation data.
                 The model will set apart this fraction of the training data,
@@ -467,44 +457,38 @@ class Model(object):
                 on this data at the end of each epoch.
                 The validation data is selected from the last samples
                 in the `x` and `y` data provided, before shuffling. This argument is
-                not supported when `x` is a dataset, generator or
-            `keras.utils.Sequence` instance.
+                not supported when `x` is a generator.
             validation_data: Data on which to evaluate
                 the loss and any model metrics at the end of each epoch.
                 The model will not be trained on this data.
                 `validation_data` will override `validation_split`.
                 `validation_data` could be:
-                - tuple `(x_val, y_val)` of Numpy/Jax arrays.
-                - tuple `(x_val, y_val, val_sample_weights)` of Numpy arrays
-                - dataset
+
+                - tuple `(x_val, y_val)` of Numpy/Jax arrays, list of arrays or mappings
+                - tuple `(x_val, y_val, val_sample_weights)` of Numpy/Jax arrays, list
+                of arrays or mappings
+                - generator
+
                 For the first two cases, `batch_size` must be provided.
-                For the last case, `validation_steps` could be provided.
+                For the last case, `validation_steps` should be provided, and should
+                follow the same convention for yielding data as `x`.
                 Note that `validation_data` does not support all the data types that
-                are supported in `x`, eg, dict, generator or `keras.utils.Sequence`.
+                are supported in `x`, eg, dict.
             shuffle: Boolean (whether to shuffle the training data
-                before each epoch) or str (for 'batch'). This argument is ignored
-                when `x` is a generator. 'batch' is a special option for dealing
-                with the limitations of HDF5 data; it shuffles in batch-sized
-                chunks. Has no effect when `steps_per_epoch` is not `None`.
+                before each epoch). This argument is ignored
+                when `x` is a generator. Has no effect when `steps_per_epoch` is not `None`.
             class_weight: Optional dictionary mapping class indices (integers)
                 to a weight (float) value, used for weighting the loss function
                 (during training only).
                 This can be useful to tell the model to
                 "pay more attention" to samples from
                 an under-represented class.
-            sample_weight: Optional Numpy array of weights for
+            sample_weight: Optional Numpy/Jax array of weights for
                 the training samples, used for weighting the loss function
                 (during training only). You can either pass a flat (1D)
                 Numpy array with the same length as the input samples
-                (1:1 mapping between weights and samples),
-                or in the case of temporal data,
-                you can pass a 2D array with shape
-                `(samples, sequence_length)`,
-                to apply a different weight to every timestep of every sample.
-                In this case you should make sure to specify
-                `sample_weight_mode="temporal"` in `compile()`. This argument is not
-                supported when `x` is a dataset, generator, or
-            `keras.utils.Sequence` instance, instead provide the sample_weights
+                (1:1 mapping between weights and samples). This argument is not
+                supported when `x` is generator, instead provide the sample_weights
                 as the third element of `x`.
             initial_epoch: Integer.
                 Epoch at which to start training
@@ -512,16 +496,15 @@ class Model(object):
             steps_per_epoch: Integer or `None`.
                 Total number of steps (batches of samples)
                 before declaring one epoch finished and starting the
-                next epoch. When training with input arrays, the default `None` is equal to
+                next epoch. When training with input arrays such as
+                jax data arrays, the default `None` is equal to
                 the number of samples in your dataset divided by
-                the batch size, or 1 if that cannot be determined. If x is a
-                `tf.data` dataset, and 'steps_per_epoch'
-                is None, the epoch will run until the input dataset is exhausted.
-                When passing an infinitely repeating dataset, you must specify the
+                the batch size, or 1 if that cannot be determined.
+                When passing a generator, you must specify the
                 `steps_per_epoch` argument. This argument is not supported with
                 array inputs.
             validation_steps: Only relevant if `validation_data` is provided and
-                is a `tf.data` dataset. Total number of steps (batches of
+                is a generator. Total number of steps (batches of
                 samples) to draw before stopping when performing validation
                 at the end of every epoch. If 'validation_steps' is None, validation
                 will run until the `validation_data` dataset is exhausted. In the
@@ -534,8 +517,7 @@ class Model(object):
                 Number of samples per validation batch.
                 If unspecified, will default to `batch_size`.
                 Do not specify the `validation_batch_size` if your data is in the
-                form of datasets, generators, or `keras.utils.Sequence` instances
-                (since they generate batches).
+                form of generators (since they generate batches).
             validation_freq: Only relevant if validation data is provided. Integer
                 or `collections_abc.Container` instance (e.g. list, tuple, etc.).
                 If an integer, specifies how many training epochs to run before a
@@ -543,34 +525,21 @@ class Model(object):
                 validation every 2 epochs. If a Container, specifies the epochs on
                 which to run validation, e.g. `validation_freq=[1, 2, 10]` runs
                 validation at the end of the 1st, 2nd, and 10th epochs.
-            max_queue_size: Integer. Used for generator or `keras.utils.Sequence`
-                input only. Maximum size for the generator queue.
-                If unspecified, `max_queue_size` will default to 10.
-            workers: Integer. Used for generator or `keras.utils.Sequence` input
-                only. Maximum number of processes to spin up
-                when using process-based threading. If unspecified, `workers`
-                will default to 1. If 0, will execute the generator on the main
-                thread.
-            use_multiprocessing: Boolean. Used for generator or
-                `keras.utils.Sequence` input only. If `True`, use process-based
-                threading. If unspecified, `use_multiprocessing` will default to
-                `False`. Note that because this implementation relies on
-                multiprocessing, you should not pass non-picklable arguments to
-                the generator as they can't be passed easily to children processes.
         
         Unpacking behavior for iterator-like inputs:
-            A common pattern is to pass a tf.data.Dataset, generator, or
-        elegy.utils.Sequence to the `x` argument of fit, which will in fact
+
+        A common pattern is to pass a generator, which will in fact
         yield not only features (x) but optionally targets (y) and sample weights.
-        Keras requires that the output of such iterator-likes be unambiguous. The
+        Elegy requires that the output of such iterator-likes be unambiguous. The
         iterator should return a tuple of length 1, 2, or 3, where the optional
         second and third elements will be used for y and sample_weight
         respectively. Any other type provided will be wrapped in a length one
         tuple, effectively treating everything as 'x'. When yielding dicts, they
         should still adhere to the top-level tuple structure.
-        e.g. `({"x0": x0, "x1": x1}, y)`. Keras will not attempt to separate
+        e.g. `({"x0": x0, "x1": x1}, y)`. Elegy will not attempt to separate
         features, targets, and weights from the keys of a single dict.
-            A notable unsupported data type is the namedtuple. The reason is that
+        
+        A notable unsupported data type is the namedtuple. The reason is that
         it behaves like both an ordered datatype (tuple) and a mapping
         datatype (dict). So given a namedtuple of the form:
             `namedtuple("example_tuple", ["y", "x"])`
@@ -581,13 +550,13 @@ class Model(object):
         and sample_weight or passed through as a single element to `x`. As a
         result the data processing code will simply raise a ValueError if it
         encounters a namedtuple. (Along with instructions to remedy the issue.)
+       
         Returns:
             A `History` object. Its `History.history` attribute is
             a record of training loss values and metrics values
             at successive epochs, as well as validation loss values
             and validation metrics values (if applicable).
         Raises:
-            RuntimeError: If the model was never compiled.
             ValueError: In case of mismatch between the provided input data
                 and what the model expects.
         """
@@ -634,11 +603,12 @@ class Model(object):
                 for step in data_handler.steps():
                     callbacks.on_train_batch_begin(step)
                     batch = next(iterator)
-                    sample_weight = batch[2] if len(batch) == 3 else None
+                    # sample_weight = batch[2] if len(batch) == 3 else None
+                    x_batch, y_batch, sample_weight = unpack_x_y_sample_weight(batch)
 
                     tmp_logs = self.train_on_batch(
-                        x=batch[0],
-                        y=batch[1] if len(batch) > 1 else None,
+                        x=x_batch,
+                        y=y_batch,
                         sample_weight=sample_weight,
                         class_weight=class_weight,
                     )
@@ -683,86 +653,69 @@ class Model(object):
     def evaluate(
         self,
         x: tp.Union[
-            jnp.ndarray,
-            np.ndarray,
-            tp.Mapping[str, tp.Union[np.ndarray, jnp.ndarray]],
-            tp.Tuple[tp.Union[np.ndarray, jnp.ndarray]],
-            tp.Iterable,
+            np.ndarray, tp.Mapping[str, np.ndarray], tp.Tuple[np.ndarray], tp.Iterable,
         ],
         y: tp.Union[
             jnp.ndarray,
             np.ndarray,
-            tp.Mapping[str, tp.Union[np.ndarray, jnp.ndarray]],
-            tp.Tuple[tp.Union[np.ndarray, jnp.ndarray]],
+            tp.Mapping[str, np.ndarray],
+            tp.Tuple[np.ndarray],
             None,
         ] = None,
         verbose: int = 1,
         batch_size: tp.Optional[int] = None,
-        sample_weight: tp.Optional[tp.Union[np.ndarray, jnp.ndarray]] = None,
+        sample_weight: tp.Optional[np.ndarray] = None,
         steps: tp.Optional[int] = None,
         callbacks: tp.Union[tp.List[Callback], CallbackList, None] = None,
-    ):
+    ) -> tp.Dict[str, np.ndarray]:
         """Returns the loss value & metrics values for the model in test mode.
             Computation is done in batches.
+
             Arguments:
-                x: Input data. It could be: 
-                    - A Numpy/Array array (or array-like), or a list
-                        of arrays (in case the model has multiple inputs).
-                    - A dict mapping input names to the corresponding arrays, if
-                        the model has named inputs. 
-                    - A generator function or arrays or possibly nested python structures 
-                        or dict, list, tuple that contain arrays as leafs.
-                y: Target data. Like the input data `x`, it could be either Numpy
-                    array(s) or Jax arrays(s). If
-                    `x` is a dataset, generator or `keras.utils.Sequence` instance, `y`
-                    should not be specified (since targets will be obtained from the
-                    iterator/dataset).
-                batch_size: Integer or `None`. Number of samples per gradient update. If
-                    unspecified, `batch_size` will default to 32. Do not specify the
-                    `batch_size` if your data is in the form of a dataset, generators,
-                    or `keras.utils.Sequence` instances (since they generate batches).
-                verbose: 0 or 1. Verbosity mode. 0 = silent, 1 = progress bar.
-                sample_weight: Optional Numpy array of weights for the test samples,
-                    used for weighting the loss function. You can either pass a flat (1D)
+                x: Input data. It could be:
+
+                    - A Numpy or Jax array (or array-like), or a list of arrays
+                        (in case the model has multiple inputs).
+                    - A dict mapping input names to the corresponding arrays,
+                        if the model has named inputs.
+                    - A generator returning `(inputs,)`, `(inputs, targets)`
+                        or `(inputs, targets, sample_weights)`.
+
+                    A more detailed description of
+                    unpacking behavior for iterator types generator
+                    is given in the `Unpacking behavior for iterator-like inputs` section
+                    of `Model.fit`.
+                y: Target data. Like the input data `x`,
+                    it could be either Numpy or Jax array(s).
+                    It should be consistent with `x`. If `x` is a generator,
+                    `y` should not be specified (since targets will be obtained from `x`).
+                verbose: 0, 1, or 2. Verbosity mode.
+                    0 = silent, 1 = progress bar, 2 = one line per epoch.
+                batch_size: Integer or `None`.
+                    Number of samples per gradient update.
+                    If unspecified, `batch_size` will default to 32.
+                    Do not specify the `batch_size` if your data is in the
+                    form of generator (since they generate batches).
+                sample_weight: Optional Numpy/Jax array of weights for
+                    the training samples, used for weighting the loss function
+                    (during training only). You can either pass a flat (1D)
                     Numpy array with the same length as the input samples
-                    (1:1 mapping between weights and samples), or in the case of
-                    temporal data, you can pass a 2D array with shape `(samples,
-                    sequence_length)`, to apply a different weight to every timestep
-                    of every sample. In this case you should make sure to specify
-                    `sample_weight_mode="temporal"` in `compile()`. This argument is
-                    not supported when `x` is a dataset, instead pass sample weights
+                    (1:1 mapping between weights and samples). This argument is not
+                    supported when `x` is generator, instead provide the sample_weights
                     as the third element of `x`.
                 steps: Integer or `None`. Total number of steps (batches of samples)
-                before declaring the evaluation round finished. Ignored with the
-                default value of `None`. If x is a `tf.data` dataset and `steps` is
-                None, 'evaluate' will run until the dataset is exhausted. This
-                argument is not supported with array inputs.
-                callbacks: List of `keras.callbacks.Callback` instances. List of
-                callbacks to apply during evaluation. See
-                [callbacks](/api_docs/python/tf/keras/callbacks).
-                max_queue_size: Integer. Used for generator or `keras.utils.Sequence`
-                input only. Maximum size for the generator queue. If unspecified,
-                `max_queue_size` will default to 10.
-                workers: Integer. Used for generator or `keras.utils.Sequence` input
-                only. Maximum number of processes to spin up when using process-based
-                threading. If unspecified, `workers` will default to 1. If 0, will
-                execute the generator on the main thread.
-                use_multiprocessing: Boolean. Used for generator or
-                `keras.utils.Sequence` input only. If `True`, use process-based
-                threading. If unspecified, `use_multiprocessing` will default to
-                `False`. Note that because this implementation relies on
-                multiprocessing, you should not pass non-picklable arguments to the
-                generator as they can't be passed easily to children processes.
-                return_dict: If `True`, loss and metric results are returned as a dict,
-                with each key being the name of the metric. If `False`, they are
-                returned as a list.
+                    before declaring the evaluation round finished. Ignored with the
+                    default value of `None`. This
+                    argument is not supported with array inputs.
+                callbacks: List of [elegy.callbacks.Callback][] instances.
+                    List of callbacks to apply during training.
+                    See [elegy.callbacks][].
+
             See the discussion of `Unpacking behavior for iterator-like inputs` for
-            `Model.fit`.
+             [`Model.fit`][elegy.model.Model.fit].
+
             Returns:
-                Scalar test loss (if the model has a single output and no metrics)
-                or list of scalars (if the model has multiple outputs
-                and/or metrics). The attribute `model.metrics_names` will give you
-                the display labels for the scalar outputs.
+                A dictionary for mapping the losses and metrics names to the values obtained.
             Raises:
                 ValueError: in case of invalid arguments.
             """
@@ -776,6 +729,7 @@ class Model(object):
             initial_epoch=0,
             epochs=1,
             shuffle=False,
+            is_training=False,
         )
 
         # Container that configures and calls `tf.keras.Callback`s.
@@ -799,12 +753,10 @@ class Model(object):
                 for step in data_handler.steps():
                     callbacks.on_test_batch_begin(step)
                     batch = next(iterator)
-                    sample_weight = batch[2] if len(batch) == 3 else None
+                    x_batch, y_batch, sample_weight = unpack_x_y_sample_weight(batch)
 
                     tmp_logs = self.test_on_batch(
-                        x=batch[0],
-                        y=batch[1] if len(batch) > 1 else None,
-                        sample_weight=sample_weight,
+                        x=x_batch, y=y_batch, sample_weight=sample_weight,
                     )
                     tmp_logs.update({"size": data_handler.batch_size})
                     logs = tmp_logs
@@ -817,63 +769,45 @@ class Model(object):
     def predict(
         self,
         x: tp.Union[
-            jnp.ndarray,
-            np.ndarray,
-            tp.Mapping[str, tp.Union[np.ndarray, jnp.ndarray]],
-            tp.Tuple[tp.Union[np.ndarray, jnp.ndarray]],
-            tp.Iterable,
+            np.ndarray, tp.Mapping[str, np.ndarray], tp.Tuple[np.ndarray], tp.Iterable,
         ],
         verbose: int = 0,
         batch_size: tp.Optional[int] = None,
         steps: tp.Optional[int] = None,
         callbacks: tp.Union[tp.List[Callback], CallbackList, None] = None,
-    ):
+    ) -> np.ndarray:
         """Generates output predictions for the input samples.
-        Computation is done in batches. This method is designed for performance in
-        large scale inputs. For small amount of inputs that fit in one batch,
-        directly using `__call__` is recommended for faster execution, e.g.,
-        `model(x)`, or `model(x, training=False)` if you have layers such as
-        `tf.keras.layers.BatchNormalization` that behaves differently during
-        inference.
+        Computation is done in batches.
+
         Arguments:
-            x: Input samples. It could be:
-            - A Numpy/Jax array (or array-like), or a list of arrays
-                (in case the model has multiple inputs).
-            - A `tf.data` dataset.
-            - A generator or `keras.utils.Sequence` instance.
-            A more detailed description of unpacking behavior for iterator types
-            (Dataset, generator, Sequence) is given in the `Unpacking behavior
-            for iterator-like inputs` section of `Model.fit`.
+            x: Input data. It could be:
+
+                - A Numpy or Jax array (or array-like), or a list of arrays
+                    (in case the model has multiple inputs).
+                - A dict mapping input names to the corresponding arrays,
+                    if the model has named inputs.
+                - A generator returning `(inputs,)`, `(inputs, targets)`
+                    or `(inputs, targets, sample_weights)`.
+
+                A more detailed description of
+                unpacking behavior for iterator types generator
+                is given in the `Unpacking behavior for iterator-like inputs` section
+                of `Model.fit`.
             batch_size: Integer or `None`.
                 Number of samples per batch.
                 If unspecified, `batch_size` will default to 32.
                 Do not specify the `batch_size` if your data is in the
-                form of dataset, generators, or `keras.utils.Sequence` instances
-                (since they generate batches).
+                form of generators (since they generate batches).
             verbose: Verbosity mode, 0 or 1.
             steps: Total number of steps (batches of samples)
                 before declaring the prediction round finished.
-                Ignored with the default value of `None`. If x is a `tf.data`
-                dataset and `steps` is None, `predict` will
-                run until the input dataset is exhausted.
-            callbacks: List of `keras.callbacks.Callback` instances.
-                List of callbacks to apply during prediction.
-                See [callbacks](/api_docs/python/tf/keras/callbacks).
-            max_queue_size: Integer. Used for generator or `keras.utils.Sequence`
-                input only. Maximum size for the generator queue.
-                If unspecified, `max_queue_size` will default to 10.
-            workers: Integer. Used for generator or `keras.utils.Sequence` input
-                only. Maximum number of processes to spin up when using
-                process-based threading. If unspecified, `workers` will default
-                to 1. If 0, will execute the generator on the main thread.
-            use_multiprocessing: Boolean. Used for generator or
-                `keras.utils.Sequence` input only. If `True`, use process-based
-                threading. If unspecified, `use_multiprocessing` will default to
-                `False`. Note that because this implementation relies on
-                multiprocessing, you should not pass non-picklable arguments to
-                the generator as they can't be passed easily to children processes.
+                Ignored with the default value of `None`.
+            callbacks: List of [elegy.callbacks.Callback][] instances.
+                List of callbacks to apply during training.
+                See [elegy.callbacks][].
         See the discussion of `Unpacking behavior for iterator-like inputs` for
-        `Model.fit`. Note that Model.predict uses the same interpretation rules as
+        [`Model.fit`][elegy.model.Model.fit].
+        Note that Model.predict uses the same interpretation rules as
         `Model.fit` and `Model.evaluate`, so inputs must be unambiguous for all
         three methods.
         Returns:
