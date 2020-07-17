@@ -13,7 +13,7 @@ ALL_ADAPTER_CLS = [ArrayDataAdapter, GeneratorDataAdapter, ListsOfScalarsDataAda
 
 
 class DataHandler(object):
-    """Handles iterating over epoch-level `tf.data.Iterator` objects."""
+    """Handles iterating over epoch-level `tp.Iterator` objects."""
 
     def __init__(
         self,
@@ -51,7 +51,7 @@ class DataHandler(object):
         self._dataset = dataset
 
     def enumerate_epochs(self):
-        """Yields `(epoch, tf.data.Iterator)`."""
+        """Yields `(epoch, tp.Iterator)`."""
         data_iterator = self._dataset()
         for epoch in range(self._initial_epoch, self._epochs):
             if self._insufficient_data:  # Set by `catch_stop_iteration`.
@@ -103,7 +103,7 @@ class DataHandler(object):
     def inferred_steps(self):
         """The inferred steps per epoch of the created `Dataset`.
             This will be `None` in the case where:
-            (1) A `Dataset` of unknown cardinality was passed to the `DataHandler`, and
+            (1) A generator `Dataset` was passed to the `DataHandler`, and
             (2) `steps_per_epoch` was not provided, and
             (3) The first epoch of iteration has not yet completed.
             Returns:

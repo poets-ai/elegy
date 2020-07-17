@@ -46,14 +46,9 @@ class GeneratorDataAdapter(DataAdapter):
         peek = self._standardize_batch(peek)
 
         self._first_batch_size = int(list(flatten(peek))[0].shape[0])
-        # self._first_batch_size = int(peek[0].shape[0])
-
-        # Note that dataset API takes a callable that creates a generator object,
-        # rather than generator itself, which is why we define a function here.
-        generator_fn = lambda: x
 
         def wrapped_generator():
-            for data in generator_fn():
+            for data in x:
                 yield self._standardize_batch(data)
 
         dataset = wrapped_generator
