@@ -40,9 +40,6 @@ class ListsOfScalarsDataAdapter(DataAdapter):
             y = np.asarray(y)
         if sample_weights is not None:
             sample_weights = np.asarray(sample_weights)
-        # sample_weight_modes = broadcast_sample_weight_modes(
-        #     sample_weights, sample_weight_modes
-        # )
 
         self._internal_adapter = ArrayDataAdapter(
             x,

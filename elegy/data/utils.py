@@ -84,7 +84,6 @@ def unpack_x_y_sample_weight(data):
 
 
 def list_to_tuple(maybe_list):
-    """Datasets will stack the list of tensor, so switch them to tuples."""
     if isinstance(maybe_list, list):
         return tuple(maybe_list)
     return maybe_list
@@ -110,7 +109,6 @@ def is_none_or_empty(inputs):
     # "The truth value of an array with more than one element is ambiguous.
     # Use a.any() or a.all()"
     return inputs is None or not list(flatten(inputs))
-    # return inputs is None or not inputs
 
 
 def assert_not_namedtuple(x):
@@ -136,8 +134,8 @@ def train_validation_split(arrays, validation_split, shuffle=True):
     """
     Split arrays into random train and validation subsets.
     Arguments:
-        arrays: Tensors to split. Allowed inputs are arbitrarily nested structures
-            of Tensors and NumPy arrays.
+        arrays: Arrays to split. Allowed inputs are arbitrarily nested structures
+            of Jax and NumPy arrays.
         validation_split: Float between 0 and 1. The proportion of the dataset to
             include in the validation split. The rest of the dataset will be included
             in the training split.
