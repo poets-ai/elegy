@@ -1179,6 +1179,38 @@ class Model(object):
         self.optimizer_state = None
 
     def save(self, path: tp.Union[str, Path], include_optimizer: bool = True) -> None:
+        """
+        Saves the model to disk.
+
+        It creates a directory that includes:
+
+        - The `Model` object instance serialized with `pickle` as
+            as `{path}/model.pkl`, this allows you to re-instantiate 
+            the model later.
+        - The model parameters + states serialized into HDF5 as `{path}/parameters.h5`.
+        - The state of the optimizer serialized with `pickle` as
+            as `{path}/optimizer_state.pkl`, allowing to resume training
+            exactly where you left off. We hope to use HDF5 in the future
+            but `optix` state is incompatible with `deepdish`.
+        
+        This allows you to save the entirety of the state of a model
+        in a directory structure which can be fully restored via 
+        `Model.load` if the model is already instiated or `elegy.model.load`
+        to load the model instance from its pickled version.
+
+        ```python
+        import elegy
+
+        model.save('my_model')  # creates folder at 'my_model'
+        del model  # deletes the existing model
+        
+        # returns a model identical to the previous one
+        model = elegy.model.load('my_model')
+        ```
+        Arguments:
+            path: path where model structure will be saved.
+            include_optimizer: If True, save optimizer's state together.
+        """
         if isinstance(path, str):
             path = Path(path)
 
@@ -1193,7 +1225,7 @@ class Model(object):
 
         optimizer_state = state.pop("optimizer_state", None)
 
-        deepdish.io.save(path / "states.h5", state)
+        deepdish.io.save(path / "parameters.h5", state)
 
         if include_optimizer and optimizer_state is not None:
             with open(path / "optimizer_state.pkl", "wb") as f:
@@ -1208,19 +1240,54 @@ class Model(object):
         self.full_state = original_state
 
     def load(self, path: tp.Union[str, Path]) -> None:
+        """
+        Loads all weights + states from a folder structure.
+        
+        You can load states from other models that have slightly different architecture
+        as long as long as it preserves the ordering of the `haiku.Params` + `haiku.State` 
+        structures, adding or removing layers is fine as long as they don't have weights, 
+        new layers with weights will be initialized from scratch.
+
+        Arguments:
+            path: path to a saved model's directory.
+        """
         if isinstance(path, str):
             path = Path(path)
 
-        state: tp.Dict = deepdish.io.load(path / "states.h5")
+        state: tp.Dict = deepdish.io.load(path / "parameters.h5")
 
-        if (path / "optimizer_state.pkl").exists():
-            with open(path / "optimizer_state.pkl", "rb") as f:
+        optimizer_state_path = path / "optimizer_state.pkl"
+
+        if optimizer_state_path.exists():
+            with open(optimizer_state_path, "rb") as f:
                 state["optimizer_state"] = pickle.load(f)
 
         self.full_state = state
 
 
 def load(path: tp.Union[str, Path]) -> Model:
+    """
+    Loads a model from disk.
+
+    This function will restore both the model architecture,
+    that is, its `Model` class instance, along with all of its
+    parameters, state, and optimizer state.
+
+    Example:
+
+    ```python
+    import elegy
+
+    model.save('my_model')  # creates folder at 'my_model'
+    del model  # deletes the existing model
+    
+    # returns a model identical to the previous one
+    model = elegy.model.load('my_model')
+    ```
+
+    Arguments:
+        path: path to a saved model's directory.
+    """
     if isinstance(path, str):
         path = Path(path)
 
