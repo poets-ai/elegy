@@ -1,13 +1,14 @@
 # Implementation based on tf.keras.engine.training.py
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
-import copy
 import pickle
 import typing as tp
+from copy import copy
 from enum import Enum
 from functools import partial
 from pathlib import Path
 
+import cloudpickle
 import deepdish
 import haiku as hk
 import jax
@@ -36,18 +37,65 @@ class Mode(Enum):
 
 
 class Model(object):
+    """
+    `Model` is tasked with performing training, evaluation, and inference for a given
+    `elegy.Module` or `haiku.Module`.
+
+    To create a `Model` you first have to define its architecture in a `Module`:
+    ```python
+    class MLP(elegy.Module):
+        def call(self, image: jnp.ndarray) -> jnp.ndarray:
+            mlp = hk.Sequential([
+                hk.Flatten(),
+                hk.Linear(300),
+                jax.nn.relu,
+                hk.Linear(10),
+            ])
+            return mlp(image)
+    ```
+    
+    Then you can pass this `Module` to the `Model`'s constructor and specify additional things like losses, metrics, optimizer, and callbacks:
+    ```python
+    model = elegy.Model(
+        module=MLP.defer(),
+        loss=[
+            elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
+            elegy.regularizers.GlobalL2(l=1e-5),
+        ],
+        metrics=elegy.metrics.SparseCategoricalAccuracy.defer(),
+        optimizer=optix.rmsprop(1e-3),
+    )
+    ```
+    
+    Once the model is created, you can train the model with `model.fit()`, or use the model
+    to do prediction with `model.predict()`.
+    Checkout [Getting Started](https://poets-ai.github.io/elegy/getting-started) for
+    additional details.
+
+    Attributes:
+        params: An `haiku.Params` structure with the weights of the model.
+        state: An `haiku.State` structure with non-trainable parameters of the model.
+        optimizer_state:  An `optix.OptState` structure with state of the optimizer.
+        metrics_state: An `haiku.State` structure with the state of the metrics.
+        initial_metrics_state: An `haiku.State` structure with the initial state of the metrics.
+        run_eagerly: if `True` it will use `jax.jit` internally on all `{train|test|predict}_on_batch` operations.
+    """
+
+    # public fields
+    params: tp.Optional[hk.Params]
+    state: tp.Optional[hk.State]
+    optimizer_state: tp.Optional[optix.OptState]
+    metrics_state: tp.Optional[hk.State]
+    initial_metrics_state: tp.Optional[hk.State]
+    run_eagerly: bool
+
+    # private fields
     _module_fn: tp.Callable
     _model_transform: hk.TransformedWithState
     _loss_fn: tp.Callable
     _metrics: tp.Optional[hk.TransformedWithState]
     _optimizer: optix.GradientTransformation
     _rngs: hk.PRNGSequence
-    _params: tp.Optional[hk.Params]
-    _state: tp.Optional[hk.State]
-    _optimizer_state: tp.Optional[optix.OptState]
-    _metrics_state: tp.Optional[hk.State]
-    _initial_metrics_state: tp.Optional[hk.State]
-    run_eagerly: bool
 
     def __init__(
         self,
@@ -61,22 +109,22 @@ class Model(object):
         optimizer_state: tp.Optional[optix.OptState] = None,
         metrics_state: tp.Optional[hk.State] = None,
         initial_metrics_state: tp.Optional[hk.State] = None,
-        seed: tp.Union[jnp.ndarray, int] = jax.random.PRNGKey(42),
+        seed: tp.Union[np.ndarray, int] = 42,
     ):
         """[summary]
 
-        Args:
-            module (tp.Optional[tp.Callable]): [description]
-            loss (tp.Callable): [description]
-            metrics (tp.Optional[tp.Callable], optional): [description]. Defaults to None.
-            optimizer (optix.GradientTransformation, optional): [description]. Defaults to optix.adam(1e-3).
-            run_eagerly (bool, optional): [description]. Defaults to False.
-            params (tp.Optional[hk.Params], optional): [description]. Defaults to None.
-            state (tp.Optional[hk.State], optional): [description]. Defaults to None.
-            optimizer_state (tp.Optional[optix.OptState], optional): [description]. Defaults to None.
-            metrics_state (tp.Optional[hk.State], optional): [description]. Defaults to None.
-            initial_metrics_state (tp.Optional[hk.State], optional): [description]. Defaults to None.
-            seed (tp.Union[jnp.ndarray, int], optional): [description]. Defaults to jax.random.PRNGKey(42).
+        Arguments:
+            module: [description].
+            loss: [description].
+            metrics: [description].
+            optimizer: [description].
+            run_eagerly: [description].
+            params: [description].
+            state: [description].
+            optimizer_state: [description].
+            metrics_state: [description].
+            initial_metrics_state: [description].
+            seed: [description].
 
         Raises:
             ValueError: [description]
@@ -110,11 +158,11 @@ class Model(object):
         )
         self._optimizer = optimizer if optimizer is not None else optix.adam(1e-3)
         self._rngs = hk.PRNGSequence(seed)
-        self._params = params
-        self._state = state
-        self._optimizer_state = optimizer_state
-        self._metrics_state = metrics_state
-        self._initial_metrics_state = initial_metrics_state
+        self.params = params
+        self.state = state
+        self.optimizer_state = optimizer_state
+        self.metrics_state = metrics_state
+        self.initial_metrics_state = initial_metrics_state
         self.run_eagerly = run_eagerly
 
     def __call__(self, *args, **kwargs):
@@ -126,109 +174,104 @@ class Model(object):
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
-        seed: tp.Union[jnp.ndarray, int, None],
-        params: tp.Optional[hk.Params],
-        state: tp.Optional[hk.State],
-        optimizer_state: tp.Optional[optix.OptState],
-        metrics_state: tp.Optional[hk.State],
-        initial_metrics_state: tp.Optional[hk.State],
         mode: Mode,
     ):
 
-        if seed is not None:
-            self._rngs = hk.PRNGSequence(key_or_seed=seed)
-
-        if params is not None:
-            self._params = params
-
-        if state is not None:
-            self._state = state
-
-        if optimizer_state is not None:
-            self._optimizer_state = optimizer_state
-
-        if metrics_state is not None:
-            self._metrics_state = metrics_state
-
-        if initial_metrics_state is not None:
-            self._initial_metrics_state = initial_metrics_state
-
-        if self._params is None or self._state is None:
+        if self.params is None or self.state is None:
             x_args, x_kwargs = utils.get_input_args(x, is_training=False)
 
-            self._params, self._state = self._model_transform.init(
+            self.params, self.state = self._model_transform.init(
                 next(self._rngs), *x_args, **x_kwargs
             )
 
         if mode == Mode.predict:
             return
 
-        if self._metrics_transform is not None and self._metrics_state is None:
+        if self._metrics_transform is not None and self.metrics_state is None:
             x_args, x_kwargs = utils.get_input_args(x, is_training=False)
 
             y_pred, state = self._model_transform.apply(
                 # required by apply
-                self._params,
-                self._state,
+                self.params,
+                self.state,
                 next(self._rngs),
                 # model_transform inputs + dependency injection
                 *x_args,
                 **x_kwargs,
             )
-            _, self._metrics_state = self._metrics_transform.init(
+            _, self.metrics_state = self._metrics_transform.init(
                 # required by init
                 next(self._rngs),
-                # required by metric API
-                y_true=y,
-                y_pred=y_pred,
                 # dependency injection
                 x=x,
+                y_true=y,
+                y_pred=y_pred,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
-                __params=self._params,  # renamed
+                is_training=False,
+                __params=self.params,  # renamed
             )
 
-            self._initial_metrics_state = self._metrics_state
+            self.initial_metrics_state = self.metrics_state
 
         if mode == Mode.test:
             return
 
-        if self._optimizer_state is None:
-            self._optimizer_state = self._optimizer.init(self._params)
+        if self.optimizer_state is None:
+            self.optimizer_state = self._optimizer.init(self.params)
 
     def reset_metrics(self, hard: bool = False):
 
         if hard:
-            self._metrics_state = None
-            self._initial_metrics_state = None
+            self.metrics_state = None
+            self.initial_metrics_state = None
         else:
-            self._metrics_state = self._initial_metrics_state
+            self.metrics_state = self.initial_metrics_state
 
     def train_on_batch(
         self,
-        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
-        sample_weight: tp.Optional[jnp.ndarray] = None,
-        class_weight: tp.Optional[jnp.ndarray] = None,
-        seed: tp.Union[jnp.ndarray, int, None] = None,
-        params: tp.Optional[hk.Params] = None,
-        state: tp.Optional[hk.State] = None,
-        optimizer_state: tp.Optional[optix.OptState] = None,
-        metrics_state: tp.Optional[hk.State] = None,
-        initial_metrics_state: tp.Optional[hk.State] = None,
-    ) -> tp.Dict[str, jnp.ndarray]:
+        x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        y: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
+        sample_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[np.ndarray] = None,
+    ) -> tp.Dict[str, np.ndarray]:
+        """
+        Runs a single gradient update on a single batch of data.
 
+        Arguments:
+            x: Input data. It could be:
+
+                - A Numpy array (or array-like), or a iterable of arrays
+                    (in case the model has multiple inputs).
+                - A dict mapping input names to the corresponding arrays,
+                    if the model has named inputs.
+            
+            y: Target data. Like the input data `x`, it could be either Numpy
+                array(s) or Jax array(s). It should be consistent with `x`
+                (you cannot have Numpy inputs and array targets, or inversely).
+            sample_weight: Optional array of the same length as x, containing
+                weights to apply to the model's loss for each sample. In the case of
+                temporal data, you can pass a 2D array with shape (samples,
+                sequence_length), to apply a different weight to every timestep of
+                every sample. In this case you should make sure to specify
+                sample_weight_mode="temporal" in compile().
+            class_weight: Optional dictionary mapping class indices (integers) to a
+                weight (float) to apply to the model's loss for the samples from this
+                class during training. This can be useful to tell the model to "pay
+                more attention" to samples from an under-represented class.
+        
+        Returns:
+            A `logs` dictionary of containing the main `loss` as well as all
+            other losses and metrics. 
+        
+        Raises:
+            ValueError: In case of invalid user-provided arguments.
+        """
         self._maybe_initialize(
             x=x,
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            seed=seed,
-            params=params,
-            state=state,
-            optimizer_state=optimizer_state,
-            metrics_state=metrics_state,
-            initial_metrics_state=initial_metrics_state,
             mode=Mode.train,
         )
 
@@ -236,19 +279,19 @@ class Model(object):
 
         (
             logs,
-            self._params,
-            self._state,
-            self._optimizer_state,
-            self._metrics_state,
+            self.params,
+            self.state,
+            self.optimizer_state,
+            self.metrics_state,
         ) = update_fn(
             x=x,
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            params=self._params,
-            state=self._state,
-            optimizer_state=self._optimizer_state,
-            metrics_state=self._metrics_state,
+            params=self.params,
+            state=self.state,
+            optimizer_state=self.optimizer_state,
+            metrics_state=self.metrics_state,
             net_rng=next(self._rngs),
             metrics_rng=next(self._rngs),
         )
@@ -296,13 +339,13 @@ class Model(object):
                 {},  # params
                 metrics_state,  # state
                 metrics_rng,  # rng
-                # required by metric API
+                # dependency injection
                 y_true=y,
                 y_pred=y_pred,
-                # dependency injection
                 x=x,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
+                is_training=True,
                 __params=params,  # renamed
             )
             logs.update(metrics)
@@ -335,6 +378,7 @@ class Model(object):
             sample_weight=sample_weight,
             class_weight=class_weight,
             params=params,
+            is_training=is_training,
         )
 
         # get total loss
@@ -370,7 +414,7 @@ class Model(object):
 
         Arguments:
             x: Input data. It could be:
-
+                
                 - A Numpy or Jax array (or array-like), or a list of arrays
                     (in case the model has multiple inputs).
                 - A dict mapping input names to the corresponding arrays,
@@ -574,7 +618,7 @@ class Model(object):
                     logs = tmp_logs
                     callbacks.on_train_batch_end(step, logs)
 
-            epoch_logs = copy.copy(logs)
+            epoch_logs = copy(logs)
             epoch_logs.update({"size": data_handler.batch_size})
 
             # Run validation.
@@ -843,38 +887,52 @@ class Model(object):
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
         sample_weight: tp.Optional[jnp.ndarray] = None,
         class_weight: tp.Optional[jnp.ndarray] = None,
-        seed: tp.Union[jnp.ndarray, int, None] = None,
-        params: tp.Optional[hk.Params] = None,
-        state: tp.Optional[hk.State] = None,
-        metrics_state: tp.Optional[hk.State] = None,
-        initial_metrics_state: tp.Optional[hk.State] = None,
     ) -> tp.Dict[str, jnp.ndarray]:
+        """
+        Test the model on a single batch of samples.
 
+        Arguments:
+            x: Input data. It could be: 
+
+                - A Numpy array (or array-like), or a list
+                    of arrays (in case the model has multiple inputs). 
+                - A dict mapping input names to the corresponding arrays, if
+                    the model has named inputs.
+            
+            y: Target data. Like the input data `x`, it could be either Numpy
+                array(s) or Jax array(s).
+            sample_weight: Optional array of the same length as x, containing
+                weights to apply to the model's loss for each sample. In the case of
+                temporal data, you can pass a 2D array with shape (samples,
+                sequence_length), to apply a different weight to every timestep of
+                every sample.
+        
+        Returns:
+            A `logs` dictionary of containing the main `loss` as well as all
+            other losses and metrics. 
+        
+        Raises:
+            ValueError: In case of invalid user-provided arguments.
+        """
         self._maybe_initialize(
             x=x,
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            seed=seed,
-            params=params,
-            state=state,
-            optimizer_state=None,
-            metrics_state=metrics_state,
-            initial_metrics_state=initial_metrics_state,
             mode=Mode.test,
         )
 
         test_fn = self._test if self.run_eagerly else self._test_jit
 
-        (logs, self._metrics_state,) = test_fn(
+        (logs, self.metrics_state,) = test_fn(
             x=x,
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            params=self._params,
-            state=self._state,
-            optimizer_state=self._optimizer_state,
-            metrics_state=self._metrics_state,
+            params=self.params,
+            state=self.state,
+            optimizer_state=self.optimizer_state,
+            metrics_state=self.metrics_state,
             net_rng=next(self._rngs),
             metrics_rng=next(self._rngs),
         )
@@ -914,13 +972,13 @@ class Model(object):
                 {},  # params
                 metrics_state,  # state
                 metrics_rng,  # rng
-                # required by metric API
+                # dependency injection
                 y_true=y,
                 y_pred=y_pred,
-                # dependency injection
                 x=x,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
+                is_training=False,
                 __params=params,  # renamed
             )
             logs.update(metrics)
@@ -936,30 +994,32 @@ class Model(object):
         self,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         seed: tp.Union[jnp.ndarray, int, None] = None,
-        params: tp.Optional[hk.Params] = None,
-        state: tp.Optional[hk.State] = None,
     ) -> tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]:
-
+        """
+        Returns predictions for a single batch of samples.
+        
+        Arguments:
+            x: Input data. A Numpy/Jax array (or array-like), or possibly 
+                nested python structure of dict, list, tuple that contain 
+                arrays as leafs.
+        
+        Returns:
+            Jax array(s) of predictions.
+        
+        Raises:
+            ValueError: In case of mismatch between given number of inputs and
+            expectations of the model.
+        """
         self._maybe_initialize(
-            x=x,
-            y=None,
-            sample_weight=None,
-            class_weight=None,
-            seed=seed,
-            params=params,
-            state=state,
-            optimizer_state=None,
-            metrics_state=None,
-            initial_metrics_state=None,
-            mode=Mode.predict,
+            x=x, y=None, sample_weight=None, class_weight=None, mode=Mode.predict,
         )
 
         predict_fn = self._predict if self.run_eagerly else self._predict_jit
 
         y_pred, _ = predict_fn(
             x=x,
-            params=self._params,
-            state=self._state,
+            params=self.params,
+            state=self.state,
             net_rng=next(self._rngs),
             is_training=False,
         )
@@ -992,46 +1052,99 @@ class Model(object):
     _predict_jit = jax.jit(_predict, static_argnums=(0,))
 
     @property
+    def seed(self) -> tp.Union[np.ndarray, int]:
+        """
+        Current random state of the model.
+        """
+        return self._rngs.internal_state[0]
+
+    @seed.setter
+    def seed(self, seed: tp.Union[np.ndarray, int]):
+        self._rngs = hk.PRNGSequence(seed)
+
+    @property
     def full_state(self) -> tp.Dict:
-        state: tp.Dict = {"rng": self._rngs.internal_state[0]}
+        """
+        """
 
-        if self._params is not None:
-            state["params"] = self._params
+        state: tp.Dict = {"seed": self.seed}
 
-        if self._state is not None:
-            state["state"] = self._state
+        if self.params is not None:
+            state["params"] = self.params
 
-        if self._metrics_state is not None:
-            state["metrics_state"] = self._metrics_state
+        if self.state is not None:
+            state["state"] = self.state
 
-        if self._optimizer_state is not None:
-            state["optimizer_state"] = self._optimizer_state
+        if self.metrics_state is not None:
+            state["metrics_state"] = self.metrics_state
+
+        if self.initial_metrics_state is not None:
+            state["initial_metrics_state"] = self.initial_metrics_state
+
+        if self.optimizer_state is not None:
+            state["optimizer_state"] = self.optimizer_state
 
         return state
 
     @full_state.setter
     def full_state(self, state):
-        self._rngs = hk.PRNGSequence(state["rng"])
+        self.seed = state["seed"]
 
         if "params" in state:
-            self._params = state["params"]
+            self.params = state["params"]
 
         if "state" in state:
-            self._state = state["state"]
+            self.state = state["state"]
 
         if "metrics_state" in state:
-            self._metrics_state = state["metrics_state"]
+            self.metrics_state = state["metrics_state"]
+
+        if "initial_metrics_state" in state:
+            self.initial_metrics_state = state["initial_metrics_state"]
 
         if "optimizer_state" in state:
-            self._optimizer_state = state["optimizer_state"]
+            self.optimizer_state = state["optimizer_state"]
 
-    def clear_state(self):
-        self._params = None
-        self._state = None
-        self._metrics_state = None
-        self._optimizer_state = None
+    def _clear_state(self):
+        self.params = None
+        self.state = None
+        self.metrics_state = None
+        self.initial_metrics_state = None
+        self.optimizer_state = None
 
-    def save(self, path: tp.Union[str, Path]) -> None:
+    def save(self, path: tp.Union[str, Path], include_optimizer: bool = True) -> None:
+        """
+        Saves the model to disk.
+
+        It creates a directory that includes:
+
+        - The `Model` object instance serialized with `pickle` as
+            as `{path}/model.pkl`, this allows you to re-instantiate 
+            the model later.
+        - The model parameters + states serialized into HDF5 as `{path}/parameters.h5`.
+        - The state of the optimizer serialized with `pickle` as
+            as `{path}/optimizer_state.pkl`, allowing to resume training
+            exactly where you left off. We hope to use HDF5 in the future
+            but `optix` state is incompatible with `deepdish`.
+        
+        This allows you to save the entirety of the state of a model
+        in a directory structure which can be fully restored via 
+        `Model.load` if the model is already instiated or `elegy.model.load`
+        to load the model instance from its pickled version.
+
+        ```python
+        import elegy
+
+        model.save('my_model')  # creates folder at 'my_model'
+        del model  # deletes the existing model
+        
+        # returns a model identical to the previous one
+        model = elegy.model.load('my_model')
+        ```
+        Arguments:
+            path: path where model structure will be saved.
+            include_optimizer: If True, save optimizer's state together.
+        """
         if isinstance(path, str):
             path = Path(path)
 
@@ -1039,26 +1152,76 @@ class Model(object):
 
         state = self.full_state
 
-        deepdish.io.save(path / "states.h5", state)
+        original_state = copy(state)
+
+        state.pop("metrics_state", None)
+        state.pop("initial_metrics_state", None)
+
+        optimizer_state = state.pop("optimizer_state", None)
+
+        deepdish.io.save(path / "parameters.h5", state)
+
+        if include_optimizer and optimizer_state is not None:
+            with open(path / "optimizer_state.pkl", "wb") as f:
+                pickle.dump(optimizer_state, f)
 
         # getting pickle errors
-        # self.clear_state()
-        # with open(path / "model.pkl", "wb") as f:
-        #     pickle.dump(self, f)
+        self._clear_state()
 
-        self.full_state = state
+        with open(path / "model.pkl", "wb") as f:
+            cloudpickle.dump(self, f)
+
+        self.full_state = original_state
 
     def load(self, path: tp.Union[str, Path]) -> None:
+        """
+        Loads all weights + states from a folder structure.
+        
+        You can load states from other models that have slightly different architecture
+        as long as long as it preserves the ordering of the `haiku.Params` + `haiku.State` 
+        structures, adding or removing layers is fine as long as they don't have weights, 
+        new layers with weights will be initialized from scratch.
+
+        Arguments:
+            path: path to a saved model's directory.
+        """
         if isinstance(path, str):
             path = Path(path)
 
-        state: tp.Dict = deepdish.io.load(path / "states.h5")
-        state.pop("optimizer_state", None)
+        state: tp.Dict = deepdish.io.load(path / "parameters.h5")
+
+        optimizer_state_path = path / "optimizer_state.pkl"
+
+        if optimizer_state_path.exists():
+            with open(optimizer_state_path, "rb") as f:
+                state["optimizer_state"] = pickle.load(f)
 
         self.full_state = state
 
 
 def load(path: tp.Union[str, Path]) -> Model:
+    """
+    Loads a model from disk.
+
+    This function will restore both the model architecture,
+    that is, its `Model` class instance, along with all of its
+    parameters, state, and optimizer state.
+
+    Example:
+
+    ```python
+    import elegy
+
+    model.save('my_model')  # creates folder at 'my_model'
+    del model  # deletes the existing model
+    
+    # returns a model identical to the previous one
+    model = elegy.model.load('my_model')
+    ```
+
+    Arguments:
+        path: path to a saved model's directory.
+    """
     if isinstance(path, str):
         path = Path(path)
 
