@@ -13,8 +13,8 @@ nav:
   - Introduction: index.md
   - Getting Started: getting-started.ipynb
   - API Reference:
+      Model: api/Model.md
       model:
-        Model: api/model/Model.md
         load: api/model/load.md
       metrics:
         Accuracy: api/metrics/Accuracy.md
