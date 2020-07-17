@@ -52,10 +52,11 @@ class DataAdapter(object):
           y: target labels. Note that y could be None in the case of prediction.
           **kwargs: Other keyword arguments for DataAdapter during the construction
             of the generator. For example:
-            - Numpy data might have `sample_weights` which will be used for
-              weighting the loss function during training.
-            - Numpy data might need to have `batch_size` parameter when constructing
-              the dataset and iterator.
+
+              - Numpy data might have `sample_weights` which will be used for
+                weighting the loss function during training.
+              - Numpy data might need to have `batch_size` parameter when constructing
+                the dataset and iterator.
 
             DataAdapter might choose to ignore any keyword argument if it doesn't
             use it, or raise exception if any required argument is not provide.
