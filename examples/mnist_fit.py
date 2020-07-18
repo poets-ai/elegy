@@ -133,7 +133,10 @@ def main(debug: bool = False, eager: bool = False):
         steps_per_epoch=100,
         validation_data=(x_val, y_val),
         shuffle=True,
-        callbacks=[elegy.callbacks.ModelCheckpoint(checkpoints_dir, verbose=1)],
+        callbacks=[
+            elegy.callbacks.ModelCheckpoint(checkpoints_dir, verbose=1),
+            elegy.callbacks.CSVLogger("test.csv"),
+        ],
     )
     plot_history(history)
     exit()
