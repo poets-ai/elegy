@@ -8,17 +8,19 @@ from enum import Enum
 from functools import partial
 from pathlib import Path
 
+import cloudpickle
 import deepdish
 import haiku as hk
 import jax
 import jax.numpy as jnp
+import logging
 import numpy as np
 from jax.experimental import optix
 
 from elegy.losses import loss_modes
 from elegy.metrics import metric_modes
 
-from . import cloudpickle, utils
+from . import utils
 from .callbacks import Callback, CallbackList, History
 from .data import (
     DataHandler,
@@ -1167,8 +1169,14 @@ class Model(object):
         # getting pickle errors
         self._clear_state()
 
-        with open(path / "model.pkl", "wb") as f:
-            cloudpickle.dump(self, f)
+        try:
+            path = path / "model.pkl"
+            with open(path, "wb") as f:
+                cloudpickle.dump(self, f)
+        except ValueError:
+            print(f"Error occurred saving the model function at {path}" "")
+        except Exception:
+            raise
 
         self.full_state = original_state
 
