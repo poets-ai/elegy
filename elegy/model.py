@@ -8,7 +8,6 @@ from enum import Enum
 from functools import partial
 from pathlib import Path
 
-import cloudpickle
 import deepdish
 import haiku as hk
 import jax
@@ -19,7 +18,7 @@ from jax.experimental import optix
 from elegy.losses import loss_modes
 from elegy.metrics import metric_modes
 
-from . import utils
+from . import cloudpickle, utils
 from .callbacks import Callback, CallbackList, History
 from .data import (
     DataHandler,
