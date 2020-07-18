@@ -9,7 +9,8 @@ from .callback import Callback
 
 
 class EarlyStopping(Callback):
-    """Stop training when a monitored metric has stopped improving.
+    """
+    Stop training when a monitored metric has stopped improving.
 
     Assuming the goal of a training is to minimize the loss. With this, the
     metric to be monitored would be 'loss', and mode would be 'min'. A
@@ -19,10 +20,9 @@ class EarlyStopping(Callback):
     `model.stop_training` is marked True and the training terminates.
 
     The quantity to be monitored needs to be available in `logs` dict.
-    To make it so, pass the loss or metrics at `model.compile()`.
+    To make it so, pass the loss or metrics at `model.__init__()`.
 
     Example:
-
     ```python
     np.random.seed(42)
     class MLP(elegy.Module):

@@ -16,15 +16,15 @@ from .callback import Callback
 class CSVLogger(Callback):
     """Callback that streams epoch results to a csv file.
 
-  Supports all values that can be represented as a string,
-  including 1D iterables such as np.ndarray.
+Supports all values that can be represented as a string,
+including 1D iterables such as `np.ndarray`.
 
-  Example:
+Example:
 
-  ```python
-  csv_logger = CSVLogger('training.log')
-  model.fit(X_train, Y_train, callbacks=[csv_logger])
-  ```
+    ```python
+    csv_logger = CSVLogger('training.log')
+    model.fit(X_train, Y_train, callbacks=[csv_logger])
+    ```
   """
 
     def __init__(self, filename: str, separator: str = ",", append: bool = False):

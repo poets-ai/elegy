@@ -9,19 +9,19 @@ from .callback import Callback
 
 class LambdaCallback(Callback):
     r"""Callback for creating simple, custom callbacks on-the-fly.
+    
+This callback is constructed with anonymous functions that will be called
+at the appropriate time. Note that the callbacks expects positional
+arguments, as:
 
-    This callback is constructed with anonymous functions that will be called
-    at the appropriate time. Note that the callbacks expects positional
-    arguments, as:
+- `on_epoch_begin` and `on_epoch_end` expect two positional arguments:
+    `epoch`, `logs`
+- `on_train_batch_begin` and `on_train_batch_end` expect two positional arguments:
+    `batch`, `logs`
+- `on_train_begin` and `on_train_end` expect one positional argument:
+    `logs`
 
-    - `on_epoch_begin` and `on_epoch_end` expect two positional arguments:
-        `epoch`, `logs`
-    - `on_train_batch_begin` and `on_train_batch_end` expect two positional arguments:
-        `batch`, `logs`
-    - `on_train_begin` and `on_train_end` expect one positional argument:
-        `logs`
-
-    Example:
+Example:
 
     ```python
     # Print the batch number at the beginning of every batch.

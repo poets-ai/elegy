@@ -246,7 +246,6 @@ class Model(object):
                     (in case the model has multiple inputs).
                 - A dict mapping input names to the corresponding arrays,
                     if the model has named inputs.
-            
             y: Target data. Like the input data `x`, it could be either Numpy
                 array(s) or Jax array(s). It should be consistent with `x`
                 (you cannot have Numpy inputs and array targets, or inversely).
@@ -899,7 +898,6 @@ class Model(object):
                     of arrays (in case the model has multiple inputs). 
                 - A dict mapping input names to the corresponding arrays, if
                     the model has named inputs.
-            
             y: Target data. Like the input data `x`, it could be either Numpy
                 array(s) or Jax array(s).
             sample_weight: Optional array of the same length as x, containing
@@ -911,7 +909,6 @@ class Model(object):
         Returns:
             A `logs` dictionary of containing the main `loss` as well as all
             other losses and metrics. 
-        
         Raises:
             ValueError: In case of invalid user-provided arguments.
         """
@@ -1009,7 +1006,7 @@ class Model(object):
         
         Raises:
             ValueError: In case of mismatch between given number of inputs and
-            expectations of the model.
+                expectations of the model.
         """
         self._maybe_initialize(
             x=x, y=None, sample_weight=None, class_weight=None, mode=Mode.predict,
