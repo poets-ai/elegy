@@ -1,3 +1,4 @@
+import os
 from typing import Any, Generator, Mapping, Tuple
 
 import haiku as hk
@@ -9,8 +10,9 @@ import tensorflow_datasets as tfds
 import typer
 
 import elegy
+from jax.experimental import optix
 
-OptState = Any
+
 Batch = Mapping[str, np.ndarray]
 np.random.seed(42)
 
@@ -80,16 +82,23 @@ def main(debug: bool = False, eager: bool = False):
     print(x_val.shape, y_val.shape)
 
     class MLP(elegy.Module):
-        def call(self, image):
-            """Standard LeNet-300-100 MLP network."""
+        """Standard LeNet-300-100 MLP network."""
+
+        def __init__(self, n1: int = 300, n2: int = 100, **kwargs):
+            super().__init__(**kwargs)
+            self.n1 = n1
+            self.n2 = n2
+
+        def call(self, image: jnp.ndarray):
+
             image = image.astype(jnp.float32) / 255.0
 
             mlp = hk.Sequential(
                 [
                     hk.Flatten(),
-                    hk.Linear(300),
+                    hk.Linear(self.n1),
                     jax.nn.relu,
-                    hk.Linear(100),
+                    hk.Linear(self.n2),
                     jax.nn.relu,
                     hk.Linear(10),
                 ]
@@ -97,20 +106,23 @@ def main(debug: bool = False, eager: bool = False):
             return mlp(image)
 
     model = elegy.Model(
-        module=MLP.defer(),
+        module=MLP.defer(n1=300, n2=100),
         loss=[
             elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
             elegy.regularizers.GlobalL2(l=1e-4),
         ],
-        metrics=lambda: elegy.metrics.SparseCategoricalAccuracy(),
+        metrics=elegy.metrics.SparseCategoricalAccuracy.defer(),
+        optimizer=optix.rmsprop(1e-3),
         run_eagerly=eager,
     )
 
-    predictions = model.predict(x_val)
-    print(predictions)
-    print(predictions.shape)
+    # predictions = model.predict(x_val)
+    # print(predictions)
+    # print(predictions.shape)
     # exit()
     epochs = 10
+    checkpoints_dir = os.path.join("summaries", "checkpoints/epoch_{epoch:04d}")
+
     # Fit with datasets in memory
     history = model.fit(
         x=x,
@@ -121,9 +133,10 @@ def main(debug: bool = False, eager: bool = False):
         steps_per_epoch=100,
         validation_data=(x_val, y_val),
         shuffle=True,
+        callbacks=[elegy.callbacks.ModelCheckpoint(checkpoints_dir, verbose=1)],
     )
     plot_history(history)
-    # exit()
+    exit()
 
     # Fit with validation from train
     history = model.fit(

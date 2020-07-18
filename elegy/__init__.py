@@ -5,3 +5,4 @@ from .losses import Loss
 from .metrics import Metric
 from .model import Model
 from .module import Module
+from .callbacks import ModelCheckpoint
