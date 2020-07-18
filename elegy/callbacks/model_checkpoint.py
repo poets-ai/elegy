@@ -1,3 +1,5 @@
+# Implementation based on tf.keras.callbacks.py
+# https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/callbacks.py
 import logging
 
 import numpy as np
@@ -6,7 +8,8 @@ from .callback import Callback
 
 
 class ModelCheckpoint(Callback):
-    """Callback to save the Elegy model or model weights at some frequency.
+    """
+    Callback to save the Elegy model or model weights at some frequency.
 
     `ModelCheckpoint` callback is used in conjunction with training using
     `model.fit()` to save a model or weights at some

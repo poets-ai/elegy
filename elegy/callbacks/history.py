@@ -1,6 +1,5 @@
 # Implementation based on tf.keras.callbacks.py
-# https://github.com/tensorflow/tensorflow/blob/2b96f3662bd776e277f86997659e61046b56c315/tensorflow/python/keras/callbacks.py
-
+# https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/callbacks.py
 from .callback import Callback
 
 

@@ -31,6 +31,14 @@ nav:
         GlobalL1: api/regularizers/GlobalL1.md
         GlobalL2: api/regularizers/GlobalL2.md
         GlobalL1L2: api/regularizers/GlobalL1L2.md
+      callbacks:
+        Callback: api/callbacks/Callback.md
+        ModelCheckpoint: api/callbacks/ModelCheckpoint.md
+        EarlyStopping: api/callbacks/EarlyStopping.md
+        LambdaCallback: api/callbacks/LambdaCallback.md
+        CSVLogger: api/callbacks/CSVLogger.md
+        RemoteMonitor: api/callbacks/RemoteMonitor.md
+        TerminateOnNaN: api/callbacks/TerminateOnNaN.md
 
 extra:
   search:
@@ -38,10 +46,14 @@ extra:
   social:
     - icon: octicons/mark-github-16
       link: https://github.com/cgarciae
+    - icon: octicons/mark-github-16
+      link: https://github.com/charlielito
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/cgarciae88
     - icon: fontawesome/brands/linkedin
       link: https://www.linkedin.com/in/cgarciae
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/calvarez92
 
 markdown_extensions:
   - admonition
