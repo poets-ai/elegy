@@ -69,17 +69,20 @@ class ModelCheckpoint(Callback):
             to epochs, the monitored metric may potentially be less reliable (it
             could reflect as little as 1 batch, since the metrics get reset every
             epoch). Defaults to `'epoch'`
+        period: the number of epochs between which the model is saved. This only works
+            if `save_freq` is 'epoch', otherwise the `save_freq` will override
+            this period.
     """
 
     def __init__(
         self,
-        filepath,
-        monitor="val_loss",
-        verbose=0,
-        save_best_only=False,
-        mode="auto",
-        save_freq="epoch",
-        period=1,
+        filepath: str,
+        monitor: str = "val_loss",
+        verbose: int = 0,
+        save_best_only: bool = False,
+        mode: str = "auto",
+        save_freq: str = "epoch",
+        period: int = 1,
     ):
         super(ModelCheckpoint, self).__init__()
         self.monitor = monitor
@@ -114,69 +117,8 @@ class ModelCheckpoint(Callback):
         if self.save_freq != "epoch" and not isinstance(self.save_freq, int):
             raise ValueError("Unrecognized save_freq: {}".format(self.save_freq))
 
-        # Only the chief worker writes model checkpoints, but all workers
-        # restore checkpoint at on_train_begin().
-        self._chief_worker_only = False
-
     def set_model(self, model):
         self.model = model
-
-    def on_train_begin(self, logs=None):
-        # pylint: disable=protected-access
-        # if self.model._in_multi_worker_mode():
-        #     # MultiWorkerTrainingState is used to manage the training state needed
-        #     # for preemption-recovery of a worker in multi-worker training.
-        #     self.model._training_state = training_state.MultiWorkerTrainingState(
-        #         self.model, self.filepath
-        #     )
-        #     self._training_state = self.model._training_state
-        #     if self._training_state.restore():
-        #         # If the training state needs to be and is successfully restored,
-        #         # it is recovering from a previous failure (or preemption). In such
-        #         # case, do not load the weights from user specified file path.
-        #         return
-
-        # If this is not multi worker training, restoring is not needed, or
-        # restoring failed, check if it should load weights on restart.
-        # if self.load_weights_on_restart:
-        # if (
-        #     not self.model._in_multi_worker_mode()
-        #     or multi_worker_util.should_load_checkpoint()
-        # ):
-        #     filepath_to_load = self._get_most_recently_modified_file_matching_pattern(
-        #         self.filepath
-        #     )
-        #     if filepath_to_load is not None and training_state.checkpoint_exists(
-        #         filepath_to_load
-        #     ):
-        #         try:
-        #             # `filepath` may contain placeholders such as `{epoch:02d}`, and
-        #             # thus it attempts to load the most recently modified file with file
-        #             # name matching the pattern.
-        #             self.model.load_weights(filepath_to_load)
-        #         except (IOError, ValueError) as e:
-        #             raise ValueError(
-        #                 "Error loading file from {}. Reason: {}".format(
-        #                     filepath_to_load, e
-        #                 )
-        #             )
-        pass
-
-    def on_train_end(self, logs=None):
-        pass
-        # pylint: disable=protected-access
-        # if self.model._in_multi_worker_mode():
-        #     if self.model.stop_training or getattr(
-        #         self.model, "_successful_loop_finish", False
-        #     ):
-        #         # In multi-worker training, on successful exit of training, delete the
-        #         # training state backup file that was saved for the purpose of worker
-        #         # recovery.
-        #         self._training_state.delete_backup()
-        #         # Restore the training state so the model is ready for next (possible)
-        #         # multi worker training.
-        #         del self._training_state
-        #         self.model._training_state = None
 
     def on_batch_end(self, batch, logs=None):
         if self._implements_train_batch_hooks():
@@ -193,25 +135,15 @@ class ModelCheckpoint(Callback):
         self.epochs_since_last_save += 1
         # pylint: disable=protected-access
         if self.save_freq == "epoch":
-            # if self.model._in_multi_worker_mode():
-            #     # Exclude training state variables in user-requested checkpoint file.
-            #     with self._training_state.untrack_vars():
-            #         self._save_model(epoch=epoch, logs=logs)
-            # else:
             self._save_model(epoch=epoch, logs=logs)
-        # if self.model._in_multi_worker_mode():
-        #     # For multi-worker training, back up the weights and current training
-        #     # state for possible future recovery.
-        #     # TODO(rchao): Call `back_up` at finer period such as N steps.
-        #     self._training_state.back_up(epoch)
 
     def _save_model(self, epoch, logs):
         """Saves the model.
 
-    Arguments:
-        epoch: the epoch this iteration is in.
-        logs: the `logs` dict passed in to `on_batch_end` or `on_epoch_end`.
-    """
+        Arguments:
+            epoch: the epoch this iteration is in.
+            logs: the `logs` dict passed in to `on_batch_end` or `on_epoch_end`.
+        """
         logs = logs or {}
 
         if (
@@ -257,7 +189,6 @@ class ModelCheckpoint(Callback):
 
                 self.model.save(filepath)
 
-            self._maybe_remove_file()
             # except IOError as e:
             #     # `e.errno` appears to be `None` so checking the content of `e.args[0]`.
             #     if "is a directory" in six.ensure_str(e.args[0]):
@@ -270,10 +201,6 @@ class ModelCheckpoint(Callback):
     def _get_file_path(self, epoch, logs):
         """Returns the file path for checkpoint."""
         # pylint: disable=protected-access
-        # if (
-        #     not self.model._in_multi_worker_mode()
-        #     or multi_worker_util.should_save_checkpoint()
-        # ):
         try:
             # `filepath` may contain placeholders such as `{epoch:02d}` and
             # `{mape:.2f}`. A mismatch between logged metrics and the path's
@@ -284,32 +211,8 @@ class ModelCheckpoint(Callback):
                 'Failed to format this callback filepath: "{}". '
                 "Reason: {}".format(self.filepath, e)
             )
-        # else:
-        #     # If this is multi-worker training, and this worker should not
-        #     # save checkpoint, we use a temp filepath to store a dummy checkpoint, so
-        #     # it writes to a file that will be removed at the end of `_save_model()`
-        #     # call. This is because the SyncOnReadVariable needs to be synced across
-        #     # all the workers in order to be read, and all workers need to initiate
-        #     # that.
-        #     self._temp_file_dir = tempfile.mkdtemp()
-        #     extension = os.path.splitext(self.filepath)[1]
-        #     return os.path.join(self._temp_file_dir, "temp" + extension)
-
-    def _maybe_remove_file(self):
-        # Remove the checkpoint directory in multi-worker training where this worker
-        # should not checkpoint. It is a dummy directory previously saved for sync
-        # distributed training.
-        pass
-        # if (
-        #     self.model._in_multi_worker_mode()
-        #     and not multi_worker_util.should_save_checkpoint()  # pylint: disable=protected-access
-        # ):
-        #     file_io.delete_recursively(self._temp_file_dir)
-        #     del self._temp_file_dir
 
     def _implements_train_batch_hooks(self):
         # If save_freq="epoch", batch-level hooks don't need to be run.
         return isinstance(self.save_freq, int)
 
-
-# checkpoints_dir = os.path.join(save_dir, "checkpoints/epoch_{epoch:04d}/cp.ckpt")
