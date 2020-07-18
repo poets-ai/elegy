@@ -42,34 +42,6 @@ class ModelCheckpoint(Callback):
     model.load(checkpoint_filepath)
     ```
 
-    Arguments:
-        filepath: string, path to save the model file. `filepath` can contain
-            named formatting options, which will be filled the value of `epoch` and
-            keys in `logs` (passed in `on_epoch_end`). For example: if `filepath` is
-            `weights.{epoch:02d}-{val_loss:.2f}`, then the model checkpoints
-            will be saved with the epoch number and the validation loss in the
-            filename.
-        monitor: quantity to monitor.
-        verbose: verbosity mode, 0 or 1.
-        save_best_only: if `save_best_only=True`, the latest best model according
-            to the quantity monitored will not be overwritten.
-            If `filepath` doesn't contain formatting options like `{epoch}` then
-            `filepath` will be overwritten by each new better model.
-        mode: one of {auto, min, max}. If `save_best_only=True`, the decision to
-            overwrite the current save file is made based on either the maximization
-            or the minimization of the monitored quantity. For `val_acc`, this
-            should be `max`, for `val_loss` this should be `min`, etc. In `auto`
-            mode, the direction is automatically inferred from the name of the
-            monitored quantity.
-        save_freq: `'epoch'` or integer. When using `'epoch'`, the callback saves
-            the model after each epoch. When using integer, the callback saves the
-            model at end of this many batches. Note that if the saving isn't aligned
-            to epochs, the monitored metric may potentially be less reliable (it
-            could reflect as little as 1 batch, since the metrics get reset every
-            epoch). Defaults to `'epoch'`
-        period: the number of epochs between which the model is saved. This only works
-            if `save_freq` is 'epoch', otherwise the `save_freq` will override
-            this period.
     """
 
     def __init__(
@@ -82,6 +54,36 @@ class ModelCheckpoint(Callback):
         save_freq: str = "epoch",
         period: int = 1,
     ):
+        """
+        Arguments:
+            filepath: string, path to save the model file. `filepath` can contain
+                named formatting options, which will be filled the value of `epoch` and
+                keys in `logs` (passed in `on_epoch_end`). For example: if `filepath` is
+                `weights.{epoch:02d}-{val_loss:.2f}`, then the model checkpoints
+                will be saved with the epoch number and the validation loss in the
+                filename.
+            monitor: quantity to monitor.
+            verbose: verbosity mode, 0 or 1.
+            save_best_only: if `save_best_only=True`, the latest best model according
+                to the quantity monitored will not be overwritten.
+                If `filepath` doesn't contain formatting options like `{epoch}` then
+                `filepath` will be overwritten by each new better model.
+            mode: one of {auto, min, max}. If `save_best_only=True`, the decision to
+                overwrite the current save file is made based on either the maximization
+                or the minimization of the monitored quantity. For `val_acc`, this
+                should be `max`, for `val_loss` this should be `min`, etc. In `auto`
+                mode, the direction is automatically inferred from the name of the
+                monitored quantity.
+            save_freq: `'epoch'` or integer. When using `'epoch'`, the callback saves
+                the model after each epoch. When using integer, the callback saves the
+                model at end of this many batches. Note that if the saving isn't aligned
+                to epochs, the monitored metric may potentially be less reliable (it
+                could reflect as little as 1 batch, since the metrics get reset every
+                epoch). Defaults to `'epoch'`
+            period: the number of epochs between which the model is saved. This only works
+                if `save_freq` is 'epoch', otherwise the `save_freq` will override
+                this period.
+        """
         super(ModelCheckpoint, self).__init__()
         self.monitor = monitor
         self.verbose = verbose

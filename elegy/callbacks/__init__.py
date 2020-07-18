@@ -2,3 +2,7 @@ from .callback_list import CallbackList
 from .callback import Callback
 from .history import History
 from .model_checkpoint import ModelCheckpoint
+from .early_stopping import EarlyStopping
+from .lambda_callback import LambdaCallback
+from .terminate_nan import TerminateOnNaN
+from .remote_monitor import RemoteMonitor
