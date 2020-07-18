@@ -1,3 +1,5 @@
+# Implementation based on tf.keras.callbacks.py
+# https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/callbacks.py
 import logging
 
 import numpy as np

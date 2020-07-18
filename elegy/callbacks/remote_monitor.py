@@ -1,3 +1,5 @@
+# Implementation based on tf.keras.callbacks.py
+# https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/callbacks.py
 try:
     import requests
 except ImportError:

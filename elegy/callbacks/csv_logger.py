@@ -1,3 +1,6 @@
+# Implementation based on tf.keras.callbacks.py
+# https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/callbacks.py
+
 import collections
 import csv
 import io
