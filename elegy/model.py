@@ -73,12 +73,15 @@ class Model(object):
     additional details.
 
     Attributes:
-        params: An `haiku.Params` structure with the weights of the model.
-        state: An `haiku.State` structure with non-trainable parameters of the model.
-        optimizer_state:  An `optix.OptState` structure with state of the optimizer.
-        metrics_state: An `haiku.State` structure with the state of the metrics.
-        initial_metrics_state: An `haiku.State` structure with the initial state of the metrics.
-        run_eagerly: if `True` it will use `jax.jit` internally on all `{train|test|predict}_on_batch` operations.
+        params: A `haiku.Params` structure with the weights of the model.
+        state: A `haiku.State` structure with non-trainable parameters of the model.
+        optimizer_state:  A `optix.OptState` structure with state of the optimizer.
+        metrics_state: A `haiku.State` structure with the state of the metrics.
+        initial_metrics_state: A `haiku.State` structure with the initial state of the metrics.
+        run_eagerly: Settable attribute indicating whether the model should run eagerly.
+            Running eagerly means that your model will be run step by step, like Python code, instead of
+            using Jax's `jit` to optimize the computation. Your model might run slower, but it should become easier for you to debug 
+            it by stepping into individual layer calls.
     """
 
     # public fields
@@ -114,20 +117,38 @@ class Model(object):
         """[summary]
 
         Arguments:
-            module: [description].
-            loss: [description].
-            metrics: [description].
-            optimizer: [description].
-            run_eagerly: [description].
-            params: [description].
-            state: [description].
-            optimizer_state: [description].
-            metrics_state: [description].
-            initial_metrics_state: [description].
-            seed: [description].
-
-        Raises:
-            ValueError: [description]
+            module: A 0-argument function that returns a Haiku or Elegy `Module` instance.
+            loss: A `elegy.Loss` or `Callable` instance representing the loss function of the network.
+                You can define more loss terms by simply passing a possibly nested structure of
+                lists and dictionaries of `elegy.Loss` or `Callable`s. Usually a plain list of losses is enough
+                but using dictionaries will create namescopes for the names of the losses
+                which might be useful e.g. to group things in tensorboard. Contrary to Keras convention,
+                in Elegy there is no relation between the structure of `loss` with the structure
+                of the labels and outputs of the network. Elegy's loss system is more flexible than
+                the one provided by Keras, for more information on how to mimick Keras behavior checkout the 
+                [Losses and Metrics Guide](https://poets-ai.github.io/elegy/guides/losses-and-metrics)`.
+            metrics: A `elegy.Metric` or `Callable` instance representing the loss function of the network.
+                You can define more metrics terms by simply passing a possibly nested structure of
+                lists and dictionaries of `elegy.Metric` or `Callable`s. Usually a plain list of metrics is enough
+                but using dictionaries will create namescopes for the names of the metrics
+                which might be useful e.g. to group things in tensorboard. Contrary to Keras convention,
+                in Elegy there is no relation between the structure of `metrics` with the structure
+                of the labels and outputs of the network. Elegy's metrics system is more flexible than
+                the one provided by Keras, for more information on how to mimick Keras behavior checkout the 
+                [Losses and Metrics Guide](https://poets-ai.github.io/elegy/guides/losses-and-metrics)`.
+            optimizer: A `optix` optimizer instance. Optix is a very flexible library for defining
+                optimization pipelines with things like learning rate schedules, this means that
+                there is no need for a `LearningRateScheduler` callback in Elegy.
+            run_eagerly: Settable attribute indicating whether the model should run eagerly.
+                Running eagerly means that your model will be run step by step, like Python code, instead of
+                using Jax's `jit` to. Your model might run slower, but it should become easier for you to debug 
+                it by stepping into individual layer calls.
+            params: A `haiku.Params` structure with the weights of the model.
+            state: A `haiku.State` structure with non-trainable parameters of the model.
+            optimizer_state:  A `optix.OptState` structure with state of the optimizer.
+            metrics_state: A `haiku.State` structure with the state of the metrics.
+            initial_metrics_state: A `haiku.State` structure with the initial state of the metrics.
+            seed: The initial random state of the model.
         """
 
         if metrics is not None:
