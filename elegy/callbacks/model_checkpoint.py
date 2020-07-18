@@ -28,7 +28,7 @@ class ModelCheckpoint(Callback):
     ```python
     EPOCHS = 10
     checkpoint_filepath = '/tmp/checkpoint'
-    model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+    model_checkpoint_callback = elegy.callbacks.ModelCheckpoint(
         filepath=checkpoint_filepath,
         monitor='val_acc',
         mode='max',
