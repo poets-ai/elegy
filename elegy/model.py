@@ -1228,12 +1228,19 @@ def load(path: tp.Union[str, Path]) -> Model:
 
     Arguments:
         path: path to a saved model's directory.
+
+    Raises:
+        `OSError` in case the model was not found or could not be
+        loaded from disk successfully.
     """
     if isinstance(path, str):
         path = Path(path)
 
     with open(path / "model.pkl", "rb") as f:
-        model = pickle.load(f)
+        try:
+            model = pickle.load(f)
+        except BaseException as e:
+            raise OSError(f"Could not load the model. Got exception: {e}")
 
     model.load(path)
 
