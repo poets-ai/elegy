@@ -12,7 +12,7 @@ numpy = "^1.19.0"
 pytest = "^5.4.3"
 deepdish = "^0.3.6"
 typing_extensions = { version = "^3.7.4", markers = "python_version < '3.8'" }
-dataclasses =  { version = "^0.7", markers = "python_version >= '3.6' and python_version < '3.7'" }
+# dataclasses =  { version = "^0.7", markers = "python_version >= '3.6' and python_version < '3.7'" }
 cloudpickle = "^1.5.0"
 
 [tool.poetry.dev-dependencies]
@@ -23,6 +23,9 @@ mkdocstrings = "^0.12.0"
 black = {version = "^19.10b0", allow-prereleases = true}
 typer = "^0.3.0"
 mkdocs-jupyter = "^0.13.0"
+matplotlib = "^3.3.0"
+tensorflow = "^2.2.0"
+tensorflow-datasets = "^3.2.1"
 
 [build-system]
 requires = ["poetry>=0.12"]
