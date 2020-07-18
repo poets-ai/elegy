@@ -8,25 +8,25 @@ from .callback import Callback
 
 
 class ModelCheckpoint(Callback):
-    """Callback to save the Elegy model state at some frequency.
+    """
+    Callback to save the Elegy model or model weights at some frequency.
 
-`ModelCheckpoint` callback is used in conjunction with training using
-`model.fit()` to save a model or weights at some
-interval, so the model or weights can be loaded later to continue the training
-from the state saved.
+    `ModelCheckpoint` callback is used in conjunction with training using
+    `model.fit()` to save a model or weights at some
+    interval, so the model or weights can be loaded later to continue the training
+    from the state saved.
 
-A few options this callback provides include:
+    A few options this callback provides include:
 
-- Whether to only keep the model that has achieved the "best performance" so
-    far, or whether to save the model at the end of every epoch regardless of
-    performance.
-- Definition of 'best'; which quantity to monitor and whether it should be
-    maximized or minimized.
-- The frequency it should save at. Currently, the callback supports saving at
-    the end of every epoch, after a fixed number of training batches, or after
-    a fixed number of epochs repeatedly
+    - Whether to only keep the model that has achieved the "best performance" so
+        far, or whether to save the model at the end of every epoch regardless of
+        performance.
+    - Definition of 'best'; which quantity to monitor and whether it should be
+        maximized or minimized.
+    - The frequency it should save at. Currently, the callback supports saving at
+        the end of every epoch, or after a fixed number of training batches.
 
-Example:
+    Example:
 
     ```python
     EPOCHS = 10
