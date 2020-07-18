@@ -21,10 +21,12 @@ nav:
         CategoricalAccuracy: api/metrics/CategoricalAccuracy.md
         SparseCategoricalAccuracy: api/metrics/SparseCategoricalAccuracy.md
         Mean: api/metrics/Mean.md
+        MeanAbsoluteError: api/metrics/MeanAbsoluteError.md
         MeanSquaredError: api/metrics/MeanSquaredError.md
       losses:
         CategoricalCrossentropy: api/losses/CategoricalCrossentropy.md
         SparseCategoricalCrossentropy: api/losses/SparseCategoricalCrossentropy.md
+        MeanAbsoluteError: api/losses/MeanAbsoluteError.md
         MeanSquaredError: api/losses/MeanSquaredError.md
         mean_squared_error: api/losses/mean_squared_error.md
       regularizers:

@@ -30,7 +30,7 @@ def mean_absolute_error(y_true: jnp.ndarray, y_pred: jnp.ndarray) -> jnp.ndarray
 
     assert loss.shape == (2,)
 
-    assert jnp.array_equal(loss, jnp.mean(jnp.square(y_true - y_pred), axis=-1))
+    assert jnp.array_equal(loss, jnp.mean(jnp.abs(y_true - y_pred), axis=-1))
     ```
     
     Arguments:
@@ -48,9 +48,9 @@ def mean_absolute_error(y_true: jnp.ndarray, y_pred: jnp.ndarray) -> jnp.ndarray
 
 class MeanAbsoluteError(Loss):
     """
-    Computes the mean of squares of errors between labels and predictions.
+    Computes the mean absolute errors between labels and predictions.
 
-    `loss = square(y_true - y_pred)`
+    `loss = mean(abs(y_true - y_pred))`
 
     Usage:
 
