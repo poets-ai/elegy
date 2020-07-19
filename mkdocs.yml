@@ -17,9 +17,11 @@ nav:
       Modules, Losses, and Metrics: guides/modules-losses-metrics.md
   - API Reference:
       Model: api/Model.md
+      Module: api/Module.md
       model:
         load: api/model/load.md
       metrics:
+        Metric: api/metrics/Metric.md
         Accuracy: api/metrics/Accuracy.md
         CategoricalAccuracy: api/metrics/CategoricalAccuracy.md
         SparseCategoricalAccuracy: api/metrics/SparseCategoricalAccuracy.md
@@ -27,6 +29,7 @@ nav:
         MeanAbsoluteError: api/metrics/MeanAbsoluteError.md
         MeanSquaredError: api/metrics/MeanSquaredError.md
       losses:
+        Loss: api/losses/Loss.md
         CategoricalCrossentropy: api/losses/CategoricalCrossentropy.md
         SparseCategoricalCrossentropy: api/losses/SparseCategoricalCrossentropy.md
         MeanAbsoluteError: api/losses/MeanAbsoluteError.md

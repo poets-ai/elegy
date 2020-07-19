@@ -8,6 +8,9 @@ from elegy.utils import Deferable
 
 
 class Module(hk.Module, Deferable):
+    """Basic Elegy Module
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
