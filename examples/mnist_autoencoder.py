@@ -1,5 +1,6 @@
 from typing import Any, Generator, Mapping, Tuple
 
+import dataget
 import haiku as hk
 import jax
 import jax.numpy as jnp
@@ -7,9 +8,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import typer
 from jax.experimental import optix
-import dataget
 
 import elegy
+from utils import plot_history
 
 
 def main(debug: bool = False, eager: bool = False):
@@ -72,25 +73,6 @@ def main(debug: bool = False, eager: bool = False):
         shuffle=True,
         callbacks=[elegy.callbacks.TensorBoard()],
     )
-
-    def plot_history(history):
-        n_plots = len(history.history.keys()) // 2
-        plt.figure(figsize=(14, 24))
-
-        for i, key in enumerate(list(history.history.keys())[:n_plots]):
-            if key == "size":
-                continue
-
-            metric = history.history[key]
-            val_metric = history.history[f"val_{key}"]
-
-            plt.subplot(n_plots, 1, i + 1)
-            plt.plot(metric, label=f"Training {key}")
-            plt.plot(val_metric, label=f"Validation {key}")
-            plt.legend(loc="lower right")
-            plt.ylabel(key)
-            plt.title(f"Training and Validation {key}")
-        plt.show()
 
     plot_history(history)
 
