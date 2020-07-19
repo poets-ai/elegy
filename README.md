@@ -1,5 +1,11 @@
 # Elegy
 
+[![Python 3.6](https://img.shields.io/badge/python-3.6-blue.svg)](https://www.python.org/downloads/release/python-360/)
+[![Python 3.7](https://img.shields.io/badge/python-3.7-blue.svg)](https://www.python.org/downloads/release/python-370/)
+[![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-380/)
+[![Release v0.1.0](https://img.shields.io/badge/release-v0.1.0-brightgreen.svg)](https://github.com/poets-ai/elegy)
+[![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/poets-ai/elegy/issues)
+
 _Elegy is a Neural Networks framework based on Jax and Haiku._ 
 
 Elegy implements the Keras API but makes changes to play better with Jax & Haiku and give more flexibility around losses and metrics (more on this soon). Elegy is still in a very early stage, feel free to test it and send us your feedback!
@@ -63,6 +69,7 @@ model.fit(
 And you are done! For a more information checkout:
 
 * Our [Getting Started](https://poets-ai.github.io/elegy/guides/getting-started) tutorial.
+* Couple of examples in `examples` directory.
 * Haiku's [User Manual](https://github.com/deepmind/dm-haiku#user-manual) and [Documentation](https://dm-haiku.readthedocs.io/en/latest/)
 * [What is Jax?](https://github.com/google/jax#what-is-jax)
 
@@ -84,6 +91,7 @@ We believe that **Elegy** can offer the best experience for coding Deep Learning
 * `losses` module
 * `metrics` module
 * `regularizers` module
+* `callbacks` module
 * `nn` layers module
 
 For more information checkout the **Reference API** section in the [Documentation](https://poets-ai.github.io/elegy).
