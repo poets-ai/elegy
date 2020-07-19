@@ -66,12 +66,7 @@ def main(debug: bool = False, eager: bool = False):
 
     # Notice we are not passing `y`
     history = model.fit(
-        x=X_train,
-        epochs=20,
-        batch_size=64,
-        validation_data=(X_test,),
-        shuffle=True,
-        callbacks=[elegy.callbacks.TensorBoard()],
+        x=X_train, epochs=20, batch_size=64, validation_data=(X_test,), shuffle=True,
     )
 
     plot_history(history)
