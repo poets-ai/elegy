@@ -5,10 +5,10 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<link href="https://poets-ai.github.io/elegy/api/losses/MeanSquaredError/" rel="canonical"/>
+<link href="https://poets-ai.github.io/elegy/api/callbacks/ModelCheckpoint/" rel="canonical"/>
 <link href="../../../assets/images/favicon.png" rel="shortcut icon"/>
 <meta content="mkdocs-1.1.2, mkdocs-material-5.4.0" name="generator"/>
-<title>MeanSquaredError - Elegy</title>
+<title>ModelCheckpoint - Elegy</title>
 <link href="../../../assets/stylesheets/main.fe0cca5b.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
@@ -19,7 +19,7 @@
 <input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
 <label class="md-overlay" for="__drawer"></label>
 <div data-md-component="skip">
-<a class="md-skip" href="#elegylossesmeansquarederror">
+<a class="md-skip" href="#elegycallbacksmodelcheckpoint">
           Skip to content
         </a>
 </div>
@@ -40,7 +40,7 @@
           </span>
 <span class="md-header-nav__topic md-ellipsis">
             
-              MeanSquaredError
+              ModelCheckpoint
             
           </span>
 </div>
@@ -232,8 +232,8 @@
 </ul>
 </nav>
 </li>
-<li class="md-nav__item md-nav__item--active md-nav__item--nested">
-<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-3-4" id="nav-3-4" type="checkbox"/>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-4" id="nav-3-4" type="checkbox"/>
 <label class="md-nav__link" for="nav-3-4">
       losses
       <span class="md-nav__icon md-icon">
@@ -249,54 +249,22 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../CategoricalCrossentropy/" title="CategoricalCrossentropy">
+<a class="md-nav__link" href="../../losses/CategoricalCrossentropy/" title="CategoricalCrossentropy">
       CategoricalCrossentropy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../SparseCategoricalCrossentropy/" title="SparseCategoricalCrossentropy">
+<a class="md-nav__link" href="../../losses/SparseCategoricalCrossentropy/" title="SparseCategoricalCrossentropy">
       SparseCategoricalCrossentropy
     </a>
 </li>
-<li class="md-nav__item md-nav__item--active">
-<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
-<label class="md-nav__link md-nav__link--active" for="__toc">
-        MeanSquaredError
-        <span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
-</span>
-</label>
-<a class="md-nav__link md-nav__link--active" href="./" title="MeanSquaredError">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../losses/MeanSquaredError/" title="MeanSquaredError">
       MeanSquaredError
     </a>
-<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
-<label class="md-nav__title" for="__toc">
-<span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
-</span>
-      Table of contents
-    </label>
-<ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.losses.mean_squared_error.MeanSquaredError">
-    elegy.losses.mean_squared_error.MeanSquaredError
-  </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.losses.mean_squared_error.MeanSquaredError.__init__">
-    __init__()
-  </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.losses.mean_squared_error.MeanSquaredError.call">
-    call()
-  </a>
-</li>
-</ul>
-</nav>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../mean_squared_error/" title="mean_squared_error">
+<a class="md-nav__link" href="../../losses/mean_squared_error/" title="mean_squared_error">
       mean_squared_error
     </a>
 </li>
@@ -337,8 +305,8 @@
 </ul>
 </nav>
 </li>
-<li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-6" id="nav-3-6" type="checkbox"/>
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-3-6" id="nav-3-6" type="checkbox"/>
 <label class="md-nav__link" for="nav-3-6">
       callbacks
       <span class="md-nav__icon md-icon">
@@ -354,37 +322,64 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/Callback/" title="Callback">
+<a class="md-nav__link" href="../Callback/" title="Callback">
       Callback
     </a>
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/ModelCheckpoint/" title="ModelCheckpoint">
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+        ModelCheckpoint
+        <span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
+</span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./" title="ModelCheckpoint">
       ModelCheckpoint
     </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.callbacks.model_checkpoint.ModelCheckpoint">
+    elegy.callbacks.model_checkpoint.ModelCheckpoint
+  </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/EarlyStopping/" title="EarlyStopping">
+<a class="md-nav__link" href="#elegy.callbacks.model_checkpoint.ModelCheckpoint.__init__">
+    __init__()
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../EarlyStopping/" title="EarlyStopping">
       EarlyStopping
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/LambdaCallback/" title="LambdaCallback">
+<a class="md-nav__link" href="../LambdaCallback/" title="LambdaCallback">
       LambdaCallback
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/CSVLogger/" title="CSVLogger">
+<a class="md-nav__link" href="../CSVLogger/" title="CSVLogger">
       CSVLogger
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/RemoteMonitor/" title="RemoteMonitor">
+<a class="md-nav__link" href="../RemoteMonitor/" title="RemoteMonitor">
       RemoteMonitor
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/TerminateOnNaN/" title="TerminateOnNaN">
+<a class="md-nav__link" href="../TerminateOnNaN/" title="TerminateOnNaN">
       TerminateOnNaN
     </a>
 </li>
@@ -411,18 +406,13 @@
     </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.losses.mean_squared_error.MeanSquaredError">
-    elegy.losses.mean_squared_error.MeanSquaredError
+<a class="md-nav__link" href="#elegy.callbacks.model_checkpoint.ModelCheckpoint">
+    elegy.callbacks.model_checkpoint.ModelCheckpoint
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.losses.mean_squared_error.MeanSquaredError.__init__">
+<a class="md-nav__link" href="#elegy.callbacks.model_checkpoint.ModelCheckpoint.__init__">
     __init__()
-  </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.losses.mean_squared_error.MeanSquaredError.call">
-    call()
   </a>
 </li>
 </ul>
@@ -432,60 +422,58 @@
 </div>
 <div class="md-content">
 <article class="md-content__inner md-typeset">
-<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/losses/MeanSquaredError.md" title="Edit this page">
+<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/callbacks/ModelCheckpoint.md" title="Edit this page">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
 </a>
-<h1 id="elegylossesmeansquarederror">elegy.losses.MeanSquaredError</h1>
+<h1 id="elegycallbacksmodelcheckpoint">elegy.callbacks.ModelCheckpoint</h1>
 <div class="doc doc-object doc-class">
-<h2 class="hidden-toc" href="#elegy.losses.mean_squared_error.MeanSquaredError" id="elegy.losses.mean_squared_error.MeanSquaredError" style="visibility: hidden; width: 0; height: 0;">
+<h2 class="hidden-toc" href="#elegy.callbacks.model_checkpoint.ModelCheckpoint" id="elegy.callbacks.model_checkpoint.ModelCheckpoint" style="visibility: hidden; width: 0; height: 0;">
 </h2>
 <div class="doc doc-contents first">
-<p>Computes the mean of squares of errors between labels and predictions.</p>
-<p><code>loss = square(y_true - y_pred)</code></p>
-<p>Usage:</p>
+<p>Callback to save the Elegy model or model weights at some frequency.</p>
+<p><code>ModelCheckpoint</code> callback is used in conjunction with training using
+<code>model.fit()</code> to save a model or weights at some
+interval, so the model or weights can be loaded later to continue the training
+from the state saved.</p>
+<p>A few options this callback provides include:</p>
+<ul>
+<li>Whether to only keep the model that has achieved the "best performance" so
+    far, or whether to save the model at the end of every epoch regardless of
+    performance.</li>
+<li>Definition of 'best'; which quantity to monitor and whether it should be
+    maximized or minimized.</li>
+<li>The frequency it should save at. Currently, the callback supports saving at
+    the end of every epoch, or after a fixed number of training batches.</li>
+</ul>
+<p><strong>Examples:</strong></p>
+<br/>
 <div class="codehilite">
-<pre><span></span><code><span class="n">y_true</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]])</span>
-<span class="n">y_pred</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]])</span>
+<pre><span></span><code><span class="n">EPOCHS</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">checkpoint_filepath</span> <span class="o">=</span> <span class="s1">'/tmp/checkpoint'</span>
+<span class="n">model_checkpoint_callback</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">ModelCheckpoint</span><span class="p">(</span>
+    <span class="n">filepath</span><span class="o">=</span><span class="n">checkpoint_filepath</span><span class="p">,</span>
+    <span class="n">monitor</span><span class="o">=</span><span class="s1">'val_acc'</span><span class="p">,</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s1">'max'</span><span class="p">,</span>
+    <span class="n">save_best_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-<span class="c1"># Using 'auto'/'sum_over_batch_size' reduction type.</span>
-<span class="n">mse</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">()</span>
+<span class="c1"># Model is saved at the end of every epoch, if it's the best seen</span>
+<span class="c1"># so far.</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">epochs</span><span class="o">=</span><span class="n">EPOCHS</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">model_checkpoint_callback</span><span class="p">])</span>
 
-<span class="k">assert</span> <span class="n">mse</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">==</span> <span class="mf">0.5</span>
-
-<span class="c1"># Calling with 'sample_weight'.</span>
-<span class="k">assert</span> <span class="n">mse</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">]))</span> <span class="o">==</span> <span class="mf">0.25</span>
-
-<span class="c1"># Using 'sum' reduction type.</span>
-<span class="n">mse</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">Reduction</span><span class="o">.</span><span class="n">SUM</span><span class="p">)</span>
-
-<span class="k">assert</span> <span class="n">mse</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">==</span> <span class="mf">1.0</span>
-
-<span class="c1"># Using 'none' reduction type.</span>
-<span class="n">mse</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">Reduction</span><span class="o">.</span><span class="n">NONE</span><span class="p">)</span>
-
-<span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">mse</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">))</span> <span class="o">==</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]</span>
-</code></pre>
-</div>
-<p>Usage with the Elegy API:</p>
-<div class="codehilite">
-<pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
-    <span class="n">module_fn</span><span class="p">,</span>
-    <span class="n">loss</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">(),</span>
-    <span class="n">metrics</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">Mean</span><span class="o">.</span><span class="n">defer</span><span class="p">(),</span>
-<span class="p">)</span>
+<span class="c1"># The model status (that are considered the best) are loaded into the model.</span>
+<span class="n">model</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">checkpoint_filepath</span><span class="p">)</span>
 </code></pre>
 </div>
 <div class="doc doc-children">
 <div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.losses.mean_squared_error.MeanSquaredError.__init__">
+<h2 class="doc doc-heading" id="elegy.callbacks.model_checkpoint.ModelCheckpoint.__init__">
 <code class="highlight language-python">
-__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
+__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="s1">'val_loss'</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">save_best_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">'auto'</span><span class="p">,</span> <span class="n">save_freq</span><span class="o">=</span><span class="s1">'epoch'</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> </code>
 <span class="doc doc-properties">
 <small class="doc doc-property doc-property-special"><code>special</code></small>
 </span>
 </h2>
 <div class="doc doc-contents">
-<p>Initializes <code>Mean</code> class.</p>
 <p><strong>Parameters:</strong></p>
 <table>
 <thead>
@@ -498,44 +486,130 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 </thead>
 <tbody>
 <tr>
-<td><code>reduction</code></td>
-<td><code>Optional[elegy.losses.loss.Reduction]</code></td>
+<td><code>filepath</code></td>
+<td><code>str</code></td>
 <td>
-<p>(Optional) Type of <code>elegy.losses.Reduction</code> to apply to
-loss. Default value is <code>SUM_OVER_BATCH_SIZE</code>. For almost all cases
-this defaults to <code>SUM_OVER_BATCH_SIZE</code>. When used with
-<code>tf.distribute.Strategy</code>, outside of built-in training loops such as
-<code>elegy</code> <code>compile</code> and <code>fit</code>, or <code>SUM_OVER_BATCH_SIZE</code>
-will raise an error.
-for more details.</p>
+<p>string, path to save the model file. <code>filepath</code> can contain
+named formatting options, which will be filled the value of <code>epoch</code> and
+keys in <code>logs</code> (passed in <code>on_epoch_end</code>). For example: if <code>filepath</code> is
+<code>weights.{epoch:02d}-{val_loss:.2f}</code>, then the model checkpoints
+will be saved with the epoch number and the validation loss in the
+filename.</p>
 </td>
-<td><code>None</code></td>
+<td><em>required</em></td>
 </tr>
 <tr>
-<td><code>name</code></td>
-<td><code>Optional[str]</code></td>
+<td><code>monitor</code></td>
+<td><code>str</code></td>
 <td>
-<p>Optional name for the loss.</p>
+<p>quantity to monitor.</p>
 </td>
-<td><code>None</code></td>
+<td><code>'val_loss'</code></td>
 </tr>
 <tr>
-<td><code>weight</code></td>
-<td><code>Optional[float]</code></td>
+<td><code>verbose</code></td>
+<td><code>int</code></td>
 <td>
-<p>Optional weight contribution for the total loss. Defaults to <code>1</code>.</p>
+<p>verbosity mode, 0 or 1.</p>
 </td>
-<td><code>None</code></td>
+<td><code>0</code></td>
+</tr>
+<tr>
+<td><code>save_best_only</code></td>
+<td><code>bool</code></td>
+<td>
+<p>if <code>save_best_only=True</code>, the latest best model according
+to the quantity monitored will not be overwritten.
+If <code>filepath</code> doesn't contain formatting options like <code>{epoch}</code> then
+<code>filepath</code> will be overwritten by each new better model.</p>
+</td>
+<td><code>False</code></td>
+</tr>
+<tr>
+<td><code>mode</code></td>
+<td><code>str</code></td>
+<td>
+<p>one of {auto, min, max}. If <code>save_best_only=True</code>, the decision to
+overwrite the current save file is made based on either the maximization
+or the minimization of the monitored quantity. For <code>val_acc</code>, this
+should be <code>max</code>, for <code>val_loss</code> this should be <code>min</code>, etc. In <code>auto</code>
+mode, the direction is automatically inferred from the name of the
+monitored quantity.</p>
+</td>
+<td><code>'auto'</code></td>
+</tr>
+<tr>
+<td><code>save_freq</code></td>
+<td><code>str</code></td>
+<td>
+<p><code>'epoch'</code> or integer. When using <code>'epoch'</code>, the callback saves
+the model after each epoch. When using integer, the callback saves the
+model at end of this many batches. Note that if the saving isn't aligned
+to epochs, the monitored metric may potentially be less reliable (it
+could reflect as little as 1 batch, since the metrics get reset every
+epoch). Defaults to <code>'epoch'</code></p>
+</td>
+<td><code>'epoch'</code></td>
+</tr>
+<tr>
+<td><code>period</code></td>
+<td><code>int</code></td>
+<td>
+<p>the number of epochs between which the model is saved. This only works
+if <code>save_freq</code> is 'epoch', otherwise the <code>save_freq</code> will override
+this period.</p>
+</td>
+<td><code>1</code></td>
 </tr>
 </tbody>
 </table>
 <details class="quote">
-<summary>Source code in <code>elegy/losses/mean_squared_error.py</code></summary>
+<summary>Source code in <code>elegy/callbacks/model_checkpoint.py</code></summary>
 <table class="highlighttable">
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span> 90
+<pre><span></span> 50
+ 51
+ 52
+ 53
+ 54
+ 55
+ 56
+ 57
+ 58
+ 59
+ 60
+ 61
+ 62
+ 63
+ 64
+ 65
+ 66
+ 67
+ 68
+ 69
+ 70
+ 71
+ 72
+ 73
+ 74
+ 75
+ 76
+ 77
+ 78
+ 79
+ 80
+ 81
+ 82
+ 83
+ 84
+ 85
+ 86
+ 87
+ 88
+ 89
+ 90
  91
  92
  93
@@ -557,212 +631,92 @@ for more details.</p>
 109
 110
 111
-112</pre>
-</div>
-</td>
-<td class="code">
-<div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-    <span class="bp">self</span><span class="p">,</span>
-    <span class="n">reduction</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">Reduction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">name</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">weight</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">on</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">IndexLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">):</span>
-    <span class="sd">"""</span>
-<span class="sd">    Initializes `Mean` class.</span>
-
-<span class="sd">    Arguments:</span>
-<span class="sd">        reduction: (Optional) Type of `elegy.losses.Reduction` to apply to</span>
-<span class="sd">            loss. Default value is `SUM_OVER_BATCH_SIZE`. For almost all cases</span>
-<span class="sd">            this defaults to `SUM_OVER_BATCH_SIZE`. When used with</span>
-<span class="sd">            `tf.distribute.Strategy`, outside of built-in training loops such as</span>
-<span class="sd">            `elegy` `compile` and `fit`, or `SUM_OVER_BATCH_SIZE`</span>
-<span class="sd">            will raise an error.</span>
-<span class="sd">            for more details.</span>
-<span class="sd">        name: Optional name for the loss.</span>
-<span class="sd">        weight: Optional weight contribution for the total loss. Defaults to `1`.</span>
-<span class="sd">    """</span>
-
-    <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="n">reduction</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">on</span><span class="p">)</span>
-</code></pre>
-</div>
-</td>
-</tr>
-</table>
-</details>
-</div>
-</div>
-<div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.losses.mean_squared_error.MeanSquaredError.call">
-<code class="highlight language-python">
-call<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
-</h2>
-<div class="doc doc-contents">
-<p>Invokes the <code>MeanSquaredError</code> instance.</p>
-<p><strong>Parameters:</strong></p>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>y_true</code></td>
-<td><code>ndarray</code></td>
-<td>
-<p>Ground truth values. shape = <code>[batch_size, d0, .. dN]</code>, except
-sparse loss functions such as sparse categorical crossentropy where
-shape = <code>[batch_size, d0, .. dN-1]</code></p>
-</td>
-<td><em>required</em></td>
-</tr>
-<tr>
-<td><code>y_pred</code></td>
-<td><code>ndarray</code></td>
-<td>
-<p>The predicted values. shape = <code>[batch_size, d0, .. dN]</code></p>
-</td>
-<td><em>required</em></td>
-</tr>
-<tr>
-<td><code>sample_weight</code></td>
-<td><code>Optional[jax.numpy.lax_numpy.ndarray]</code></td>
-<td>
-<p>Optional <code>sample_weight</code> acts as a
-coefficient for the loss. If a scalar is provided, then the loss is
-simply scaled by the given value. If <code>sample_weight</code> is a tensor of size
-<code>[batch_size]</code>, then the total loss for each sample of the batch is
-rescaled by the corresponding element in the <code>sample_weight</code> vector. If
-the shape of <code>sample_weight</code> is <code>[batch_size, d0, .. dN-1]</code> (or can be
-broadcasted to this shape), then each loss element of <code>y_pred</code> is scaled
-by the corresponding value of <code>sample_weight</code>. (Note on<code>dN-1</code>: all loss
-functions reduce by 1 dimension, usually axis=-1.)</p>
-</td>
-<td><code>None</code></td>
-</tr>
-</tbody>
-</table>
-<p><strong>Returns:</strong></p>
-<table>
-<thead>
-<tr>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>ndarray</code></td>
-<td>
-<p>Weighted loss float <code>Tensor</code>. If <code>reduction</code> is <code>NONE</code>, this has
-    shape <code>[batch_size, d0, .. dN-1]</code>; otherwise, it is scalar. (Note <code>dN-1</code>
-    because all loss functions reduce by 1 dimension, usually axis=-1.)</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Exceptions:</strong></p>
-<table>
-<thead>
-<tr>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>ValueError</code></td>
-<td>
-<p>If the shape of <code>sample_weight</code> is invalid.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<details class="quote">
-<summary>Source code in <code>elegy/losses/mean_squared_error.py</code></summary>
-<table class="highlighttable">
-<tr>
-<td class="linenos">
-<div class="linenodiv">
-<pre><span></span>114
+112
+113
+114
 115
 116
 117
 118
 119
 120
-121
-122
-123
-124
-125
-126
-127
-128
-129
-130
-131
-132
-133
-134
-135
-136
-137
-138
-139
-140
-141
-142
-143
-144
-145
-146
-147
-148</pre>
+121</pre>
 </div>
 </td>
 <td class="code">
 <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span>
+<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
-    <span class="n">y_true</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-    <span class="n">y_pred</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-    <span class="n">sample_weight</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span>
-        <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span>
-    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># not used, __call__ handles it, left for documentation purposes.</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">monitor</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"val_loss"</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">save_best_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"auto"</span><span class="p">,</span>
+    <span class="n">save_freq</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"epoch"</span><span class="p">,</span>
+    <span class="n">period</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+<span class="p">):</span>
     <span class="sd">"""</span>
-<span class="sd">    Invokes the `MeanSquaredError` instance.</span>
-
 <span class="sd">    Arguments:</span>
-<span class="sd">        y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`, except</span>
-<span class="sd">            sparse loss functions such as sparse categorical crossentropy where</span>
-<span class="sd">            shape = `[batch_size, d0, .. dN-1]`</span>
-<span class="sd">        y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`</span>
-<span class="sd">        sample_weight: Optional `sample_weight` acts as a</span>
-<span class="sd">            coefficient for the loss. If a scalar is provided, then the loss is</span>
-<span class="sd">            simply scaled by the given value. If `sample_weight` is a tensor of size</span>
-<span class="sd">            `[batch_size]`, then the total loss for each sample of the batch is</span>
-<span class="sd">            rescaled by the corresponding element in the `sample_weight` vector. If</span>
-<span class="sd">            the shape of `sample_weight` is `[batch_size, d0, .. dN-1]` (or can be</span>
-<span class="sd">            broadcasted to this shape), then each loss element of `y_pred` is scaled</span>
-<span class="sd">            by the corresponding value of `sample_weight`. (Note on`dN-1`: all loss</span>
-<span class="sd">            functions reduce by 1 dimension, usually axis=-1.)</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        Weighted loss float `Tensor`. If `reduction` is `NONE`, this has</span>
-<span class="sd">            shape `[batch_size, d0, .. dN-1]`; otherwise, it is scalar. (Note `dN-1`</span>
-<span class="sd">            because all loss functions reduce by 1 dimension, usually axis=-1.)</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ValueError: If the shape of `sample_weight` is invalid.</span>
+<span class="sd">        filepath: string, path to save the model file. `filepath` can contain</span>
+<span class="sd">            named formatting options, which will be filled the value of `epoch` and</span>
+<span class="sd">            keys in `logs` (passed in `on_epoch_end`). For example: if `filepath` is</span>
+<span class="sd">            `weights.{epoch:02d}-{val_loss:.2f}`, then the model checkpoints</span>
+<span class="sd">            will be saved with the epoch number and the validation loss in the</span>
+<span class="sd">            filename.</span>
+<span class="sd">        monitor: quantity to monitor.</span>
+<span class="sd">        verbose: verbosity mode, 0 or 1.</span>
+<span class="sd">        save_best_only: if `save_best_only=True`, the latest best model according</span>
+<span class="sd">            to the quantity monitored will not be overwritten.</span>
+<span class="sd">            If `filepath` doesn't contain formatting options like `{epoch}` then</span>
+<span class="sd">            `filepath` will be overwritten by each new better model.</span>
+<span class="sd">        mode: one of {auto, min, max}. If `save_best_only=True`, the decision to</span>
+<span class="sd">            overwrite the current save file is made based on either the maximization</span>
+<span class="sd">            or the minimization of the monitored quantity. For `val_acc`, this</span>
+<span class="sd">            should be `max`, for `val_loss` this should be `min`, etc. In `auto`</span>
+<span class="sd">            mode, the direction is automatically inferred from the name of the</span>
+<span class="sd">            monitored quantity.</span>
+<span class="sd">        save_freq: `'epoch'` or integer. When using `'epoch'`, the callback saves</span>
+<span class="sd">            the model after each epoch. When using integer, the callback saves the</span>
+<span class="sd">            model at end of this many batches. Note that if the saving isn't aligned</span>
+<span class="sd">            to epochs, the monitored metric may potentially be less reliable (it</span>
+<span class="sd">            could reflect as little as 1 batch, since the metrics get reset every</span>
+<span class="sd">            epoch). Defaults to `'epoch'`</span>
+<span class="sd">        period: the number of epochs between which the model is saved. This only works</span>
+<span class="sd">            if `save_freq` is 'epoch', otherwise the `save_freq` will override</span>
+<span class="sd">            this period.</span>
 <span class="sd">    """</span>
-    <span class="k">return</span> <span class="n">mean_squared_error</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">ModelCheckpoint</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span> <span class="o">=</span> <span class="n">monitor</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span> <span class="o">=</span> <span class="n">filepath</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">save_best_only</span> <span class="o">=</span> <span class="n">save_best_only</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">save_freq</span> <span class="o">=</span> <span class="n">save_freq</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">period</span> <span class="o">=</span> <span class="n">period</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">epochs_since_last_save</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_batches_seen_since_last_saving</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"auto"</span><span class="p">,</span> <span class="s2">"min"</span><span class="p">,</span> <span class="s2">"max"</span><span class="p">]:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">"ModelCheckpoint mode </span><span class="si">%s</span><span class="s2"> is unknown, "</span> <span class="s2">"fallback to auto mode."</span><span class="p">,</span> <span class="n">mode</span>
+        <span class="p">)</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="s2">"auto"</span>
+
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">"min"</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">monitor_op</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">less</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">Inf</span>
+    <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">"max"</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">monitor_op</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">greater</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">Inf</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">"acc"</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"fmeasure"</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">monitor_op</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">greater</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">best</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">Inf</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">monitor_op</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">less</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">best</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">Inf</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_freq</span> <span class="o">!=</span> <span class="s2">"epoch"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_freq</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Unrecognized save_freq: </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_freq</span><span class="p">))</span>
 </code></pre>
 </div>
 </td>
@@ -781,7 +735,7 @@ functions reduce by 1 dimension, usually axis=-1.)</p>
 <footer class="md-footer">
 <div class="md-footer-nav">
 <nav aria-label="Footer" class="md-footer-nav__inner md-grid">
-<a class="md-footer-nav__link md-footer-nav__link--prev" href="../SparseCategoricalCrossentropy/" rel="prev" title="SparseCategoricalCrossentropy">
+<a class="md-footer-nav__link md-footer-nav__link--prev" href="../Callback/" rel="prev" title="Callback">
 <div class="md-footer-nav__button md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </div>
@@ -790,17 +744,17 @@ functions reduce by 1 dimension, usually axis=-1.)</p>
 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                SparseCategoricalCrossentropy
+                Callback
               </div>
 </div>
 </a>
-<a class="md-footer-nav__link md-footer-nav__link--next" href="../mean_squared_error/" rel="next" title="mean_squared_error">
+<a class="md-footer-nav__link md-footer-nav__link--next" href="../EarlyStopping/" rel="next" title="EarlyStopping">
 <div class="md-footer-nav__title">
 <div class="md-ellipsis">
 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                mean_squared_error
+                EarlyStopping
               </div>
 </div>
 <div class="md-footer-nav__button md-icon">
