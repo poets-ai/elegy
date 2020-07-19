@@ -5,10 +5,10 @@ import collections
 import csv
 import io
 import os
+import typing as tp
 
 import numpy as np
 import six
-from six.moves import collections_abc
 
 from .callback import Callback
 
@@ -64,7 +64,7 @@ Example:
             is_zero_dim_ndarray = isinstance(k, np.ndarray) and k.ndim == 0
             if isinstance(k, six.string_types):
                 return k
-            elif isinstance(k, collections_abc.Iterable) and not is_zero_dim_ndarray:
+            elif isinstance(k, tp.Iterable) and not is_zero_dim_ndarray:
                 return '"[%s]"' % (", ".join(map(str, k)))
             else:
                 return k
