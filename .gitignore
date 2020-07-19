@@ -141,3 +141,4 @@ cython_debug/
 /.vscode
 /test.*
 /summaries
+/docs/guides/model
