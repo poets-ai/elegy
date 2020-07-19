@@ -9,6 +9,7 @@ import numpy as np
 import tensorflow_datasets as tfds
 import typer
 
+breakpoint()
 import elegy
 from jax.experimental import optix
 
@@ -136,6 +137,7 @@ def main(debug: bool = False, eager: bool = False):
         callbacks=[
             elegy.callbacks.ModelCheckpoint(checkpoints_dir, verbose=1),
             elegy.callbacks.CSVLogger("test.csv"),
+            elegy.callbacks.TensorBoard(),
         ],
     )
     plot_history(history)
