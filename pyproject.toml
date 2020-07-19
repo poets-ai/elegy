@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "elegy"
-version = "0.1.1-beta-1"
+version = "0.1.1-beta-3"
 description = ""
 authors = ["Cristian Garcia <cgarcia.e88@gmail.com>"]
 

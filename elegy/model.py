@@ -1192,10 +1192,8 @@ class Model(object):
             path = path / "model.pkl"
             with open(path, "wb") as f:
                 cloudpickle.dump(self, f)
-        except ValueError:
-            print(f"Error occurred saving the model function at {path}" "")
-        except Exception:
-            raise
+        except BaseException as e:
+            print(f"Error occurred saving the model object at {path}\nContinuing....")
 
         self.full_state = original_state
 
