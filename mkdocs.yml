@@ -38,6 +38,7 @@ nav:
         ModelCheckpoint: api/callbacks/ModelCheckpoint.md
         EarlyStopping: api/callbacks/EarlyStopping.md
         LambdaCallback: api/callbacks/LambdaCallback.md
+        Tensorboard: api/callbacks/TensorBoard.md
         CSVLogger: api/callbacks/CSVLogger.md
         RemoteMonitor: api/callbacks/RemoteMonitor.md
         TerminateOnNaN: api/callbacks/TerminateOnNaN.md
