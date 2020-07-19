@@ -42,7 +42,7 @@ model = elegy.Model(
     loss=[
         elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
         elegy.regularizers.GlobalL2(l=1e-5),
-    ]
+    ],
     metrics=elegy.metrics.SparseCategoricalAccuracy.defer(),
     optimizer=optix.rmsprop(1e-3),
 )
@@ -84,13 +84,12 @@ We believe that **Elegy** can offer the best experience for coding Deep Learning
 * `losses` module
 * `metrics` module
 * `regularizers` module
-* `callbacks` module
 * `nn` layers module
 
 For more information checkout the **Reference API** section in the [Documentation](https://poets-ai.github.io/elegy).
 
 ## Contributing
-Deep Learning is evolving at an incredible rate, there is so much to do and so few hands. If you wish to contribute anything from a loss or metrics to a new awesome feature for Elegy just open an issue or send a PR!
+Deep Learning is evolving at an incredible rate, there is so much to do and so few hands. If you wish to contibute anything from a loss or metrics to a new awesome feature for Elegy just open an issue or send a PR!
 
 ## About Us
 
