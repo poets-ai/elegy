@@ -21,8 +21,8 @@ including 1D iterables such as `np.ndarray`.
 Example:
 
     ```python
-    csv_logger = TensorBoard('runs')
-    model.fit(X_train, Y_train, callbacks=[csv_logger])
+    tensorboard_logger = TensorBoard('runs')
+    model.fit(X_train, Y_train, callbacks=[tensorboard_logger])
     ```
   """
 
