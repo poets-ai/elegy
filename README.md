@@ -92,7 +92,7 @@ For more information checkout the **Reference API** section in the [Documentatio
 Deep Learning is evolving at an incredible rate, there is so much to do and so few hands. If you wish to contibute anything from a loss or metrics to a new awesome feature for Elegy just open an issue or send a PR!
 
 ## About Us
-
+We are a couple friends passionate about ML.
 
 ## License
 Apache
