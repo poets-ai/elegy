@@ -1,10 +1,18 @@
-from elegy.utils import Deferable
 import typing as tp
-import haiku as hk
 from abc import abstractmethod
+
+import haiku as hk
+
+from elegy import utils
+from elegy.utils import Deferable
 
 
 class Module(hk.Module, Deferable):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.call = utils.inject_dependencies(self.call)
+
     def __call__(self, *args, **kwargs):
         return self.call(*args, **kwargs)
 
