@@ -1,19 +1,28 @@
-from elegy import types
 import typing as tp
 
 import jax
 import jax.numpy as jnp
+import numpy as np
 
-from elegy import utils
+from elegy import types, utils
 from elegy.losses.loss import Loss, Reduction
 
 
+def smooth_labels(labels: jnp.ndarray, smoothing: jnp.ndarray,) -> jnp.ndarray:
+    smooth_positives = 1.0 - smoothing
+    smooth_negatives = smoothing / labels.shape[-1]
+    return smooth_positives * labels + smooth_negatives
+
+
 def categorical_crossentropy(
-    y_true: jnp.ndarray, y_pred: jnp.ndarray, from_logits: bool = False
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    from_logits: bool = False,
+    label_smoothing: np.ndarray = 0,
 ) -> jnp.ndarray:
 
-    # if self._sparse_labels:
-    #     y_true = jax.nn.one_hot(y_true, y_pred.shape[-1])
+    if label_smoothing > 0:
+        y_true = smooth_labels(y_true, label_smoothing)
 
     if from_logits:
         y_pred = jax.nn.log_softmax(y_pred)
@@ -131,4 +140,9 @@ class CategoricalCrossentropy(Loss):
             Loss values per sample.
         """
 
-        return categorical_crossentropy(y_true, y_pred, from_logits=self._from_logits)
+        return categorical_crossentropy(
+            y_true,
+            y_pred,
+            from_logits=self._from_logits,
+            label_smoothing=self._label_smoothing,
+        )

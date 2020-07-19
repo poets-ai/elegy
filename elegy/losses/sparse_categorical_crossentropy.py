@@ -13,9 +13,18 @@ def sparse_categorical_crossentropy(
     y_true: jnp.ndarray, y_pred: jnp.ndarray, from_logits: bool = False
 ) -> jnp.ndarray:
 
-    y_true = jax.nn.one_hot(y_true, y_pred.shape[-1])
+    if from_logits:
+        y_pred = jax.nn.log_softmax(y_pred)
+        return -jnp.take_along_axis(y_pred, y_true[..., None], axis=-1)[..., 0]
 
-    return categorical_crossentropy(y_true, y_pred, from_logits=from_logits)
+    else:
+        # select output value
+        y_pred = jnp.take_along_axis(y_pred, y_true[..., None], axis=-1)[..., 0]
+
+        # calculate log
+        y_pred = jnp.maximum(y_pred, utils.EPSILON)
+        y_pred = jnp.log(y_pred)
+        return -y_pred
 
 
 class SparseCategoricalCrossentropy(Loss):
@@ -77,7 +86,6 @@ class SparseCategoricalCrossentropy(Loss):
     def __init__(
         self,
         from_logits: bool = False,
-        label_smoothing: float = 0,
         reduction: tp.Optional[Reduction] = None,
         name: tp.Optional[str] = None,
         weight: tp.Optional[float] = None,
@@ -90,10 +98,6 @@ class SparseCategoricalCrossentropy(Loss):
             from_logits: Whether `y_pred` is expected to be a logits tensor. By
                 default, we assume that `y_pred` encodes a probability distribution.
                 **Note - Using from_logits=True is more numerically stable.**
-            label_smoothing: Float in [0, 1]. When > 0, label values are smoothed,
-                meaning the confidence on label values are relaxed. e.g.
-                `label_smoothing=0.2` means that we will use a value of `0.1` for label
-                `0` and `0.9` for label `1`"
             reduction: (Optional) Type of `elegy.losses.Reduction` to apply to
                 loss. Default value is `SUM_OVER_BATCH_SIZE`. For almost all cases
                 this defaults to `SUM_OVER_BATCH_SIZE`. When used with
@@ -106,7 +110,6 @@ class SparseCategoricalCrossentropy(Loss):
         super().__init__(reduction=reduction, name=name, weight=weight, on=on)
 
         self._from_logits = from_logits
-        self._label_smoothing = label_smoothing
 
     def call(
         self, y_true, y_pred, sample_weight: tp.Optional[jnp.ndarray] = None
