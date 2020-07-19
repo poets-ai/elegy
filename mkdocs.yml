@@ -13,7 +13,7 @@ nav:
   - Introduction: index.md
   - Guides:
       Getting Started: guides/getting-started.ipynb
-      Losses and Metrics: guides/losses-and-metrics.md
+      Modules, Losses, and Metrics: guides/modules-losses-metrics.md
   - API Reference:
       Model: api/Model.md
       model:

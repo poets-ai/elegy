@@ -46,7 +46,7 @@ Elegy solves the previous problems by instruducting a _dependency injection_ mec
 
 
 ## Modules
-Modules apart of being able to request `is_training` they can also request the content of the inputs `x` according to the following rules:
+Modules define the architecture of the network, their primary task (Elegy terms) is transforming `x` into `y_pred`. To make it easy to consume the content of `x` Elegy has some special but very simple rules on how the signature of any `Module` can be structured:
 
 If `x` is a `tuple` then `x` will be expanded positional arguments a.k.a. `*args`, this means that the module will have define EXACTLY as many arguments as there are inputs. For example:
   
@@ -179,7 +179,7 @@ model = Model(
 ```
 This example assumes they are dictionaries but they can also be tuples. This gives you maximal flexibility but come at the additional cost of having to implement a custom loss function. 
 
-#### 1-to-1 Mapping
+### Keras-like behaviour
 While these example show Elegy's flexibility, there is an inbetween scenario that Keras covers really well: what if you really just need 1 loss per (label, output) pair? For example the equivalent of:
 
 ```python
@@ -239,3 +239,31 @@ model = elegy.Model(
     ]
 )
 ```
+
+## Metrics
+Metrics behave very similar to losses, everything said about losses previously about losses holds for metrics except for one thing: metrics can hold state. As in Keras, Elegy metrics are cummulative metrics which update their internal state on every step. From a user perspective this a couple of things:
+
+1. Metrics are implemented using Haiku `Module`s, this means that you can't instantiate them normally outside of Haiku, hence the `lambda` / `dered` trick.
+2. You can use `hk.get_state` and `hk.set_state` when implementing you own metrics.
+
+Here is an example of a simple implementation of Accuracy:
+
+```python
+class Accuracy(elegy.Metric):
+    def call(self, y_true, y_pred):
+
+        total = hk.get_state("total", [], jnp.zeros)
+        count = hk.get_state("count", [], jnp.zeros)
+
+        total += jnp.sum(y_true == y_pred)
+        count += jnp.prod(y_true.shape)
+
+        hk.set_state("total", total)
+        hk.set_state("count", count)
+
+        return total / count
+```
+
+
+## A little secret
+We think users should use the base classes provided by Elegy (Module, Loss, Metric) for convenience, but the fact is that Elegy also accepts ordinary callables. Being true to Haiku and Jax in general, you can just use functions, however you can run into trouble with Haiku due to not scoping you computation inside Modules.
