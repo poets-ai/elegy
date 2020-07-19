@@ -8,7 +8,6 @@ import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow_datasets as tfds
 import typer
 from jax.experimental import optix
 
