@@ -474,9 +474,9 @@ from the state saved.</p>
 <br/>
 <div class="codehilite">
 <pre><span></span><code><span class="n">EPOCHS</span> <span class="o">=</span> <span class="mi">10</span>
-<span class="n">checkpoint_filepath</span> <span class="o">=</span> <span class="s1">'/tmp/checkpoint'</span>
+<span class="n">checkpoint_path</span> <span class="o">=</span> <span class="s1">'/tmp/checkpoint'</span>
 <span class="n">model_checkpoint_callback</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">callbacks</span><span class="o">.</span><span class="n">ModelCheckpoint</span><span class="p">(</span>
-    <span class="n">filepath</span><span class="o">=</span><span class="n">checkpoint_filepath</span><span class="p">,</span>
+    <span class="n">path</span><span class="o">=</span><span class="n">checkpoint_path</span><span class="p">,</span>
     <span class="n">monitor</span><span class="o">=</span><span class="s1">'val_acc'</span><span class="p">,</span>
     <span class="n">mode</span><span class="o">=</span><span class="s1">'max'</span><span class="p">,</span>
     <span class="n">save_best_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -486,14 +486,14 @@ from the state saved.</p>
 <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">epochs</span><span class="o">=</span><span class="n">EPOCHS</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">model_checkpoint_callback</span><span class="p">])</span>
 
 <span class="c1"># The model status (that are considered the best) are loaded into the model.</span>
-<span class="n">model</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">checkpoint_filepath</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">)</span>
 </code></pre>
 </div>
 <div class="doc doc-children">
 <div class="doc doc-object doc-method">
 <h2 class="doc doc-heading" id="elegy.callbacks.model_checkpoint.ModelCheckpoint.__init__">
 <code class="highlight language-python">
-__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="s1">'val_loss'</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">save_best_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">'auto'</span><span class="p">,</span> <span class="n">save_freq</span><span class="o">=</span><span class="s1">'epoch'</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> </code>
+__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="s1">'val_loss'</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">save_best_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">'auto'</span><span class="p">,</span> <span class="n">save_freq</span><span class="o">=</span><span class="s1">'epoch'</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> </code>
 <span class="doc doc-properties">
 <small class="doc doc-property doc-property-special"><code>special</code></small>
 </span>
@@ -511,12 +511,12 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 </thead>
 <tbody>
 <tr>
-<td><code>filepath</code></td>
+<td><code>path</code></td>
 <td><code>str</code></td>
 <td>
-<p>string, path to save the model file. <code>filepath</code> can contain
+<p>string, path to directory to save the model state. <code>path</code> can contain
 named formatting options, which will be filled the value of <code>epoch</code> and
-keys in <code>logs</code> (passed in <code>on_epoch_end</code>). For example: if <code>filepath</code> is
+keys in <code>logs</code> (passed in <code>on_epoch_end</code>). For example: if <code>path</code> is
 <code>weights.{epoch:02d}-{val_loss:.2f}</code>, then the model checkpoints
 will be saved with the epoch number and the validation loss in the
 filename.</p>
@@ -545,8 +545,8 @@ filename.</p>
 <td>
 <p>if <code>save_best_only=True</code>, the latest best model according
 to the quantity monitored will not be overwritten.
-If <code>filepath</code> doesn't contain formatting options like <code>{epoch}</code> then
-<code>filepath</code> will be overwritten by each new better model.</p>
+If <code>path</code> doesn't contain formatting options like <code>{epoch}</code> then
+<code>path</code> will be overwritten by each new better model.</p>
 </td>
 <td><code>False</code></td>
 </tr>
@@ -672,7 +672,7 @@ this period.</p>
 <div class="highlight">
 <pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
-    <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">monitor</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"val_loss"</span><span class="p">,</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="n">save_best_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -682,9 +682,9 @@ this period.</p>
 <span class="p">):</span>
     <span class="sd">"""</span>
 <span class="sd">    Arguments:</span>
-<span class="sd">        filepath: string, path to save the model file. `filepath` can contain</span>
+<span class="sd">        path: string, path to directory to save the model state. `path` can contain</span>
 <span class="sd">            named formatting options, which will be filled the value of `epoch` and</span>
-<span class="sd">            keys in `logs` (passed in `on_epoch_end`). For example: if `filepath` is</span>
+<span class="sd">            keys in `logs` (passed in `on_epoch_end`). For example: if `path` is</span>
 <span class="sd">            `weights.{epoch:02d}-{val_loss:.2f}`, then the model checkpoints</span>
 <span class="sd">            will be saved with the epoch number and the validation loss in the</span>
 <span class="sd">            filename.</span>
@@ -692,8 +692,8 @@ this period.</p>
 <span class="sd">        verbose: verbosity mode, 0 or 1.</span>
 <span class="sd">        save_best_only: if `save_best_only=True`, the latest best model according</span>
 <span class="sd">            to the quantity monitored will not be overwritten.</span>
-<span class="sd">            If `filepath` doesn't contain formatting options like `{epoch}` then</span>
-<span class="sd">            `filepath` will be overwritten by each new better model.</span>
+<span class="sd">            If `path` doesn't contain formatting options like `{epoch}` then</span>
+<span class="sd">            `path` will be overwritten by each new better model.</span>
 <span class="sd">        mode: one of {auto, min, max}. If `save_best_only=True`, the decision to</span>
 <span class="sd">            overwrite the current save file is made based on either the maximization</span>
 <span class="sd">            or the minimization of the monitored quantity. For `val_acc`, this</span>
@@ -713,7 +713,7 @@ this period.</p>
     <span class="nb">super</span><span class="p">(</span><span class="n">ModelCheckpoint</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span> <span class="o">=</span> <span class="n">monitor</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span> <span class="o">=</span> <span class="n">filepath</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">save_best_only</span> <span class="o">=</span> <span class="n">save_best_only</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">save_freq</span> <span class="o">=</span> <span class="n">save_freq</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">period</span> <span class="o">=</span> <span class="n">period</span>
