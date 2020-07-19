@@ -5,6 +5,7 @@ site_url: https://poets-ai.github.io/elegy
 
 theme:
   name: material
+  favicon: images/favicon.png
   icon:
     logo: fontawesome/solid/infinity
     repo: octicons/mark-github-16
