@@ -9,7 +9,6 @@ import numpy as np
 import tensorflow_datasets as tfds
 import typer
 
-breakpoint()
 import elegy
 from jax.experimental import optix
 
