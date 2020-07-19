@@ -5,10 +5,10 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<link href="https://poets-ai.github.io/elegy/api/losses/MeanSquaredError/" rel="canonical"/>
+<link href="https://poets-ai.github.io/elegy/api/losses/MeanAbsoluteError/" rel="canonical"/>
 <link href="../../../images/favicon.png" rel="shortcut icon"/>
 <meta content="mkdocs-1.1.2, mkdocs-material-5.4.0" name="generator"/>
-<title>MeanSquaredError - Elegy</title>
+<title>MeanAbsoluteError - Elegy</title>
 <link href="../../../assets/stylesheets/main.fe0cca5b.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
@@ -19,7 +19,7 @@
 <input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
 <label class="md-overlay" for="__drawer"></label>
 <div data-md-component="skip">
-<a class="md-skip" href="#elegylossesmeansquarederror">
+<a class="md-skip" href="#elegylossesmeanabsoluteerror">
           Skip to content
         </a>
 </div>
@@ -40,7 +40,7 @@
           </span>
 <span class="md-header-nav__topic md-ellipsis">
             
-              MeanSquaredError
+              MeanAbsoluteError
             
           </span>
 </div>
@@ -278,21 +278,16 @@
       SparseCategoricalCrossentropy
     </a>
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../MeanAbsoluteError/" title="MeanAbsoluteError">
-      MeanAbsoluteError
-    </a>
-</li>
 <li class="md-nav__item md-nav__item--active">
 <input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
 <label class="md-nav__link md-nav__link--active" for="__toc">
-        MeanSquaredError
+        MeanAbsoluteError
         <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
 </span>
 </label>
-<a class="md-nav__link md-nav__link--active" href="./" title="MeanSquaredError">
-      MeanSquaredError
+<a class="md-nav__link md-nav__link--active" href="./" title="MeanAbsoluteError">
+      MeanAbsoluteError
     </a>
 <nav aria-label="Table of contents" class="md-nav md-nav--secondary">
 <label class="md-nav__title" for="__toc">
@@ -303,22 +298,27 @@
     </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.losses.mean_squared_error.MeanSquaredError">
-    elegy.losses.mean_squared_error.MeanSquaredError
+<a class="md-nav__link" href="#elegy.losses.mean_absolute_error.MeanAbsoluteError">
+    elegy.losses.mean_absolute_error.MeanAbsoluteError
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.losses.mean_squared_error.MeanSquaredError.__init__">
+<a class="md-nav__link" href="#elegy.losses.mean_absolute_error.MeanAbsoluteError.__init__">
     __init__()
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.losses.mean_squared_error.MeanSquaredError.call">
+<a class="md-nav__link" href="#elegy.losses.mean_absolute_error.MeanAbsoluteError.call">
     call()
   </a>
 </li>
 </ul>
 </nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../MeanSquaredError/" title="MeanSquaredError">
+      MeanSquaredError
+    </a>
 </li>
 <li class="md-nav__item">
 <a class="md-nav__link" href="../mean_squared_error/" title="mean_squared_error">
@@ -436,17 +436,17 @@
     </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.losses.mean_squared_error.MeanSquaredError">
-    elegy.losses.mean_squared_error.MeanSquaredError
+<a class="md-nav__link" href="#elegy.losses.mean_absolute_error.MeanAbsoluteError">
+    elegy.losses.mean_absolute_error.MeanAbsoluteError
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.losses.mean_squared_error.MeanSquaredError.__init__">
+<a class="md-nav__link" href="#elegy.losses.mean_absolute_error.MeanAbsoluteError.__init__">
     __init__()
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.losses.mean_squared_error.MeanSquaredError.call">
+<a class="md-nav__link" href="#elegy.losses.mean_absolute_error.MeanAbsoluteError.call">
     call()
   </a>
 </li>
@@ -457,52 +457,52 @@
 </div>
 <div class="md-content">
 <article class="md-content__inner md-typeset">
-<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/losses/MeanSquaredError.md" title="Edit this page">
+<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/losses/MeanAbsoluteError.md" title="Edit this page">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
 </a>
-<h1 id="elegylossesmeansquarederror">elegy.losses.MeanSquaredError</h1>
+<h1 id="elegylossesmeanabsoluteerror">elegy.losses.MeanAbsoluteError</h1>
 <div class="doc doc-object doc-class">
-<h2 class="hidden-toc" href="#elegy.losses.mean_squared_error.MeanSquaredError" id="elegy.losses.mean_squared_error.MeanSquaredError" style="visibility: hidden; width: 0; height: 0;">
+<h2 class="hidden-toc" href="#elegy.losses.mean_absolute_error.MeanAbsoluteError" id="elegy.losses.mean_absolute_error.MeanAbsoluteError" style="visibility: hidden; width: 0; height: 0;">
 </h2>
 <div class="doc doc-contents first">
-<p>Computes the mean of squares of errors between labels and predictions.</p>
-<p><code>loss = square(y_true - y_pred)</code></p>
+<p>Computes the mean absolute errors between labels and predictions.</p>
+<p><code>loss = mean(abs(y_true - y_pred))</code></p>
 <p>Usage:</p>
 <div class="codehilite">
 <pre><span></span><code><span class="n">y_true</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]])</span>
 <span class="n">y_pred</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]])</span>
 
 <span class="c1"># Using 'auto'/'sum_over_batch_size' reduction type.</span>
-<span class="n">mse</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">()</span>
+<span class="n">mae</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanAbsoluteError</span><span class="p">()</span>
 
-<span class="k">assert</span> <span class="n">mse</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">==</span> <span class="mf">0.5</span>
+<span class="k">assert</span> <span class="n">mae</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">==</span> <span class="mf">0.5</span>
 
 <span class="c1"># Calling with 'sample_weight'.</span>
-<span class="k">assert</span> <span class="n">mse</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">]))</span> <span class="o">==</span> <span class="mf">0.25</span>
+<span class="k">assert</span> <span class="n">mae</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">]))</span> <span class="o">==</span> <span class="mf">0.25</span>
 
 <span class="c1"># Using 'sum' reduction type.</span>
-<span class="n">mse</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">Reduction</span><span class="o">.</span><span class="n">SUM</span><span class="p">)</span>
+<span class="n">mae</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanAbsoluteError</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">Reduction</span><span class="o">.</span><span class="n">SUM</span><span class="p">)</span>
 
-<span class="k">assert</span> <span class="n">mse</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">==</span> <span class="mf">1.0</span>
+<span class="k">assert</span> <span class="n">mae</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">==</span> <span class="mf">1.0</span>
 
 <span class="c1"># Using 'none' reduction type.</span>
-<span class="n">mse</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">Reduction</span><span class="o">.</span><span class="n">NONE</span><span class="p">)</span>
+<span class="n">mae</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanAbsoluteError</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">Reduction</span><span class="o">.</span><span class="n">NONE</span><span class="p">)</span>
 
-<span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">mse</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">))</span> <span class="o">==</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]</span>
+<span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">mae</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">))</span> <span class="o">==</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]</span>
 </code></pre>
 </div>
 <p>Usage with the Elegy API:</p>
 <div class="codehilite">
 <pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
     <span class="n">module_fn</span><span class="p">,</span>
-    <span class="n">loss</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">(),</span>
+    <span class="n">loss</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanAbsoluteError</span><span class="p">(),</span>
     <span class="n">metrics</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">Mean</span><span class="o">.</span><span class="n">defer</span><span class="p">(),</span>
 <span class="p">)</span>
 </code></pre>
 </div>
 <div class="doc doc-children">
 <div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.losses.mean_squared_error.MeanSquaredError.__init__">
+<h2 class="doc doc-heading" id="elegy.losses.mean_absolute_error.MeanAbsoluteError.__init__">
 <code class="highlight language-python">
 __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
 <span class="doc doc-properties">
@@ -555,7 +555,7 @@ for more details.</p>
 </tbody>
 </table>
 <details class="quote">
-<summary>Source code in <code>elegy/losses/mean_squared_error.py</code></summary>
+<summary>Source code in <code>elegy/losses/mean_absolute_error.py</code></summary>
 <table class="highlighttable">
 <tr>
 <td class="linenos">
@@ -619,12 +619,12 @@ for more details.</p>
 </div>
 </div>
 <div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.losses.mean_squared_error.MeanSquaredError.call">
+<h2 class="doc doc-heading" id="elegy.losses.mean_absolute_error.MeanAbsoluteError.call">
 <code class="highlight language-python">
 call<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
 </h2>
 <div class="doc doc-contents">
-<p>Invokes the <code>MeanSquaredError</code> instance.</p>
+<p>Invokes the <code>MeanAbsoluteError</code> instance.</p>
 <p><strong>Parameters:</strong></p>
 <table>
 <thead>
@@ -709,7 +709,7 @@ functions reduce by 1 dimension, usually axis=-1.)</p>
 </tbody>
 </table>
 <details class="quote">
-<summary>Source code in <code>elegy/losses/mean_squared_error.py</code></summary>
+<summary>Source code in <code>elegy/losses/mean_absolute_error.py</code></summary>
 <table class="highlighttable">
 <tr>
 <td class="linenos">
@@ -762,7 +762,7 @@ functions reduce by 1 dimension, usually axis=-1.)</p>
     <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># not used, __call__ handles it, left for documentation purposes.</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
     <span class="sd">"""</span>
-<span class="sd">    Invokes the `MeanSquaredError` instance.</span>
+<span class="sd">    Invokes the `MeanAbsoluteError` instance.</span>
 
 <span class="sd">    Arguments:</span>
 <span class="sd">        y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`, except</span>
@@ -787,7 +787,7 @@ functions reduce by 1 dimension, usually axis=-1.)</p>
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError: If the shape of `sample_weight` is invalid.</span>
 <span class="sd">    """</span>
-    <span class="k">return</span> <span class="n">mean_squared_error</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mean_absolute_error</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
 </code></pre>
 </div>
 </td>
@@ -806,7 +806,7 @@ functions reduce by 1 dimension, usually axis=-1.)</p>
 <footer class="md-footer">
 <div class="md-footer-nav">
 <nav aria-label="Footer" class="md-footer-nav__inner md-grid">
-<a class="md-footer-nav__link md-footer-nav__link--prev" href="../MeanAbsoluteError/" rel="prev" title="MeanAbsoluteError">
+<a class="md-footer-nav__link md-footer-nav__link--prev" href="../SparseCategoricalCrossentropy/" rel="prev" title="SparseCategoricalCrossentropy">
 <div class="md-footer-nav__button md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </div>
@@ -815,17 +815,17 @@ functions reduce by 1 dimension, usually axis=-1.)</p>
 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                MeanAbsoluteError
+                SparseCategoricalCrossentropy
               </div>
 </div>
 </a>
-<a class="md-footer-nav__link md-footer-nav__link--next" href="../mean_squared_error/" rel="next" title="mean_squared_error">
+<a class="md-footer-nav__link md-footer-nav__link--next" href="../MeanSquaredError/" rel="next" title="MeanSquaredError">
 <div class="md-footer-nav__title">
 <div class="md-ellipsis">
 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                mean_squared_error
+                MeanSquaredError
               </div>
 </div>
 <div class="md-footer-nav__button md-icon">
