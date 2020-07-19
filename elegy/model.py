@@ -1249,8 +1249,8 @@ def load(path: tp.Union[str, Path]) -> Model:
         path: path to a saved model's directory.
 
     Raises:
-        `OSError` in case the model was not found or could not be
-        loaded from disk successfully.
+        OSError: in case the model was not found or could not be
+            loaded from disk successfully.
     """
     if isinstance(path, str):
         path = Path(path)
