@@ -70,7 +70,7 @@ class Model(object):
     
     Once the model is created, you can train the model with `model.fit()`, or use the model
     to do prediction with `model.predict()`.
-    Checkout [Getting Started](https://poets-ai.github.io/elegy/getting-started) for
+    Checkout [Getting Started](https://poets-ai.github.io/elegy/guides/getting-started) for
     additional details.
 
     Attributes:
@@ -361,13 +361,14 @@ class Model(object):
                 metrics_state,  # state
                 metrics_rng,  # rng
                 # dependency injection
+                x=x,
                 y_true=y,
                 y_pred=y_pred,
-                x=x,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 is_training=True,
                 __params=params,  # renamed
+                state=state,
             )
             logs.update(metrics)
 
@@ -391,15 +392,14 @@ class Model(object):
         )
 
         logs = self._loss_fn(
-            # required by loss API
+            x=x,
             y_true=y,
             y_pred=y_pred,
-            # dependency injection
-            x=x,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            params=params,
             is_training=is_training,
+            params=params,
+            state=state,
         )
 
         # get total loss
@@ -990,13 +990,14 @@ class Model(object):
                 metrics_state,  # state
                 metrics_rng,  # rng
                 # dependency injection
+                x=x,
                 y_true=y,
                 y_pred=y_pred,
-                x=x,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 is_training=False,
                 __params=params,  # renamed
+                state=state,
             )
             logs.update(metrics)
 

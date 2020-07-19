@@ -11,7 +11,9 @@ theme:
 
 nav:
   - Introduction: index.md
-  - Getting Started: getting-started.ipynb
+  - Guides:
+      Getting Started: guides/getting-started.ipynb
+      Modules, Losses, and Metrics: guides/modules-losses-metrics.md
   - API Reference:
       Model: api/Model.md
       model:
