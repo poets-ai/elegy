@@ -7,3 +7,4 @@ from .lambda_callback import LambdaCallback
 from .terminate_nan import TerminateOnNaN
 from .remote_monitor import RemoteMonitor
 from .csv_logger import CSVLogger
+from .tensorboard_callback import TensorBoard

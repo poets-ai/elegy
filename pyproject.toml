@@ -1,8 +1,10 @@
 [tool.poetry]
 name = "elegy"
 version = "0.1.0"
-description = ""
-authors = ["Cristian Garcia <cgarcia.e88@gmail.com>"]
+description = "Elegy is a Neural Networks framework based on Jax and Haiku."
+authors = ["Cristian Garcia <cgarcia.e88@gmail.com>",
+           "Carlos Alvarez <candres.alv@gmail.com>",
+           "David Cardozo <david@cerberusdata.ai>"]
 
 [tool.poetry.dependencies]
 python = "^3.6.1"
@@ -14,6 +16,7 @@ deepdish = "^0.3.6"
 typing_extensions = { version = "^3.7.4", markers = "python_version < '3.8'" }
 # dataclasses =  { version = "^0.7", markers = "python_version >= '3.6' and python_version < '3.7'" }
 cloudpickle = "^1.5.0"
+tensorboardx = "^2.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
@@ -25,8 +28,10 @@ typer = "^0.3.0"
 mkdocs-jupyter = "^0.13.0"
 matplotlib = "^3.3.0"
 tensorflow = "^2.2.0"
-tensorflow-datasets = "^3.2.1"
+# TODO(davidnet): Update as soon as the problem of ssl downloads is fixed
+tensorflow-datasets = "3.1.0"
 dataget = "^0.4.14"
+debugpy = "^1.0.0-beta.12"
 
 [build-system]
 requires = ["poetry>=0.12"]
