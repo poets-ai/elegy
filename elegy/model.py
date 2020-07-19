@@ -173,7 +173,7 @@ class Model(object):
         self._loss_fn = utils.inject_dependencies(loss)
         self._metrics_transform = (
             hk.transform_with_state(
-                utils.inject_dependencies(metrics, rename={"__params": "params"})
+                utils.inject_dependencies(metrics, rename={"__params": "params", "__state": "state"})
             )
             if metrics
             else None
@@ -368,7 +368,7 @@ class Model(object):
                 class_weight=class_weight,
                 is_training=True,
                 __params=params,  # renamed
-                state=state,
+                __state=state,
             )
             logs.update(metrics)
 
@@ -997,7 +997,7 @@ class Model(object):
                 class_weight=class_weight,
                 is_training=False,
                 __params=params,  # renamed
-                state=state,
+                __state=state,
             )
             logs.update(metrics)
 
