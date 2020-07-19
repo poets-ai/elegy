@@ -7,7 +7,7 @@ import numpy as np
 import six
 from six.moves import collections_abc
 from tensorboardX.writer import SummaryWriter
-from typing import Optional
+from typing import Optional, Union
 
 from .callback import Callback
 
@@ -26,7 +26,12 @@ Example:
     ```
   """
 
-    def __init__(self, logdir: Optional[str] = None, **kwargs) -> None:
+    def __init__(
+        self,
+        logdir: Optional[str] = None,
+        update_freq: Union[str, int] = "epoch",
+        **kwargs
+    ) -> None:
         """
         Arguments:
              logdir (string): Save directory location. Default is
@@ -39,11 +44,40 @@ Example:
         self.logdir = logdir
         self.writer = None
         self.keys = None
+        if update_freq == "batch":
+            self.update_freq = 1
+        else:
+            self.update_freq = update_freq
         self._open_args = kwargs if kwargs else {}
         super(TensorBoard, self).__init__()
 
     def on_train_begin(self, logs=None):
         self.writer = SummaryWriter(self.logdir, **self._open_args)
+
+    def on_train_batch_end(self, batch: int, logs):
+        if self.update_freq == "epoch":
+            return
+        logs = logs or {}
+
+        def handle_value(k):
+            is_zero_dim_ndarray = isinstance(k, np.ndarray) and k.ndim == 0
+            if isinstance(k, six.string_types):
+                return k
+            elif isinstance(k, collections_abc.Iterable) and not is_zero_dim_ndarray:
+                return '"[%s]"' % (", ".join(map(str, k)))
+            else:
+                return k
+
+        if self.update_freq != "epoch" and batch % self.update_freq == 0:
+            if self.keys is None:
+                self.keys = sorted(logs.keys())
+            row_dict = collections.OrderedDict({"batch": batch})
+            row_dict.update(
+                (key + "batch", handle_value(logs[key])) for key in self.keys
+            )
+
+            for key, value in row_dict.items():
+                self.writer.add_scalar(key, value, batch)
 
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
