@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Elegy is a Neural Networks framework based on Jax and Haiku."
 authors = ["Cristian Garcia <cgarcia.e88@gmail.com>",
            "Carlos Alvarez <candres.alv@gmail.com>",
-           "David Cardozo <david@cerberusdata.ai>"]
+           "David Cardozo <davidcardozo@berkeley.edu>"]
 
 [tool.poetry.dependencies]
 python = "^3.6.1"
