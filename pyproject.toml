@@ -3,7 +3,8 @@ name = "elegy"
 description = "Elegy is a Neural Networks framework based on Jax and Haiku."
 authors = ["Cristian Garcia <cgarcia.e88@gmail.com>",
            "Carlos Alvarez <candres.alv@gmail.com>",
-           "David Cardozo <davidcardozo@berkeley.edu>"]
+           "David Cardozo <davidcardozo@berkeley.edu>",
+           "Sebastian Arango"]
 version = "0.1.1-beta-4"
 
 [tool.poetry.dependencies]
@@ -29,8 +30,6 @@ typer = "^0.3.0"
 mkdocs-jupyter = "^0.13.0"
 matplotlib = "^3.3.0"
 tensorflow = "^2.2.0"
-# TODO(davidnet): Update as soon as the problem of ssl downloads is fixed
-tensorflow-datasets = "3.1.0"
 dataget = "^0.4.14"
 debugpy = "^1.0.0-beta.12"
 
