@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "elegy"
-version = "0.1.1-beta-3"
+version = "0.1.1-beta-4"
 description = ""
 authors = ["Cristian Garcia <cgarcia.e88@gmail.com>"]
 
@@ -14,6 +14,7 @@ deepdish = "^0.3.6"
 typing_extensions = { version = "^3.7.4", markers = "python_version < '3.8'" }
 dataclasses =  { version = "^0.7", markers = "python_version >= '3.6' and python_version < '3.7'" }
 cloudpickle = "^1.5.0"
+tables = "^3.6.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
