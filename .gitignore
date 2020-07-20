@@ -141,8 +141,5 @@ cython_debug/
 /.vscode
 /test.*
 /summaries
-<<<<<<< HEAD
 /runs
-=======
 /docs/guides/model
->>>>>>> master
