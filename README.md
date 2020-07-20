@@ -1,7 +1,7 @@
 # Elegy
 
 [![Python 3.6](https://img.shields.io/badge/python-3.6-blue.svg)](https://www.python.org/downloads/release/python-360/) [![Python 3.7](https://img.shields.io/badge/python-3.7-blue.svg)](https://www.python.org/downloads/release/python-370/) [![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-380/)
-[![Release v0.1.2](https://img.shields.io/badge/release-v0.1.2-brightgreen.svg)](https://github.com/poets-ai/elegy)
+[![Release v0.1.3](https://img.shields.io/badge/release-v0.1.3-brightgreen.svg)](https://github.com/poets-ai/elegy)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/poets-ai/elegy/issues)
 
 _Elegy is a Neural Networks framework based on Jax and Haiku._ 
