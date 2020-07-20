@@ -1,7 +1,4 @@
-# You can update the PY_VERSION to pick a python version
-ARG PY_VERSION=3.8
-ARG CUDA_VERSION=cuda102
-FROM docker.io/nvidia/cuda:10.2-cudnn7-runtime-ubuntu18.04
+FROM docker.io/nvidia/cuda:10.2-cudnn7-devel-ubuntu18.04
 
 WORKDIR /usr/src/app
 COPY pyproject.toml poetry.lock /usr/src/app/
@@ -16,6 +13,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-get update && apt-get install -y --no-install-recommends \
     python3.8-dev \
     python3.8-distutils \
+    curl \
+
     && curl -Lk "https://bootstrap.pypa.io/get-pip.py" | python3.8 && \
     rm -rf /var/lib/apt/lists/*
 
@@ -25,6 +24,6 @@ RUN python3.8 -m pip install poetry && \
 
 # TODO (davidnet): Parametrize for nvidia version
 ENV BASE_URL="https://storage.googleapis.com/jax-releases"
-RUN pip install --upgrade $BASE_URL/cuda102/jaxlib-0.1.50-cp38-none-manylinux2010_x86_64.whl
-RUN pip install --upgrade jax
+RUN python3.8 -m pip install --upgrade $BASE_URL/cuda102/jaxlib-0.1.51-cp38-none-manylinux2010_x86_64.whl
+RUN python3.8 -m pip install --upgrade jax
 ENV XLA_PYTHON_CLIENT_ALLOCATOR="platform"

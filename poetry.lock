@@ -198,6 +198,15 @@ version = "0.10.0"
 six = "*"
 
 [[package]]
+category = "main"
+description = "A backport of the dataclasses module for Python 3.6"
+marker = "python_version >= \"3.6\" and python_version < \"3.7\""
+name = "dataclasses"
+optional = false
+python-versions = ">=3.6, <3.7"
+version = "0.7"
+
+[[package]]
 category = "dev"
 description = "A framework-agnostic datasets library for Machine Learning research and education."
 name = "dataget"
@@ -213,6 +222,14 @@ kaggle = ">=1.5.6,<2.0.0"
 numpy = ">=1.18.1,<2.0.0"
 pandas = ">=1.0.1,<2.0.0"
 tqdm = ">=4.42.1,<5.0.0"
+
+[[package]]
+category = "dev"
+description = "An implementation of the Debug Adapter Protocol for Python"
+name = "debugpy"
+optional = false
+python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
+version = "1.0.0b12"
 
 [[package]]
 category = "dev"
@@ -245,17 +262,6 @@ name = "defusedxml"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 version = "0.6.0"
-
-[[package]]
-category = "dev"
-description = "serialize all of python"
-name = "dill"
-optional = false
-python-versions = ">=2.6, !=3.0.*"
-version = "0.3.2"
-
-[package.extras]
-graph = ["objgraph (>=1.7.2)"]
 
 [[package]]
 category = "main"
@@ -340,20 +346,6 @@ version = "0.2.0"
 
 [package.dependencies]
 six = "*"
-
-[[package]]
-category = "dev"
-description = "Common protobufs used in Google APIs"
-name = "googleapis-common-protos"
-optional = false
-python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
-version = "1.52.0"
-
-[package.dependencies]
-protobuf = ">=3.6.0"
-
-[package.extras]
-grpc = ["grpcio (>=1.0.0)"]
 
 [[package]]
 category = "dev"
@@ -1037,20 +1029,6 @@ dev = ["pre-commit", "tox"]
 
 [[package]]
 category = "dev"
-description = "Promises/A+ implementation for Python"
-name = "promise"
-optional = false
-python-versions = "*"
-version = "2.3"
-
-[package.dependencies]
-six = "*"
-
-[package.extras]
-test = ["pytest (>=2.7.3)", "pytest-cov", "coveralls", "futures", "pytest-benchmark", "mock"]
-
-[[package]]
-category = "dev"
 description = "Library for building powerful interactive command lines in Python"
 name = "prompt-toolkit"
 optional = false
@@ -1061,7 +1039,7 @@ version = "3.0.5"
 wcwidth = "*"
 
 [[package]]
-category = "dev"
+category = "main"
 description = "Protocol Buffers"
 name = "protobuf"
 optional = false
@@ -1381,6 +1359,19 @@ python-versions = "*"
 version = "1.7.0"
 
 [[package]]
+category = "main"
+description = "TensorBoardX lets you watch Tensors Flow without Tensorflow"
+name = "tensorboardx"
+optional = false
+python-versions = "*"
+version = "2.1"
+
+[package.dependencies]
+numpy = "*"
+protobuf = ">=3.8.0"
+six = "*"
+
+[[package]]
 category = "dev"
 description = "TensorFlow is an open source machine learning framework for everyone."
 name = "tensorflow"
@@ -1415,71 +1406,11 @@ version = ">=0.26"
 
 [[package]]
 category = "dev"
-description = "tensorflow/datasets is a library of datasets ready to use with TensorFlow."
-name = "tensorflow-datasets"
-optional = false
-python-versions = "*"
-version = "3.2.1"
-
-[package.dependencies]
-absl-py = "*"
-attrs = ">=18.1.0"
-dill = "*"
-future = "*"
-numpy = "*"
-promise = "*"
-protobuf = ">=3.6.1"
-requests = ">=2.19.0"
-six = "*"
-tensorflow-metadata = "*"
-termcolor = "*"
-tqdm = "*"
-wrapt = "*"
-
-[package.extras]
-aflw2k3d = ["scipy"]
-c4 = ["apache-beam", "langdetect", "nltk", "tldextract"]
-cats_vs_dogs = ["matplotlib"]
-colorectal_histology = ["pillow"]
-common_voice = ["pydub"]
-duke_ultrasound = ["scipy"]
-eurosat = ["scikit-image"]
-groove = ["pretty-midi", "pydub"]
-imagenet2012_corrupted = ["opencv-python (3.4.0.14)", "scikit-image", "scipy"]
-librispeech = ["pydub"]
-lsun = ["tensorflow-io"]
-matplotlib = ["matplotlib"]
-nsynth = ["crepe (>=0.0.11)", "librosa", "numba (0.48)", "scikit-learn (0.20.3)"]
-pet_finder = ["pandas"]
-robonet = ["h5py"]
-svhn = ["scipy"]
-tensorflow = ["tensorflow (>=1.15.0)"]
-tensorflow-data-validation = ["tensorflow-data-validation"]
-tensorflow_gpu = ["tensorflow-gpu (>=1.15.0)"]
-tests = ["jupyter", "mako", "pytest", "pytest-xdist", "tensorflow-data-validation", "scipy", "apache-beam", "langdetect", "nltk", "tldextract", "matplotlib", "pillow", "pydub", "scikit-image", "pretty-midi", "opencv-python (3.4.0.14)", "pandas", "h5py", "mwparserfromhell", "mock"]
-the300w_lp = ["scipy"]
-wider_face = ["pillow"]
-wikipedia = ["mwparserfromhell", "apache-beam"]
-
-[[package]]
-category = "dev"
 description = "TensorFlow Estimator."
 name = "tensorflow-estimator"
 optional = false
 python-versions = "*"
 version = "2.2.0"
-
-[[package]]
-category = "dev"
-description = "Library and standards for schema and statistics."
-name = "tensorflow-metadata"
-optional = false
-python-versions = ">=2.7,<4"
-version = "0.22.2"
-
-[package.dependencies]
-googleapis-common-protos = "*"
-protobuf = ">=3.7,<4"
 
 [[package]]
 category = "dev"
@@ -1658,7 +1589,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "522c08205b1d863648e738a714617f716c5db4ad902551a58067462095bc5550"
+content-hash = "dc95f5157942952e629c16ce2ca4cc93522a864ef2e0a58b7f4e2ed5621ca35c"
 python-versions = "^3.6.1"
 
 [metadata.files]
@@ -1737,9 +1668,51 @@ cycler = [
     {file = "cycler-0.10.0-py2.py3-none-any.whl", hash = "sha256:1d8a5ae1ff6c5cf9b93e8811e581232ad8920aeec647c37316ceac982b08cb2d"},
     {file = "cycler-0.10.0.tar.gz", hash = "sha256:cd7b2d1018258d7247a71425e9f26463dfb444d411c39569972f4ce586b0c9d8"},
 ]
+dataclasses = [
+    {file = "dataclasses-0.7-py3-none-any.whl", hash = "sha256:3459118f7ede7c8bea0fe795bff7c6c2ce287d01dd226202f7c9ebc0610a7836"},
+    {file = "dataclasses-0.7.tar.gz", hash = "sha256:494a6dcae3b8bcf80848eea2ef64c0cc5cd307ffc263e17cdf42f3e5420808e6"},
+]
 dataget = [
     {file = "dataget-0.4.14-py3-none-any.whl", hash = "sha256:523f4f75ffd7611a66923530ccbc7bde95cec95eec92045ebdc3c37f5631741b"},
     {file = "dataget-0.4.14.tar.gz", hash = "sha256:19af3e8932f53178e381392bc64daf475ce60fcb4b2cd2eb399210770af1dcbd"},
+]
+debugpy = [
+    {file = "debugpy-1.0.0b12-cp27-cp27m-macosx_10_14_x86_64.whl", hash = "sha256:a86bdfb00a4056998215b9526efae7b38e6a18648aac188d2373c871722370bd"},
+    {file = "debugpy-1.0.0b12-cp27-cp27m-manylinux1_i686.whl", hash = "sha256:7ff0efea93d6c399f88575ab297f7255dd33080c362f00708602d501b36e5946"},
+    {file = "debugpy-1.0.0b12-cp27-cp27m-manylinux1_x86_64.whl", hash = "sha256:7609c1714df300c0f118de454feb453dd362eefe3df0dde7366a8dd207e93796"},
+    {file = "debugpy-1.0.0b12-cp27-cp27m-manylinux2010_x86_64.whl", hash = "sha256:5bca5b2f1220cd58bfcc10311d1d85d86122992cfbc51363421f3db6a6e85d3c"},
+    {file = "debugpy-1.0.0b12-cp27-cp27mu-manylinux1_i686.whl", hash = "sha256:e724a206bc1f930bd7e40d2c12c82d96799d34305a6f9fbf82182dea35f00374"},
+    {file = "debugpy-1.0.0b12-cp27-cp27mu-manylinux1_x86_64.whl", hash = "sha256:a7c161ce0400c2732cb22882c399acef031b283de4d3eeec82f4235b4817259f"},
+    {file = "debugpy-1.0.0b12-cp27-cp27mu-manylinux2010_x86_64.whl", hash = "sha256:0794bf2f6ece0c760c71c5f3a2626568d5391d467c2e99885be60aba1809a923"},
+    {file = "debugpy-1.0.0b12-cp34-cp34m-manylinux1_i686.whl", hash = "sha256:00424ac07527f5e0eaf3b9aa090222eaed358062b672a7ab2be28c4e81520dd3"},
+    {file = "debugpy-1.0.0b12-cp34-cp34m-manylinux1_x86_64.whl", hash = "sha256:119d4a3dec554b8db73455adfceb1320b52e7cf8c910a9ff8fffc60691167e4f"},
+    {file = "debugpy-1.0.0b12-cp34-cp34m-manylinux2010_x86_64.whl", hash = "sha256:6168eab7a67e9f9fcdff82af667dd4e25e01cabc13e11026b48b0d135c420c50"},
+    {file = "debugpy-1.0.0b12-cp35-cp35m-macosx_10_14_x86_64.whl", hash = "sha256:346d11a1181fde02876a80cddd20349c97b7ea0f0d44de59642cd79849e16c18"},
+    {file = "debugpy-1.0.0b12-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:9b15645bdbf388322d1096446a28e0544ec5fcd6c87c24160fa75fc97b447465"},
+    {file = "debugpy-1.0.0b12-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:659ea14ab7463bfbfc55adb5771d499cb355dcde68c425f23d38e28283b30c71"},
+    {file = "debugpy-1.0.0b12-cp35-cp35m-manylinux2010_x86_64.whl", hash = "sha256:d64ff7b33b00b99078b81f3ce7111d56b35626533eb9757a2118e3a8c5fea5e1"},
+    {file = "debugpy-1.0.0b12-cp35-cp35m-win32.whl", hash = "sha256:daaf3d4f82b63fe92720d79043197087ce5bb636419898dd698111b1378d22e6"},
+    {file = "debugpy-1.0.0b12-cp35-cp35m-win_amd64.whl", hash = "sha256:8640bf31ec6aae4cdbcef0454f31b406405162def04a9eb2f6020665c8aa149b"},
+    {file = "debugpy-1.0.0b12-cp36-cp36m-macosx_10_14_x86_64.whl", hash = "sha256:4c36caa741ce8de60cb7c6a37084e7b2c05634cc9c2746fdbb4e43ab21906de1"},
+    {file = "debugpy-1.0.0b12-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:876026f74b11385169462badcba6b4e6561f6f4f58204877bddae63b464b642f"},
+    {file = "debugpy-1.0.0b12-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:32fc944bee2ff5a6721ce00c7669f63bcc9caabe541bfa9d0cedf180e250c7dd"},
+    {file = "debugpy-1.0.0b12-cp36-cp36m-manylinux2010_x86_64.whl", hash = "sha256:0e32b55e517e9164ae69fa488e4b7e690b84f2f61dae250096df2e4d14f3e7b4"},
+    {file = "debugpy-1.0.0b12-cp36-cp36m-win32.whl", hash = "sha256:2a3b61152fb558e64671e518aa6212bdb9bd28d1998524e5ebfdb3c92b315f26"},
+    {file = "debugpy-1.0.0b12-cp36-cp36m-win_amd64.whl", hash = "sha256:f9a065fd51bb6747c4988e12bec783f862281310fcc373f1e7ba39020ee6b9b5"},
+    {file = "debugpy-1.0.0b12-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:9cbe2469eb0576d932204361beb2d9b463ac69ad8e3c863608d614b046606cfa"},
+    {file = "debugpy-1.0.0b12-cp37-cp37m-manylinux1_i686.whl", hash = "sha256:b8c17b8335600393df248b1b13240edb34886f553c46b171cfbea5778f64cccd"},
+    {file = "debugpy-1.0.0b12-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:ff9bedcfaf5d3098acce07ae01d136789bb7e7f197654b3d39abba17d4900c4c"},
+    {file = "debugpy-1.0.0b12-cp37-cp37m-manylinux2010_x86_64.whl", hash = "sha256:681b666dec0b4390e3b6800eb28818bba03171e4088b56bf9121e3c71fe1d806"},
+    {file = "debugpy-1.0.0b12-cp37-cp37m-win32.whl", hash = "sha256:ecc561c8fa8dbc4dc116de7c19c73e3c5563ad1dbcf4b85a08819be05dabe24f"},
+    {file = "debugpy-1.0.0b12-cp37-cp37m-win_amd64.whl", hash = "sha256:b3a25ace9fff36b1f696645012dd9bd1c4330b6c20347f405aae03a2b8459701"},
+    {file = "debugpy-1.0.0b12-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:e3aced5be851c32ff09cff9edc2cec9caee5d0aaf0bc8d5f58c865885daf43a3"},
+    {file = "debugpy-1.0.0b12-cp38-cp38-manylinux1_i686.whl", hash = "sha256:3f7bbc878934b26317d39a2e8396785b78f619b5e6664878b2852a4a2968aab6"},
+    {file = "debugpy-1.0.0b12-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:60285ab0f7fa09c9accdec72a9c9f97da5f4d506eff91aa9eb49ae0029d4fe25"},
+    {file = "debugpy-1.0.0b12-cp38-cp38-manylinux2010_x86_64.whl", hash = "sha256:9e965f50f59901d17cbc15bc081ba6404b03b0f55b1c64d617f8560d143c6eaf"},
+    {file = "debugpy-1.0.0b12-cp38-cp38-win32.whl", hash = "sha256:7c0e800a4a3729d264c85eee2be2ec2dbdfebbfb6d8dc5f6cc2c0d411697d365"},
+    {file = "debugpy-1.0.0b12-cp38-cp38-win_amd64.whl", hash = "sha256:0b7c2b6f5038df8696a65494a385da90735c9ae51f4fd35037f5f4dae467eb84"},
+    {file = "debugpy-1.0.0b12-py2.py3-none-any.whl", hash = "sha256:bf7da2a4c9760a3bec19951b0458181611847b99ec101c0b7e0fbdebb9ac837c"},
+    {file = "debugpy-1.0.0b12.zip", hash = "sha256:1ed95e03edc8d28732312a3ce96ca74259d121830ba13d09a8eb0e1b89dace75"},
 ]
 decorator = [
     {file = "decorator-4.4.2-py2.py3-none-any.whl", hash = "sha256:41fa54c2a0cc4ba648be4fd43cff00aedf5b9465c9bf18d64325bc225f08f760"},
@@ -1752,9 +1725,6 @@ deepdish = [
 defusedxml = [
     {file = "defusedxml-0.6.0-py2.py3-none-any.whl", hash = "sha256:6687150770438374ab581bb7a1b327a847dd9c5749e396102de3fad4e8a3ef93"},
     {file = "defusedxml-0.6.0.tar.gz", hash = "sha256:f684034d135af4c6cbb949b8a4d2ed61634515257a67299e5f940fbaa34377f5"},
-]
-dill = [
-    {file = "dill-0.3.2.zip", hash = "sha256:6e12da0d8e49c220e8d6e97ee8882002e624f1160289ce85ec2cc0a5246b3a2e"},
 ]
 dm-haiku = [
     {file = "dm-haiku-0.0.1.tar.gz", hash = "sha256:898677a52af5bdf0c49e65e71b61802e42b3d7e59a2aa966394b1eab9846a022"},
@@ -1783,10 +1753,6 @@ google-pasta = [
     {file = "google-pasta-0.2.0.tar.gz", hash = "sha256:c9f2c8dfc8f96d0d5808299920721be30c9eec37f2389f28904f454565c8a16e"},
     {file = "google_pasta-0.2.0-py2-none-any.whl", hash = "sha256:4612951da876b1a10fe3960d7226f0c7682cf901e16ac06e473b267a5afa8954"},
     {file = "google_pasta-0.2.0-py3-none-any.whl", hash = "sha256:b32482794a366b5366a32c92a9a9201b107821889935a02b3e51f6b432ea84ed"},
-]
-googleapis-common-protos = [
-    {file = "googleapis-common-protos-1.52.0.tar.gz", hash = "sha256:560716c807117394da12cecb0a54da5a451b5cf9866f1d37e9a5e2329a665351"},
-    {file = "googleapis_common_protos-1.52.0-py2.py3-none-any.whl", hash = "sha256:c8961760f5aad9a711d37b675be103e0cc4e9a39327e0d6d857872f698403e24"},
 ]
 grpcio = [
     {file = "grpcio-1.30.0-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:d5eee9d205518ee4feb9c424475ddad18a44fea97ff405780e7cd1d6df8ee96a"},
@@ -2207,9 +2173,6 @@ pluggy = [
     {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},
     {file = "pluggy-0.13.1.tar.gz", hash = "sha256:15b2acde666561e1298d71b523007ed7364de07029219b604cf808bfa1c765b0"},
 ]
-promise = [
-    {file = "promise-2.3.tar.gz", hash = "sha256:dfd18337c523ba4b6a58801c164c1904a9d4d1b1747c7d5dbf45b693a49d93d0"},
-]
 prompt-toolkit = [
     {file = "prompt_toolkit-3.0.5-py3-none-any.whl", hash = "sha256:df7e9e63aea609b1da3a65641ceaf5bc7d05e0a04de5bd45d05dbeffbabf9e04"},
     {file = "prompt_toolkit-3.0.5.tar.gz", hash = "sha256:563d1a4140b63ff9dd587bda9557cffb2fe73650205ab6f4383092fb882e7dc8"},
@@ -2438,6 +2401,10 @@ tensorboard = [
 tensorboard-plugin-wit = [
     {file = "tensorboard_plugin_wit-1.7.0-py3-none-any.whl", hash = "sha256:ee775f04821185c90d9a0e9c56970ee43d7c41403beb6629385b39517129685b"},
 ]
+tensorboardx = [
+    {file = "tensorboardX-2.1-py2.py3-none-any.whl", hash = "sha256:2d81c10d9e3225dcd9bb5fb277588610bdf45317603e7682f6953d83b5b38f6a"},
+    {file = "tensorboardX-2.1.tar.gz", hash = "sha256:9e8907cf2ab900542d6cb72bf91aa87b43005a7f0aa43126268697e3727872f9"},
+]
 tensorflow = [
     {file = "tensorflow-2.2.0-cp35-cp35m-macosx_10_11_x86_64.whl", hash = "sha256:7ed67b47cdf6598a79583de5b57c595493eac2b8b6b3a828f912354716cb8149"},
     {file = "tensorflow-2.2.0-cp35-cp35m-manylinux2010_x86_64.whl", hash = "sha256:267017724a49c367ca5df536e5f6d3d59643eaed946c82233d6b371e62b5ddc8"},
@@ -2452,15 +2419,8 @@ tensorflow = [
     {file = "tensorflow-2.2.0-cp38-cp38-manylinux2010_x86_64.whl", hash = "sha256:8f364528f70d895b96a0de36c7c6002644bf4c5df1ee3fbfa775f5cee6571ad7"},
     {file = "tensorflow-2.2.0-cp38-cp38-win_amd64.whl", hash = "sha256:784ab8217e4b0eb4d121c28430c6cdc2ce56c02634a9720d84fb30598b338b8c"},
 ]
-tensorflow-datasets = [
-    {file = "tensorflow-datasets-3.2.1.tar.gz", hash = "sha256:b622467b9e8ac0fdff04d07c1f3d551102e930c35d28694bbe23e8c3758ee05b"},
-    {file = "tensorflow_datasets-3.2.1-py3-none-any.whl", hash = "sha256:a9ecf8fd0cb13a23c010c682b4801db929e15f4815d738c5c8f6efd762892e11"},
-]
 tensorflow-estimator = [
     {file = "tensorflow_estimator-2.2.0-py2.py3-none-any.whl", hash = "sha256:d09dacdd127f2579cea8d5af21f4a918036b8ae246adc82f26b61f91cc247dc2"},
-]
-tensorflow-metadata = [
-    {file = "tensorflow_metadata-0.22.2-py2.py3-none-any.whl", hash = "sha256:f9ffde743dd61f775f35872e79c4eefecbc539a8870e57b20359dc74726f06eb"},
 ]
 termcolor = [
     {file = "termcolor-1.1.0.tar.gz", hash = "sha256:1d6d69ce66211143803fbc56652b41d73b4a400a2891d7bf7a1cdf4c02de613b"},
