@@ -39,6 +39,9 @@ Example:
               Use hierarchical folder structure to compare
               between runs easily. e.g. pass in 'runs/exp1', 'runs/exp2', etc.
               for each new experiment to compare across them.
+              update_freq (int or String): `'batch'` or `'epoch'` or integer. When using `'batch'`,
+              writes the losses and metrics to TensorBoard after each batch. The same
+                applies for `'epoch'`. 
             **kwargs (dict): Options to pass to `SummaryWriter` object
         """
         self.logdir = logdir
