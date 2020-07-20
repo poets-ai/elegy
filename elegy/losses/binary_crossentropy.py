@@ -49,9 +49,14 @@ class BinaryCrossEntropy(Loss):
       ...     reduction=elegy.losses.Reduction.NONE)
       >>> bce(y_true, y_pred).numpy()
       array([0.916 , 0.714], dtype=float32)
-      Usage with the `tf.keras` API:
+       Usage with the `compile` API:
       ```python
-      model.compile(optimizer='sgd', loss=tf.keras.losses.BinaryCrossentropy())
+       model = elegy.Model(
+        module_fn,
+        loss=elegy.losses.BinaryCrossEntropy(),
+        metrics=elegy.metrics.Accuracy.defer(),
+        optimizer=optix.adam(1e-3),
+    )
       ```
       """
     def __init__(
