@@ -221,8 +221,8 @@ class MyModule(elegy.Module):
 model = elegy.Model(
     module=MyModule.defer(),
     loss=[
-        keras.losses.BinaryCrossentropy(on="key_a", weight=10.0),
-        keras.losses.MeanSquaredError(on="key_b", weight=1.0),
+        elegy.losses.BinaryCrossentropy(on="key_a", weight=10.0),
+        elegy.losses.MeanSquaredError(on="key_b", weight=1.0),
         ...
     ]
 )
@@ -233,11 +233,11 @@ This is almost exactly how Keras behaves except each loss is explicitly aware of
 model = elegy.Model(
     module=MyModule.defer(),
     loss=[
-        lambda y_true, y_pred: keras.losses.BinaryCrossentropy(weight=10.0)(
+        lambda y_true, y_pred: elegy.losses.BinaryCrossentropy(weight=10.0)(
             y_true=y_true["key_a"],
             y_pred=y_pred["key_a"],
         ),
-        lambda y_true, y_pred: keras.losses.MeanSquaredError(weight=1.0)(
+        lambda y_true, y_pred: elegy.losses.MeanSquaredError(weight=1.0)(
             y_true=y_true["key_b"],
             y_pred=y_pred["key_b"],
         ),
