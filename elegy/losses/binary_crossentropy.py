@@ -11,10 +11,14 @@ def binary_cross_entropy(
 ) -> jnp.ndarray:
     if from_logits:
         y_pred = jax.nn.log_sigmoid(y_pred)
-    else:
-        y_pred = jnp.maximum(y_pred, utils.EPSILON)
-        y_pred = jnp.log(y_pred)
-    return -jnp.sum(y_true * y_pred, axis=-1)
+    '''
+    Note, we add a very small value (in this case 1E-15) to the predicted probabilities to 
+    avoid ever calculating the log of 0.0. This means that in practice, 
+    the best possible loss will be a value very close to zero, but not exactly zero.
+    '''
+    score = jnp.sum(y_true * jnp.log(utils.EPSILON + y_pred))
+    mean_sum_score = 1.0 / len(y_true) * score
+    return -jnp.array(mean_sum_score)
 
 
 class BinaryCrossEntropy(Loss):
