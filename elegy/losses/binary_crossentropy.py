@@ -11,11 +11,11 @@ def binary_cross_entropy(
 ) -> jnp.ndarray:
     if from_logits:
         y_pred = jax.nn.log_sigmoid(y_pred)
-    return -jnp.mean(y_true * jnp.log(y_pred) + (1 - y_true) * jnp.log(1 - y_pred))
+    return -jnp.mean(y_true * jnp.log(y_pred) + (1 - y_true) * jnp.log(1 - y_pred), axis=-1)
 
 
 
-class BinaryCrossEntropy(Loss):
+class BinaryCrossentropy(Loss):
     """Computes the cross-entropy loss between true labels and predicted labels.
       Use this cross-entropy loss when there are only two label classes (assumed to
       be 0 and 1). For each example, there should be a single floating-point value
@@ -34,7 +34,7 @@ class BinaryCrossEntropy(Loss):
       >>> bce(y_true, y_pred, sample_weight=[1, 0]).numpy()
       0.458
        >>> # Using 'sum' reduction type.
-      >>> bce = elegy.losses.BinaryCrossEntropy()(
+      >>> bce = elegy.losses.BinaryCrossEntropy(
       ...     reduction=elegy.losses.Reduction.SUM
       >>> bce(y_true, y_pred).numpy()
       1.630
@@ -43,6 +43,8 @@ class BinaryCrossEntropy(Loss):
       ...     reduction=elegy.losses.Reduction.NONE)
       >>> bce(y_true, y_pred).numpy()
       array([0.916 , 0.714], dtype=float32)
+
+
        Usage with the `compile` API:
       ```python
        model = elegy.Model(
