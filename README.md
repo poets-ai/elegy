@@ -66,7 +66,7 @@ model.fit(
 
 And you are done! For a more information checkout:
 
-* Our [Getting Started](getting-started) tutorial.
+* Our [Getting Started](https://poets-ai.github.io/elegy/getting-started/) tutorial.
 * Couple of examples in [examples](https://github.com/poets-ai/elegy/tree/master/examples) directory.
 * Haiku's [User Manual](https://github.com/deepmind/dm-haiku#user-manual) and [Documentation](https://dm-haiku.readthedocs.io/en/latest/)
 * [What is Jax?](https://github.com/google/jax#what-is-jax)
