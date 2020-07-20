@@ -16,10 +16,10 @@ def binary_cross_entropy(
     avoid ever calculating the log of 0.0. This means that in practice, 
     the best possible loss will be a value very close to zero, but not exactly zero.
     '''
+    # implementation 1
     #score = jnp.sum(y_true * jnp.log(utils.EPSILON + y_pred))
     #mean_sum_score = 1.0 / len(y_true) * score
     #return -jnp.array(mean_sum_score)
-    #return -jnp.sum(y_true * jnp.log(y_pred) - (1 - y_true) * jnp.log(1 - y_pred))
 
     # implementation 2
     score = jnp.sum(y_true * jnp.log(y_pred)
