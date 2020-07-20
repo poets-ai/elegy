@@ -15,7 +15,7 @@ def binary_crossentropy(
     if from_logits:
         return -jnp.mean(y_true * y_pred - jnp.logaddexp(0.0, y_pred), axis=-1)
 
-    y_pred = jnp.maximum(y_pred, utils.EPSILON)
+    y_pred = jnp.clip(y_pred, utils.EPSILON, 1.0 - utils.EPSILON)
     return -jnp.mean(y_true * jnp.log(y_pred) + (1 - y_true) * jnp.log(1 - y_pred), axis=-1)
 
 
