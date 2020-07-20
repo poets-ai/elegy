@@ -13,6 +13,13 @@ def test_basic():
     result = bce(y_true, y_pred)
     assert jnp.isclose(result, 0.815, rtol=0.01)
 
+    y_logits = jnp.log(y_pred) - jnp.log(1 - y_pred)
+    bce = elegy.losses.BinaryCrossentropy(from_logits=True)
+    result_from_logits = bce(y_true, y_logits)
+    assert jnp.isclose(result_from_logits, 0.815, rtol=0.01)
+    assert jnp.isclose(result_from_logits, result, rtol=0.01)
+
+    bce = elegy.losses.BinaryCrossentropy()
     result = bce(y_true, y_pred, sample_weight=jnp.array([1, 0]))
     assert jnp.isclose(result, 0.458, rtol=0.01)
 
@@ -38,9 +45,10 @@ def test_compatibility():
     assert jnp.isclose(bce_elegy(y_true, y_pred), bce_tfk(y_true, y_pred), rtol=0.0001)
 
     # Standard BCE, considering prediction tensor as logits
+    y_logits = jnp.log(y_pred) - jnp.log(1 - y_pred)
     bce_elegy = elegy.losses.BinaryCrossentropy(from_logits=True)
     bce_tfk = tfk.losses.BinaryCrossentropy(from_logits=True)
-    assert jnp.isclose(bce_elegy(y_true, y_pred), bce_tfk(y_true, y_pred), rtol=0.0001)
+    assert jnp.isclose(bce_elegy(y_true, y_logits), bce_tfk(y_true, y_logits), rtol=0.0001)
 
     # BCE using sample_weight
     bce_elegy = elegy.losses.BinaryCrossentropy()
@@ -56,5 +64,3 @@ def test_compatibility():
     bce_elegy = elegy.losses.BinaryCrossentropy(reduction=elegy.losses.Reduction.NONE)
     bce_tfk = tfk.losses.BinaryCrossentropy(reduction=tfk.losses.Reduction.NONE)
     assert jnp.all(jnp.isclose(bce_elegy(y_true, y_pred), bce_tfk(y_true, y_pred), rtol=0.0001))
-
-    
