@@ -5,6 +5,7 @@ site_url: https://poets-ai.github.io/elegy
 
 theme:
   name: material
+  favicon: images/favicon.png
   icon:
     logo: fontawesome/solid/infinity
     repo: octicons/mark-github-16
@@ -12,27 +13,41 @@ theme:
 nav:
   - Introduction: index.md
   - Getting Started: getting-started.ipynb
+  - Guides:
+      Modules, Losses, and Metrics: guides/modules-losses-metrics.md
   - API Reference:
-      Overview: api/Overview.md
       Model: api/Model.md
+      # Module: api/Module.md
+      model:
+        load: api/model/load.md
       metrics:
-        Overview: api/metrics/Overview.md
+        Metric: api/metrics/Metric.md
         Accuracy: api/metrics/Accuracy.md
         CategoricalAccuracy: api/metrics/CategoricalAccuracy.md
         SparseCategoricalAccuracy: api/metrics/SparseCategoricalAccuracy.md
         Mean: api/metrics/Mean.md
+        MeanAbsoluteError: api/metrics/MeanAbsoluteError.md
         MeanSquaredError: api/metrics/MeanSquaredError.md
       losses:
-        Overview: api/losses/Overview.md
+        Loss: api/losses/Loss.md
         CategoricalCrossentropy: api/losses/CategoricalCrossentropy.md
         SparseCategoricalCrossentropy: api/losses/SparseCategoricalCrossentropy.md
+        MeanAbsoluteError: api/losses/MeanAbsoluteError.md
         MeanSquaredError: api/losses/MeanSquaredError.md
         mean_squared_error: api/losses/mean_squared_error.md
       regularizers:
-        Overview: api/regularizers/Overview.md
         GlobalL1: api/regularizers/GlobalL1.md
         GlobalL2: api/regularizers/GlobalL2.md
         GlobalL1L2: api/regularizers/GlobalL1L2.md
+      callbacks:
+        Callback: api/callbacks/Callback.md
+        ModelCheckpoint: api/callbacks/ModelCheckpoint.md
+        EarlyStopping: api/callbacks/EarlyStopping.md
+        LambdaCallback: api/callbacks/LambdaCallback.md
+        CSVLogger: api/callbacks/CSVLogger.md
+        RemoteMonitor: api/callbacks/RemoteMonitor.md
+        TerminateOnNaN: api/callbacks/TerminateOnNaN.md
+        Tensorboard: api/callbacks/TensorBoard.md
 
 extra:
   search:
@@ -40,10 +55,14 @@ extra:
   social:
     - icon: octicons/mark-github-16
       link: https://github.com/cgarciae
+    - icon: octicons/mark-github-16
+      link: https://github.com/charlielito
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/cgarciae88
     - icon: fontawesome/brands/linkedin
       link: https://www.linkedin.com/in/cgarciae
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/calvarez92
 
 markdown_extensions:
   - admonition

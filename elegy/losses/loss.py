@@ -47,7 +47,9 @@ class Reduction(Enum):
 
 
 class Loss:
-    """Wraps a loss function in the `Loss` class."""
+    """
+    Wraps a loss function in the `Loss` class.
+    """
 
     def __init__(
         self,

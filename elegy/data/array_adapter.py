@@ -47,21 +47,11 @@ class ArrayDataAdapter(DataAdapter):
         **kwargs,
     ):
         super(ArrayDataAdapter, self).__init__(x, y, **kwargs)
-        # x, y, sample_weights = _process_tensorlike((x, y, sample_weights))
-        # sample_weight_modes = broadcast_sample_weight_modes(
-        #     sample_weights, sample_weight_modes
-        # )
-
-        # If sample_weights are not specified for an output use 1.0 as weights.
-        # (sample_weights, _, _) = training_utils.handle_partial_sample_weights(
-        #     y, sample_weights, sample_weight_modes, check_all_flat=True
-        # )
-        # sample_weights = handle_partial_sample_weights(y, sample_weights)
 
         inputs = pack_x_y_sample_weight(x, y, sample_weights)
 
         num_samples = set(int(i.shape[0]) for i in flatten(inputs))
-        # num_samples = set(int(i.shape[0]) for i in inputs)
+
         if len(num_samples) > 1:
             msg = "Data cardinality is ambiguous:\n"
             for label, data in zip(["x", "y", "sample_weight"], inputs):
@@ -74,9 +64,9 @@ class ArrayDataAdapter(DataAdapter):
 
         # If batch_size is not passed but steps is, calculate from the input data.
         if not batch_size:
+            # if batch_size is None and steps is None:
+            #     raise ValueError("Please provide either batch_size or steps")
             batch_size = int(math.ceil(num_samples / steps)) if steps else 32
-            if batch_size is None:
-                raise ValueError("Please provide either batch_size or steps")
 
         self._size = int(math.ceil(num_samples / batch_size))
         self._batch_size = batch_size

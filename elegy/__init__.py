@@ -1,8 +1,7 @@
-__version__ = "0.1.0"
+__version__ = "0.1.3"
 
-from . import losses, metrics, regularizers
-from .model import Model
-from .module import Module
-
+from . import losses, metrics, model, regularizers, callbacks
 from .losses import Loss
 from .metrics import Metric
+from .model import Model
+from .module import Module
