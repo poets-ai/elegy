@@ -5,18 +5,23 @@ site_url: https://poets-ai.github.io/elegy
 
 theme:
   name: material
+  favicon: images/favicon.png
   icon:
     logo: fontawesome/solid/infinity
     repo: octicons/mark-github-16
 
 nav:
   - Introduction: index.md
-  - Getting Started: getting-started.ipynb
+  - Guides:
+      Getting Started: guides/getting-started.ipynb
+      Modules, Losses, and Metrics: guides/modules-losses-metrics.md
   - API Reference:
       Model: api/Model.md
+      Module: api/Module.md
       model:
         load: api/model/load.md
       metrics:
+        Metric: api/metrics/Metric.md
         Accuracy: api/metrics/Accuracy.md
         CategoricalAccuracy: api/metrics/CategoricalAccuracy.md
         SparseCategoricalAccuracy: api/metrics/SparseCategoricalAccuracy.md
@@ -24,6 +29,7 @@ nav:
         MeanAbsoluteError: api/metrics/MeanAbsoluteError.md
         MeanSquaredError: api/metrics/MeanSquaredError.md
       losses:
+        Loss: api/losses/Loss.md
         CategoricalCrossentropy: api/losses/CategoricalCrossentropy.md
         SparseCategoricalCrossentropy: api/losses/SparseCategoricalCrossentropy.md
         MeanAbsoluteError: api/losses/MeanAbsoluteError.md

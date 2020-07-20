@@ -70,7 +70,7 @@ class Model(object):
     
     Once the model is created, you can train the model with `model.fit()`, or use the model
     to do prediction with `model.predict()`.
-    Checkout [Getting Started](https://poets-ai.github.io/elegy/getting-started) for
+    Checkout [Getting Started](https://poets-ai.github.io/elegy/guides/getting-started) for
     additional details.
 
     Attributes:
@@ -173,7 +173,9 @@ class Model(object):
         self._loss_fn = utils.inject_dependencies(loss)
         self._metrics_transform = (
             hk.transform_with_state(
-                utils.inject_dependencies(metrics, rename={"__params": "params"})
+                utils.inject_dependencies(
+                    metrics, rename={"__params": "params", "__state": "state"}
+                )
             )
             if metrics
             else None
@@ -361,13 +363,14 @@ class Model(object):
                 metrics_state,  # state
                 metrics_rng,  # rng
                 # dependency injection
+                x=x,
                 y_true=y,
                 y_pred=y_pred,
-                x=x,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 is_training=True,
                 __params=params,  # renamed
+                __state=state,
             )
             logs.update(metrics)
 
@@ -391,15 +394,14 @@ class Model(object):
         )
 
         logs = self._loss_fn(
-            # required by loss API
+            x=x,
             y_true=y,
             y_pred=y_pred,
-            # dependency injection
-            x=x,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            params=params,
             is_training=is_training,
+            params=params,
+            state=state,
         )
 
         # get total loss
@@ -990,13 +992,14 @@ class Model(object):
                 metrics_state,  # state
                 metrics_rng,  # rng
                 # dependency injection
+                x=x,
                 y_true=y,
                 y_pred=y_pred,
-                x=x,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 is_training=False,
                 __params=params,  # renamed
+                __state=state,
             )
             logs.update(metrics)
 
@@ -1189,10 +1192,8 @@ class Model(object):
             path = path / "model.pkl"
             with open(path, "wb") as f:
                 cloudpickle.dump(self, f)
-        except ValueError:
-            print(f"Error occurred saving the model function at {path}" "")
-        except Exception:
-            raise
+        except BaseException as e:
+            print(f"Error occurred saving the model object at {path}\nContinuing....")
 
         self.full_state = original_state
 
@@ -1246,8 +1247,8 @@ def load(path: tp.Union[str, Path]) -> Model:
         path: path to a saved model's directory.
 
     Raises:
-        `OSError` in case the model was not found or could not be
-        loaded from disk successfully.
+        OSError: in case the model was not found or could not be
+            loaded from disk successfully.
     """
     if isinstance(path, str):
         path = Path(path)

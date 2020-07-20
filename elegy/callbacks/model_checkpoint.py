@@ -30,9 +30,9 @@ class ModelCheckpoint(Callback):
 
     ```python
     EPOCHS = 10
-    checkpoint_filepath = '/tmp/checkpoint'
+    checkpoint_path = '/tmp/checkpoint'
     model_checkpoint_callback = elegy.callbacks.ModelCheckpoint(
-        filepath=checkpoint_filepath,
+        path=checkpoint_path,
         monitor='val_acc',
         mode='max',
         save_best_only=True)
@@ -42,14 +42,14 @@ class ModelCheckpoint(Callback):
     model.fit(epochs=EPOCHS, callbacks=[model_checkpoint_callback])
 
     # The model status (that are considered the best) are loaded into the model.
-    model.load(checkpoint_filepath)
+    model.load(checkpoint_path)
     ```
 
     """
 
     def __init__(
         self,
-        filepath: str,
+        path: str,
         monitor: str = "val_loss",
         verbose: int = 0,
         save_best_only: bool = False,
@@ -59,9 +59,9 @@ class ModelCheckpoint(Callback):
     ):
         """
         Arguments:
-            filepath: string, path to save the model file. `filepath` can contain
+            path: string, path to directory to save the model state. `path` can contain
                 named formatting options, which will be filled the value of `epoch` and
-                keys in `logs` (passed in `on_epoch_end`). For example: if `filepath` is
+                keys in `logs` (passed in `on_epoch_end`). For example: if `path` is
                 `weights.{epoch:02d}-{val_loss:.2f}`, then the model checkpoints
                 will be saved with the epoch number and the validation loss in the
                 filename.
@@ -69,8 +69,8 @@ class ModelCheckpoint(Callback):
             verbose: verbosity mode, 0 or 1.
             save_best_only: if `save_best_only=True`, the latest best model according
                 to the quantity monitored will not be overwritten.
-                If `filepath` doesn't contain formatting options like `{epoch}` then
-                `filepath` will be overwritten by each new better model.
+                If `path` doesn't contain formatting options like `{epoch}` then
+                `path` will be overwritten by each new better model.
             mode: one of {auto, min, max}. If `save_best_only=True`, the decision to
                 overwrite the current save file is made based on either the maximization
                 or the minimization of the monitored quantity. For `val_acc`, this
@@ -90,7 +90,7 @@ class ModelCheckpoint(Callback):
         super(ModelCheckpoint, self).__init__()
         self.monitor = monitor
         self.verbose = verbose
-        self.filepath = filepath
+        self.path = path
         self.save_best_only = save_best_only
         self.save_freq = save_freq
         self.period = period
@@ -154,7 +154,7 @@ class ModelCheckpoint(Callback):
             or self.epochs_since_last_save >= self.period
         ):
             self.epochs_since_last_save = 0
-            filepath = self._get_file_path(epoch, logs)
+            path = self._get_file_path(epoch, logs)
 
             # try:
             if self.save_best_only:
@@ -170,16 +170,10 @@ class ModelCheckpoint(Callback):
                             print(
                                 "\nEpoch %05d: %s improved from %0.5f to %0.5f,"
                                 " saving model to %s"
-                                % (
-                                    epoch + 1,
-                                    self.monitor,
-                                    self.best,
-                                    current,
-                                    filepath,
-                                )
+                                % (epoch + 1, self.monitor, self.best, current, path,)
                             )
                         self.best = current
-                        self.model.save(filepath)
+                        self.model.save(path)
                     else:
                         if self.verbose > 0:
                             print(
@@ -188,31 +182,31 @@ class ModelCheckpoint(Callback):
                             )
             else:
                 if self.verbose > 0:
-                    print("\nEpoch %05d: saving model to %s" % (epoch + 1, filepath))
+                    print("\nEpoch %05d: saving model to %s" % (epoch + 1, path))
 
-                self.model.save(filepath)
+                self.model.save(path)
 
             # except IOError as e:
             #     # `e.errno` appears to be `None` so checking the content of `e.args[0]`.
             #     if "is a directory" in six.ensure_str(e.args[0]):
             #         raise IOError(
-            #             "Please specify a non-directory filepath for "
+            #             "Please specify a non-directory path for "
             #             "ModelCheckpoint. Filepath used is an existing "
-            #             "directory: {}".format(filepath)
+            #             "directory: {}".format(path)
             #         )
 
     def _get_file_path(self, epoch, logs):
         """Returns the file path for checkpoint."""
         # pylint: disable=protected-access
         try:
-            # `filepath` may contain placeholders such as `{epoch:02d}` and
+            # `path` may contain placeholders such as `{epoch:02d}` and
             # `{mape:.2f}`. A mismatch between logged metrics and the path's
             # placeholders can cause formatting to fail.
-            return self.filepath.format(epoch=epoch + 1, **logs)
+            return self.path.format(epoch=epoch + 1, **logs)
         except KeyError as e:
             raise KeyError(
-                'Failed to format this callback filepath: "{}". '
-                "Reason: {}".format(self.filepath, e)
+                'Failed to format this callback path: "{}". '
+                "Reason: {}".format(self.path, e)
             )
 
     def _implements_train_batch_hooks(self):
