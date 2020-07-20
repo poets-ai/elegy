@@ -72,7 +72,7 @@ def main(debug: bool = False):
         run_eagerly=False,
     )
 
-    model.fit()
+    #model.fit()
 
 
 if __name__ == "__main__":

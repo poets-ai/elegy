@@ -1,6 +1,6 @@
 from .loss import Loss, Reduction
 from .categorical_crossentropy import CategoricalCrossentropy
-
+from .binary_crossentropy import BinaryCrossEntropy
 from .mean_squared_error import MeanSquaredError, mean_squared_error
 from .sparse_categorical_crossentropy import (
     SparseCategoricalCrossentropy,
