@@ -21,45 +21,53 @@ def binary_crossentropy(
 
 
 class BinaryCrossentropy(Loss):
-    """Computes the cross-entropy loss between true labels and predicted labels.
-      Use this cross-entropy loss when there are only two label classes (assumed to
-      be 0 and 1). For each example, there should be a single floating-point value
-      per prediction.
-      In the snippet below, each of the four examples has only a single
-      floating-pointing value, and both `y_pred` and `y_true` have the shape
-      `[batch_size]`.
-      Standalone usage:
-      >>> y_true = [[0., 1.], [0., 0.]]
-      >>> y_pred = [[0.6, 0.4], [0.4, 0.6]]
-      >>> # Using 'auto'/'sum_over_batch_size' reduction type.
-      >>> bce = elegy.losses.BinaryCrossEntropy()
-      >>> bce(y_true, y_pred).numpy()
-      0.815
-      >>> # Calling with 'sample_weight'.
-      >>> bce(y_true, y_pred, sample_weight=[1, 0]).numpy()
-      0.458
-       >>> # Using 'sum' reduction type.
-      >>> bce = elegy.losses.BinaryCrossEntropy(
-      ...     reduction=elegy.losses.Reduction.SUM
-      >>> bce(y_true, y_pred).numpy()
-      1.630
-      >>> # Using 'none' reduction type.
-      >>> bce = elegy.losses.BinaryCrossEntropy(
-      ...     reduction=elegy.losses.Reduction.NONE)
-      >>> bce(y_true, y_pred).numpy()
-      array([0.916 , 0.714], dtype=float32)
+    """
+    Computes the cross-entropy loss between true labels and predicted labels.
+    Use this cross-entropy loss when there are only two label classes (assumed to
+    be 0 and 1). For each example, there should be a single floating-point value
+    per prediction.
+    In the snippet below, each of the four examples has only a single
+    floating-pointing value, and both `y_pred` and `y_true` have the shape
+    `[batch_size]`.
+
+    Usage:
+    ```python
+    y_true = jnp.array([[0., 1.], [0., 0.]])
+    y_pred = jnp.array[[0.6, 0.4], [0.4, 0.6]])
+
+    # Using 'auto'/'sum_over_batch_size' reduction type.
+    bce = elegy.losses.BinaryCrossentropy()
+    result = bce(y_true, y_pred)
+    assert jnp.isclose(result, 0.815, rtol=0.01)
+
+    # Calling with 'sample_weight'.
+    bce = elegy.losses.BinaryCrossentropy()
+    result = bce(y_true, y_pred, sample_weight=jnp.array([1, 0]))
+    assert jnp.isclose(result, 0.458, rtol=0.01)
+
+    # Using 'sum' reduction type.
+    bce = elegy.losses.BinaryCrossentropy(reduction=elegy.losses.Reduction.SUM)
+    result = bce(y_true, y_pred)
+    assert jnp.isclose(result, 1.630, rtol=0.01)
+
+    # Using 'none' reduction type.
+    bce = elegy.losses.BinaryCrossentropy(reduction=elegy.losses.Reduction.NONE)
+    result = bce(y_true, y_pred)
+    assert jnp.all(jnp.isclose(result, [0.916, 0.713], rtol=0.01))
+    ```
 
 
-       Usage with the `compile` API:
-      ```python
-       model = elegy.Model(
+    Usage with the `compile` API:
+    ```python
+    model = elegy.Model(
         module_fn,
         loss=elegy.losses.BinaryCrossentropy(),
         metrics=elegy.metrics.Accuracy.defer(),
         optimizer=optix.adam(1e-3),
     )
-      ```
-      """
+    ```
+    """
+    
     def __init__(
             self,
             from_logits=False,
