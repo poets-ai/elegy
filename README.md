@@ -39,7 +39,7 @@ class MLP(elegy.Module):
         ])
         return mlp(image)
 ```
-**2.** Create a `Model` from this module and specify additional things like losses, metrics, optimizers, and callbacks:
+**2.** Create a `Model` from this module and specify additional things like losses, metrics, and optimizers:
 ```python
 model = elegy.Model(
     module=MLP.defer(),
@@ -61,6 +61,7 @@ model.fit(
     batch_size=64,
     validation_data=(X_test, y_test),
     shuffle=True,
+    callbacks=[elegy.callbacks.TensorBoard("summaries")]
 )
 ```
 
