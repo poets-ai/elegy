@@ -1,16 +1,10 @@
 [tool.poetry]
 name = "elegy"
-<<<<<<< HEAD
-version = "0.1.0"
 description = "Elegy is a Neural Networks framework based on Jax and Haiku."
 authors = ["Cristian Garcia <cgarcia.e88@gmail.com>",
            "Carlos Alvarez <candres.alv@gmail.com>",
            "David Cardozo <davidcardozo@berkeley.edu>"]
-=======
-version = "0.1.1-beta-3"
-description = ""
-authors = ["Cristian Garcia <cgarcia.e88@gmail.com>"]
->>>>>>> master
+version = "0.1.1-beta-4"
 
 [tool.poetry.dependencies]
 python = "^3.6.1"
@@ -23,6 +17,7 @@ typing_extensions = { version = "^3.7.4", markers = "python_version < '3.8'" }
 dataclasses =  { version = "^0.7", markers = "python_version >= '3.6' and python_version < '3.7'" }
 cloudpickle = "^1.5.0"
 tensorboardx = "^2.1"
+tables = "^3.6.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
