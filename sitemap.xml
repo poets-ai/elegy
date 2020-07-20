@@ -1,119 +1,119 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url>
      <loc>https://poets-ai.github.io/elegy/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
-     <loc>https://poets-ai.github.io/elegy/guides/getting-started/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <loc>https://poets-ai.github.io/elegy/getting-started/</loc>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/guides/modules-losses-metrics/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/Model/</loc>
-     <lastmod>2020-07-19</lastmod>
-     <changefreq>daily</changefreq>
-    </url><url>
-     <loc>https://poets-ai.github.io/elegy/api/Module/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/model/load/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/Metric/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/Accuracy/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/CategoricalAccuracy/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/SparseCategoricalAccuracy/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/Mean/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/MeanAbsoluteError/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/MeanSquaredError/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/Loss/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/CategoricalCrossentropy/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/SparseCategoricalCrossentropy/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/MeanAbsoluteError/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/MeanSquaredError/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/mean_squared_error/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/regularizers/GlobalL1/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/regularizers/GlobalL2/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/regularizers/GlobalL1L2/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/callbacks/Callback/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/callbacks/ModelCheckpoint/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/callbacks/EarlyStopping/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/callbacks/LambdaCallback/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/callbacks/CSVLogger/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/callbacks/RemoteMonitor/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/callbacks/TerminateOnNaN/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-20</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://poets-ai.github.io/elegy/api/callbacks/TensorBoard/</loc>
+     <lastmod>2020-07-20</lastmod>
      <changefreq>daily</changefreq>
     </url>
 </urlset>

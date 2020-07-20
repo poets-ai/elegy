@@ -5,10 +5,10 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<link href="https://poets-ai.github.io/elegy/api/metrics/SparseCategoricalAccuracy/" rel="canonical"/>
+<link href="https://poets-ai.github.io/elegy/api/callbacks/TensorBoard/" rel="canonical"/>
 <link href="../../../images/favicon.png" rel="shortcut icon"/>
 <meta content="mkdocs-1.1.2, mkdocs-material-5.4.0" name="generator"/>
-<title>SparseCategoricalAccuracy - Elegy</title>
+<title>Tensorboard - Elegy</title>
 <link href="../../../assets/stylesheets/main.fe0cca5b.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
@@ -19,7 +19,7 @@
 <input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
 <label class="md-overlay" for="__drawer"></label>
 <div data-md-component="skip">
-<a class="md-skip" href="#elegymetricssparsecategoricalaccuracy">
+<a class="md-skip" href="#elegycallbackstensorboard">
           Skip to content
         </a>
 </div>
@@ -40,7 +40,7 @@
           </span>
 <span class="md-header-nav__topic md-ellipsis">
             
-              SparseCategoricalAccuracy
+              Tensorboard
             
           </span>
 </div>
@@ -188,8 +188,8 @@
 </ul>
 </nav>
 </li>
-<li class="md-nav__item md-nav__item--active md-nav__item--nested">
-<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-4-3" id="nav-4-3" type="checkbox"/>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-3" id="nav-4-3" type="checkbox"/>
 <label class="md-nav__link" for="nav-4-3">
       metrics
       <span class="md-nav__icon md-icon">
@@ -205,69 +205,37 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../Metric/" title="Metric">
+<a class="md-nav__link" href="../../metrics/Metric/" title="Metric">
       Metric
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../Accuracy/" title="Accuracy">
+<a class="md-nav__link" href="../../metrics/Accuracy/" title="Accuracy">
       Accuracy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../CategoricalAccuracy/" title="CategoricalAccuracy">
+<a class="md-nav__link" href="../../metrics/CategoricalAccuracy/" title="CategoricalAccuracy">
       CategoricalAccuracy
     </a>
 </li>
-<li class="md-nav__item md-nav__item--active">
-<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
-<label class="md-nav__link md-nav__link--active" for="__toc">
-        SparseCategoricalAccuracy
-        <span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
-</span>
-</label>
-<a class="md-nav__link md-nav__link--active" href="./" title="SparseCategoricalAccuracy">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../metrics/SparseCategoricalAccuracy/" title="SparseCategoricalAccuracy">
       SparseCategoricalAccuracy
     </a>
-<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
-<label class="md-nav__title" for="__toc">
-<span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
-</span>
-      Table of contents
-    </label>
-<ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy">
-    elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy
-  </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy.__init__">
-    __init__()
-  </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy.call">
-    call()
-  </a>
-</li>
-</ul>
-</nav>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../Mean/" title="Mean">
+<a class="md-nav__link" href="../../metrics/Mean/" title="Mean">
       Mean
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../MeanAbsoluteError/" title="MeanAbsoluteError">
+<a class="md-nav__link" href="../../metrics/MeanAbsoluteError/" title="MeanAbsoluteError">
       MeanAbsoluteError
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../MeanSquaredError/" title="MeanSquaredError">
+<a class="md-nav__link" href="../../metrics/MeanSquaredError/" title="MeanSquaredError">
       MeanSquaredError
     </a>
 </li>
@@ -357,8 +325,8 @@
 </ul>
 </nav>
 </li>
-<li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-6" id="nav-4-6" type="checkbox"/>
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-4-6" id="nav-4-6" type="checkbox"/>
 <label class="md-nav__link" for="nav-4-6">
       callbacks
       <span class="md-nav__icon md-icon">
@@ -374,44 +342,71 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/Callback/" title="Callback">
+<a class="md-nav__link" href="../Callback/" title="Callback">
       Callback
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/ModelCheckpoint/" title="ModelCheckpoint">
+<a class="md-nav__link" href="../ModelCheckpoint/" title="ModelCheckpoint">
       ModelCheckpoint
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/EarlyStopping/" title="EarlyStopping">
+<a class="md-nav__link" href="../EarlyStopping/" title="EarlyStopping">
       EarlyStopping
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/LambdaCallback/" title="LambdaCallback">
+<a class="md-nav__link" href="../LambdaCallback/" title="LambdaCallback">
       LambdaCallback
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/CSVLogger/" title="CSVLogger">
+<a class="md-nav__link" href="../CSVLogger/" title="CSVLogger">
       CSVLogger
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/RemoteMonitor/" title="RemoteMonitor">
+<a class="md-nav__link" href="../RemoteMonitor/" title="RemoteMonitor">
       RemoteMonitor
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/TerminateOnNaN/" title="TerminateOnNaN">
+<a class="md-nav__link" href="../TerminateOnNaN/" title="TerminateOnNaN">
       TerminateOnNaN
     </a>
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/TensorBoard/" title="Tensorboard">
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+        Tensorboard
+        <span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
+</span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./" title="Tensorboard">
       Tensorboard
     </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.callbacks.tensorboard.TensorBoard">
+    elegy.callbacks.tensorboard.TensorBoard
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.callbacks.tensorboard.TensorBoard.__init__">
+    __init__()
+  </a>
+</li>
+</ul>
+</nav>
 </li>
 </ul>
 </nav>
@@ -436,18 +431,13 @@
     </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy">
-    elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy
+<a class="md-nav__link" href="#elegy.callbacks.tensorboard.TensorBoard">
+    elegy.callbacks.tensorboard.TensorBoard
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy.__init__">
+<a class="md-nav__link" href="#elegy.callbacks.tensorboard.TensorBoard.__init__">
     __init__()
-  </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy.call">
-    call()
   </a>
 </li>
 </ul>
@@ -457,61 +447,33 @@
 </div>
 <div class="md-content">
 <article class="md-content__inner md-typeset">
-<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/metrics/SparseCategoricalAccuracy.md" title="Edit this page">
+<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/callbacks/TensorBoard.md" title="Edit this page">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
 </a>
-<h1 id="elegymetricssparsecategoricalaccuracy">elegy.metrics.SparseCategoricalAccuracy</h1>
+<h1 id="elegycallbackstensorboard">elegy.callbacks.TensorBoard</h1>
 <div class="doc doc-object doc-class">
-<h2 class="hidden-toc" href="#elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy" id="elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy" style="visibility: hidden; width: 0; height: 0;">
+<h2 class="hidden-toc" href="#elegy.callbacks.tensorboard.TensorBoard" id="elegy.callbacks.tensorboard.TensorBoard" style="visibility: hidden; width: 0; height: 0;">
 </h2>
 <div class="doc doc-contents first">
-<p>Calculates how often predictions matches integer labels.</p>
-<p>You can provide logits of classes as <code>y_pred</code>, since argmax of
-logits and probabilities are same.
-This metric creates two local variables, <code>total</code> and <code>count</code> that are used to
-compute the frequency with which <code>y_pred</code> matches <code>y_true</code>. This frequency is
-ultimately returned as <code>sparse categorical accuracy</code>: an idempotent operation
-that simply divides <code>total</code> by <code>count</code>.
-If <code>sample_weight</code> is <code>None</code>, weights default to 1.
-Use <code>sample_weight</code> of 0 to mask values.</p>
-<p>Usage:</p>
+<p>Callback that streams epoch results to tensorboard events folder.</p>
+<p>Supports all values that can be represented as a string,
+including 1D iterables such as <code>np.ndarray</code>.</p>
+<p><strong>Examples:</strong></p>
 <div class="codehilite">
-<pre><span></span><code><span class="n">accuracy</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">SparseCategoricalAccuracy</span><span class="p">()</span>
-
-<span class="n">result</span> <span class="o">=</span> <span class="n">accuracy</span><span class="p">(</span>
-    <span class="n">y_true</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span> 
-    <span class="n">y_pred</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
-<span class="p">)</span>
-<span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="mf">0.5</span>  <span class="c1"># 1/2</span>
-
-<span class="n">result</span> <span class="o">=</span> <span class="n">accuracy</span><span class="p">(</span>
-    <span class="n">y_true</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span>
-    <span class="n">y_pred</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]),</span>
-<span class="p">)</span>
-<span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="mf">0.75</span>  <span class="c1"># 3/4</span>
-</code></pre>
-</div>
-<p>Usage with elegy API:</p>
-<div class="codehilite">
-<pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
-    <span class="n">module_fn</span><span class="p">,</span>
-    <span class="n">loss</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">CategoricalCrossentropy</span><span class="p">(),</span>
-    <span class="n">metrics</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">SparseCategoricalAccuracy</span><span class="o">.</span><span class="n">defer</span><span class="p">(),</span>
-    <span class="n">optimizer</span><span class="o">=</span><span class="n">optix</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">),</span>
-<span class="p">)</span>
+<pre><span></span><code><span class="n">tensorboard_logger</span> <span class="o">=</span> <span class="n">TensorBoard</span><span class="p">(</span><span class="s1">'runs'</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">tensorboard_logger</span><span class="p">])</span>
 </code></pre>
 </div>
 <div class="doc doc-children">
 <div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy.__init__">
+<h2 class="doc doc-heading" id="elegy.callbacks.tensorboard.TensorBoard.__init__">
 <code class="highlight language-python">
-__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
+__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logdir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">update_freq</span><span class="o">=</span><span class="s1">'epoch'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> </code>
 <span class="doc doc-properties">
 <small class="doc doc-property doc-property-special"><code>special</code></small>
 </span>
 </h2>
 <div class="doc doc-contents">
-<p>Creates a <code>SparseCategoricalAccuracy</code> instance.</p>
 <p><strong>Parameters:</strong></p>
 <table>
 <thead>
@@ -524,209 +486,101 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 </thead>
 <tbody>
 <tr>
-<td><code>name</code></td>
+<td><code>logdir</code></td>
 <td><code>Optional[str]</code></td>
 <td>
-<p>string name of the metric instance.</p>
+<p>Save directory location. Default is
+runs/<strong>CURRENT_DATETIME_HOSTNAME</strong>, which changes after each run.
+Use hierarchical folder structure to compare
+between runs easily. e.g. pass in 'runs/exp1', 'runs/exp2', etc.
+for each new experiment to compare across them.</p>
 </td>
 <td><code>None</code></td>
 </tr>
 <tr>
-<td><code>dtype</code></td>
-<td><code>Optional[numpy.dtype]</code></td>
+<td><code>update_freq</code></td>
+<td><code>Union[str, int]</code></td>
 <td>
-<p>data type of the metric result.</p>
+<p><code>'batch'</code> or <code>'epoch'</code> or integer. When using <code>'batch'</code>,
+writes the losses and metrics to TensorBoard after each batch. The same
+applies for <code>'epoch'</code>. </p>
 </td>
-<td><code>None</code></td>
+<td><code>'epoch'</code></td>
+</tr>
+<tr>
+<td><code>**kwargs</code></td>
+<td><code></code></td>
+<td>
+<p>Options to pass to <code>SummaryWriter</code> object</p>
+</td>
+<td><code>{}</code></td>
 </tr>
 </tbody>
 </table>
 <details class="quote">
-<summary>Source code in <code>elegy/metrics/sparse_categorical_accuracy.py</code></summary>
+<summary>Source code in <code>elegy/callbacks/tensorboard.py</code></summary>
 <table class="highlighttable">
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>62
-63
-64
-65
-66
-67
-68
-69
-70
-71
-72
-73
-74
-75</pre>
+<pre><span></span>29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55</pre>
 </div>
 </td>
 <td class="code">
 <div class="highlight">
 <pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
-    <span class="n">name</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">dtype</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">on</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">IndexLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">):</span>
+    <span class="n">logdir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">update_freq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"epoch"</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="sd">"""</span>
-<span class="sd">    Creates a `SparseCategoricalAccuracy` instance.</span>
-
 <span class="sd">    Arguments:</span>
-<span class="sd">        name: string name of the metric instance.</span>
-<span class="sd">        dtype: data type of the metric result.</span>
+<span class="sd">        logdir: Save directory location. Default is</span>
+<span class="sd">            runs/**CURRENT_DATETIME_HOSTNAME**, which changes after each run.</span>
+<span class="sd">            Use hierarchical folder structure to compare</span>
+<span class="sd">            between runs easily. e.g. pass in 'runs/exp1', 'runs/exp2', etc.</span>
+<span class="sd">            for each new experiment to compare across them.</span>
+<span class="sd">        update_freq: `'batch'` or `'epoch'` or integer. When using `'batch'`,</span>
+<span class="sd">            writes the losses and metrics to TensorBoard after each batch. The same</span>
+<span class="sd">            applies for `'epoch'`. </span>
+<span class="sd">        **kwargs: Options to pass to `SummaryWriter` object</span>
 <span class="sd">    """</span>
-    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">on</span><span class="p">)</span>
-</code></pre>
-</div>
-</td>
-</tr>
-</table>
-</details>
-</div>
-</div>
-<div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.metrics.sparse_categorical_accuracy.SparseCategoricalAccuracy.call">
-<code class="highlight language-python">
-call<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
-</h2>
-<div class="doc doc-contents">
-<p>Accumulates metric statistics. <code>y_true</code> and <code>y_pred</code> should have the same shape except
-<code>y_true</code> should not have the last dimension of <code>y_pred</code>.</p>
-<p><strong>Parameters:</strong></p>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>y_true</code></td>
-<td><code>ndarray</code></td>
-<td>
-<p>Sparse ground truth values. shape = <code>[batch_size, d0, .. dN-1]</code>.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-<tr>
-<td><code>y_pred</code></td>
-<td><code>ndarray</code></td>
-<td>
-<p>The predicted values. shape = <code>[batch_size, d0, .. dN-1, dN]</code>.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-<tr>
-<td><code>sample_weight</code></td>
-<td><code>Optional[jax.numpy.lax_numpy.ndarray]</code></td>
-<td>
-<p>Optional <code>sample_weight</code> acts as a
-coefficient for the metric. If a scalar is provided, then the metric is
-simply scaled by the given value. If <code>sample_weight</code> is a tensor of size
-<code>[batch_size]</code>, then the metric for each sample of the batch is rescaled
-by the corresponding element in the <code>sample_weight</code> vector. If the shape
-of <code>sample_weight</code> is <code>[batch_size, d0, .. dN-1]</code> (or can be broadcasted
-to this shape), then each metric element of <code>y_pred</code> is scaled by the
-corresponding value of <code>sample_weight</code>. (Note on <code>dN-1</code>: all metric
-functions reduce by 1 dimension, usually the last axis (-1)).</p>
-</td>
-<td><code>None</code></td>
-</tr>
-</tbody>
-</table>
-<p><strong>Returns:</strong></p>
-<table>
-<thead>
-<tr>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>ndarray</code></td>
-<td>
-<p>Array with the cumulative accuracy.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<details class="quote">
-<summary>Source code in <code>elegy/metrics/sparse_categorical_accuracy.py</code></summary>
-<table class="highlighttable">
-<tr>
-<td class="linenos">
-<div class="linenodiv">
-<pre><span></span> 77
- 78
- 79
- 80
- 81
- 82
- 83
- 84
- 85
- 86
- 87
- 88
- 89
- 90
- 91
- 92
- 93
- 94
- 95
- 96
- 97
- 98
- 99
-100
-101
-102
-103
-104
-105
-106</pre>
-</div>
-</td>
-<td class="code">
-<div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span>
-    <span class="bp">self</span><span class="p">,</span>
-    <span class="n">y_true</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-    <span class="n">y_pred</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-    <span class="n">sample_weight</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-    <span class="sd">"""</span>
-<span class="sd">    Accumulates metric statistics. `y_true` and `y_pred` should have the same shape except</span>
-<span class="sd">    `y_true` should not have the last dimension of `y_pred`.</span>
-
-<span class="sd">    Arguments:</span>
-<span class="sd">        y_true: Sparse ground truth values. shape = `[batch_size, d0, .. dN-1]`.</span>
-<span class="sd">        y_pred: The predicted values. shape = `[batch_size, d0, .. dN-1, dN]`.</span>
-<span class="sd">        sample_weight: Optional `sample_weight` acts as a</span>
-<span class="sd">            coefficient for the metric. If a scalar is provided, then the metric is</span>
-<span class="sd">            simply scaled by the given value. If `sample_weight` is a tensor of size</span>
-<span class="sd">            `[batch_size]`, then the metric for each sample of the batch is rescaled</span>
-<span class="sd">            by the corresponding element in the `sample_weight` vector. If the shape</span>
-<span class="sd">            of `sample_weight` is `[batch_size, d0, .. dN-1]` (or can be broadcasted</span>
-<span class="sd">            to this shape), then each metric element of `y_pred` is scaled by the</span>
-<span class="sd">            corresponding value of `sample_weight`. (Note on `dN-1`: all metric</span>
-<span class="sd">            functions reduce by 1 dimension, usually the last axis (-1)).</span>
-<span class="sd">    Returns:</span>
-<span class="sd">        Array with the cumulative accuracy.</span>
-<span class="sd">"""</span>
-
-    <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">call</span><span class="p">(</span>
-        <span class="n">values</span><span class="o">=</span><span class="n">sparse_categorical_accuracy</span><span class="p">(</span><span class="n">y_true</span><span class="o">=</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="o">=</span><span class="n">y_pred</span><span class="p">),</span>
-        <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">logdir</span> <span class="o">=</span> <span class="n">logdir</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">writer</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">keys</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">update_freq</span> <span class="o">==</span> <span class="s2">"batch"</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_freq</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_freq</span> <span class="o">=</span> <span class="n">update_freq</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_open_args</span> <span class="o">=</span> <span class="n">kwargs</span> <span class="k">if</span> <span class="n">kwargs</span> <span class="k">else</span> <span class="p">{}</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">TensorBoard</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 </code></pre>
 </div>
 </td>
@@ -745,7 +599,7 @@ functions reduce by 1 dimension, usually the last axis (-1)).</p>
 <footer class="md-footer">
 <div class="md-footer-nav">
 <nav aria-label="Footer" class="md-footer-nav__inner md-grid">
-<a class="md-footer-nav__link md-footer-nav__link--prev" href="../CategoricalAccuracy/" rel="prev" title="CategoricalAccuracy">
+<a class="md-footer-nav__link md-footer-nav__link--prev" href="../TerminateOnNaN/" rel="prev" title="TerminateOnNaN">
 <div class="md-footer-nav__button md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </div>
@@ -754,21 +608,8 @@ functions reduce by 1 dimension, usually the last axis (-1)).</p>
 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                CategoricalAccuracy
+                TerminateOnNaN
               </div>
-</div>
-</a>
-<a class="md-footer-nav__link md-footer-nav__link--next" href="../Mean/" rel="next" title="Mean">
-<div class="md-footer-nav__title">
-<div class="md-ellipsis">
-<span class="md-footer-nav__direction">
-                  Next
-                </span>
-                Mean
-              </div>
-</div>
-<div class="md-footer-nav__button md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"></path></svg>
 </div>
 </a>
 </nav>
