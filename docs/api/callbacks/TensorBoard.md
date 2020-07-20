@@ -4,4 +4,4 @@
     selection:
         inherited_members: true
         members:
-            - __init_
+            - __init__

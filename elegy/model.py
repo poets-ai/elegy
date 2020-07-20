@@ -70,7 +70,7 @@ class Model(object):
     
     Once the model is created, you can train the model with `model.fit()`, or use the model
     to do prediction with `model.predict()`.
-    Checkout [Getting Started](https://poets-ai.github.io/elegy/guides/getting-started) for
+    Checkout [Getting Started](https://poets-ai.github.io/elegy/getting-started) for
     additional details.
 
     Attributes:

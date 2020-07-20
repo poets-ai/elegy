@@ -3,11 +3,12 @@
 
 
 import collections
+import typing as tp
+from typing import Optional, Union
+
 import numpy as np
 import six
-from six.moves import collections_abc
 from tensorboardX.writer import SummaryWriter
-from typing import Optional, Union
 
 from .callback import Callback
 
@@ -34,15 +35,15 @@ Example:
     ) -> None:
         """
         Arguments:
-             logdir (string): Save directory location. Default is
-              runs/**CURRENT_DATETIME_HOSTNAME**, which changes after each run.
-              Use hierarchical folder structure to compare
-              between runs easily. e.g. pass in 'runs/exp1', 'runs/exp2', etc.
-              for each new experiment to compare across them.
-              update_freq (int or String): `'batch'` or `'epoch'` or integer. When using `'batch'`,
-              writes the losses and metrics to TensorBoard after each batch. The same
+            logdir: Save directory location. Default is
+                runs/**CURRENT_DATETIME_HOSTNAME**, which changes after each run.
+                Use hierarchical folder structure to compare
+                between runs easily. e.g. pass in 'runs/exp1', 'runs/exp2', etc.
+                for each new experiment to compare across them.
+            update_freq: `'batch'` or `'epoch'` or integer. When using `'batch'`,
+                writes the losses and metrics to TensorBoard after each batch. The same
                 applies for `'epoch'`. 
-            **kwargs (dict): Options to pass to `SummaryWriter` object
+            **kwargs: Options to pass to `SummaryWriter` object
         """
         self.logdir = logdir
         self.writer = None
@@ -66,7 +67,7 @@ Example:
             is_zero_dim_ndarray = isinstance(k, np.ndarray) and k.ndim == 0
             if isinstance(k, six.string_types):
                 return k
-            elif isinstance(k, collections_abc.Iterable) and not is_zero_dim_ndarray:
+            elif isinstance(k, tp.Iterable) and not is_zero_dim_ndarray:
                 return '"[%s]"' % (", ".join(map(str, k)))
             else:
                 return k
@@ -89,7 +90,7 @@ Example:
             is_zero_dim_ndarray = isinstance(k, np.ndarray) and k.ndim == 0
             if isinstance(k, six.string_types):
                 return k
-            elif isinstance(k, collections_abc.Iterable) and not is_zero_dim_ndarray:
+            elif isinstance(k, tp.Iterable) and not is_zero_dim_ndarray:
                 return '"[%s]"' % (", ".join(map(str, k)))
             else:
                 return k
