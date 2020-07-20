@@ -6,11 +6,16 @@ from elegy import utils
 from elegy.losses.loss import Loss, Reduction
 
 
-def binary_cross_entropy(
-    y_true: jnp.ndarray, y_pred: jnp.ndarray, from_logits: bool = False
-) -> jnp.ndarray:
+def binary_crossentropy(
+    y_true: jnp.ndarray, 
+    y_pred: jnp.ndarray, 
+    from_logits: bool = False
+    ) -> jnp.ndarray:
+
+    y_pred = jnp.maximum(y_pred, utils.EPSILON)
+
     if from_logits:
-        y_pred = jax.nn.log_sigmoid(y_pred)
+        y_pred = jax.nn.sigmoid(y_pred)
     return -jnp.mean(y_true * jnp.log(y_pred) + (1 - y_true) * jnp.log(1 - y_pred), axis=-1)
 
 
@@ -49,7 +54,7 @@ class BinaryCrossentropy(Loss):
       ```python
        model = elegy.Model(
         module_fn,
-        loss=elegy.losses.BinaryCrossEntropy(),
+        loss=elegy.losses.BinaryCrossentropy(),
         metrics=elegy.metrics.Accuracy.defer(),
         optimizer=optix.adam(1e-3),
     )
@@ -91,4 +96,4 @@ class BinaryCrossentropy(Loss):
             Loss values per sample.
         """
 
-        return binary_cross_entropy(y_true, y_pred, from_logits=self._from_logits)
+        return binary_crossentropy(y_true, y_pred, from_logits=self._from_logits)
