@@ -103,3 +103,21 @@ We are a couple friends passionate about ML.
 
 ## License
 Apache
+
+## Citing Elegy
+
+To cite this project:
+
+**BibTeX**
+
+```
+@software{elegy2020repository,
+author = {PoetsAI},
+title = {Elegy: A Keras-like deep learning framework based on Jax & Haiku},
+url = {https://github.com/poets-ai/elegy},
+version = {0.1.3},
+year = {2020},
+}
+```
+
+Where the current *version* may be retrieved either from the `Release` tag or the file [elegy/\_\_init\_\_.py](https://github.com/poets-ai/elegy/blob/master/elegy/__init__.py) and the *year* corresponds to the project's release year.
