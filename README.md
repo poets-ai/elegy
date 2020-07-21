@@ -24,6 +24,8 @@ Install Elegy using pip:
 pip install elegy
 ```
 
+For Windows users we recomend the Windows subsystem for linux 2 [WSL2](https://docs.microsoft.com/es-es/windows/wsl/install-win10?redirectedfrom=MSDN) since [jax](https://github.com/google/jax/issues/438) does not have support for it yet.
+
 ## Quick Start
 Elegy greatly simplifies the training of Deep Learning models compared to pure Jax / Haiku where, due to Jax functional nature, users have to do a lot of book keeping around the state of the model. In Elegy just you just have to follow 3 basic steps:
 
