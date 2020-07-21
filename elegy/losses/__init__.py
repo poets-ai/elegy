@@ -8,3 +8,4 @@ from .sparse_categorical_crossentropy import (
 )
 
 from .mean_absolute_error import MeanAbsoluteError, mean_absolute_error
+from .mean_absolute_percentage_error import MeanAbsolutePercentageError, mean_percentage_absolute_error
