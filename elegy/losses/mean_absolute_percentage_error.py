@@ -24,7 +24,7 @@ def mean_percentage_absolute_error(y_true: jnp.ndarray, y_pred: jnp.ndarray) -> 
 
     assert loss.shape == (2,)
 
-    assert jnp.array_equal(loss, 100. * jnp.mean(jnp.abs((y_pred - y_true) / jnp.clip(y_true, jnp.finfo(float).eps, None)))
+    assert jnp.array_equal(loss, 100. * jnp.mean(jnp.abs((y_pred - y_true) / jnp.clip(y_true, jnp.finfo(float).eps, None))))
     ```
     
     Arguments:

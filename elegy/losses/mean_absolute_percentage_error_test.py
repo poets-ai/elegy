@@ -12,7 +12,7 @@ def test_basic():
     y_pred = jnp.array([[1.0, 1.0], [1.0, 0.0]])
 
     # Using 'auto'/'sum_over_batch_size' reduction type.
-    mape = elegy.losses.MeanAbsolutePercentageError()
+    mape = MeanAbsolutePercentageError()
 
     assert mape(y_true, y_pred) == 0.5
 
@@ -20,11 +20,11 @@ def test_basic():
     assert mape(y_true, y_pred, sample_weight=jnp.array([0.7, 0.3])) == 0.25
 
     # Using 'sum' reduction type.
-    mape = elegy.losses.MeanAbsoluteError(reduction=elegy.losses.Reduction.SUM)
+    mape = elegy.losses.MeanAbsolutePercentageError(reduction=elegy.losses.Reduction.SUM)
     assert mape(y_true, y_pred) == 1.0
 
     # Using 'none' reduction type.
-    mape = elegy.losses.MeanAbsoluteError(reduction=elegy.losses.Reduction.NONE)
+    mape = elegy.losses.MeanAbsolutePercentageError(reduction=elegy.losses.Reduction.NONE)
 
     assert list(mape(y_true, y_pred)) == [0.5, 0.5]
 
@@ -36,11 +36,11 @@ def test_function():
     y_true = jax.random.randint(rng, shape=(2, 3), minval=0, maxval=2)
     y_pred = jax.random.uniform(rng, shape=(2, 3))
 
-    loss = elegy.losses.mean_absolute_error(y_true, y_pred)
+    loss = elegy.losses.mean_percentage_absolute_error(y_true, y_pred)
 
     assert loss.shape == (2,)
 
-    assert jnp.array_equal(loss, jnp.mean(jnp.abs(y_true - y_pred), axis=-1))
+    assert jnp.array_equal(loss, 100. * jnp.mean(jnp.abs((y_pred - y_true) / jnp.clip(y_true, jnp.finfo(float).eps, None))))
 
 
 if __name__ == '__main__':
