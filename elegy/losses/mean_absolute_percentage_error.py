@@ -12,10 +12,6 @@ def mean_percentage_absolute_error(y_true: jnp.ndarray, y_pred: jnp.ndarray) -> 
     After computing the absolute distance between the true value and the prediction value
     and divide by the true value, the mean value over the last dimension is returned. 
     
-    ```python
-    loss = mean(abs((y_true - y_pred) / y_true), axis=-1)
-    ```
-
     Usage:
     
     ```python
@@ -28,13 +24,13 @@ def mean_percentage_absolute_error(y_true: jnp.ndarray, y_pred: jnp.ndarray) -> 
 
     assert loss.shape == (2,)
 
-    assert jnp.array_equal(loss, jnp.mean(jnp.abs((y_true - y_pred) / y_true), axis=-1))
+    assert jnp.array_equal(loss, 100. * jnp.mean(jnp.abs((y_pred - y_true) / jnp.clip(y_true, jnp.finfo(float).eps, None)))
     ```
     
     Arguments:
         y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
         y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
-    
+
     Returns:
         Mean absolute percentage error values. shape = `[batch_size, d0, .. dN-1]`.
     """
@@ -56,22 +52,22 @@ class MeanAbsolutePercentageError(Loss):
     y_pred = jnp.array([[1.0, 1.0], [1.0, 0.0]])
 
     # Using 'auto'/'sum_over_batch_size' reduction type.
-    mae = elegy.losses.MeanAbsolutePercentageError()
+    mape = elegy.losses.MeanAbsolutePercentageError()
 
-    assert mae(y_true, y_pred) == 0.5
+    assert mape(y_true, y_pred) == 0.5
 
     # Calling with 'sample_weight'.
-    assert mae(y_true, y_pred, sample_weight=jnp.array([0.7, 0.3])) == 0.25
+    assert mape(y_true, y_pred, sample_weight=jnp.array([0.7, 0.3])) == 0.25
 
     # Using 'sum' reduction type.
-    mae = elegy.losses.MeanAbsolutePercentageError(reduction=elegy.losses.Reduction.SUM)
+    mape = elegy.losses.MeanAbsolutePercentageError(reduction=elegy.losses.Reduction.SUM)
 
-    assert mae(y_true, y_pred) == 1.0
+    assert mape(y_true, y_pred) == 1.0
 
     # Using 'none' reduction type.
-    mae = elegy.losses.MeanAbsolutePercentageError(reduction=elegy.losses.Reduction.NONE)
+    mape = elegy.losses.MeanAbsolutePercentageError(reduction=elegy.losses.Reduction.NONE)
 
-    assert list(mae(y_true, y_pred)) == [0.5, 0.5]
+    assert list(mape(y_true, y_pred)) == [0.5, 0.5]
     ```
     Usage with the Elegy API:
 
@@ -117,7 +113,7 @@ class MeanAbsolutePercentageError(Loss):
         ] = None,  # not used, __call__ handles it, left for documentation purposes.
     ) -> jnp.ndarray:
         """
-        Invokes the `MeanAbsoluteError` instance.
+        Invokes the `MeanAbsolutePercentageError` instance.
 
         Arguments:
             y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`, except
