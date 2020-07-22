@@ -48,26 +48,24 @@ class MeanAbsolutePercentageError(Loss):
     Usage:
 
     ```python
-    y_true = jnp.array([[0.0, 1.0], [0.0, 0.0]])
+    y_true = jnp.array([[1.0, 1.0], [0.9, 0.0]])
     y_pred = jnp.array([[1.0, 1.0], [1.0, 0.0]])
 
-    # Using 'auto'/'sum_over_batch_size' reduction type.
-    mape = elegy.losses.MeanAbsolutePercentageError()
-
-    assert mape(y_true, y_pred) == 0.5
+    assert mape(y_true, y_pred) == 2.7777786
 
     # Calling with 'sample_weight'.
-    assert mape(y_true, y_pred, sample_weight=jnp.array([0.7, 0.3])) == 0.25
+    assert mape(y_true, y_pred, sample_weight=jnp.array([0.1, 0.9])) == 2.5000007
 
     # Using 'sum' reduction type.
     mape = elegy.losses.MeanAbsolutePercentageError(reduction=elegy.losses.Reduction.SUM)
 
-    assert mape(y_true, y_pred) == 1.0
+    assert mape(y_true, y_pred) == 5.5555573
 
     # Using 'none' reduction type.
     mape = elegy.losses.MeanAbsolutePercentageError(reduction=elegy.losses.Reduction.NONE)
 
-    assert list(mape(y_true, y_pred)) == [0.5, 0.5]
+    assert list(mape(y_true, y_pred)) == [0. , 5.5555573]
+
     ```
     Usage with the Elegy API:
 
