@@ -325,6 +325,11 @@
     </a>
 </li>
 <li class="md-nav__item">
+<a class="md-nav__link" href="../../api/losses/BinaryCrossentropy/" title="BinaryCrossentropy">
+      BinaryCrossentropy
+    </a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="../../api/losses/CategoricalCrossentropy/" title="CategoricalCrossentropy">
       CategoricalCrossentropy
     </a>
@@ -520,7 +525,7 @@
 </a>
 <h1 id="modules-losses-and-metrics">Modules, Losses, and Metrics</h1>
 <p>This guide goes into depth on how modules, losses and metrics work in Elegy and how to create your own. One of our goals with Elegy was to solve Keras restrictions around the type of losses and metrics you can define.</p>
-<p>When creating a complex model with multiple outputs with Keras, say <code>output_a</code> and <code>output_b</code>, you are forced to define losses and metrics per-output only:</p>
+<p>When creating a complex model with multiple outputs in Keras, say <code>output_a</code> and <code>output_b</code>, you are forced to define losses and metrics per-output only:</p>
 <div class="codehilite"><pre><span></span><code><span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
     <span class="n">loss</span><span class="o">=</span><span class="p">{</span>
         <span class="s2">"output_a"</span><span class="p">:</span> <span class="n">keras</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">BinaryCrossentropy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
@@ -613,11 +618,11 @@
 </table>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The content of <code>x</code> is technically passed to the model's <code>Module</code> but the parameter name <em>x</em> will bare no special meaning there.</p>
+<p>The content of <code>x</code> is technically passed to the model's <code>Module</code> but the parameter name <em>x</em> will bare no special meaning in that context.</p>
 </div>
 <h2 id="modules">Modules</h2>
-<p>Modules define the architecture of the network, their primary task (Elegy terms) is transforming <code>x</code> into <code>y_pred</code>. To make it easy to consume the content of <code>x</code>, Elegy has some special but very simple rules on how the signature of any <code>Module</code> can be structured:</p>
-<p>If <code>x</code> is a <code>tuple</code>, then <code>x</code> will be expanded positional arguments a.k.a. <code>*args</code>, this means that the module will have define EXACTLY as many arguments as there are inputs. For example:</p>
+<p>Modules define the architecture of the network, their primary task (in Elegy terms) is transforming the inputs <code>x</code> into outputs <code>y_pred</code>. To make it easy to consume the content of <code>x</code>, Elegy has some special but very simple rules on how the signature of any <code>Module</code> can be structured:</p>
+<p><strong>1.</strong> If <code>x</code> is a <code>tuple</code>, then <code>x</code> will be expanded positional arguments a.k.a. <code>*args</code>, this means that the module will have define <strong>exactly</strong> as many arguments as there are inputs. For example:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">SomeModule</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="hll">    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
 </span>        <span class="o">...</span>
@@ -632,7 +637,8 @@
 <span class="p">)</span>
 </code></pre></div>
 <p>In this case <code>a</code> is passed as <code>m</code> and <code>b</code> is passed as <code>n</code>.</p>
-<p>On the other hand, if <code>x</code> is a <code>dict</code>, then <code>x</code> will be expanded as keyword arguments a.k.a. <code>**kwargs</code>, in this case the module can optionally request any key defined in <code>x</code> as an argument. For example:</p>
+<p><strong>2.</strong> If <code>x</code> is a single array it will be converted internally into a <code>tuple</code> containing that array so the module can expect it as a positional argument.</p>
+<p><strong>3.</strong> If <code>x</code> is a <code>dict</code>, then <code>x</code> will be expanded as keyword arguments a.k.a. <code>**kwargs</code>, in this case the module can optionally request any key defined in <code>x</code> as an argument. For example:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">SomeModule</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="hll">    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
 </span>        <span class="o">...</span>
@@ -646,7 +652,7 @@
 </span>    <span class="o">...</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>Here <code>n</code> is requested by name and you get as input its value <code>b</code>, and <code>m</code> is safely ignored.</p>
+<p>Here <code>n</code> is requested by name and you get as input its value <code>b</code>, and <code>m</code> with the content of <code>a</code> is safely ignored.</p>
 <h2 id="losses">Losses</h2>
 <p>Losses can request all the available parameters that Elegy provides for dependency injection. A typical loss will request the <code>y_true</code> and <code>y_pred</code> values (as its common / enforced in Keras). The Mean Squared Error loss for example is easily defined in these terms:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">MSE</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Loss</span><span class="p">):</span> 
@@ -663,7 +669,7 @@
     <span class="o">...</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>Here the input <code>y</code> is passed as <code>y_true</code> as stated previously. However, if for example you want to build an autoencoder you don't actually need <code>y</code> since you just want to reconstruct <code>x</code>, therefore it makes perfect sense to just request <code>x</code> and Elegy lets you do exactly that:</p>
+<p>Here the input <code>y</code> is passed as <code>y_true</code> to <code>MSE</code>. However, if you for example want to build an autoencoder then, according to the math, you actually don't need <code>y</code> because you are actually trying to reconstruct <code>x</code>. It makes perfect sense for this lossto be defined in terms of <code>x</code> and Elegy lets you do exactly that:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">AutoEncoderLoss</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Loss</span><span class="p">):</span> 
 <span class="hll">    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
 </span>        <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
@@ -677,20 +683,19 @@
     <span class="o">...</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>Here we only used <code>x</code> instead of <code>y_true</code> to define the loss as the math usually tells use, therefore no <code>y</code> was required on <code>fit</code>.</p>
+<p>Notice thanks to this we didn't have to define <code>y</code> on the <code>fit</code> method.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>In this case you could have easily just passed <code>y=X_train</code> and reused the previous <code>MSE</code> definition. However, avoiding the creation of redundant labels is good in general and being explicit about e.g. the function using <code>x</code> might even self-document its behaviour.</p>
+<p>An alternative here is to just use the previous definition of <code>MSE</code> and define <code>y=X_train</code>. However, avoiding the creation of redundant information is good in general and being explicit about dependencies might help documenting the behaviour of the model in general.</p>
 </div>
 <h3 id="partitioning-a-loss">Partitioning a loss</h3>
-<p>If you have a complex loss function that is just a sum of different subparts but that you probably have to compute together, e.g. to reuse some computation, you might define something like this:</p>
+<p>If you have a complex loss function that is just a sum of different parts that have to be compute together you might define something like this:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">SomeComplexFunction</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Loss</span><span class="p">):</span> 
     <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="o">...</span><span class="p">):</span>
         <span class="o">...</span>
-
         <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="n">c</span>
 </code></pre></div>
-<p>Purely for logging purposes you can instead return a <code>dict</code> of these losses:</p>
+<p>Elegy lets you return a <code>dict</code> specifying the name of each part:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">SomeComplexFunction</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Loss</span><span class="p">):</span> 
     <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="o">...</span><span class="p">):</span>
         <span class="o">...</span>
@@ -706,19 +711,23 @@
 <li><code>some_complex_function_loss/b</code></li>
 <li><code>some_complex_function_loss/c</code></li>
 </ul>
+<p>Each individual loss will still be subject to the <code>sample_weight</code> and <code>reduction</code> behavior as specified to <code>SomeComplexFunction</code>.</p>
 <h3 id="multiple-outputs-labels">Multiple Outputs + Labels</h3>
-<p>The models constructor <code>loss</code> argument can accept a single <code>Loss</code>, a <code>list</code> or <code>dict</code> of losses, and even nested structures of the previous, yet the form of <code>loss</code> is not strictly related to structure or numbers of labels and outputs of the model. This is very different to Keras where each loss has to be matched with exactly 1 label and 1 output. Elegy's method of dealing with multiple outputs and labels is super simple:</p>
+<p>The <code>Model</code>'s constructor <code>loss</code> argument can accept a single <code>Loss</code>, a <code>list</code> or <code>dict</code> of losses, and even nested structures of the previous, yet in Elegy the form of <code>loss</code> is not strictly related to structure of input labels and outputs of the model. This is very different to Keras where each loss has to be matched with exactly one (label, output) pair. Elegy's method of dealing with multiple outputs and labels is super simple:</p>
 <div class="admonition quote">
 <p class="admonition-title">Quote</p>
-<p><code>y_true</code> and <code>y_pred</code> will <strong>always</strong> be passed to each loss exactly as they are defined</p>
+<ul>
+<li><code>y_true</code> will contain the <strong>entire</strong> structure passed to <code>y</code>.</li>
+<li><code>y_pred</code> will contain the <strong>entire</strong> structure output by the <code>Module</code>.</li>
+</ul>
 </div>
-<p>This means there are no restrictions on how you structure the loss function. According to this rule, for simple cases where there is only 1 output and 1 label, Keras and Elegy will behave the same because there is no structure: </p>
+<p>This means there are no restrictions on how you structure the loss function. According to this rule Keras and Elegy behave the same when there is only one output and one label because there is no structure. Both framework will allow you to define something like: </p>
 <div class="codehilite"><pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span>
     <span class="o">...</span>
     <span class="n">loss</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">CategoricalCrossentropy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>But if you have many outputs and many labels Elegy will just pass them to you and you can just define your loss function by using indexing their structures:</p>
+<p>However, if you have many outputs and many labels, Elegy will just pass their structures to your loss and you will be able to do whatever you want by e.g. indexing these structures:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">MyLoss</span><span class="p">(</span><span class="n">Elegy</span><span class="o">.</span><span class="n">Loss</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">some_function</span><span class="p">(</span>
@@ -730,9 +739,9 @@
     <span class="n">loss</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MyLoss</span><span class="p">()</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>This example assumes they are dictionaries but they can also be tuples. This gives you maximal flexibility but come at the additional cost of having to implement a custom loss function. </p>
+<p>This example assumes the <code>y_true</code> and <code>y_pred</code> are dictionaries but they can also be tuples or nested structures. This strategy gives you maximal flexibility but come with the additional cost of having to implement your own loss function. </p>
 <h3 id="keras-like-behavior">Keras-like behavior</h3>
-<p>While these examples show Elegy's flexibility, there is an inbetween scenario that Keras covers really well: what if you really just need 1 loss per (label, output) pair? For example the equivalent of:</p>
+<p>While having this flexibility available is good, there is a common scenario that Keras covers really well: what if you really just need one loss per (label, output) pair? In other words, how can we achieve equivalent of the following Keras code in Elege?</p>
 <div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="o">...</span>
@@ -755,7 +764,7 @@
     <span class="p">},</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>Elegy recovers this behavior by letting each <code>Loss</code> filter (or rather index) <code>y_true</code> and <code>y_pred</code> based on a string key in the case of dictionaries or int key in the case of tuples using the constructor's <code>on</code> parameter:</p>
+<p>To recover this behavior Elegy lets each <code>Loss</code> optionally filter / index the <code>y_true</code> and <code>y_pred</code> arguments based on a string key (for <code>dict</code>s) or integer key (for <code>tuple</code>s) in the constructor's <code>on</code> parameter:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">MyModule</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="o">...</span>
@@ -768,21 +777,21 @@
 <span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
     <span class="n">module</span><span class="o">=</span><span class="n">MyModule</span><span class="o">.</span><span class="n">defer</span><span class="p">(),</span>
     <span class="n">loss</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">keras</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">BinaryCrossentropy</span><span class="p">(</span><span class="n">on</span><span class="o">=</span><span class="s2">"key_a"</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-        <span class="n">keras</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">(</span><span class="n">on</span><span class="o">=</span><span class="s2">"key_b"</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">1.0</span><span class="p">),</span>
+        <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">BinaryCrossentropy</span><span class="p">(</span><span class="n">on</span><span class="o">=</span><span class="s2">"key_a"</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
+        <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">(</span><span class="n">on</span><span class="o">=</span><span class="s2">"key_b"</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">1.0</span><span class="p">),</span>
         <span class="o">...</span>
     <span class="p">]</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>This is almost exactly how Keras behaves except each loss is explicitly aware of which part of the output / label its supposed to attend to. The previous is roughly equivalent to manually indexing <code>y_true</code> and <code>y_pred</code> and passing the resulting value to the loss like this:</p>
+<p>This is almost exactly how Keras behaves except each loss is explicitly aware of which part of the output / label its supposed to attend to. The previous is roughly equivalent to manually indexing <code>y_true</code> and <code>y_pred</code> and passing the resulting value to the loss in question like this:</p>
 <div class="codehilite"><pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
     <span class="n">module</span><span class="o">=</span><span class="n">MyModule</span><span class="o">.</span><span class="n">defer</span><span class="p">(),</span>
     <span class="n">loss</span><span class="o">=</span><span class="p">[</span>
-        <span class="k">lambda</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">:</span> <span class="n">keras</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">BinaryCrossentropy</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="mf">10.0</span><span class="p">)(</span>
+        <span class="k">lambda</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">:</span> <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">BinaryCrossentropy</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="mf">10.0</span><span class="p">)(</span>
             <span class="n">y_true</span><span class="o">=</span><span class="n">y_true</span><span class="p">[</span><span class="s2">"key_a"</span><span class="p">],</span>
             <span class="n">y_pred</span><span class="o">=</span><span class="n">y_pred</span><span class="p">[</span><span class="s2">"key_a"</span><span class="p">],</span>
         <span class="p">),</span>
-        <span class="k">lambda</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">:</span> <span class="n">keras</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)(</span>
+        <span class="k">lambda</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">:</span> <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)(</span>
             <span class="n">y_true</span><span class="o">=</span><span class="n">y_true</span><span class="p">[</span><span class="s2">"key_b"</span><span class="p">],</span>
             <span class="n">y_pred</span><span class="o">=</span><span class="n">y_pred</span><span class="p">[</span><span class="s2">"key_b"</span><span class="p">],</span>
         <span class="p">),</span>
@@ -792,15 +801,15 @@
 </code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Elegy doesn't support <code>loss_weights</code> like in <code>keras.compile</code>. Nonetheless, you just can  add the weight directly in the constructor of each loss like the above example.</p>
+<p>For the same reasons Elegy doesn't support the <code>loss_weights</code> parameter as defined in <code>keras.compile</code>. Nonetheless, each loss accepts a <code>weight</code> argument directly, as seen in the examples above, which you can use to recover this behavior.</p>
 </div>
 <h2 id="metrics">Metrics</h2>
-<p>Metrics behave very similar to losses, everything said about losses previously holds for metrics except for one thing: metrics can hold state. As in Keras, Elegy metrics are cumulative metrics which update their internal state on every step. From an user perspective this means a couple of things:</p>
+<p>Metrics behave exactly like losses except for one thing: Metrics can hold state. As in Keras, Elegy metrics are cumulative metrics which update their internal state on every step. From an user's perspective this means a couple of things:</p>
 <ol>
-<li>Metrics are implemented using Haiku <code>Module</code>s, this means that you can't instantiate them normally outside of Haiku, hence the <code>lambda</code> / <code>defer</code> trick.</li>
+<li>Metrics are implemented using Haiku <code>Module</code>, this means that you can't instantiate them normally outside of Haiku, hence the <code>lambda</code> / <code>defer</code> trick.</li>
 <li>You can use <code>hk.get_state</code> and <code>hk.set_state</code> when implementing your own metrics.</li>
 </ol>
-<p>Here is an example of a simple implementation of Accuracy:</p>
+<p>Here is an example of a simple implementation of <code>Accuracy</code> which uses this cumulative behavior:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">Accuracy</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Metric</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
 
@@ -816,7 +825,7 @@
         <span class="k">return</span> <span class="n">total</span> <span class="o">/</span> <span class="n">count</span>
 </code></pre></div>
 <h2 id="a-little-secret">A little secret</h2>
-<p>We think users should use the base classes provided by Elegy (Module, Loss, Metric) for convenience, but the fact is that Elegy also accepts ordinary callables. Being true to Haiku and Jax in general, you can just use functions, however you can run into trouble with Haiku due to not scoping you computation inside Modules.</p>
+<p>We think users should use the base classes provided by Elegy (Module, Loss, Metric) for convenience, being true to Haiku and Jax in general Elegy also lets you use plain functions. Be cautious when doing this since you can easily run into trouble with Haiku's scoping rules.</p>
 </article>
 </div>
 </div>

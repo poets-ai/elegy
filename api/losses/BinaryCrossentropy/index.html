@@ -5,10 +5,10 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<link href="https://poets-ai.github.io/elegy/api/callbacks/LambdaCallback/" rel="canonical"/>
+<link href="https://poets-ai.github.io/elegy/api/losses/BinaryCrossentropy/" rel="canonical"/>
 <link href="../../../images/favicon.png" rel="shortcut icon"/>
 <meta content="mkdocs-1.1.2, mkdocs-material-5.4.0" name="generator"/>
-<title>LambdaCallback - Elegy</title>
+<title>BinaryCrossentropy - Elegy</title>
 <link href="../../../assets/stylesheets/main.fe0cca5b.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
@@ -19,7 +19,7 @@
 <input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
 <label class="md-overlay" for="__drawer"></label>
 <div data-md-component="skip">
-<a class="md-skip" href="#elegycallbackslambdacallback">
+<a class="md-skip" href="#elegylossesbinarycrossentropy">
           Skip to content
         </a>
 </div>
@@ -40,7 +40,7 @@
           </span>
 <span class="md-header-nav__topic md-ellipsis">
             
-              LambdaCallback
+              BinaryCrossentropy
             
           </span>
 </div>
@@ -242,8 +242,8 @@
 </ul>
 </nav>
 </li>
-<li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" id="nav-4-4" type="checkbox"/>
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" id="nav-4-4" type="checkbox"/>
 <label class="md-nav__link" for="nav-4-4">
       losses
       <span class="md-nav__icon md-icon">
@@ -259,37 +259,64 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../losses/Loss/" title="Loss">
+<a class="md-nav__link" href="../Loss/" title="Loss">
       Loss
     </a>
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../losses/BinaryCrossentropy/" title="BinaryCrossentropy">
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+        BinaryCrossentropy
+        <span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
+</span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./" title="BinaryCrossentropy">
       BinaryCrossentropy
     </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.losses.binary_crossentropy.BinaryCrossentropy">
+    elegy.losses.binary_crossentropy.BinaryCrossentropy
+  </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../losses/CategoricalCrossentropy/" title="CategoricalCrossentropy">
+<a class="md-nav__link" href="#elegy.losses.binary_crossentropy.BinaryCrossentropy.call">
+    call()
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../CategoricalCrossentropy/" title="CategoricalCrossentropy">
       CategoricalCrossentropy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../losses/SparseCategoricalCrossentropy/" title="SparseCategoricalCrossentropy">
+<a class="md-nav__link" href="../SparseCategoricalCrossentropy/" title="SparseCategoricalCrossentropy">
       SparseCategoricalCrossentropy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../losses/MeanAbsoluteError/" title="MeanAbsoluteError">
+<a class="md-nav__link" href="../MeanAbsoluteError/" title="MeanAbsoluteError">
       MeanAbsoluteError
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../losses/MeanSquaredError/" title="MeanSquaredError">
+<a class="md-nav__link" href="../MeanSquaredError/" title="MeanSquaredError">
       MeanSquaredError
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../losses/mean_squared_error/" title="mean_squared_error">
+<a class="md-nav__link" href="../mean_squared_error/" title="mean_squared_error">
       mean_squared_error
     </a>
 </li>
@@ -330,8 +357,8 @@
 </ul>
 </nav>
 </li>
-<li class="md-nav__item md-nav__item--active md-nav__item--nested">
-<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-4-6" id="nav-4-6" type="checkbox"/>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-6" id="nav-4-6" type="checkbox"/>
 <label class="md-nav__link" for="nav-4-6">
       callbacks
       <span class="md-nav__icon md-icon">
@@ -347,69 +374,42 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../Callback/" title="Callback">
+<a class="md-nav__link" href="../../callbacks/Callback/" title="Callback">
       Callback
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../ModelCheckpoint/" title="ModelCheckpoint">
+<a class="md-nav__link" href="../../callbacks/ModelCheckpoint/" title="ModelCheckpoint">
       ModelCheckpoint
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../EarlyStopping/" title="EarlyStopping">
+<a class="md-nav__link" href="../../callbacks/EarlyStopping/" title="EarlyStopping">
       EarlyStopping
     </a>
 </li>
-<li class="md-nav__item md-nav__item--active">
-<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
-<label class="md-nav__link md-nav__link--active" for="__toc">
-        LambdaCallback
-        <span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
-</span>
-</label>
-<a class="md-nav__link md-nav__link--active" href="./" title="LambdaCallback">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../callbacks/LambdaCallback/" title="LambdaCallback">
       LambdaCallback
     </a>
-<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
-<label class="md-nav__title" for="__toc">
-<span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
-</span>
-      Table of contents
-    </label>
-<ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.callbacks.lambda_callback.LambdaCallback">
-    elegy.callbacks.lambda_callback.LambdaCallback
-  </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.callbacks.lambda_callback.LambdaCallback.__init__">
-    __init__()
-  </a>
-</li>
-</ul>
-</nav>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../CSVLogger/" title="CSVLogger">
+<a class="md-nav__link" href="../../callbacks/CSVLogger/" title="CSVLogger">
       CSVLogger
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../RemoteMonitor/" title="RemoteMonitor">
+<a class="md-nav__link" href="../../callbacks/RemoteMonitor/" title="RemoteMonitor">
       RemoteMonitor
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../TerminateOnNaN/" title="TerminateOnNaN">
+<a class="md-nav__link" href="../../callbacks/TerminateOnNaN/" title="TerminateOnNaN">
       TerminateOnNaN
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../TensorBoard/" title="Tensorboard">
+<a class="md-nav__link" href="../../callbacks/TensorBoard/" title="Tensorboard">
       Tensorboard
     </a>
 </li>
@@ -436,13 +436,13 @@
     </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.callbacks.lambda_callback.LambdaCallback">
-    elegy.callbacks.lambda_callback.LambdaCallback
+<a class="md-nav__link" href="#elegy.losses.binary_crossentropy.BinaryCrossentropy">
+    elegy.losses.binary_crossentropy.BinaryCrossentropy
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.callbacks.lambda_callback.LambdaCallback.__init__">
-    __init__()
+<a class="md-nav__link" href="#elegy.losses.binary_crossentropy.BinaryCrossentropy.call">
+    call()
   </a>
 </li>
 </ul>
@@ -452,64 +452,65 @@
 </div>
 <div class="md-content">
 <article class="md-content__inner md-typeset">
-<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/callbacks/LambdaCallback.md" title="Edit this page">
+<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/losses/BinaryCrossentropy.md" title="Edit this page">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
 </a>
-<h1 id="elegycallbackslambdacallback">elegy.callbacks.LambdaCallback</h1>
+<h1 id="elegylossesbinarycrossentropy">elegy.losses.BinaryCrossentropy</h1>
 <div class="doc doc-object doc-class">
-<h2 class="hidden-toc" href="#elegy.callbacks.lambda_callback.LambdaCallback" id="elegy.callbacks.lambda_callback.LambdaCallback" style="visibility: hidden; width: 0; height: 0;">
+<h2 class="hidden-toc" href="#elegy.losses.binary_crossentropy.BinaryCrossentropy" id="elegy.losses.binary_crossentropy.BinaryCrossentropy" style="visibility: hidden; width: 0; height: 0;">
 </h2>
 <div class="doc doc-contents first">
-<p>Callback for creating simple, custom callbacks on-the-fly.</p>
-<p>This callback is constructed with anonymous functions that will be called
-at the appropriate time. Note that the callbacks expects positional
-arguments, as:</p>
-<ul>
-<li><code>on_epoch_begin</code> and <code>on_epoch_end</code> expect two positional arguments:
-    <code>epoch</code>, <code>logs</code></li>
-<li><code>on_train_batch_begin</code> and <code>on_train_batch_end</code> expect two positional arguments:
-    <code>batch</code>, <code>logs</code></li>
-<li><code>on_train_begin</code> and <code>on_train_end</code> expect one positional argument:
-    <code>logs</code></li>
-</ul>
-<p><strong>Examples:</strong></p>
+<p>Computes the cross-entropy loss between true labels and predicted labels.
+Use this cross-entropy loss when there are only two label classes (assumed to
+be 0 and 1). For each example, there should be a single floating-point value
+per prediction.
+In the snippet below, each of the four examples has only a single
+floating-pointing value, and both <code>y_pred</code> and <code>y_true</code> have the shape
+<code>[batch_size]</code>.</p>
+<p>Usage:</p>
 <div class="codehilite">
-<pre><span></span><code><span class="c1"># Print the batch number at the beginning of every batch.</span>
-<span class="n">batch_print_callback</span> <span class="o">=</span> <span class="n">LambdaCallback</span><span class="p">(</span>
-    <span class="n">on_train_batch_begin</span><span class="o">=</span><span class="k">lambda</span> <span class="n">batch</span><span class="p">,</span><span class="n">logs</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">batch</span><span class="p">))</span>
+<pre><span></span><code><span class="n">y_true</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">]])</span>
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">[[</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">]])</span>
 
-<span class="c1"># Stream the epoch loss to a file in JSON format. The file content</span>
-<span class="c1"># is not well-formed JSON but rather has a JSON object per line.</span>
-<span class="kn">import</span> <span class="nn">json</span>
-<span class="n">json_log</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">'loss_log.json'</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">'wt'</span><span class="p">,</span> <span class="n">buffering</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">json_logging_callback</span> <span class="o">=</span> <span class="n">LambdaCallback</span><span class="p">(</span>
-    <span class="n">on_epoch_end</span><span class="o">=</span><span class="k">lambda</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="p">:</span> <span class="n">json_log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
-        <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s1">'epoch'</span><span class="p">:</span> <span class="n">epoch</span><span class="p">,</span> <span class="s1">'loss'</span><span class="p">:</span> <span class="n">logs</span><span class="p">[</span><span class="s1">'loss'</span><span class="p">]})</span> <span class="o">+</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="p">),</span>
-    <span class="n">on_train_end</span><span class="o">=</span><span class="k">lambda</span> <span class="n">logs</span><span class="p">:</span> <span class="n">json_log</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="c1"># Using 'auto'/'sum_over_batch_size' reduction type.</span>
+<span class="n">bce</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">BinaryCrossentropy</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">bce</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">jnp</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="mf">0.815</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+
+<span class="c1"># Calling with 'sample_weight'.</span>
+<span class="n">bce</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">BinaryCrossentropy</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">bce</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))</span>
+<span class="k">assert</span> <span class="n">jnp</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="mf">0.458</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+
+<span class="c1"># Using 'sum' reduction type.</span>
+<span class="n">bce</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">BinaryCrossentropy</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">Reduction</span><span class="o">.</span><span class="n">SUM</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">bce</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">jnp</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="mf">1.630</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+
+<span class="c1"># Using 'none' reduction type.</span>
+<span class="n">bce</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">BinaryCrossentropy</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">Reduction</span><span class="o">.</span><span class="n">NONE</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">bce</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">jnp</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.916</span><span class="p">,</span> <span class="mf">0.713</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.01</span><span class="p">))</span>
+</code></pre>
+</div>
+<p>Usage with the <code>compile</code> API:</p>
+<div class="codehilite">
+<pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
+    <span class="n">module_fn</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">BinaryCrossentropy</span><span class="p">(),</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">Accuracy</span><span class="o">.</span><span class="n">defer</span><span class="p">(),</span>
+    <span class="n">optimizer</span><span class="o">=</span><span class="n">optix</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">),</span>
 <span class="p">)</span>
-
-<span class="c1"># Terminate some processes after having finished model training.</span>
-<span class="n">processes</span> <span class="o">=</span> <span class="o">...</span>
-<span class="n">cleanup_callback</span> <span class="o">=</span> <span class="n">LambdaCallback</span><span class="p">(</span>
-    <span class="n">on_train_end</span><span class="o">=</span><span class="k">lambda</span> <span class="n">logs</span><span class="p">:</span> <span class="p">[</span>
-        <span class="n">p</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">processes</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_alive</span><span class="p">()])</span>
-
-<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">...</span><span class="p">,</span>
-            <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">batch_print_callback</span><span class="p">,</span>
-                    <span class="n">json_logging_callback</span><span class="p">,</span>
-                    <span class="n">cleanup_callback</span><span class="p">])</span>
 </code></pre>
 </div>
 <div class="doc doc-children">
 <div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.callbacks.lambda_callback.LambdaCallback.__init__">
+<h2 class="doc doc-heading" id="elegy.losses.binary_crossentropy.BinaryCrossentropy.call">
 <code class="highlight language-python">
-__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">on_epoch_begin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on_epoch_end</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on_train_batch_begin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on_train_batch_end</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on_train_begin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on_train_end</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> </code>
-<span class="doc doc-properties">
-<small class="doc doc-property doc-property-special"><code>special</code></small>
-</span>
+call<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
 </h2>
 <div class="doc doc-contents">
+<p>Invokes the <code>BinaryCrossentropy</code> instance.</p>
 <p><strong>Parameters:</strong></p>
 <table>
 <thead>
@@ -522,90 +523,63 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 </thead>
 <tbody>
 <tr>
-<td><code>on_epoch_begin</code></td>
-<td><code>Optional[Callable[[int, Dict[str, numpy.ndarray]], NoneType]]</code></td>
+<td><code>y_true</code></td>
+<td><code>ndarray</code></td>
 <td>
-<p>called at the beginning of every epoch.</p>
+<p>Ground truth values.</p>
 </td>
-<td><code>None</code></td>
+<td><em>required</em></td>
 </tr>
 <tr>
-<td><code>on_epoch_end</code></td>
-<td><code>Optional[Callable[[int, Dict[str, numpy.ndarray]], NoneType]]</code></td>
+<td><code>y_pred</code></td>
+<td><code>ndarray</code></td>
 <td>
-<p>called at the end of every epoch.</p>
+<p>The predicted values.</p>
 </td>
-<td><code>None</code></td>
+<td><em>required</em></td>
 </tr>
 <tr>
-<td><code>on_train_batch_begin</code></td>
-<td><code>Optional[Callable[[int, Dict[str, numpy.ndarray]], NoneType]]</code></td>
+<td><code>sample_weight</code></td>
+<td><code>Optional[jax.numpy.lax_numpy.ndarray]</code></td>
 <td>
-<p>called at the beginning of every batch.</p>
-</td>
-<td><code>None</code></td>
-</tr>
-<tr>
-<td><code>on_train_batch_end</code></td>
-<td><code>Optional[Callable[[int, Dict[str, numpy.ndarray]], NoneType]]</code></td>
-<td>
-<p>called at the end of every batch.</p>
-</td>
-<td><code>None</code></td>
-</tr>
-<tr>
-<td><code>on_train_begin</code></td>
-<td><code>Optional[Callable[[Dict[str, numpy.ndarray]], NoneType]]</code></td>
-<td>
-<p>called at the beginning of model training.</p>
-</td>
-<td><code>None</code></td>
-</tr>
-<tr>
-<td><code>on_train_end</code></td>
-<td><code>Optional[Callable[[Dict[str, numpy.ndarray]], NoneType]]</code></td>
-<td>
-<p>called at the end of model training.</p>
+<p>Acts as a
+coefficient for the loss. If a scalar is provided, then the loss is
+simply scaled by the given value. If <code>sample_weight</code> is a tensor of size
+<code>[batch_size]</code>, then the total loss for each sample of the batch is
+rescaled by the corresponding element in the <code>sample_weight</code> vector. If
+the shape of <code>sample_weight</code> is <code>[batch_size, d0, .. dN-1]</code> (or can be
+broadcasted to this shape), then each loss element of <code>y_pred</code> is scaled
+by the corresponding value of <code>sample_weight</code>. (Note on<code>dN-1</code>: all loss
+functions reduce by 1 dimension, usually axis=-1.)</p>
 </td>
 <td><code>None</code></td>
 </tr>
 </tbody>
 </table>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ndarray</code></td>
+<td>
+<p>Loss values per sample.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <details class="quote">
-<summary>Source code in <code>elegy/callbacks/lambda_callback.py</code></summary>
+<summary>Source code in <code>elegy/losses/binary_crossentropy.py</code></summary>
 <table class="highlighttable">
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span> 54
- 55
- 56
- 57
- 58
- 59
- 60
- 61
- 62
- 63
- 64
- 65
- 66
- 67
- 68
- 69
- 70
- 71
- 72
- 73
- 74
- 75
- 76
- 77
- 78
- 79
- 80
- 81
- 82
+<pre><span></span> 82
  83
  84
  85
@@ -630,67 +604,37 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 104
 105
 106
-107
-108</pre>
+107</pre>
 </div>
 </td>
 <td class="code">
 <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-    <span class="bp">self</span><span class="p">,</span>
-    <span class="n">on_epoch_begin</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span>
-        <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]</span>
-    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">on_epoch_end</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span>
-        <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]</span>
-    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">on_train_batch_begin</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span>
-        <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]</span>
-    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">on_train_batch_end</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span>
-        <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]</span>
-    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">on_train_begin</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span>
-        <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="n">tp</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]</span>
-    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">on_train_end</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="n">tp</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="o">**</span><span class="n">kwargs</span>
-<span class="p">):</span>
+<pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">y_true</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">y_pred</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">sample_weight</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
     <span class="sd">"""</span>
+<span class="sd">    Invokes the `BinaryCrossentropy` instance.</span>
+
 <span class="sd">    Arguments:</span>
-<span class="sd">        on_epoch_begin: called at the beginning of every epoch.</span>
-<span class="sd">        on_epoch_end: called at the end of every epoch.</span>
-<span class="sd">        on_train_batch_begin: called at the beginning of every batch.</span>
-<span class="sd">        on_train_batch_end: called at the end of every batch.</span>
-<span class="sd">        on_train_begin: called at the beginning of model training.</span>
-<span class="sd">        on_train_end: called at the end of model training.</span>
+<span class="sd">        y_true: Ground truth values.</span>
+<span class="sd">        y_pred: The predicted values.</span>
+<span class="sd">        sample_weight: Acts as a</span>
+<span class="sd">            coefficient for the loss. If a scalar is provided, then the loss is</span>
+<span class="sd">            simply scaled by the given value. If `sample_weight` is a tensor of size</span>
+<span class="sd">            `[batch_size]`, then the total loss for each sample of the batch is</span>
+<span class="sd">            rescaled by the corresponding element in the `sample_weight` vector. If</span>
+<span class="sd">            the shape of `sample_weight` is `[batch_size, d0, .. dN-1]` (or can be</span>
+<span class="sd">            broadcasted to this shape), then each loss element of `y_pred` is scaled</span>
+<span class="sd">            by the corresponding value of `sample_weight`. (Note on`dN-1`: all loss</span>
+<span class="sd">            functions reduce by 1 dimension, usually axis=-1.)</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Loss values per sample.</span>
 <span class="sd">    """</span>
-    <span class="nb">super</span><span class="p">(</span><span class="n">LambdaCallback</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-    <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">on_epoch_begin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">on_epoch_begin</span> <span class="o">=</span> <span class="n">on_epoch_begin</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">on_epoch_begin</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="p">:</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="n">on_epoch_end</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">on_epoch_end</span> <span class="o">=</span> <span class="n">on_epoch_end</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">on_epoch_end</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="p">:</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="n">on_train_batch_begin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">on_train_batch_begin</span> <span class="o">=</span> <span class="n">on_train_batch_begin</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">on_train_batch_begin</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="p">:</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="n">on_train_batch_end</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">on_train_batch_end</span> <span class="o">=</span> <span class="n">on_train_batch_end</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">on_train_batch_end</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="p">:</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="n">on_train_begin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">on_train_begin</span> <span class="o">=</span> <span class="n">on_train_begin</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">on_train_begin</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">logs</span><span class="p">:</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="n">on_train_end</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">on_train_end</span> <span class="o">=</span> <span class="n">on_train_end</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">on_train_end</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">logs</span><span class="p">:</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">binary_crossentropy</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">from_logits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_from_logits</span><span class="p">)</span>
 </code></pre>
 </div>
 </td>
@@ -709,7 +653,7 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 <footer class="md-footer">
 <div class="md-footer-nav">
 <nav aria-label="Footer" class="md-footer-nav__inner md-grid">
-<a class="md-footer-nav__link md-footer-nav__link--prev" href="../EarlyStopping/" rel="prev" title="EarlyStopping">
+<a class="md-footer-nav__link md-footer-nav__link--prev" href="../Loss/" rel="prev" title="Loss">
 <div class="md-footer-nav__button md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </div>
@@ -718,17 +662,17 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                EarlyStopping
+                Loss
               </div>
 </div>
 </a>
-<a class="md-footer-nav__link md-footer-nav__link--next" href="../CSVLogger/" rel="next" title="CSVLogger">
+<a class="md-footer-nav__link md-footer-nav__link--next" href="../CategoricalCrossentropy/" rel="next" title="CategoricalCrossentropy">
 <div class="md-footer-nav__title">
 <div class="md-ellipsis">
 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                CSVLogger
+                CategoricalCrossentropy
               </div>
 </div>
 <div class="md-footer-nav__button md-icon">
