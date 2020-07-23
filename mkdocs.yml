@@ -23,6 +23,7 @@ nav:
       metrics:
         Metric: api/metrics/Metric.md
         Accuracy: api/metrics/Accuracy.md
+        BinaryCrossentropy: api/metrics/BinaryCrossentropy.md
         CategoricalAccuracy: api/metrics/CategoricalAccuracy.md
         SparseCategoricalAccuracy: api/metrics/SparseCategoricalAccuracy.md
         Mean: api/metrics/Mean.md
