@@ -1,4 +1,8 @@
+# Implementation based on Tensorflow Keras:
+# https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/losses.py#L44-L201
+
 from abc import abstractmethod
+import numpy as np
 
 from numpy.lib.arraysetops import isin
 from elegy import types
@@ -48,7 +52,23 @@ class Reduction(Enum):
 
 class Loss:
     """
-    Wraps a loss function in the `Loss` class.
+    Loss base class.
+
+    To be implemented by subclasses:
+
+    * `call()`: Contains the logic for loss calculation.
+
+    Example subclass implementation:
+
+    ```python
+    class MeanSquaredError(Loss):
+        def call(self, y_true, y_pred):
+            return jnp.mean(jnp.square(y_pred - y_true), axis=-1)
+    ```
+
+    Please see the [Modules, Losses, and Metrics Guide]
+    (https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#losses) for more
+    details on this.
     """
 
     def __init__(
@@ -71,6 +91,13 @@ class Loss:
                 for more details.
             name: Optional name for the loss.
             weight: Optional weight contribution for the total loss. Defaults to `1`.
+            on: A string or integer, or iterable of string or integers, that
+                indicate how to index/filter the `y_true` and `y_pred`
+                arguments before passing them to `call`. For example if `on = "a"` then
+                `y_true = y_true["a"]`. If `on` is an iterable
+                the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`
+                then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
+                check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).
         """
         self.name = (
             name
@@ -120,7 +147,7 @@ class Loss:
 
 def reduce_loss(values, sample_weight, weight, reduction):
 
-    values = jnp.asarray(values)
+    values: jnp.ndarray = jnp.asarray(values)
 
     if sample_weight is not None:
         values *= sample_weight
@@ -128,9 +155,9 @@ def reduce_loss(values, sample_weight, weight, reduction):
     if reduction == Reduction.NONE:
         loss = values
     elif reduction == Reduction.SUM:
-        loss = values.sum()
+        loss = jnp.sum(values)
     elif reduction == Reduction.SUM_OVER_BATCH_SIZE:
-        loss = values.sum() / jnp.prod(values.shape)
+        loss = jnp.sum(values) / jnp.prod(values.shape)
     else:
         raise ValueError(f"Invalid reduction '{reduction}'")
 
