@@ -5,11 +5,11 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<link href="https://poets-ai.github.io/elegy/api/losses/mean_squared_error/" rel="canonical"/>
-<link href="../../../images/favicon.png" rel="shortcut icon"/>
+<link href="https://poets-ai.github.io/elegy/guides/contributing/" rel="canonical"/>
+<link href="../../images/favicon.png" rel="shortcut icon"/>
 <meta content="mkdocs-1.1.2, mkdocs-material-5.4.0" name="generator"/>
-<title>mean_squared_error - Elegy</title>
-<link href="../../../assets/stylesheets/main.fe0cca5b.min.css" rel="stylesheet"/>
+<title>Contibuting - Elegy</title>
+<link href="../../assets/stylesheets/main.fe0cca5b.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
 <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
@@ -19,7 +19,7 @@
 <input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
 <label class="md-overlay" for="__drawer"></label>
 <div data-md-component="skip">
-<a class="md-skip" href="#elegylossesmean_squared_error">
+<a class="md-skip" href="#contributing">
           Skip to content
         </a>
 </div>
@@ -40,7 +40,7 @@
           </span>
 <span class="md-header-nav__topic md-ellipsis">
             
-              mean_squared_error
+              Contibuting
             
           </span>
 </div>
@@ -110,17 +110,17 @@
 </div>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../.." title="Introduction">
+<a class="md-nav__link" href="../.." title="Introduction">
       Introduction
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../../getting-started/" title="Getting Started">
+<a class="md-nav__link" href="../../getting-started/" title="Getting Started">
       Getting Started
     </a>
 </li>
-<li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" id="nav-3" type="checkbox"/>
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-3" id="nav-3" type="checkbox"/>
 <label class="md-nav__link" for="nav-3">
       Guides
       <span class="md-nav__icon md-icon">
@@ -136,20 +136,57 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../../guides/modules-losses-metrics/" title="Modules, Losses, and Metrics">
+<a class="md-nav__link" href="../modules-losses-metrics/" title="Modules, Losses, and Metrics">
       Modules, Losses, and Metrics
     </a>
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../../guides/contributing/" title="Contibuting">
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+        Contibuting
+        <span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
+</span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./" title="Contibuting">
       Contibuting
     </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#setup">
+    Setup
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#creating-losses-and-metrics">
+    Creating Losses and Metrics
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#testing">
+    Testing
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#documentation">
+    Documentation
+  </a>
 </li>
 </ul>
 </nav>
 </li>
-<li class="md-nav__item md-nav__item--active md-nav__item--nested">
-<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-4" id="nav-4" type="checkbox"/>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" id="nav-4" type="checkbox"/>
 <label class="md-nav__link" for="nav-4">
       API Reference
       <span class="md-nav__icon md-icon">
@@ -165,7 +202,7 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../Model/" title="Model">
+<a class="md-nav__link" href="../../api/Model/" title="Model">
       Model
     </a>
 </li>
@@ -186,7 +223,7 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../model/load/" title="load">
+<a class="md-nav__link" href="../../api/model/load/" title="load">
       load
     </a>
 </li>
@@ -210,45 +247,45 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/Metric/" title="Metric">
+<a class="md-nav__link" href="../../api/metrics/Metric/" title="Metric">
       Metric
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/Accuracy/" title="Accuracy">
+<a class="md-nav__link" href="../../api/metrics/Accuracy/" title="Accuracy">
       Accuracy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/CategoricalAccuracy/" title="CategoricalAccuracy">
+<a class="md-nav__link" href="../../api/metrics/CategoricalAccuracy/" title="CategoricalAccuracy">
       CategoricalAccuracy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/SparseCategoricalAccuracy/" title="SparseCategoricalAccuracy">
+<a class="md-nav__link" href="../../api/metrics/SparseCategoricalAccuracy/" title="SparseCategoricalAccuracy">
       SparseCategoricalAccuracy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/Mean/" title="Mean">
+<a class="md-nav__link" href="../../api/metrics/Mean/" title="Mean">
       Mean
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/MeanAbsoluteError/" title="MeanAbsoluteError">
+<a class="md-nav__link" href="../../api/metrics/MeanAbsoluteError/" title="MeanAbsoluteError">
       MeanAbsoluteError
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/MeanSquaredError/" title="MeanSquaredError">
+<a class="md-nav__link" href="../../api/metrics/MeanSquaredError/" title="MeanSquaredError">
       MeanSquaredError
     </a>
 </li>
 </ul>
 </nav>
 </li>
-<li class="md-nav__item md-nav__item--active md-nav__item--nested">
-<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" id="nav-4-4" type="checkbox"/>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" id="nav-4-4" type="checkbox"/>
 <label class="md-nav__link" for="nav-4-4">
       losses
       <span class="md-nav__icon md-icon">
@@ -264,61 +301,39 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../Loss/" title="Loss">
+<a class="md-nav__link" href="../../api/losses/Loss/" title="Loss">
       Loss
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../BinaryCrossentropy/" title="BinaryCrossentropy">
+<a class="md-nav__link" href="../../api/losses/BinaryCrossentropy/" title="BinaryCrossentropy">
       BinaryCrossentropy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../CategoricalCrossentropy/" title="CategoricalCrossentropy">
+<a class="md-nav__link" href="../../api/losses/CategoricalCrossentropy/" title="CategoricalCrossentropy">
       CategoricalCrossentropy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../SparseCategoricalCrossentropy/" title="SparseCategoricalCrossentropy">
+<a class="md-nav__link" href="../../api/losses/SparseCategoricalCrossentropy/" title="SparseCategoricalCrossentropy">
       SparseCategoricalCrossentropy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../MeanAbsoluteError/" title="MeanAbsoluteError">
+<a class="md-nav__link" href="../../api/losses/MeanAbsoluteError/" title="MeanAbsoluteError">
       MeanAbsoluteError
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../MeanSquaredError/" title="MeanSquaredError">
+<a class="md-nav__link" href="../../api/losses/MeanSquaredError/" title="MeanSquaredError">
       MeanSquaredError
     </a>
 </li>
-<li class="md-nav__item md-nav__item--active">
-<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
-<label class="md-nav__link md-nav__link--active" for="__toc">
-        mean_squared_error
-        <span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
-</span>
-</label>
-<a class="md-nav__link md-nav__link--active" href="./" title="mean_squared_error">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../api/losses/mean_squared_error/" title="mean_squared_error">
       mean_squared_error
     </a>
-<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
-<label class="md-nav__title" for="__toc">
-<span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
-</span>
-      Table of contents
-    </label>
-<ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.losses.mean_squared_error.mean_squared_error">
-    elegy.losses.mean_squared_error.mean_squared_error
-  </a>
-</li>
-</ul>
-</nav>
 </li>
 </ul>
 </nav>
@@ -340,17 +355,17 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../regularizers/GlobalL1/" title="GlobalL1">
+<a class="md-nav__link" href="../../api/regularizers/GlobalL1/" title="GlobalL1">
       GlobalL1
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../regularizers/GlobalL2/" title="GlobalL2">
+<a class="md-nav__link" href="../../api/regularizers/GlobalL2/" title="GlobalL2">
       GlobalL2
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../regularizers/GlobalL1L2/" title="GlobalL1L2">
+<a class="md-nav__link" href="../../api/regularizers/GlobalL1L2/" title="GlobalL1L2">
       GlobalL1L2
     </a>
 </li>
@@ -374,42 +389,42 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/Callback/" title="Callback">
+<a class="md-nav__link" href="../../api/callbacks/Callback/" title="Callback">
       Callback
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/ModelCheckpoint/" title="ModelCheckpoint">
+<a class="md-nav__link" href="../../api/callbacks/ModelCheckpoint/" title="ModelCheckpoint">
       ModelCheckpoint
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/EarlyStopping/" title="EarlyStopping">
+<a class="md-nav__link" href="../../api/callbacks/EarlyStopping/" title="EarlyStopping">
       EarlyStopping
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/LambdaCallback/" title="LambdaCallback">
+<a class="md-nav__link" href="../../api/callbacks/LambdaCallback/" title="LambdaCallback">
       LambdaCallback
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/CSVLogger/" title="CSVLogger">
+<a class="md-nav__link" href="../../api/callbacks/CSVLogger/" title="CSVLogger">
       CSVLogger
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/RemoteMonitor/" title="RemoteMonitor">
+<a class="md-nav__link" href="../../api/callbacks/RemoteMonitor/" title="RemoteMonitor">
       RemoteMonitor
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/TerminateOnNaN/" title="TerminateOnNaN">
+<a class="md-nav__link" href="../../api/callbacks/TerminateOnNaN/" title="TerminateOnNaN">
       TerminateOnNaN
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/TensorBoard/" title="Tensorboard">
+<a class="md-nav__link" href="../../api/callbacks/TensorBoard/" title="Tensorboard">
       Tensorboard
     </a>
 </li>
@@ -436,8 +451,23 @@
     </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.losses.mean_squared_error.mean_squared_error">
-    elegy.losses.mean_squared_error.mean_squared_error
+<a class="md-nav__link" href="#setup">
+    Setup
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#creating-losses-and-metrics">
+    Creating Losses and Metrics
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#testing">
+    Testing
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#documentation">
+    Documentation
   </a>
 </li>
 </ul>
@@ -447,173 +477,57 @@
 </div>
 <div class="md-content">
 <article class="md-content__inner md-typeset">
-<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/losses/mean_squared_error.md" title="Edit this page">
+<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/guides/contributing.md" title="Edit this page">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
 </a>
-<h1 id="elegylossesmean_squared_error">elegy.losses.mean_squared_error</h1>
-<div class="doc doc-object doc-function">
-<h2 class="hidden-toc" href="#elegy.losses.mean_squared_error.mean_squared_error" id="elegy.losses.mean_squared_error.mean_squared_error" style="visibility: hidden; width: 0; height: 0;">
-</h2>
-<div class="doc doc-contents first">
-<p>Computes the mean squared error between labels and predictions.</p>
-<p>After computing the squared distance between the inputs, the mean value over
-the last dimension is returned.</p>
-<div class="codehilite">
-<pre><span></span><code><span class="n">loss</span> <span class="o">=</span> <span class="n">mean</span><span class="p">(</span><span class="n">square</span><span class="p">(</span><span class="n">y_true</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-</code></pre>
-</div>
-<p>Usage:</p>
-<div class="codehilite">
-<pre><span></span><code><span class="n">rng</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PRNGKey</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<h1 id="contributing">Contributing</h1>
+<p>This is a shot guide on how to start contibuting to Elegy along with some best practices for the project.</p>
+<h2 id="setup">Setup</h2>
+<p>We use <code>poetry</code> so the easiest way to setup a development environment is run</p>
+<div class="codehilite"><pre><span></span><code>poetry install
+</code></pre></div>
+<h2 id="creating-losses-and-metrics">Creating Losses and Metrics</h2>
+<p>For this you can follow these guidelines:</p>
+<ul>
+<li>Each loss / metric should be defined in its own file.</li>
+<li>Inherit from either <code>elegy.losses.loss.Loss</code> or <code>elegy.metrics.metric.Metric</code> or an existing class that inherits from them.</li>
+<li>Try to use an existing metric or loss as a template</li>
+<li>You must provide documentation for the following:</li>
+<li>The class definition.</li>
+<li>The <code>__init__</code> method.</li>
+<li>The <code>call</code> method.</li>
+<li>Try to port the documentation + signature from its Keras counter part.</li>
+<li>If so you must give credits to the original source file.</li>
+<li>You must include tests.</li>
+<li>If you there exists an equivalent loss/metric in Keras you must test numerical equivalence between both.</li>
+</ul>
+<h2 id="testing">Testing</h2>
+<p>To execute all the tests just run</p>
+<div class="codehilite"><pre><span></span><code>pytest
+</code></pre></div>
+<h2 id="documentation">Documentation</h2>
+<p>We use <code>mkdocs</code>. If you create a new object that requires documentation please do the following:</p>
+<ul>
+<li>Add a markdown file inside <code>/docs/api</code> in the appropriate location according to the project's structure. This file must:</li>
+<li>Contain the path of function / class as header</li>
+<li>Use <code>mkdocstring</code> to render the API information.</li>
+<li>Example:</li>
+</ul>
+<div class="codehilite"><pre><span></span><code><span class="o">#</span> <span class="n">elegy</span><span class="p">.</span><span class="n">losses</span><span class="p">.</span><span class="n">BinaryCrossentropy</span>
 
-<span class="n">y_true</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">minval</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">maxval</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">y_pred</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
-
-<span class="n">loss</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">mean_squared_error</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
-
-<span class="k">assert</span> <span class="n">loss</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">2</span><span class="p">,)</span>
-
-<span class="k">assert</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">y_true</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
-</code></pre>
-</div>
-<p><strong>Parameters:</strong></p>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>y_true</code></td>
-<td><code>ndarray</code></td>
-<td>
-<p>Ground truth values. shape = <code>[batch_size, d0, .. dN]</code>.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-<tr>
-<td><code>y_pred</code></td>
-<td><code>ndarray</code></td>
-<td>
-<p>The predicted values. shape = <code>[batch_size, d0, .. dN]</code>.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-</tbody>
-</table>
-<p><strong>Returns:</strong></p>
-<table>
-<thead>
-<tr>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>ndarray</code></td>
-<td>
-<p>Mean squared error values. shape = <code>[batch_size, d0, .. dN-1]</code>.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<details class="quote">
-<summary>Source code in <code>elegy/losses/mean_squared_error.py</code></summary>
-<table class="highlighttable">
-<tr>
-<td class="linenos">
-<div class="linenodiv">
-<pre><span></span>10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
-36
-37
-38
-39
-40
-41
-42
-43
-44
-45
-46</pre>
-</div>
-</td>
-<td class="code">
-<div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">mean_squared_error</span><span class="p">(</span><span class="n">y_true</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-    <span class="sd">"""</span>
-<span class="sd">    Computes the mean squared error between labels and predictions.</span>
-
-<span class="sd">    After computing the squared distance between the inputs, the mean value over</span>
-<span class="sd">    the last dimension is returned.</span>
-
-<span class="sd">    ```python</span>
-<span class="sd">    loss = mean(square(y_true - y_pred), axis=-1)</span>
-<span class="sd">    ```</span>
-
-<span class="sd">    Usage:</span>
-
-<span class="sd">    ```python</span>
-<span class="sd">    rng = jax.random.PRNGKey(42)</span>
-
-<span class="sd">    y_true = jax.random.randint(rng, shape=(2, 3), minval=0, maxval=2)</span>
-<span class="sd">    y_pred = jax.random.uniform(rng, shape=(2, 3))</span>
-
-<span class="sd">    loss = elegy.losses.mean_squared_error(y_true, y_pred)</span>
-
-<span class="sd">    assert loss.shape == (2,)</span>
-
-<span class="sd">    assert jnp.array_equal(loss, jnp.mean(jnp.square(y_true - y_pred), axis=-1))</span>
-<span class="sd">    ```</span>
-
-<span class="sd">    Arguments:</span>
-<span class="sd">        y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.</span>
-<span class="sd">        y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        Mean squared error values. shape = `[batch_size, d0, .. dN-1]`.</span>
-<span class="sd">    """</span>
-
-    <span class="n">y_true</span> <span class="o">=</span> <span class="n">y_true</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">y_pred</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">y_pred</span> <span class="o">-</span> <span class="n">y_true</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-</code></pre>
-</div>
-</td>
-</tr>
-</table>
-</details>
-</div>
-</div>
+<span class="p">:::</span> <span class="n">elegy</span><span class="p">.</span><span class="n">losses</span><span class="p">.</span><span class="n">BinaryCrossentropy</span>
+    <span class="n">selection</span><span class="p">:</span>
+        <span class="n">inherited_members</span><span class="p">:</span> <span class="k">true</span>
+        <span class="n">members</span><span class="p">:</span>
+            <span class="o">-</span> <span class="k">call</span>
+            <span class="o">-</span> <span class="n">__init__</span>
+</code></pre></div>
+<ul>
+<li>Add and entry to <code>mkdocs.yml</code> inside <code>nav</code> pointing to this file. Checkout <code>mkdocs.yml</code>.</li>
+</ul>
+<p>To build and visualize the documentation locally run</p>
+<div class="codehilite"><pre><span></span><code>mkdocs serve
+</code></pre></div>
 </article>
 </div>
 </div>
@@ -621,7 +535,7 @@ the last dimension is returned.</p>
 <footer class="md-footer">
 <div class="md-footer-nav">
 <nav aria-label="Footer" class="md-footer-nav__inner md-grid">
-<a class="md-footer-nav__link md-footer-nav__link--prev" href="../MeanSquaredError/" rel="prev" title="MeanSquaredError">
+<a class="md-footer-nav__link md-footer-nav__link--prev" href="../modules-losses-metrics/" rel="prev" title="Modules, Losses, and Metrics">
 <div class="md-footer-nav__button md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </div>
@@ -630,17 +544,17 @@ the last dimension is returned.</p>
 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                MeanSquaredError
+                Modules, Losses, and Metrics
               </div>
 </div>
 </a>
-<a class="md-footer-nav__link md-footer-nav__link--next" href="../../regularizers/GlobalL1/" rel="next" title="GlobalL1">
+<a class="md-footer-nav__link md-footer-nav__link--next" href="../../api/Model/" rel="next" title="Model">
 <div class="md-footer-nav__title">
 <div class="md-ellipsis">
 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                GlobalL1
+                Model
               </div>
 </div>
 <div class="md-footer-nav__button md-icon">
@@ -679,14 +593,14 @@ the last dimension is returned.</p>
 </div>
 </footer>
 </div>
-<script src="../../../assets/javascripts/vendor.d710d30a.min.js"></script>
-<script src="../../../assets/javascripts/bundle.b39636ac.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+<script src="../../assets/javascripts/vendor.d710d30a.min.js"></script>
+<script src="../../assets/javascripts/bundle.b39636ac.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
 <script>
         app = initialize({
-          base: "../../..",
+          base: "../..",
           features: [],
           search: Object.assign({
-            worker: "../../../assets/javascripts/worker/search.a68abb33.min.js"
+            worker: "../../assets/javascripts/worker/search.a68abb33.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>
