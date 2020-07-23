@@ -15,13 +15,13 @@ For this you can follow these guidelines:
 * Inherit from either `elegy.losses.loss.Loss` or `elegy.metrics.metric.Metric` or an existing class that inherits from them.
 * Try to use an existing metric or loss as a template
 * You must provide documentation for the following:
-  * The class definition.
-  * The `__init__` method.
-  * The `call` method.
+    * The class definition.
+    * The `__init__` method.
+    * The `call` method.
 * Try to port the documentation + signature from its Keras counter part.
-  * If so you must give credits to the original source file.
+    * If so you must give credits to the original source file.
 * You must include tests.
-  * If you there exists an equivalent loss/metric in Keras you must test numerical equivalence between both.
+    * If you there exists an equivalent loss/metric in Keras you must test numerical equivalence between both.
 
 ## Testing
 To execute all the tests just run
