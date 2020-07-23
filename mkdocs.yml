@@ -15,6 +15,7 @@ nav:
   - Getting Started: getting-started.ipynb
   - Guides:
       Modules, Losses, and Metrics: guides/modules-losses-metrics.md
+      Contibuting: guides/contributing.md
   - API Reference:
       Model: api/Model.md
       # Module: api/Module.md
