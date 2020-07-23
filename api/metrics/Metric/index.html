@@ -233,12 +233,22 @@
     elegy.metrics.metric.Metric
   </a>
 </li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.metrics.metric.Metric.__init__">
+    __init__()
+  </a>
+</li>
 </ul>
 </nav>
 </li>
 <li class="md-nav__item">
 <a class="md-nav__link" href="../Accuracy/" title="Accuracy">
       Accuracy
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../BinaryCrossentropy/" title="BinaryCrossentropy">
+      BinaryCrossentropy
     </a>
 </li>
 <li class="md-nav__item">
@@ -440,6 +450,11 @@
     elegy.metrics.metric.Metric
   </a>
 </li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.metrics.metric.Metric.__init__">
+    __init__()
+  </a>
+</li>
 </ul>
 </nav>
 </div>
@@ -460,43 +475,181 @@
 <div class="codehilite">
 <pre><span></span><code><span class="n">m</span> <span class="o">=</span> <span class="n">SomeMetric</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="o">...</span><span class="p">:</span>
-    <span class="n">m</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">'Final result: '</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">result</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">m</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'Final result: '</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
 </code></pre>
 </div>
-<p>Usage with elegy API:</p>
+<p>Usage with the Model API:</p>
 <div class="codehilite">
-<pre><span></span><code><span class="kn">import</span> <span class="nn">haiku</span> <span class="k">as</span> <span class="nn">hk</span>
-<span class="kn">import</span> <span class="nn">jax</span>
-<span class="kn">from</span> <span class="nn">jax.experimental</span> <span class="kn">import</span> <span class="n">optix</span>
-
-<span class="k">def</span> <span class="nf">module_fn</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">hk</span><span class="o">.</span><span class="n">Sequential</span><span class="p">([</span>
-        <span class="n">hk</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">64</span><span class="p">),</span> 
-        <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">,</span>
-        <span class="n">hk</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">64</span><span class="p">),</span> 
-        <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">,</span>
-        <span class="n">hk</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> 
-        <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">softmax</span><span class="p">,</span>
-    <span class="p">])(</span><span class="n">x</span><span class="p">)</span>
+<pre><span></span><code><span class="k">class</span> <span class="nc">MLP</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">mlp</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">Sequential</span><span class="p">([</span>
+            <span class="n">hk</span><span class="o">.</span><span class="n">Flatten</span><span class="p">(),</span>
+            <span class="n">hk</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">300</span><span class="p">),</span>
+            <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">,</span>
+            <span class="n">hk</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+        <span class="p">])</span>
+        <span class="k">return</span> <span class="n">mlp</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
-    <span class="n">module_fn</span><span class="p">,</span>
-    <span class="n">optimizer</span><span class="o">=</span><span class="n">optix</span><span class="o">.</span><span class="n">rmsprop</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
-    <span class="n">loss</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">CategoricalCrossentropy</span><span class="p">(),</span>
-    <span class="n">metrics</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">Accuracy</span><span class="o">.</span><span class="n">defer</span><span class="p">(),</span>
+    <span class="n">module</span><span class="o">=</span><span class="n">MLP</span><span class="o">.</span><span class="n">defer</span><span class="p">(),</span>
+    <span class="n">loss</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">SparseCategoricalCrossentropy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="p">],</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">SparseCategoricalAccuracy</span><span class="o">.</span><span class="n">defer</span><span class="p">()</span>
+    <span class="p">],</span>
+    <span class="n">optimizer</span><span class="o">=</span><span class="n">optix</span><span class="o">.</span><span class="n">rmsprop</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">),</span>
 <span class="p">)</span>
 </code></pre>
 </div>
 <p>To be implemented by subclasses:</p>
 <ul>
-<li><code>call()</code>: Computes the actual metric</li>
+<li><code>call()</code>: All state variables should be created in this method by
+    calling <code>haiku.get_state()</code>, update this state by calling
+    <code>haiku.set_state(...)</code>, and return a result based on these states.</li>
 </ul>
 <p>Example subclass implementation:</p>
-<ul>
-<li>TODO</li>
-</ul>
+<div class="codehilite">
+<pre><span></span><code><span class="k">class</span> <span class="nc">Accuracy</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
+
+        <span class="n">total</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">get_state</span><span class="p">(</span><span class="s2">"total"</span><span class="p">,</span> <span class="p">[],</span> <span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span><span class="p">)</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">get_state</span><span class="p">(</span><span class="s2">"count"</span><span class="p">,</span> <span class="p">[],</span> <span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span><span class="p">)</span>
+
+        <span class="n">total</span> <span class="o">+=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_true</span> <span class="o">==</span> <span class="n">y_pred</span><span class="p">)</span>
+        <span class="n">count</span> <span class="o">+=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">y_true</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="n">hk</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="s2">"total"</span><span class="p">,</span> <span class="n">total</span><span class="p">)</span>
+        <span class="n">hk</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="s2">"count"</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">total</span> <span class="o">/</span> <span class="n">count</span>
+</code></pre>
+</div>
 <div class="doc doc-children">
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.metrics.metric.Metric.__init__">
+<code class="highlight language-python">
+__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-special"><code>special</code></small>
+</span>
+</h2>
+<div class="doc doc-contents">
+<p>Base Metric constructor.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td><code>Optional[str]</code></td>
+<td>
+<p>string name of the metric instance.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>dtype</code></td>
+<td><code>Optional[numpy.dtype]</code></td>
+<td>
+<p>data type of the metric result.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>on</code></td>
+<td><code>Optional[Union[str, int, Iterable[Union[str, int]]]]</code></td>
+<td>
+<p>A string or integer, or iterable of string or integers, that
+indicate how to index/filter the <code>y_true</code> and <code>y_pred</code>
+arguments before passing them to <code>call</code>. For example if <code>on = "a"</code> then
+<code>y_true = y_true["a"]</code>. If <code>on</code> is an iterable
+the structures will be indexed iteratively, for example if <code>on = ["a", 0, "b"]</code>
+then <code>y_true = y_true["a"][0]["b"]</code>, same for <code>y_pred</code>. For more information
+check out <a href="https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior">Keras-like behavior</a>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+<summary>Source code in <code>elegy/metrics/metric.py</code></summary>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span>73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98</pre>
+</div>
+</td>
+<td class="code">
+<div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">dtype</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">on</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">IndexLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Base Metric constructor.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        name: string name of the metric instance.</span>
+<span class="sd">        dtype: data type of the metric result.</span>
+<span class="sd">        on: A string or integer, or iterable of string or integers, that</span>
+<span class="sd">            indicate how to index/filter the `y_true` and `y_pred`</span>
+<span class="sd">            arguments before passing them to `call`. For example if `on = "a"` then</span>
+<span class="sd">            `y_true = y_true["a"]`. If `on` is an iterable</span>
+<span class="sd">            the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`</span>
+<span class="sd">            then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information</span>
+<span class="sd">            check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).</span>
+<span class="sd">    """</span>
+
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span> <span class="o">=</span> <span class="n">dtype</span> <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">jnp</span><span class="o">.</span><span class="n">float32</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_labels_filter</span> <span class="o">=</span> <span class="p">(</span><span class="n">on</span><span class="p">,)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">on</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">))</span> <span class="k">else</span> <span class="n">on</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">call</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">inject_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">)</span>
+</code></pre>
+</div>
+</td>
+</tr>
+</table>
+</details>
+</div>
+</div>
 </div>
 </div>
 </div>

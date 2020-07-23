@@ -220,6 +220,11 @@
     </a>
 </li>
 <li class="md-nav__item">
+<a class="md-nav__link" href="../../metrics/BinaryCrossentropy/" title="BinaryCrossentropy">
+      BinaryCrossentropy
+    </a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="../../metrics/CategoricalAccuracy/" title="CategoricalAccuracy">
       CategoricalAccuracy
     </a>
@@ -562,6 +567,20 @@ for more details.</p>
 </td>
 <td><code>None</code></td>
 </tr>
+<tr>
+<td><code>on</code></td>
+<td><code>Optional[Union[str, int, Iterable[Union[str, int]]]]</code></td>
+<td>
+<p>A string or integer, or iterable of string or integers, that
+indicate how to index/filter the <code>y_true</code> and <code>y_pred</code>
+arguments before passing them to <code>call</code>. For example if <code>on = "a"</code> then
+<code>y_true = y_true["a"]</code>. If <code>on</code> is an iterable
+the structures will be indexed iteratively, for example if <code>on = ["a", 0, "b"]</code>
+then <code>y_true = y_true["a"][0]["b"]</code>, same for <code>y_pred</code>. For more information
+check out <a href="https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior">Keras-like behavior</a>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
 </tbody>
 </table>
 <details class="quote">
@@ -592,7 +611,14 @@ for more details.</p>
 109
 110
 111
-112</pre>
+112
+113
+114
+115
+116
+117
+118
+119</pre>
 </div>
 </td>
 <td class="code">
@@ -617,6 +643,13 @@ for more details.</p>
 <span class="sd">            for more details.</span>
 <span class="sd">        name: Optional name for the loss.</span>
 <span class="sd">        weight: Optional weight contribution for the total loss. Defaults to `1`.</span>
+<span class="sd">        on: A string or integer, or iterable of string or integers, that</span>
+<span class="sd">            indicate how to index/filter the `y_true` and `y_pred`</span>
+<span class="sd">            arguments before passing them to `call`. For example if `on = "a"` then</span>
+<span class="sd">            `y_true = y_true["a"]`. If `on` is an iterable</span>
+<span class="sd">            the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`</span>
+<span class="sd">            then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information</span>
+<span class="sd">            check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).</span>
 <span class="sd">    """</span>
 
     <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="n">reduction</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">on</span><span class="p">)</span>
@@ -724,14 +757,7 @@ functions reduce by 1 dimension, usually axis=-1.)</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>114
-115
-116
-117
-118
-119
-120
-121
+<pre><span></span>121
 122
 123
 124
@@ -758,7 +784,14 @@ functions reduce by 1 dimension, usually axis=-1.)</p>
 145
 146
 147
-148</pre>
+148
+149
+150
+151
+152
+153
+154
+155</pre>
 </div>
 </td>
 <td class="code">
