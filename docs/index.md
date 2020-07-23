@@ -24,7 +24,7 @@ Install Elegy using pip:
 pip install elegy
 ```
 
-For Windows users we recomend the Windows subsystem for linux 2 [WSL2](https://docs.microsoft.com/es-es/windows/wsl/install-win10?redirectedfrom=MSDN) since [jax](https://github.com/google/jax/issues/438) does not have support for it yet.
+For Windows users we recommend the Windows subsystem for linux 2 [WSL2](https://docs.microsoft.com/es-es/windows/wsl/install-win10?redirectedfrom=MSDN) since [jax](https://github.com/google/jax/issues/438) does not support it yet.
 
 ## Quick Start
 Elegy greatly simplifies the training of Deep Learning models compared to pure Jax / Haiku where, due to Jax functional nature, users have to do a lot of book keeping around the state of the model. In Elegy you just have to follow 3 basic steps:
@@ -95,7 +95,7 @@ We believe that **Elegy** can offer the best experience for coding Deep Learning
 * `callbacks` module
 * `nn` layers module
 
-For more information checkout the **Reference API** section in the [Documentation](https://poets-ai.github.io/elegy).
+For more information check out the **Reference API** section in the [Documentation](https://poets-ai.github.io/elegy).
 
 ## Contributing
 Deep Learning is evolving at an incredible pace, there is so much to do and so few hands. If you wish to contibute anything from a loss or metric to a new awesome feature for Elegy just open an issue or send a PR!

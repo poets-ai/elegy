@@ -81,7 +81,7 @@ And you are done! For more information check out:
 * The speed and hardware support of XLA
 * Automatic Differentiation
 
-The awesome thing about Jax is that Deep Learning is just a usecase that it happens to excel at but you can use it for most task you would use Numpy for.
+The awesome thing about Jax is that Deep Learning is just a usecase that it happens to excel at but you can use it for most task you would use NumPy for.
 
 On the other hand, **Haiku** is a Neural Networks library built on top of Jax that implements a `Module` system, common Neural Network layers, and even some full architectures. Compared to other Jax-based libraries like Trax or Flax, Haiku is very minimal, polished, well documented, and makes it super easy / clean to implement Deep Learning code! 
 
@@ -98,7 +98,7 @@ We believe that **Elegy** can offer the best experience for coding Deep Learning
 For more information checkout the **Reference API** section in the [Documentation](https://poets-ai.github.io/elegy).
 
 ## Contributing
-Deep Learning is evolving at an incredible rate, there is so much to do and so few hands. If you wish to contibute anything from a loss or metrics to a new awesome feature for Elegy just open an issue or send a PR! For more information checkout our [Contibuting Guide](https://poets-ai.github.io/elegy/guides/contributing).
+Deep Learning is evolving at an incredible pace, there is so much to do and so few hands. If you wish to contibute anything from a loss or metric to a new awesome feature for Elegy just open an issue or send a PR! For more information check out our [Contibuting Guide](https://poets-ai.github.io/elegy/guides/contributing).
 
 ## About Us
 We are some friends passionate about ML.
