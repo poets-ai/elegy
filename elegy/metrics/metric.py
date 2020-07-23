@@ -42,11 +42,25 @@ model = elegy.Model(
 ```
 To be implemented by subclasses:
 
-- `call()`: Computes the actual metric
+- `call()`: Contains the logic and computation of the actual metric
 
 Example subclass implementation:
 
-- TODO
+```python
+class Accuracy(elegy.Metric):
+    def call(self, y_true, y_pred):
+
+        total = hk.get_state("total", [], jnp.zeros)
+        count = hk.get_state("count", [], jnp.zeros)
+
+        total += jnp.sum(y_true == y_pred)
+        count += jnp.prod(y_true.shape)
+
+        hk.set_state("total", total)
+        hk.set_state("count", count)
+
+        return total / count
+```
     """
 
     def __init__(

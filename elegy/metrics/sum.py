@@ -19,16 +19,17 @@ class Sum(reduce.Reduce):
     
     Usage:
     ```python
-    >>> m = elegy.metrics.Sum()
-    >>> _ = m.update_state([1, 3, 5, 7])
-    >>> m.result().numpy()
-    16.0
+    m = elegy.metrics.Sum()
+    assert 16.0 == m([1, 3, 5, 7])
     ``` 
-    Usage with elegy API:
+    Usage with Elegy API:
     ```python
+    model = elegy.Model(
+        module_fn,
+        loss=elegy.losses.CategoricalCrossentropy(),
+        metrics=elegy.metrics.Sum.defer(name='sum_1'),
+    )
     model = elegy.Model(inputs, outputs)
-    model.add_metric(elegy.metrics.Sum(name='sum_1')(outputs))
-    model.compile('sgd', loss='mse')
     ```
     """
 
