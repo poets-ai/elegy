@@ -1,5 +1,5 @@
 # Contributing
-This is a shot guide on how to start contibuting to Elegy along with some best practices for the project.
+This is a short guide on how to start contibuting to Elegy along with some best practices for the project.
 
 ## Setup
 We use `poetry` so the easiest way to setup a development environment is run
