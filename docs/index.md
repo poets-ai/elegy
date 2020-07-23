@@ -6,7 +6,7 @@
 
 _Elegy is a Neural Networks framework based on Jax and Haiku._ 
 
-Elegy implements the Keras API but makes changes to play better with Jax & Haiku and give more flexibility around losses and metrics (more on this soon). Elegy is still in a very early stage, feel free to test it and send us your feedback!
+Elegy implements the Keras API but makes changes to play better with Jax & Haiku and gives more flexibility around losses and metrics (more on this soon). Elegy is still in a very early stage, feel free to test it and send us your feedback!
 
 #### Main Features
 
@@ -24,10 +24,10 @@ Install Elegy using pip:
 pip install elegy
 ```
 
-For Windows users we recomend the Windows subsystem for linux 2 [WSL2](https://docs.microsoft.com/es-es/windows/wsl/install-win10?redirectedfrom=MSDN) since [jax](https://github.com/google/jax/issues/438) does not have support for it yet.
+For Windows users we recommend the Windows subsystem for linux 2 [WSL2](https://docs.microsoft.com/es-es/windows/wsl/install-win10?redirectedfrom=MSDN) since [jax](https://github.com/google/jax/issues/438) does not support it yet.
 
 ## Quick Start
-Elegy greatly simplifies the training of Deep Learning models compared to pure Jax / Haiku where, due to Jax functional nature, users have to do a lot of book keeping around the state of the model. In Elegy just you just have to follow 3 basic steps:
+Elegy greatly simplifies the training of Deep Learning models compared to pure Jax / Haiku where, due to Jax functional nature, users have to do a lot of book keeping around the state of the model. In Elegy you just have to follow 3 basic steps:
 
 **1.** Define the architecture inside an `elegy.Module`:
 ```python
@@ -67,7 +67,7 @@ model.fit(
 )
 ```
 
-And you are done! For a more information checkout:
+And you are done! For more information check out:
 
 * Our [Getting Started](https://poets-ai.github.io/elegy/getting-started/) tutorial.
 * Couple of examples in [examples](https://github.com/poets-ai/elegy/tree/master/examples) directory.
@@ -81,7 +81,7 @@ And you are done! For a more information checkout:
 * The speed and hardware support of XLA
 * Automatic Differentiation
 
-The awesome thing about Jax that Deep Learning is just a usecase that it happens to excel at but you can use it for most task you would use Numpy for.
+The awesome thing about Jax is that Deep Learning is just a usecase that it happens to excel at but you can use it for most task you would use NumPy for.
 
 On the other hand, **Haiku** is a Neural Networks library built on top of Jax that implements a `Module` system, common Neural Network layers, and even some full architectures. Compared to other Jax-based libraries like Trax or Flax, Haiku is very minimal, polished, well documented, and makes it super easy / clean to implement Deep Learning code! 
 
@@ -95,13 +95,13 @@ We believe that **Elegy** can offer the best experience for coding Deep Learning
 * `callbacks` module
 * `nn` layers module
 
-For more information checkout the **Reference API** section in the [Documentation](https://poets-ai.github.io/elegy).
+For more information check out the **Reference API** section in the [Documentation](https://poets-ai.github.io/elegy).
 
 ## Contributing
-Deep Learning is evolving at an incredible rate, there is so much to do and so few hands. If you wish to contibute anything from a loss or metrics to a new awesome feature for Elegy just open an issue or send a PR!
+Deep Learning is evolving at an incredible pace, there is so much to do and so few hands. If you wish to contibute anything from a loss or metric to a new awesome feature for Elegy just open an issue or send a PR!
 
 ## About Us
-We are a couple friends passionate about ML.
+We are some friends passionate about ML.
 
 ## License
 Apache
