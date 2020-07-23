@@ -492,14 +492,20 @@
 <li>Each loss / metric should be defined in its own file.</li>
 <li>Inherit from either <code>elegy.losses.loss.Loss</code> or <code>elegy.metrics.metric.Metric</code> or an existing class that inherits from them.</li>
 <li>Try to use an existing metric or loss as a template</li>
-<li>You must provide documentation for the following:</li>
+<li>You must provide documentation for the following:<ul>
 <li>The class definition.</li>
 <li>The <code>__init__</code> method.</li>
 <li>The <code>call</code> method.</li>
-<li>Try to port the documentation + signature from its Keras counter part.</li>
+</ul>
+</li>
+<li>Try to port the documentation + signature from its Keras counter part.<ul>
 <li>If so you must give credits to the original source file.</li>
-<li>You must include tests.</li>
+</ul>
+</li>
+<li>You must include tests.<ul>
 <li>If you there exists an equivalent loss/metric in Keras you must test numerical equivalence between both.</li>
+</ul>
+</li>
 </ul>
 <h2 id="testing">Testing</h2>
 <p>To execute all the tests just run</p>
