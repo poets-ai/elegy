@@ -55,6 +55,9 @@ Example subclass implementation:
         dtype: tp.Optional[jnp.dtype] = None,
         on: tp.Optional[types.IndexLike] = None,
     ):
+        """
+        """
+
         super().__init__(name=name)
 
         self._dtype = self._dtype = dtype if dtype is not None else jnp.float32
