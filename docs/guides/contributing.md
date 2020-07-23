@@ -33,9 +33,9 @@ pytest
 We use `mkdocs`. If you create a new object that requires documentation please do the following:
 
 * Add a markdown file inside `/docs/api` in the appropriate location according to the project's structure. This file must:
-  * Contain the path of function / class as header
-  * Use `mkdocstring` to render the API information.
-  * Example:
+    * Contain the path of function / class as header
+    * Use `mkdocstring` to render the API information.
+    * Example:
 ```markdown
 # elegy.losses.BinaryCrossentropy
 
