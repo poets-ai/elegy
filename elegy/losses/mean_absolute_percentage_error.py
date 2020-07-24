@@ -5,7 +5,9 @@ from elegy import utils
 from elegy.losses.loss import Loss, Reduction
 
 
-def mean_percentage_absolute_error(y_true: jnp.ndarray, y_pred: jnp.ndarray) -> jnp.ndarray:
+def mean_percentage_absolute_error(
+    y_true: jnp.ndarray, y_pred: jnp.ndarray
+) -> jnp.ndarray:
     """
     Computes the mean absolute percentage error (MAPE) between labels and predictions.
     
@@ -36,7 +38,7 @@ def mean_percentage_absolute_error(y_true: jnp.ndarray, y_pred: jnp.ndarray) -> 
     """
     y_true = y_true.astype(y_pred.dtype)
     diff = jnp.abs((y_pred - y_true) / jnp.clip(y_true, utils.EPSILON, None))
-    return 100. * jnp.mean(diff, axis=-1)
+    return 100.0 * jnp.mean(diff, axis=-1)
 
 
 class MeanAbsolutePercentageError(Loss):
@@ -101,6 +103,13 @@ class MeanAbsolutePercentageError(Loss):
                 for more details.
             name: Optional name for the loss.
             weight: Optional weight contribution for the total loss. Defaults to `1`.
+            on: A string or integer, or iterable of string or integers, that
+                indicate how to index/filter the `y_true` and `y_pred`
+                arguments before passing them to `call`. For example if `on = "a"` then
+                `y_true = y_true["a"]`. If `on` is an iterable
+                the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`
+                then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
+                check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).
         """
 
         return super().__init__(reduction=reduction, name=name, weight=weight, on=on)
