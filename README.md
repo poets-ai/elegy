@@ -69,6 +69,7 @@ model.fit(
 
 And you are done! For more information check out:
 
+
 * Our [Getting Started](https://poets-ai.github.io/elegy/getting-started/) tutorial.
 * Couple of examples in [examples](https://github.com/poets-ai/elegy/tree/master/examples) directory.
 * Haiku's [User Manual](https://github.com/deepmind/dm-haiku#user-manual) and [Documentation](https://dm-haiku.readthedocs.io/en/latest/)
