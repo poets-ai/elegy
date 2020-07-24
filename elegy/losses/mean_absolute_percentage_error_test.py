@@ -36,6 +36,7 @@ class MeanAbsolutePercentageErrorTest(TestCase):
             reduction=elegy.losses.Reduction.NONE
         )
 
+        result = mape(y_true, y_pred)
         assert jnp.all(jnp.isclose(result, [0.0, 5.6], rtol=0.01))
 
     @transform_and_run
@@ -93,7 +94,7 @@ class MeanAbsolutePercentageErrorTest(TestCase):
             loss,
             100
             * jnp.mean(
-                jnp.abs((y_pred - y_true) / (jnp.clip(y_true, utils.EPSILON, None))),
+                jnp.abs((y_pred - y_true) / jnp.maximum(jnp.abs(y_true), utils.EPSILON)),
                 axis=-1,
             ),
         )
