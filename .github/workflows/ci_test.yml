@@ -1,7 +1,22 @@
 # Checks that we can build and validate the Unittest
-name: Pull-Request-Checks
+name: GitHub CI
 on: [pull_request]
 jobs:
+  black-test:
+    name: Black Python code format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8 
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install black
+      - name: Ensure contributor used ("black ./") before commit
+        run: black --check .
   test:
     runs-on: ubuntu-latest
     strategy:

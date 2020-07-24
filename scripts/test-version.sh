@@ -1,5 +1,5 @@
 #!/bin/bash
-# run-test - A script to run tests pypeln in a container
+# run-test - A script to run tests elegy in a container
 # can recive an optional declaring python version
 set -e
 
