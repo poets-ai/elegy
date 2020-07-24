@@ -21,6 +21,9 @@ nav:
       # Module: api/Module.md
       model:
         load: api/model/load.md
+      nn:
+        BatchNormalization: api/nn/BatchNormalization.md
+        Dropout: api/nn/Dropout.md
       metrics:
         Metric: api/metrics/Metric.md
         Accuracy: api/metrics/Accuracy.md
