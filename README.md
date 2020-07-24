@@ -1,8 +1,16 @@
 # Elegy
-
-[![Python 3.6](https://img.shields.io/badge/python-3.6-blue.svg)](https://www.python.org/downloads/release/python-360/) [![Python 3.7](https://img.shields.io/badge/python-3.7-blue.svg)](https://www.python.org/downloads/release/python-370/) [![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-380/)
-[![Release v0.1.3](https://img.shields.io/badge/release-v0.1.3-brightgreen.svg)](https://github.com/poets-ai/elegy)
+-----------------
+[![PyPI Status Badge](https://badge.fury.io/py/elegy.svg)](https://pypi.org/project/elegy/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/elegy)](https://pypi.org/project/elegy/)
+[![Documentation](https://img.shields.io/badge/api-reference-blue.svg)](https://poets-ai.github.io/elegy/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/poets-ai/elegy/issues)
+
+### Continuous Build Status
+| Build      | Status |
+| ---             | ---    |
+| **Ubuntu**   | [![Status](https://github.com/poets-ai/elegy/workflows/GitHub%20CI/badge.svg)](https://github.com/poets-ai/elegy/actions?query=workflow%3A"GitHub+CI") |
+
 
 _Elegy is a Neural Networks framework based on Jax and Haiku._ 
 
@@ -68,6 +76,7 @@ model.fit(
 ```
 
 And you are done! For more information check out:
+
 
 * Our [Getting Started](https://poets-ai.github.io/elegy/getting-started/) tutorial.
 * Couple of examples in [examples](https://github.com/poets-ai/elegy/tree/master/examples) directory.

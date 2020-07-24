@@ -212,4 +212,3 @@ class ModelCheckpoint(Callback):
     def _implements_train_batch_hooks(self):
         # If save_freq="epoch", batch-level hooks don't need to be run.
         return isinstance(self.save_freq, int)
-
