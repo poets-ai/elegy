@@ -74,7 +74,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
         x=X_train,
         y=dict(outputs=y_train),
         epochs=100,
-        steps_per_epoch=10,
+        steps_per_epoch=200,
         batch_size=64,
         validation_data=(X_test, dict(outputs=y_test)),
         shuffle=True,
@@ -103,6 +103,11 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
         tbwriter.add_figure("Predictions", figure, 100)
 
     plt.show()
+
+    print(
+        "\n\n\nMetrics and images can be explored using tensorboard using:",
+        f"\n \t\t\t tensorboard --logdir {logdir}",
+    )
 
 
 if __name__ == "__main__":

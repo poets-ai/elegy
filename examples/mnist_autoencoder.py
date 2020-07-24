@@ -1,3 +1,5 @@
+import os
+from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
 
 import dataget
@@ -6,6 +8,7 @@ import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
+from tensorboardX.writer import SummaryWriter
 import typer
 from jax.experimental import optix
 
@@ -13,7 +16,7 @@ import elegy
 from utils import plot_history
 
 
-def main(debug: bool = False, eager: bool = False):
+def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
 
     if debug:
         import debugpy
@@ -21,6 +24,9 @@ def main(debug: bool = False, eager: bool = False):
         print("Waiting for debugger...")
         debugpy.listen(5678)
         debugpy.wait_for_client()
+
+    current_time = datetime.now().strftime("%b%d_%H-%M-%S")
+    logdir = os.path.join(logdir, current_time)
 
     X_train, _1, X_test, _2 = dataget.image.mnist(global_cache=True).get()
 
@@ -71,7 +77,7 @@ def main(debug: bool = False, eager: bool = False):
         batch_size=64,
         validation_data=(X_test,),
         shuffle=True,
-        callbacks=[elegy.callbacks.TensorBoard()],
+        callbacks=[elegy.callbacks.TensorBoard(logdir=logdir, update_freq=300)],
     )
 
     plot_history(history)
@@ -83,15 +89,24 @@ def main(debug: bool = False, eager: bool = False):
     # get predictions
     y_pred = model.predict(x=x_sample)
 
-    # plot results
-    plt.figure(figsize=(12, 12))
-    for i in range(5):
-        plt.subplot(2, 5, i + 1)
-        plt.imshow(x_sample[i], cmap="gray")
-        plt.subplot(2, 5, 5 + i + 1)
-        plt.imshow(y_pred[i], cmap="gray")
+    # plot and save results
+    with SummaryWriter(logdir + "/val") as tbwriter:
+
+        figure = plt.figure(figsize=(12, 12))
+        for i in range(5):
+            plt.subplot(2, 5, i + 1)
+            plt.imshow(x_sample[i], cmap="gray")
+            plt.subplot(2, 5, 5 + i + 1)
+            plt.imshow(y_pred[i], cmap="gray")
+
+        tbwriter.add_figure("AutoEncoder images", figure, 20)
 
     plt.show()
+
+    print(
+        "\n\n\nMetrics and images can be explored using tensorboard using:",
+        f"\n \t\t\t tensorboard --logdir {logdir}",
+    )
 
 
 if __name__ == "__main__":
