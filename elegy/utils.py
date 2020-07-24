@@ -68,7 +68,7 @@ def get_input_args(
     apply_kwargs = dict(is_training=is_training)
     apply_kwargs.update(kwargs)
 
-    return args, kwargs
+    return args, apply_kwargs
 
 
 class Defered:
