@@ -1,4 +1,4 @@
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 
 from . import callbacks, losses, metrics, model, nn, regularizers
 from .losses import Loss
