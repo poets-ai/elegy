@@ -1,6 +1,6 @@
 # Checks that we can build and validate the Unittest
 name: Pull-Request-Checks
-on: [push]
+on: [pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
