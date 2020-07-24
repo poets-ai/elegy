@@ -18,8 +18,8 @@ jobs:
       - name: Install Poetry
         uses: dschep/install-poetry-action@v1.2
 
-      - name: Install Additional Dependencies
-        run: bash scripts/run-tests-action.sh
+      - name: Install Dependencies
+        run: bash scripts/action-install-deps.sh
 
       - name: Run Tests
         run: pytest
