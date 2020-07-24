@@ -111,8 +111,6 @@ class BatchNormalization(Module):
         self.mean_ema = hk.ExponentialMovingAverage(momentum, name="mean_ema")
         self.var_ema = hk.ExponentialMovingAverage(momentum, name="var_ema")
 
-        hk.BatchNorm
-
     def call(
         self,
         inputs: jnp.ndarray,
