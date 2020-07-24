@@ -31,10 +31,9 @@ jobs:
         run: poetry install
         if: steps.cache.outputs.cache-hit != 'true'
 
-      - name: Install dependencies
+      - name: Install Additional Dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install jax
+          PYTHONPATH=src/ poetry add jax
 
       - name: Run pytest
         run: PYTHONPATH=src/ poetry run python -m pytest
