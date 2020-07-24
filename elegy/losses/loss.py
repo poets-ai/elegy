@@ -84,11 +84,7 @@ class Loss:
         Arguments:
             reduction: (Optional) Type of `elegy.losses.Reduction` to apply to
                 loss. Default value is `SUM_OVER_BATCH_SIZE`. For almost all cases
-                this defaults to `SUM_OVER_BATCH_SIZE`. When used with
-                `tf.distribute.Strategy`, outside of built-in training loops such as
-                `elegy` `compile` and `fit`, or `SUM_OVER_BATCH_SIZE`
-                will raise an error.
-                for more details.
+                this defaults to `SUM_OVER_BATCH_SIZE`.
             name: Optional name for the loss.
             weight: Optional weight contribution for the total loss. Defaults to `1`.
             on: A string or integer, or iterable of string or integers, that
