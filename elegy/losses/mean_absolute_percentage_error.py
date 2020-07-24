@@ -37,7 +37,7 @@ def mean_percentage_absolute_error(
         Mean absolute percentage error values. shape = `[batch_size, d0, .. dN-1]`.
     """
     y_true = y_true.astype(y_pred.dtype)
-    diff = jnp.abs((y_pred - y_true) / jnp.clip(y_true, utils.EPSILON, None))
+    diff = jnp.abs((y_pred - y_true) / jnp.maximum(jnp.abs(y_true), utils.EPSILON))
     return 100.0 * jnp.mean(diff, axis=-1)
 
 
