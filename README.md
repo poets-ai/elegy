@@ -9,7 +9,7 @@
 ### Continuous Build Status
 | Build      | Status |
 | ---             | ---    |
-| **Ubuntu**   | [![Status](https://github.com/poets-ai/elegy/workflows/Pull-Request-Checks/badge.svg)](https://github.com/poets-ai/elegy/actions?query=workflow%3APull-Request-Checks) |
+| **Ubuntu**   | [![Status](https://github.com/poets-ai/elegy/workflows/GitHub%20CI/badge.svg)](https://github.com/poets-ai/elegy/actions?query=workflow%3A"GitHub+CI") |
 
 
 _Elegy is a Neural Networks framework based on Jax and Haiku._ 
