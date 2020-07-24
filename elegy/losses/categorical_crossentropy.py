@@ -69,7 +69,7 @@ class CategoricalCrossentropy(Loss):
     assert list(cce(y_true, y_pred)) == [0.0513, 2.303]
     ```
 
-    Usage with the `compile` API:
+    Usage with the `Elegy` API:
     ```python
     model = elegy.Model(
         module_fn,
@@ -103,10 +103,7 @@ class CategoricalCrossentropy(Loss):
             reduction: (Optional) Type of `elegy.losses.Reduction` to apply to
                 loss. Default value is `SUM_OVER_BATCH_SIZE`. Indicates that the reduction
                 option will be determined by the usage context. For almost all cases
-                this defaults to `SUM_OVER_BATCH_SIZE`. When used with
-                `tf.distribute.Strategy`, outside of built-in training loops such as
-                `elegy` `compile` and `fit`, ` or `SUM_OVER_BATCH_SIZE`
-                will raise an error.
+                this defaults to `SUM_OVER_BATCH_SIZE`.
             name: Optional name for the op.
             weight: Optional weight contribution for the total loss. Defaults to `1`.
             on: A string or integer, or iterable of string or integers, that

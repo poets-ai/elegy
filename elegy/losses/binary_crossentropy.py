@@ -7,17 +7,16 @@ from elegy.losses.loss import Loss, Reduction
 
 
 def binary_crossentropy(
-    y_true: jnp.ndarray, 
-    y_pred: jnp.ndarray, 
-    from_logits: bool = False
-    ) -> jnp.ndarray:
+    y_true: jnp.ndarray, y_pred: jnp.ndarray, from_logits: bool = False
+) -> jnp.ndarray:
 
     if from_logits:
         return -jnp.mean(y_true * y_pred - jnp.logaddexp(0.0, y_pred), axis=-1)
 
     y_pred = jnp.clip(y_pred, utils.EPSILON, 1.0 - utils.EPSILON)
-    return -jnp.mean(y_true * jnp.log(y_pred) + (1 - y_true) * jnp.log(1 - y_pred), axis=-1)
-
+    return -jnp.mean(
+        y_true * jnp.log(y_pred) + (1 - y_true) * jnp.log(1 - y_pred), axis=-1
+    )
 
 
 class BinaryCrossentropy(Loss):
@@ -57,7 +56,7 @@ class BinaryCrossentropy(Loss):
     ```
 
 
-    Usage with the `compile` API:
+    Usage with the `Elegy` API:
     ```python
     model = elegy.Model(
         module_fn,
@@ -67,23 +66,23 @@ class BinaryCrossentropy(Loss):
     )
     ```
     """
-    
+
     def __init__(
-            self,
-            from_logits=False,
-            label_smoothing: float=0,
-            reduction: tp.Optional[Reduction] = None,
-            name: tp.Optional[str] = None
+        self,
+        from_logits=False,
+        label_smoothing: float = 0,
+        reduction: tp.Optional[Reduction] = None,
+        name: tp.Optional[str] = None,
     ):
         super().__init__(reduction=reduction, name=name)
         self._from_logits = from_logits
         self._label_smoothing = label_smoothing
 
     def call(
-            self,
-            y_true: jnp.ndarray,
-            y_pred: jnp.ndarray,
-            sample_weight: tp.Optional[jnp.ndarray] = None,
+        self,
+        y_true: jnp.ndarray,
+        y_pred: jnp.ndarray,
+        sample_weight: tp.Optional[jnp.ndarray] = None,
     ) -> jnp.ndarray:
         """
         Invokes the `BinaryCrossentropy` instance.
