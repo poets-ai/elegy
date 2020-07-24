@@ -276,8 +276,7 @@ class Model(object):
                 weights to apply to the model's loss for each sample. In the case of
                 temporal data, you can pass a 2D array with shape (samples,
                 sequence_length), to apply a different weight to every timestep of
-                every sample. In this case you should make sure to specify
-                sample_weight_mode="temporal" in compile().
+                every sample.
             class_weight: Optional dictionary mapping class indices (integers) to a
                 weight (float) to apply to the model's loss for the samples from this
                 class during training. This can be useful to tell the model to "pay

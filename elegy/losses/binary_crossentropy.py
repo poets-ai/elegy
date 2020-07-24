@@ -56,7 +56,7 @@ class BinaryCrossentropy(Loss):
     ```
 
 
-    Usage with the `compile` API:
+    Usage with the `Elegy` API:
     ```python
     model = elegy.Model(
         module_fn,
