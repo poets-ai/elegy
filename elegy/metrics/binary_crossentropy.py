@@ -49,7 +49,8 @@ class BinaryCrossentropy(Mean):
         dtype: tp.Optional[jnp.dtype] = None,
         on: tp.Optional[types.IndexLike] = None,
     ):
-        """Creates a `BinaryCrossentropy` instance.
+        """
+        Creates a `BinaryCrossentropy` instance.
 
         Arguments:
             from_logits: Whether `y_pred` is expected to be a logits tensor. By
