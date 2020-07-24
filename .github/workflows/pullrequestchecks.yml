@@ -13,27 +13,13 @@ jobs:
       - name: Set up Python 3.6
         uses: actions/setup-python@v1
         with:
-          python-version: 3.6 
+          python-version: 3.6
 
       - name: Install Poetry
         uses: dschep/install-poetry-action@v1.2
 
-      - name: Cache Poetry virtualenv
-        uses: actions/cache@v1
-        id: cache
-        with:
-          path: ~/.virtualenvs
-          key: poetry-$
-          restore-keys: |
-            poetry-$
-
-      - name: Install Dependencies using Poetry
-        run: poetry install
-        if: steps.cache.outputs.cache-hit != 'true'
-
       - name: Install Additional Dependencies
-        run: PYTHONPATH=src/ poetry add jax
-        # run: PYTHONPATH=src/ pip install --upgrade jax jaxlib
+        run: bash scripts/run-tests-action.sh
 
-      - name: Run pytest
-        run: PYTHONPATH=src/ poetry run python -m pytest
+      - name: Run Tests
+        run: pytest
