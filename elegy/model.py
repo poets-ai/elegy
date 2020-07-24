@@ -202,7 +202,7 @@ class Model(object):
     ):
 
         if self.params is None or self.state is None:
-            x_args, x_kwargs = utils.get_input_args(x, is_training=False)
+            x_args, x_kwargs = utils.get_input_args(x, is_training=True)
 
             self.params, self.state = self._model_transform.init(
                 next(self._rngs), *x_args, **x_kwargs
@@ -212,7 +212,7 @@ class Model(object):
             return
 
         if self._metrics_transform is not None and self.metrics_state is None:
-            x_args, x_kwargs = utils.get_input_args(x, is_training=False)
+            x_args, x_kwargs = utils.get_input_args(x, is_training=True)
 
             y_pred, state = self._model_transform.apply(
                 # required by apply
@@ -276,8 +276,7 @@ class Model(object):
                 weights to apply to the model's loss for each sample. In the case of
                 temporal data, you can pass a 2D array with shape (samples,
                 sequence_length), to apply a different weight to every timestep of
-                every sample. In this case you should make sure to specify
-                sample_weight_mode="temporal" in compile().
+                every sample.
             class_weight: Optional dictionary mapping class indices (integers) to a
                 weight (float) to apply to the model's loss for the samples from this
                 class during training. This can be useful to tell the model to "pay
@@ -390,7 +389,7 @@ class Model(object):
         is_training: bool,
     ):
         y_pred, state = self._predict(
-            x=x, params=params, state=state, net_rng=net_rng, is_training=is_training,
+            is_training=is_training, x=x, params=params, state=state, net_rng=net_rng,
         )
 
         logs = self._loss_fn(
@@ -1037,22 +1036,22 @@ class Model(object):
         predict_fn = self._predict if self.run_eagerly else self._predict_jit
 
         y_pred, _ = predict_fn(
+            False,  # is_training
             x=x,
             params=self.params,
             state=self.state,
             net_rng=next(self._rngs),
-            is_training=False,
         )
 
         return y_pred
 
     def _predict(
         self,
+        is_training: bool,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         params: hk.Params,
         state: hk.State,
         net_rng: jnp.ndarray,
-        is_training: bool,
     ) -> tp.Tuple[
         tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple], hk.State,
     ]:
@@ -1069,7 +1068,7 @@ class Model(object):
 
         return y_pred, state
 
-    _predict_jit = jax.jit(_predict, static_argnums=(0,))
+    _predict_jit = jax.jit(_predict, static_argnums=(0, 1))
 
     @property
     def seed(self) -> tp.Union[np.ndarray, int]:

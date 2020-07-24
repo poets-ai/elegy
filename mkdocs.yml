@@ -15,6 +15,7 @@ nav:
   - Getting Started: getting-started.ipynb
   - Guides:
       Modules, Losses, and Metrics: guides/modules-losses-metrics.md
+      Contibuting: guides/contributing.md
   - API Reference:
       Model: api/Model.md
       # Module: api/Module.md
@@ -23,6 +24,7 @@ nav:
       metrics:
         Metric: api/metrics/Metric.md
         Accuracy: api/metrics/Accuracy.md
+        BinaryCrossentropy: api/metrics/BinaryCrossentropy.md
         CategoricalAccuracy: api/metrics/CategoricalAccuracy.md
         SparseCategoricalAccuracy: api/metrics/SparseCategoricalAccuracy.md
         Mean: api/metrics/Mean.md
@@ -30,6 +32,7 @@ nav:
         MeanSquaredError: api/metrics/MeanSquaredError.md
       losses:
         Loss: api/losses/Loss.md
+        BinaryCrossentropy: api/losses/BinaryCrossentropy.md
         CategoricalCrossentropy: api/losses/CategoricalCrossentropy.md
         SparseCategoricalCrossentropy: api/losses/SparseCategoricalCrossentropy.md
         MeanAbsoluteError: api/losses/MeanAbsoluteError.md

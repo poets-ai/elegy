@@ -53,7 +53,7 @@ def flatten(inputs: types.ArrayHolder) -> tp.Iterable[types.ArrayLike]:
     elif isinstance(inputs, tp.Dict):
         for x in inputs.values():
             yield from flatten(x)
-    elif isinstance(inputs, tp.Generator):
+    elif isinstance(inputs, (tp.Generator, tp.Iterator, tp.Iterable)):
         yield inputs
     else:
         raise TypeError(f"Unsupported type '{type(inputs)}'")
