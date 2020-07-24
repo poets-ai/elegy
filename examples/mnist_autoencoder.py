@@ -90,7 +90,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
     y_pred = model.predict(x=x_sample)
 
     # plot and save results
-    with SummaryWriter(logdir + "/val") as tbwriter:
+    with SummaryWriter(os.path.join(logdir, "val")) as tbwriter:
 
         figure = plt.figure(figsize=(12, 12))
         for i in range(5):

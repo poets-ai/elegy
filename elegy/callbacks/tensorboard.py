@@ -83,10 +83,10 @@ Example:
 
     def on_train_begin(self, logs=None):
         self.train_writer = SummaryWriter(
-            self.logdir + "/train", purge_step=self.purge_step
+            os.path.join(self.logdir, "train"), purge_step=self.purge_step
         )
         self.val_writer = SummaryWriter(
-            self.logdir + "/val", purge_step=self.purge_step
+            os.path.join(self.logdir, "val"), purge_step=self.purge_step
         )
         self.steps = self.params["steps"]
         self.global_step = 0
