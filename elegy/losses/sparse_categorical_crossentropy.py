@@ -70,7 +70,7 @@ class SparseCategoricalCrossentropy(Loss):
     assert jnp.all(jnp.isclose(result, [0.0513, 2.303], rtol=0.01))
     ```
 
-    Usage with the `compile` API:
+    Usage with the `Elegy` API:
     
     ```python
     model = elegy.Model(
@@ -100,12 +100,16 @@ class SparseCategoricalCrossentropy(Loss):
                 **Note - Using from_logits=True is more numerically stable.**
             reduction: (Optional) Type of `elegy.losses.Reduction` to apply to
                 loss. Default value is `SUM_OVER_BATCH_SIZE`. For almost all cases
-                this defaults to `SUM_OVER_BATCH_SIZE`. When used with
-                `tf.distribute.Strategy`, outside of built-in training loops such as
-                `elegy` `compile` and `fit`, or `SUM_OVER_BATCH_SIZE`
-                will raise an error.
+                this defaults to `SUM_OVER_BATCH_SIZE`.
             name: Optional name for the op. Defaults to 'sparse_categorical_crossentropy'.
             weight: Optional weight contribution for the total loss. Defaults to `1`.
+            on: A string or integer, or iterable of string or integers, that
+                indicate how to index/filter the `y_true` and `y_pred`
+                arguments before passing them to `call`. For example if `on = "a"` then
+                `y_true = y_true["a"]`. If `on` is an iterable
+                the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`
+                then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
+                check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).
         """
         super().__init__(reduction=reduction, name=name, weight=weight, on=on)
 

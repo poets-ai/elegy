@@ -19,16 +19,17 @@ class Sum(reduce.Reduce):
     
     Usage:
     ```python
-    >>> m = elegy.metrics.Sum()
-    >>> _ = m.update_state([1, 3, 5, 7])
-    >>> m.result().numpy()
-    16.0
+    m = elegy.metrics.Sum()
+    assert 16.0 == m([1, 3, 5, 7])
     ``` 
-    Usage with elegy API:
+    Usage with Elegy API:
     ```python
+    model = elegy.Model(
+        module_fn,
+        loss=elegy.losses.CategoricalCrossentropy(),
+        metrics=elegy.metrics.Sum.defer(name='sum_1'),
+    )
     model = elegy.Model(inputs, outputs)
-    model.add_metric(elegy.metrics.Sum(name='sum_1')(outputs))
-    model.compile('sgd', loss='mse')
     ```
     """
 
@@ -43,5 +44,12 @@ class Sum(reduce.Reduce):
         Arguments:
           name: (Optional) string name of the metric instance.
           dtype: (Optional) data type of the metric result.
+          on: A string or integer, or iterable of string or integers, that
+              indicate how to index/filter the `y_true` and `y_pred`
+              arguments before passing them to `call`. For example if `on = "a"` then
+              `y_true = y_true["a"]`. If `on` is an iterable
+              the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`
+              then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
+              check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).
         """
         super().__init__(reduction=reduce.Reduction.SUM, name=name, dtype=dtype, on=on)

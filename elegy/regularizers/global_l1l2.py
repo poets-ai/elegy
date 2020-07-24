@@ -76,4 +76,3 @@ class GlobalL1L2(Loss):
             )
 
         return regularization
-

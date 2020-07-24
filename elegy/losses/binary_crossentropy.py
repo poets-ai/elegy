@@ -7,17 +7,16 @@ from elegy.losses.loss import Loss, Reduction
 
 
 def binary_crossentropy(
-    y_true: jnp.ndarray, 
-    y_pred: jnp.ndarray, 
-    from_logits: bool = False
-    ) -> jnp.ndarray:
+    y_true: jnp.ndarray, y_pred: jnp.ndarray, from_logits: bool = False
+) -> jnp.ndarray:
 
     if from_logits:
         return -jnp.mean(y_true * y_pred - jnp.logaddexp(0.0, y_pred), axis=-1)
 
     y_pred = jnp.clip(y_pred, utils.EPSILON, 1.0 - utils.EPSILON)
-    return -jnp.mean(y_true * jnp.log(y_pred) + (1 - y_true) * jnp.log(1 - y_pred), axis=-1)
-
+    return -jnp.mean(
+        y_true * jnp.log(y_pred) + (1 - y_true) * jnp.log(1 - y_pred), axis=-1
+    )
 
 
 class BinaryCrossentropy(Loss):
@@ -57,7 +56,7 @@ class BinaryCrossentropy(Loss):
     ```
 
 
-    Usage with the `compile` API:
+    Usage with the `Elegy` API:
     ```python
     model = elegy.Model(
         module_fn,
@@ -67,23 +66,53 @@ class BinaryCrossentropy(Loss):
     )
     ```
     """
-    
+
     def __init__(
-            self,
-            from_logits=False,
-            label_smoothing: float=0,
-            reduction: tp.Optional[Reduction] = None,
-            name: tp.Optional[str] = None
+        self,
+        from_logits: bool = False,
+        label_smoothing: float = 0,
+        reduction: tp.Optional[Reduction] = None,
+        name: tp.Optional[str] = None,
+        weight: tp.Optional[float] = None,
+        on: tp.Optional[types.IndexLike] = None,
     ):
-        super().__init__(reduction=reduction, name=name)
+        """
+        Initializes `CategoricalCrossentropy` instance.
+        
+        Arguments:
+            from_logits: Whether `y_pred` is expected to be a logits tensor. By
+                default, we assume that `y_pred` encodes a probability distribution.
+                **Note - Using from_logits=True is more numerically stable.**
+            label_smoothing: Float in [0, 1]. When > 0, label values are smoothed,
+                meaning the confidence on label values are relaxed. e.g.
+                `label_smoothing=0.2` means that we will use a value of `0.1` for label
+                `0` and `0.9` for label `1`"
+            reduction: (Optional) Type of `elegy.losses.Reduction` to apply to
+                loss. Default value is `SUM_OVER_BATCH_SIZE`. Indicates that the reduction
+                option will be determined by the usage context. For almost all cases
+                this defaults to `SUM_OVER_BATCH_SIZE`. When used with
+                `tf.distribute.Strategy`, outside of built-in training loops such as
+                `elegy` `compile` and `fit`, ` or `SUM_OVER_BATCH_SIZE`
+                will raise an error.
+            name: Optional name for the op.
+            weight: Optional weight contribution for the total loss. Defaults to `1`.
+            on: A string or integer, or iterable of string or integers, that
+                indicate how to index/filter the `y_true` and `y_pred`
+                arguments before passing them to `call`. For example if `on = "a"` then
+                `y_true = y_true["a"]`. If `on` is an iterable
+                the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`
+                then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
+                check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).
+        """
+        super().__init__(reduction=reduction, name=name, weight=weight, on=on)
         self._from_logits = from_logits
         self._label_smoothing = label_smoothing
 
     def call(
-            self,
-            y_true: jnp.ndarray,
-            y_pred: jnp.ndarray,
-            sample_weight: tp.Optional[jnp.ndarray] = None,
+        self,
+        y_true: jnp.ndarray,
+        y_pred: jnp.ndarray,
+        sample_weight: tp.Optional[jnp.ndarray] = None,
     ) -> jnp.ndarray:
         """
         Invokes the `BinaryCrossentropy` instance.

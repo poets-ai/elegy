@@ -57,26 +57,26 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
                     hk.Linear(10),
                 ]
             )
-            return dict(outputs=mlp(image))
+            return mlp(image)
 
     model = elegy.Model(
         module=MLP.defer(n1=300, n2=100),
         loss=[
-            elegy.losses.SparseCategoricalCrossentropy(from_logits=True, on="outputs"),
+            elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
             elegy.regularizers.GlobalL2(l=1e-4),
         ],
-        metrics=elegy.metrics.SparseCategoricalAccuracy.defer(on="outputs"),
+        metrics=elegy.metrics.SparseCategoricalAccuracy.defer(),
         optimizer=optix.rmsprop(1e-3),
         run_eagerly=eager,
     )
 
     history = model.fit(
         x=X_train,
-        y=dict(outputs=y_train),
+        y=y_train,
         epochs=100,
         steps_per_epoch=200,
         batch_size=64,
-        validation_data=(X_test, dict(outputs=y_test)),
+        validation_data=(X_test, y_test),
         shuffle=True,
         callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],
     )
@@ -97,8 +97,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             for j in range(3):
                 k = 3 * i + j
                 plt.subplot(3, 3, k + 1)
-
-                plt.title(f"{np.argmax(y_pred['outputs'][k])}")
+                plt.title(f"{np.argmax(y_pred[k])}")
                 plt.imshow(x_sample[k], cmap="gray")
         tbwriter.add_figure("Predictions", figure, 100)
 

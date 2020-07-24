@@ -15,14 +15,19 @@ nav:
   - Getting Started: getting-started.ipynb
   - Guides:
       Modules, Losses, and Metrics: guides/modules-losses-metrics.md
+      Contibuting: guides/contributing.md
   - API Reference:
       Model: api/Model.md
       # Module: api/Module.md
       model:
         load: api/model/load.md
+      nn:
+        BatchNormalization: api/nn/BatchNormalization.md
+        Dropout: api/nn/Dropout.md
       metrics:
         Metric: api/metrics/Metric.md
         Accuracy: api/metrics/Accuracy.md
+        BinaryCrossentropy: api/metrics/BinaryCrossentropy.md
         CategoricalAccuracy: api/metrics/CategoricalAccuracy.md
         SparseCategoricalAccuracy: api/metrics/SparseCategoricalAccuracy.md
         Mean: api/metrics/Mean.md
