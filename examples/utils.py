@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 def plot_history(history):
     n_plots = len(history.history.keys()) // 2
-    plt.figure(figsize=(14, 24))
+    figure = plt.figure(figsize=(14, 24))
 
     for i, key in enumerate(list(history.history.keys())[:n_plots]):
         if key == "size":

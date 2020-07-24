@@ -1,3 +1,5 @@
+import os
+from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
 
 import dataget
@@ -6,6 +8,7 @@ import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
+from tensorboardX.writer import SummaryWriter
 import typer
 from jax.experimental import optix
 
@@ -13,7 +16,7 @@ import elegy
 from utils import plot_history
 
 
-def main(debug: bool = False, eager: bool = False):
+def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
 
     if debug:
         import debugpy
@@ -21,6 +24,9 @@ def main(debug: bool = False, eager: bool = False):
         print("Waiting for debugger...")
         debugpy.listen(5678)
         debugpy.wait_for_client()
+
+    current_time = datetime.now().strftime("%b%d_%H-%M-%S")
+    logdir = os.path.join(logdir, current_time)
 
     X_train, y_train, X_test, y_test = dataget.image.mnist(global_cache=True).get()
 
@@ -68,10 +74,11 @@ def main(debug: bool = False, eager: bool = False):
         x=X_train,
         y=dict(outputs=y_train),
         epochs=100,
-        steps_per_epoch=200,
+        steps_per_epoch=10,
         batch_size=64,
         validation_data=(X_test, dict(outputs=y_test)),
         shuffle=True,
+        callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],
     )
 
     plot_history(history)
@@ -83,15 +90,17 @@ def main(debug: bool = False, eager: bool = False):
     # get predictions
     y_pred = model.predict(x=x_sample)
 
-    # plot results
-    plt.figure(figsize=(12, 12))
-    for i in range(3):
-        for j in range(3):
-            k = 3 * i + j
-            plt.subplot(3, 3, k + 1)
+    # plot and save results
+    with SummaryWriter(logdir + "/val") as tbwriter:
+        figure = plt.figure(figsize=(12, 12))
+        for i in range(3):
+            for j in range(3):
+                k = 3 * i + j
+                plt.subplot(3, 3, k + 1)
 
-            plt.title(f"{np.argmax(y_pred['outputs'][k])}")
-            plt.imshow(x_sample[k], cmap="gray")
+                plt.title(f"{np.argmax(y_pred['outputs'][k])}")
+                plt.imshow(x_sample[k], cmap="gray")
+        tbwriter.add_figure("Predictions", figure, 100)
 
     plt.show()
 
