@@ -1,4 +1,7 @@
+from tensorboardX.writer import SummaryWriter
+from elegy.callbacks.tensorboard import TensorBoard
 import os
+from datetime import datetime
 import typing as tp
 from typing import Any, Generator, Mapping, Tuple
 
@@ -131,7 +134,7 @@ class KLDivergence(elegy.Loss):
         )
 
 
-def main(debug: bool = False, eager: bool = False):
+def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
 
     if debug:
         import debugpy
@@ -139,6 +142,9 @@ def main(debug: bool = False, eager: bool = False):
         print("Waiting for debugger...")
         debugpy.listen(5678)
         debugpy.wait_for_client()
+
+    current_time = datetime.now().strftime("%b%d_%H-%M-%S")
+    logdir = os.path.join(logdir, current_time)
 
     X_train, _1, X_test, _2 = dataget.image.mnist(global_cache=True).get()
     # Now binarize data
@@ -165,6 +171,7 @@ def main(debug: bool = False, eager: bool = False):
         steps_per_epoch=100,
         validation_data=(X_test,),
         shuffle=True,
+        callbacks=[TensorBoard(logdir)],
     )
     plot_history(history)
 
@@ -175,15 +182,22 @@ def main(debug: bool = False, eager: bool = False):
     # get predictions
     y_pred = model.predict(x=x_sample)
 
-    # plot results
-    plt.figure(figsize=(12, 12))
-    for i in range(5):
-        plt.subplot(2, 5, i + 1)
-        plt.imshow(x_sample[i], cmap="gray")
-        plt.subplot(2, 5, 5 + i + 1)
-        plt.imshow(y_pred["image"][i], cmap="gray")
+    # plot and save results
+    with SummaryWriter(os.path.join(logdir, "val")) as tbwriter:
+        figure = plt.figure(figsize=(12, 12))
+        for i in range(5):
+            plt.subplot(2, 5, i + 1)
+            plt.imshow(x_sample[i], cmap="gray")
+            plt.subplot(2, 5, 5 + i + 1)
+            plt.imshow(y_pred["image"][i], cmap="gray")
+        tbwriter.add_figure("VAE Example", figure, epochs)
 
     plt.show()
+
+    print(
+        "\n\n\nMetrics and images can be explored using tensorboard using:",
+        f"\n \t\t\t tensorboard --logdir {logdir}",
+    )
 
 
 if __name__ == "__main__":
