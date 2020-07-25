@@ -5,74 +5,90 @@ from contextlib import contextmanager
 import haiku as hk
 import numpy as np
 from haiku._src import base
+from haiku._src import transform as src_transform
 
-LOCAL = threading.local()
-LOCAL.calculating_summary = False
-LOCAL.layer_outputs = None
 
 T = tp.TypeVar("T")
+LOCAL = threading.local()
+LOCAL.contexts = []
 
 
-class LocalList(list, threading.local):
-    pass
+class Context(tp.NamedTuple):
+    get_summaries: bool
+    losses: tp.Dict[str, np.ndarray]
+    metrics: tp.Dict[str, np.ndarray]
+    summaries: tp.Dict[str, tp.Any]
 
-
-CONTEXTS = LocalList()
-RNG_ERROR_TPL = (
-    "{f} must be called with an RNG as the {position} argument, "
-    "the required signature is: `{signature}`"
-)
-INIT_RNG_ERROR = RNG_ERROR_TPL.format(
-    f="Init", position="first", signature="init(rng, *a, **k)"
-)
-APPLY_RNG_ERROR = RNG_ERROR_TPL.format(
-    f="Apply", position="second", signature="apply(params, rng, *a, **k)"
-)
-APPLY_RNG_STATE_ERROR = RNG_ERROR_TPL.format(
-    f="Apply", position="third", signature="apply(params, state, rng, *a, **k)"
-)
+    @classmethod
+    def create(cls, get_summaries: bool = False):
+        return cls(get_summaries=get_summaries, losses={}, metrics={}, summaries={})
 
 
 @contextmanager
-def elegy_hooks():
-    context = {}
-    CONTEXTS.append(context)
+def elegy_context(get_summaries: bool = False):
+
+    if get_summaries is None:
+        context_get_summaries: bool = LOCAL.get_summariess
+        get_summaries = context_get_summaries
+
+    context = Context.create(get_summaries=get_summaries)
+    LOCAL.contexts.append(context)
     try:
         yield context
     finally:
-        CONTEXTS.pop()
+        LOCAL.contexts.pop()
 
 
-def log_value(topic, name, value):
-    # NOTE: log(..) ignored when not logging.
-    if CONTEXTS:
-        context = CONTEXTS[-1]
+def add_loss(name: str, value: np.ndarray):
+    name += "_loss"
+    if LOCAL.contexts:
+        context: Context = LOCAL.contexts[-1]
 
-        if topic in context:
-            context[topic][name] = value
+        if name in context.losses:
+            context.losses[name] += value
         else:
-            context[topic] = {name: value}
+            context.losses[name] = value
+    else:
+        raise ValueError("Cannot execute `add_loss` outside of a `elegy.transform`")
 
 
-class layer_summaries:
-    def __enter__(self):
-        self.calculating_summary = LOCAL.calculating_summary
-        self.layer_outputs = LOCAL.layer_outputs
+def add_metric(name: str, value: np.ndarray):
+    if LOCAL.contexts:
+        context: Context = LOCAL.contexts[-1]
 
-        LOCAL.calculating_summary = True
-        LOCAL.layer_outputs = []
+        name = f"{base.current_bundle_name()}/{name}"
+        name = get_unique_name(context.summaries, name)
 
-    def __exit__(self, *args):
-        LOCAL.calculating_summary = self.calculating_summary
-        LOCAL.layer_outputs = self.layer_outputs
+        context.metrics[name] = value
+    else:
+        raise ValueError("Cannot execute `add_loss` outside of a `elegy.transform`")
 
 
-class no_op:
-    def __enter__(self):
-        pass
+def add_summary(name: str, value: np.ndarray):
+    if LOCAL.contexts:
+        context: Context = LOCAL.contexts[-1]
 
-    def __exit__(self, *args):
-        pass
+        if not context.get_summaries:
+            return
+
+        name = f"{base.current_bundle_name()}/{name}"
+        name = get_unique_name(context.summaries, name)
+
+        context.summaries[name] = value
+    else:
+        raise ValueError("Cannot execute `add_loss` outside of a `elegy.transform`")
+
+
+def get_unique_name(logs, name):
+
+    if name not in logs:
+        return name
+
+    i = 1
+    while f"{name}_{i}" in logs:
+        i += 1
+
+    return f"{name}_{i}"
 
 
 class TransformedState(tp.NamedTuple):
@@ -80,63 +96,10 @@ class TransformedState(tp.NamedTuple):
     state: hk.State
     losses: hk.State
     metrics: hk.State
-    layer_outputs: hk.State
+    summaries: hk.State
 
 
-class Transform(tp.NamedTuple):
-    f: tp.Callable
-
-    def init(
-        self, rng: tp.Optional[tp.Union[np.ndarray, int]], *args, **kwargs,
-    ) -> tp.Tuple[hk.Params, hk.State]:
-        """
-        Initializes your function collecting parameters and state.
-        """
-
-        rng = to_prng_sequence(rng, err_msg=INIT_RNG_ERROR)
-
-        with base.new_context(rng=rng) as ctx:
-            self.f(*args, **kwargs)
-
-        initital_state = ctx.collect_initial_state()
-
-        return ctx.collect_params(), initital_state
-
-    def apply(
-        self,
-        params: tp.Optional[hk.Params],
-        state: tp.Optional[hk.State],
-        rng: tp.Optional[tp.Union[np.ndarray, int]],
-        *args,
-        **kwargs,
-    ) -> TransformedState:
-        """
-        Applies your function injecting parameters and state.
-        """
-
-        params = check_mapping("params", params)
-        state = check_mapping("state", state)
-        rng = to_prng_sequence(
-            rng, err_msg=(APPLY_RNG_STATE_ERROR if state else APPLY_RNG_ERROR)
-        )
-
-        with base.new_context(params=params, state=state, rng=rng) as ctx:
-            outputs = self.f(*args, **kwargs)
-
-        state = ctx.collect_state()
-        losses = {}
-        metrics = {}
-
-        return TransformedState(
-            outputs=outputs,
-            state=state,
-            losses=losses,
-            metrics=metrics,
-            layer_outputs=dict(LOCAL.layer_outputs) if LOCAL.layer_outputs else {},
-        )
-
-
-def transform(f) -> Transform:
+class transform(tp.NamedTuple):
     """
     Transforms a function using Haiku modules into a pair of pure functions.
 
@@ -176,33 +139,67 @@ def transform(f) -> Transform:
         functions.
     """
 
-    return Transform(f)
+    f: tp.Callable
 
+    def init(
+        self,
+        rng: tp.Optional[tp.Union[np.ndarray, int]],
+        args: tp.Tuple = (),
+        kwargs: tp.Optional[tp.Dict] = None,
+    ) -> tp.Tuple[hk.Params, hk.State]:
+        """
+        Initializes your function collecting parameters and state.
+        """
+        if kwargs is None:
+            kwargs = {}
 
-def to_prng_sequence(rng, err_msg) -> tp.Optional[hk.PRNGSequence]:
-    if rng is not None:
-        try:
-            rng = hk.PRNGSequence(rng)
-        except Exception as e:
-            raise ValueError(err_msg) from e
-    return rng
+        rng = src_transform.to_prng_sequence(rng, err_msg=src_transform.INIT_RNG_ERROR)
 
+        with base.new_context(rng=rng) as ctx, elegy_context():
+            self.f(*args, **kwargs)
 
-def check_mapping(name: str, mapping: tp.Optional[T]) -> T:
-    """Cleans inputs to apply_fn, providing better errors."""
-    # TODO(tomhennigan) Remove support for empty non-Mappings.
-    if mapping is None:
-        # Convert None to empty dict.
-        mapping = dict()
-    if not isinstance(mapping, tp.Mapping):
-        raise TypeError(
-            f"{name} argument does not appear valid: {mapping!r}. "
-            "For reference the parameters for apply are "
-            "`apply(params, rng, ...)`` for `hk.transform` and "
-            "`apply(params, state, rng, ...)` for "
-            "`hk.transform_with_state`."
+        initital_state = ctx.collect_initial_state()
+
+        return ctx.collect_params(), initital_state
+
+    def apply(
+        self,
+        params: tp.Optional[hk.Params],
+        state: tp.Optional[hk.State],
+        rng: tp.Optional[tp.Union[np.ndarray, int]],
+        get_summaries: bool = False,
+        args: tp.Tuple = (),
+        kwargs: tp.Optional[tp.Dict] = None,
+    ) -> TransformedState:
+        """
+        Applies your function injecting parameters and state.
+        """
+        if kwargs is None:
+            kwargs = {}
+
+        params = src_transform.check_mapping("params", params)
+        state = src_transform.check_mapping("state", state)
+        rng = src_transform.to_prng_sequence(
+            rng,
+            err_msg=(
+                src_transform.APPLY_RNG_STATE_ERROR
+                if state
+                else src_transform.APPLY_RNG_ERROR
+            ),
         )
-    return mapping
+
+        with base.new_context(
+            params=params, state=state, rng=rng
+        ) as ctx, elegy_context(get_summaries=get_summaries) as elegy_ctx:
+            outputs = self.f(*args, **kwargs)
+
+        return TransformedState(
+            outputs=outputs,
+            state=ctx.collect_state(),
+            losses=elegy_ctx.losses,
+            metrics=elegy_ctx.metrics,
+            summaries=elegy_ctx.summaries,
+        )
 
 
 # def map_state(

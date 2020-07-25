@@ -96,7 +96,7 @@ class Model(object):
 
     # private fields
     _module_fn: tp.Callable
-    _model_transform: hooks.Transform
+    _model_transform: hooks.transform
     _loss_fn: tp.Callable
     _metrics: tp.Optional[hk.TransformedWithState]
     _optimizer: optix.GradientTransformation
@@ -207,7 +207,7 @@ class Model(object):
                 x_args, x_kwargs = utils.get_input_args(x, is_training=True)
 
                 self.params, self.state = self._model_transform.init(
-                    next(self._rngs), *x_args, **x_kwargs
+                    rng=next(self._rngs), args=x_args, kwargs=x_kwargs
                 )
 
             if mode == Mode.predict:
@@ -218,12 +218,12 @@ class Model(object):
 
                 transformed_state = self._model_transform.apply(
                     # required by apply
-                    self.params,
-                    self.state,
-                    next(self._rngs),
-                    # model_transform inputs + dependency injection
-                    *x_args,
-                    **x_kwargs,
+                    params=self.params,
+                    state=self.state,
+                    rng=next(self._rngs),
+                    get_summaries=False,
+                    args=x_args,
+                    kwargs=x_kwargs,
                 )
 
                 y_pred = transformed_state.outputs
@@ -401,7 +401,12 @@ class Model(object):
     ):
 
         transformed_state = self._predict(
-            is_training=is_training, x=x, params=params, state=state, net_rng=net_rng,
+            is_training=is_training,
+            get_summaries=False,
+            x=x,
+            params=params,
+            state=state,
+            net_rng=net_rng,
         )
 
         y_pred = transformed_state.outputs
@@ -1030,9 +1035,7 @@ class Model(object):
     # ----------------------------------------------------------------
 
     def predict_on_batch(
-        self,
-        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        seed: tp.Union[jnp.ndarray, int, None] = None,
+        self, x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]
     ) -> tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]:
         """
         Returns predictions for a single batch of samples.
@@ -1057,6 +1060,7 @@ class Model(object):
 
         transformed_state = predict_fn(
             False,  # is_training
+            False,  # get_summaries
             x=x,
             params=self.params,
             state=self.state,
@@ -1068,6 +1072,7 @@ class Model(object):
     def _predict(
         self,
         is_training: bool,
+        get_summaries: bool,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         params: hk.Params,
         state: hk.State,
@@ -1077,17 +1082,17 @@ class Model(object):
 
         transformed_state = self._model_transform.apply(
             # required by apply
-            params,
-            state,
-            net_rng,
-            # new inputs + dependency injection
-            *x_args,
-            **x_kwargs,
+            params=params,
+            state=state,
+            rng=net_rng,
+            get_summaries=get_summaries,
+            args=x_args,
+            kwargs=x_kwargs,
         )
 
         return transformed_state
 
-    _predict_jit = jax.jit(_predict, static_argnums=(0, 1))
+    _predict_jit = jax.jit(_predict, static_argnums=(0, 1, 2))
 
     @property
     def seed(self) -> tp.Union[np.ndarray, int]:
@@ -1250,26 +1255,17 @@ class Model(object):
             mode=Mode.predict,
         )
 
-        # print()
-        # print("params")
-        # print(jax.tree_map(lambda x: x.shape, self.params))
+        transformed_state = self._predict(
+            False,  # is_training
+            True,  # get_summaries
+            x=x_sample,
+            params=self.params,
+            state=self.state,
+            net_rng=next(self._rngs),
+        )
 
-        # print()
-        # print("state")
-        # print(jax.tree_map(lambda x: x.shape, self.state))
-
-        with utils.layer_summaries():
-
-            transformed_state = self._predict(
-                False,  # is_training
-                x=x_sample,
-                params=self.params,
-                state=self.state,
-                net_rng=next(self._rngs),
-            )
-
-            for key, value in transformed_state.layer_outputs.items():
-                print(key, value.shape)
+        for key, value in transformed_state.summaries.items():
+            print(key, value.shape)
 
 
 def load(path: tp.Union[str, Path]) -> Model:

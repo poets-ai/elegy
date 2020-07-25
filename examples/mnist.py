@@ -38,7 +38,7 @@ def main(debug: bool = False, eager: bool = False):
             self.n1 = n1
             self.n2 = n2
 
-        def call(self, image: jnp.ndarray):
+        def call(self, image: jnp.ndarray, is_training: bool):
 
             image = image.astype(jnp.float32) / 255.0
 
@@ -46,13 +46,21 @@ def main(debug: bool = False, eager: bool = False):
                 [
                     hk.Flatten(),
                     hk.Linear(self.n1),
-                    lambda x: elegy.nn.BatchNormalization()(x, is_training=True),
+                    lambda x: elegy.nn.BatchNormalization()(x, is_training),
                     jax.nn.relu,
                     hk.Linear(self.n2),
                     jax.nn.relu,
                     hk.Linear(10),
                 ]
             )
+
+            if is_training:
+                elegy.add_loss("a", 1.0)
+                elegy.add_metric("b", 5.0)
+            else:
+                elegy.add_loss("a", 2.0)
+                elegy.add_metric("b", 10.0)
+
             return mlp(image)
 
     model = elegy.Model(
@@ -71,8 +79,8 @@ def main(debug: bool = False, eager: bool = False):
     history = model.fit(
         x=X_train,
         y=y_train,
-        epochs=100,
-        steps_per_epoch=200,
+        epochs=10,
+        steps_per_epoch=20,
         batch_size=64,
         validation_data=(X_test, y_test),
         shuffle=True,

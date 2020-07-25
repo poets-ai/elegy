@@ -7,6 +7,7 @@ import numpy as np
 
 from elegy import utils
 from elegy.utils import Deferable
+from elegy import hooks
 
 
 class Module(hk.Module, Deferable):
@@ -22,11 +23,7 @@ class Module(hk.Module, Deferable):
 
         outputs = self.call(*args, **kwargs)
 
-        if utils.LOCAL.calculating_summary:
-            layer_tag = f"__ELEGY__LAYEROUTPUT__{utils.LOCAL.layer_count}"
-            hk.get_state(layer_tag, [], init=lambda *args: np.array(0.0))
-            utils.LOCAL.layer_count += 1
-            hk.set_state(layer_tag, outputs)
+        hooks.add_summary("outputs", outputs)
 
         return outputs
 
