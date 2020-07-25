@@ -202,52 +202,51 @@ class Model(object):
         mode: Mode,
     ):
 
-        with utils.layer_summaries():
-            if self.params is None or self.state is None:
-                x_args, x_kwargs = utils.get_input_args(x, is_training=True)
+        if self.params is None or self.state is None:
+            x_args, x_kwargs = utils.get_input_args(x, is_training=True)
 
-                self.params, self.state = self._model_transform.init(
-                    rng=next(self._rngs), args=x_args, kwargs=x_kwargs
-                )
+            self.params, self.state = self._model_transform.init(
+                rng=next(self._rngs), args=x_args, kwargs=x_kwargs
+            )
 
-            if mode == Mode.predict:
-                return
+        if mode == Mode.predict:
+            return
 
-            if self._metrics_transform is not None and self.metrics_state is None:
-                x_args, x_kwargs = utils.get_input_args(x, is_training=True)
+        if self._metrics_transform is not None and self.metrics_state is None:
+            x_args, x_kwargs = utils.get_input_args(x, is_training=True)
 
-                transformed_state = self._model_transform.apply(
-                    # required by apply
-                    params=self.params,
-                    state=self.state,
-                    rng=next(self._rngs),
-                    get_summaries=False,
-                    args=x_args,
-                    kwargs=x_kwargs,
-                )
+            transformed_state = self._model_transform.apply(
+                # required by apply
+                params=self.params,
+                state=self.state,
+                rng=next(self._rngs),
+                get_summaries=False,
+                args=x_args,
+                kwargs=x_kwargs,
+            )
 
-                y_pred = transformed_state.outputs
+            y_pred = transformed_state.outputs
 
-                _, self.metrics_state = self._metrics_transform.init(
-                    # required by init
-                    next(self._rngs),
-                    # dependency injection
-                    x=x,
-                    y_true=y,
-                    y_pred=y_pred,
-                    sample_weight=sample_weight,
-                    class_weight=class_weight,
-                    is_training=False,
-                    __params=self.params,  # renamed
-                )
+            _, self.metrics_state = self._metrics_transform.init(
+                # required by init
+                next(self._rngs),
+                # dependency injection
+                x=x,
+                y_true=y,
+                y_pred=y_pred,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+                is_training=False,
+                __params=self.params,  # renamed
+            )
 
-                self.initial_metrics_state = self.metrics_state
+            self.initial_metrics_state = self.metrics_state
 
-            if mode == Mode.test:
-                return
+        if mode == Mode.test:
+            return
 
-            if self.optimizer_state is None:
-                self.optimizer_state = self._optimizer.init(self.params)
+        if self.optimizer_state is None:
+            self.optimizer_state = self._optimizer.init(self.params)
 
     def reset_metrics(self, hard: bool = False):
 
@@ -424,7 +423,9 @@ class Model(object):
         )
 
         # get total loss
-        loss = logs["loss"] = sum(logs.values())
+        loss = logs["loss"] = sum(logs.values()) + sum(
+            transformed_state.losses.values()
+        )
 
         return loss, (transformed_state, logs)
 

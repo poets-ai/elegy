@@ -16,23 +16,6 @@ else:
 
 EPSILON = 1e-7
 
-LOCAL = threading.local()
-LOCAL.calculating_summary = False
-LOCAL.layer_count = 0
-
-
-class layer_summaries:
-    def __enter__(self):
-        self.calculating_summary = LOCAL.calculating_summary
-        self.layer_count = LOCAL.layer_count
-
-        LOCAL.calculating_summary = True
-        LOCAL.layer_count = 0
-
-    def __exit__(self, *args):
-        LOCAL.calculating_summary = self.calculating_summary
-        LOCAL.layer_count = self.layer_count
-
 
 def inject_dependencies(
     f: tp.Callable, rename: tp.Optional[tp.Dict[str, str]] = None,
@@ -107,3 +90,4 @@ class Deferable:
     @classmethod
     def defer(cls, *args, **kwargs) -> Defered:
         return Defered(cls, *args, **kwargs)
+

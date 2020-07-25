@@ -1,6 +1,6 @@
 import elegy
 import haiku as hk
-from haiku.testing import transform_and_run
+from elegy.testing_utils import transform_and_run
 import jax.numpy as jnp
 import jax
 
@@ -51,7 +51,7 @@ def test_function():
     assert jnp.array_equal(loss, jnp.mean(jnp.square(y_true - y_pred), axis=-1))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     test_basic()
     test_function()
