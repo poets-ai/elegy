@@ -195,17 +195,19 @@ class Model(object):
 
     def _maybe_initialize(
         self,
+        mode: Mode,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
-        mode: Mode,
     ):
+
+        maybe_jit = jax.jit if self.run_eagerly else lambda x: x
 
         if self.params is None or self.state is None:
             x_args, x_kwargs = utils.get_input_args(x, is_training=True)
 
-            self.params, self.state = self._model_transform.init(
+            self.params, self.state = maybe_jit(self._model_transform.init)(
                 rng=next(self._rngs), args=x_args, kwargs=x_kwargs
             )
 
@@ -215,7 +217,7 @@ class Model(object):
         if self._metrics_transform is not None and self.metrics_state is None:
             x_args, x_kwargs = utils.get_input_args(x, is_training=True)
 
-            transformed_state = self._model_transform.apply(
+            transformed_state = maybe_jit(self._model_transform.apply)(
                 # required by apply
                 params=self.params,
                 state=self.state,
@@ -227,7 +229,7 @@ class Model(object):
 
             y_pred = transformed_state.outputs
 
-            _, self.metrics_state = self._metrics_transform.init(
+            _, self.metrics_state = maybe_jit(self._metrics_transform.init)(
                 # required by init
                 next(self._rngs),
                 # dependency injection
@@ -246,7 +248,7 @@ class Model(object):
             return
 
         if self.optimizer_state is None:
-            self.optimizer_state = self._optimizer.init(self.params)
+            self.optimizer_state = maybe_jit(self._optimizer.init)(self.params)
 
     def reset_metrics(self, hard: bool = False):
 
@@ -294,11 +296,11 @@ class Model(object):
             ValueError: In case of invalid user-provided arguments.
         """
         self._maybe_initialize(
+            mode=Mode.train,
             x=x,
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            mode=Mode.train,
         )
 
         (
@@ -341,7 +343,7 @@ class Model(object):
         optix.OptState,
         tp.Optional[hk.State],
     ]:
-        update_fn = self._update_eager if self.run_eagerly else self._update_jit
+        update_fn = self._update_no_jit if self.run_eagerly else self._update_jit
 
         return update_fn(
             x=x,
@@ -356,7 +358,7 @@ class Model(object):
             metrics_rng=metrics_rng,
         )
 
-    def _update_eager(
+    def _update_no_jit(
         self,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
@@ -417,7 +419,7 @@ class Model(object):
 
         return logs, params, state, optimizer_state, metrics_state
 
-    _update_jit = jax.jit(_update_eager, static_argnums=(0,))
+    _update_jit = jax.jit(_update_no_jit, static_argnums=(0,))
 
     def _loss(
         self,
@@ -431,7 +433,7 @@ class Model(object):
         is_training: bool,
     ):
 
-        transformed_state = self._predict_eager(
+        transformed_state = self._predict_no_jit(
             is_training=is_training,
             get_summaries=False,
             x=x,
@@ -986,11 +988,11 @@ class Model(object):
             ValueError: In case of invalid user-provided arguments.
         """
         self._maybe_initialize(
+            mode=Mode.test,
             x=x,
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            mode=Mode.test,
         )
 
         (logs, self.metrics_state,) = self._test(
@@ -1022,7 +1024,7 @@ class Model(object):
         tp.Dict[str, jnp.ndarray], tp.Optional[hk.State],
     ]:
 
-        test_fn = self._test_eager if self.run_eagerly else self._test_jit
+        test_fn = self._test_no_jit if self.run_eagerly else self._test_jit
 
         return test_fn(
             x=x,
@@ -1036,7 +1038,7 @@ class Model(object):
             metrics_rng=metrics_rng,
         )
 
-    def _test_eager(
+    def _test_no_jit(
         self,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
@@ -1087,7 +1089,7 @@ class Model(object):
 
         return logs, metrics_state
 
-    _test_jit = jax.jit(_test_eager, static_argnums=(0,))
+    _test_jit = jax.jit(_test_no_jit, static_argnums=(0,))
     # ----------------------------------------------------------------
     # predict
     # ----------------------------------------------------------------
@@ -1111,7 +1113,7 @@ class Model(object):
                 expectations of the model.
         """
         self._maybe_initialize(
-            x=x, y=None, sample_weight=None, class_weight=None, mode=Mode.predict,
+            mode=Mode.predict, x=x, y=None, sample_weight=None, class_weight=None
         )
 
         transformed_state = self._predict(
@@ -1135,7 +1137,7 @@ class Model(object):
         net_rng: jnp.ndarray,
     ) -> hooks.TransformedState:
 
-        predict_fn = self._predict_eager if self.run_eagerly else self._predict_jit
+        predict_fn = self._predict_no_jit if self.run_eagerly else self._predict_jit
 
         return predict_fn(
             is_training,
@@ -1146,7 +1148,7 @@ class Model(object):
             net_rng=net_rng,
         )
 
-    def _predict_eager(
+    def _predict_no_jit(
         self,
         is_training: bool,
         get_summaries: bool,
@@ -1170,7 +1172,7 @@ class Model(object):
 
         return transformed_state
 
-    _predict_jit = jax.jit(_predict_eager, static_argnums=(0, 1, 2))
+    _predict_jit = jax.jit(_predict_no_jit, static_argnums=(0, 1, 2))
 
     @property
     def seed(self) -> tp.Union[np.ndarray, int]:
@@ -1326,11 +1328,11 @@ class Model(object):
     def summary(self, x_sample):
 
         self._maybe_initialize(
+            mode=Mode.predict,
             x=x_sample,
             y=None,
             sample_weight=None,
             class_weight=None,
-            mode=Mode.predict,
         )
 
         transformed_state = self._predict(
