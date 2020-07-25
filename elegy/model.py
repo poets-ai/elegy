@@ -1308,4 +1308,3 @@ def load(path: tp.Union[str, Path]) -> Model:
     model.load(path)
 
     return model
-

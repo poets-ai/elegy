@@ -90,4 +90,3 @@ class Deferable:
     @classmethod
     def defer(cls, *args, **kwargs) -> Defered:
         return Defered(cls, *args, **kwargs)
-

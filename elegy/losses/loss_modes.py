@@ -57,4 +57,3 @@ def apply_recursive(context: tp.Tuple[str, ...], losses, **kwargs):
             yield from apply_recursive(context + (name,), loss, **kwargs)
     else:
         raise TypeError(f"Invalid type {type(losses)}")
-
