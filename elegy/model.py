@@ -301,15 +301,13 @@ class Model(object):
             mode=Mode.train,
         )
 
-        update_fn = self._update if self.run_eagerly else self._update_jit
-
         (
             logs,
             self.params,
             self.state,
             self.optimizer_state,
             self.metrics_state,
-        ) = update_fn(
+        ) = self._update(
             x=x,
             y=y,
             sample_weight=sample_weight,
@@ -325,6 +323,40 @@ class Model(object):
         return {key: np.asarray(value) for key, value in logs.items()}
 
     def _update(
+        self,
+        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
+        sample_weight: tp.Optional[jnp.ndarray],
+        class_weight: tp.Optional[jnp.ndarray],
+        params: hk.Params,
+        state: hk.State,
+        optimizer_state: optix.OptState,
+        metrics_state: tp.Optional[hk.State],
+        net_rng: jnp.ndarray,
+        metrics_rng: jnp.ndarray,
+    ) -> tp.Tuple[
+        tp.Dict[str, jnp.ndarray],
+        hk.Params,
+        hk.State,
+        optix.OptState,
+        tp.Optional[hk.State],
+    ]:
+        update_fn = self._update_eager if self.run_eagerly else self._update_jit
+
+        return update_fn(
+            x=x,
+            y=y,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            params=params,
+            state=state,
+            optimizer_state=optimizer_state,
+            metrics_state=metrics_state,
+            net_rng=net_rng,
+            metrics_rng=metrics_rng,
+        )
+
+    def _update_eager(
         self,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
@@ -385,7 +417,7 @@ class Model(object):
 
         return logs, params, state, optimizer_state, metrics_state
 
-    _update_jit = jax.jit(_update, static_argnums=(0,))
+    _update_jit = jax.jit(_update_eager, static_argnums=(0,))
 
     def _loss(
         self,
@@ -399,7 +431,7 @@ class Model(object):
         is_training: bool,
     ):
 
-        transformed_state = self._predict(
+        transformed_state = self._predict_eager(
             is_training=is_training,
             get_summaries=False,
             x=x,
@@ -961,16 +993,13 @@ class Model(object):
             mode=Mode.test,
         )
 
-        test_fn = self._test if self.run_eagerly else self._test_jit
-
-        (logs, self.metrics_state,) = test_fn(
+        (logs, self.metrics_state,) = self._test(
             x=x,
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
             params=self.params,
             state=self.state,
-            optimizer_state=self.optimizer_state,
             metrics_state=self.metrics_state,
             net_rng=next(self._rngs),
             metrics_rng=next(self._rngs),
@@ -986,7 +1015,35 @@ class Model(object):
         class_weight: tp.Optional[jnp.ndarray],
         params: hk.Params,
         state: hk.State,
-        optimizer_state: optix.OptState,
+        metrics_state: tp.Optional[hk.State],
+        net_rng: jnp.ndarray,
+        metrics_rng: jnp.ndarray,
+    ) -> tp.Tuple[
+        tp.Dict[str, jnp.ndarray], tp.Optional[hk.State],
+    ]:
+
+        test_fn = self._test_eager if self.run_eagerly else self._test_jit
+
+        return test_fn(
+            x=x,
+            y=y,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            params=params,
+            state=state,
+            metrics_state=metrics_state,
+            net_rng=net_rng,
+            metrics_rng=metrics_rng,
+        )
+
+    def _test_eager(
+        self,
+        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
+        sample_weight: tp.Optional[jnp.ndarray],
+        class_weight: tp.Optional[jnp.ndarray],
+        params: hk.Params,
+        state: hk.State,
         metrics_state: tp.Optional[hk.State],
         net_rng: jnp.ndarray,
         metrics_rng: jnp.ndarray,
@@ -1030,7 +1087,7 @@ class Model(object):
 
         return logs, metrics_state
 
-    _test_jit = jax.jit(_test, static_argnums=(0,))
+    _test_jit = jax.jit(_test_eager, static_argnums=(0,))
     # ----------------------------------------------------------------
     # predict
     # ----------------------------------------------------------------
@@ -1057,9 +1114,7 @@ class Model(object):
             x=x, y=None, sample_weight=None, class_weight=None, mode=Mode.predict,
         )
 
-        predict_fn = self._predict if self.run_eagerly else self._predict_jit
-
-        transformed_state = predict_fn(
+        transformed_state = self._predict(
             False,  # is_training
             False,  # get_summaries
             x=x,
@@ -1079,6 +1134,28 @@ class Model(object):
         state: hk.State,
         net_rng: jnp.ndarray,
     ) -> hooks.TransformedState:
+
+        predict_fn = self._predict_eager if self.run_eagerly else self._predict_jit
+
+        return predict_fn(
+            is_training,
+            get_summaries,
+            x=x,
+            params=params,
+            state=state,
+            net_rng=net_rng,
+        )
+
+    def _predict_eager(
+        self,
+        is_training: bool,
+        get_summaries: bool,
+        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        params: hk.Params,
+        state: hk.State,
+        net_rng: jnp.ndarray,
+    ) -> hooks.TransformedState:
+
         x_args, x_kwargs = utils.get_input_args(x, is_training=is_training)
 
         transformed_state = self._model_transform.apply(
@@ -1093,7 +1170,7 @@ class Model(object):
 
         return transformed_state
 
-    _predict_jit = jax.jit(_predict, static_argnums=(0, 1, 2))
+    _predict_jit = jax.jit(_predict_eager, static_argnums=(0, 1, 2))
 
     @property
     def seed(self) -> tp.Union[np.ndarray, int]:

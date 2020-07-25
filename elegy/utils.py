@@ -52,14 +52,14 @@ def get_function_args(f) -> tp.List[inspect.Parameter]:
 
 
 def get_input_args(
-    x: tp.Union[np.ndarray, jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+    x: tp.Union[np.ndarray, jnp.ndarray, tp.Dict[str, tp.Any], tp.Tuple],
     is_training: bool,
-) -> tp.Tuple[tp.Tuple, tp.Mapping[str, tp.Any]]:
+) -> tp.Tuple[tp.Tuple, tp.Dict[str, tp.Any]]:
 
     if isinstance(x, tp.Tuple):
         args = x
         kwargs = {}
-    elif isinstance(x, tp.Mapping):
+    elif isinstance(x, tp.Dict):
         args = ()
         kwargs = x
     else:
