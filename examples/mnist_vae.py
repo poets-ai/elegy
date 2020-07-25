@@ -83,6 +83,7 @@ class VariationalAutoEncoder(elegy.Module):
     def call(self, x: jnp.ndarray) -> dict:
         x = x.astype(jnp.float32)
         mean, stddev = Encoder(self._hidden_size, self._latent_size)(x)
+
         z = mean + stddev * jax.random.normal(hk.next_rng_key(), mean.shape)
         logits = Decoder(self._hidden_size, self._output_shape)(z)
 

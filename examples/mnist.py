@@ -55,6 +55,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
                     lambda x: elegy.nn.BatchNormalization()(x, is_training),
                     jax.nn.relu,
                     hk.Linear(self.n2),
+                    lambda x: elegy.nn.BatchNormalization()(x, is_training),
                     jax.nn.relu,
                     hk.Linear(10),
                 ]
@@ -81,6 +82,8 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
     )
 
     model.summary(X_train[:64])
+
+    exit()
 
     history = model.fit(
         x=X_train,

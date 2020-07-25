@@ -17,19 +17,15 @@ class Context(tp.NamedTuple):
     get_summaries: bool
     losses: tp.Dict[str, np.ndarray]
     metrics: tp.Dict[str, np.ndarray]
-    summaries: tp.Dict[str, tp.Any]
+    summaries: tp.List[tp.Tuple[str, tp.Any]]
 
     @classmethod
     def create(cls, get_summaries: bool = False):
-        return cls(get_summaries=get_summaries, losses={}, metrics={}, summaries={})
+        return cls(get_summaries=get_summaries, losses={}, metrics={}, summaries=[])
 
 
 @contextmanager
 def elegy_context(get_summaries: bool = False):
-
-    if get_summaries is None:
-        context_get_summaries: bool = LOCAL.get_summariess
-        get_summaries = context_get_summaries
 
     context = Context.create(get_summaries=get_summaries)
     LOCAL.contexts.append(context)
@@ -57,7 +53,7 @@ def add_metric(name: str, value: np.ndarray):
         context: Context = LOCAL.contexts[-1]
 
         name = f"{base.current_bundle_name()}/{name}"
-        name = get_unique_name(context.summaries, name)
+        name = get_unique_name(context.metrics, name)
 
         context.metrics[name] = value
     else:
@@ -74,18 +70,24 @@ def add_summary(name: str, value: np.ndarray):
         name = f"{base.current_bundle_name()}/{name}"
         name = get_unique_name(context.summaries, name)
 
-        context.summaries[name] = value
+        context.summaries.append((name, value))
     else:
         raise ValueError("Cannot execute `add_loss` outside of a `elegy.transform`")
 
 
-def get_unique_name(logs, name):
+def get_unique_name(
+    logs: tp.Union[tp.Dict[str, tp.Any], tp.List[tp.Tuple[str, tp.Any]]], name: str
+):
 
-    if name not in logs:
+    names: tp.Set[str] = set(logs.values()) if isinstance(logs, dict) else {
+        t[0] for t in logs
+    }
+
+    if name not in names:
         return name
 
     i = 1
-    while f"{name}_{i}" in logs:
+    while f"{name}_{i}" in names:
         i += 1
 
     return f"{name}_{i}"
@@ -96,7 +98,7 @@ class TransformedState(tp.NamedTuple):
     state: hk.State
     losses: hk.State
     metrics: hk.State
-    summaries: hk.State
+    summaries: tp.List[tp.Tuple[str, tp.Any]]
 
 
 class transform(tp.NamedTuple):

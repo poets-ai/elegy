@@ -2,6 +2,7 @@ import typing as tp
 from abc import abstractmethod
 
 import haiku as hk
+import jax
 import jax.numpy as jnp
 import numpy as np
 
@@ -23,6 +24,7 @@ class Module(hk.Module, Deferable):
 
         outputs = self.call(*args, **kwargs)
 
+        print("outputs", jax.tree_map(lambda x: x.shape, outputs))
         hooks.add_summary("outputs", outputs)
 
         return outputs
@@ -30,3 +32,4 @@ class Module(hk.Module, Deferable):
     @abstractmethod
     def call(self, *args, **kwargs):
         ...
+

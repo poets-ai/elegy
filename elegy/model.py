@@ -15,6 +15,7 @@ import haiku as hk
 import jax
 import jax.numpy as jnp
 import numpy as np
+import toolz
 from jax.experimental import optix
 
 from elegy import hooks
@@ -393,9 +394,6 @@ class Model(object):
         y_pred = transformed_state.outputs
         state = transformed_state.state
 
-        logs.update(transformed_state.losses)
-        logs.update(transformed_state.metrics)
-
         updates, optimizer_state = self._optimizer.update(grads, optimizer_state)
         params = optix.apply_updates(params, updates)
 
@@ -460,6 +458,9 @@ class Model(object):
         loss = logs["loss"] = sum(logs.values()) + sum(
             transformed_state.losses.values()
         )
+
+        logs.update(transformed_state.losses)
+        logs.update(transformed_state.metrics)
 
         return loss, (transformed_state, logs)
 
@@ -1066,9 +1067,6 @@ class Model(object):
 
         y_pred = transformed_state.outputs
 
-        logs.update(transformed_state.losses)
-        logs.update(transformed_state.metrics)
-
         if self._metrics_transform is not None:
             metrics, metrics_state = self._metrics_transform.apply(
                 # required by apply
@@ -1325,7 +1323,7 @@ class Model(object):
 
         self.full_state = state
 
-    def summary(self, x_sample):
+    def summary(self, x_sample, depth: int = 2):
 
         self._maybe_initialize(
             mode=Mode.predict,
@@ -1336,16 +1334,26 @@ class Model(object):
         )
 
         transformed_state = self._predict(
-            False,  # is_training
-            True,  # get_summaries
+            is_training=False,
+            get_summaries=True,
             x=x_sample,
             params=self.params,
             state=self.state,
             net_rng=next(self._rngs),
         )
 
-        for key, value in transformed_state.summaries.items():
+        # summaries = (
+        #     (tuple(name.split("/")), value)
+        #     for name, value in transformed_state.summaries
+        # )
+
+        # summaries = toolz.groupby(lambda x: x[:2], summaries)
+
+        for key, value in transformed_state.summaries:
             print(key, value.shape)
+
+        print("params")
+        print(jax.tree_map(lambda x: x.shape, self.params))
 
 
 def load(path: tp.Union[str, Path]) -> Model:
