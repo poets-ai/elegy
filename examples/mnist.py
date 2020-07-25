@@ -4,6 +4,7 @@ import dataget
 import haiku as hk
 import jax
 import jax.numpy as jnp
+from jax.numpy.lax_numpy import mod
 import matplotlib.pyplot as plt
 import numpy as np
 import typer
@@ -45,6 +46,7 @@ def main(debug: bool = False, eager: bool = False):
                 [
                     hk.Flatten(),
                     hk.Linear(self.n1),
+                    lambda x: elegy.nn.BatchNormalization()(x, is_training=True),
                     jax.nn.relu,
                     hk.Linear(self.n2),
                     jax.nn.relu,
@@ -63,6 +65,8 @@ def main(debug: bool = False, eager: bool = False):
         optimizer=optix.rmsprop(1e-3),
         run_eagerly=eager,
     )
+
+    model.summary(X_train[:64])
 
     history = model.fit(
         x=X_train,

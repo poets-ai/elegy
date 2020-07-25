@@ -1,6 +1,7 @@
 # Implementation based on tf.keras.engine.training.py
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
+import logging
 import pickle
 import typing as tp
 from copy import copy
@@ -13,10 +14,10 @@ import deepdish
 import haiku as hk
 import jax
 import jax.numpy as jnp
-import logging
 import numpy as np
 from jax.experimental import optix
 
+from elegy import hooks
 from elegy.losses import loss_modes
 from elegy.metrics import metric_modes
 
@@ -95,7 +96,7 @@ class Model(object):
 
     # private fields
     _module_fn: tp.Callable
-    _model_transform: hk.TransformedWithState
+    _model_transform: hooks.Transform
     _loss_fn: tp.Callable
     _metrics: tp.Optional[hk.TransformedWithState]
     _optimizer: optix.GradientTransformation
@@ -169,7 +170,7 @@ class Model(object):
             return utils.inject_dependencies(module)(*args, **kwargs)
 
         self._module_fn = module
-        self._model_transform = hk.transform_with_state(model_fn)
+        self._model_transform = hooks.transform(model_fn)
         self._loss_fn = utils.inject_dependencies(loss)
         self._metrics_transform = (
             hk.transform_with_state(
@@ -201,48 +202,52 @@ class Model(object):
         mode: Mode,
     ):
 
-        if self.params is None or self.state is None:
-            x_args, x_kwargs = utils.get_input_args(x, is_training=True)
+        with utils.layer_summaries():
+            if self.params is None or self.state is None:
+                x_args, x_kwargs = utils.get_input_args(x, is_training=True)
 
-            self.params, self.state = self._model_transform.init(
-                next(self._rngs), *x_args, **x_kwargs
-            )
+                self.params, self.state = self._model_transform.init(
+                    next(self._rngs), *x_args, **x_kwargs
+                )
 
-        if mode == Mode.predict:
-            return
+            if mode == Mode.predict:
+                return
 
-        if self._metrics_transform is not None and self.metrics_state is None:
-            x_args, x_kwargs = utils.get_input_args(x, is_training=True)
+            if self._metrics_transform is not None and self.metrics_state is None:
+                x_args, x_kwargs = utils.get_input_args(x, is_training=True)
 
-            y_pred, state = self._model_transform.apply(
-                # required by apply
-                self.params,
-                self.state,
-                next(self._rngs),
-                # model_transform inputs + dependency injection
-                *x_args,
-                **x_kwargs,
-            )
-            _, self.metrics_state = self._metrics_transform.init(
-                # required by init
-                next(self._rngs),
-                # dependency injection
-                x=x,
-                y_true=y,
-                y_pred=y_pred,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                is_training=False,
-                __params=self.params,  # renamed
-            )
+                transformed_state = self._model_transform.apply(
+                    # required by apply
+                    self.params,
+                    self.state,
+                    next(self._rngs),
+                    # model_transform inputs + dependency injection
+                    *x_args,
+                    **x_kwargs,
+                )
 
-            self.initial_metrics_state = self.metrics_state
+                y_pred = transformed_state.outputs
 
-        if mode == Mode.test:
-            return
+                _, self.metrics_state = self._metrics_transform.init(
+                    # required by init
+                    next(self._rngs),
+                    # dependency injection
+                    x=x,
+                    y_true=y,
+                    y_pred=y_pred,
+                    sample_weight=sample_weight,
+                    class_weight=class_weight,
+                    is_training=False,
+                    __params=self.params,  # renamed
+                )
 
-        if self.optimizer_state is None:
-            self.optimizer_state = self._optimizer.init(self.params)
+                self.initial_metrics_state = self.metrics_state
+
+            if mode == Mode.test:
+                return
+
+            if self.optimizer_state is None:
+                self.optimizer_state = self._optimizer.init(self.params)
 
     def reset_metrics(self, hard: bool = False):
 
@@ -339,7 +344,7 @@ class Model(object):
         optix.OptState,
         tp.Optional[hk.State],
     ]:
-        (loss, (y_pred, state, logs)), grads = jax.value_and_grad(
+        (loss, (transformed_state, logs)), grads = jax.value_and_grad(
             self._loss, has_aux=True
         )(
             params,
@@ -351,6 +356,12 @@ class Model(object):
             class_weight=class_weight,
             is_training=True,
         )
+
+        y_pred = transformed_state.outputs
+        state = transformed_state.state
+
+        logs.update(transformed_state.losses)
+        logs.update(transformed_state.metrics)
 
         updates, optimizer_state = self._optimizer.update(grads, optimizer_state)
         params = optix.apply_updates(params, updates)
@@ -388,9 +399,13 @@ class Model(object):
         class_weight: tp.Optional[jnp.ndarray],
         is_training: bool,
     ):
-        y_pred, state = self._predict(
+
+        transformed_state = self._predict(
             is_training=is_training, x=x, params=params, state=state, net_rng=net_rng,
         )
+
+        y_pred = transformed_state.outputs
+        state = transformed_state.state
 
         logs = self._loss_fn(
             x=x,
@@ -406,7 +421,7 @@ class Model(object):
         # get total loss
         loss = logs["loss"] = sum(logs.values())
 
-        return loss, (y_pred, state, logs)
+        return loss, (transformed_state, logs)
 
     def fit(
         self,
@@ -973,7 +988,7 @@ class Model(object):
         tp.Dict[str, jnp.ndarray], tp.Optional[hk.State],
     ]:
 
-        loss, (y_pred, _state, logs) = self._loss(
+        loss, (transformed_state, logs) = self._loss(
             params,
             state=state,
             net_rng=net_rng,
@@ -983,6 +998,11 @@ class Model(object):
             class_weight=class_weight,
             is_training=False,
         )
+
+        y_pred = transformed_state.outputs
+
+        logs.update(transformed_state.losses)
+        logs.update(transformed_state.metrics)
 
         if self._metrics_transform is not None:
             metrics, metrics_state = self._metrics_transform.apply(
@@ -1035,7 +1055,7 @@ class Model(object):
 
         predict_fn = self._predict if self.run_eagerly else self._predict_jit
 
-        y_pred, _ = predict_fn(
+        transformed_state = predict_fn(
             False,  # is_training
             x=x,
             params=self.params,
@@ -1043,7 +1063,7 @@ class Model(object):
             net_rng=next(self._rngs),
         )
 
-        return y_pred
+        return transformed_state.outputs
 
     def _predict(
         self,
@@ -1052,11 +1072,10 @@ class Model(object):
         params: hk.Params,
         state: hk.State,
         net_rng: jnp.ndarray,
-    ) -> tp.Tuple[
-        tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple], hk.State,
-    ]:
+    ) -> hooks.TransformedState:
         x_args, x_kwargs = utils.get_input_args(x, is_training=is_training)
-        y_pred, state = self._model_transform.apply(
+
+        transformed_state = self._model_transform.apply(
             # required by apply
             params,
             state,
@@ -1066,7 +1085,7 @@ class Model(object):
             **x_kwargs,
         )
 
-        return y_pred, state
+        return transformed_state
 
     _predict_jit = jax.jit(_predict, static_argnums=(0, 1))
 
@@ -1221,6 +1240,37 @@ class Model(object):
 
         self.full_state = state
 
+    def summary(self, x_sample):
+
+        self._maybe_initialize(
+            x=x_sample,
+            y=None,
+            sample_weight=None,
+            class_weight=None,
+            mode=Mode.predict,
+        )
+
+        # print()
+        # print("params")
+        # print(jax.tree_map(lambda x: x.shape, self.params))
+
+        # print()
+        # print("state")
+        # print(jax.tree_map(lambda x: x.shape, self.state))
+
+        with utils.layer_summaries():
+
+            transformed_state = self._predict(
+                False,  # is_training
+                x=x_sample,
+                params=self.params,
+                state=self.state,
+                net_rng=next(self._rngs),
+            )
+
+            for key, value in transformed_state.layer_outputs.items():
+                print(key, value.shape)
+
 
 def load(path: tp.Union[str, Path]) -> Model:
     """
@@ -1261,3 +1311,4 @@ def load(path: tp.Union[str, Path]) -> Model:
     model.load(path)
 
     return model
+
