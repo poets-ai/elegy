@@ -10,7 +10,7 @@ jobs:
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8 
+          python-version: 3.8
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -36,7 +36,10 @@ jobs:
         uses: dschep/install-poetry-action@v1.2
 
       - name: Install Dependencies
-        run: bash scripts/action-install-deps.sh
+        run: |
+          poetry export --dev -f requirements.txt > requirments.txt
+          pip install -r requirments.txt
+          pip install jax
 
       - name: Run Tests
         run: pytest
