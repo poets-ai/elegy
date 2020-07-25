@@ -198,6 +198,15 @@ version = "0.10.0"
 six = "*"
 
 [[package]]
+category = "main"
+description = "A backport of the dataclasses module for Python 3.6"
+marker = "python_version >= \"3.6\" and python_version < \"3.7\""
+name = "dataclasses"
+optional = false
+python-versions = ">=3.6, <3.7"
+version = "0.7"
+
+[[package]]
 category = "dev"
 description = "A framework-agnostic datasets library for Machine Learning research and education."
 name = "dataget"
@@ -1591,7 +1600,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "55387313c17c0e473d11276becb4335a9e56a4e465b1587a25b7a3ecab27e5c7"
+content-hash = "bccd20613d3aa17852bd427eed630e3b0ab93e7a5eec9066b01409b99b58f3c4"
 python-versions = "^3.6.1"
 
 [metadata.files]
@@ -1669,6 +1678,10 @@ contextvars = [
 cycler = [
     {file = "cycler-0.10.0-py2.py3-none-any.whl", hash = "sha256:1d8a5ae1ff6c5cf9b93e8811e581232ad8920aeec647c37316ceac982b08cb2d"},
     {file = "cycler-0.10.0.tar.gz", hash = "sha256:cd7b2d1018258d7247a71425e9f26463dfb444d411c39569972f4ce586b0c9d8"},
+]
+dataclasses = [
+    {file = "dataclasses-0.7-py3-none-any.whl", hash = "sha256:3459118f7ede7c8bea0fe795bff7c6c2ce287d01dd226202f7c9ebc0610a7836"},
+    {file = "dataclasses-0.7.tar.gz", hash = "sha256:494a6dcae3b8bcf80848eea2ef64c0cc5cd307ffc263e17cdf42f3e5420808e6"},
 ]
 dataget = [
     {file = "dataget-0.4.14-py3-none-any.whl", hash = "sha256:523f4f75ffd7611a66923530ccbc7bde95cec95eec92045ebdc3c37f5631741b"},
