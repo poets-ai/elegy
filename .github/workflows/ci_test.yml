@@ -1,6 +1,12 @@
 # Checks that we can build and validate the Unittest
 name: GitHub CI
 on: [pull_request]
+  push:
+    # Sequence of patterns matched against refs/heads
+    branches:    
+      # Push events on master branch
+      - master
+  pull_request:
 jobs:
   black-test:
     name: Black Python code format
