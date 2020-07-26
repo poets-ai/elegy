@@ -1327,7 +1327,9 @@ class Model(object):
 
         self.full_state = state
 
-    def summary(self, x, depth: int = 2):
+    def summary(
+        self, x, depth: int = 2, tablefmt: str = "fancy_grid", **tablulate_kwargs
+    ):
 
         self._maybe_initialize(
             mode=Mode.predict, x=x, y=None, sample_weight=None, class_weight=None,
@@ -1344,7 +1346,7 @@ class Model(object):
 
         def format_output(outputs) -> str:
             file = StringIO()
-            outputs = jax.tree_map(lambda x: f"{x.shape} {x.dtype}", outputs)
+            outputs = jax.tree_map(lambda x: f"{x.shape}{{pad}}  {x.dtype}", outputs)
             yaml.safe_dump(
                 outputs, file, default_flow_style=False, indent=2, explicit_end=False
             )
@@ -1397,13 +1399,25 @@ class Model(object):
             states_size = format_size(hk.data_structures.tree_bytes(sub_states))
 
             table.append(
-                (
-                    "/".join(keys) + f" ({class_name})",
+                [
+                    "/".join(keys) + f"{{pad}}  ({class_name})",
                     format_output(output),
-                    f"{params_count:,}\n{params_size}" if params_count > 0 else "0",
-                    f"{states_count:,}\n{states_size}" if states_count > 0 else "0",
-                )
+                    f"{params_count:,}{{pad}}    {params_size}"
+                    if params_count > 0
+                    else "0",
+                    f"{states_count:,}{{pad}}    {states_size}"
+                    if states_count > 0
+                    else "0",
+                ]
             )
+
+        # add papdding
+        for col in range(4):
+            max_length = max(len(row[col].split("{pad}")[0]) for row in table[1:])
+
+            for row in table:
+                length = len(row[col].split("{pad}")[0])
+                row[col] = row[col].format(pad=" " * (max_length - length))
 
         print(
             tabulate(
@@ -1414,7 +1428,8 @@ class Model(object):
                     "Trainable\nParameters",
                     "Non-trainable\nParameters",
                 ],
-                tablefmt="fancy_grid",
+                tablefmt=tablefmt,
+                **tablulate_kwargs,
             )
         )
 
@@ -1425,17 +1440,27 @@ class Model(object):
         total_count = params_count + states_count
         total_size = params_size + states_size
 
-        params_size = format_size(params_size)
-        states_size = format_size(states_size)
-        total_size = format_size(total_size)
-
         print(
-            f"Total Parameters: "
-            + (f"{total_count:,} - {total_size}" if total_count > 0 else "0")
-            + f"\nTrainable Parameters: "
-            + (f"{params_count:,} - {params_size}" if params_count > 0 else "0")
-            + f"\nNon-trainable Parameters: "
-            + (f"{states_count:,} - {states_size}" if states_count > 0 else "0")
+            tabulate(
+                [
+                    [
+                        f"Total Parameters:",
+                        f"{total_count:,}",
+                        f"{format_size(total_size)}" if total_count > 0 else "",
+                    ],
+                    [
+                        f"Trainable Parameters:",
+                        f"{params_count:,}",
+                        f"{format_size(params_size)}" if params_count > 0 else "",
+                    ],
+                    [
+                        f"Non-trainable Parameters:",
+                        f"{states_count:,}",
+                        f"{format_size(states_size)}" if states_count > 0 else "",
+                    ],
+                ],
+                tablefmt="plain",
+            )
         )
 
 
