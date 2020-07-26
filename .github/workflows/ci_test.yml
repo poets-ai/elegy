@@ -1,6 +1,12 @@
 # Checks that we can build and validate the Unittest
 name: GitHub CI
-on: [pull_request]
+on:
+  push:
+    # Sequence of patterns matched against refs/heads
+    branches:    
+      # Push events on master branch
+      - master
+  pull_request:
 jobs:
   black-test:
     name: Black Python code format
@@ -37,9 +43,12 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          poetry export --dev -f requirements.txt > requirments.txt
-          pip install -r requirments.txt
+          poetry export --dev -f requirements.txt > requirements.txt
+          pip install -r requirements.txt
           pip install jax
 
       - name: Run Tests
-        run: pytest
+        run: pytest --cov=elegy --cov-report=term-missing --cov-report=xml
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v1
