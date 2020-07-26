@@ -36,6 +36,15 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
 
+    class Lambda(elegy.Module):
+        def __init__(self, f):
+            super().__init__()
+            self.f = f
+
+        @hk.transparent
+        def call(self, x):
+            return self.f(x)
+
     class MLP(elegy.Module):
         """Standard LeNet-300-100 MLP network."""
 
@@ -44,13 +53,22 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             self.n1 = n1
             self.n2 = n2
 
+        @hk.transparent
         def call(self, image: jnp.ndarray, is_training: bool):
 
             image = image.astype(jnp.float32) / 255.0
 
+            image = Lambda(
+                lambda x1: Lambda(
+                    lambda x2: Lambda(lambda x3: Lambda(lambda x4: x4)(x3))(x2)
+                )(x1)
+            )(image)
+
             mlp = hk.Sequential(
                 [
+                    lambda x: elegy.nn.BatchNormalization()(x, is_training),
                     hk.Flatten(),
+                    lambda x: elegy.nn.BatchNormalization()(x, is_training),
                     hk.Linear(self.n1),
                     lambda x: elegy.nn.BatchNormalization()(x, is_training),
                     jax.nn.relu,
@@ -58,6 +76,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
                     lambda x: elegy.nn.BatchNormalization()(x, is_training),
                     jax.nn.relu,
                     hk.Linear(10),
+                    lambda x: elegy.nn.BatchNormalization()(x, is_training),
                 ]
             )
 
@@ -81,7 +100,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
         run_eagerly=eager,
     )
 
-    model.summary(X_train[:64])
+    model.summary(X_train[:64], depth=3)
 
     exit()
 

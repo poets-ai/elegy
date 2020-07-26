@@ -17,7 +17,7 @@ class Context(tp.NamedTuple):
     get_summaries: bool
     losses: tp.Dict[str, np.ndarray]
     metrics: tp.Dict[str, np.ndarray]
-    summaries: tp.List[tp.Tuple[str, tp.Any]]
+    summaries: tp.List[tp.Tuple[str, str, tp.Any]]
 
     @classmethod
     def create(cls, get_summaries: bool = False):
@@ -45,7 +45,7 @@ def add_loss(name: str, value: np.ndarray):
         else:
             context.losses[name] = value
     else:
-        raise ValueError("Cannot execute `add_loss` outside of a `elegy.transform`")
+        raise ValueError("Cannot execute `add_loss` outside of an `elegy.transform`")
 
 
 def add_metric(name: str, value: np.ndarray):
@@ -57,26 +57,27 @@ def add_metric(name: str, value: np.ndarray):
 
         context.metrics[name] = value
     else:
-        raise ValueError("Cannot execute `add_loss` outside of a `elegy.transform`")
+        raise ValueError("Cannot execute `add_metric` outside of an `elegy.transform`")
 
 
-def add_summary(name: str, value: np.ndarray):
+def add_summary(name: tp.Optional[str], class_name, value: np.ndarray):
     if LOCAL.contexts:
         context: Context = LOCAL.contexts[-1]
 
         if not context.get_summaries:
             return
 
-        name = f"{base.current_bundle_name()}/{name}"
+        base_names = base.current_bundle_name()
+        name = f"{base_names}/{name}" if name is not None else base_names
         name = get_unique_name(context.summaries, name)
 
-        context.summaries.append((name, value))
+        context.summaries.append((name, class_name, value))
     else:
-        raise ValueError("Cannot execute `add_loss` outside of a `elegy.transform`")
+        raise ValueError("Cannot execute `add_summary` outside of an `elegy.transform`")
 
 
 def get_unique_name(
-    logs: tp.Union[tp.Dict[str, tp.Any], tp.List[tp.Tuple[str, tp.Any]]], name: str
+    logs: tp.Union[tp.Dict[str, tp.Any], tp.List[tp.Tuple[str, str, tp.Any]]], name: str
 ):
 
     names: tp.Set[str] = set(logs.values()) if isinstance(logs, dict) else {
@@ -98,7 +99,7 @@ class TransformedState(tp.NamedTuple):
     state: hk.State
     losses: hk.State
     metrics: hk.State
-    summaries: tp.List[tp.Tuple[str, tp.Any]]
+    summaries: tp.List[tp.Tuple[str, str, tp.Any]]
 
 
 class transform(tp.NamedTuple):

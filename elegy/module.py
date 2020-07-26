@@ -24,8 +24,7 @@ class Module(hk.Module, Deferable):
 
         outputs = self.call(*args, **kwargs)
 
-        print("outputs", jax.tree_map(lambda x: x.shape, outputs))
-        hooks.add_summary("outputs", outputs)
+        hooks.add_summary(None, self.__class__.__name__, outputs)
 
         return outputs
 
@@ -33,3 +32,5 @@ class Module(hk.Module, Deferable):
     def call(self, *args, **kwargs):
         ...
 
+
+hk.transparent

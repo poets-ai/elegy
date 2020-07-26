@@ -1,6 +1,8 @@
 # Implementation based on tf.keras.engine.training.py
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
+from io import StringIO
+import json
 import logging
 import pickle
 import typing as tp
@@ -17,6 +19,8 @@ import jax.numpy as jnp
 import numpy as np
 import toolz
 from jax.experimental import optix
+from tabulate import tabulate
+import yaml
 
 from elegy import hooks
 from elegy.losses import loss_modes
@@ -1323,37 +1327,116 @@ class Model(object):
 
         self.full_state = state
 
-    def summary(self, x_sample, depth: int = 2):
+    def summary(self, x, depth: int = 2):
 
         self._maybe_initialize(
-            mode=Mode.predict,
-            x=x_sample,
-            y=None,
-            sample_weight=None,
-            class_weight=None,
+            mode=Mode.predict, x=x, y=None, sample_weight=None, class_weight=None,
         )
 
         transformed_state = self._predict(
             is_training=False,
             get_summaries=True,
-            x=x_sample,
+            x=x,
             params=self.params,
             state=self.state,
             net_rng=next(self._rngs),
         )
 
-        # summaries = (
-        #     (tuple(name.split("/")), value)
-        #     for name, value in transformed_state.summaries
-        # )
+        def format_output(outputs) -> str:
+            file = StringIO()
+            outputs = jax.tree_map(lambda x: f"{x.shape} {x.dtype}", outputs)
+            yaml.safe_dump(
+                outputs, file, default_flow_style=False, indent=2, explicit_end=False
+            )
+            return file.getvalue().replace("\n...", "")
 
-        # summaries = toolz.groupby(lambda x: x[:2], summaries)
+        def format_size(size):
+            return (
+                f"{size / 1e9 :,.1f} GB"
+                if size > 1e9
+                else f"{size / 1e6 :,.1f} MB"
+                if size > 1e6
+                else f"{size / 1e3 :,.1f} KB"
+                if size > 1e3
+                else f"{size:,} B"
+            )
 
-        for key, value in transformed_state.summaries:
-            print(key, value.shape)
+        summaries = (
+            (tuple(name.split("/")), cls_name, value)
+            for name, cls_name, value in transformed_state.summaries
+        )
 
-        print("params")
-        print(jax.tree_map(lambda x: x.shape, self.params))
+        summaries = toolz.groupby(lambda x: x[0][:depth], summaries)
+        params = utils.split_and_merge(self.params)
+        state = utils.split_and_merge(self.state)
+
+        table: tp.List = [["Inputs", format_output(x), "0", "0"]]
+
+        for keys, group in summaries.items():
+            output = group[-1][2]
+            class_name = group[-1][1]
+
+            sub_params = params
+            sub_states = state
+
+            try:
+                for k in keys:
+                    sub_params = sub_params[k]
+            except KeyError:
+                sub_params = {}
+
+            try:
+                for k in keys:
+                    sub_states = sub_states[k]
+            except KeyError:
+                sub_states = {}
+
+            params_count = hk.data_structures.tree_size(sub_params)
+            params_size = format_size(hk.data_structures.tree_bytes(sub_params))
+            states_count = hk.data_structures.tree_size(sub_states)
+            states_size = format_size(hk.data_structures.tree_bytes(sub_states))
+
+            table.append(
+                (
+                    "/".join(keys) + f" ({class_name})",
+                    format_output(output),
+                    f"{params_count:,}\n{params_size}" if params_count > 0 else "0",
+                    f"{states_count:,}\n{states_size}" if states_count > 0 else "0",
+                )
+            )
+
+        print(
+            tabulate(
+                table,
+                headers=[
+                    "Layer",
+                    "Outputs Shape",
+                    "Trainable\nParameters",
+                    "Non-trainable\nParameters",
+                ],
+                tablefmt="fancy_grid",
+            )
+        )
+
+        params_count = hk.data_structures.tree_size(self.params)
+        params_size = hk.data_structures.tree_bytes(self.params)
+        states_count = hk.data_structures.tree_size(self.state)
+        states_size = hk.data_structures.tree_bytes(self.state)
+        total_count = params_count + states_count
+        total_size = params_size + states_size
+
+        params_size = format_size(params_size)
+        states_size = format_size(states_size)
+        total_size = format_size(total_size)
+
+        print(
+            f"Total Parameters: "
+            + (f"{total_count:,} - {total_size}" if total_count > 0 else "0")
+            + f"\nTrainable Parameters: "
+            + (f"{params_count:,} - {params_size}" if params_count > 0 else "0")
+            + f"\nNon-trainable Parameters: "
+            + (f"{states_count:,} - {states_size}" if states_count > 0 else "0")
+        )
 
 
 def load(path: tp.Union[str, Path]) -> Model:

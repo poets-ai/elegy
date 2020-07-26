@@ -1,4 +1,4 @@
-from elegy.utils import inject_dependencies
+from elegy import utils
 import pytest
 from unittest import TestCase
 
@@ -8,7 +8,7 @@ class DIFunctionTests(TestCase):
         def f(a, b, c):
             return a + b + c
 
-        g = inject_dependencies(f)
+        g = utils.inject_dependencies(f)
 
         y = g("a", "b", "c")
 
@@ -18,7 +18,7 @@ class DIFunctionTests(TestCase):
         def f(a, b, c):
             return a + b + c
 
-        g = inject_dependencies(f)
+        g = utils.inject_dependencies(f)
 
         with pytest.raises(TypeError):
             g("a", "b")
@@ -27,7 +27,7 @@ class DIFunctionTests(TestCase):
         def f(a, b, c):
             return a + b + c
 
-        g = inject_dependencies(f)
+        g = utils.inject_dependencies(f)
 
         with pytest.raises(TypeError):
             g("a", "b", "c", "d")
@@ -36,7 +36,7 @@ class DIFunctionTests(TestCase):
         def f(a, b, c):
             return a + b + c
 
-        g = inject_dependencies(f)
+        g = utils.inject_dependencies(f)
 
         y = g("a", "b", "c", d="d")
 
@@ -46,7 +46,7 @@ class DIFunctionTests(TestCase):
         def f(a, b, c):
             return a + b + c
 
-        g = inject_dependencies(f)
+        g = utils.inject_dependencies(f)
 
         y = g(b="b", c="c", a="a")
 
@@ -56,7 +56,7 @@ class DIFunctionTests(TestCase):
         def f(a, b, c):
             return a + b + c
 
-        g = inject_dependencies(f)
+        g = utils.inject_dependencies(f)
 
         y = g(b="b", c="c", a="a", d="d")
 
@@ -66,7 +66,7 @@ class DIFunctionTests(TestCase):
         def f(a, b, c):
             return a + b + c
 
-        g = inject_dependencies(f)
+        g = utils.inject_dependencies(f)
 
         with pytest.raises(TypeError):
             g(b="b", c="c")
@@ -75,7 +75,7 @@ class DIFunctionTests(TestCase):
         def f(a, b, c):
             return a + b + c
 
-        g = inject_dependencies(f)
+        g = utils.inject_dependencies(f)
 
         y = g("a", c="c", b="b")
 
@@ -85,7 +85,7 @@ class DIFunctionTests(TestCase):
         def f(a, b, c):
             return a + b + c
 
-        g = inject_dependencies(f)
+        g = utils.inject_dependencies(f)
 
         y = g("a", c="c", b="b", a="f")
 
@@ -95,8 +95,23 @@ class DIFunctionTests(TestCase):
         def f(a, b, c="x"):
             return a + b + c
 
-        g = inject_dependencies(f)
+        g = utils.inject_dependencies(f)
 
         y = g("a", c="c", b="b")
 
         assert y == "abc"
+
+
+class SplitTest(TestCase):
+    def test_basic(self):
+        from deepmerge import always_merger
+        import toolz
+
+        d = {"a/n/m": {"x": 1, "y/hola": 2}, "a/n/m/x/t": 10, "b": {"z": 3, "k": 5}}
+        ds = list(utils.split(d))
+
+        dn = toolz.reduce(always_merger.merge, ds, {})
+
+        print(ds)
+        print(dn)
+

@@ -4,9 +4,11 @@ import sys
 import threading
 import typing as tp
 from dataclasses import dataclass
+from deepmerge import always_merger
 
 import jax.numpy as jnp
 import numpy as np
+import toolz
 
 if sys.version_info >= (3, 8):
     from typing import Protocol, runtime_checkable
@@ -90,3 +92,37 @@ class Deferable:
     @classmethod
     def defer(cls, *args, **kwargs) -> Defered:
         return Defered(cls, *args, **kwargs)
+
+
+def split(
+    d: tp.Union[tp.Dict[str, tp.Any], tp.Mapping[str, tp.Any]]
+) -> tp.Iterable[tp.Dict[str, tp.Any]]:
+
+    for k, v in d.items():
+
+        parts = k.split("/")
+        parts.reverse()
+
+        if isinstance(v, (tp.Dict, tp.Mapping)):
+            vs = list(split(v))
+        else:
+            vs = [v]
+
+        for v in vs:
+            output = {}
+
+            for k in parts:
+                if not output:
+                    output[k] = v
+                else:
+                    output = {k: output}
+
+            yield output
+
+
+def split_and_merge(
+    d: tp.Union[tp.Dict[str, tp.Any], tp.Mapping[str, tp.Any]]
+) -> tp.Dict[str, tp.Any]:
+
+    ds = split(d)
+    return toolz.reduce(always_merger.merge, ds, {})

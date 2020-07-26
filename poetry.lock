@@ -247,6 +247,14 @@ tables = "*"
 image = ["skimage"]
 
 [[package]]
+category = "main"
+description = "a toolset to deeply merge python dictionaries."
+name = "deepmerge"
+optional = false
+python-versions = "*"
+version = "0.1.0"
+
+[[package]]
 category = "dev"
 description = "XML bomb protection for Python stdlib modules"
 name = "defusedxml"
@@ -1192,7 +1200,7 @@ python-versions = "*"
 version = "228"
 
 [[package]]
-category = "dev"
+category = "main"
 description = "YAML parser and emitter for Python"
 name = "pyyaml"
 optional = false
@@ -1599,7 +1607,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "835aaf95638a306ca4f6e4353cb5cc0805ba7dca37f1977be2cedd9ab7eac9b6"
+content-hash = "88ff77445c1b3dc5c8a38b097fa132a2afed262a2afa3de5823249718dc6fec7"
 python-versions = "^3.6.1"
 
 [metadata.files]
@@ -1727,6 +1735,10 @@ decorator = [
 deepdish = [
     {file = "deepdish-0.3.6-py2.py3-none-any.whl", hash = "sha256:2b1d3d2a32356909f2618c382a1829347990ad81b63aaecc87b35a046cd3034c"},
     {file = "deepdish-0.3.6.tar.gz", hash = "sha256:7858b674ef15ee79828de4892dadd2f58773ead527f3a62aaf1e8ce5a595a074"},
+]
+deepmerge = [
+    {file = "deepmerge-0.1.0-py2.py3-none-any.whl", hash = "sha256:ae23dd76d3c0d22d33a3fd3980c92d3f0773e4affb48d9b341847d0b0a24e8f8"},
+    {file = "deepmerge-0.1.0.tar.gz", hash = "sha256:3d37f739e74e8a284ee0bd683daaef88acc8438ba048545aefb87ade695a2a34"},
 ]
 defusedxml = [
     {file = "defusedxml-0.6.0-py2.py3-none-any.whl", hash = "sha256:6687150770438374ab581bb7a1b327a847dd9c5749e396102de3fad4e8a3ef93"},
