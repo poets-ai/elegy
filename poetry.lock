@@ -70,21 +70,6 @@ docs = ["sphinx", "zope.interface"]
 tests = ["coverage", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "zope.interface"]
 
 [[package]]
-category = "main"
-description = "Pytest plugin for measuring coverage."
-name = "pytest-cov"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-version = "2.10.0"
-
-[package.dependencies]
-coverage = ">=4.4"
-pytest = ">=4.6"
-
-[package.extras]
-testing = ["fields", "hunter", "process-tests (2.0.2)", "six", "pytest-xdist", "virtualenv"]
-
-[[package]]
 category = "dev"
 description = "Specifications for callback functions passed in to an API"
 name = "backcall"
@@ -200,6 +185,17 @@ version = "2.4"
 
 [package.dependencies]
 immutables = ">=0.9"
+
+[[package]]
+category = "main"
+description = "Code coverage measurement for Python"
+name = "coverage"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4"
+version = "5.2.1"
+
+[package.extras]
+toml = ["toml"]
 
 [[package]]
 category = "dev"
@@ -812,13 +808,13 @@ description = "Automatic documentation from sources, for MkDocs."
 name = "mkdocstrings"
 optional = false
 python-versions = ">=3.6,<4.0"
-version = "0.12.1"
+version = "0.12.2"
 
 [package.dependencies]
 beautifulsoup4 = ">=4.8.2,<5.0.0"
 mkdocs = ">=1.1,<2.0"
 pymdown-extensions = ">=6.3,<8.0"
-pytkdocs = ">=0.2.0,<0.7.0"
+pytkdocs = ">=0.2.0,<0.8.0"
 
 [[package]]
 category = "main"
@@ -1166,6 +1162,21 @@ checkqa-mypy = ["mypy (v0.761)"]
 testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "requests", "xmlschema"]
 
 [[package]]
+category = "main"
+description = "Pytest plugin for measuring coverage."
+name = "pytest-cov"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+version = "2.10.0"
+
+[package.dependencies]
+coverage = ">=4.4"
+pytest = ">=4.6"
+
+[package.extras]
+testing = ["fields", "hunter", "process-tests (2.0.2)", "six", "pytest-xdist", "virtualenv"]
+
+[[package]]
 category = "dev"
 description = "Extensions to the standard Python datetime module"
 name = "python-dateutil"
@@ -1196,7 +1207,7 @@ description = "Load Python objects documentation."
 name = "pytkdocs"
 optional = false
 python-versions = ">=3.6,<4.0"
-version = "0.6.0"
+version = "0.7.0"
 
 [[package]]
 category = "dev"
@@ -1604,7 +1615,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "dc95f5157942952e629c16ce2ca4cc93522a864ef2e0a58b7f4e2ed5621ca35c"
+content-hash = "cf58afc4e47bde2b91b5def2917c2b23ca1b2949e597f293186e291dfd99876b"
 python-versions = "^3.6.1"
 
 [metadata.files]
@@ -2068,8 +2079,8 @@ mkdocs-material-extensions = [
     {file = "mkdocs_material_extensions-1.0-py3-none-any.whl", hash = "sha256:09569c3694b5acc1e8334c9730e52b4bcde65fc9d613cc20e49af131ef1a9ca0"},
 ]
 mkdocstrings = [
-    {file = "mkdocstrings-0.12.1-py3-none-any.whl", hash = "sha256:346a881267c4fdc581ba910038a7e5690ed7d99c34420a393da847d79b9bfab3"},
-    {file = "mkdocstrings-0.12.1.tar.gz", hash = "sha256:10632762d0f4f7d243912f42e370782f4a06edd49372f5729001fbbfcecffa83"},
+    {file = "mkdocstrings-0.12.2-py3-none-any.whl", hash = "sha256:f5147ea5f67f8e580f29b30e505c1866eefe308742e9e0e0d2d6af8a239cdc55"},
+    {file = "mkdocstrings-0.12.2.tar.gz", hash = "sha256:d90bca3c9d571629ee658b034d6d8d92af1b28d1a618bd283cf4d21c240024db"},
 ]
 more-itertools = [
     {file = "more-itertools-8.4.0.tar.gz", hash = "sha256:68c70cc7167bdf5c7c9d8f6954a7837089c6a36bf565383919bb595efb8a17e5"},
@@ -2305,6 +2316,10 @@ pytest = [
     {file = "pytest-5.4.3-py3-none-any.whl", hash = "sha256:5c0db86b698e8f170ba4582a492248919255fcd4c79b1ee64ace34301fb589a1"},
     {file = "pytest-5.4.3.tar.gz", hash = "sha256:7979331bfcba207414f5e1263b5a0f8f521d0f457318836a7355531ed1a4c7d8"},
 ]
+pytest-cov = [
+    {file = "pytest-cov-2.10.0.tar.gz", hash = "sha256:1a629dc9f48e53512fcbfda6b07de490c374b0c83c55ff7a1720b3fccff0ac87"},
+    {file = "pytest_cov-2.10.0-py2.py3-none-any.whl", hash = "sha256:6e6d18092dce6fad667cd7020deed816f858ad3b49d5b5e2b1cc1c97a4dba65c"},
+]
 python-dateutil = [
     {file = "python-dateutil-2.8.1.tar.gz", hash = "sha256:73ebfe9dbf22e832286dafa60473e4cd239f8592f699aa5adaf10050e6e1823c"},
     {file = "python_dateutil-2.8.1-py2.py3-none-any.whl", hash = "sha256:75bb3f31ea686f1197762692a9ee6a7550b59fc6ca3a1f4b5d7e32fb98e2da2a"},
@@ -2313,16 +2328,12 @@ python-slugify = [
     {file = "python-slugify-4.0.1.tar.gz", hash = "sha256:69a517766e00c1268e5bbfc0d010a0a8508de0b18d30ad5a1ff357f8ae724270"},
 ]
 pytkdocs = [
-    {file = "pytkdocs-0.6.0-py3-none-any.whl", hash = "sha256:e5675088061ab1950688e52e581d21a98f5d4945b92fe55ad26ba4a0670359ef"},
-    {file = "pytkdocs-0.6.0.tar.gz", hash = "sha256:4dec18d0465aa84e38629ea3b32c2215e2bc4714c611b0b64c35b786aae1f180"},
+    {file = "pytkdocs-0.7.0-py3-none-any.whl", hash = "sha256:96c494143e70ccbb657bc4c0a93a97da0209f839f0236c08f227faedc51c1745"},
+    {file = "pytkdocs-0.7.0.tar.gz", hash = "sha256:88c79290525f7658e8271ce19dd343c01c53bbe6c2801d1bfcc6792cad0636d5"},
 ]
 pytz = [
     {file = "pytz-2020.1-py2.py3-none-any.whl", hash = "sha256:a494d53b6d39c3c6e44c3bec237336e14305e4f29bbf800b599253057fbb79ed"},
     {file = "pytz-2020.1.tar.gz", hash = "sha256:c35965d010ce31b23eeb663ed3cc8c906275d6be1a34393a1d73a41febf4a048"},
-]
-pytest-cov = [
-    {file = "pytest-cov-2.10.0.tar.gz", hash = "sha256:1a629dc9f48e53512fcbfda6b07de490c374b0c83c55ff7a1720b3fccff0ac87"},
-    {file = "pytest_cov-2.10.0-py2.py3-none-any.whl", hash = "sha256:6e6d18092dce6fad667cd7020deed816f858ad3b49d5b5e2b1cc1c97a4dba65c"},
 ]
 pywin32 = [
     {file = "pywin32-228-cp27-cp27m-win32.whl", hash = "sha256:37dc9935f6a383cc744315ae0c2882ba1768d9b06700a70f35dc1ce73cd4ba9c"},
