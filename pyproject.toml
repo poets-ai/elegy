@@ -19,6 +19,7 @@ dataclasses =  { version = "^0.7", markers = "python_version >= '3.6' and python
 cloudpickle = "^1.5.0"
 tensorboardx = "^2.1"
 tables = "^3.6.1"
+pytest-cov = "^2.10.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

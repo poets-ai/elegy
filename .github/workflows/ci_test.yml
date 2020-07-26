@@ -37,9 +37,34 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          poetry export --dev -f requirements.txt > requirments.txt
-          pip install -r requirments.txt
+          poetry export --dev -f requirements.txt > requirements.txt
+          pip install -r requirements.txt
           pip install jax
 
       - name: Run Tests
         run: pytest
+  test-coverage:
+    name: Coverage check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install Poetry
+        uses: dschep/install-poetry-action@v1.2
+  
+      - name: Install Dependencies
+        run: |
+          poetry export --dev -f requirements.txt > requirements.txt
+          pip install -r requirements.txt
+          pip install jax
+      - name: Run pytest
+        run: pytest -v --cov=src/ 
+
+      - name: Run Coverage
+        run: coverage report -m
+
+      - name: Generate XML Report
+        run: coverage xml
