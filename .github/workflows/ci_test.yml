@@ -61,10 +61,7 @@ jobs:
           pip install -r requirements.txt
           pip install jax
       - name: Run pytest
-        run: pytest -v --cov=src/ 
+        run: pytest --cov=elegy --cov-report=term-missing --cov-report=xml
 
-      - name: Run Coverage
-        run: coverage report -m
-
-      - name: Generate XML Report
-        run: coverage xml
+      - name: Upload coverage
+        uses: codecov/codecov-action@v1
