@@ -13,4 +13,5 @@
             - seed
             - load
             - save
+            - summary
             - __init__

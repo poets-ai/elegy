@@ -12,7 +12,9 @@ from elegy import hooks
 
 
 class Module(hk.Module, Deferable):
-    """Basic Elegy Module
+    """
+    Basic Elegy Module. Its a thin wrapper around `hk.Module` that
+    add custom functionalities related to Elegy.
     """
 
     def __init__(self, *args, **kwargs):

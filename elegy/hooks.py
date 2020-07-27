@@ -1,3 +1,6 @@
+# Some portiong of this code are adapted from Haiku:
+# https://github.com/deepmind/dm-haiku/blob/master/haiku/_src/transform.py#L228#L300
+
 import threading
 import typing as tp
 from contextlib import contextmanager
@@ -36,6 +39,24 @@ def elegy_context(get_summaries: bool = False):
 
 
 def add_loss(name: str, value: np.ndarray):
+    """
+    A hook that lets you define a loss within a [`transform`][elegy.hooks.transform].
+
+    ```python
+    w = hk.get_parameter("w", [3, 5], init=jnp.zeros)
+    
+    # L2 regularization penalty
+    elegy.add_loss("l2_regularization", 0.01 * jnp.mean(w ** 2))
+    ```
+
+    The loss will be aggregated by [`transform.apply`][elegy.hooks.transform.apply]
+    and automatically handled by [`Model`][elegy.model.Model].
+
+    Arguments:
+        name: The name of the loss. If a `name` is repeated on
+            different calls values will be added together.
+        value: The value for the loss.
+    """
     name += "_loss"
     if LOCAL.contexts:
         context: Context = LOCAL.contexts[-1]
@@ -49,6 +70,22 @@ def add_loss(name: str, value: np.ndarray):
 
 
 def add_metric(name: str, value: np.ndarray):
+    """
+    A hook that lets you define a metric within a [`transform`][elegy.hooks.transform].
+
+    ```python
+    y = jax.nn.relu(x)
+    elegy.add_metric("activation_mean", jnp.mean(y))
+    ```
+
+    The metrics will be aggregated by [`transform.apply`][elegy.hooks.transform.apply]
+    and automatically handled by [`Model`][elegy.model.Model].
+
+    Arguments:
+        name: The name of the loss. If a metric with the same
+            `name` already exists a unique identifier will be generated.
+        value: The value for the metric.
+    """
     if LOCAL.contexts:
         context: Context = LOCAL.contexts[-1]
 
@@ -61,6 +98,33 @@ def add_metric(name: str, value: np.ndarray):
 
 
 def add_summary(name: tp.Optional[str], class_name, value: np.ndarray):
+    """
+    A hook that lets you define a summary within a [`transform`][elegy.hooks.transform].
+
+    ```python
+    y = jax.nn.relu(x)
+    elegy.add_summary("relu", "Relu", y)
+    ```
+
+    The metrics will be aggregated by [`transform.apply`][elegy.hooks.transform.apply]
+    and automatically handled by [`Model`][elegy.model.Model]. 
+
+    Be default `add_summary` doesn't do anything, in order to enable the collection of
+    summaries `get_summaries` must be set to `True`:
+
+    ```python
+    transformed_state = transform.apply(..., get_summaries=True, ...)
+    ```
+
+    [`Model.summary`][elegy.model.Model.summary] will render added summaries. 
+
+    Arguments:
+        name: The name of the loss. If a metric with the same
+            `name` already exists a unique identifier will be generated.
+        class_name:
+        value: The value for the metric.
+    """
+
     if LOCAL.contexts:
         context: Context = LOCAL.contexts[-1]
 
@@ -95,6 +159,18 @@ def get_unique_name(
 
 
 class TransformedState(tp.NamedTuple):
+    """
+    A named tuple representing the outputs of [elegy.hooks.transform.apply][].
+
+    Attributes:
+        outputs: The output of the transformed function.
+        state: The states parameters.
+        losses: The collected losses added by [`add_loss`][elegy.hooks.add_loss].
+        metrics: The collected metrics added by [`add_metric`][elegy.hooks.add_metric].
+        summaries: A list of `(name, class_name, value)` tuples
+            added by [`add_summary`][elegy.hooks.add_summary].
+    """
+
     outputs: tp.Any
     state: hk.State
     losses: hk.State
@@ -104,42 +180,40 @@ class TransformedState(tp.NamedTuple):
 
 class transform(tp.NamedTuple):
     """
-    Transforms a function using Haiku modules into a pair of pure functions.
+    Transforms a function using Elegy modules into pure functions.
 
-    See :func:`transform` for general details on Haiku transformations.
-    For a function ``out = f(*a, **k)`` this function returns a pair of two pure
-    functions that call ``f(*a, **k)`` explicitly collecting and injecting
-    parameter values and state::
+    `transform` is a stronger version of 
+    [hk.transform_with_state](https://dm-haiku.readthedocs.io/en/latest/api.html?highlight=transform#haiku.transform_with_state)
+    that lets you use all of the hooks provided by Haiku plus some 
+    custom hooks from Elegy:
+    
+    - [`add_loss`][elegy.hooks.add_loss]
+    - [`add_metric`][elegy.hooks.add_metric]
+    - [`add_summary`][elegy.hooks.add_summary]
+
+    `transform.apply` return additional outputs that give you the structures
+    collected by these hooks:
 
     ```python
+    def f(a, b, c):
+        ...
+        elegy.add_loss("the_universe", 42)
+        ...
+    
     transform = elegy.transform(f)
-    params, state = transform.init(rng, *a, **k)
-    out, state = transform.apply(params, state, rng, *a, **k)
-    ```
-    
-    Note that the ``rng`` argument is typically not required for ``apply`` and
-    passing ``None`` is accepted.
-    This function is equivalent to :func:`transform`, however it allows you to
-    maintain and update internal state (e.g. :class:`ExponentialMovingAverage` in
-    :class:`BatchNorm`) via :func:`get_state` and :func:`set_state`:
-    >>> def f():
-    ...   counter = hk.get_state("counter", shape=[], dtype=jnp.int32,
-    ...                          init=jnp.zeros)
-    ...   hk.set_state("counter", counter + 1)
-    ...   return counter
-    >>> f = hk.transform_with_state(f)
-    >>> params, state = f.init(None)
-    >>> for _ in range(10):
-    ...   counter, state = f.apply(params, state, None)
-    >>> counter
-    DeviceArray(9, dtype=int32)
+    params, state = transform.init(rng, args=(a, b), kwargs={"c": c})  # f(a, b, c=c)
+    outputs, state, losses, metrics, summaries = transform.apply(
+        params, state, rng, args=(a, b), kwargs={"c": c}
+    )
 
-    Arguments:
-        f: A function closing over :class:`Module` instances.
+    assert losses["the_universe_loss"] == 42
+    ``` 
     
-    Returns:
-        A :class:`TransformedWithState` tuple with ``init`` and ``apply`` pure
-        functions.
+    As in Haiku, the `rng` argument for `apply` is optional. Contrary
+    to Haiku, `transform` is a class and not a function.
+
+    Attributes:
+        f: A function closing over [elegy.Module] instances.
     """
 
     f: tp.Callable
@@ -169,13 +243,25 @@ class transform(tp.NamedTuple):
         self,
         params: tp.Optional[hk.Params],
         state: tp.Optional[hk.State],
-        rng: tp.Optional[tp.Union[np.ndarray, int]],
+        rng: tp.Optional[tp.Union[np.ndarray, int]] = None,
         get_summaries: bool = False,
         args: tp.Tuple = (),
         kwargs: tp.Optional[tp.Dict] = None,
     ) -> TransformedState:
         """
         Applies your function injecting parameters and state.
+
+        Arguments:
+            params:
+            state: 
+            rng: 
+            get_summaries: 
+            args: 
+            kwargs: 
+
+        Returns:
+            A [`TransformedState`][elegy.hooks.TransformedState] namedtuple consiting 
+            of (outputs, state, losses, metrics, summaries).
         """
         if kwargs is None:
             kwargs = {}
