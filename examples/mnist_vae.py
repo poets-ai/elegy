@@ -24,7 +24,21 @@ np.random.seed(42)
 MNIST_IMAGE_SHAPE: tp.Sequence[int] = (28, 28)
 
 
-class Encoder(hk.Module):
+def kl_divergence(mean: np.ndarray, std: np.ndarray) -> np.ndarray:
+    r"""Calculate KL divergence between given and standard gaussian distributions.
+    KL(p, q) = H(p, q) - H(p) = -\int p(x)log(q(x))dx - -\int p(x)log(p(x))dx
+            = 0.5 * [log(|s2|/|s1|) - 1 + tr(s1/s2) + (m1-m2)^2/s2]
+            = 0.5 * [-log(|s1|) - 1 + tr(s1) + m1^2] (if m2 = 0, s2 = 1)
+    Args:
+        mean: mean vector of the first distribution
+        var: diagonal vector of covariance matrix of the first distribution
+    Returns:
+        A scalar representing KL divergence of the two Gaussian distributions.
+    """
+    return 0.5 * jnp.mean(-jnp.log(std ** 2) - 1.0 + std ** 2 + mean ** 2)
+
+
+class Encoder(elegy.Module):
     """Encoder model."""
 
     def __init__(self, hidden_size: int = 512, latent_size: int = 10):
@@ -32,19 +46,24 @@ class Encoder(hk.Module):
         self._hidden_size = hidden_size
         self._latent_size = latent_size
 
-    def __call__(self, x: jnp.ndarray) -> Tuple[jnp.ndarray, jnp.ndarray]:
+    @hk.transparent
+    def call(self, x: np.ndarray) -> np.ndarray:
         x = hk.Flatten()(x)
-        x = hk.Linear(self._hidden_size)(x)
+        x = elegy.nn.Linear(self._hidden_size)(x)
         x = jax.nn.relu(x)
 
-        mean = hk.Linear(self._latent_size)(x)
-        log_stddev = hk.Linear(self._latent_size)(x)
+        mean = elegy.nn.Linear(self._latent_size)(x)
+        log_stddev = elegy.nn.Linear(self._latent_size)(x)
         stddev = jnp.exp(log_stddev)
 
-        return mean, stddev
+        elegy.add_loss("kl_divergence", 0.01 * kl_divergence(mean, stddev))
+
+        z = mean + stddev * jax.random.normal(hk.next_rng_key(), mean.shape)
+
+        return z
 
 
-class Decoder(hk.Module):
+class Decoder(elegy.Module):
     """Decoder model."""
 
     def __init__(
@@ -56,11 +75,12 @@ class Decoder(hk.Module):
         self._hidden_size = hidden_size
         self._output_shape = output_shape
 
-    def __call__(self, z: jnp.ndarray) -> jnp.ndarray:
-        z = hk.Linear(self._hidden_size)(z)
+    @hk.transparent
+    def call(self, z: np.ndarray) -> np.ndarray:
+        z = elegy.nn.Linear(self._hidden_size)(z)
         z = jax.nn.relu(z)
 
-        logits = hk.Linear(jnp.prod(self._output_shape))(z)
+        logits = elegy.nn.Linear(jnp.prod(self._output_shape))(z)
         logits = jnp.reshape(logits, (-1, *self._output_shape))
 
         return logits
@@ -80,20 +100,21 @@ class VariationalAutoEncoder(elegy.Module):
         self._latent_size = latent_size
         self._output_shape = output_shape
 
-    def call(self, x: jnp.ndarray) -> dict:
+    @hk.transparent
+    def call(self, x: np.ndarray) -> dict:
         x = x.astype(jnp.float32)
-        mean, stddev = Encoder(self._hidden_size, self._latent_size)(x)
-        z = mean + stddev * jax.random.normal(hk.next_rng_key(), mean.shape)
+        z = Encoder(self._hidden_size, self._latent_size)(x)
+
         logits = Decoder(self._hidden_size, self._output_shape)(z)
 
         p = jax.nn.sigmoid(logits)
         image = jax.random.bernoulli(hk.next_rng_key(), p)
 
-        return dict(image=image, mean=mean, std=stddev, logits=logits)
+        return dict(image=image, logits=logits)
 
 
 class BinaryCrossEntropy(elegy.Loss):
-    def call(self, x: jnp.ndarray, y_pred: jnp.ndarray) -> np.ndarray:
+    def call(self, x: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
         """Calculate binary (logistic) cross-entropy from distribution logits.
     Args:
         x: input variable tensor, must be of same shape as logits
@@ -110,28 +131,7 @@ class BinaryCrossEntropy(elegy.Loss):
         x = jnp.reshape(x, (x.shape[0], -1))
         y_pred = jnp.reshape(y_pred, (y_pred.shape[0], -1))
 
-        return -jnp.sum(x * y_pred - jnp.logaddexp(0.0, y_pred), axis=-1)
-
-
-class KLDivergence(elegy.Loss):
-    def call(self, y_pred: jnp.ndarray) -> jnp.ndarray:
-        r"""Calculate KL divergence between given and standard gaussian distributions.
-    KL(p, q) = H(p, q) - H(p) = -\int p(x)log(q(x))dx - -\int p(x)log(p(x))dx
-            = 0.5 * [log(|s2|/|s1|) - 1 + tr(s1/s2) + (m1-m2)^2/s2]
-            = 0.5 * [-log(|s1|) - 1 + tr(s1) + m1^2] (if m2 = 0, s2 = 1)
-    Args:
-        mean: mean vector of the first distribution
-        var: diagonal vector of covariance matrix of the first distribution
-    Returns:
-        A scalar representing KL divergence of the two Gaussian distributions.
-    """
-        return 0.5 * jnp.sum(
-            -jnp.log(y_pred["std"] ** 2)
-            - 1.0
-            + y_pred["std"] ** 2
-            + y_pred["mean"] ** 2,
-            axis=-1,
-        )
+        return -jnp.mean(x * y_pred - jnp.logaddexp(0.0, y_pred), axis=-1)
 
 
 def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
@@ -156,19 +156,21 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
 
     model = elegy.Model(
         module=VariationalAutoEncoder.defer(),
-        loss=[KLDivergence(), BinaryCrossEntropy(on="logits")],
+        loss=[BinaryCrossEntropy(on="logits")],
         optimizer=optix.adam(1e-3),
         run_eagerly=eager,
     )
 
-    epochs = 10
+    model.summary(X_train[:64])
+
+    epochs = 50
 
     # Fit with datasets in memory
     history = model.fit(
         x=X_train,
         epochs=epochs,
         batch_size=64,
-        steps_per_epoch=100,
+        steps_per_epoch=200,
         validation_data=(X_test,),
         shuffle=True,
         callbacks=[TensorBoard(logdir)],

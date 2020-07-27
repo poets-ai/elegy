@@ -1,6 +1,9 @@
 # Implementation based on tf.keras.engine.training.py
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
+from io import StringIO
+import json
+import logging
 import pickle
 import typing as tp
 from copy import copy
@@ -13,10 +16,13 @@ import deepdish
 import haiku as hk
 import jax
 import jax.numpy as jnp
-import logging
 import numpy as np
+import toolz
 from jax.experimental import optix
+from tabulate import tabulate
+import yaml
 
+from elegy import hooks
 from elegy.losses import loss_modes
 from elegy.metrics import metric_modes
 
@@ -95,7 +101,7 @@ class Model(object):
 
     # private fields
     _module_fn: tp.Callable
-    _model_transform: hk.TransformedWithState
+    _model_transform: hooks.transform
     _loss_fn: tp.Callable
     _metrics: tp.Optional[hk.TransformedWithState]
     _optimizer: optix.GradientTransformation
@@ -169,7 +175,7 @@ class Model(object):
             return utils.inject_dependencies(module)(*args, **kwargs)
 
         self._module_fn = module
-        self._model_transform = hk.transform_with_state(model_fn)
+        self._model_transform = hooks.transform(model_fn)
         self._loss_fn = utils.inject_dependencies(loss)
         self._metrics_transform = (
             hk.transform_with_state(
@@ -194,18 +200,20 @@ class Model(object):
 
     def _maybe_initialize(
         self,
+        mode: Mode,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
-        mode: Mode,
     ):
+
+        maybe_jit = jax.jit if self.run_eagerly else lambda x: x
 
         if self.params is None or self.state is None:
             x_args, x_kwargs = utils.get_input_args(x, is_training=True)
 
-            self.params, self.state = self._model_transform.init(
-                next(self._rngs), *x_args, **x_kwargs
+            self.params, self.state = maybe_jit(self._model_transform.init)(
+                rng=next(self._rngs), args=x_args, kwargs=x_kwargs
             )
 
         if mode == Mode.predict:
@@ -214,16 +222,19 @@ class Model(object):
         if self._metrics_transform is not None and self.metrics_state is None:
             x_args, x_kwargs = utils.get_input_args(x, is_training=True)
 
-            y_pred, state = self._model_transform.apply(
+            transformed_state = maybe_jit(self._model_transform.apply)(
                 # required by apply
-                self.params,
-                self.state,
-                next(self._rngs),
-                # model_transform inputs + dependency injection
-                *x_args,
-                **x_kwargs,
+                params=self.params,
+                state=self.state,
+                rng=next(self._rngs),
+                get_summaries=False,
+                args=x_args,
+                kwargs=x_kwargs,
             )
-            _, self.metrics_state = self._metrics_transform.init(
+
+            y_pred = transformed_state.outputs
+
+            _, self.metrics_state = maybe_jit(self._metrics_transform.init)(
                 # required by init
                 next(self._rngs),
                 # dependency injection
@@ -242,7 +253,7 @@ class Model(object):
             return
 
         if self.optimizer_state is None:
-            self.optimizer_state = self._optimizer.init(self.params)
+            self.optimizer_state = maybe_jit(self._optimizer.init)(self.params)
 
     def reset_metrics(self, hard: bool = False):
 
@@ -290,14 +301,12 @@ class Model(object):
             ValueError: In case of invalid user-provided arguments.
         """
         self._maybe_initialize(
+            mode=Mode.train,
             x=x,
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            mode=Mode.train,
         )
-
-        update_fn = self._update if self.run_eagerly else self._update_jit
 
         (
             logs,
@@ -305,7 +314,7 @@ class Model(object):
             self.state,
             self.optimizer_state,
             self.metrics_state,
-        ) = update_fn(
+        ) = self._update(
             x=x,
             y=y,
             sample_weight=sample_weight,
@@ -339,7 +348,41 @@ class Model(object):
         optix.OptState,
         tp.Optional[hk.State],
     ]:
-        (loss, (y_pred, state, logs)), grads = jax.value_and_grad(
+        update_fn = self._update_no_jit if self.run_eagerly else self._update_jit
+
+        return update_fn(
+            x=x,
+            y=y,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            params=params,
+            state=state,
+            optimizer_state=optimizer_state,
+            metrics_state=metrics_state,
+            net_rng=net_rng,
+            metrics_rng=metrics_rng,
+        )
+
+    def _update_no_jit(
+        self,
+        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
+        sample_weight: tp.Optional[jnp.ndarray],
+        class_weight: tp.Optional[jnp.ndarray],
+        params: hk.Params,
+        state: hk.State,
+        optimizer_state: optix.OptState,
+        metrics_state: tp.Optional[hk.State],
+        net_rng: jnp.ndarray,
+        metrics_rng: jnp.ndarray,
+    ) -> tp.Tuple[
+        tp.Dict[str, jnp.ndarray],
+        hk.Params,
+        hk.State,
+        optix.OptState,
+        tp.Optional[hk.State],
+    ]:
+        (loss, (transformed_state, logs)), grads = jax.value_and_grad(
             self._loss, has_aux=True
         )(
             params,
@@ -351,6 +394,9 @@ class Model(object):
             class_weight=class_weight,
             is_training=True,
         )
+
+        y_pred = transformed_state.outputs
+        state = transformed_state.state
 
         updates, optimizer_state = self._optimizer.update(grads, optimizer_state)
         params = optix.apply_updates(params, updates)
@@ -375,7 +421,7 @@ class Model(object):
 
         return logs, params, state, optimizer_state, metrics_state
 
-    _update_jit = jax.jit(_update, static_argnums=(0,))
+    _update_jit = jax.jit(_update_no_jit, static_argnums=(0,))
 
     def _loss(
         self,
@@ -388,9 +434,18 @@ class Model(object):
         class_weight: tp.Optional[jnp.ndarray],
         is_training: bool,
     ):
-        y_pred, state = self._predict(
-            is_training=is_training, x=x, params=params, state=state, net_rng=net_rng,
+
+        transformed_state = self._predict_no_jit(
+            is_training=is_training,
+            get_summaries=False,
+            x=x,
+            params=params,
+            state=state,
+            net_rng=net_rng,
         )
+
+        y_pred = transformed_state.outputs
+        state = transformed_state.state
 
         logs = self._loss_fn(
             x=x,
@@ -404,9 +459,14 @@ class Model(object):
         )
 
         # get total loss
-        loss = logs["loss"] = sum(logs.values())
+        loss = logs["loss"] = sum(logs.values()) + sum(
+            transformed_state.losses.values()
+        )
 
-        return loss, (y_pred, state, logs)
+        logs.update(transformed_state.losses)
+        logs.update(transformed_state.metrics)
+
+        return loss, (transformed_state, logs)
 
     def fit(
         self,
@@ -933,23 +993,20 @@ class Model(object):
             ValueError: In case of invalid user-provided arguments.
         """
         self._maybe_initialize(
+            mode=Mode.test,
             x=x,
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            mode=Mode.test,
         )
 
-        test_fn = self._test if self.run_eagerly else self._test_jit
-
-        (logs, self.metrics_state,) = test_fn(
+        (logs, self.metrics_state,) = self._test(
             x=x,
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
             params=self.params,
             state=self.state,
-            optimizer_state=self.optimizer_state,
             metrics_state=self.metrics_state,
             net_rng=next(self._rngs),
             metrics_rng=next(self._rngs),
@@ -965,7 +1022,6 @@ class Model(object):
         class_weight: tp.Optional[jnp.ndarray],
         params: hk.Params,
         state: hk.State,
-        optimizer_state: optix.OptState,
         metrics_state: tp.Optional[hk.State],
         net_rng: jnp.ndarray,
         metrics_rng: jnp.ndarray,
@@ -973,7 +1029,36 @@ class Model(object):
         tp.Dict[str, jnp.ndarray], tp.Optional[hk.State],
     ]:
 
-        loss, (y_pred, _state, logs) = self._loss(
+        test_fn = self._test_no_jit if self.run_eagerly else self._test_jit
+
+        return test_fn(
+            x=x,
+            y=y,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            params=params,
+            state=state,
+            metrics_state=metrics_state,
+            net_rng=net_rng,
+            metrics_rng=metrics_rng,
+        )
+
+    def _test_no_jit(
+        self,
+        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
+        sample_weight: tp.Optional[jnp.ndarray],
+        class_weight: tp.Optional[jnp.ndarray],
+        params: hk.Params,
+        state: hk.State,
+        metrics_state: tp.Optional[hk.State],
+        net_rng: jnp.ndarray,
+        metrics_rng: jnp.ndarray,
+    ) -> tp.Tuple[
+        tp.Dict[str, jnp.ndarray], tp.Optional[hk.State],
+    ]:
+
+        loss, (transformed_state, logs) = self._loss(
             params,
             state=state,
             net_rng=net_rng,
@@ -983,6 +1068,8 @@ class Model(object):
             class_weight=class_weight,
             is_training=False,
         )
+
+        y_pred = transformed_state.outputs
 
         if self._metrics_transform is not None:
             metrics, metrics_state = self._metrics_transform.apply(
@@ -1004,15 +1091,13 @@ class Model(object):
 
         return logs, metrics_state
 
-    _test_jit = jax.jit(_test, static_argnums=(0,))
+    _test_jit = jax.jit(_test_no_jit, static_argnums=(0,))
     # ----------------------------------------------------------------
     # predict
     # ----------------------------------------------------------------
 
     def predict_on_batch(
-        self,
-        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        seed: tp.Union[jnp.ndarray, int, None] = None,
+        self, x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]
     ) -> tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]:
         """
         Returns predictions for a single batch of samples.
@@ -1030,45 +1115,66 @@ class Model(object):
                 expectations of the model.
         """
         self._maybe_initialize(
-            x=x, y=None, sample_weight=None, class_weight=None, mode=Mode.predict,
+            mode=Mode.predict, x=x, y=None, sample_weight=None, class_weight=None
         )
 
-        predict_fn = self._predict if self.run_eagerly else self._predict_jit
-
-        y_pred, _ = predict_fn(
+        transformed_state = self._predict(
             False,  # is_training
+            False,  # get_summaries
             x=x,
             params=self.params,
             state=self.state,
             net_rng=next(self._rngs),
         )
 
-        return y_pred
+        return transformed_state.outputs
 
     def _predict(
         self,
         is_training: bool,
+        get_summaries: bool,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         params: hk.Params,
         state: hk.State,
         net_rng: jnp.ndarray,
-    ) -> tp.Tuple[
-        tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple], hk.State,
-    ]:
-        x_args, x_kwargs = utils.get_input_args(x, is_training=is_training)
-        y_pred, state = self._model_transform.apply(
-            # required by apply
-            params,
-            state,
-            net_rng,
-            # new inputs + dependency injection
-            *x_args,
-            **x_kwargs,
+    ) -> hooks.TransformedState:
+
+        predict_fn = self._predict_no_jit if self.run_eagerly else self._predict_jit
+
+        return predict_fn(
+            is_training,
+            get_summaries,
+            x=x,
+            params=params,
+            state=state,
+            net_rng=net_rng,
         )
 
-        return y_pred, state
+    def _predict_no_jit(
+        self,
+        is_training: bool,
+        get_summaries: bool,
+        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        params: hk.Params,
+        state: hk.State,
+        net_rng: jnp.ndarray,
+    ) -> hooks.TransformedState:
 
-    _predict_jit = jax.jit(_predict, static_argnums=(0, 1))
+        x_args, x_kwargs = utils.get_input_args(x, is_training=is_training)
+
+        transformed_state = self._model_transform.apply(
+            # required by apply
+            params=params,
+            state=state,
+            rng=net_rng,
+            get_summaries=get_summaries,
+            args=x_args,
+            kwargs=x_kwargs,
+        )
+
+        return transformed_state
+
+    _predict_jit = jax.jit(_predict_no_jit, static_argnums=(0, 1, 2))
 
     @property
     def seed(self) -> tp.Union[np.ndarray, int]:
@@ -1220,6 +1326,167 @@ class Model(object):
                 state["optimizer_state"] = pickle.load(f)
 
         self.full_state = state
+
+    def summary(
+        self, x, depth: int = 3, tablefmt: str = "fancy_grid", **tablulate_kwargs
+    ):
+        """
+        Prints a summary of the network.
+
+        Arguments:
+            x: A sample of inputs to the network.
+            depth: The level number of nested level which will be showed.
+                Information about summaries from modules deeper than `depth` 
+                will be aggregated together.
+            tablefmt: A string represeting the style of the table generated by
+                `tabulate`. See
+                [python-tabulate](https://github.com/astanin/python-tabulate)
+                for more options.
+            tablulate_kwargs: Additional keyword arguments passed to `tabulate`.
+                See [python-tabulate](https://github.com/astanin/python-tabulate)
+                for more options.
+        """
+        self._maybe_initialize(
+            mode=Mode.predict, x=x, y=None, sample_weight=None, class_weight=None,
+        )
+
+        transformed_state = self._predict(
+            is_training=False,
+            get_summaries=True,
+            x=x,
+            params=self.params,
+            state=self.state,
+            net_rng=next(self._rngs),
+        )
+
+        def format_output(outputs) -> str:
+            file = StringIO()
+            outputs = jax.tree_map(lambda x: f"{x.shape}{{pad}}  {x.dtype}", outputs)
+            yaml.safe_dump(
+                outputs, file, default_flow_style=False, indent=2, explicit_end=False
+            )
+            return file.getvalue().replace("\n...", "")
+
+        def format_size(size):
+            return (
+                f"{size / 1e9 :,.1f} GB"
+                if size > 1e9
+                else f"{size / 1e6 :,.1f} MB"
+                if size > 1e6
+                else f"{size / 1e3 :,.1f} KB"
+                if size > 1e3
+                else f"{size:,} B"
+            )
+
+        summaries = (
+            (tuple(name.split("/")), cls_name, value)
+            for name, cls_name, value in transformed_state.summaries
+        )
+
+        summaries = toolz.groupby(lambda x: x[0][:depth], summaries)
+        params = utils.split_and_merge(self.params)
+        state = utils.split_and_merge(self.state)
+
+        table: tp.List = [["Inputs", format_output(x), "0", "0"]]
+
+        for keys, group in summaries.items():
+            output = group[-1][2]
+            class_name = group[-1][1]
+
+            sub_params = params
+            sub_states = state
+
+            try:
+                for k in keys:
+                    sub_params = sub_params[k]
+            except KeyError:
+                sub_params = {}
+
+            try:
+                for k in keys:
+                    sub_states = sub_states[k]
+            except KeyError:
+                sub_states = {}
+
+            params_count = hk.data_structures.tree_size(sub_params)
+            params_size = format_size(hk.data_structures.tree_bytes(sub_params))
+            states_count = hk.data_structures.tree_size(sub_states)
+            states_size = format_size(hk.data_structures.tree_bytes(sub_states))
+
+            table.append(
+                [
+                    "/".join(keys) + f"{{pad}}  ({class_name})",
+                    format_output(output),
+                    f"{params_count:,}{{pad}}    {params_size}"
+                    if params_count > 0
+                    else "0",
+                    f"{states_count:,}{{pad}}    {states_size}"
+                    if states_count > 0
+                    else "0",
+                ]
+            )
+
+        # add papdding
+        for col in range(4):
+            max_length = max(
+                len(line.split("{pad}")[0])
+                for row in table
+                for line in row[col].split("\n")
+            )
+
+            for row in table:
+                row[col] = "\n".join(
+                    line.format(
+                        pad=" " * (max_length - len(line.rstrip().split("{pad}")[0]))
+                    )
+                    for line in row[col].rstrip().split("\n")
+                )
+
+        print(
+            "\n"
+            + tabulate(
+                table,
+                headers=[
+                    "Layer",
+                    "Outputs Shape",
+                    "Trainable\nParameters",
+                    "Non-trainable\nParameters",
+                ],
+                tablefmt=tablefmt,
+                **tablulate_kwargs,
+            )
+        )
+
+        params_count = hk.data_structures.tree_size(self.params)
+        params_size = hk.data_structures.tree_bytes(self.params)
+        states_count = hk.data_structures.tree_size(self.state)
+        states_size = hk.data_structures.tree_bytes(self.state)
+        total_count = params_count + states_count
+        total_size = params_size + states_size
+
+        print(
+            tabulate(
+                [
+                    [
+                        f"Total Parameters:",
+                        f"{total_count:,}",
+                        f"{format_size(total_size)}" if total_count > 0 else "",
+                    ],
+                    [
+                        f"Trainable Parameters:",
+                        f"{params_count:,}",
+                        f"{format_size(params_size)}" if params_count > 0 else "",
+                    ],
+                    [
+                        f"Non-trainable Parameters:",
+                        f"{states_count:,}",
+                        f"{format_size(states_size)}" if states_count > 0 else "",
+                    ],
+                ],
+                tablefmt="plain",
+            )
+            + "\n"
+        )
 
 
 def load(path: tp.Union[str, Path]) -> Model:

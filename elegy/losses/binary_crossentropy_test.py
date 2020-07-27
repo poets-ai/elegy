@@ -1,5 +1,5 @@
+from elegy.testing_utils import transform_and_run
 import elegy
-from haiku.testing import transform_and_run
 import jax.numpy as jnp
 import tensorflow.keras as tfk
 

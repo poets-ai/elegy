@@ -6,6 +6,7 @@ import dataget
 import haiku as hk
 import jax
 import jax.numpy as jnp
+from jax.numpy.lax_numpy import mod
 import matplotlib.pyplot as plt
 import numpy as np
 from tensorboardX.writer import SummaryWriter
@@ -35,6 +36,15 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
 
+    class Lambda(elegy.Module):
+        def __init__(self, f):
+            super().__init__()
+            self.f = f
+
+        @hk.transparent
+        def call(self, x):
+            return self.f(x)
+
     class MLP(elegy.Module):
         """Standard LeNet-300-100 MLP network."""
 
@@ -43,20 +53,22 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             self.n1 = n1
             self.n2 = n2
 
-        def call(self, image: jnp.ndarray):
+        @hk.transparent
+        def call(self, image: jnp.ndarray, is_training: bool):
 
             image = image.astype(jnp.float32) / 255.0
 
             mlp = hk.Sequential(
                 [
-                    hk.Flatten(),
-                    hk.Linear(self.n1),
+                    elegy.nn.Flatten(),
+                    elegy.nn.Linear(self.n1),
                     jax.nn.relu,
-                    hk.Linear(self.n2),
+                    elegy.nn.Linear(self.n2),
                     jax.nn.relu,
-                    hk.Linear(10),
+                    elegy.nn.Linear(10),
                 ]
             )
+
             return mlp(image)
 
     model = elegy.Model(
@@ -66,9 +78,11 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             elegy.regularizers.GlobalL2(l=1e-4),
         ],
         metrics=elegy.metrics.SparseCategoricalAccuracy.defer(),
-        optimizer=optix.rmsprop(1e-3),
+        optimizer=optix.adam(1e-3),
         run_eagerly=eager,
     )
+
+    model.summary(X_train[:64])
 
     history = model.fit(
         x=X_train,

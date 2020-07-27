@@ -11,18 +11,18 @@ from .callback import Callback
 
 
 class TensorBoard(Callback):
-    """Callback that streams epoch results to tensorboard events folder.
+    """
+    Callback that streams epoch results to tensorboard events folder.
 
-Supports all values that can be represented as a string,
-including 1D iterables such as `np.ndarray`.
+    Supports all values that can be represented as a string,
+    including 1D iterables such as `np.ndarray`.
 
-Example:
 
     ```python
     tensorboard_logger = TensorBoard('runs')
     model.fit(X_train, Y_train, callbacks=[tensorboard_logger])
     ```
-  """
+    """
 
     def __init__(
         self,
@@ -46,12 +46,12 @@ Example:
                 batches. Note that writing too frequently to TensorBoard can slow down
                 your training.
             purge_step (int):
-              When logging crashes at step :math:`T+X` and restarts at step :math:`T`,
-              any events whose global_step larger or equal to :math:`T` will be
-              purged and hidden from TensorBoard.
-              Note that crashed and resumed experiments should have the same ``logdir``.
+                When logging crashes at step :math:`T+X` and restarts at step :math:`T`,
+                any events whose global_step larger or equal to :math:`T` will be
+                purged and hidden from TensorBoard.
+                Note that crashed and resumed experiments should have the same ``logdir``.
             comment (string): Comment logdir suffix appended to the default
-              ``logdir``. If ``logdir`` is assigned, this argument has no effect.
+                ``logdir``. If ``logdir`` is assigned, this argument has no effect.
         """
         if not logdir:
             import socket

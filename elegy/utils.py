@@ -1,11 +1,12 @@
-from dataclasses import dataclass
 import functools
 import inspect
 import sys
 import typing as tp
+from deepmerge import always_merger
 
 import jax.numpy as jnp
 import numpy as np
+import toolz
 
 if sys.version_info >= (3, 8):
     from typing import Protocol, runtime_checkable
@@ -51,14 +52,14 @@ def get_function_args(f) -> tp.List[inspect.Parameter]:
 
 
 def get_input_args(
-    x: tp.Union[np.ndarray, jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+    x: tp.Union[np.ndarray, jnp.ndarray, tp.Dict[str, tp.Any], tp.Tuple],
     is_training: bool,
-) -> tp.Tuple[tp.Tuple, tp.Mapping[str, tp.Any]]:
+) -> tp.Tuple[tp.Tuple, tp.Dict[str, tp.Any]]:
 
     if isinstance(x, tp.Tuple):
         args = x
         kwargs = {}
-    elif isinstance(x, tp.Mapping):
+    elif isinstance(x, tp.Dict):
         args = ()
         kwargs = x
     else:
@@ -89,3 +90,37 @@ class Deferable:
     @classmethod
     def defer(cls, *args, **kwargs) -> Defered:
         return Defered(cls, *args, **kwargs)
+
+
+def split(
+    d: tp.Union[tp.Dict[str, tp.Any], tp.Mapping[str, tp.Any]]
+) -> tp.Iterable[tp.Dict[str, tp.Any]]:
+
+    for k, v in d.items():
+
+        parts = k.split("/")
+        parts.reverse()
+
+        if isinstance(v, (tp.Dict, tp.Mapping)):
+            vs = list(split(v))
+        else:
+            vs = [v]
+
+        for v in vs:
+            output = {}
+
+            for k in parts:
+                if not output:
+                    output[k] = v
+                else:
+                    output = {k: output}
+
+            yield output
+
+
+def split_and_merge(
+    d: tp.Union[tp.Dict[str, tp.Any], tp.Mapping[str, tp.Any]]
+) -> tp.Dict[str, tp.Any]:
+
+    ds = split(d)
+    return toolz.reduce(always_merger.merge, ds, {})

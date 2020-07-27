@@ -267,8 +267,8 @@ Here is an example of a simple implementation of `Accuracy` which uses this cumu
 class Accuracy(elegy.Metric):
     def call(self, y_true, y_pred):
 
-        total = hk.get_state("total", [], jnp.zeros)
-        count = hk.get_state("count", [], jnp.zeros)
+        total = hk.get_state("total", [], init=jnp.zeros)
+        count = hk.get_state("count", [], init=jnp.zeros)
 
         total += jnp.sum(y_true == y_pred)
         count += jnp.prod(y_true.shape)

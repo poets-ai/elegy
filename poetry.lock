@@ -267,6 +267,14 @@ tables = "*"
 image = ["skimage"]
 
 [[package]]
+category = "main"
+description = "a toolset to deeply merge python dictionaries."
+name = "deepmerge"
+optional = false
+python-versions = "*"
+version = "0.1.0"
+
+[[package]]
 category = "dev"
 description = "XML bomb protection for Python stdlib modules"
 name = "defusedxml"
@@ -1227,7 +1235,7 @@ python-versions = "*"
 version = "228"
 
 [[package]]
-category = "dev"
+category = "main"
 description = "YAML parser and emitter for Python"
 name = "pyyaml"
 optional = false
@@ -1351,6 +1359,17 @@ numexpr = ">=2.6.2"
 numpy = ">=1.9.3"
 
 [[package]]
+category = "main"
+description = "Pretty-print tabular data"
+name = "tabulate"
+optional = false
+python-versions = "*"
+version = "0.8.7"
+
+[package.extras]
+widechars = ["wcwidth"]
+
+[[package]]
 category = "dev"
 description = "TensorBoard lets you watch Tensors Flow"
 name = "tensorboard"
@@ -1472,6 +1491,14 @@ name = "toml"
 optional = false
 python-versions = "*"
 version = "0.10.1"
+
+[[package]]
+category = "main"
+description = "List processing tools and functional utilities"
+name = "toolz"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "0.10.0"
 
 [[package]]
 category = "dev"
@@ -1615,7 +1642,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "cf58afc4e47bde2b91b5def2917c2b23ca1b2949e597f293186e291dfd99876b"
+content-hash = "f9d780b117c053d206ebb52cd1785b3d52e39c02452545214754be7e3d2955db"
 python-versions = "^3.6.1"
 
 [metadata.files]
@@ -1783,6 +1810,10 @@ decorator = [
 deepdish = [
     {file = "deepdish-0.3.6-py2.py3-none-any.whl", hash = "sha256:2b1d3d2a32356909f2618c382a1829347990ad81b63aaecc87b35a046cd3034c"},
     {file = "deepdish-0.3.6.tar.gz", hash = "sha256:7858b674ef15ee79828de4892dadd2f58773ead527f3a62aaf1e8ce5a595a074"},
+]
+deepmerge = [
+    {file = "deepmerge-0.1.0-py2.py3-none-any.whl", hash = "sha256:ae23dd76d3c0d22d33a3fd3980c92d3f0773e4affb48d9b341847d0b0a24e8f8"},
+    {file = "deepmerge-0.1.0.tar.gz", hash = "sha256:3d37f739e74e8a284ee0bd683daaef88acc8438ba048545aefb87ade695a2a34"},
 ]
 defusedxml = [
     {file = "defusedxml-0.6.0-py2.py3-none-any.whl", hash = "sha256:6687150770438374ab581bb7a1b327a847dd9c5749e396102de3fad4e8a3ef93"},
@@ -2461,6 +2492,10 @@ tables = [
     {file = "tables-3.6.1-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:94d7ccac04277089e3bb466bf5c8f7038dd53bb8f19ea9679b7fea62c5c3ae8f"},
     {file = "tables-3.6.1.tar.gz", hash = "sha256:49a972b8a7c27a8a173aeb05f67acb45fe608b64cd8e9fa667c0962a60b71b49"},
 ]
+tabulate = [
+    {file = "tabulate-0.8.7-py3-none-any.whl", hash = "sha256:ac64cb76d53b1231d364babcd72abbb16855adac7de6665122f97b593f1eb2ba"},
+    {file = "tabulate-0.8.7.tar.gz", hash = "sha256:db2723a20d04bcda8522165c73eea7c300eda74e0ce852d9022e0159d7895007"},
+]
 tensorboard = [
     {file = "tensorboard-2.2.2-py3-none-any.whl", hash = "sha256:a3feb73e1221c0a512398ad2cd08570fb082d8a2ba364aa0562543ecbd3659ef"},
 ]
@@ -2502,6 +2537,9 @@ text-unidecode = [
 toml = [
     {file = "toml-0.10.1-py2.py3-none-any.whl", hash = "sha256:bda89d5935c2eac546d648028b9901107a595863cb36bae0c73ac804a9b4ce88"},
     {file = "toml-0.10.1.tar.gz", hash = "sha256:926b612be1e5ce0634a2ca03470f95169cf16f939018233a670519cb4ac58b0f"},
+]
+toolz = [
+    {file = "toolz-0.10.0.tar.gz", hash = "sha256:08fdd5ef7c96480ad11c12d472de21acd32359996f69a5259299b540feba4560"},
 ]
 tornado = [
     {file = "tornado-6.0.4-cp35-cp35m-win32.whl", hash = "sha256:5217e601700f24e966ddab689f90b7ea4bd91ff3357c3600fa1045e26d68e55d"},
