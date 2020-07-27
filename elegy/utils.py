@@ -1,9 +1,7 @@
 import functools
 import inspect
 import sys
-import threading
 import typing as tp
-from dataclasses import dataclass
 from deepmerge import always_merger
 
 import jax.numpy as jnp
