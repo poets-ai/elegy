@@ -72,26 +72,6 @@ def get_input_args(
     return args, apply_kwargs
 
 
-class Defered:
-    csl: tp.Type
-    cls_args: tp.Tuple
-    cls_kwargs: tp.Dict[str, tp.Any]
-
-    def __init__(self, csl: tp.Callable, *args, **kwargs):
-        self.csl = csl
-        self.cls_args = args
-        self.cls_kwargs = kwargs
-
-    def __call__(self, *args, **kwargs):
-        return inject_dependencies(self.csl(*self.cls_args, **self.cls_kwargs))(
-            *args, **kwargs
-        )
-
-
-class Deferable:
-    @classmethod
-    def defer(cls, *args, **kwargs) -> Defered:
-        return Defered(cls, *args, **kwargs)
 
 
 def split(
