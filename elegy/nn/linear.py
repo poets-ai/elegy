@@ -1,5 +1,5 @@
+from elegy.module import Deferable
 from elegy import hooks
-from elegy.utils import Deferable
 import typing as tp
 
 import haiku as hk

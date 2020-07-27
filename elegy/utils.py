@@ -72,26 +72,6 @@ def get_input_args(
     return args, apply_kwargs
 
 
-class Defered:
-    f: tp.Union[tp.Callable, tp.Type]
-    args: tp.Tuple
-    kwargs: tp.Dict[str, tp.Any]
-
-    def __init__(self, f: tp.Callable, *args, **kwargs):
-        self.f = f
-        self.args = args
-        self.kwargs = kwargs
-
-    def __call__(self):
-        return self.f(*self.args, **self.kwargs)
-
-
-class Deferable:
-    @classmethod
-    def defer(cls, *args, **kwargs) -> Defered:
-        return Defered(cls, *args, **kwargs)
-
-
 def split(
     d: tp.Union[tp.Dict[str, tp.Any], tp.Mapping[str, tp.Any]]
 ) -> tp.Iterable[tp.Dict[str, tp.Any]]:

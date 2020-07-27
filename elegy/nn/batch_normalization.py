@@ -2,8 +2,8 @@
 # Tensorflow: https://github.com/tensorflow/tensorflow/blob/2b96f3662bd776e277f86997659e61046b56c315/tensorflow/python/keras/layers/normalization.py#L46
 # Haiku: https://github.com/deepmind/dm-haiku/blob/master/haiku/_src/batch_norm.py#L39#L194
 
+from elegy.module import Deferable
 from elegy import hooks
-from elegy.utils import Deferable
 import typing as tp
 
 import haiku as hk

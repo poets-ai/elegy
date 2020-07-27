@@ -102,7 +102,7 @@ class Model(object):
     # private fields
     _module_fn: tp.Callable
     _model_transform: hooks.transform
-    _loss_fn: tp.Callable
+    _loss_fn: tp.Optional[tp.Callable]
     _metrics: tp.Optional[hk.TransformedWithState]
     _optimizer: optix.GradientTransformation
     _rngs: hk.PRNGSequence
@@ -158,29 +158,14 @@ class Model(object):
             seed: The initial random state of the model.
         """
 
-        if metrics is not None:
-            metrics = metric_modes.forward_all(metrics)
-
-        if loss is None:
-
-            def loss_(y_true, y_pred):
-                return 0.0
-
-            loss = loss_
-
-        loss = loss_modes.forward_all(loss)
-
-        def model_fn(*args, **kwargs):
-            module = self._module_fn()
-            return utils.inject_dependencies(module)(*args, **kwargs)
-
         self._module_fn = module
-        self._model_transform = hooks.transform(model_fn)
-        self._loss_fn = utils.inject_dependencies(loss)
+        self._model_transform = hooks.transform(self._module_fn)
+        self._loss_fn = loss_modes.forward_all(loss) if loss is not None else None
         self._metrics_transform = (
             hk.transform_with_state(
                 utils.inject_dependencies(
-                    metrics, rename={"__params": "params", "__state": "state"}
+                    metric_modes.forward_all(metrics),
+                    rename={"__params": "params", "__state": "state"},
                 )
             )
             if metrics
@@ -245,6 +230,7 @@ class Model(object):
                 class_weight=class_weight,
                 is_training=False,
                 __params=self.params,  # renamed
+                __state=self.state,  # renamed
             )
 
             self.initial_metrics_state = self.metrics_state
@@ -415,7 +401,7 @@ class Model(object):
                 class_weight=class_weight,
                 is_training=True,
                 __params=params,  # renamed
-                __state=state,
+                __state=state,  # renamed
             )
             logs.update(metrics)
 
@@ -447,15 +433,19 @@ class Model(object):
         y_pred = transformed_state.outputs
         state = transformed_state.state
 
-        logs = self._loss_fn(
-            x=x,
-            y_true=y,
-            y_pred=y_pred,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            is_training=is_training,
-            params=params,
-            state=state,
+        logs = (
+            self._loss_fn(
+                x=x,
+                y_true=y,
+                y_pred=y_pred,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+                is_training=is_training,
+                params=params,
+                state=state,
+            )
+            if self._loss_fn is not None
+            else {}
         )
 
         # get total loss
@@ -463,6 +453,7 @@ class Model(object):
             transformed_state.losses.values()
         )
 
+        # add losses and metrics from hooks
         logs.update(transformed_state.losses)
         logs.update(transformed_state.metrics)
 
@@ -1085,7 +1076,7 @@ class Model(object):
                 class_weight=class_weight,
                 is_training=False,
                 __params=params,  # renamed
-                __state=state,
+                __state=state,  # renamed
             )
             logs.update(metrics)
 
