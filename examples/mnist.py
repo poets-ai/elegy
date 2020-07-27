@@ -60,7 +60,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
 
             mlp = hk.Sequential(
                 [
-                    hk.Flatten(),
+                    elegy.nn.Flatten(),
                     elegy.nn.Linear(self.n1),
                     jax.nn.relu,
                     elegy.nn.Linear(self.n2),
@@ -78,19 +78,17 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             elegy.regularizers.GlobalL2(l=1e-4),
         ],
         metrics=elegy.metrics.SparseCategoricalAccuracy.defer(),
-        optimizer=optix.rmsprop(1e-3),
+        optimizer=optix.adam(1e-3),
         run_eagerly=eager,
     )
 
     model.summary(X_train[:64])
 
-    exit()
-
     history = model.fit(
         x=X_train,
         y=y_train,
-        epochs=10,
-        steps_per_epoch=20,
+        epochs=100,
+        steps_per_epoch=200,
         batch_size=64,
         validation_data=(X_test, y_test),
         shuffle=True,
