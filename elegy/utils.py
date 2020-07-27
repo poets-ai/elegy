@@ -72,8 +72,6 @@ def get_input_args(
     return args, apply_kwargs
 
 
-
-
 def split(
     d: tp.Union[tp.Dict[str, tp.Any], tp.Mapping[str, tp.Any]]
 ) -> tp.Iterable[tp.Dict[str, tp.Any]]:
