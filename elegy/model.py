@@ -1428,11 +1428,19 @@ class Model(object):
 
         # add papdding
         for col in range(4):
-            max_length = max(len(row[col].split("{pad}")[0]) for row in table)
+            max_length = max(
+                len(line.split("{pad}")[0])
+                for row in table
+                for line in row[col].split("\n")
+            )
 
             for row in table:
-                length = len(row[col].split("{pad}")[0])
-                row[col] = row[col].format(pad=" " * (max_length - length))
+                row[col] = "\n".join(
+                    line.format(
+                        pad=" " * (max_length - len(line.rstrip().split("{pad}")[0]))
+                    )
+                    for line in row[col].rstrip().split("\n")
+                )
 
         print(
             "\n"
