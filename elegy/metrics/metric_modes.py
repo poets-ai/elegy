@@ -7,32 +7,27 @@ from elegy import utils
 import jax
 
 
-def forward_all(metrics_fn):
+def forward_all(metrics):
     def _metrics_fn(**kwargs):
-
-        if isinstance(metrics_fn, (tp.List, tp.Tuple, tp.Dict)):
-            metrics = jax.tree_multimap(lambda f: f(), metrics_fn)
-        else:
-            metrics = metrics_fn()
 
         logs = {}
 
-        for context, loss_val in apply_recursive((), metrics, **kwargs):
+        for context, val in apply_recursive((), metrics, **kwargs):
             name = "/".join(context)
             loss_name = get_unique_name(logs, name)
-            logs[loss_name] = loss_val
+            logs[loss_name] = val
 
         return logs
 
     return _metrics_fn
 
 
-def apply_recursive(context: tp.Tuple[str, ...], losses, **kwargs):
+def apply_recursive(context: tp.Tuple[str, ...], metrics, **kwargs):
 
-    if isinstance(losses, tp.Callable):
-        name = losses.module_name if isinstance(losses, Metric) else losses.__name__
+    if isinstance(metrics, tp.Callable):
+        name = metrics.module_name if isinstance(metrics, Metric) else metrics.__name__
         context += (name,)
-        loss_val = utils.inject_dependencies(losses)(**kwargs)
+        loss_val = utils.inject_dependencies(metrics)(**kwargs)
 
         if isinstance(loss_val, tp.Dict):
             for name, loss_val in loss_val.items():
@@ -40,14 +35,14 @@ def apply_recursive(context: tp.Tuple[str, ...], losses, **kwargs):
         else:
             yield context, loss_val
 
-    elif isinstance(losses, (tp.Tuple, tp.List)):
-        for loss in losses:
+    elif isinstance(metrics, (tp.Tuple, tp.List)):
+        for loss in metrics:
             yield from apply_recursive(context, loss, **kwargs)
-    elif isinstance(losses, tp.Dict):
-        for name, loss in losses.items():
+    elif isinstance(metrics, tp.Dict):
+        for name, loss in metrics.items():
             yield from apply_recursive(context + (name,), loss, **kwargs)
     else:
-        raise TypeError(f"Invalid type {type(losses)}")
+        raise TypeError(f"Invalid type {type(metrics)}")
 
 
 def get_unique_name(logs, name):

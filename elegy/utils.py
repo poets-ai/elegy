@@ -73,17 +73,19 @@ def get_input_args(
 
 
 class Defered:
-    f: tp.Union[tp.Callable, tp.Type]
-    args: tp.Tuple
-    kwargs: tp.Dict[str, tp.Any]
+    csl: tp.Type
+    cls_args: tp.Tuple
+    cls_kwargs: tp.Dict[str, tp.Any]
 
-    def __init__(self, f: tp.Callable, *args, **kwargs):
-        self.f = f
-        self.args = args
-        self.kwargs = kwargs
+    def __init__(self, csl: tp.Callable, *args, **kwargs):
+        self.csl = csl
+        self.cls_args = args
+        self.cls_kwargs = kwargs
 
-    def __call__(self):
-        return self.f(*self.args, **self.kwargs)
+    def __call__(self, *args, **kwargs):
+        return inject_dependencies(self.csl(*self.cls_args, **self.cls_kwargs))(
+            *args, **kwargs
+        )
 
 
 class Deferable:
