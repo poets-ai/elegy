@@ -32,7 +32,7 @@ Elegy greatly simplifies the training of Deep Learning models compared to pure J
 **1.** Define the architecture inside an `elegy.Module`:
 ```python
 class MLP(elegy.Module):
-    def call(self, image: jnp.ndarray) -> jnp.ndarray:
+    def __apply__(self, image: jnp.ndarray) -> jnp.ndarray:
         mlp = hk.Sequential([
             hk.Flatten(),
             hk.Linear(300),

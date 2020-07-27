@@ -56,13 +56,13 @@ class Loss:
 
     To be implemented by subclasses:
 
-    * `call()`: Contains the logic for loss calculation.
+    * `__apply__()`: Contains the logic for loss calculation.
 
     Example subclass implementation:
 
     ```python
     class MeanSquaredError(Loss):
-        def call(self, y_true, y_pred):
+        def __apply__(self, y_true, y_pred):
             return jnp.mean(jnp.square(y_pred - y_true), axis=-1)
     ```
 
@@ -89,7 +89,7 @@ class Loss:
             weight: Optional weight contribution for the total loss. Defaults to `1`.
             on: A string or integer, or iterable of string or integers, that
                 indicate how to index/filter the `y_true` and `y_pred`
-                arguments before passing them to `call`. For example if `on = "a"` then
+                arguments before passing them to `__apply__`. For example if `on = "a"` then
                 `y_true = y_true["a"]`. If `on` is an iterable
                 the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`
                 then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
@@ -105,7 +105,7 @@ class Loss:
             reduction if reduction is not None else Reduction.SUM_OVER_BATCH_SIZE
         )
         self._labels_filter = (on,) if isinstance(on, (str, int)) else on
-        self.call = utils.inject_dependencies(self.call)
+        self.__apply__ = utils.inject_dependencies(self.__apply__)
 
     def __call__(
         self,
@@ -124,7 +124,7 @@ class Loss:
                 for index in self._labels_filter:
                     y_pred = y_pred[index]
 
-        values = self.call(
+        values = self.__apply__(
             y_true=y_true, y_pred=y_pred, sample_weight=sample_weight, **kwargs
         )
 
@@ -137,7 +137,7 @@ class Loss:
             return reduce_loss(values, sample_weight, self.weight, self._reduction)
 
     @abstractmethod
-    def call(self, *args, **kwargs):
+    def __apply__(self, *args, **kwargs):
         ...
 
 

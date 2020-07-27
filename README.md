@@ -8,9 +8,9 @@
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/poets-ai/elegy/issues)
 
 ### Continuous Build Status
-| Build      | Status |
-| ---             | ---    |
-| **Ubuntu**   | [![Status](https://github.com/poets-ai/elegy/workflows/GitHub%20CI/badge.svg)](https://github.com/poets-ai/elegy/actions?query=workflow%3A"GitHub+CI") |
+| Build      | Status                                                                                                                                                 |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Ubuntu** | [![Status](https://github.com/poets-ai/elegy/workflows/GitHub%20CI/badge.svg)](https://github.com/poets-ai/elegy/actions?query=workflow%3A"GitHub+CI") |
 
 
 _Elegy is a Neural Networks framework based on Jax and Haiku._ 
@@ -41,7 +41,7 @@ Elegy greatly simplifies the training of Deep Learning models compared to pure J
 **1.** Define the architecture inside an `elegy.Module`:
 ```python
 class MLP(elegy.Module):
-    def call(self, image: jnp.ndarray) -> jnp.ndarray:
+    def __apply__(self, image: jnp.ndarray) -> jnp.ndarray:
         mlp = hk.Sequential([
             hk.Flatten(),
             hk.Linear(300),

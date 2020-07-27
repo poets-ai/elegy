@@ -29,7 +29,7 @@ class Defered(tp.NamedTuple):
         def __init__(self, a, b):
             ...
 
-        def call(self, x):
+        def __apply__(self, x):
             ...
 
     model = elegy.Model(
@@ -39,13 +39,13 @@ class Defered(tp.NamedTuple):
     ```
 
     **2.** It can also serve as a mechanism for reusing hyperparameters since you can define
-    them once and an call them mutliple times:
+    them once and an __apply__ them mutliple times:
 
     ```python
     some_defered = SomeModule.defer(a=1, b=2)
 
     class OtherModule(elegy.Module):
-        def call(self, x):
+        def __apply__(self, x):
             x = some_defered(x)
             x = some_defered(x)
             return x
@@ -55,7 +55,7 @@ class Defered(tp.NamedTuple):
 
     ```python
     class OtherModule(elegy.Module):
-        def call(self, x):
+        def __apply__(self, x):
             x = SomeModule(a=1, b=2)(x)
             x = SomeModule(a=1, b=2)(x)
             return x
@@ -66,7 +66,7 @@ class Defered(tp.NamedTuple):
 
     ```python
     class OtherModule(elegy.Module):
-        def call(self, x):
+        def __apply__(self, x):
             some_module = some_defered.get_instance()
             x = some_module(x)
             x = some_module(x)
@@ -76,7 +76,7 @@ class Defered(tp.NamedTuple):
 
     ```python
     class OtherModule(elegy.Module):
-        def call(self, x):
+        def __apply__(self, x):
             some_module = SomeModule(a=1, b=2)
             x = some_module(x)
             x = some_module(x)
@@ -135,21 +135,21 @@ class Module(hk.Module, Deferable):
         """
         super().__init__(name=name)
 
-        self.call = utils.inject_dependencies(self.call)
+        self.__apply__ = utils.inject_dependencies(self.__apply__)
 
     def __call__(self, *args, **kwargs):
         """
-        Forwards all input arguments to the Module's `call` method and calls
+        Forwards all input arguments to the Module's `__apply__` method and calls
         `elegy.add_summary` on the outputs.
         """
-        outputs = self.call(*args, **kwargs)
+        outputs = self.__apply__(*args, **kwargs)
 
         hooks.add_summary(None, self.__class__.__name__, outputs)
 
         return outputs
 
     @abstractmethod
-    def call(self, *args, **kwargs):
+    def __apply__(self, *args, **kwargs):
         ...
 
     @classmethod

@@ -13,7 +13,7 @@ np.random.seed(42)
 class ArrayDataAdapterTest(TestCase):
     def test_example(self):
         class MLP(elegy.Module):
-            def call(self, input):
+            def __apply__(self, input):
                 mlp = hk.Sequential([hk.Linear(10),])
                 return mlp(input)
 

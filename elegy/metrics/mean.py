@@ -54,7 +54,7 @@ class Mean(reduce.Reduce):
           dtype: (Optional) data type of the metric result.
           on: A string or integer, or iterable of string or integers, that
                 indicate how to index/filter the `y_true` and `y_pred`
-                arguments before passing them to `call`. For example if `on = "a"` then
+                arguments before passing them to `__apply__`. For example if `on = "a"` then
                 `y_true = y_true["a"]`. If `on` is an iterable
                 the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`
                 then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
@@ -64,7 +64,7 @@ class Mean(reduce.Reduce):
             reduction=reduce.Reduction.WEIGHTED_MEAN, name=name, dtype=dtype, on=on
         )
 
-    def call(
+    def __apply__(
         self, values: jnp.ndarray, sample_weight: tp.Optional[jnp.ndarray] = None
     ) -> jnp.ndarray:
         """
@@ -77,4 +77,4 @@ class Mean(reduce.Reduce):
         Returns:
             Array with the cumulative mean.
         """
-        return super().call(values=values, sample_weight=sample_weight)
+        return super().__apply__(values=values, sample_weight=sample_weight)
