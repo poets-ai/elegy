@@ -50,4 +50,3 @@ class Flatten(hk.Flatten, Deferable):
         hooks.add_summary(None, self.__class__.__name__, outputs)
 
         return outputs
-

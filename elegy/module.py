@@ -33,4 +33,3 @@ class Module(hk.Module, Deferable):
     @abstractmethod
     def call(self, *args, **kwargs):
         ...
-

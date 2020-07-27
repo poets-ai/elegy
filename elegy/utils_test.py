@@ -114,4 +114,3 @@ class SplitTest(TestCase):
 
         print(ds)
         print(dn)
-
