@@ -58,34 +58,16 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
 
             image = image.astype(jnp.float32) / 255.0
 
-            image = Lambda(
-                lambda x1: Lambda(
-                    lambda x2: Lambda(lambda x3: Lambda(lambda x4: x4)(x3))(x2)
-                )(x1)
-            )(image)
-
             mlp = hk.Sequential(
                 [
-                    lambda x: elegy.nn.BatchNormalization()(x, is_training),
                     hk.Flatten(),
-                    lambda x: elegy.nn.BatchNormalization()(x, is_training),
                     hk.Linear(self.n1),
-                    lambda x: elegy.nn.BatchNormalization()(x, is_training),
                     jax.nn.relu,
                     hk.Linear(self.n2),
-                    lambda x: elegy.nn.BatchNormalization()(x, is_training),
                     jax.nn.relu,
                     hk.Linear(10),
-                    lambda x: elegy.nn.BatchNormalization()(x, is_training),
                 ]
             )
-
-            if is_training:
-                elegy.add_loss("a", 1.0)
-                elegy.add_metric("b", 5.0)
-            else:
-                elegy.add_loss("a", 2.0)
-                elegy.add_metric("b", 10.0)
 
             return mlp(image)
 
@@ -100,7 +82,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
         run_eagerly=eager,
     )
 
-    model.summary(X_train[:64], depth=3)
+    model.summary(X_train[:64])
 
     exit()
 
