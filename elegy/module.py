@@ -96,7 +96,7 @@ class Defered(tp.NamedTuple):
         dependency injection (optional argument not required by the Module 
         will be ignored).
         """
-        return utils.inject_dependencies(self.csl(*self.args, **self.args))(
+        return utils.inject_dependencies(self.csl(*self.args, **self.kwargs))(
             *args, **kwargs
         )
 
@@ -112,7 +112,7 @@ class Deferable:
     def defer(cls, *args, **kwargs) -> Defered:
         """
         """
-        return Defered(cls, *args, **kwargs)
+        return Defered(cls, args=args, kwargs=kwargs)
 
 
 class Module(hk.Module, Deferable):
@@ -160,4 +160,4 @@ class Module(hk.Module, Deferable):
         All arguments (positional and keyword) passed to `defer` must be accepted by
         the `Module`'s constructor.
         """
-        return Defered(cls, *args, **kwargs)
+        return Defered(cls, args=args, kwargs=kwargs)
