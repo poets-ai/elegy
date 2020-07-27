@@ -28,6 +28,8 @@ nav:
         transform: api/hooks/transform.md
         TransformedState: api/hooks/TransformedState.md
       nn:
+        Linear: api/nn/Linear.md
+        Flatten: api/nn/Flatten.md
         BatchNormalization: api/nn/BatchNormalization.md
         Dropout: api/nn/Dropout.md
       metrics:

@@ -34,5 +34,3 @@ class Module(hk.Module, Deferable):
     def call(self, *args, **kwargs):
         ...
 
-
-hk.transparent

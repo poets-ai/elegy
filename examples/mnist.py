@@ -61,11 +61,11 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             mlp = hk.Sequential(
                 [
                     hk.Flatten(),
-                    hk.Linear(self.n1),
+                    elegy.nn.Linear(self.n1),
                     jax.nn.relu,
-                    hk.Linear(self.n2),
+                    elegy.nn.Linear(self.n2),
                     jax.nn.relu,
-                    hk.Linear(10),
+                    elegy.nn.Linear(10),
                 ]
             )
 

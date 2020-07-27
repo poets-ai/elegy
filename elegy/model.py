@@ -1428,14 +1428,15 @@ class Model(object):
 
         # add papdding
         for col in range(4):
-            max_length = max(len(row[col].split("{pad}")[0]) for row in table[1:])
+            max_length = max(len(row[col].split("{pad}")[0]) for row in table)
 
             for row in table:
                 length = len(row[col].split("{pad}")[0])
                 row[col] = row[col].format(pad=" " * (max_length - length))
 
         print(
-            tabulate(
+            "\n"
+            + tabulate(
                 table,
                 headers=[
                     "Layer",
@@ -1476,6 +1477,7 @@ class Model(object):
                 ],
                 tablefmt="plain",
             )
+            + "\n"
         )
 
 

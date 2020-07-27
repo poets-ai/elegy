@@ -1,6 +1,6 @@
-# elegy.nn.BatchNormalization
+# elegy.nn.Linear
 
-::: elegy.nn.BatchNormalization
+::: elegy.nn.Linear
     selection:
         inherited_members: true
         members:

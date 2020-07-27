@@ -1,6 +1,6 @@
-# elegy.nn.BatchNormalization
+# elegy.nn.Flatten
 
-::: elegy.nn.BatchNormalization
+::: elegy.nn.Flatten
     selection:
         inherited_members: true
         members:
