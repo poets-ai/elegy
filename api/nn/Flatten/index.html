@@ -5,10 +5,10 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<link href="https://poets-ai.github.io/elegy/api/metrics/Metric/" rel="canonical"/>
+<link href="https://poets-ai.github.io/elegy/api/nn/Flatten/" rel="canonical"/>
 <link href="../../../images/favicon.png" rel="shortcut icon"/>
 <meta content="mkdocs-1.1.2, mkdocs-material-5.5.0" name="generator"/>
-<title>Metric - Elegy</title>
+<title>Flatten - Elegy</title>
 <link href="../../../assets/stylesheets/main.b5d04df8.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
@@ -19,7 +19,7 @@
 <input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
 <label class="md-overlay" for="__drawer"></label>
 <div data-md-component="skip">
-<a class="md-skip" href="#elegymetricsmetric">
+<a class="md-skip" href="#elegynnflatten">
           Skip to content
         </a>
 </div>
@@ -40,7 +40,7 @@
           </span>
 <span class="md-header-nav__topic md-ellipsis">
             
-              Metric
+              Flatten
             
           </span>
 </div>
@@ -266,8 +266,8 @@
 </ul>
 </nav>
 </li>
-<li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" id="nav-4-4" type="checkbox"/>
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" id="nav-4-4" type="checkbox"/>
 <label class="md-nav__link" for="nav-4-4">
       nn
       <span class="md-nav__icon md-icon">
@@ -283,35 +283,67 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../nn/Linear/" title="Linear">
+<a class="md-nav__link" href="../Linear/" title="Linear">
       Linear
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../nn/Conv2D/" title="Conv2D">
+<a class="md-nav__link" href="../Conv2D/" title="Conv2D">
       Conv2D
     </a>
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../nn/Flatten/" title="Flatten">
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+        Flatten
+        <span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
+</span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./" title="Flatten">
       Flatten
     </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.nn.flatten.Flatten">
+    elegy.nn.flatten.Flatten
+  </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../nn/BatchNormalization/" title="BatchNormalization">
+<a class="md-nav__link" href="#elegy.nn.flatten.Flatten.__call__">
+    __call__()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.nn.flatten.Flatten.__init__">
+    __init__()
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../BatchNormalization/" title="BatchNormalization">
       BatchNormalization
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../nn/Dropout/" title="Dropout">
+<a class="md-nav__link" href="../Dropout/" title="Dropout">
       Dropout
     </a>
 </li>
 </ul>
 </nav>
 </li>
-<li class="md-nav__item md-nav__item--active md-nav__item--nested">
-<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-4-5" id="nav-4-5" type="checkbox"/>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-5" id="nav-4-5" type="checkbox"/>
 <label class="md-nav__link" for="nav-4-5">
       metrics
       <span class="md-nav__icon md-icon">
@@ -326,70 +358,43 @@
         metrics
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item md-nav__item--active">
-<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
-<label class="md-nav__link md-nav__link--active" for="__toc">
-        Metric
-        <span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
-</span>
-</label>
-<a class="md-nav__link md-nav__link--active" href="./" title="Metric">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../metrics/Metric/" title="Metric">
       Metric
     </a>
-<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
-<label class="md-nav__title" for="__toc">
-<span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
-</span>
-      Table of contents
-    </label>
-<ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.metric.Metric">
-    elegy.metrics.metric.Metric
-  </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.metric.Metric.__init__">
-    __init__()
-  </a>
-</li>
-</ul>
-</nav>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../Accuracy/" title="Accuracy">
+<a class="md-nav__link" href="../../metrics/Accuracy/" title="Accuracy">
       Accuracy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../BinaryCrossentropy/" title="BinaryCrossentropy">
+<a class="md-nav__link" href="../../metrics/BinaryCrossentropy/" title="BinaryCrossentropy">
       BinaryCrossentropy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../CategoricalAccuracy/" title="CategoricalAccuracy">
+<a class="md-nav__link" href="../../metrics/CategoricalAccuracy/" title="CategoricalAccuracy">
       CategoricalAccuracy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../SparseCategoricalAccuracy/" title="SparseCategoricalAccuracy">
+<a class="md-nav__link" href="../../metrics/SparseCategoricalAccuracy/" title="SparseCategoricalAccuracy">
       SparseCategoricalAccuracy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../Mean/" title="Mean">
+<a class="md-nav__link" href="../../metrics/Mean/" title="Mean">
       Mean
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../MeanAbsoluteError/" title="MeanAbsoluteError">
+<a class="md-nav__link" href="../../metrics/MeanAbsoluteError/" title="MeanAbsoluteError">
       MeanAbsoluteError
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../MeanSquaredError/" title="MeanSquaredError">
+<a class="md-nav__link" href="../../metrics/MeanSquaredError/" title="MeanSquaredError">
       MeanSquaredError
     </a>
 </li>
@@ -563,12 +568,17 @@
     </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.metric.Metric">
-    elegy.metrics.metric.Metric
+<a class="md-nav__link" href="#elegy.nn.flatten.Flatten">
+    elegy.nn.flatten.Flatten
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.metrics.metric.Metric.__init__">
+<a class="md-nav__link" href="#elegy.nn.flatten.Flatten.__call__">
+    __call__()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.nn.flatten.Flatten.__init__">
     __init__()
   </a>
 </li>
@@ -579,81 +589,40 @@
 </div>
 <div class="md-content">
 <article class="md-content__inner md-typeset">
-<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/metrics/Metric.md" title="Edit this page">
+<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/nn/Flatten.md" title="Edit this page">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
 </a>
-<h1 id="elegymetricsmetric">elegy.metrics.Metric</h1>
+<h1 id="elegynnflatten">elegy.nn.Flatten</h1>
 <div class="doc doc-object doc-class">
-<h2 class="hidden-toc" href="#elegy.metrics.metric.Metric" id="elegy.metrics.metric.Metric" style="visibility: hidden; width: 0; height: 0;">
+<h2 class="hidden-toc" href="#elegy.nn.flatten.Flatten" id="elegy.nn.flatten.Flatten" style="visibility: hidden; width: 0; height: 0;">
 </h2>
 <div class="doc doc-contents first">
-<p>Encapsulates metric logic and state.</p>
-<p>Usage:</p>
+<p>Flattens the input, preserving the batch dimension(s).</p>
+<p>By default, Flatten combines all dimensions except the first.
+Additional leading dimensions can be preserved by setting preserve_dims.</p>
 <div class="codehilite">
-<pre><span></span><code><span class="n">m</span> <span class="o">=</span> <span class="n">SomeMetric</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-<span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="o">...</span><span class="p">:</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">m</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">'Final result: '</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+<pre><span></span><code><span class="n">x</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+<span class="n">flat</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">Flatten</span><span class="p">()</span>
+<span class="n">flat</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="c1"># (3, 8)</span>
 </code></pre>
 </div>
-<p>Usage with the Model API:</p>
+<p>When the input to flatten has fewer than <code>preserve_dims</code> dimensions it is
+returned unchanged:</p>
 <div class="codehilite">
-<pre><span></span><code><span class="k">class</span> <span class="nc">MLP</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__apply__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="n">mlp</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">Sequential</span><span class="p">([</span>
-            <span class="n">hk</span><span class="o">.</span><span class="n">Flatten</span><span class="p">(),</span>
-            <span class="n">hk</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">300</span><span class="p">),</span>
-            <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">,</span>
-            <span class="n">hk</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
-        <span class="p">])</span>
-        <span class="k">return</span> <span class="n">mlp</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
-
-<span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
-    <span class="n">module</span><span class="o">=</span><span class="n">MLP</span><span class="o">.</span><span class="n">defer</span><span class="p">(),</span>
-    <span class="n">loss</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">SparseCategoricalCrossentropy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-    <span class="p">],</span>
-    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">SparseCategoricalAccuracy</span><span class="o">.</span><span class="n">defer</span><span class="p">()</span>
-    <span class="p">],</span>
-    <span class="n">optimizer</span><span class="o">=</span><span class="n">optix</span><span class="o">.</span><span class="n">rmsprop</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">),</span>
-<span class="p">)</span>
-</code></pre>
-</div>
-<p>To be implemented by subclasses:</p>
-<ul>
-<li><code>__apply__()</code>: All state variables should be created in this method by
-    calling <code>haiku.get_state()</code>, update this state by calling
-    <code>haiku.set_state(...)</code>, and return a result based on these states.</li>
-</ul>
-<p>Example subclass implementation:</p>
-<div class="codehilite">
-<pre><span></span><code><span class="k">class</span> <span class="nc">Accuracy</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Metric</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__apply__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
-
-        <span class="n">total</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">get_state</span><span class="p">(</span><span class="s2">"total"</span><span class="p">,</span> <span class="p">[],</span> <span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span><span class="p">)</span>
-        <span class="n">count</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">get_state</span><span class="p">(</span><span class="s2">"count"</span><span class="p">,</span> <span class="p">[],</span> <span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span><span class="p">)</span>
-
-        <span class="n">total</span> <span class="o">+=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_true</span> <span class="o">==</span> <span class="n">y_pred</span><span class="p">)</span>
-        <span class="n">count</span> <span class="o">+=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">y_true</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-
-        <span class="n">hk</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="s2">"total"</span><span class="p">,</span> <span class="n">total</span><span class="p">)</span>
-        <span class="n">hk</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="s2">"count"</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">total</span> <span class="o">/</span> <span class="n">count</span>
+<pre><span></span><code><span class="n">x</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">3</span><span class="p">])</span>
+<span class="n">flat</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="c1"># (3,)</span>
 </code></pre>
 </div>
 <div class="doc doc-children">
 <div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.metrics.metric.Metric.__init__">
+<h2 class="doc doc-heading" id="elegy.nn.flatten.Flatten.__call__">
 <code class="highlight language-python">
-__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
+__call__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span> </code>
 <span class="doc doc-properties">
 <small class="doc doc-property doc-property-special"><code>special</code></small>
 </span>
 </h2>
 <div class="doc doc-contents">
-<p>Base Metric constructor.</p>
 <p><strong>Parameters:</strong></p>
 <table>
 <thead>
@@ -666,99 +635,124 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 </thead>
 <tbody>
 <tr>
+<td><code>inputs</code></td>
+<td><code>ndarray</code></td>
+<td>
+<p>Input arrays to be flattened.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+<summary>Source code in <code>elegy/nn/flatten.py</code></summary>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span>43
+44
+45
+46
+47
+48
+49
+50
+51
+52</pre>
+</div>
+</td>
+<td class="code">
+<div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Arguments:</span>
+<span class="sd">        inputs: Input arrays to be flattened.</span>
+<span class="sd">    """</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+    <span class="n">hooks</span><span class="o">.</span><span class="n">add_summary</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">outputs</span>
+</code></pre>
+</div>
+</td>
+</tr>
+</table>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.flatten.Flatten.__init__">
+<code class="highlight language-python">
+__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">preserve_dims</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-special"><code>special</code></small>
+</span>
+</h2>
+<div class="doc doc-contents">
+<p>Creates a Flatten instance.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>preserve_dims</code></td>
+<td><code>int</code></td>
+<td>
+<p>Number of leading dimensions that will not be reshaped.</p>
+</td>
+<td><code>1</code></td>
+</tr>
+<tr>
 <td><code>name</code></td>
 <td><code>Optional[str]</code></td>
 <td>
-<p>string name of the metric instance.</p>
-</td>
-<td><code>None</code></td>
-</tr>
-<tr>
-<td><code>dtype</code></td>
-<td><code>Optional[numpy.dtype]</code></td>
-<td>
-<p>data type of the metric result.</p>
-</td>
-<td><code>None</code></td>
-</tr>
-<tr>
-<td><code>on</code></td>
-<td><code>Optional[Union[str, int, Iterable[Union[str, int]]]]</code></td>
-<td>
-<p>A string or integer, or iterable of string or integers, that
-indicate how to index/filter the <code>y_true</code> and <code>y_pred</code>
-arguments before passing them to <code>__apply__</code>. For example if <code>on = "a"</code> then
-<code>y_true = y_true["a"]</code>. If <code>on</code> is an iterable
-the structures will be indexed iteratively, for example if <code>on = ["a", 0, "b"]</code>
-then <code>y_true = y_true["a"][0]["b"]</code>, same for <code>y_pred</code>. For more information
-check out <a href="https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior">Keras-like behavior</a>.</p>
+<p>Name of the module.</p>
 </td>
 <td><code>None</code></td>
 </tr>
 </tbody>
 </table>
 <details class="quote">
-<summary>Source code in <code>elegy/metrics/metric.py</code></summary>
+<summary>Source code in <code>elegy/nn/flatten.py</code></summary>
 <table class="highlighttable">
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>73
-74
-75
-76
-77
-78
-79
-80
-81
-82
-83
-84
-85
-86
-87
-88
-89
-90
-91
-92
-93
-94
-95
-96
-97
-98</pre>
+<pre><span></span>31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41</pre>
 </div>
 </td>
 <td class="code">
 <div class="highlight">
 <pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-    <span class="bp">self</span><span class="p">,</span>
-    <span class="n">name</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">dtype</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">on</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">IndexLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="bp">self</span><span class="p">,</span> <span class="n">preserve_dims</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="sd">"""</span>
-<span class="sd">    Base Metric constructor.</span>
+<span class="sd">    Creates a Flatten instance.</span>
 
 <span class="sd">    Arguments:</span>
-<span class="sd">        name: string name of the metric instance.</span>
-<span class="sd">        dtype: data type of the metric result.</span>
-<span class="sd">        on: A string or integer, or iterable of string or integers, that</span>
-<span class="sd">            indicate how to index/filter the `y_true` and `y_pred`</span>
-<span class="sd">            arguments before passing them to `__apply__`. For example if `on = "a"` then</span>
-<span class="sd">            `y_true = y_true["a"]`. If `on` is an iterable</span>
-<span class="sd">            the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`</span>
-<span class="sd">            then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information</span>
-<span class="sd">            check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).</span>
+<span class="sd">        preserve_dims: Number of leading dimensions that will not be reshaped.</span>
+<span class="sd">        name: Name of the module.</span>
 <span class="sd">    """</span>
-
-    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
-
-    <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span> <span class="o">=</span> <span class="n">dtype</span> <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">jnp</span><span class="o">.</span><span class="n">float32</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_labels_filter</span> <span class="o">=</span> <span class="p">(</span><span class="n">on</span><span class="p">,)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">on</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">))</span> <span class="k">else</span> <span class="n">on</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">__apply__</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">inject_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__apply__</span><span class="p">)</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">preserve_dims</span><span class="o">=</span><span class="n">preserve_dims</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 </code></pre>
 </div>
 </td>
@@ -777,7 +771,7 @@ check out <a href="https://poets-ai.github.io/elegy/guides/modules-losses-metric
 <footer class="md-footer">
 <div class="md-footer-nav">
 <nav aria-label="Footer" class="md-footer-nav__inner md-grid">
-<a class="md-footer-nav__link md-footer-nav__link--prev" href="../../nn/Dropout/" rel="prev" title="Dropout">
+<a class="md-footer-nav__link md-footer-nav__link--prev" href="../Conv2D/" rel="prev" title="Conv2D">
 <div class="md-footer-nav__button md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </div>
@@ -786,17 +780,17 @@ check out <a href="https://poets-ai.github.io/elegy/guides/modules-losses-metric
 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Dropout
+                Conv2D
               </div>
 </div>
 </a>
-<a class="md-footer-nav__link md-footer-nav__link--next" href="../Accuracy/" rel="next" title="Accuracy">
+<a class="md-footer-nav__link md-footer-nav__link--next" href="../BatchNormalization/" rel="next" title="BatchNormalization">
 <div class="md-footer-nav__title">
 <div class="md-ellipsis">
 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Accuracy
+                BatchNormalization
               </div>
 </div>
 <div class="md-footer-nav__button md-icon">

@@ -5,11 +5,11 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<link href="https://poets-ai.github.io/elegy/api/Module/" rel="canonical"/>
-<link href="../../images/favicon.png" rel="shortcut icon"/>
+<link href="https://poets-ai.github.io/elegy/api/hooks/add_loss/" rel="canonical"/>
+<link href="../../../images/favicon.png" rel="shortcut icon"/>
 <meta content="mkdocs-1.1.2, mkdocs-material-5.5.0" name="generator"/>
-<title>elegy.module.Module - Elegy</title>
-<link href="../../assets/stylesheets/main.b5d04df8.min.css" rel="stylesheet"/>
+<title>add_loss - Elegy</title>
+<link href="../../../assets/stylesheets/main.b5d04df8.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
 <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
@@ -19,7 +19,7 @@
 <input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
 <label class="md-overlay" for="__drawer"></label>
 <div data-md-component="skip">
-<a class="md-skip" href="#elegymodulemodule">
+<a class="md-skip" href="#elegyadd_loss">
           Skip to content
         </a>
 </div>
@@ -40,7 +40,7 @@
           </span>
 <span class="md-header-nav__topic md-ellipsis">
             
-              elegy.module.Module
+              add_loss
             
           </span>
 </div>
@@ -110,12 +110,12 @@
 </div>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../.." title="Introduction">
+<a class="md-nav__link" href="../../.." title="Introduction">
       Introduction
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../getting-started/" title="Getting Started">
+<a class="md-nav__link" href="../../../getting-started/" title="Getting Started">
       Getting Started
     </a>
 </li>
@@ -136,20 +136,20 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../guides/modules-losses-metrics/" title="Modules, Losses, and Metrics">
+<a class="md-nav__link" href="../../../guides/modules-losses-metrics/" title="Modules, Losses, and Metrics">
       Modules, Losses, and Metrics
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../guides/contributing/" title="Contibuting">
+<a class="md-nav__link" href="../../../guides/contributing/" title="Contibuting">
       Contibuting
     </a>
 </li>
 </ul>
 </nav>
 </li>
-<li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" id="nav-4" type="checkbox"/>
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-4" id="nav-4" type="checkbox"/>
 <label class="md-nav__link" for="nav-4">
       API Reference
       <span class="md-nav__icon md-icon">
@@ -164,10 +164,34 @@
         API Reference
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-1" id="nav-4-1" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-1">
+      module
+      <span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
+</span>
+</label>
+<nav aria-label="module" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="nav-4-1">
+<span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</span>
+        module
+      </label>
+<ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../Model/" title="Model">
-      Model
+<a class="md-nav__link" href="../../module/Module/" title="Module">
+      Module
     </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../module/Defered/" title="Defered">
+      Defered
+    </a>
+</li>
+</ul>
+</nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
 <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-2" id="nav-4-2" type="checkbox"/>
@@ -186,37 +210,79 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../model/load/" title="load">
+<a class="md-nav__link" href="../../model/Model/" title="Model">
+      Model
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../model/load/" title="load">
       load
     </a>
 </li>
 </ul>
 </nav>
 </li>
-<li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-3" id="nav-4-3" type="checkbox"/>
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-4-3" id="nav-4-3" type="checkbox"/>
 <label class="md-nav__link" for="nav-4-3">
-      nn
+      hooks
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
-<nav aria-label="nn" class="md-nav" data-md-level="2">
+<nav aria-label="hooks" class="md-nav" data-md-level="2">
 <label class="md-nav__title" for="nav-4-3">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
-        nn
+        hooks
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+        add_loss
+        <span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
+</span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./" title="add_loss">
+      add_loss
+    </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../nn/BatchNormalization/" title="BatchNormalization">
-      BatchNormalization
+<a class="md-nav__link" href="#elegy.hooks.add_loss">
+    elegy.hooks.add_loss
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../add_metric/" title="add_metric">
+      add_metric
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../nn/Dropout/" title="Dropout">
-      Dropout
+<a class="md-nav__link" href="../add_summary/" title="add_summary">
+      add_summary
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../transform/" title="transform">
+      transform
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../TransformedState/" title="TransformedState">
+      TransformedState
     </a>
 </li>
 </ul>
@@ -225,57 +291,42 @@
 <li class="md-nav__item md-nav__item--nested">
 <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" id="nav-4-4" type="checkbox"/>
 <label class="md-nav__link" for="nav-4-4">
-      metrics
+      nn
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
-<nav aria-label="metrics" class="md-nav" data-md-level="2">
+<nav aria-label="nn" class="md-nav" data-md-level="2">
 <label class="md-nav__title" for="nav-4-4">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
-        metrics
+        nn
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../metrics/Metric/" title="Metric">
-      Metric
+<a class="md-nav__link" href="../../nn/Linear/" title="Linear">
+      Linear
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../metrics/Accuracy/" title="Accuracy">
-      Accuracy
+<a class="md-nav__link" href="../../nn/Conv2D/" title="Conv2D">
+      Conv2D
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../metrics/BinaryCrossentropy/" title="BinaryCrossentropy">
-      BinaryCrossentropy
+<a class="md-nav__link" href="../../nn/Flatten/" title="Flatten">
+      Flatten
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../metrics/CategoricalAccuracy/" title="CategoricalAccuracy">
-      CategoricalAccuracy
+<a class="md-nav__link" href="../../nn/BatchNormalization/" title="BatchNormalization">
+      BatchNormalization
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../metrics/SparseCategoricalAccuracy/" title="SparseCategoricalAccuracy">
-      SparseCategoricalAccuracy
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../metrics/Mean/" title="Mean">
-      Mean
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../metrics/MeanAbsoluteError/" title="MeanAbsoluteError">
-      MeanAbsoluteError
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../metrics/MeanSquaredError/" title="MeanSquaredError">
-      MeanSquaredError
+<a class="md-nav__link" href="../../nn/Dropout/" title="Dropout">
+      Dropout
     </a>
 </li>
 </ul>
@@ -284,52 +335,57 @@
 <li class="md-nav__item md-nav__item--nested">
 <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-5" id="nav-4-5" type="checkbox"/>
 <label class="md-nav__link" for="nav-4-5">
-      losses
+      metrics
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
-<nav aria-label="losses" class="md-nav" data-md-level="2">
+<nav aria-label="metrics" class="md-nav" data-md-level="2">
 <label class="md-nav__title" for="nav-4-5">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
-        losses
+        metrics
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../losses/Loss/" title="Loss">
-      Loss
+<a class="md-nav__link" href="../../metrics/Metric/" title="Metric">
+      Metric
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../losses/BinaryCrossentropy/" title="BinaryCrossentropy">
+<a class="md-nav__link" href="../../metrics/Accuracy/" title="Accuracy">
+      Accuracy
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../metrics/BinaryCrossentropy/" title="BinaryCrossentropy">
       BinaryCrossentropy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../losses/CategoricalCrossentropy/" title="CategoricalCrossentropy">
-      CategoricalCrossentropy
+<a class="md-nav__link" href="../../metrics/CategoricalAccuracy/" title="CategoricalAccuracy">
+      CategoricalAccuracy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../losses/SparseCategoricalCrossentropy/" title="SparseCategoricalCrossentropy">
-      SparseCategoricalCrossentropy
+<a class="md-nav__link" href="../../metrics/SparseCategoricalAccuracy/" title="SparseCategoricalAccuracy">
+      SparseCategoricalAccuracy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../losses/MeanAbsoluteError/" title="MeanAbsoluteError">
+<a class="md-nav__link" href="../../metrics/Mean/" title="Mean">
+      Mean
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../metrics/MeanAbsoluteError/" title="MeanAbsoluteError">
       MeanAbsoluteError
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../losses/MeanSquaredError/" title="MeanSquaredError">
+<a class="md-nav__link" href="../../metrics/MeanSquaredError/" title="MeanSquaredError">
       MeanSquaredError
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../losses/mean_squared_error/" title="mean_squared_error">
-      mean_squared_error
     </a>
 </li>
 </ul>
@@ -338,32 +394,52 @@
 <li class="md-nav__item md-nav__item--nested">
 <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-6" id="nav-4-6" type="checkbox"/>
 <label class="md-nav__link" for="nav-4-6">
-      regularizers
+      losses
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
-<nav aria-label="regularizers" class="md-nav" data-md-level="2">
+<nav aria-label="losses" class="md-nav" data-md-level="2">
 <label class="md-nav__title" for="nav-4-6">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
-        regularizers
+        losses
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../regularizers/GlobalL1/" title="GlobalL1">
-      GlobalL1
+<a class="md-nav__link" href="../../losses/Loss/" title="Loss">
+      Loss
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../regularizers/GlobalL2/" title="GlobalL2">
-      GlobalL2
+<a class="md-nav__link" href="../../losses/BinaryCrossentropy/" title="BinaryCrossentropy">
+      BinaryCrossentropy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../regularizers/GlobalL1L2/" title="GlobalL1L2">
-      GlobalL1L2
+<a class="md-nav__link" href="../../losses/CategoricalCrossentropy/" title="CategoricalCrossentropy">
+      CategoricalCrossentropy
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../losses/SparseCategoricalCrossentropy/" title="SparseCategoricalCrossentropy">
+      SparseCategoricalCrossentropy
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../losses/MeanAbsoluteError/" title="MeanAbsoluteError">
+      MeanAbsoluteError
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../losses/MeanSquaredError/" title="MeanSquaredError">
+      MeanSquaredError
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../losses/mean_squared_error/" title="mean_squared_error">
+      mean_squared_error
     </a>
 </li>
 </ul>
@@ -372,13 +448,47 @@
 <li class="md-nav__item md-nav__item--nested">
 <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-7" id="nav-4-7" type="checkbox"/>
 <label class="md-nav__link" for="nav-4-7">
+      regularizers
+      <span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
+</span>
+</label>
+<nav aria-label="regularizers" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="nav-4-7">
+<span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</span>
+        regularizers
+      </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../regularizers/GlobalL1/" title="GlobalL1">
+      GlobalL1
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../regularizers/GlobalL2/" title="GlobalL2">
+      GlobalL2
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../regularizers/GlobalL1L2/" title="GlobalL1L2">
+      GlobalL1L2
+    </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-8" id="nav-4-8" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-8">
       callbacks
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="callbacks" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-7">
+<label class="md-nav__title" for="nav-4-8">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -386,42 +496,42 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../callbacks/Callback/" title="Callback">
+<a class="md-nav__link" href="../../callbacks/Callback/" title="Callback">
       Callback
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../callbacks/ModelCheckpoint/" title="ModelCheckpoint">
+<a class="md-nav__link" href="../../callbacks/ModelCheckpoint/" title="ModelCheckpoint">
       ModelCheckpoint
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../callbacks/EarlyStopping/" title="EarlyStopping">
+<a class="md-nav__link" href="../../callbacks/EarlyStopping/" title="EarlyStopping">
       EarlyStopping
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../callbacks/LambdaCallback/" title="LambdaCallback">
+<a class="md-nav__link" href="../../callbacks/LambdaCallback/" title="LambdaCallback">
       LambdaCallback
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../callbacks/CSVLogger/" title="CSVLogger">
+<a class="md-nav__link" href="../../callbacks/CSVLogger/" title="CSVLogger">
       CSVLogger
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../callbacks/RemoteMonitor/" title="RemoteMonitor">
+<a class="md-nav__link" href="../../callbacks/RemoteMonitor/" title="RemoteMonitor">
       RemoteMonitor
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../callbacks/TerminateOnNaN/" title="TerminateOnNaN">
+<a class="md-nav__link" href="../../callbacks/TerminateOnNaN/" title="TerminateOnNaN">
       TerminateOnNaN
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../callbacks/TensorBoard/" title="Tensorboard">
+<a class="md-nav__link" href="../../callbacks/TensorBoard/" title="Tensorboard">
       Tensorboard
     </a>
 </li>
@@ -448,8 +558,8 @@
     </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.module.Module">
-    elegy.module.Module
+<a class="md-nav__link" href="#elegy.hooks.add_loss">
+    elegy.hooks.add_loss
   </a>
 </li>
 </ul>
@@ -459,17 +569,128 @@
 </div>
 <div class="md-content">
 <article class="md-content__inner md-typeset">
-<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/Module.md" title="Edit this page">
+<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/hooks/add_loss.md" title="Edit this page">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
 </a>
-<h1 id="elegymodulemodule">elegy.module.Module</h1>
-<div class="doc doc-object doc-class">
-<h2 class="hidden-toc" href="#elegy.module.Module" id="elegy.module.Module" style="visibility: hidden; width: 0; height: 0;">
+<h1 id="elegyadd_loss">elegy.add_loss</h1>
+<div class="doc doc-object doc-function">
+<h2 class="hidden-toc" href="#elegy.hooks.add_loss" id="elegy.hooks.add_loss" style="visibility: hidden; width: 0; height: 0;">
 </h2>
 <div class="doc doc-contents first">
-<p>Basic Elegy Module</p>
-<div class="doc doc-children">
+<p>A hook that lets you define a loss within a <a href="https://poets-ai.github.io/elegy/api/hooks/transform/#elegy.hooks.transform"><code>transform</code></a>.</p>
+<div class="codehilite">
+<pre><span></span><code><span class="n">w</span> <span class="o">=</span> <span class="n">hk</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="s2">"w"</span><span class="p">,</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="n">init</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span><span class="p">)</span>
+
+<span class="c1"># L2 regularization penalty</span>
+<span class="n">elegy</span><span class="o">.</span><span class="n">add_loss</span><span class="p">(</span><span class="s2">"l2_regularization"</span><span class="p">,</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">w</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+</code></pre>
 </div>
+<p>The loss will be aggregated by <a href="https://poets-ai.github.io/elegy/api/hooks/transform/#elegy.hooks.transform.apply"><code>transform.apply</code></a>
+and automatically handled by <a href="https://poets-ai.github.io/elegy/api/model/Model/#elegy.model.Model"><code>Model</code></a>.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td><code>str</code></td>
+<td>
+<p>The name of the loss. If a <code>name</code> is repeated on
+different calls values will be added together.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>value</code></td>
+<td><code>ndarray</code></td>
+<td>
+<p>The value for the loss.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+<summary>Source code in <code>elegy/hooks.py</code></summary>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span>42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70</pre>
+</div>
+</td>
+<td class="code">
+<div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">add_loss</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    A hook that lets you define a loss within a [`transform`][elegy.hooks.transform].</span>
+
+<span class="sd">    ```python</span>
+<span class="sd">    w = hk.get_parameter("w", [3, 5], init=jnp.zeros)</span>
+
+<span class="sd">    # L2 regularization penalty</span>
+<span class="sd">    elegy.add_loss("l2_regularization", 0.01 * jnp.mean(w ** 2))</span>
+<span class="sd">    ```</span>
+
+<span class="sd">    The loss will be aggregated by [`transform.apply`][elegy.hooks.transform.apply]</span>
+<span class="sd">    and automatically handled by [`Model`][elegy.model.Model].</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        name: The name of the loss. If a `name` is repeated on</span>
+<span class="sd">            different calls values will be added together.</span>
+<span class="sd">        value: The value for the loss.</span>
+<span class="sd">    """</span>
+    <span class="n">name</span> <span class="o">+=</span> <span class="s2">"_loss"</span>
+    <span class="k">if</span> <span class="n">LOCAL</span><span class="o">.</span><span class="n">contexts</span><span class="p">:</span>
+        <span class="n">context</span><span class="p">:</span> <span class="n">ElegyContext</span> <span class="o">=</span> <span class="n">LOCAL</span><span class="o">.</span><span class="n">contexts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">context</span><span class="o">.</span><span class="n">losses</span><span class="p">:</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">losses</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">+=</span> <span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">losses</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Cannot execute `add_loss` outside of an `elegy.transform`"</span><span class="p">)</span>
+</code></pre>
+</div>
+</td>
+</tr>
+</table>
+</details>
 </div>
 </div>
 </article>
@@ -477,6 +698,36 @@
 </div>
 </main>
 <footer class="md-footer">
+<div class="md-footer-nav">
+<nav aria-label="Footer" class="md-footer-nav__inner md-grid">
+<a class="md-footer-nav__link md-footer-nav__link--prev" href="../../model/load/" rel="prev" title="load">
+<div class="md-footer-nav__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</div>
+<div class="md-footer-nav__title">
+<div class="md-ellipsis">
+<span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                load
+              </div>
+</div>
+</a>
+<a class="md-footer-nav__link md-footer-nav__link--next" href="../add_metric/" rel="next" title="add_metric">
+<div class="md-footer-nav__title">
+<div class="md-ellipsis">
+<span class="md-footer-nav__direction">
+                  Next
+                </span>
+                add_metric
+              </div>
+</div>
+<div class="md-footer-nav__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"></path></svg>
+</div>
+</a>
+</nav>
+</div>
 <div class="md-footer-meta md-typeset">
 <div class="md-footer-meta__inner md-grid">
 <div class="md-footer-copyright">
@@ -507,14 +758,14 @@
 </div>
 </footer>
 </div>
-<script src="../../assets/javascripts/vendor.92ffa368.min.js"></script>
-<script src="../../assets/javascripts/bundle.5123e3d4.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+<script src="../../../assets/javascripts/vendor.92ffa368.min.js"></script>
+<script src="../../../assets/javascripts/bundle.5123e3d4.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
 <script>
         app = initialize({
-          base: "../..",
+          base: "../../..",
           features: [],
           search: Object.assign({
-            worker: "../../assets/javascripts/worker/search.a68abb33.min.js"
+            worker: "../../../assets/javascripts/worker/search.a68abb33.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>
