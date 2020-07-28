@@ -46,8 +46,9 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             self.n2 = n2
 
         def __apply__(self, image: jnp.ndarray, is_training: bool):
+            @hk.to_module
             def conv_block(x, units, kernel, stride=1):
-                x = hk.Conv2D(units, kernel, stride=stride, padding="same")(x)
+                x = elegy.nn.Conv2D(units, kernel, stride=stride, padding="same")(x)
                 x = elegy.nn.BatchNormalization()(x, is_training)
                 x = elegy.nn.Dropout(0.2)(x, is_training)
                 return jax.nn.relu(x)
@@ -55,10 +56,10 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             x: np.ndarray = image.astype(jnp.float32) / 255.0
 
             # base
-            x = conv_block(x, 16, [3, 3])
-            x = conv_block(x, 32, [3, 3], stride=2)
-            x = conv_block(x, 64, [3, 3], stride=2)
-            x = conv_block(x, 64, [3, 3], stride=2)
+            x = conv_block()(x, 16, [3, 3])
+            x = conv_block()(x, 32, [3, 3], stride=2)
+            x = conv_block()(x, 64, [3, 3], stride=2)
+            x = conv_block()(x, 64, [3, 3], stride=2)
 
             # 1x1 Conv
             x = hk.Linear(10)(x)
@@ -76,12 +77,8 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
         run_eagerly=eager,
     )
 
-    # force initialize
-    model.predict(X_train[:64])
-
-    print(
-        f"Total parameters: {sum(np.prod(x.shape) for x in jax.tree_leaves(model.params)):,}"
-    )
+    # show summary
+    model.summary(X_train[:64])
 
     history = model.fit(
         x=X_train,
