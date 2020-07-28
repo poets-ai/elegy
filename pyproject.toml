@@ -5,7 +5,7 @@ authors = ["Cristian Garcia <cgarcia.e88@gmail.com>",
            "Carlos Alvarez <candres.alv@gmail.com>",
            "David Cardozo <davidcardozo@berkeley.edu>",
            "Sebastian Arango"]
-version = "0.1.4"
+version = "0.1.5"
 
 [tool.poetry.dependencies]
 python = "^3.6.1"
