@@ -4,6 +4,7 @@
 import threading
 import typing as tp
 from contextlib import contextmanager
+from dataclasses import dataclass
 
 import haiku as hk
 import numpy as np
@@ -16,7 +17,7 @@ LOCAL = threading.local()
 LOCAL.contexts = []
 
 
-class Context(tp.NamedTuple):
+class ElegyContext(tp.NamedTuple):
     get_summaries: bool
     losses: tp.Dict[str, np.ndarray]
     metrics: tp.Dict[str, np.ndarray]
@@ -30,7 +31,7 @@ class Context(tp.NamedTuple):
 @contextmanager
 def elegy_context(get_summaries: bool = False):
 
-    context = Context.create(get_summaries=get_summaries)
+    context = ElegyContext.create(get_summaries=get_summaries)
     LOCAL.contexts.append(context)
     try:
         yield context
@@ -59,7 +60,7 @@ def add_loss(name: str, value: np.ndarray):
     """
     name += "_loss"
     if LOCAL.contexts:
-        context: Context = LOCAL.contexts[-1]
+        context: ElegyContext = LOCAL.contexts[-1]
 
         if name in context.losses:
             context.losses[name] += value
@@ -87,7 +88,7 @@ def add_metric(name: str, value: np.ndarray):
         value: The value for the metric.
     """
     if LOCAL.contexts:
-        context: Context = LOCAL.contexts[-1]
+        context: ElegyContext = LOCAL.contexts[-1]
 
         name = f"{base.current_bundle_name()}/{name}"
         name = get_unique_name(context.metrics, name)
@@ -126,7 +127,7 @@ def add_summary(name: tp.Optional[str], class_name, value: np.ndarray):
     """
 
     if LOCAL.contexts:
-        context: Context = LOCAL.contexts[-1]
+        context: ElegyContext = LOCAL.contexts[-1]
 
         if not context.get_summaries:
             return
@@ -291,22 +292,92 @@ class transform(tp.NamedTuple):
         )
 
 
-# def map_state(
-#     f: tp.Callable[[tp.Tuple[str, ...], str, tp.Any], bool],
-#     state: tp.Mapping,
-#     parents: tp.Tuple = (),
-# ):
+class HookStates(tp.NamedTuple):
+    """
+    A named tuple representing the outputs of [elegy.hooks.transform.apply][].
 
-#     output_state = {}
+    Attributes:
+        outputs: The output of the transformed function.
+        state: The states parameters.
+        losses: The collected losses added by [`add_loss`][elegy.hooks.add_loss].
+        metrics: The collected metrics added by [`add_metric`][elegy.hooks.add_metric].
+        summaries: A list of `(name, class_name, value)` tuples
+            added by [`add_summary`][elegy.hooks.add_summary].
+    """
 
-#     for key, value in state.items():
+    params: hk.Params
+    state: hk.State
+    losses: hk.State
+    metrics: hk.State
+    summaries: tp.List[tp.Tuple[str, str, tp.Any]]
 
-#         if isinstance(value, tp.Mapping):
-#             value = map_state(f, value, parents + (key,))
 
-#             if value:
-#                 output_state[key] = value
-#         else:
-#             output_state[key] = f(parents, key, value)
+@dataclass
+class Context:
+    _hook_states: tp.Optional[HookStates]
 
-#     return hk.data_structures.to_immutable_dict(output_state)
+    def collect(self) -> HookStates:
+        assert self._hook_states
+        return self._hook_states
+
+
+@contextmanager
+def context(
+    hook_states: tp.Union[HookStates, tp.Tuple[hk.Params, hk.State], None] = None,
+    rng: tp.Optional[tp.Union[np.ndarray, int]] = None,
+    get_summaries: bool = False,
+) -> tp.Iterator[Context]:
+    """
+        Applies your function injecting parameters and state.
+
+        Arguments:
+            params:
+            state: 
+            rng: 
+            get_summaries: 
+            args: 
+            kwargs: 
+
+        Returns:
+            A [`TransformedState`][elegy.hooks.TransformedState] namedtuple consiting 
+            of (outputs, state, losses, metrics, summaries).
+        """
+    context = Context(None)
+
+    if hook_states:
+
+        params, state, *_ = hook_states
+
+        params = src_transform.check_mapping("params", params)
+        state = src_transform.check_mapping("state", state)
+
+        rng = src_transform.to_prng_sequence(
+            rng,
+            err_msg=(
+                src_transform.APPLY_RNG_STATE_ERROR
+                if state
+                else src_transform.APPLY_RNG_ERROR
+            ),
+        )
+    else:
+        params = None
+        state = None
+
+    try:
+
+        with base.new_context(
+            params=params, state=state, rng=rng
+        ) as ctx, elegy_context(get_summaries=get_summaries) as elegy_ctx:
+
+            yield context
+
+        context._hook_states = HookStates(
+            params=params if params else ctx.collect_params(),
+            state=ctx.collect_state() if hook_states else ctx.collect_initial_state(),
+            losses=elegy_ctx.losses,
+            metrics=elegy_ctx.metrics,
+            summaries=elegy_ctx.summaries,
+        )
+
+    finally:
+        pass
