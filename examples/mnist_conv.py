@@ -47,7 +47,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
 
         def __apply__(self, image: jnp.ndarray, is_training: bool):
             @hk.to_module
-            def ConvBlock(x, units, kernel, stride=1):
+            def conv_block(x, units, kernel, stride=1):
                 x = elegy.nn.Conv2D(units, kernel, stride=stride, padding="same")(x)
                 x = elegy.nn.BatchNormalization()(x, is_training)
                 x = elegy.nn.Dropout(0.2)(x, is_training)
@@ -56,10 +56,10 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             x: np.ndarray = image.astype(jnp.float32) / 255.0
 
             # base
-            x = ConvBlock()(x, 16, [3, 3])
-            x = ConvBlock()(x, 32, [3, 3], stride=2)
-            x = ConvBlock()(x, 64, [3, 3], stride=2)
-            x = ConvBlock()(x, 64, [3, 3], stride=2)
+            x = conv_block()(x, 16, [3, 3])
+            x = conv_block()(x, 32, [3, 3], stride=2)
+            x = conv_block()(x, 64, [3, 3], stride=2)
+            x = conv_block()(x, 64, [3, 3], stride=2)
 
             # 1x1 Conv
             x = hk.Linear(10)(x)
