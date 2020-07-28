@@ -1,11 +1,15 @@
+import os
+from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
 
 import dataget
 import haiku as hk
 import jax
 import jax.numpy as jnp
+from jax.numpy.lax_numpy import mod
 import matplotlib.pyplot as plt
 import numpy as np
+from tensorboardX.writer import SummaryWriter
 import typer
 from jax.experimental import optix
 
@@ -13,7 +17,7 @@ import elegy
 from utils import plot_history
 
 
-def main(debug: bool = False, eager: bool = False):
+def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
 
     if debug:
         import debugpy
@@ -22,12 +26,24 @@ def main(debug: bool = False, eager: bool = False):
         debugpy.listen(5678)
         debugpy.wait_for_client()
 
+    current_time = datetime.now().strftime("%b%d_%H-%M-%S")
+    logdir = os.path.join(logdir, current_time)
+
     X_train, y_train, X_test, y_test = dataget.image.mnist(global_cache=True).get()
 
     print("X_train:", X_train.shape, X_train.dtype)
     print("y_train:", y_train.shape, y_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
+
+    class Lambda(elegy.Module):
+        def __init__(self, f):
+            super().__init__()
+            self.f = f
+
+        @hk.transparent
+        def call(self, x):
+            return self.f(x)
 
     class MLP(elegy.Module):
         """Standard LeNet-300-100 MLP network."""
@@ -37,20 +53,22 @@ def main(debug: bool = False, eager: bool = False):
             self.n1 = n1
             self.n2 = n2
 
-        def call(self, image: jnp.ndarray):
+        @hk.transparent
+        def call(self, image: jnp.ndarray, is_training: bool):
 
             image = image.astype(jnp.float32) / 255.0
 
             mlp = hk.Sequential(
                 [
-                    hk.Flatten(),
-                    hk.Linear(self.n1),
+                    elegy.nn.Flatten(),
+                    elegy.nn.Linear(self.n1),
                     jax.nn.relu,
-                    hk.Linear(self.n2),
+                    elegy.nn.Linear(self.n2),
                     jax.nn.relu,
-                    hk.Linear(10),
+                    elegy.nn.Linear(10),
                 ]
             )
+
             return mlp(image)
 
     model = elegy.Model(
@@ -60,9 +78,11 @@ def main(debug: bool = False, eager: bool = False):
             elegy.regularizers.GlobalL2(l=1e-4),
         ],
         metrics=elegy.metrics.SparseCategoricalAccuracy.defer(),
-        optimizer=optix.rmsprop(1e-3),
+        optimizer=optix.adam(1e-3),
         run_eagerly=eager,
     )
+
+    model.summary(X_train[:64])
 
     history = model.fit(
         x=X_train,
@@ -72,6 +92,7 @@ def main(debug: bool = False, eager: bool = False):
         batch_size=64,
         validation_data=(X_test, y_test),
         shuffle=True,
+        callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],
     )
 
     plot_history(history)
@@ -83,17 +104,23 @@ def main(debug: bool = False, eager: bool = False):
     # get predictions
     y_pred = model.predict(x=x_sample)
 
-    # plot results
-    plt.figure(figsize=(12, 12))
-    for i in range(3):
-        for j in range(3):
-            k = 3 * i + j
-            plt.subplot(3, 3, k + 1)
-
-            plt.title(f"{np.argmax(y_pred[k])}")
-            plt.imshow(x_sample[k], cmap="gray")
+    # plot and save results
+    with SummaryWriter(os.path.join(logdir, "val")) as tbwriter:
+        figure = plt.figure(figsize=(12, 12))
+        for i in range(3):
+            for j in range(3):
+                k = 3 * i + j
+                plt.subplot(3, 3, k + 1)
+                plt.title(f"{np.argmax(y_pred[k])}")
+                plt.imshow(x_sample[k], cmap="gray")
+        tbwriter.add_figure("Predictions", figure, 100)
 
     plt.show()
+
+    print(
+        "\n\n\nMetrics and images can be explored using tensorboard using:",
+        f"\n \t\t\t tensorboard --logdir {logdir}",
+    )
 
 
 if __name__ == "__main__":

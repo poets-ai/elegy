@@ -1,5 +1,5 @@
+from elegy.module import Deferable
 from elegy import types
-from elegy.utils import Deferable
 import typing as tp
 import haiku as hk
 import jax.numpy as jnp

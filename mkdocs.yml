@@ -17,10 +17,23 @@ nav:
       Modules, Losses, and Metrics: guides/modules-losses-metrics.md
       Contibuting: guides/contributing.md
   - API Reference:
-      Model: api/Model.md
-      # Module: api/Module.md
+      module:
+        Module: api/module/Module.md
+        Defered: api/module/Defered.md
       model:
+        Model: api/model/Model.md
         load: api/model/load.md
+      hooks:
+        add_loss: api/hooks/add_loss.md
+        add_metric: api/hooks/add_metric.md
+        add_summary: api/hooks/add_summary.md
+        transform: api/hooks/transform.md
+        TransformedState: api/hooks/TransformedState.md
+      nn:
+        Linear: api/nn/Linear.md
+        Flatten: api/nn/Flatten.md
+        BatchNormalization: api/nn/BatchNormalization.md
+        Dropout: api/nn/Dropout.md
       metrics:
         Metric: api/metrics/Metric.md
         Accuracy: api/metrics/Accuracy.md

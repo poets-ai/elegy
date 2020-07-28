@@ -5,7 +5,7 @@ authors = ["Cristian Garcia <cgarcia.e88@gmail.com>",
            "Carlos Alvarez <candres.alv@gmail.com>",
            "David Cardozo <davidcardozo@berkeley.edu>",
            "Sebastian Arango"]
-version = "0.1.3"
+version = "0.1.4"
 
 [tool.poetry.dependencies]
 python = "^3.6.1"
@@ -19,6 +19,11 @@ dataclasses =  { version = "^0.7", markers = "python_version >= '3.6' and python
 cloudpickle = "^1.5.0"
 tensorboardx = "^2.1"
 tables = "^3.6.1"
+tabulate = "^0.8.7"
+toolz = "^0.10.0"
+deepmerge = "^0.1.0"
+pyyaml = "^5.3.1"
+pytest-cov = "^2.10.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
