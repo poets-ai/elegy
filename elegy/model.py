@@ -51,7 +51,7 @@ class Model(object):
     To create a `Model` you first have to define its architecture in a `Module`:
     ```python
     class MLP(elegy.Module):
-        def call(self, image: jnp.ndarray) -> jnp.ndarray:
+        def __apply__(self, image: jnp.ndarray) -> jnp.ndarray:
             mlp = hk.Sequential([
                 hk.Flatten(),
                 hk.Linear(300),

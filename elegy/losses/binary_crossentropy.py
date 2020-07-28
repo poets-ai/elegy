@@ -98,7 +98,7 @@ class BinaryCrossentropy(Loss):
             weight: Optional weight contribution for the total loss. Defaults to `1`.
             on: A string or integer, or iterable of string or integers, that
                 indicate how to index/filter the `y_true` and `y_pred`
-                arguments before passing them to `call`. For example if `on = "a"` then
+                arguments before passing them to `__apply__`. For example if `on = "a"` then
                 `y_true = y_true["a"]`. If `on` is an iterable
                 the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`
                 then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
@@ -108,7 +108,7 @@ class BinaryCrossentropy(Loss):
         self._from_logits = from_logits
         self._label_smoothing = label_smoothing
 
-    def call(
+    def __apply__(
         self,
         y_true: jnp.ndarray,
         y_pred: jnp.ndarray,

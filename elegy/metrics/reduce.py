@@ -104,7 +104,7 @@ class Reduce(Metric):
                 )
             )
 
-    def call(
+    def __apply__(
         self, values: jnp.ndarray, sample_weight: tp.Optional[jnp.ndarray] = None
     ) -> jnp.ndarray:
         """

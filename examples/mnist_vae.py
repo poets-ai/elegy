@@ -46,8 +46,7 @@ class Encoder(elegy.Module):
         self._hidden_size = hidden_size
         self._latent_size = latent_size
 
-    @hk.transparent
-    def call(self, x: np.ndarray) -> np.ndarray:
+    def __apply__(self, x: np.ndarray) -> np.ndarray:
         x = hk.Flatten()(x)
         x = elegy.nn.Linear(self._hidden_size)(x)
         x = jax.nn.relu(x)
@@ -75,8 +74,7 @@ class Decoder(elegy.Module):
         self._hidden_size = hidden_size
         self._output_shape = output_shape
 
-    @hk.transparent
-    def call(self, z: np.ndarray) -> np.ndarray:
+    def __apply__(self, z: np.ndarray) -> np.ndarray:
         z = elegy.nn.Linear(self._hidden_size)(z)
         z = jax.nn.relu(z)
 
@@ -100,8 +98,7 @@ class VariationalAutoEncoder(elegy.Module):
         self._latent_size = latent_size
         self._output_shape = output_shape
 
-    @hk.transparent
-    def call(self, x: np.ndarray) -> dict:
+    def __apply__(self, x: np.ndarray) -> dict:
         x = x.astype(jnp.float32)
         z = Encoder(self._hidden_size, self._latent_size)(x)
 
@@ -114,7 +111,7 @@ class VariationalAutoEncoder(elegy.Module):
 
 
 class BinaryCrossEntropy(elegy.Loss):
-    def call(self, x: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
+    def __apply__(self, x: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
         """Calculate binary (logistic) cross-entropy from distribution logits.
     Args:
         x: input variable tensor, must be of same shape as logits

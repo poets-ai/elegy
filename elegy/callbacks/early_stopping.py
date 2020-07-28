@@ -26,7 +26,7 @@ class EarlyStopping(Callback):
     ```python
     np.random.seed(42)
     class MLP(elegy.Module):
-        def call(self, input):
+        def __apply__(self, input):
             mlp = hk.Sequential([hk.Linear(10),])
             return mlp(input)
 

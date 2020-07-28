@@ -31,6 +31,7 @@ nav:
         TransformedState: api/hooks/TransformedState.md
       nn:
         Linear: api/nn/Linear.md
+        Conv2D: api/nn/Conv2D.md
         Flatten: api/nn/Flatten.md
         BatchNormalization: api/nn/BatchNormalization.md
         Dropout: api/nn/Dropout.md

@@ -14,7 +14,7 @@ class DropoutTest(TestCase):
 
     def test_on_predict(self):
         class TestModule(elegy.Module):
-            def call(self, x, is_training):
+            def __apply__(self, x, is_training):
                 return elegy.nn.Dropout(0.5)(x, is_training)
 
         model = elegy.Model(module=TestModule.defer())
