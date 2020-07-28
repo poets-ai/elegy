@@ -43,4 +43,3 @@ class TestHooks(TestCase):
         assert dict(states.state) == {"my_module": {"s": 2}}
         assert dict(states.metrics) == {"my_module/m": 1}
         assert dict(states.losses) == {"l_loss": 1}
-
