@@ -52,3 +52,10 @@ To build and visualize the documentation locally run
 ```bash
 mkdocs serve
 ```
+
+# Creating a PR
+Before sending a pull request make sure all test run and code is formatted with `black`:
+
+```bash
+black .
+```
