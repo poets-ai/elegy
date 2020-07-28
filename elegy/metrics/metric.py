@@ -24,7 +24,7 @@ class Metric(hk.Module, Deferable):
 
     ```python
     class MLP(elegy.Module):
-        def call(self, image: jnp.ndarray) -> jnp.ndarray:
+        def __apply__(self, image: jnp.ndarray) -> jnp.ndarray:
             mlp = hk.Sequential([
                 hk.Flatten(),
                 hk.Linear(300),
@@ -47,7 +47,7 @@ class Metric(hk.Module, Deferable):
 
     To be implemented by subclasses:
 
-    * `call()`: All state variables should be created in this method by
+    * `__apply__()`: All state variables should be created in this method by
         calling `haiku.get_state()`, update this state by calling
         `haiku.set_state(...)`, and return a result based on these states.
 
@@ -55,7 +55,7 @@ class Metric(hk.Module, Deferable):
 
     ```python
     class Accuracy(elegy.Metric):
-        def call(self, y_true, y_pred):
+        def __apply__(self, y_true, y_pred):
 
             total = hk.get_state("total", [], jnp.zeros)
             count = hk.get_state("count", [], jnp.zeros)
@@ -84,7 +84,7 @@ class Metric(hk.Module, Deferable):
             dtype: data type of the metric result.
             on: A string or integer, or iterable of string or integers, that
                 indicate how to index/filter the `y_true` and `y_pred`
-                arguments before passing them to `call`. For example if `on = "a"` then
+                arguments before passing them to `__apply__`. For example if `on = "a"` then
                 `y_true = y_true["a"]`. If `on` is an iterable
                 the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`
                 then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
@@ -95,7 +95,7 @@ class Metric(hk.Module, Deferable):
 
         self._dtype = self._dtype = dtype if dtype is not None else jnp.float32
         self._labels_filter = (on,) if isinstance(on, (str, int)) else on
-        self.call = utils.inject_dependencies(self.call)
+        self.__apply__ = utils.inject_dependencies(self.__apply__)
 
     def __call__(self, y_true=None, y_pred=None, **kwargs):
 
@@ -108,8 +108,8 @@ class Metric(hk.Module, Deferable):
                 for index in self._labels_filter:
                     y_pred = y_pred[index]
 
-        return self.call(y_true=y_true, y_pred=y_pred, **kwargs)
+        return self.__apply__(y_true=y_true, y_pred=y_pred, **kwargs)
 
     @abstractmethod
-    def call(self, *args, **kwargs):
+    def __apply__(self, *args, **kwargs):
         ...

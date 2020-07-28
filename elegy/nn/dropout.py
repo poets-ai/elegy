@@ -53,7 +53,7 @@ class Dropout(Module):
         super().__init__(name=name)
         self.rate = rate
 
-    def call(
+    def __apply__(
         self, x: np.ndarray, is_training: bool, rng: tp.Optional[np.ndarray] = None,
     ) -> jnp.ndarray:
         """

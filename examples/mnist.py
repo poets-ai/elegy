@@ -41,8 +41,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             super().__init__()
             self.f = f
 
-        @hk.transparent
-        def call(self, x):
+        def __apply__(self, x):
             return self.f(x)
 
     class MLP(elegy.Module):
@@ -53,8 +52,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             self.n1 = n1
             self.n2 = n2
 
-        @hk.transparent
-        def call(self, image: jnp.ndarray, is_training: bool):
+        def __apply__(self, image: jnp.ndarray, is_training: bool):
 
             image = image.astype(jnp.float32) / 255.0
 

@@ -52,7 +52,7 @@ class GlobalL1L2(Loss):
         self.l1 = l1
         self.l2 = l2
 
-    def call(self, params: hk.Params) -> jnp.ndarray:
+    def __apply__(self, params: hk.Params) -> jnp.ndarray:
         """
         Computes the L1 and L2 regularization penalty simultaneously.
 
