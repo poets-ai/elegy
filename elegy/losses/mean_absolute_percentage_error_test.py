@@ -94,8 +94,9 @@ class MeanAbsolutePercentageErrorTest(TestCase):
             loss,
             100
             * jnp.mean(
-                jnp.abs((y_pred - y_true) / jnp.maximum(jnp.abs(y_true), utils.EPSILON)),
+                jnp.abs(
+                    (y_pred - y_true) / jnp.maximum(jnp.abs(y_true), utils.EPSILON)
+                ),
                 axis=-1,
             ),
         )
-
