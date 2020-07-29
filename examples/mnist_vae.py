@@ -1,3 +1,4 @@
+from elegy import utils
 from tensorboardX.writer import SummaryWriter
 from elegy.callbacks.tensorboard import TensorBoard
 import os
@@ -24,24 +25,25 @@ np.random.seed(42)
 MNIST_IMAGE_SHAPE: tp.Sequence[int] = (28, 28)
 
 
-def kl_divergence(mean: np.ndarray, std: np.ndarray) -> np.ndarray:
-    r"""Calculate KL divergence between given and standard gaussian distributions.
-    KL(p, q) = H(p, q) - H(p) = -\int p(x)log(q(x))dx - -\int p(x)log(p(x))dx
-            = 0.5 * [log(|s2|/|s1|) - 1 + tr(s1/s2) + (m1-m2)^2/s2]
-            = 0.5 * [-log(|s1|) - 1 + tr(s1) + m1^2] (if m2 = 0, s2 = 1)
-    Args:
-        mean: mean vector of the first distribution
-        var: diagonal vector of covariance matrix of the first distribution
-    Returns:
-        A scalar representing KL divergence of the two Gaussian distributions.
-    """
-    return 0.5 * jnp.mean(-jnp.log(std ** 2) - 1.0 + std ** 2 + mean ** 2)
+class KLDivergence(elegy.Loss):
+    def __apply__(self, mean: np.ndarray, std: np.ndarray) -> np.ndarray:
+        r"""Calculate KL divergence between given and standard gaussian distributions.
+        KL(p, q) = H(p, q) - H(p) = -\int p(x)log(q(x))dx - -\int p(x)log(p(x))dx
+                = 0.5 * [log(|s2|/|s1|) - 1 + tr(s1/s2) + (m1-m2)^2/s2]
+                = 0.5 * [-log(|s1|) - 1 + tr(s1) + m1^2] (if m2 = 0, s2 = 1)
+        Args:
+            mean: mean vector of the first distribution
+            var: diagonal vector of covariance matrix of the first distribution
+        Returns:
+            A scalar representing KL divergence of the two Gaussian distributions.
+        """
+        return 0.5 * jnp.mean(-jnp.log(std ** 2) - 1.0 + std ** 2 + mean ** 2, axis=-1)
 
 
 class Encoder(elegy.Module):
     """Encoder model."""
 
-    def __init__(self, hidden_size: int = 512, latent_size: int = 10):
+    def __init__(self, hidden_size: int = 512, latent_size: int = 128):
         super().__init__()
         self._hidden_size = hidden_size
         self._latent_size = latent_size
@@ -55,7 +57,7 @@ class Encoder(elegy.Module):
         log_stddev = elegy.nn.Linear(self._latent_size)(x)
         stddev = jnp.exp(log_stddev)
 
-        elegy.add_loss("kl_divergence", 0.01 * kl_divergence(mean, stddev))
+        elegy.add_loss("kl_divergence", 2e-1 * KLDivergence()(mean, stddev))
 
         z = mean + stddev * jax.random.normal(hk.next_rng_key(), mean.shape)
 
@@ -90,7 +92,7 @@ class VariationalAutoEncoder(elegy.Module):
     def __init__(
         self,
         hidden_size: int = 512,
-        latent_size: int = 10,
+        latent_size: int = 128,
         output_shape: tp.Sequence[int] = MNIST_IMAGE_SHAPE,
     ):
         super().__init__()
@@ -107,31 +109,17 @@ class VariationalAutoEncoder(elegy.Module):
         p = jax.nn.sigmoid(logits)
         image = jax.random.bernoulli(hk.next_rng_key(), p)
 
-        return dict(image=image, logits=logits)
+        return dict(image=image, logits=logits, det_image=p)
 
 
-class BinaryCrossEntropy(elegy.Loss):
+class BinaryCrossEntropy(elegy.losses.BinaryCrossentropy):
     def __apply__(self, x: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
-        """Calculate binary (logistic) cross-entropy from distribution logits.
-    Args:
-        x: input variable tensor, must be of same shape as logits
-        logits: log odds of a Bernoulli distribution, i.e. log(p/(1-p))
-    Returns:
-        A scalar representing binary CE for the given Bernoulli distribution.
-    """
-        if x.shape != y_pred.shape:
-            raise ValueError(
-                "inputs x and y_pred must be of the same shape"
-                f"got {x.shape} and {y_pred.shape}"
-            )
-
-        x = jnp.reshape(x, (x.shape[0], -1))
-        y_pred = jnp.reshape(y_pred, (y_pred.shape[0], -1))
-
-        return -jnp.mean(x * y_pred - jnp.logaddexp(0.0, y_pred), axis=-1)
+        return super().__apply__(y_true=x, y_pred=y_pred)
 
 
-def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
+def main(
+    epochs: int = 50, debug: bool = False, eager: bool = False, logdir: str = "runs"
+):
 
     if debug:
         import debugpy
@@ -153,14 +141,12 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
 
     model = elegy.Model(
         module=VariationalAutoEncoder.defer(),
-        loss=[BinaryCrossEntropy(on="logits")],
+        loss=[BinaryCrossEntropy(from_logits=True, on="logits")],
         optimizer=optix.adam(1e-3),
         run_eagerly=eager,
     )
 
     model.summary(X_train[:64])
-
-    epochs = 50
 
     # Fit with datasets in memory
     history = model.fit(
@@ -172,6 +158,12 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
         shuffle=True,
         callbacks=[TensorBoard(logdir)],
     )
+
+    print(
+        "\n\n\nMetrics and images can be explored using tensorboard using:",
+        f"\n \t\t\t tensorboard --logdir {logdir}",
+    )
+
     plot_history(history)
 
     # get random samples
@@ -188,15 +180,42 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             plt.subplot(2, 5, i + 1)
             plt.imshow(x_sample[i], cmap="gray")
             plt.subplot(2, 5, 5 + i + 1)
-            plt.imshow(y_pred["image"][i], cmap="gray")
+            plt.imshow(y_pred["det_image"][i], cmap="gray")
         tbwriter.add_figure("VAE Example", figure, epochs)
 
     plt.show()
 
-    print(
-        "\n\n\nMetrics and images can be explored using tensorboard using:",
-        f"\n \t\t\t tensorboard --logdir {logdir}",
+    print(jax.tree_map(lambda x: x.shape, model.params))
+
+    params = utils.split_and_merge(model.params)
+    state = utils.split_and_merge(model.state)
+
+    def slice(params, old, new):
+        return {k.replace(old, new): v for k, v in params.items() if old in k}
+
+    # sample
+    decoder = elegy.Model(
+        module=Decoder.defer(),
+        params=slice(model.params, "variational_auto_encoder/decoder", "decoder"),
+        state=slice(model.state, "variational_auto_encoder/decoder", "decoder"),
     )
+
+    z_samples = np.random.normal(size=(12, 128))
+    samples = decoder.predict(z_samples)
+    samples = jax.nn.sigmoid(samples)
+
+    # plot and save results
+    with SummaryWriter(os.path.join(logdir, "val")) as tbwriter:
+        figure = plt.figure(figsize=(5, 12))
+        plt.title("Generative Samples")
+        for i in range(5):
+            plt.subplot(2, 5, 2 * i + 1)
+            plt.imshow(samples[i], cmap="gray")
+            plt.subplot(2, 5, 2 * i + 2)
+            plt.imshow(samples[i + 1], cmap="gray")
+        tbwriter.add_figure("VAE Generative Example", figure, epochs)
+
+    plt.show()
 
 
 if __name__ == "__main__":
