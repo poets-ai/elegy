@@ -108,25 +108,21 @@ class Loss:
         self.__apply__ = utils.inject_dependencies(self.__apply__)
 
     def __call__(
-        self,
-        y_true=None,
-        y_pred=None,
-        sample_weight: tp.Optional[jnp.ndarray] = None,
-        **kwargs,
+        self, *args, **kwargs,
     ):
 
         if self._labels_filter is not None:
-            if y_true is not None:
+            if "y_true" in kwargs and kwargs["y_true"] is not None:
                 for index in self._labels_filter:
-                    y_true = y_true[index]
+                    kwargs["y_true"] = kwargs["y_true"][index]
 
-            if y_pred is not None:
+            if "y_pred" in kwargs and kwargs["y_pred"] is not None:
                 for index in self._labels_filter:
-                    y_pred = y_pred[index]
+                    kwargs["y_pred"] = kwargs["y_pred"][index]
 
-        values = self.__apply__(
-            y_true=y_true, y_pred=y_pred, sample_weight=sample_weight, **kwargs
-        )
+        values = self.__apply__(*args, **kwargs)
+
+        sample_weight: tp.Optional[jnp.ndarray] = kwargs.get("sample_weight", None)
 
         if isinstance(values, tp.Dict):
             return {
@@ -137,7 +133,7 @@ class Loss:
             return reduce_loss(values, sample_weight, self.weight, self._reduction)
 
     @abstractmethod
-    def __apply__(self, *args, **kwargs):
+    def __apply__(self, *args, **kwargs) -> tp.Any:
         ...
 
 

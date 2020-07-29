@@ -97,18 +97,18 @@ class Metric(hk.Module, Deferable):
         self._labels_filter = (on,) if isinstance(on, (str, int)) else on
         self.__apply__ = utils.inject_dependencies(self.__apply__)
 
-    def __call__(self, y_true=None, y_pred=None, **kwargs):
+    def __call__(self, *args, **kwargs):
 
         if self._labels_filter is not None:
-            if y_true is not None:
+            if "y_true" in kwargs and kwargs["y_true"] is not None:
                 for index in self._labels_filter:
-                    y_true = y_true[index]
+                    kwargs["y_true"] = kwargs["y_true"][index]
 
-            if y_pred is not None:
+            if "y_pred" in kwargs and kwargs["y_pred"] is not None:
                 for index in self._labels_filter:
-                    y_pred = y_pred[index]
+                    kwargs["y_pred"] = kwargs["y_pred"][index]
 
-        return self.__apply__(y_true=y_true, y_pred=y_pred, **kwargs)
+        return self.__apply__(*args, **kwargs)
 
     @abstractmethod
     def __apply__(self, *args, **kwargs):
