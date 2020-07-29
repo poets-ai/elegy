@@ -185,13 +185,14 @@ def main(
 
     plt.show()
 
-    print(jax.tree_map(lambda x: x.shape, model.params))
-
-    params = utils.split_and_merge(model.params)
-    state = utils.split_and_merge(model.state)
-
-    def slice(params, old, new):
-        return {k.replace(old, new): v for k, v in params.items() if old in k}
+    def slice(
+        params: tp.Optional[tp.Mapping[str, tp.Any]], old: str, new: str
+    ) -> tp.Dict[str, tp.Any]:
+        return (
+            {k.replace(old, new, 1): v for k, v in params.items() if old in k}
+            if params
+            else {}
+        )
 
     # sample
     decoder = elegy.Model(
