@@ -39,11 +39,11 @@ Elegy greatly simplifies the training of Deep Learning models compared to pure J
 ```python
 class MLP(elegy.Module):
     def __apply__(self, image: jnp.ndarray) -> jnp.ndarray:
-        mlp = hk.Sequential([
-            hk.Flatten(),
-            hk.Linear(300),
+        mlp = elegy.nn.Sequential([
+            elegy.nn.Flatten(),
+            elegy.nn.Linear(300),
             jax.nn.relu,
-            hk.Linear(10),
+            elegy.nn.Linear(10),
         ])
         return mlp(image)
 ```
