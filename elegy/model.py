@@ -1,6 +1,8 @@
 # Implementation based on tf.keras.engine.training.py
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
+import re
+from elegy.module import Defered, Module
 from io import StringIO
 import json
 import logging
@@ -121,7 +123,7 @@ class Model(object):
         initial_metrics_state: tp.Optional[hk.State] = None,
         seed: tp.Union[np.ndarray, int] = 42,
     ):
-        """[summary]
+        """
 
         Arguments:
             module: A 0-argument function that returns a Haiku or Elegy `Module` instance.
@@ -1317,6 +1319,56 @@ class Model(object):
                 state["optimizer_state"] = pickle.load(f)
 
         self.full_state = state
+
+    def slice(
+        self,
+        module: Defered,
+        namescope: tp.Optional[str] = None,
+        module_name: tp.Optional[str] = None,
+    ) -> "Model":
+        """
+        TODO: write docs
+        """
+        assert self.params is not None and self.state is not None
+
+        if module_name is None:
+            # converts module class name to snake-case
+            module_name = re.sub(r"(?<!^)(?=[A-Z])", "_", module.cls.__name__).lower()
+
+        if namescope is None:
+            namescopes = set(key.split("/")[0] for key in self.params.keys()) | set(
+                key.split("/")[0] for key in self.state.keys()
+            )
+
+            if len(namescopes) == 0:
+                raise ValueError("No namescopes found in params or state.")
+
+            if len(namescopes) > 2:
+                raise ValueError(
+                    f"Found multiple top-level namescope in params or state: {namescopes}"
+                )
+
+            namescope = namescopes.pop()
+            namescope = f"{namescope}/{module_name}"
+
+        old_namescope = namescope
+        new_namescope = module_name
+
+        return Model(
+            module=module,
+            params={
+                namescope.replace(old_namescope, new_namescope, 1): value
+                for namescope, value in self.params.items()
+                # accept only exact matches e.g old/new/xyz or old/new but not old/new_1/
+                if f"{old_namescope}/" in namescope or old_namescope == namescope
+            },
+            state={
+                namescope.replace(old_namescope, new_namescope, 1): value
+                for namescope, value in self.state.items()
+                # accept only exact matches e.g old/new/xyz or old/new but not old/new_1/
+                if f"{old_namescope}/" in namescope or old_namescope == namescope
+            },
+        )
 
     def summary(
         self, x, depth: int = 3, tablefmt: str = "fancy_grid", **tablulate_kwargs

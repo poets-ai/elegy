@@ -8,6 +8,17 @@ import numpy as np
 
 from elegy import utils
 from elegy import hooks
+from abc import ABC
+
+
+class CallableModule(tp.Protocol):
+    module_name: str
+
+    def __init__(self, *args, **kwargs):
+        ...
+
+    def __call__(self, *args, **kwargs) -> tp.Any:
+        ...
 
 
 class Defered(tp.NamedTuple):
@@ -85,7 +96,7 @@ class Defered(tp.NamedTuple):
     and is probably how you should do parameter sharing most of the time.
     """
 
-    csl: tp.Type
+    cls: tp.Type[CallableModule]
     args: tp.Tuple
     kwargs: tp.Dict[str, tp.Any]
 
@@ -96,7 +107,7 @@ class Defered(tp.NamedTuple):
         dependency injection (optional argument not required by the Module 
         will be ignored).
         """
-        return utils.inject_dependencies(self.csl(*self.args, **self.kwargs))(
+        return utils.inject_dependencies(self.cls(*self.args, **self.kwargs))(
             *args, **kwargs
         )
 
@@ -104,12 +115,12 @@ class Defered(tp.NamedTuple):
         """
         Construct a new instance of the type wrapper by Defered.
         """
-        return self.csl(*self.args, **self.kwargs)
+        return self.cls(*self.args, **self.kwargs)
 
 
 class Deferable:
     @classmethod
-    def defer(cls, *args, **kwargs) -> Defered:
+    def defer(cls: tp.Type[CallableModule], *args, **kwargs) -> Defered:
         """
         """
         return Defered(cls, args=args, kwargs=kwargs)

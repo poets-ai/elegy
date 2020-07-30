@@ -185,21 +185,8 @@ def main(
 
     plt.show()
 
-    def slice(
-        params: tp.Optional[tp.Mapping[str, tp.Any]], old: str, new: str
-    ) -> tp.Dict[str, tp.Any]:
-        return (
-            {k.replace(old, new, 1): v for k, v in params.items() if old in k}
-            if params
-            else {}
-        )
-
-    # sample
-    decoder = elegy.Model(
-        module=Decoder.defer(),
-        params=slice(model.params, "variational_auto_encoder/decoder", "decoder"),
-        state=slice(model.state, "variational_auto_encoder/decoder", "decoder"),
-    )
+    # get a new model with just the params of the Decoder
+    decoder = model.slice(Decoder.defer())
 
     z_samples = np.random.normal(size=(12, 128))
     samples = decoder.predict(z_samples)
