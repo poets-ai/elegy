@@ -1,5 +1,6 @@
 import functools
 import inspect
+import re
 import sys
 import typing as tp
 from deepmerge import always_merger
@@ -104,3 +105,7 @@ def split_and_merge(
 
     ds = split(d)
     return toolz.reduce(always_merger.merge, ds, {})
+
+
+def lower_snake_case(s: str) -> str:
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", s).lower()

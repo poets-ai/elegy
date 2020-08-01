@@ -115,11 +115,15 @@ class Deferable:
         return Defered(cls, args=args, kwargs=kwargs)
 
 
-class Module(hk.Module, Deferable):
+class Module:
     """
     Basic Elegy Module. Its a thin wrapper around `hk.Module` that
     add custom functionalities related to Elegy.
     """
+
+    name: str
+    _params: tp.List[str]
+    _initialized: bool
 
     def __init__(self, name: tp.Optional[str] = None):
         """
@@ -129,15 +133,15 @@ class Module(hk.Module, Deferable):
         variables such that those modules are named correctly.
 
         Arguments:
-            name: An optional string name for the class. Must be a valid Python
+            name: An optional string name for the class. Must be a valid elsePython
                 identifier. If ``name`` is not provided then the class name for the
                 current instance is converted to ``lower_snake_case`` and used instead.
         """
-        super().__init__(name=name)
+        self.name = name if name else utils.lower_snake_case(self.__class__.__name__)
+        self._initialized = False
+        self._params = []
 
-        self.__apply__ = utils.inject_dependencies(self.__apply__)
-
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs) -> tp.Any:
         """
         Forwards all input arguments to the Module's `__apply__` method and calls
         `elegy.add_summary` on the outputs.
@@ -146,18 +150,96 @@ class Module(hk.Module, Deferable):
 
         hooks.add_summary(None, self.__class__.__name__, outputs)
 
+        self._initialized = True
+
         return outputs
 
     @abstractmethod
     def __apply__(self, *args, **kwargs):
         ...
 
-    @classmethod
-    def defer(cls, *args, **kwargs) -> Defered:
-        """
-        Creates a [`Defered`][elegy.module.Defered] instance for this class.
+    def get_parameter(
+        self,
+        name: str,
+        shape: tp.Sequence[int],
+        dtype: tp.Any = jnp.float32,
+        initializer: tp.Callable[[tp.Sequence[int], tp.Any], np.ndarray] = None,
+    ) -> np.ndarray:
 
-        All arguments (positional and keyword) passed to `defer` must be accepted by
-        the `Module`'s constructor.
-        """
-        return Defered(cls, args=args, kwargs=kwargs)
+        if name not in self._params:
+            setattr(self, name, initializer(shape, dtype))
+            self._params.append(name)
+
+        return getattr(self, name)
+
+    @property
+    def parameters(self):
+        return get_parameters(self)
+
+    @parameters.setter
+    def parameters(self, values: tp.Dict):
+        return set_parameters(self, values)
+
+
+def get_parameters(
+    module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict]
+) -> tp.Union[tp.List, tp.Tuple, tp.Dict]:
+
+    if isinstance(module, tp.List):
+        return [get_parameters(module) for module in module]
+    elif isinstance(module, tp.Tuple):
+        return tuple(get_parameters(module) for module in module)
+    elif isinstance(module, tp.Dict):
+        return {key: get_parameters(module) for key, module in module.items()}
+    else:
+        return dict(
+            **{key: getattr(module, key) for key in module._params},
+            **{
+                key: get_parameters(value)
+                for key, value in vars(module).items()
+                if key != "_params" and leaf_isinstance(value, Module)
+            },
+        )
+
+
+def set_parameters(
+    module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict],
+    values: tp.Union[tp.List, tp.Tuple, tp.Dict],
+):
+
+    if isinstance(module, tp.List):
+        assert isinstance(values, tp.List)
+
+        for module, value in zip(module, values):
+            set_parameters(module, value)
+
+    elif isinstance(module, tp.Tuple):
+        assert isinstance(values, tp.Tuple)
+
+        for module, value in zip(module, values):
+            set_parameters(module, value)
+
+    elif isinstance(module, tp.Dict):
+        assert isinstance(values, tp.Dict)
+
+        for key, value in values.items():
+            set_parameters(module[key], value)
+
+    else:
+        assert isinstance(values, tp.Dict)
+
+        for key, value in values.items():
+            if key in module._params:
+                setattr(module, key, value)
+            else:
+                set_parameters(getattr(module, key), value)
+
+
+def leaf_isinstance(obj: tp.Any, types) -> tp.Type:
+
+    if isinstance(obj, (tp.List, tp.Tuple)):
+        return leaf_isinstance(obj[0], types)
+    elif isinstance(obj, tp.Dict):
+        return leaf_isinstance(list(obj.values())[0], types)
+    else:
+        return isinstance(obj, types)

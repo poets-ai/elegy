@@ -137,8 +137,8 @@ def add_summary(name: tp.Optional[str], class_name, value: np.ndarray):
         name = get_unique_name(context.summaries, name)
 
         context.summaries.append((name, class_name, value))
-    else:
-        raise ValueError("Cannot execute `add_summary` outside of an `elegy.transform`")
+    # else:
+    #     raise ValueError("Cannot execute `add_summary` outside of an `elegy.transform`")
 
 
 def get_unique_name(
