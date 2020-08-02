@@ -201,6 +201,8 @@ def main(
         state=slice(model.state, "variational_auto_encoder/decoder", "decoder"),
     )
 
+    decoder = model.decoder
+
     z_samples = np.random.normal(size=(12, 128))
     samples = decoder.predict(z_samples)
     samples = jax.nn.sigmoid(samples)

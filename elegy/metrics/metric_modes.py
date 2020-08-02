@@ -1,4 +1,3 @@
-from elegy.module import Defered
 from typing import Tuple
 from elegy.metrics.metric import Metric
 import typing as tp
@@ -26,9 +25,6 @@ def forward_all(metrics):
 def apply_recursive(context: tp.Tuple[str, ...], metrics, **kwargs):
 
     if isinstance(metrics, tp.Callable):
-
-        if isinstance(metrics, Defered):
-            metrics = metrics.get_instance()
 
         name = (
             metrics.module_name if isinstance(metrics, hk.Module) else metrics.__name__

@@ -1,5 +1,4 @@
 from haiku._src.typing import PadFnOrFns
-from elegy.module import Deferable
 from elegy import hooks
 import typing as tp
 
@@ -7,7 +6,7 @@ import haiku as hk
 import numpy as np
 
 
-class Conv2D(hk.Conv2D, Deferable):
+class Conv2D(hk.Conv2D):
     """Two dimensional convolution."""
 
     def __init__(

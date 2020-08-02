@@ -1,4 +1,3 @@
-from elegy.module import Deferable
 from elegy import hooks
 import typing as tp
 
@@ -6,7 +5,7 @@ import haiku as hk
 import numpy as np
 
 
-class Linear(hk.Linear, Deferable):
+class Linear(hk.Linear):
     """Linear module."""
 
     def __init__(

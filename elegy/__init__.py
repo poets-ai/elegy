@@ -3,15 +3,13 @@ __version__ = "0.1.5"
 from haiku import get_parameter, get_state, set_state
 
 from . import callbacks, losses, metrics, model, nn, regularizers
-from .hooks import (
-    add_loss,
-    add_metric,
-    add_summary,
-    transform,
+from .module import (
     TransformedState,
-    HookStates,
     Context,
     context,
+    ApplyOutput,
+    ApplyContext,
+    InitContext,
 )
 from .losses import Loss
 from .metrics import Metric

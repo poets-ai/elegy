@@ -1,6 +1,7 @@
 # Implementation based on tf.keras.engine.training.py
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
+from elegy.module import TransformedState
 from io import StringIO
 import json
 import logging
@@ -101,7 +102,6 @@ class Model(object):
 
     # private fields
     _module_fn: tp.Callable
-    _model_transform: hooks.transform
     _loss_fn: tp.Optional[tp.Callable]
     _metrics: tp.Optional[hk.TransformedWithState]
     _optimizer: optix.GradientTransformation
@@ -1128,7 +1128,7 @@ class Model(object):
         params: hk.Params,
         state: hk.State,
         net_rng: jnp.ndarray,
-    ) -> hooks.TransformedState:
+    ) -> TransformedState:
 
         predict_fn = self._predict_no_jit if self.run_eagerly else self._predict_jit
 
@@ -1149,7 +1149,7 @@ class Model(object):
         params: hk.Params,
         state: hk.State,
         net_rng: jnp.ndarray,
-    ) -> hooks.TransformedState:
+    ) -> TransformedState:
 
         x_args, x_kwargs = utils.get_input_args(x, is_training=is_training)
 

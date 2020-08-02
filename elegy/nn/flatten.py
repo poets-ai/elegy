@@ -1,4 +1,3 @@
-from elegy.module import Deferable
 from elegy import hooks
 import typing as tp
 
@@ -6,7 +5,7 @@ import haiku as hk
 import numpy as np
 
 
-class Flatten(hk.Flatten, Deferable):
+class Flatten(hk.Flatten):
     """
     Flattens the input, preserving the batch dimension(s).
 
