@@ -1,6 +1,6 @@
 import typing as tp
 from typing import List, Tuple
-import haiku as hk
+
 
 from elegy import utils
 from elegy.losses.loss import Loss

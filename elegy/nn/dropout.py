@@ -4,7 +4,7 @@
 
 import typing as tp
 
-import haiku as hk
+
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -53,7 +53,7 @@ class Dropout(Module):
         super().__init__(name=name)
         self.rate = rate
 
-    def __apply__(
+    def call(
         self, x: np.ndarray, is_training: bool, rng: tp.Optional[np.ndarray] = None,
     ) -> jnp.ndarray:
         """

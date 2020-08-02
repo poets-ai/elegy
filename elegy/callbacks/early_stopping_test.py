@@ -1,7 +1,7 @@
 import logging
 from unittest import TestCase
 
-import haiku as hk
+
 import numpy as np
 from jax.experimental import optix
 
@@ -13,7 +13,7 @@ np.random.seed(42)
 class ArrayDataAdapterTest(TestCase):
     def test_example(self):
         class MLP(elegy.Module):
-            def __apply__(self, input):
+            def call(self, input):
                 mlp = hk.Sequential([hk.Linear(10),])
                 return mlp(input)
 

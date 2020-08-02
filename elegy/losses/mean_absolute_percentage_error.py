@@ -114,7 +114,7 @@ class MeanAbsolutePercentageError(Loss):
 
         return super().__init__(reduction=reduction, name=name, weight=weight, on=on)
 
-    def __apply__(
+    def call(
         self,
         y_true: jnp.ndarray,
         y_pred: jnp.ndarray,

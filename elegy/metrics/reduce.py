@@ -3,7 +3,7 @@ from elegy import utils
 from enum import Enum
 import typing as tp
 
-import haiku as hk
+
 import jax.numpy as jnp
 from elegy.metrics.metric import Metric
 
@@ -104,7 +104,7 @@ class Reduce(Metric):
                 )
             )
 
-    def __apply__(
+    def call(
         self, values: jnp.ndarray, sample_weight: tp.Optional[jnp.ndarray] = None
     ) -> jnp.ndarray:
         """

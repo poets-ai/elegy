@@ -1,6 +1,6 @@
 import typing as tp
 
-import haiku as hk
+
 import numpy as np
 
 

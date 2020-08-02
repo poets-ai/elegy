@@ -6,7 +6,7 @@
             - fit
             - evaluate
             - predict
-            - __apply__
+            - call
             - train_on_batch
             - test_on_batch
             - predict_on_batch

@@ -1,7 +1,7 @@
 from haiku._src.typing import PadFnOrFns
 import typing as tp
 
-import haiku as hk
+
 import numpy as np
 
 

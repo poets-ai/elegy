@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
 
 import dataget
-import haiku as hk
+
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -45,7 +45,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             self.n1 = n1
             self.n2 = n2
 
-        def __apply__(self, image: jnp.ndarray, is_training: bool):
+        def call(self, image: jnp.ndarray, is_training: bool):
             @hk.to_module
             def conv_block(x, units, kernel, stride=1):
                 x = elegy.nn.Conv2D(units, kernel, stride=stride, padding="same")(x)

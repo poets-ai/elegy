@@ -1,7 +1,7 @@
 from typing import Tuple
 from elegy.metrics.metric import Metric
 import typing as tp
-import haiku as hk
+
 
 from elegy import utils
 import jax

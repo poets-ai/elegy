@@ -1,4 +1,3 @@
-import haiku as hk
 import jax.numpy as jnp
 from elegy.testing_utils import transform_and_run
 from unittest import TestCase

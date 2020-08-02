@@ -4,5 +4,5 @@
     selection:
         inherited_members: true
         members:
-            - __apply__
+            - call
             - __init__

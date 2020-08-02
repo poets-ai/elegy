@@ -1,18 +1,23 @@
+from elegy.types import Initializer
+from elegy.module import Module
 import typing as tp
-
+import jax.numpy as jnp
 import haiku as hk
+
 import numpy as np
 
+hk.Linear
 
-class Linear(hk.Linear):
+
+class Linear(Module):
     """Linear module."""
 
     def __init__(
         self,
         output_size: int,
         with_bias: bool = True,
-        w_init: tp.Optional[hk.initializers.Initializer] = None,
-        b_init: tp.Optional[hk.initializers.Initializer] = None,
+        w_init: tp.Optional[Initializer] = None,
+        b_init: tp.Optional[Initializer] = None,
         name: tp.Optional[str] = None,
     ):
         """
@@ -27,21 +32,34 @@ class Linear(hk.Linear):
             b_init: Optional initializer for bias. By default, zero.
             name: Name of the module.
         """
-        super().__init__(
-            output_size=output_size,
-            with_bias=with_bias,
-            w_init=w_init,
-            b_init=b_init,
-            name=name,
-        )
+        super().__init__(name=name)
+        self.input_size = None
+        self.output_size = output_size
+        self.with_bias = with_bias
+        self.w_init = w_init
+        self.b_init = b_init or jnp.zeros
 
-    def __call__(self, inputs: np.ndarray):
-        """
-        Arguments:
-            inputs: Input array.
-        """
-        outputs = super().__call__(inputs)
+    def call(self, inputs: np.ndarray) -> np.ndarray:
+        if not inputs.shape:
+            raise ValueError("Input must not be scalar.")
 
-        hooks.add_summary(None, self.__class__.__name__, outputs)
+        input_size = self.input_size = inputs.shape[-1]
+        output_size = self.output_size
+        dtype = inputs.dtype
 
-        return outputs
+        w_init = self.w_init
+
+        if w_init is None:
+            stddev = 1.0 / np.sqrt(self.input_size)
+            w_init = hk.initializers.TruncatedNormal(stddev=stddev)
+
+        w = hk.get_parameter("w", [input_size, output_size], dtype, init=w_init)
+
+        out = jnp.dot(inputs, w)
+
+        if self.with_bias:
+            b = hk.get_parameter("b", [self.output_size], dtype, init=self.b_init)
+            b = jnp.broadcast_to(b, out.shape)
+            out = out + b
+
+        return out

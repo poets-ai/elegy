@@ -4,7 +4,7 @@
     selection:
         inherited_members: true
         members:
-            - __apply__
+            - call
             - __init__
             - __call__
             - defer

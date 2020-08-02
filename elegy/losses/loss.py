@@ -11,7 +11,6 @@ import re
 import typing as tp
 
 
-import haiku as hk
 import jax.numpy as jnp
 
 from elegy import utils
@@ -56,13 +55,13 @@ class Loss:
 
     To be implemented by subclasses:
 
-    * `__apply__()`: Contains the logic for loss calculation.
+    * `call()`: Contains the logic for loss calculation.
 
     Example subclass implementation:
 
     ```python
     class MeanSquaredError(Loss):
-        def __apply__(self, y_true, y_pred):
+        def call(self, y_true, y_pred):
             return jnp.mean(jnp.square(y_pred - y_true), axis=-1)
     ```
 
@@ -89,7 +88,7 @@ class Loss:
             weight: Optional weight contribution for the total loss. Defaults to `1`.
             on: A string or integer, or iterable of string or integers, that
                 indicate how to index/filter the `y_true` and `y_pred`
-                arguments before passing them to `__apply__`. For example if `on = "a"` then
+                arguments before passing them to `call`. For example if `on = "a"` then
                 `y_true = y_true["a"]`. If `on` is an iterable
                 the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`
                 then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
@@ -105,7 +104,7 @@ class Loss:
             reduction if reduction is not None else Reduction.SUM_OVER_BATCH_SIZE
         )
         self._labels_filter = (on,) if isinstance(on, (str, int)) else on
-        self.__apply__ = utils.inject_dependencies(self.__apply__)
+        self.call = utils.inject_dependencies(self.call)
 
     def __call__(
         self, *args, **kwargs,
@@ -120,7 +119,7 @@ class Loss:
                 for index in self._labels_filter:
                     kwargs["y_pred"] = kwargs["y_pred"][index]
 
-        values = self.__apply__(*args, **kwargs)
+        values = self.call(*args, **kwargs)
 
         sample_weight: tp.Optional[jnp.ndarray] = kwargs.get("sample_weight", None)
 
@@ -133,7 +132,7 @@ class Loss:
             return reduce_loss(values, sample_weight, self.weight, self._reduction)
 
     @abstractmethod
-    def __apply__(self, *args, **kwargs) -> tp.Any:
+    def call(self, *args, **kwargs) -> tp.Any:
         ...
 
 

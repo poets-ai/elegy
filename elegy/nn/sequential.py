@@ -2,7 +2,7 @@ from elegy import utils
 from elegy.module import Module
 import typing as tp
 
-import haiku as hk
+
 import numpy as np
 
 
@@ -12,7 +12,7 @@ class Sequential(Module):
 
     ```python
     class MLP(elegy.Module):
-        def __apply__(self, x):
+        def call(self, x):
             mlp = elegy.nn.Sequential([
                 elegy.nn.Flatten(),
                 elegy.nn.Linear(100),
@@ -83,7 +83,7 @@ class Sequential(Module):
         super().__init__(name=name)
         self.layers = layers
 
-    def __apply__(self, inputs: np.ndarray, *args, **kwargs):
+    def call(self, inputs: np.ndarray, *args, **kwargs):
         """
         Connects all layers. *args and **kwargs are passed to the first layer.
         

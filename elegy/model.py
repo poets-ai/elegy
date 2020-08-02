@@ -1,7 +1,7 @@
 # Implementation based on tf.keras.engine.training.py
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
-from elegy.module import TransformedState
+from elegy.module import Module, PRNGSequence, TransformedState
 from io import StringIO
 import json
 import logging
@@ -14,7 +14,6 @@ from pathlib import Path
 
 import cloudpickle
 import deepdish
-import haiku as hk
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -43,7 +42,7 @@ class Mode(Enum):
     train = 3
 
 
-class Model(object):
+class Model(Module):
     """
     `Model` is tasked with performing training, evaluation, and inference for a given
     `elegy.Module` or `haiku.Module`.
@@ -51,7 +50,7 @@ class Model(object):
     To create a `Model` you first have to define its architecture in a `Module`:
     ```python
     class MLP(elegy.Module):
-        def __apply__(self, image: jnp.ndarray) -> jnp.ndarray:
+        def call(self, image: jnp.ndarray) -> jnp.ndarray:
             mlp = hk.Sequential([
                 hk.Flatten(),
                 hk.Linear(300),
@@ -92,19 +91,16 @@ class Model(object):
     """
 
     # public fields
-    params: tp.Optional[hk.Params]
-    state: tp.Optional[hk.State]
     optimizer_state: tp.Optional[optix.OptState]
-    metrics_state: tp.Optional[hk.State]
-    initial_metrics_state: tp.Optional[hk.State]
+    metrics_state: tp.Optional[tp.Dict]
+    initial_metrics_state: tp.Optional[tp.Dict]
     run_eagerly: bool
 
     # private fields
-    _module_fn: tp.Callable
     _loss_fn: tp.Optional[tp.Callable]
-    _metrics: tp.Optional[hk.TransformedWithState]
+    _metrics: tp.Optional[tp.Callable]
     _optimizer: optix.GradientTransformation
-    _rngs: hk.PRNGSequence
+    _rngs: PRNGSequence
 
     def __init__(
         self,

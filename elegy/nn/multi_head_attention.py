@@ -1,6 +1,6 @@
 import jax
 from jax import numpy as jnp
-import haiku as hk
+
 import typing as tp
 import numpy as np
 

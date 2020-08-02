@@ -7,7 +7,7 @@ import typing as tp
 from typing import Any, Generator, Mapping, Tuple
 
 import dataget
-import haiku as hk
+
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -26,7 +26,7 @@ MNIST_IMAGE_SHAPE: tp.Sequence[int] = (28, 28)
 
 
 class KLDivergence(elegy.Loss):
-    def __apply__(self, mean: np.ndarray, std: np.ndarray) -> np.ndarray:
+    def call(self, mean: np.ndarray, std: np.ndarray) -> np.ndarray:
         r"""Calculate KL divergence between given and standard gaussian distributions.
         KL(p, q) = H(p, q) - H(p) = -\int p(x)log(q(x))dx - -\int p(x)log(p(x))dx
                 = 0.5 * [log(|s2|/|s1|) - 1 + tr(s1/s2) + (m1-m2)^2/s2]
@@ -48,7 +48,7 @@ class Encoder(elegy.Module):
         self._hidden_size = hidden_size
         self._latent_size = latent_size
 
-    def __apply__(self, x: np.ndarray) -> np.ndarray:
+    def call(self, x: np.ndarray) -> np.ndarray:
         x = hk.Flatten()(x)
         x = elegy.nn.Linear(self._hidden_size)(x)
         x = jax.nn.relu(x)
@@ -76,7 +76,7 @@ class Decoder(elegy.Module):
         self._hidden_size = hidden_size
         self._output_shape = output_shape
 
-    def __apply__(self, z: np.ndarray) -> np.ndarray:
+    def call(self, z: np.ndarray) -> np.ndarray:
         z = elegy.nn.Linear(self._hidden_size)(z)
         z = jax.nn.relu(z)
 
@@ -100,7 +100,7 @@ class VariationalAutoEncoder(elegy.Module):
         self._latent_size = latent_size
         self._output_shape = output_shape
 
-    def __apply__(self, x: np.ndarray) -> dict:
+    def call(self, x: np.ndarray) -> dict:
         x = x.astype(jnp.float32)
         z = Encoder(self._hidden_size, self._latent_size)(x)
 
@@ -113,8 +113,8 @@ class VariationalAutoEncoder(elegy.Module):
 
 
 class BinaryCrossEntropy(elegy.losses.BinaryCrossentropy):
-    def __apply__(self, x: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
-        return super().__apply__(y_true=x, y_pred=y_pred)
+    def call(self, x: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
+        return super().call(y_true=x, y_pred=y_pred)
 
 
 def main(

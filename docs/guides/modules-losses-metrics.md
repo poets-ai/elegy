@@ -52,7 +52,7 @@ Modules define the architecture of the network, their primary task (in Elegy ter
   
 ```python hl_lines="2 10"
 class SomeModule(elegy.Module):
-    def __apply__(self, m, n):
+    def call(self, m, n):
         ...
 
 ...
@@ -72,7 +72,7 @@ In this case `a` is passed as `m` and `b` is passed as `n`.
 
 ```python hl_lines="2 10"
 class SomeModule(elegy.Module):
-    def __apply__(self, n):
+    def call(self, n):
         ...
 
 ...
@@ -93,7 +93,7 @@ Losses can request all the available parameters that Elegy provides for dependen
 
 ```python hl_lines="2"
 class MSE(elegy.Loss): 
-    def __apply__(self, y_true, y_pred):
+    def call(self, y_true, y_pred):
         return jnp.mean(jnp.square(y_true - y_pred), axis=-1)
 
 ...
@@ -110,7 +110,7 @@ Here the input `y` is passed as `y_true` to `MSE`. However, if you for example w
 
 ```python hl_lines="2"
 class AutoEncoderLoss(elegy.Loss): 
-    def __apply__(self, x, y_pred):
+    def call(self, x, y_pred):
         return jnp.mean(jnp.square(x - y_pred), axis=-1)
 
 ...
@@ -132,7 +132,7 @@ Notice thanks to this we didn't have to define `y` on the `fit` method.
 If you have a complex loss function that is just a sum of different parts that have to be compute together you might define something like this:
 ```python
 class SomeComplexFunction(elegy.Loss): 
-    def __apply__(self, x, y_true, y_pred, params, ...):
+    def call(self, x, y_true, y_pred, params, ...):
         ...
         return a + b + c
 ```
@@ -140,7 +140,7 @@ Elegy lets you return a `dict` specifying the name of each part:
 
 ```python
 class SomeComplexFunction(elegy.Loss): 
-    def __apply__(self, x, y_true, y_pred, params, ...):
+    def call(self, x, y_true, y_pred, params, ...):
         ...
         return {
             "a": a,
@@ -175,7 +175,7 @@ However, if you have many outputs and many labels, Elegy will just pass their st
 
 ```python
 class MyLoss(Elegy.Loss):
-    def __apply__(self, y_true, y_pred):
+    def call(self, y_true, y_pred):
         return some_function(
             y_true["label_a"], y_pred["output_a"], y_true["label_b"]
         )
@@ -192,7 +192,7 @@ While having this flexibility available is good, there is a common scenario that
 
 ```python
 class MyModel(keras.Model):
-    def __apply__(self, x):
+    def call(self, x):
         ...
         return {
             "key_a": key_a,
@@ -217,7 +217,7 @@ To recover this behavior Elegy lets each `Loss` optionally filter / index the `y
 
 ```python
 class MyModule(elegy.Module):
-    def __apply__(self, x):
+    def call(self, x):
         ...
         return {
             "key_a": key_a,
@@ -265,7 +265,7 @@ Here is an example of a simple implementation of `Accuracy` which uses this cumu
 
 ```python
 class Accuracy(elegy.Metric):
-    def __apply__(self, y_true, y_pred):
+    def call(self, y_true, y_pred):
 
         total = hk.get_state("total", [], init=jnp.zeros)
         count = hk.get_state("count", [], init=jnp.zeros)

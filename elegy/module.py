@@ -1,13 +1,12 @@
 from contextlib import contextmanager
 import threading
 import typing as tp
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 
-import haiku as hk
+
 import jax
 import jax.numpy as jnp
 import numpy as np
-from haiku._src.base import new_context as haiku_context
 
 from elegy import utils
 
@@ -16,7 +15,23 @@ LOCAL = threading.local()
 LOCAL.contexts = []
 
 
-class Module:
+class ModuleMeta(ABCMeta):
+    def __call__(cls: tp.Type[T], *args, **kwargs) -> T:
+        module = cls.__new__(cls, *args, **kwargs)
+        cls.__init__(module, *args, **kwargs)
+
+        if (
+            not hasattr(module, "name")
+            or not hasattr(module, "_params")
+            or not hasattr(module, "_states")
+        ):
+            raise ValueError(
+                "Constructing an hk.Module without calling the super constructor "
+                "is not supported."
+            )
+
+
+class Module(metaclass=ModuleMeta):
     """
     Basic Elegy Module. Its a thin wrapper around `hk.Module` that
     add custom functionalities related to Elegy.
@@ -45,18 +60,18 @@ class Module:
 
     def __call__(self, *args, **kwargs) -> tp.Any:
         """
-        Forwards all input arguments to the Module's `__apply__` method and calls
+        Forwards all input arguments to the Module's `call` method and calls
         `elegy.add_summary` on the outputs.
         """
         with names_context(self):
-            outputs = self.__apply__(*args, **kwargs)
+            outputs = self.call(*args, **kwargs)
 
             self.add_summary(None, outputs)
 
             return outputs
 
     @abstractmethod
-    def __apply__(self, *args, **kwargs):
+    def call(self, *args, **kwargs):
         ...
 
     def init(
@@ -74,7 +89,6 @@ class Module:
         states: tp.Optional[tp.Dict] = None,
         rng: tp.Optional[tp.Union[np.ndarray, int]] = None,
         training: bool = True,
-        building: bool = False,
         get_summaries: bool = False,
         return_context: bool = False,
     ) -> "ApplyContext":
@@ -100,7 +114,6 @@ class Module:
             states=states,
             rng=rng,
             training=training,
-            building=building,
             get_summaries=get_summaries,
             return_context=return_context,
         )
@@ -437,7 +450,6 @@ class ApplyContext(tp.NamedTuple):
     states: tp.Optional[tp.Dict]
     rng: tp.Optional[tp.Union[np.ndarray, int]]
     training: bool
-    building: bool
     get_summaries: bool
     return_context: bool
 
@@ -452,7 +464,7 @@ class ApplyContext(tp.NamedTuple):
         with context(
             rng=self.rng,
             training=self.training,
-            building=self.building,
+            building=False,
             get_summaries=self.get_summaries,
         ) as ctx:
             outputs = self.module(*args, **kwargs)
@@ -591,3 +603,19 @@ def get_unique_name(
         i += 1
 
     return f"{name}_{i}"
+
+
+# -----------------------------------------------------------------
+# PRNGSequence
+# ----------------------------------------------------------------
+
+
+class PRNGSequence:
+    rng: np.ndarray
+
+    def __init__(self, key: tp.Union[int, np.ndarray]):
+        self.rng = jax.random.PRNGKey(key)
+
+    def __next__(self):
+        self.rng, rng_next = jax.random.split(self.rng)
+        return rng_next
