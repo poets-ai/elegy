@@ -10,7 +10,6 @@ import numpy as np
 from haiku._src.base import new_context as haiku_context
 
 from elegy import utils
-from elegy import hooks
 
 T = tp.TypeVar("T")
 LOCAL = threading.local()
@@ -131,7 +130,12 @@ class Module:
                 else:
                     context.parameters[base_name] = {name: getattr(self, name)}
 
-            return getattr(self, name)
+            param = getattr(self, name)
+
+            assert param.shape == tuple(shape)
+            assert param.dtype == dtype
+
+            return param
         else:
             raise ValueError(
                 "Cannot execute `get_parameter` outside of a `elegy.context`"
@@ -162,7 +166,12 @@ class Module:
                     else:
                         context.states[base_name] = {name: getattr(self, name)}
 
-            return getattr(self, name)
+            param = getattr(self, name)
+
+            assert param.shape == tuple(shape)
+            assert param.dtype == dtype
+
+            return param
         else:
             raise ValueError("Cannot execute `get_state` outside of a `elegy.context`")
 

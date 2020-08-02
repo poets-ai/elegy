@@ -1,4 +1,3 @@
-from elegy import hooks
 import typing as tp
 
 import haiku as hk

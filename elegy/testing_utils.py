@@ -1,7 +1,6 @@
 import functools
 
 from jax import random
-from elegy import hooks
 import typing as tp
 
 

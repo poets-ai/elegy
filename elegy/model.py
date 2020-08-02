@@ -23,7 +23,6 @@ from jax.experimental import optix
 from tabulate import tabulate
 import yaml
 
-from elegy import hooks
 from elegy.losses import loss_modes
 from elegy.metrics import metric_modes
 
