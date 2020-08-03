@@ -1,3 +1,4 @@
+from elegy.module import Module
 from elegy import types
 import typing as tp
 
@@ -6,7 +7,7 @@ from abc import abstractmethod
 from elegy import utils
 
 
-class Metric(hk.Module):
+class Metric(Module):
     """
     Encapsulates metric logic and state.
 

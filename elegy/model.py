@@ -109,11 +109,11 @@ class Model(Module):
         metrics: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
         optimizer: tp.Optional[optix.GradientTransformation] = None,
         run_eagerly: bool = False,
-        params: tp.Optional[hk.Params] = None,
-        state: tp.Optional[hk.State] = None,
+        params: tp.Optional[tp.Dict] = None,
+        state: tp.Optional[tp.Dict] = None,
         optimizer_state: tp.Optional[optix.OptState] = None,
-        metrics_state: tp.Optional[hk.State] = None,
-        initial_metrics_state: tp.Optional[hk.State] = None,
+        metrics_state: tp.Optional[tp.Dict] = None,
+        initial_metrics_state: tp.Optional[tp.Dict] = None,
         seed: tp.Union[np.ndarray, int] = 42,
     ):
         """[summary]
@@ -316,18 +316,18 @@ class Model(Module):
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
-        params: hk.Params,
-        state: hk.State,
+        params: tp.Dict,
+        state: tp.Dict,
         optimizer_state: optix.OptState,
-        metrics_state: tp.Optional[hk.State],
+        metrics_state: tp.Optional[tp.Dict],
         net_rng: jnp.ndarray,
         metrics_rng: jnp.ndarray,
     ) -> tp.Tuple[
         tp.Dict[str, jnp.ndarray],
-        hk.Params,
-        hk.State,
+        tp.Dict,
+        tp.Dict,
         optix.OptState,
-        tp.Optional[hk.State],
+        tp.Optional[tp.Dict],
     ]:
         update_fn = self._update_no_jit if self.run_eagerly else self._update_jit
 
@@ -350,18 +350,18 @@ class Model(Module):
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
-        params: hk.Params,
-        state: hk.State,
+        params: tp.Dict,
+        state: tp.Dict,
         optimizer_state: optix.OptState,
-        metrics_state: tp.Optional[hk.State],
+        metrics_state: tp.Optional[tp.Dict],
         net_rng: jnp.ndarray,
         metrics_rng: jnp.ndarray,
     ) -> tp.Tuple[
         tp.Dict[str, jnp.ndarray],
-        hk.Params,
-        hk.State,
+        tp.Dict,
+        tp.Dict,
         optix.OptState,
-        tp.Optional[hk.State],
+        tp.Optional[tp.Dict],
     ]:
         (loss, (transformed_state, logs)), grads = jax.value_and_grad(
             self._loss, has_aux=True
@@ -406,8 +406,8 @@ class Model(Module):
 
     def _loss(
         self,
-        params: hk.Params,
-        state: hk.State,
+        params: tp.Dict,
+        state: tp.Dict,
         net_rng: jnp.ndarray,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
@@ -1006,13 +1006,13 @@ class Model(Module):
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
-        params: hk.Params,
-        state: hk.State,
-        metrics_state: tp.Optional[hk.State],
+        params: tp.Dict,
+        state: tp.Dict,
+        metrics_state: tp.Optional[tp.Dict],
         net_rng: jnp.ndarray,
         metrics_rng: jnp.ndarray,
     ) -> tp.Tuple[
-        tp.Dict[str, jnp.ndarray], tp.Optional[hk.State],
+        tp.Dict[str, jnp.ndarray], tp.Optional[tp.Dict],
     ]:
 
         test_fn = self._test_no_jit if self.run_eagerly else self._test_jit
@@ -1035,13 +1035,13 @@ class Model(Module):
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
-        params: hk.Params,
-        state: hk.State,
-        metrics_state: tp.Optional[hk.State],
+        params: tp.Dict,
+        state: tp.Dict,
+        metrics_state: tp.Optional[tp.Dict],
         net_rng: jnp.ndarray,
         metrics_rng: jnp.ndarray,
     ) -> tp.Tuple[
-        tp.Dict[str, jnp.ndarray], tp.Optional[hk.State],
+        tp.Dict[str, jnp.ndarray], tp.Optional[tp.Dict],
     ]:
 
         loss, (transformed_state, logs) = self._loss(
@@ -1120,8 +1120,8 @@ class Model(Module):
         is_training: bool,
         get_summaries: bool,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        params: hk.Params,
-        state: hk.State,
+        params: tp.Dict,
+        state: tp.Dict,
         net_rng: jnp.ndarray,
     ) -> TransformedState:
 
@@ -1141,8 +1141,8 @@ class Model(Module):
         is_training: bool,
         get_summaries: bool,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        params: hk.Params,
-        state: hk.State,
+        params: tp.Dict,
+        state: tp.Dict,
         net_rng: jnp.ndarray,
     ) -> TransformedState:
 

@@ -1,3 +1,4 @@
+from elegy.initializers import TruncatedNormal
 from elegy.types import Initializer
 from elegy.module import Module
 import typing as tp
@@ -5,8 +6,6 @@ import jax.numpy as jnp
 import haiku as hk
 
 import numpy as np
-
-hk.Linear
 
 
 class Linear(Module):
@@ -51,14 +50,18 @@ class Linear(Module):
 
         if w_init is None:
             stddev = 1.0 / np.sqrt(self.input_size)
-            w_init = hk.initializers.TruncatedNormal(stddev=stddev)
+            w_init = TruncatedNormal(stddev=stddev)
 
-        w = hk.get_parameter("w", [input_size, output_size], dtype, init=w_init)
+        w = self.get_parameter(
+            "w", [input_size, output_size], dtype, initializer=w_init
+        )
 
         out = jnp.dot(inputs, w)
 
         if self.with_bias:
-            b = hk.get_parameter("b", [self.output_size], dtype, init=self.b_init)
+            b = self.get_parameter(
+                "b", [self.output_size], dtype, initializer=self.b_init
+            )
             b = jnp.broadcast_to(b, out.shape)
             out = out + b
 

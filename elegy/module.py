@@ -1,8 +1,13 @@
-from contextlib import contextmanager
+from elegy.types import PRNGKey
 import threading
 import typing as tp
 from abc import ABCMeta, abstractmethod
+from contextlib import contextmanager
 
+# -------------------------------------------------------------
+# context
+# -------------------------------------------------------------
+from dataclasses import dataclass
 
 import jax
 import jax.numpy as jnp
@@ -29,6 +34,8 @@ class ModuleMeta(ABCMeta):
                 "Constructing an hk.Module without calling the super constructor "
                 "is not supported."
             )
+
+        return module
 
 
 class Module(metaclass=ModuleMeta):
@@ -146,7 +153,6 @@ class Module(metaclass=ModuleMeta):
             param = getattr(self, name)
 
             assert param.shape == tuple(shape)
-            assert param.dtype == dtype
 
             return param
         else:
@@ -198,69 +204,13 @@ class Module(metaclass=ModuleMeta):
         else:
             raise ValueError("Cannot execute `set_state` outside of a `elegy.context`")
 
-    def add_loss(self, name: str, value: np.ndarray):
-        """
-        A hook that lets you define a loss within a [`transform`][elegy.hooks.transform].
-
-        ```python
-        w = hk.get_parameter("w", [3, 5], init=jnp.zeros)
-        
-        # L2 regularization penalty
-        elegy.add_loss("l2_regularization", 0.01 * jnp.mean(w ** 2))
-        ```
-
-        The loss will be aggregated by [`transform.apply`][elegy.hooks.transform.apply]
-        and automatically handled by [`Model`][elegy.model.Model].
-
-        Arguments:
-            name: The name of the loss. If a `name` is repeated on
-                different calls values will be added together.
-            value: The value for the loss.
-        """
-        name += "_loss"
-        if LOCAL.contexts:
-            context: Context = LOCAL.contexts[-1]
-
-            if name in context.losses:
-                context.losses[name] += value
-            else:
-                context.losses[name] = value
-        else:
-            raise ValueError("Cannot execute `add_loss` outside of an `elegy.context`")
-
-    def add_metric(self, name: str, value: np.ndarray):
-        """
-        A hook that lets you define a metric within a [`transform`][elegy.hooks.transform].
-
-        ```python
-        y = jax.nn.relu(x)
-        elegy.add_metric("activation_mean", jnp.mean(y))
-        ```
-
-        The metrics will be aggregated by [`transform.apply`][elegy.hooks.transform.apply]
-        and automatically handled by [`Model`][elegy.model.Model].
-
-        Arguments:
-            name: The name of the loss. If a metric with the same
-                `name` already exists a unique identifier will be generated.
-            value: The value for the metric.
-        """
-        if LOCAL.contexts:
-            context: Context = LOCAL.contexts[-1]
-            name = get_unique_name(context.metrics, name)
-            context.metrics[name] = value
-        else:
-            raise ValueError(
-                "Cannot execute `add_metric` outside of an `elegy.context`"
-            )
-
     def add_summary(self, name: tp.Optional[str], value: np.ndarray):
         """
         A hook that lets you define a summary within a [`transform`][elegy.hooks.transform].
 
         ```python
         y = jax.nn.relu(x)
-        elegy.add_summary("relu", "Relu", y)
+        self.add_summary("relu", "Relu", y)
         ```
 
         The metrics will be aggregated by [`transform.apply`][elegy.hooks.transform.apply]
@@ -289,12 +239,11 @@ class Module(metaclass=ModuleMeta):
                 return
 
             base_name = context.unique_name[self]
-            class_name = base_name.split("/")[-1]
 
             name = f"{base_name}/{name}" if name is not None else base_name
             name = get_unique_name(context.summaries, name)
 
-            context.summaries.append((name, class_name, value))
+            context.summaries.append((name, self.__class__.__name__, value))
         else:
             raise ValueError(
                 "Cannot execute `add_summary` outside of an `elegy.context`"
@@ -322,8 +271,116 @@ class Module(metaclass=ModuleMeta):
 
 
 # -------------------------------------------------------------
-# context
+# hooks
 # -------------------------------------------------------------
+
+
+def add_loss(name: str, value: np.ndarray):
+    """
+    A hook that lets you define a loss within a [`transform`][elegy.hooks.transform].
+
+    ```python
+    w = hk.get_parameter("w", [3, 5], init=jnp.zeros)
+    
+    # L2 regularization penalty
+    elegy.add_loss("l2_regularization", 0.01 * jnp.mean(w ** 2))
+    ```
+
+    The loss will be aggregated by [`transform.apply`][elegy.hooks.transform.apply]
+    and automatically handled by [`Model`][elegy.model.Model].
+
+    Arguments:
+        name: The name of the loss. If a `name` is repeated on
+            different calls values will be added together.
+        value: The value for the loss.
+    """
+    name += "_loss"
+    if LOCAL.contexts:
+        context: Context = LOCAL.contexts[-1]
+
+        if name in context.losses:
+            context.losses[name] += value
+        else:
+            context.losses[name] = value
+    else:
+        raise ValueError("Cannot execute `add_loss` outside of an `elegy.context`")
+
+
+def add_metric(name: str, value: np.ndarray):
+    """
+    A hook that lets you define a metric within a [`transform`][elegy.hooks.transform].
+
+    ```python
+    y = jax.nn.relu(x)
+    elegy.add_metric("activation_mean", jnp.mean(y))
+    ```
+
+    The metrics will be aggregated by [`transform.apply`][elegy.hooks.transform.apply]
+    and automatically handled by [`Model`][elegy.model.Model].
+
+    Arguments:
+        name: The name of the loss. If a metric with the same
+            `name` already exists a unique identifier will be generated.
+        value: The value for the metric.
+    """
+    if LOCAL.contexts:
+        context: Context = LOCAL.contexts[-1]
+        name = get_unique_name(context.metrics, name)
+        context.metrics[name] = value
+    else:
+        raise ValueError("Cannot execute `add_metric` outside of an `elegy.context`")
+
+
+def next_rng_key() -> PRNGKey:
+    """
+    Returns a unique JAX RNG key split from the current global key.
+
+    ```python
+    key = hk.next_rng_key()
+    x = jax.random.uniform(key, [])
+    ```
+
+    Returns:
+        A unique (within a transformed function) JAX rng key that can be used with
+        APIs such as ``jax.random.uniform``.
+    """
+    if LOCAL.contexts:
+        context: Context = LOCAL.contexts[-1]
+        if context.rng_sequence is not None:
+            context: Context = LOCAL.contexts[-1]
+            return next(context.rng_sequence)
+        else:
+            raise ValueError(
+                "Cannot execute `rng` not set in context, check init or apply."
+            )
+    else:
+        raise ValueError("Cannot execute `next_rng_key` outside of an `elegy.context`")
+
+
+def is_training() -> bool:
+    """
+    Returns a unique JAX RNG key split from the current global key.
+
+    ```python
+    key = hk.next_rng_key()
+    x = jax.random.uniform(key, [])
+    ```
+
+    Returns:
+        A unique (within a transformed function) JAX rng key that can be used with
+        APIs such as ``jax.random.uniform``.
+    """
+    if LOCAL.contexts:
+        context: Context = LOCAL.contexts[-1]
+        if context.rng_sequence is not None:
+            context: Context = LOCAL.contexts[-1]
+            return context.training
+        else:
+            raise ValueError(
+                "Cannot execute `rng` not set in context, check init or apply."
+            )
+    else:
+        raise ValueError("Cannot execute `next_rng_key` outside of an `elegy.context`")
 
 
 class Context(tp.NamedTuple):
@@ -339,8 +396,8 @@ class Context(tp.NamedTuple):
 
     building: bool
     get_summaries: bool
-    training: tp.Optional[bool]
-    rng: tp.Optional[np.ndarray]
+    training: bool
+    rng_sequence: tp.Optional["PRNGSequence"]
     losses: tp.Dict
     metrics: tp.Dict
     summaries: tp.List[tp.Tuple[str, str, tp.Any]]
@@ -354,20 +411,20 @@ class Context(tp.NamedTuple):
 @contextmanager
 def context(
     rng: tp.Union[np.ndarray, int, None] = None,
-    training: tp.Optional[bool] = None,
+    training: bool = True,
     building: bool = False,
     get_summaries: bool = False,
 ) -> tp.Iterator[Context]:
     """
     """
 
-    rng = jax.random.PRNGKey(rng) if rng is not None else None
+    rng_sequence = PRNGSequence(rng) if rng is not None else None
 
     ctx = Context(
         building=building,
         get_summaries=get_summaries,
         training=training,
-        rng=rng,
+        rng_sequence=rng_sequence,
         losses={},
         metrics={},
         summaries=[],
@@ -506,8 +563,8 @@ class TransformedState(tp.NamedTuple):
     """
 
     outputs: tp.Any
-    losses: hk.State
-    metrics: hk.State
+    losses: tp.Dict
+    metrics: tp.Dict
     summaries: tp.List[tp.Tuple[str, str, tp.Any]]
 
 
@@ -608,14 +665,19 @@ def get_unique_name(
 # -----------------------------------------------------------------
 # PRNGSequence
 # ----------------------------------------------------------------
+import haiku as hk
+
+hk.PRNGSequence
 
 
-class PRNGSequence:
+class PRNGSequence(tp.Iterator[PRNGKey]):
     rng: np.ndarray
 
     def __init__(self, key: tp.Union[int, np.ndarray]):
         self.rng = jax.random.PRNGKey(key)
 
-    def __next__(self):
-        self.rng, rng_next = jax.random.split(self.rng)
+    def __next__(self) -> np.ndarray:
+        self.rng, rng_next = tuple(jax.random.split(self.rng, 2))
         return rng_next
+
+    next = __next__

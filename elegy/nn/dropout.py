@@ -4,11 +4,11 @@
 
 import typing as tp
 
-
-import jax
+import haiku as hk
 import jax.numpy as jnp
 import numpy as np
 
+from elegy import module
 from elegy.module import Module
 
 
@@ -53,9 +53,7 @@ class Dropout(Module):
         super().__init__(name=name)
         self.rate = rate
 
-    def call(
-        self, x: np.ndarray, is_training: bool, rng: tp.Optional[np.ndarray] = None,
-    ) -> jnp.ndarray:
+    def call(self, x: np.ndarray, rng: tp.Optional[np.ndarray] = None,) -> jnp.ndarray:
         """
         Arguments:
             x: The value to be dropped out.
@@ -65,7 +63,7 @@ class Dropout(Module):
             x but dropped out and scaled by `1 / (1 - rate)`.
         """
         return hk.dropout(
-            rng=hk.next_rng_key() if rng is None else rng,
-            rate=self.rate if is_training else 0.0,
+            rng=module.next_rng_key() if rng is None else rng,
+            rate=self.rate if module.is_training() else 0.0,
             x=x,
         )

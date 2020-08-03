@@ -1,8 +1,9 @@
-import jax
-from jax import numpy as jnp
-
 import typing as tp
+
+import haiku as hk
+import jax
 import numpy as np
+from jax import numpy as jnp
 
 
 class MultiHeadAttention(hk.Module):

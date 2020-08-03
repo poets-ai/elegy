@@ -1,9 +1,11 @@
-from elegy import utils
+import typing as tp
+
+import haiku as hk
 import jax
-from elegy.losses.loss import Loss, Reduction
 import jax.numpy as jnp
 
-import typing as tp
+from elegy import utils
+from elegy.losses.loss import Loss, Reduction
 
 
 class GlobalL1L2(Loss):
