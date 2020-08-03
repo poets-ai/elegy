@@ -66,3 +66,7 @@ class ModuleTest(TestCase):
 
         print(context)
 
+        m.parameters = None
+
+        print(m.parameters)
+

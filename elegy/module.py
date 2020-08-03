@@ -256,8 +256,11 @@ class Module(metaclass=ModuleMeta):
         return parameters
 
     @parameters.setter
-    def parameters(self, values: tp.Dict):
-        return set_tree(self, values, "_params")
+    def parameters(self, values: tp.Optional[tp.Dict]):
+        if values is None:
+            clear_tree(self, "_params")
+        else:
+            set_tree(self, values, "_params")
 
     @property
     def states(self) -> tp.Dict:
@@ -266,8 +269,11 @@ class Module(metaclass=ModuleMeta):
         return states
 
     @states.setter
-    def states(self, values: tp.Dict):
-        return set_tree(self, values, "_states")
+    def states(self, values: tp.Optional[tp.Dict]):
+        if values is None:
+            clear_tree(self, "_states")
+        else:
+            set_tree(self, values, "_states")
 
 
 # -------------------------------------------------------------
@@ -626,6 +632,32 @@ def set_tree(
                 setattr(module, key, value)
             else:
                 set_tree(getattr(module, key), value, list_field)
+
+
+def clear_tree(module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict], dict_field: str):
+
+    if isinstance(module, tp.List):
+
+        for module in module:
+            clear_tree(module, dict_field)
+
+    elif isinstance(module, tp.Tuple):
+
+        for module in module:
+            clear_tree(module, dict_field)
+
+    elif isinstance(module, tp.Dict):
+
+        for key, value in module.items():
+            clear_tree(module[key], dict_field)
+
+    else:
+
+        setattr(module, dict_field, {})
+
+        for key, value in vars(module).items():
+            if leaf_isinstance(value, Module):
+                clear_tree(value, dict_field)
 
 
 def leaf_isinstance(obj: tp.Any, types) -> tp.Type:
