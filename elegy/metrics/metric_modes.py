@@ -14,8 +14,8 @@ def forward_all(metrics):
 
         for context, val in apply_recursive((), metrics, **kwargs):
             name = "/".join(context)
-            loss_name = get_unique_name(logs, name)
-            logs[loss_name] = val
+            name = get_unique_name(logs, name)
+            logs[name] = val
 
         return logs
 

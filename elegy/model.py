@@ -79,11 +79,11 @@ class Model(Module):
     additional details.
 
     Attributes:
-        params: A `haiku.Params` structure with the weights of the model.
-        state: A `haiku.State` structure with non-trainable parameters of the model.
-        optimizer_state:  A `optix.OptState` structure with state of the optimizer.
-        metrics_state: A `haiku.State` structure with the state of the metrics.
-        initial_metrics_state: A `haiku.State` structure with the initial state of the metrics.
+        parameters: A `haiku.Params` structure with the weights of the model.
+        states: A `haiku.State` structure with non-trainable parameters of the model.
+        optimizer_state:  A `optix.OptState` structure with states of the optimizer.
+        metrics_state: A `haiku.State` structure with the states of the metrics.
+        initial_metrics_state: A `haiku.State` structure with the initial states of the metrics.
         run_eagerly: Settable attribute indicating whether the model should run eagerly.
             Running eagerly means that your model will be run step by step, like Python code, instead of
             using Jax's `jit` to optimize the computation. Your model might run slower, but it should become easier for you to debug 
@@ -91,6 +91,9 @@ class Model(Module):
     """
 
     # public fields
+    module: Module
+    parameters: tp.Optional[tp.Dict[str, tp.Any]]
+    states: tp.Optional[tp.Dict[str, tp.Any]]
     optimizer_state: tp.Optional[optix.OptState]
     metrics_state: tp.Optional[tp.Dict]
     initial_metrics_state: tp.Optional[tp.Dict]
@@ -98,19 +101,19 @@ class Model(Module):
 
     # private fields
     _loss_fn: tp.Optional[tp.Callable]
-    _metrics: tp.Optional[tp.Callable]
+    _metrics_fn: tp.Optional[tp.Callable]
     _optimizer: optix.GradientTransformation
     _rngs: PRNGSequence
 
     def __init__(
         self,
-        module: tp.Callable,
+        module: Module,
         loss: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
         metrics: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
         optimizer: tp.Optional[optix.GradientTransformation] = None,
         run_eagerly: bool = False,
-        params: tp.Optional[tp.Dict] = None,
-        state: tp.Optional[tp.Dict] = None,
+        parameters: tp.Optional[tp.Dict] = None,
+        states: tp.Optional[tp.Dict] = None,
         optimizer_state: tp.Optional[optix.OptState] = None,
         metrics_state: tp.Optional[tp.Dict] = None,
         initial_metrics_state: tp.Optional[tp.Dict] = None,
@@ -119,7 +122,7 @@ class Model(Module):
         """[summary]
 
         Arguments:
-            module: A 0-argument function that returns a Haiku or Elegy `Module` instance.
+            module: A `Module` instance.
             loss: A `elegy.Loss` or `Callable` instance representing the loss function of the network.
                 You can define more loss terms by simply passing a possibly nested structure of
                 lists and dictionaries of `elegy.Loss` or `Callable`s. Usually a plain list of losses is enough
@@ -145,31 +148,21 @@ class Model(Module):
                 Running eagerly means that your model will be run step by step, like Python code, instead of
                 using Jax's `jit` to. Your model might run slower, but it should become easier for you to debug 
                 it by stepping into individual layer calls.
-            params: A `haiku.Params` structure with the weights of the model.
-            state: A `haiku.State` structure with non-trainable parameters of the model.
-            optimizer_state:  A `optix.OptState` structure with state of the optimizer.
-            metrics_state: A `haiku.State` structure with the state of the metrics.
-            initial_metrics_state: A `haiku.State` structure with the initial state of the metrics.
-            seed: The initial random state of the model.
+            parameters: A `haiku.Params` structure with the weights of the model.
+            states: A `haiku.State` structure with non-trainable parameters of the model.
+            optimizer_state:  A `optix.OptState` structure with states of the optimizer.
+            metrics_state: A `haiku.State` structure with the states of the metrics.
+            initial_metrics_state: A `haiku.State` structure with the initial states of the metrics.
+            seed: The initial random states of the model.
         """
 
-        self._module_fn = module
-        self._model_transform = hooks.transform(self._module_fn)
+        self.module = module
         self._loss_fn = loss_modes.forward_all(loss) if loss is not None else None
-        self._metrics_transform = (
-            hk.transform_with_state(
-                utils.inject_dependencies(
-                    metric_modes.forward_all(metrics),
-                    rename={"__params": "params", "__state": "state"},
-                )
-            )
-            if metrics
-            else None
-        )
+        self._metrics_fn = metric_modes.forward_all(metrics) if metrics else None
         self._optimizer = optimizer if optimizer is not None else optix.adam(1e-3)
-        self._rngs = hk.PRNGSequence(seed)
-        self.params = params
-        self.state = state
+        self._rngs = PRNGSequence(seed)
+        self.parameters = parameters
+        self.states = states
         self.optimizer_state = optimizer_state
         self.metrics_state = metrics_state
         self.initial_metrics_state = initial_metrics_state
@@ -189,23 +182,23 @@ class Model(Module):
 
         maybe_jit = jax.jit if self.run_eagerly else lambda x: x
 
-        if self.params is None or self.state is None:
+        if self.parameters is None or self.states is None:
             x_args, x_kwargs = utils.get_input_args(x, is_training=True)
 
-            self.params, self.state = maybe_jit(self._model_transform.init)(
+            self.parameters, self.states = maybe_jit(self._model_transform.init)(
                 rng=next(self._rngs), args=x_args, kwargs=x_kwargs
             )
 
         if mode == Mode.predict:
             return
 
-        if self._metrics_transform is not None and self.metrics_state is None:
+        if self._metrics_fn is not None and self.metrics_state is None:
             x_args, x_kwargs = utils.get_input_args(x, is_training=True)
 
             transformed_state = maybe_jit(self._model_transform.apply)(
                 # required by apply
-                params=self.params,
-                state=self.state,
+                parameters=self.parameters,
+                states=self.states,
                 rng=next(self._rngs),
                 get_summaries=False,
                 args=x_args,
@@ -214,7 +207,7 @@ class Model(Module):
 
             y_pred = transformed_state.outputs
 
-            _, self.metrics_state = maybe_jit(self._metrics_transform.init)(
+            _, self.metrics_state = maybe_jit(self._metrics_fn.init)(
                 # required by init
                 next(self._rngs),
                 # dependency injection
@@ -224,8 +217,8 @@ class Model(Module):
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 is_training=False,
-                __params=self.params,  # renamed
-                __state=self.state,  # renamed
+                __params=self.parameters,  # renamed
+                __state=self.states,  # renamed
             )
 
             self.initial_metrics_state = self.metrics_state
@@ -234,7 +227,7 @@ class Model(Module):
             return
 
         if self.optimizer_state is None:
-            self.optimizer_state = maybe_jit(self._optimizer.init)(self.params)
+            self.optimizer_state = maybe_jit(self._optimizer.init)(self.parameters)
 
     def reset_metrics(self, hard: bool = False):
 
@@ -291,8 +284,8 @@ class Model(Module):
 
         (
             logs,
-            self.params,
-            self.state,
+            self.parameters,
+            self.states,
             self.optimizer_state,
             self.metrics_state,
         ) = self._update(
@@ -300,8 +293,8 @@ class Model(Module):
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            params=self.params,
-            state=self.state,
+            parameters=self.parameters,
+            states=self.states,
             optimizer_state=self.optimizer_state,
             metrics_state=self.metrics_state,
             net_rng=next(self._rngs),
@@ -316,8 +309,8 @@ class Model(Module):
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
-        params: tp.Dict,
-        state: tp.Dict,
+        parameters: tp.Dict,
+        states: tp.Dict,
         optimizer_state: optix.OptState,
         metrics_state: tp.Optional[tp.Dict],
         net_rng: jnp.ndarray,
@@ -336,8 +329,8 @@ class Model(Module):
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            params=params,
-            state=state,
+            parameters=parameters,
+            states=states,
             optimizer_state=optimizer_state,
             metrics_state=metrics_state,
             net_rng=net_rng,
@@ -350,8 +343,8 @@ class Model(Module):
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
-        params: tp.Dict,
-        state: tp.Dict,
+        parameters: tp.Dict,
+        states: tp.Dict,
         optimizer_state: optix.OptState,
         metrics_state: tp.Optional[tp.Dict],
         net_rng: jnp.ndarray,
@@ -366,8 +359,8 @@ class Model(Module):
         (loss, (transformed_state, logs)), grads = jax.value_and_grad(
             self._loss, has_aux=True
         )(
-            params,
-            state=state,
+            parameters,
+            states=states,
             net_rng=net_rng,
             x=x,
             y=y,
@@ -377,16 +370,16 @@ class Model(Module):
         )
 
         y_pred = transformed_state.outputs
-        state = transformed_state.state
+        states = transformed_state.states
 
         updates, optimizer_state = self._optimizer.update(grads, optimizer_state)
-        params = optix.apply_updates(params, updates)
+        parameters = optix.apply_updates(parameters, updates)
 
-        if self._metrics_transform is not None:
-            metrics, metrics_state = self._metrics_transform.apply(
+        if self._metrics_fn is not None:
+            metrics, metrics_state = self._metrics_fn.apply(
                 # required by apply
-                {},  # params
-                metrics_state,  # state
+                {},  # parameters
+                metrics_state,  # states
                 metrics_rng,  # rng
                 # dependency injection
                 x=x,
@@ -395,19 +388,19 @@ class Model(Module):
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 is_training=True,
-                __params=params,  # renamed
-                __state=state,  # renamed
+                __params=parameters,  # renamed
+                __state=states,  # renamed
             )
             logs.update(metrics)
 
-        return logs, params, state, optimizer_state, metrics_state
+        return logs, parameters, states, optimizer_state, metrics_state
 
     _update_jit = jax.jit(_update_no_jit, static_argnums=(0,))
 
     def _loss(
         self,
-        params: tp.Dict,
-        state: tp.Dict,
+        parameters: tp.Dict,
+        states: tp.Dict,
         net_rng: jnp.ndarray,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
@@ -420,13 +413,13 @@ class Model(Module):
             is_training=is_training,
             get_summaries=False,
             x=x,
-            params=params,
-            state=state,
+            parameters=parameters,
+            states=states,
             net_rng=net_rng,
         )
 
         y_pred = transformed_state.outputs
-        state = transformed_state.state
+        states = transformed_state.states
 
         logs = (
             self._loss_fn(
@@ -436,8 +429,8 @@ class Model(Module):
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 is_training=is_training,
-                params=params,
-                state=state,
+                parameters=parameters,
+                states=states,
             )
             if self._loss_fn is not None
             else {}
@@ -991,8 +984,8 @@ class Model(Module):
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            params=self.params,
-            state=self.state,
+            parameters=self.parameters,
+            states=self.states,
             metrics_state=self.metrics_state,
             net_rng=next(self._rngs),
             metrics_rng=next(self._rngs),
@@ -1006,8 +999,8 @@ class Model(Module):
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
-        params: tp.Dict,
-        state: tp.Dict,
+        parameters: tp.Dict,
+        states: tp.Dict,
         metrics_state: tp.Optional[tp.Dict],
         net_rng: jnp.ndarray,
         metrics_rng: jnp.ndarray,
@@ -1022,8 +1015,8 @@ class Model(Module):
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            params=params,
-            state=state,
+            parameters=parameters,
+            states=states,
             metrics_state=metrics_state,
             net_rng=net_rng,
             metrics_rng=metrics_rng,
@@ -1035,8 +1028,8 @@ class Model(Module):
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
-        params: tp.Dict,
-        state: tp.Dict,
+        parameters: tp.Dict,
+        states: tp.Dict,
         metrics_state: tp.Optional[tp.Dict],
         net_rng: jnp.ndarray,
         metrics_rng: jnp.ndarray,
@@ -1045,8 +1038,8 @@ class Model(Module):
     ]:
 
         loss, (transformed_state, logs) = self._loss(
-            params,
-            state=state,
+            parameters,
+            states=states,
             net_rng=net_rng,
             x=x,
             y=y,
@@ -1057,11 +1050,11 @@ class Model(Module):
 
         y_pred = transformed_state.outputs
 
-        if self._metrics_transform is not None:
-            metrics, metrics_state = self._metrics_transform.apply(
+        if self._metrics_fn is not None:
+            metrics, metrics_state = self._metrics_fn.apply(
                 # required by apply
-                {},  # params
-                metrics_state,  # state
+                {},  # parameters
+                metrics_state,  # states
                 metrics_rng,  # rng
                 # dependency injection
                 x=x,
@@ -1070,8 +1063,8 @@ class Model(Module):
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 is_training=False,
-                __params=params,  # renamed
-                __state=state,  # renamed
+                __params=parameters,  # renamed
+                __state=states,  # renamed
             )
             logs.update(metrics)
 
@@ -1108,8 +1101,8 @@ class Model(Module):
             False,  # is_training
             False,  # get_summaries
             x=x,
-            params=self.params,
-            state=self.state,
+            parameters=self.parameters,
+            states=self.states,
             net_rng=next(self._rngs),
         )
 
@@ -1120,8 +1113,8 @@ class Model(Module):
         is_training: bool,
         get_summaries: bool,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        params: tp.Dict,
-        state: tp.Dict,
+        parameters: tp.Dict,
+        states: tp.Dict,
         net_rng: jnp.ndarray,
     ) -> TransformedState:
 
@@ -1131,8 +1124,8 @@ class Model(Module):
             is_training,
             get_summaries,
             x=x,
-            params=params,
-            state=state,
+            parameters=parameters,
+            states=states,
             net_rng=net_rng,
         )
 
@@ -1141,8 +1134,8 @@ class Model(Module):
         is_training: bool,
         get_summaries: bool,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        params: tp.Dict,
-        state: tp.Dict,
+        parameters: tp.Dict,
+        states: tp.Dict,
         net_rng: jnp.ndarray,
     ) -> TransformedState:
 
@@ -1150,8 +1143,8 @@ class Model(Module):
 
         transformed_state = self._model_transform.apply(
             # required by apply
-            params=params,
-            state=state,
+            parameters=parameters,
+            states=states,
             rng=net_rng,
             get_summaries=get_summaries,
             args=x_args,
@@ -1165,7 +1158,7 @@ class Model(Module):
     @property
     def seed(self) -> tp.Union[np.ndarray, int]:
         """
-        Current random state of the model.
+        Current random states of the model.
         """
         return self._rngs.internal_state[0]
 
@@ -1178,47 +1171,47 @@ class Model(Module):
         """
         """
 
-        state: tp.Dict = {"seed": self.seed}
+        states: tp.Dict = {"seed": self.seed}
 
-        if self.params is not None:
-            state["params"] = self.params
+        if self.parameters is not None:
+            states["parameters"] = self.parameters
 
-        if self.state is not None:
-            state["state"] = self.state
+        if self.states is not None:
+            states["states"] = self.states
 
         if self.metrics_state is not None:
-            state["metrics_state"] = self.metrics_state
+            states["metrics_state"] = self.metrics_state
 
         if self.initial_metrics_state is not None:
-            state["initial_metrics_state"] = self.initial_metrics_state
+            states["initial_metrics_state"] = self.initial_metrics_state
 
         if self.optimizer_state is not None:
-            state["optimizer_state"] = self.optimizer_state
+            states["optimizer_state"] = self.optimizer_state
 
-        return state
+        return states
 
     @full_state.setter
-    def full_state(self, state):
-        self.seed = state["seed"]
+    def full_state(self, states):
+        self.seed = states["seed"]
 
-        if "params" in state:
-            self.params = state["params"]
+        if "parameters" in states:
+            self.parameters = states["parameters"]
 
-        if "state" in state:
-            self.state = state["state"]
+        if "states" in states:
+            self.states = states["states"]
 
-        if "metrics_state" in state:
-            self.metrics_state = state["metrics_state"]
+        if "metrics_state" in states:
+            self.metrics_state = states["metrics_state"]
 
-        if "initial_metrics_state" in state:
-            self.initial_metrics_state = state["initial_metrics_state"]
+        if "initial_metrics_state" in states:
+            self.initial_metrics_state = states["initial_metrics_state"]
 
-        if "optimizer_state" in state:
-            self.optimizer_state = state["optimizer_state"]
+        if "optimizer_state" in states:
+            self.optimizer_state = states["optimizer_state"]
 
     def _clear_state(self):
-        self.params = None
-        self.state = None
+        self.parameters = None
+        self.states = None
         self.metrics_state = None
         self.initial_metrics_state = None
         self.optimizer_state = None
@@ -1233,12 +1226,12 @@ class Model(Module):
             as `{path}/model.pkl`, this allows you to re-instantiate 
             the model later.
         - The model parameters + states serialized into HDF5 as `{path}/parameters.h5`.
-        - The state of the optimizer serialized with `pickle` as
+        - The states of the optimizer serialized with `pickle` as
             as `{path}/optimizer_state.pkl`, allowing to resume training
             exactly where you left off. We hope to use HDF5 in the future
-            but `optix` state is incompatible with `deepdish`.
+            but `optix` states is incompatible with `deepdish`.
         
-        This allows you to save the entirety of the state of a model
+        This allows you to save the entirety of the states of a model
         in a directory structure which can be fully restored via 
         `Model.load` if the model is already instiated or `elegy.model.load`
         to load the model instance from its pickled version.
@@ -1254,23 +1247,23 @@ class Model(Module):
         ```
         Arguments:
             path: path where model structure will be saved.
-            include_optimizer: If True, save optimizer's state together.
+            include_optimizer: If True, save optimizer's states together.
         """
         if isinstance(path, str):
             path = Path(path)
 
         path.mkdir(parents=True, exist_ok=True)
 
-        state = self.full_state
+        states = self.full_state
 
-        original_state = copy(state)
+        original_state = copy(states)
 
-        state.pop("metrics_state", None)
-        state.pop("initial_metrics_state", None)
+        states.pop("metrics_state", None)
+        states.pop("initial_metrics_state", None)
 
-        optimizer_state = state.pop("optimizer_state", None)
+        optimizer_state = states.pop("optimizer_state", None)
 
-        deepdish.io.save(path / "parameters.h5", state)
+        deepdish.io.save(path / "parameters.h5", states)
 
         if include_optimizer and optimizer_state is not None:
             with open(path / "optimizer_state.pkl", "wb") as f:
@@ -1303,15 +1296,15 @@ class Model(Module):
         if isinstance(path, str):
             path = Path(path)
 
-        state: tp.Dict = deepdish.io.load(path / "parameters.h5")
+        states: tp.Dict = deepdish.io.load(path / "parameters.h5")
 
         optimizer_state_path = path / "optimizer_state.pkl"
 
         if optimizer_state_path.exists():
             with open(optimizer_state_path, "rb") as f:
-                state["optimizer_state"] = pickle.load(f)
+                states["optimizer_state"] = pickle.load(f)
 
-        self.full_state = state
+        self.full_state = states
 
     def summary(
         self, x, depth: int = 3, tablefmt: str = "fancy_grid", **tablulate_kwargs
@@ -1340,8 +1333,8 @@ class Model(Module):
             is_training=False,
             get_summaries=True,
             x=x,
-            params=self.params,
-            state=self.state,
+            parameters=self.parameters,
+            states=self.states,
             net_rng=next(self._rngs),
         )
 
@@ -1370,8 +1363,8 @@ class Model(Module):
         )
 
         summaries = toolz.groupby(lambda x: x[0][:depth], summaries)
-        params = utils.split_and_merge(self.params)
-        state = utils.split_and_merge(self.state)
+        parameters = utils.split_and_merge(self.parameters)
+        states = utils.split_and_merge(self.states)
 
         table: tp.List = [["Inputs", format_output(x), "0", "0"]]
 
@@ -1379,8 +1372,8 @@ class Model(Module):
             output = group[-1][2]
             class_name = group[-1][1]
 
-            sub_params = params
-            sub_states = state
+            sub_params = parameters
+            sub_states = states
 
             try:
                 for k in keys:
@@ -1443,10 +1436,10 @@ class Model(Module):
             )
         )
 
-        params_count = hk.data_structures.tree_size(self.params)
-        params_size = hk.data_structures.tree_bytes(self.params)
-        states_count = hk.data_structures.tree_size(self.state)
-        states_size = hk.data_structures.tree_bytes(self.state)
+        params_count = hk.data_structures.tree_size(self.parameters)
+        params_size = hk.data_structures.tree_bytes(self.parameters)
+        states_count = hk.data_structures.tree_size(self.states)
+        states_size = hk.data_structures.tree_bytes(self.states)
         total_count = params_count + states_count
         total_size = params_size + states_size
 
@@ -1481,7 +1474,7 @@ def load(path: tp.Union[str, Path]) -> Model:
 
     This function will restore both the model architecture,
     that is, its `Model` class instance, along with all of its
-    parameters, state, and optimizer state.
+    parameters, states, and optimizer states.
 
     Example:
 

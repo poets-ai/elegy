@@ -24,6 +24,8 @@ State = tp.Mapping[str, tp.Mapping[str, np.ndarray]]
 PadFn = tp.Callable[[int], tp.Tuple[int, int]]
 PadFnOrFns = tp.Union[PadFn, tp.Sequence[PadFn]]
 PRNGKey = np.ndarray
+Parameters = tp.Dict[str, tp.Any]
+States = tp.Dict[str, tp.Any]
 
 
 class Initializer(utils.Protocol):

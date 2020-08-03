@@ -1,4 +1,4 @@
-from elegy.types import PRNGKey
+import functools
 import threading
 import typing as tp
 from abc import ABCMeta, abstractmethod
@@ -9,11 +9,16 @@ from contextlib import contextmanager
 # -------------------------------------------------------------
 from dataclasses import dataclass
 
+# -----------------------------------------------------------------
+# PRNGSequence
+# ----------------------------------------------------------------
+import haiku as hk
 import jax
 import jax.numpy as jnp
 import numpy as np
 
-from elegy import utils
+from elegy import types, utils
+from elegy.types import PRNGKey
 
 T = tp.TypeVar("T")
 LOCAL = threading.local()
@@ -22,18 +27,24 @@ LOCAL.contexts = []
 
 class ModuleMeta(ABCMeta):
     def __call__(cls: tp.Type[T], *args, **kwargs) -> T:
-        module = cls.__new__(cls, *args, **kwargs)
+        module: Module = cls.__new__(cls, *args, **kwargs)
         cls.__init__(module, *args, **kwargs)
+        functools.wraps(module.call)(module)
 
         if (
             not hasattr(module, "name")
             or not hasattr(module, "_params")
             or not hasattr(module, "_states")
+            or not hasattr(module, "_submodules")
         ):
             raise ValueError(
                 "Constructing an hk.Module without calling the super constructor "
                 "is not supported."
             )
+
+        for key, value in vars(module).items():
+            if leaf_isinstance(value, Module):
+                module._submodules.add(key)
 
         return module
 
@@ -45,9 +56,9 @@ class Module(metaclass=ModuleMeta):
     """
 
     name: str
-    _params: tp.List[str]
-    _states: tp.List[str]
-    _next_states: tp.List[str]
+    _params: tp.Dict[str, tp.Any]
+    _states: tp.Dict[str, tp.Any]
+    _submodules: tp.Set[str]
 
     def __init__(self, name: tp.Optional[str] = None):
         """
@@ -62,8 +73,9 @@ class Module(metaclass=ModuleMeta):
                 current instance is converted to ``lower_snake_case`` and used instead.
         """
         self.name = name if name else utils.lower_snake_case(self.__class__.__name__)
-        self._params = []
-        self._states = []
+        self._params = {}
+        self._states = {}
+        self._submodules = set()
 
     def __call__(self, *args, **kwargs) -> tp.Any:
         """
@@ -82,13 +94,20 @@ class Module(metaclass=ModuleMeta):
         ...
 
     def init(
-        self, rng: tp.Optional[tp.Union[np.ndarray, int]] = None,
-    ) -> "InitContext":
+        self, rng: tp.Optional[tp.Union[np.ndarray, int]] = None
+    ) -> "InitCallable":
         """
         Initializes your function collecting parameters and states.
         """
 
-        return InitContext(module=self, rng=rng)
+        @functools.wraps(self.call)
+        def init_fn(*args, **kwargs):
+            with context(rng=rng, training=True, building=True, get_summaries=False):
+                self(*args, **kwargs)
+
+            return self.parameters, self.states
+
+        return init_fn
 
     def apply(
         self,
@@ -97,8 +116,7 @@ class Module(metaclass=ModuleMeta):
         rng: tp.Optional[tp.Union[np.ndarray, int]] = None,
         training: bool = True,
         get_summaries: bool = False,
-        return_context: bool = False,
-    ) -> "ApplyContext":
+    ) -> "ApplyCallable":
         """
         Applies your function injecting parameters and states.
 
@@ -115,15 +133,31 @@ class Module(metaclass=ModuleMeta):
             of (outputs, states, losses, metrics, summaries).
         """
 
-        return ApplyContext(
-            module=self,
-            parameters=parameters,
-            states=states,
-            rng=rng,
-            training=training,
-            get_summaries=get_summaries,
-            return_context=return_context,
-        )
+        @functools.wraps(self.call)
+        def apply_fn(*args, **kwargs):
+
+            if parameters:
+                self.parameters = parameters
+
+            if states:
+                self.states = states
+
+            with context(
+                rng=rng, training=training, building=False, get_summaries=get_summaries,
+            ) as ctx:
+                outputs = self(*args, **kwargs)
+
+            return (
+                outputs,
+                ApplyContext(
+                    states=self.states,
+                    losses=ctx.losses,
+                    metrics=ctx.metrics,
+                    summaries=ctx.summaries,
+                ),
+            )
+
+        return apply_fn
 
     def get_parameter(
         self,
@@ -136,21 +170,20 @@ class Module(metaclass=ModuleMeta):
             context: Context = LOCAL.contexts[-1]
 
             if name not in self._params:
-                setattr(self, name, initializer(shape, dtype))
-                self._params.append(name)
+                if not context.building:
+                    raise ValueError(
+                        f"Trying to initialize '{name}' outside of `init`."
+                    )
 
-            if context.get_summaries:
-                base_name = context.unique_name[self]
+                if name in self._submodules:
+                    raise ValueError(
+                        f"Cannot use name '{name}' for parameter since a submodule "
+                        "with the same name already exists."
+                    )
 
-                if (
-                    base_name in context.parameters
-                    and name not in context.parameters[base_name]
-                ):
-                    context.parameters[base_name][name] = getattr(self, name)
-                else:
-                    context.parameters[base_name] = {name: getattr(self, name)}
+                self._params[name] = initializer(shape, dtype)
 
-            param = getattr(self, name)
+            param = self._params[name]
 
             assert param.shape == tuple(shape)
 
@@ -167,28 +200,27 @@ class Module(metaclass=ModuleMeta):
         dtype: tp.Any = jnp.float32,
         initializer: tp.Callable[[tp.Sequence[int], tp.Any], tp.Any] = None,
     ) -> tp.Any:
-        context: Context = LOCAL.contexts[-1]
 
         if LOCAL.contexts:
+            context: Context = LOCAL.contexts[-1]
+
             if name not in self._states:
-                setattr(self, name, initializer(shape, dtype))
-                self._states.append(name)
+                if not context.building:
+                    raise ValueError(
+                        f"Trying to initialize '{name}' outside of `init`."
+                    )
 
-                if context.get_summaries:
-                    base_name = context.unique_name[self]
+                if name in self._submodules:
+                    raise ValueError(
+                        f"Cannot use name '{name}' for state since a submodule "
+                        "with the same name already exists."
+                    )
 
-                    if (
-                        base_name in context.states
-                        and name not in context.states[base_name]
-                    ):
-                        context.states[base_name][name] = getattr(self, name)
-                    else:
-                        context.states[base_name] = {name: getattr(self, name)}
+                self._states[name] = initializer(shape, dtype)
 
-            param = getattr(self, name)
+            param = self._states[name]
 
             assert param.shape == tuple(shape)
-            assert param.dtype == dtype
 
             return param
         else:
@@ -200,7 +232,7 @@ class Module(metaclass=ModuleMeta):
             context: Context = LOCAL.contexts[-1]
 
             if not context.building:
-                setattr(self, name, value)
+                self._states[name] = value
         else:
             raise ValueError("Cannot execute `set_state` outside of a `elegy.context`")
 
@@ -240,10 +272,11 @@ class Module(metaclass=ModuleMeta):
 
             base_name = context.unique_name[self]
 
-            name = f"{base_name}/{name}" if name is not None else base_name
-            name = get_unique_name(context.summaries, name)
+            base_name = f"{base_name}/{name}" if name is not None else base_name
+            base_name = get_unique_name(context.summaries, base_name)
+            module = self if name is None else None  # pass module only if name is None
 
-            context.summaries.append((name, self.__class__.__name__, value))
+            context.summaries.append((module, base_name, value))
         else:
             raise ValueError(
                 "Cannot execute `add_summary` outside of an `elegy.context`"
@@ -256,11 +289,11 @@ class Module(metaclass=ModuleMeta):
         return parameters
 
     @parameters.setter
-    def parameters(self, values: tp.Optional[tp.Dict]):
-        if values is None:
-            clear_tree(self, "_params")
-        else:
-            set_tree(self, values, "_params")
+    def parameters(self, values: tp.Dict):
+        set_tree(self, values, "_params")
+
+    def clear_parameters(self):
+        clear_tree(self, "_params")
 
     @property
     def states(self) -> tp.Dict:
@@ -269,11 +302,37 @@ class Module(metaclass=ModuleMeta):
         return states
 
     @states.setter
-    def states(self, values: tp.Optional[tp.Dict]):
-        if values is None:
-            clear_tree(self, "_states")
+    def states(self, values: tp.Dict):
+        set_tree(self, values, "_states")
+
+    def clear_states(self):
+        clear_tree(self, "_states")
+
+    def parameters_size(self, include_submodules: bool = True):
+        if include_submodules:
+            return sum(x.size for x in jax.tree_leaves(self.parameters))
         else:
-            set_tree(self, values, "_states")
+            return sum(x.size for x in jax.tree_leaves(self._params))
+
+    def states_size(self, include_submodules: bool = True):
+        if include_submodules:
+            return sum(x.size for x in jax.tree_leaves(self.states))
+        else:
+            return sum(x.size for x in jax.tree_leaves(self._states))
+
+    def parameters_bytes(self, include_submodules: bool = True):
+        if include_submodules:
+            return sum(
+                x.size * x.dtype.itemsize for x in jax.tree_leaves(self.parameters)
+            )
+        else:
+            return sum(x.size * x.dtype.itemsize for x in jax.tree_leaves(self._params))
+
+    def states_bytes(self, include_submodules: bool = True):
+        if include_submodules:
+            return sum(x.size * x.dtype.itemsize for x in jax.tree_leaves(self.states))
+        else:
+            return sum(x.size * x.dtype.itemsize for x in jax.tree_leaves(self._states))
 
 
 # -------------------------------------------------------------
@@ -331,6 +390,8 @@ def add_metric(name: str, value: np.ndarray):
     """
     if LOCAL.contexts:
         context: Context = LOCAL.contexts[-1]
+        base_name = "/".join(context.names_context)
+        name = f"{base_name}/{name}"
         name = get_unique_name(context.metrics, name)
         context.metrics[name] = value
     else:
@@ -363,32 +424,6 @@ def next_rng_key() -> PRNGKey:
         raise ValueError("Cannot execute `next_rng_key` outside of an `elegy.context`")
 
 
-def is_training() -> bool:
-    """
-    Returns a unique JAX RNG key split from the current global key.
-
-    ```python
-    key = hk.next_rng_key()
-    x = jax.random.uniform(key, [])
-    ```
-
-    Returns:
-        A unique (within a transformed function) JAX rng key that can be used with
-        APIs such as ``jax.random.uniform``.
-    """
-    if LOCAL.contexts:
-        context: Context = LOCAL.contexts[-1]
-        if context.rng_sequence is not None:
-            context: Context = LOCAL.contexts[-1]
-            return context.training
-        else:
-            raise ValueError(
-                "Cannot execute `rng` not set in context, check init or apply."
-            )
-    else:
-        raise ValueError("Cannot execute `next_rng_key` outside of an `elegy.context`")
-
-
 class Context(tp.NamedTuple):
     """
     A named tuple representing the outputs of [elegy.hooks.transform.apply][].
@@ -406,12 +441,10 @@ class Context(tp.NamedTuple):
     rng_sequence: tp.Optional["PRNGSequence"]
     losses: tp.Dict
     metrics: tp.Dict
-    summaries: tp.List[tp.Tuple[str, str, tp.Any]]
+    summaries: tp.List[tp.Tuple[tp.Optional[Module], str, tp.Any]]
     names_context: tp.List[str]
     unique_name: tp.Dict[tp.Any, str]
     repeated_name_count: tp.Dict[str, int]
-    parameters: tp.Dict[str, tp.Dict[str, tp.Any]]
-    states: tp.Dict[str, tp.Dict[str, tp.Any]]
 
 
 @contextmanager
@@ -437,8 +470,6 @@ def context(
         names_context=[],
         unique_name={},
         repeated_name_count={},
-        parameters={},
-        states={},
     )
 
     LOCAL.contexts.append(ctx)
@@ -496,64 +527,21 @@ def names_context(module: Module):
 # ------------------------------------------------------------------------
 
 
-class InitContext(tp.NamedTuple):
-    module: "Module"
-    rng: tp.Optional[tp.Union[np.ndarray, int]]
+class ApplyCallable(utils.Protocol):
+    def __call__(self, *args, **kwargs) -> tp.Tuple[tp.Any, "ApplyContext"]:
+        ...
 
-    def __call__(self, *args, **kwargs) -> tp.Tuple[tp.Dict, tp.Dict]:
-        with context(rng=self.rng, training=True, building=True, get_summaries=False):
-            self.module(*args, **kwargs)
 
-        return self.module.parameters, self.module.states
+class InitCallable(utils.Protocol):
+    def __call__(self, *args, **kwargs) -> tp.Tuple[types.Parameters, types.States]:
+        ...
 
 
 class ApplyContext(tp.NamedTuple):
-    module: Module
-    parameters: tp.Optional[tp.Dict]
-    states: tp.Optional[tp.Dict]
-    rng: tp.Optional[tp.Union[np.ndarray, int]]
-    training: bool
-    get_summaries: bool
-    return_context: bool
-
-    def __call__(self, *args, **kwargs) -> tp.Union[tp.Any, "ApplyOutput"]:
-
-        if self.parameters:
-            self.module.parameters = self.parameters
-
-        if self.states:
-            self.module.states = self.states
-
-        with context(
-            rng=self.rng,
-            training=self.training,
-            building=False,
-            get_summaries=self.get_summaries,
-        ) as ctx:
-            outputs = self.module(*args, **kwargs)
-
-        if self.return_context:
-            return ApplyOutput(
-                outputs=outputs,
-                states=self.module.states,
-                losses=ctx.losses,
-                metrics=ctx.metrics,
-                summaries=ctx.summaries,
-                parameters_summaries=ctx.parameters,
-                states_summaries=ctx.states,
-            )
-        else:
-            return outputs
-
-
-class ApplyOutput(tp.NamedTuple):
-    outputs: tp.Any
     states: tp.Dict
     losses: tp.Dict
     metrics: tp.Dict
-    summaries: tp.List[tp.Tuple[str, str, tp.Any]]
-    parameters_summaries: tp.Dict[str, tp.Dict[str, tp.Any]]
-    states_summaries: tp.Dict[str, tp.Dict[str, tp.Any]]
+    summaries: tp.List[tp.Tuple[tp.Optional[Module], str, tp.Any]]
 
 
 class TransformedState(tp.NamedTuple):
@@ -571,7 +559,7 @@ class TransformedState(tp.NamedTuple):
     outputs: tp.Any
     losses: tp.Dict
     metrics: tp.Dict
-    summaries: tp.List[tp.Tuple[str, str, tp.Any]]
+    summaries: tp.List[tp.Tuple[tp.Optional[Module], str, tp.Any]]
 
 
 # ------------------------------------------------------------------------
@@ -580,58 +568,59 @@ class TransformedState(tp.NamedTuple):
 
 
 def get_tree(
-    module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict], list_field: str
+    module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict], dict_field: str
 ) -> tp.Union[tp.List, tp.Tuple, tp.Dict]:
 
     if isinstance(module, tp.List):
-        return [get_tree(module, list_field) for module in module]
+        return [get_tree(module, dict_field) for module in module]
     elif isinstance(module, tp.Tuple):
-        return tuple(get_tree(module, list_field) for module in module)
+        return tuple(get_tree(module, dict_field) for module in module)
     elif isinstance(module, tp.Dict):
-        return {key: get_tree(module, list_field) for key, module in module.items()}
+        return {key: get_tree(module, dict_field) for key, module in module.items()}
     else:
-        return dict(
-            **{key: getattr(module, key) for key in getattr(module, list_field)},
-            **{
-                key: get_tree(value, list_field)
-                for key, value in vars(module).items()
-                if leaf_isinstance(value, Module)
-            },
-        )
+        node = getattr(module, dict_field).copy()
+        for submodule in module._submodules:
+            value = get_tree(getattr(module, submodule), dict_field)
+            if value:  # drop if empty
+                node[submodule] = value
+        return node
 
 
 def set_tree(
     module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict],
     values: tp.Union[tp.List, tp.Tuple, tp.Dict],
-    list_field: str,
+    dict_field: str,
 ):
 
     if isinstance(module, tp.List):
         assert isinstance(values, tp.List)
 
         for module, value in zip(module, values):
-            set_tree(module, value, list_field)
+            set_tree(module, value, dict_field)
 
     elif isinstance(module, tp.Tuple):
         assert isinstance(values, tp.Tuple)
 
         for module, value in zip(module, values):
-            set_tree(module, value, list_field)
+            set_tree(module, value, dict_field)
 
     elif isinstance(module, tp.Dict):
         assert isinstance(values, tp.Dict)
 
         for key, value in values.items():
-            set_tree(module[key], value, list_field)
+            set_tree(module[key], value, dict_field)
 
     else:
         assert isinstance(values, tp.Dict)
 
-        for key, value in values.items():
-            if key in getattr(module, list_field):
-                setattr(module, key, value)
-            else:
-                set_tree(getattr(module, key), value, list_field)
+        dict_field_value = getattr(module, dict_field)
+
+        for key in dict_field_value:
+            dict_field_value[key] = values[key]
+
+        for key in module._submodules:
+            if key in values:
+                set_tree(getattr(module, key), values[key], dict_field)
 
 
 def clear_tree(module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict], dict_field: str):
@@ -652,12 +641,10 @@ def clear_tree(module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict], dict_field:
             clear_tree(module[key], dict_field)
 
     else:
-
         setattr(module, dict_field, {})
 
-        for key, value in vars(module).items():
-            if leaf_isinstance(value, Module):
-                clear_tree(value, dict_field)
+        for key in module._submodules:
+            clear_tree(getattr(module, key), dict_field)
 
 
 def leaf_isinstance(obj: tp.Any, types) -> tp.Type:
@@ -665,14 +652,16 @@ def leaf_isinstance(obj: tp.Any, types) -> tp.Type:
     if isinstance(obj, (tp.List, tp.Tuple)) and obj:
         return leaf_isinstance(obj[0], types)
     elif isinstance(obj, tp.Dict) and obj:
-        return leaf_isinstance(list(obj.values())[0], types)
+        return leaf_isinstance(next(iter(obj.values())), types)
     else:
         return isinstance(obj, types)
 
 
 def get_unique_name(
     logs: tp.Union[
-        tp.Set[str], tp.Dict[str, tp.Any], tp.List[tp.Tuple[str, str, tp.Any]]
+        tp.Set[str],
+        tp.Dict[str, tp.Any],
+        tp.List[tp.Tuple[tp.Optional[Module], str, tp.Any]],
     ],
     name: str,
 ):
@@ -680,7 +669,7 @@ def get_unique_name(
     if isinstance(logs, dict):
         names = set(logs.keys())
     elif isinstance(logs, tp.List):
-        names = {t[0] for t in logs}
+        names = {t[1] for t in logs}
     else:
         names = logs
 
@@ -693,11 +682,6 @@ def get_unique_name(
 
     return f"{name}_{i}"
 
-
-# -----------------------------------------------------------------
-# PRNGSequence
-# ----------------------------------------------------------------
-import haiku as hk
 
 hk.PRNGSequence
 

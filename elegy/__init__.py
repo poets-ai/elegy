@@ -7,14 +7,13 @@ from .losses import Loss
 from .metrics import Metric
 from .model import Model
 from .module import (
+    ApplyCallable,
     ApplyContext,
-    ApplyOutput,
     Context,
-    InitContext,
+    InitCallable,
     Module,
     TransformedState,
-    context,
     add_loss,
     add_metric,
-    is_training,
+    context,
 )
