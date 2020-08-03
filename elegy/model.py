@@ -1,7 +1,14 @@
 # Implementation based on tf.keras.engine.training.py
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
-from elegy.module import Module, PRNGSequence, TransformedState
+import functools
+from elegy.module import (
+    ApplyCallable,
+    ApplyContext,
+    Module,
+    PRNGSequence,
+    TransformedState,
+)
 from io import StringIO
 import json
 import logging
@@ -42,7 +49,7 @@ class Mode(Enum):
     train = 3
 
 
-class Model(Module):
+class Model:
     """
     `Model` is tasked with performing training, evaluation, and inference for a given
     `elegy.Module` or `haiku.Module`.
@@ -101,7 +108,7 @@ class Model(Module):
 
     # private fields
     _loss_fn: tp.Optional[tp.Callable]
-    _metrics_fn: tp.Optional[tp.Callable]
+    _metrics_module: tp.Optional[Module]
     _optimizer: optix.GradientTransformation
     _rngs: PRNGSequence
 
@@ -158,7 +165,7 @@ class Model(Module):
 
         self.module = module
         self._loss_fn = loss_modes.forward_all(loss) if loss is not None else None
-        self._metrics_fn = metric_modes.forward_all(metrics) if metrics else None
+        self._metrics_module = metric_modes.Metrics(metrics) if metrics else None
         self._optimizer = optimizer if optimizer is not None else optix.adam(1e-3)
         self._rngs = PRNGSequence(seed)
         self.parameters = parameters
@@ -168,8 +175,10 @@ class Model(Module):
         self.initial_metrics_state = initial_metrics_state
         self.run_eagerly = run_eagerly
 
+        functools.wraps(self.module)(self)
+
     def __call__(self, *args, **kwargs):
-        return self._module_fn(*args, **kwargs)
+        return self.module(*args, **kwargs)
 
     def _maybe_initialize(
         self,
@@ -185,40 +194,36 @@ class Model(Module):
         if self.parameters is None or self.states is None:
             x_args, x_kwargs = utils.get_input_args(x, is_training=True)
 
-            self.parameters, self.states = maybe_jit(self._model_transform.init)(
-                rng=next(self._rngs), args=x_args, kwargs=x_kwargs
-            )
+            self.parameters, self.states = maybe_jit(
+                self.module.init(rng=next(self._rngs))
+            )(*x_args, **x_kwargs)
 
         if mode == Mode.predict:
             return
 
-        if self._metrics_fn is not None and self.metrics_state is None:
+        if self._metrics_module is not None and self.metrics_state is None:
             x_args, x_kwargs = utils.get_input_args(x, is_training=True)
 
-            transformed_state = maybe_jit(self._model_transform.apply)(
-                # required by apply
-                parameters=self.parameters,
-                states=self.states,
-                rng=next(self._rngs),
-                get_summaries=False,
-                args=x_args,
-                kwargs=x_kwargs,
-            )
+            y_pred, context = maybe_jit(
+                self.module.apply(
+                    parameters=self.parameters,
+                    states=self.states,
+                    rng=next(self._rngs),
+                    get_summaries=False,
+                )
+            )(*x_args, **x_kwargs)
 
-            y_pred = transformed_state.outputs
-
-            _, self.metrics_state = maybe_jit(self._metrics_fn.init)(
-                # required by init
-                next(self._rngs),
-                # dependency injection
+            _, self.metrics_state = maybe_jit(
+                self._metrics_module.init(rng=next(self._rngs))
+            )(
                 x=x,
                 y_true=y,
                 y_pred=y_pred,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 is_training=False,
-                __params=self.parameters,  # renamed
-                __state=self.states,  # renamed
+                parameters=self.parameters,
+                states=self.states,
             )
 
             self.initial_metrics_state = self.metrics_state
@@ -356,9 +361,7 @@ class Model(Module):
         optix.OptState,
         tp.Optional[tp.Dict],
     ]:
-        (loss, (transformed_state, logs)), grads = jax.value_and_grad(
-            self._loss, has_aux=True
-        )(
+        (loss, (context, logs)), grads = jax.value_and_grad(self._loss, has_aux=True)(
             parameters,
             states=states,
             net_rng=net_rng,
@@ -369,28 +372,26 @@ class Model(Module):
             is_training=True,
         )
 
-        y_pred = transformed_state.outputs
-        states = transformed_state.states
+        y_pred = context.outputs
+        states = context.states
 
         updates, optimizer_state = self._optimizer.update(grads, optimizer_state)
         parameters = optix.apply_updates(parameters, updates)
 
-        if self._metrics_fn is not None:
-            metrics, metrics_state = self._metrics_fn.apply(
-                # required by apply
-                {},  # parameters
-                metrics_state,  # states
-                metrics_rng,  # rng
-                # dependency injection
+        if self._metrics_module is not None:
+            metrics, metrics_context = self._metrics_module.apply(
+                states=metrics_state, rng=metrics_rng,
+            )(
                 x=x,
                 y_true=y,
                 y_pred=y_pred,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 is_training=True,
-                __params=parameters,  # renamed
-                __state=states,  # renamed
+                parameters=parameters,
+                states=states,
             )
+            metrics_state = metrics_context.states
             logs.update(metrics)
 
         return logs, parameters, states, optimizer_state, metrics_state
@@ -409,7 +410,7 @@ class Model(Module):
         is_training: bool,
     ):
 
-        transformed_state = self._predict_no_jit(
+        y_pred, context = self._predict_no_jit(
             is_training=is_training,
             get_summaries=False,
             x=x,
@@ -418,8 +419,7 @@ class Model(Module):
             net_rng=net_rng,
         )
 
-        y_pred = transformed_state.outputs
-        states = transformed_state.states
+        states = context.states
 
         logs = (
             self._loss_fn(
@@ -437,15 +437,13 @@ class Model(Module):
         )
 
         # get total loss
-        loss = logs["loss"] = sum(logs.values()) + sum(
-            transformed_state.losses.values()
-        )
+        loss = logs["loss"] = sum(logs.values()) + sum(context.losses.values())
 
         # add losses and metrics from hooks
-        logs.update(transformed_state.losses)
-        logs.update(transformed_state.metrics)
+        logs.update(context.losses)
+        logs.update(context.metrics)
 
-        return loss, (transformed_state, logs)
+        return loss, (context, logs)
 
     def fit(
         self,
@@ -1037,7 +1035,7 @@ class Model(Module):
         tp.Dict[str, jnp.ndarray], tp.Optional[tp.Dict],
     ]:
 
-        loss, (transformed_state, logs) = self._loss(
+        loss, (context, logs) = self._loss(
             parameters,
             states=states,
             net_rng=net_rng,
@@ -1048,10 +1046,10 @@ class Model(Module):
             is_training=False,
         )
 
-        y_pred = transformed_state.outputs
+        y_pred = context.outputs
 
-        if self._metrics_fn is not None:
-            metrics, metrics_state = self._metrics_fn.apply(
+        if self._metrics_module is not None:
+            metrics, metrics_state = self._metrics_module.apply(
                 # required by apply
                 {},  # parameters
                 metrics_state,  # states
@@ -1097,7 +1095,7 @@ class Model(Module):
             mode=Mode.predict, x=x, y=None, sample_weight=None, class_weight=None
         )
 
-        transformed_state = self._predict(
+        context = self._predict(
             False,  # is_training
             False,  # get_summaries
             x=x,
@@ -1106,7 +1104,7 @@ class Model(Module):
             net_rng=next(self._rngs),
         )
 
-        return transformed_state.outputs
+        return context.outputs
 
     def _predict(
         self,
@@ -1137,21 +1135,16 @@ class Model(Module):
         parameters: tp.Dict,
         states: tp.Dict,
         net_rng: jnp.ndarray,
-    ) -> TransformedState:
+    ) -> tp.Tuple[tp.Any, ApplyContext]:
 
         x_args, x_kwargs = utils.get_input_args(x, is_training=is_training)
 
-        transformed_state = self._model_transform.apply(
-            # required by apply
+        return self.module.apply(
             parameters=parameters,
             states=states,
             rng=net_rng,
             get_summaries=get_summaries,
-            args=x_args,
-            kwargs=x_kwargs,
-        )
-
-        return transformed_state
+        )(*x_args, **x_kwargs,)
 
     _predict_jit = jax.jit(_predict_no_jit, static_argnums=(0, 1, 2))
 
@@ -1329,7 +1322,7 @@ class Model(Module):
             mode=Mode.predict, x=x, y=None, sample_weight=None, class_weight=None,
         )
 
-        transformed_state = self._predict(
+        context = self._predict(
             is_training=False,
             get_summaries=True,
             x=x,
@@ -1359,7 +1352,7 @@ class Model(Module):
 
         summaries = (
             (tuple(name.split("/")), cls_name, value)
-            for name, cls_name, value in transformed_state.summaries
+            for name, cls_name, value in context.summaries
         )
 
         summaries = toolz.groupby(lambda x: x[0][:depth], summaries)

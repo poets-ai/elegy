@@ -437,7 +437,6 @@ class Context(tp.NamedTuple):
 
     building: bool
     get_summaries: bool
-    training: bool
     rng_sequence: tp.Optional["PRNGSequence"]
     losses: tp.Dict
     metrics: tp.Dict
@@ -450,7 +449,6 @@ class Context(tp.NamedTuple):
 @contextmanager
 def context(
     rng: tp.Union[np.ndarray, int, None] = None,
-    training: bool = True,
     building: bool = False,
     get_summaries: bool = False,
 ) -> tp.Iterator[Context]:
@@ -462,7 +460,6 @@ def context(
     ctx = Context(
         building=building,
         get_summaries=get_summaries,
-        training=training,
         rng_sequence=rng_sequence,
         losses={},
         metrics={},

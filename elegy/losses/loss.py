@@ -2,6 +2,7 @@
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/losses.py#L44-L201
 
 from abc import abstractmethod
+import functools
 import numpy as np
 
 from numpy.lib.arraysetops import isin
@@ -104,7 +105,8 @@ class Loss:
             reduction if reduction is not None else Reduction.SUM_OVER_BATCH_SIZE
         )
         self._labels_filter = (on,) if isinstance(on, (str, int)) else on
-        self.call = utils.inject_dependencies(self.call)
+
+        functools.wraps(self.call)(self)
 
     def __call__(
         self, *args, **kwargs,
