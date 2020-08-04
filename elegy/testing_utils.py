@@ -18,7 +18,7 @@ def transform_and_run(
   >>> x = jnp.ones([])
   >>> rng = jax.random.PRNGKey(42)
   >>> f = hk.transform_with_state(f)
-  >>> params, state = f.init(rng, x)
+  >>> parameters, state = f.init(rng, x)
   >>> out = f.apply(params, state, rng, x)
 
   This function makes it very convenient to unit test Haiku:

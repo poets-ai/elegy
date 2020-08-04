@@ -38,7 +38,7 @@ class ModuleMeta(ABCMeta):
             or not hasattr(module, "_submodules")
         ):
             raise ValueError(
-                "Constructing an hk.Module without calling the super constructor "
+                "Constructing a Module without calling the super constructor "
                 "is not supported."
             )
 
@@ -102,7 +102,7 @@ class Module(metaclass=ModuleMeta):
 
         @functools.wraps(self.call)
         def init_fn(*args, **kwargs):
-            with context(rng=rng, training=True, building=True, get_summaries=False):
+            with context(rng=rng, building=True, get_summaries=False):
                 self(*args, **kwargs)
 
             return self.parameters, self.states
@@ -114,7 +114,6 @@ class Module(metaclass=ModuleMeta):
         parameters: tp.Optional[tp.Dict] = None,
         states: tp.Optional[tp.Dict] = None,
         rng: tp.Optional[tp.Union[np.ndarray, int]] = None,
-        training: bool = True,
         get_summaries: bool = False,
     ) -> "ApplyCallable":
         """
@@ -142,9 +141,7 @@ class Module(metaclass=ModuleMeta):
             if states:
                 self.states = states
 
-            with context(
-                rng=rng, training=training, building=False, get_summaries=get_summaries,
-            ) as ctx:
+            with context(rng=rng, building=False, get_summaries=get_summaries,) as ctx:
                 outputs = self(*args, **kwargs)
 
             return (
@@ -574,13 +571,15 @@ def get_tree(
         return tuple(get_tree(module, dict_field) for module in module)
     elif isinstance(module, tp.Dict):
         return {key: get_tree(module, dict_field) for key, module in module.items()}
-    else:
+    elif isinstance(module, Module):
         node = getattr(module, dict_field).copy()
         for submodule in module._submodules:
             value = get_tree(getattr(module, submodule), dict_field)
             if value:  # drop if empty
                 node[submodule] = value
         return node
+    else:
+        return ()
 
 
 def set_tree(
@@ -607,7 +606,7 @@ def set_tree(
         for key, value in values.items():
             set_tree(module[key], value, dict_field)
 
-    else:
+    elif isinstance(module, Module):
         assert isinstance(values, tp.Dict)
 
         dict_field_value = getattr(module, dict_field)
@@ -647,9 +646,9 @@ def clear_tree(module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict], dict_field:
 def leaf_isinstance(obj: tp.Any, types) -> tp.Type:
 
     if isinstance(obj, (tp.List, tp.Tuple)) and obj:
-        return leaf_isinstance(obj[0], types)
+        return any(leaf_isinstance(elem, types) for elem in obj)
     elif isinstance(obj, tp.Dict) and obj:
-        return leaf_isinstance(next(iter(obj.values())), types)
+        return any(leaf_isinstance(elem, types) for elem in obj.values())
     else:
         return isinstance(obj, types)
 
@@ -687,7 +686,9 @@ class PRNGSequence(tp.Iterator[PRNGKey]):
     rng: np.ndarray
 
     def __init__(self, key: tp.Union[int, np.ndarray]):
-        self.rng = jax.random.PRNGKey(key)
+        self.rng = (
+            jax.random.PRNGKey(key) if isinstance(key, int) or key.shape == () else key
+        )
 
     def __next__(self) -> np.ndarray:
         self.rng, rng_next = tuple(jax.random.split(self.rng, 2))

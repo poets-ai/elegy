@@ -49,38 +49,34 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
 
         def __init__(self, n1: int = 300, n2: int = 100, **kwargs):
             super().__init__(**kwargs)
-            self.n1 = n1
-            self.n2 = n2
-
-        def call(self, image: jnp.ndarray, is_training: bool):
-
-            image = image.astype(jnp.float32) / 255.0
-
-            mlp = hk.Sequential(
+            self.mlp = elegy.nn.Sequential(
                 [
                     elegy.nn.Flatten(),
-                    elegy.nn.Linear(self.n1),
+                    elegy.nn.Linear(n1),
                     jax.nn.relu,
-                    elegy.nn.Linear(self.n2),
+                    elegy.nn.Linear(n2),
                     jax.nn.relu,
                     elegy.nn.Linear(10),
                 ]
             )
 
-            return mlp(image)
+        def call(self, image: jnp.ndarray):
+            image = image.astype(jnp.float32) / 255.0
+
+            return self.mlp(image)
 
     model = elegy.Model(
-        module=MLP.defer(n1=300, n2=100),
+        module=MLP(n1=300, n2=100),
         loss=[
             elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
             elegy.regularizers.GlobalL2(l=1e-4),
         ],
-        metrics=elegy.metrics.SparseCategoricalAccuracy.defer(),
+        metrics=elegy.metrics.SparseCategoricalAccuracy(),
         optimizer=optix.adam(1e-3),
         run_eagerly=eager,
     )
 
-    model.summary(X_train[:64])
+    # model.summary(X_train[:64])
 
     history = model.fit(
         x=X_train,

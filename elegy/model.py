@@ -89,7 +89,7 @@ class Model:
         parameters: A `haiku.Params` structure with the weights of the model.
         states: A `haiku.State` structure with non-trainable parameters of the model.
         optimizer_state:  A `optix.OptState` structure with states of the optimizer.
-        metrics_state: A `haiku.State` structure with the states of the metrics.
+        metrics_states: A `haiku.State` structure with the states of the metrics.
         initial_metrics_state: A `haiku.State` structure with the initial states of the metrics.
         run_eagerly: Settable attribute indicating whether the model should run eagerly.
             Running eagerly means that your model will be run step by step, like Python code, instead of
@@ -102,7 +102,7 @@ class Model:
     parameters: tp.Optional[tp.Dict[str, tp.Any]]
     states: tp.Optional[tp.Dict[str, tp.Any]]
     optimizer_state: tp.Optional[optix.OptState]
-    metrics_state: tp.Optional[tp.Dict]
+    metrics_states: tp.Optional[tp.Dict]
     initial_metrics_state: tp.Optional[tp.Dict]
     run_eagerly: bool
 
@@ -122,7 +122,7 @@ class Model:
         parameters: tp.Optional[tp.Dict] = None,
         states: tp.Optional[tp.Dict] = None,
         optimizer_state: tp.Optional[optix.OptState] = None,
-        metrics_state: tp.Optional[tp.Dict] = None,
+        metrics_states: tp.Optional[tp.Dict] = None,
         initial_metrics_state: tp.Optional[tp.Dict] = None,
         seed: tp.Union[np.ndarray, int] = 42,
     ):
@@ -158,7 +158,7 @@ class Model:
             parameters: A `haiku.Params` structure with the weights of the model.
             states: A `haiku.State` structure with non-trainable parameters of the model.
             optimizer_state:  A `optix.OptState` structure with states of the optimizer.
-            metrics_state: A `haiku.State` structure with the states of the metrics.
+            metrics_states: A `haiku.State` structure with the states of the metrics.
             initial_metrics_state: A `haiku.State` structure with the initial states of the metrics.
             seed: The initial random states of the model.
         """
@@ -171,7 +171,7 @@ class Model:
         self.parameters = parameters
         self.states = states
         self.optimizer_state = optimizer_state
-        self.metrics_state = metrics_state
+        self.metrics_states = metrics_states
         self.initial_metrics_state = initial_metrics_state
         self.run_eagerly = run_eagerly
 
@@ -189,32 +189,36 @@ class Model:
         class_weight: tp.Optional[jnp.ndarray],
     ):
 
-        maybe_jit = jax.jit if self.run_eagerly else lambda x: x
+        maybe_jit = jax.jit if not self.run_eagerly else lambda x: x
 
         if self.parameters is None or self.states is None:
             x_args, x_kwargs = utils.get_input_args(x, is_training=True)
 
             self.parameters, self.states = maybe_jit(
-                self.module.init(rng=next(self._rngs))
+                utils.inject_dependencies(self.module.init(rng=next(self._rngs)))
             )(*x_args, **x_kwargs)
 
         if mode == Mode.predict:
             return
 
-        if self._metrics_module is not None and self.metrics_state is None:
+        if self._metrics_module is not None and self.metrics_states is None:
             x_args, x_kwargs = utils.get_input_args(x, is_training=True)
 
             y_pred, context = maybe_jit(
-                self.module.apply(
-                    parameters=self.parameters,
-                    states=self.states,
-                    rng=next(self._rngs),
-                    get_summaries=False,
+                utils.inject_dependencies(
+                    self.module.apply(
+                        parameters=self.parameters,
+                        states=self.states,
+                        rng=next(self._rngs),
+                        get_summaries=False,
+                    )
                 )
             )(*x_args, **x_kwargs)
 
-            _, self.metrics_state = maybe_jit(
-                self._metrics_module.init(rng=next(self._rngs))
+            _, self.metrics_states = maybe_jit(
+                utils.inject_dependencies(
+                    self._metrics_module.init(rng=next(self._rngs))
+                )
             )(
                 x=x,
                 y_true=y,
@@ -226,7 +230,7 @@ class Model:
                 states=self.states,
             )
 
-            self.initial_metrics_state = self.metrics_state
+            self.initial_metrics_state = self.metrics_states
 
         if mode == Mode.test:
             return
@@ -237,10 +241,10 @@ class Model:
     def reset_metrics(self, hard: bool = False):
 
         if hard:
-            self.metrics_state = None
+            self.metrics_states = None
             self.initial_metrics_state = None
         else:
-            self.metrics_state = self.initial_metrics_state
+            self.metrics_states = self.initial_metrics_state
 
     def train_on_batch(
         self,
@@ -292,7 +296,7 @@ class Model:
             self.parameters,
             self.states,
             self.optimizer_state,
-            self.metrics_state,
+            self.metrics_states,
         ) = self._update(
             x=x,
             y=y,
@@ -301,10 +305,13 @@ class Model:
             parameters=self.parameters,
             states=self.states,
             optimizer_state=self.optimizer_state,
-            metrics_state=self.metrics_state,
+            metrics_states=self.metrics_states,
             net_rng=next(self._rngs),
             metrics_rng=next(self._rngs),
         )
+
+        self.module.parameters = self.parameters
+        self.module.states = self.states
 
         return {key: np.asarray(value) for key, value in logs.items()}
 
@@ -317,7 +324,7 @@ class Model:
         parameters: tp.Dict,
         states: tp.Dict,
         optimizer_state: optix.OptState,
-        metrics_state: tp.Optional[tp.Dict],
+        metrics_states: tp.Optional[tp.Dict],
         net_rng: jnp.ndarray,
         metrics_rng: jnp.ndarray,
     ) -> tp.Tuple[
@@ -337,7 +344,7 @@ class Model:
             parameters=parameters,
             states=states,
             optimizer_state=optimizer_state,
-            metrics_state=metrics_state,
+            metrics_states=metrics_states,
             net_rng=net_rng,
             metrics_rng=metrics_rng,
         )
@@ -351,7 +358,7 @@ class Model:
         parameters: tp.Dict,
         states: tp.Dict,
         optimizer_state: optix.OptState,
-        metrics_state: tp.Optional[tp.Dict],
+        metrics_states: tp.Optional[tp.Dict],
         net_rng: jnp.ndarray,
         metrics_rng: jnp.ndarray,
     ) -> tp.Tuple[
@@ -361,7 +368,9 @@ class Model:
         optix.OptState,
         tp.Optional[tp.Dict],
     ]:
-        (loss, (context, logs)), grads = jax.value_and_grad(self._loss, has_aux=True)(
+        (loss, (y_pred, context, logs)), grads = jax.value_and_grad(
+            self._loss, has_aux=True
+        )(
             parameters,
             states=states,
             net_rng=net_rng,
@@ -372,15 +381,14 @@ class Model:
             is_training=True,
         )
 
-        y_pred = context.outputs
         states = context.states
 
         updates, optimizer_state = self._optimizer.update(grads, optimizer_state)
         parameters = optix.apply_updates(parameters, updates)
 
         if self._metrics_module is not None:
-            metrics, metrics_context = self._metrics_module.apply(
-                states=metrics_state, rng=metrics_rng,
+            metrics, metrics_context = utils.inject_dependencies(
+                self._metrics_module.apply(states=metrics_states, rng=metrics_rng,)
             )(
                 x=x,
                 y_true=y,
@@ -391,10 +399,10 @@ class Model:
                 parameters=parameters,
                 states=states,
             )
-            metrics_state = metrics_context.states
+            metrics_states = metrics_context.states
             logs.update(metrics)
 
-        return logs, parameters, states, optimizer_state, metrics_state
+        return logs, parameters, states, optimizer_state, metrics_states
 
     _update_jit = jax.jit(_update_no_jit, static_argnums=(0,))
 
@@ -443,7 +451,7 @@ class Model:
         logs.update(context.losses)
         logs.update(context.metrics)
 
-        return loss, (context, logs)
+        return loss, (y_pred, context, logs)
 
     def fit(
         self,
@@ -977,14 +985,14 @@ class Model:
             class_weight=class_weight,
         )
 
-        (logs, self.metrics_state,) = self._test(
+        (logs, self.metrics_states) = self._test(
             x=x,
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
             parameters=self.parameters,
             states=self.states,
-            metrics_state=self.metrics_state,
+            metrics_states=self.metrics_states,
             net_rng=next(self._rngs),
             metrics_rng=next(self._rngs),
         )
@@ -999,7 +1007,7 @@ class Model:
         class_weight: tp.Optional[jnp.ndarray],
         parameters: tp.Dict,
         states: tp.Dict,
-        metrics_state: tp.Optional[tp.Dict],
+        metrics_states: tp.Optional[tp.Dict],
         net_rng: jnp.ndarray,
         metrics_rng: jnp.ndarray,
     ) -> tp.Tuple[
@@ -1015,7 +1023,7 @@ class Model:
             class_weight=class_weight,
             parameters=parameters,
             states=states,
-            metrics_state=metrics_state,
+            metrics_states=metrics_states,
             net_rng=net_rng,
             metrics_rng=metrics_rng,
         )
@@ -1028,14 +1036,14 @@ class Model:
         class_weight: tp.Optional[jnp.ndarray],
         parameters: tp.Dict,
         states: tp.Dict,
-        metrics_state: tp.Optional[tp.Dict],
+        metrics_states: tp.Optional[tp.Dict],
         net_rng: jnp.ndarray,
         metrics_rng: jnp.ndarray,
     ) -> tp.Tuple[
         tp.Dict[str, jnp.ndarray], tp.Optional[tp.Dict],
     ]:
 
-        loss, (context, logs) = self._loss(
+        loss, (y_pred, context, logs) = self._loss(
             parameters,
             states=states,
             net_rng=net_rng,
@@ -1046,27 +1054,23 @@ class Model:
             is_training=False,
         )
 
-        y_pred = context.outputs
-
         if self._metrics_module is not None:
-            metrics, metrics_state = self._metrics_module.apply(
-                # required by apply
-                {},  # parameters
-                metrics_state,  # states
-                metrics_rng,  # rng
-                # dependency injection
+            metrics, metrics_context = utils.inject_dependencies(
+                self._metrics_module.apply(states=metrics_states, rng=metrics_rng,)
+            )(
                 x=x,
                 y_true=y,
                 y_pred=y_pred,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 is_training=False,
-                __params=parameters,  # renamed
-                __state=states,  # renamed
+                __params=parameters,
+                __state=states,
             )
+            metrics_states = metrics_context.states
             logs.update(metrics)
 
-        return logs, metrics_state
+        return logs, metrics_states
 
     _test_jit = jax.jit(_test_no_jit, static_argnums=(0,))
     # ----------------------------------------------------------------
@@ -1114,7 +1118,7 @@ class Model:
         parameters: tp.Dict,
         states: tp.Dict,
         net_rng: jnp.ndarray,
-    ) -> TransformedState:
+    ) -> tp.Tuple[tp.Any, "ApplyContext"]:
 
         predict_fn = self._predict_no_jit if self.run_eagerly else self._predict_jit
 
@@ -1139,11 +1143,13 @@ class Model:
 
         x_args, x_kwargs = utils.get_input_args(x, is_training=is_training)
 
-        return self.module.apply(
-            parameters=parameters,
-            states=states,
-            rng=net_rng,
-            get_summaries=get_summaries,
+        return utils.inject_dependencies(
+            self.module.apply(
+                parameters=parameters,
+                states=states,
+                rng=net_rng,
+                get_summaries=get_summaries,
+            )
         )(*x_args, **x_kwargs,)
 
     _predict_jit = jax.jit(_predict_no_jit, static_argnums=(0, 1, 2))
@@ -1172,8 +1178,8 @@ class Model:
         if self.states is not None:
             states["states"] = self.states
 
-        if self.metrics_state is not None:
-            states["metrics_state"] = self.metrics_state
+        if self.metrics_states is not None:
+            states["metrics_states"] = self.metrics_states
 
         if self.initial_metrics_state is not None:
             states["initial_metrics_state"] = self.initial_metrics_state
@@ -1193,8 +1199,8 @@ class Model:
         if "states" in states:
             self.states = states["states"]
 
-        if "metrics_state" in states:
-            self.metrics_state = states["metrics_state"]
+        if "metrics_states" in states:
+            self.metrics_states = states["metrics_states"]
 
         if "initial_metrics_state" in states:
             self.initial_metrics_state = states["initial_metrics_state"]
@@ -1205,7 +1211,7 @@ class Model:
     def _clear_state(self):
         self.parameters = None
         self.states = None
-        self.metrics_state = None
+        self.metrics_states = None
         self.initial_metrics_state = None
         self.optimizer_state = None
 
@@ -1251,7 +1257,7 @@ class Model:
 
         original_state = copy(states)
 
-        states.pop("metrics_state", None)
+        states.pop("metrics_states", None)
         states.pop("initial_metrics_state", None)
 
         optimizer_state = states.pop("optimizer_state", None)
@@ -1322,7 +1328,7 @@ class Model:
             mode=Mode.predict, x=x, y=None, sample_weight=None, class_weight=None,
         )
 
-        context = self._predict(
+        y_pred, context = self._predict(
             is_training=False,
             get_summaries=True,
             x=x,

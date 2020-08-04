@@ -37,8 +37,8 @@ Elegy solves the previous problems by introducing a _dependency injection_ mecha
  | `sample_weight` | Importance of each sample                                      |        | x      | x    |
  | `class_weight`  | Importance of each class                                       |        | x      | x    |
  | `is_training`   | Whether training is currently in progress                      | x      | x      | x    |
- | `params`        | The learnable parameters of the model                          |        | x      | x    |
- | `state`         | The non-learnable parameters of the model                      |        | x      | x    |
+ | `parameters`    | The learnable parameters of the model                          |        | x      | x    |
+ | `states`        | The non-learnable parameters of the model                      |        | x      | x    |
 
 
 !!! Note
@@ -132,7 +132,7 @@ Notice thanks to this we didn't have to define `y` on the `fit` method.
 If you have a complex loss function that is just a sum of different parts that have to be compute together you might define something like this:
 ```python
 class SomeComplexFunction(elegy.Loss): 
-    def call(self, x, y_true, y_pred, params, ...):
+    def call(self, x, y_true, y_pred, parameters, ...):
         ...
         return a + b + c
 ```
@@ -140,7 +140,7 @@ Elegy lets you return a `dict` specifying the name of each part:
 
 ```python
 class SomeComplexFunction(elegy.Loss): 
-    def call(self, x, y_true, y_pred, params, ...):
+    def call(self, x, y_true, y_pred, parameters, ...):
         ...
         return {
             "a": a,

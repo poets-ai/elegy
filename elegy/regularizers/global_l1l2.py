@@ -54,12 +54,12 @@ class GlobalL1L2(Loss):
         self.l1 = l1
         self.l2 = l2
 
-    def call(self, params: hk.Params) -> jnp.ndarray:
+    def call(self, parameters: hk.Params) -> jnp.ndarray:
         """
         Computes the L1 and L2 regularization penalty simultaneously.
 
         Arguments:
-            params: A structure with all the parameters of the model.
+            parameters: A structure with all the parameters of the model.
         """
 
         regularization: jnp.ndarray = jnp.array(0.0)
@@ -69,12 +69,12 @@ class GlobalL1L2(Loss):
 
         if self.l1:
             regularization += self.l1 * sum(
-                jnp.sum(jnp.abs(p)) for p in jax.tree_leaves(params)
+                jnp.sum(jnp.abs(p)) for p in jax.tree_leaves(parameters)
             )
 
         if self.l2:
             regularization += self.l2 * sum(
-                jnp.sum(jnp.square(p)) for p in jax.tree_leaves(params)
+                jnp.sum(jnp.square(p)) for p in jax.tree_leaves(parameters)
             )
 
         return regularization

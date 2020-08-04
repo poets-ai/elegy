@@ -216,9 +216,9 @@ class TransformerEncoderLayer(hk.Module):
 
 if __name__ == "__main__":
 
-    def get_shapes(params: hk.Params):
+    def get_shapes(parameters: hk.Params):
 
-        for name, value in params.items():
+        for name, value in parameters.items():
             if isinstance(value, tp.Mapping):
                 yield from get_shapes(value)
             else:
@@ -233,9 +233,9 @@ if __name__ == "__main__":
     print(query.shape)
 
     net = hk.transform(model_fn, apply_rng=True)
-    params = net.init(next(rngs), query)
+    parameters = net.init(next(rngs), query)
 
-    output = net.apply(params, next(rngs), query)
+    output = net.apply(parameters, next(rngs), query)
 
     print(output.shape)
-    print(sum(np.prod(value) for name, value in get_shapes(params)))
+    print(sum(np.prod(value) for name, value in get_shapes(parameters)))

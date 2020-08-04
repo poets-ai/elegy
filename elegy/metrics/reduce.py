@@ -2,6 +2,7 @@ from elegy import types
 from elegy import utils
 from enum import Enum
 import typing as tp
+from elegy import initializers
 
 
 import jax.numpy as jnp
@@ -119,13 +120,16 @@ class Reduce(Metric):
         Returns:
             Array with the cummulative reduce.
         """
-        total = hk.get_state(
-            "total", shape=[], dtype=self._dtype, init=hk.initializers.Constant(0)
+        total = self.get_state(
+            "total", shape=[], dtype=self._dtype, initializer=initializers.Constant(0)
         )
 
         if self._reduction in (Reduction.SUM_OVER_BATCH_SIZE, Reduction.WEIGHTED_MEAN,):
-            count = hk.get_state(
-                "count", shape=[], dtype=jnp.int32, init=hk.initializers.Constant(0)
+            count = self.get_state(
+                "count",
+                shape=[],
+                dtype=jnp.int32,
+                initializer=initializers.Constant(0),
             )
         else:
             count = None
@@ -139,9 +143,9 @@ class Reduce(Metric):
             dtype=self._dtype,
         )
 
-        hk.set_state("total", total)
+        self.set_state("total", total)
 
         if count is not None:
-            hk.set_state("count", count)
+            self.set_state("count", count)
 
         return value
