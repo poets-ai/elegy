@@ -102,6 +102,9 @@ class ModuleTest(TestCase):
         print(f"{m.parameters_size(include_submodules=False)=}")
         assert m.parameters_size(include_submodules=False) == 7
 
+        current_parameters = m.parameters
+        current_states = m.states
+
         print(f"{m.parameters_size()=}")
         m.reset()
 
@@ -112,4 +115,13 @@ class ModuleTest(TestCase):
 
         print(f"{inspect.signature(m.apply())=}")
         print(f"{inspect.signature(m)=}")
+
+        m.parameters = current_parameters
+        m.states = current_states
+
+        assert m.parameters["bias"][0] == -1
+        assert m.linear.parameters["w"][0, 0] == -1
+        assert m.linear.parameters["b"][0] == -1
+        assert m.linear1.parameters["w"][0, 0] == -1
+        assert m.linear1.parameters["b"][0] == -1
 

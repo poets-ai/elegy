@@ -1546,7 +1546,7 @@ def load(path: tp.Union[str, Path]) -> Model:
 
     with open(path / "model.pkl", "rb") as f:
         try:
-            model = pickle.load(f)
+            model: Model = pickle.load(f)
         except BaseException as e:
             raise OSError(f"Could not load the model. Got exception: {e}")
 

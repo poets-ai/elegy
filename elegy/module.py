@@ -319,8 +319,11 @@ class Module(metaclass=ModuleMeta):
         set_tree(self, values, "_states")
 
     def reset(self):
-        clear_tree(self, "_params")
-        clear_tree(self, "_states")
+        def clear_module(module: Module):
+            module._params = {}
+            module._states = {}
+
+        apply_tree(clear_module, self)
 
     def parameters_size(self, include_submodules: bool = True):
         if include_submodules:
@@ -629,36 +632,11 @@ def set_tree(
 
         dict_field_value = getattr(module, dict_field)
 
-        for key in dict_field_value:
-            dict_field_value[key] = values[key]
-
-        for key in module._submodules:
-            if key in values:
+        for key in values:
+            if key in module._submodules:
                 set_tree(getattr(module, key), values[key], dict_field)
-
-
-def clear_tree(module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict], dict_field: str):
-
-    if isinstance(module, tp.List):
-
-        for module in module:
-            clear_tree(module, dict_field)
-
-    elif isinstance(module, tp.Tuple):
-
-        for module in module:
-            clear_tree(module, dict_field)
-
-    elif isinstance(module, tp.Dict):
-
-        for key, value in module.items():
-            clear_tree(module[key], dict_field)
-
-    else:
-        setattr(module, dict_field, {})
-
-        for key in module._submodules:
-            clear_tree(getattr(module, key), dict_field)
+            else:
+                dict_field_value[key] = values[key]
 
 
 def apply_tree(f: tp.Callable, module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict]):
