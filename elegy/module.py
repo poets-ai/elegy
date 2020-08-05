@@ -135,19 +135,38 @@ class Module(metaclass=ModuleMeta):
         @functools.wraps(self.call)
         def apply_fn(*args, **kwargs):
 
-            if parameters:
+            current_parameters = self.parameters
+            current_states = self.states
+
+            assert current_parameters is not None
+            assert current_states is not None
+
+            if parameters is not None:
                 self.parameters = parameters
 
-            if states:
+            if states is not None:
                 self.states = states
+
+            assert self.parameters is not None
+            assert self.states is not None
 
             with context(rng=rng, building=False, get_summaries=get_summaries,) as ctx:
                 outputs = self(*args, **kwargs)
 
+            output_parameters = self.parameters
+            output_states = self.states
+
+            if parameters is not None:
+                self.parameters = current_parameters
+
+            if states is not None:
+                self.states = current_states
+
             return (
                 outputs,
                 ApplyContext(
-                    states=self.states,
+                    parameters=output_parameters,
+                    states=output_states,
                     losses=ctx.losses,
                     metrics=ctx.metrics,
                     summaries=ctx.summaries,
@@ -280,29 +299,27 @@ class Module(metaclass=ModuleMeta):
             )
 
     @property
-    def parameters(self) -> tp.Dict:
-        parameters = get_tree(self, "_params")
-        assert isinstance(parameters, tp.Dict)
-        return parameters
+    def parameters(self) -> types.Parameters:
+        params = get_tree(self, "_params")
+        assert isinstance(params, tp.Dict)
+        return params
 
     @parameters.setter
-    def parameters(self, values: tp.Dict):
+    def parameters(self, values: types.Parameters):
         set_tree(self, values, "_params")
 
-    def clear_parameters(self):
-        clear_tree(self, "_params")
-
     @property
-    def states(self) -> tp.Dict:
+    def states(self) -> types.States:
         states = get_tree(self, "_states")
         assert isinstance(states, tp.Dict)
         return states
 
     @states.setter
-    def states(self, values: tp.Dict):
+    def states(self, values: types.States):
         set_tree(self, values, "_states")
 
-    def clear_states(self):
+    def reset(self):
+        clear_tree(self, "_params")
         clear_tree(self, "_states")
 
     def parameters_size(self, include_submodules: bool = True):
@@ -532,7 +549,8 @@ class InitCallable(utils.Protocol):
 
 
 class ApplyContext(tp.NamedTuple):
-    states: tp.Dict
+    parameters: types.Parameters
+    states: types.States
     losses: tp.Dict
     metrics: tp.Dict
     summaries: tp.List[tp.Tuple[tp.Optional[Module], str, tp.Any]]
@@ -643,6 +661,30 @@ def clear_tree(module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict], dict_field:
             clear_tree(getattr(module, key), dict_field)
 
 
+def apply_tree(f: tp.Callable, module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict]):
+
+    if isinstance(module, tp.List):
+
+        for module in module:
+            apply_tree(f, module)
+
+    elif isinstance(module, tp.Tuple):
+
+        for module in module:
+            apply_tree(f, module)
+
+    elif isinstance(module, tp.Dict):
+
+        for key, value in module.items():
+            apply_tree(f, module[key])
+
+    elif isinstance(module, Module):
+        f(module)
+
+        for key in module._submodules:
+            apply_tree(f, getattr(module, key))
+
+
 def leaf_isinstance(obj: tp.Any, types) -> tp.Type:
 
     if isinstance(obj, (tp.List, tp.Tuple)) and obj:
@@ -683,15 +725,15 @@ hk.PRNGSequence
 
 
 class PRNGSequence(tp.Iterator[PRNGKey]):
-    rng: np.ndarray
+    key: np.ndarray
 
     def __init__(self, key: tp.Union[int, np.ndarray]):
-        self.rng = (
+        self.key = (
             jax.random.PRNGKey(key) if isinstance(key, int) or key.shape == () else key
         )
 
     def __next__(self) -> np.ndarray:
-        self.rng, rng_next = tuple(jax.random.split(self.rng, 2))
+        self.key, rng_next = tuple(jax.random.split(self.key, 2))
         return rng_next
 
     next = __next__

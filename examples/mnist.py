@@ -76,7 +76,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
         run_eagerly=eager,
     )
 
-    # model.summary(X_train[:64])
+    model.summary(X_train[:64])
 
     history = model.fit(
         x=X_train,

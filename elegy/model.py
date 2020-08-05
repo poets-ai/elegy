@@ -1,6 +1,8 @@
 # Implementation based on tf.keras.engine.training.py
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
+import re
+from elegy import types
 import functools
 from elegy.module import (
     ApplyCallable,
@@ -99,18 +101,18 @@ class Model:
 
     # public fields
     module: Module
-    parameters: tp.Optional[tp.Dict[str, tp.Any]]
-    states: tp.Optional[tp.Dict[str, tp.Any]]
     optimizer_state: tp.Optional[optix.OptState]
-    metrics_states: tp.Optional[tp.Dict]
     initial_metrics_state: tp.Optional[tp.Dict]
     run_eagerly: bool
 
     # private fields
     _loss_fn: tp.Optional[tp.Callable]
-    _metrics_module: tp.Optional[Module]
+    metrics_module: tp.Optional[Module]
     _optimizer: optix.GradientTransformation
     _rngs: PRNGSequence
+    _parameters: tp.Optional[types.Parameters]
+    _states: tp.Optional[types.States]
+    _metrics_states: tp.Optional[tp.Dict]
 
     def __init__(
         self,
@@ -119,8 +121,8 @@ class Model:
         metrics: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
         optimizer: tp.Optional[optix.GradientTransformation] = None,
         run_eagerly: bool = False,
-        parameters: tp.Optional[tp.Dict] = None,
-        states: tp.Optional[tp.Dict] = None,
+        parameters: tp.Optional[types.Parameters] = None,
+        states: tp.Optional[types.States] = None,
         optimizer_state: tp.Optional[optix.OptState] = None,
         metrics_states: tp.Optional[tp.Dict] = None,
         initial_metrics_state: tp.Optional[tp.Dict] = None,
@@ -165,17 +167,48 @@ class Model:
 
         self.module = module
         self._loss_fn = loss_modes.forward_all(loss) if loss is not None else None
-        self._metrics_module = metric_modes.Metrics(metrics) if metrics else None
+        self.metrics_module = metric_modes.Metrics(metrics) if metrics else None
         self._optimizer = optimizer if optimizer is not None else optix.adam(1e-3)
         self._rngs = PRNGSequence(seed)
-        self.parameters = parameters
-        self.states = states
+        self._parameters = parameters
+        self._states = states
+        if self.metrics_module is not None:
+            self._metrics_states = metrics_states
         self.optimizer_state = optimizer_state
-        self.metrics_states = metrics_states
         self.initial_metrics_state = initial_metrics_state
         self.run_eagerly = run_eagerly
 
         functools.wraps(self.module)(self)
+
+    @property
+    def parameters(self) -> tp.Optional[types.Parameters]:
+        return self._parameters
+
+    @parameters.setter
+    def parameters(self, values: types.Parameters):
+        self.module.parameters = values
+        self._parameters = values
+
+    @property
+    def states(self) -> tp.Optional[types.States]:
+        return self._states
+
+    @states.setter
+    def states(self, values: types.States):
+        self.module.states = values
+        self._states = values
+
+    @property
+    def metrics_states(self) -> tp.Optional[types.States]:
+        return self._metrics_states
+
+    @metrics_states.setter
+    def metrics_states(self, values: types.States):
+        if self.metrics_module is not None:
+            self.metrics_module.states = values
+            self._metrics_states = values
+        else:
+            raise ValueError("Cannot set metrics_states when metrics_module is None")
 
     def __call__(self, *args, **kwargs):
         return self.module(*args, **kwargs)
@@ -201,9 +234,10 @@ class Model:
         if mode == Mode.predict:
             return
 
-        if self._metrics_module is not None and self.metrics_states is None:
+        if self.metrics_module is not None and self.metrics_states is None:
             x_args, x_kwargs = utils.get_input_args(x, is_training=True)
 
+            context: ApplyContext
             y_pred, context = maybe_jit(
                 utils.inject_dependencies(
                     self.module.apply(
@@ -215,9 +249,12 @@ class Model:
                 )
             )(*x_args, **x_kwargs)
 
+            self.parameters = context.parameters
+            self.states = context.states
+
             _, self.metrics_states = maybe_jit(
                 utils.inject_dependencies(
-                    self._metrics_module.init(rng=next(self._rngs))
+                    self.metrics_module.init(rng=next(self._rngs))
                 )
             )(
                 x=x,
@@ -241,10 +278,10 @@ class Model:
     def reset_metrics(self, hard: bool = False):
 
         if hard:
-            self.metrics_states = None
+            self.metrics_module.reset()
             self.initial_metrics_state = None
-        else:
-            self.metrics_states = self.initial_metrics_state
+        elif self.initial_metrics_state is not None:
+            self.metrics_module.states = self.initial_metrics_state
 
     def train_on_batch(
         self,
@@ -291,12 +328,16 @@ class Model:
             class_weight=class_weight,
         )
 
+        assert self.parameters is not None
+        assert self.states is not None
+        assert self.optimizer_state is not None
+
         (
             logs,
             self.parameters,
             self.states,
             self.optimizer_state,
-            self.metrics_states,
+            metrics_states,
         ) = self._update(
             x=x,
             y=y,
@@ -310,8 +351,8 @@ class Model:
             metrics_rng=next(self._rngs),
         )
 
-        self.module.parameters = self.parameters
-        self.module.states = self.states
+        if metrics_states is not None:
+            self.metrics_states = metrics_states
 
         return {key: np.asarray(value) for key, value in logs.items()}
 
@@ -386,9 +427,9 @@ class Model:
         updates, optimizer_state = self._optimizer.update(grads, optimizer_state)
         parameters = optix.apply_updates(parameters, updates)
 
-        if self._metrics_module is not None:
+        if self.metrics_module is not None:
             metrics, metrics_context = utils.inject_dependencies(
-                self._metrics_module.apply(states=metrics_states, rng=metrics_rng,)
+                self.metrics_module.apply(states=metrics_states, rng=metrics_rng,)
             )(
                 x=x,
                 y_true=y,
@@ -985,7 +1026,10 @@ class Model:
             class_weight=class_weight,
         )
 
-        (logs, self.metrics_states) = self._test(
+        assert self.parameters is not None
+        assert self.states is not None
+
+        (logs, metrics_states) = self._test(
             x=x,
             y=y,
             sample_weight=sample_weight,
@@ -996,6 +1040,9 @@ class Model:
             net_rng=next(self._rngs),
             metrics_rng=next(self._rngs),
         )
+
+        if metrics_states is not None:
+            self.metrics_states = metrics_states
 
         return {key: np.asarray(value) for key, value in logs.items()}
 
@@ -1054,9 +1101,9 @@ class Model:
             is_training=False,
         )
 
-        if self._metrics_module is not None:
+        if self.metrics_module is not None:
             metrics, metrics_context = utils.inject_dependencies(
-                self._metrics_module.apply(states=metrics_states, rng=metrics_rng,)
+                self.metrics_module.apply(states=metrics_states, rng=metrics_rng,)
             )(
                 x=x,
                 y_true=y,
@@ -1099,7 +1146,10 @@ class Model:
             mode=Mode.predict, x=x, y=None, sample_weight=None, class_weight=None
         )
 
-        context = self._predict(
+        assert self.parameters is not None
+        assert self.states is not None
+
+        y_pred, context = self._predict(
             False,  # is_training
             False,  # get_summaries
             x=x,
@@ -1108,7 +1158,7 @@ class Model:
             net_rng=next(self._rngs),
         )
 
-        return context.outputs
+        return y_pred
 
     def _predict(
         self,
@@ -1155,15 +1205,15 @@ class Model:
     _predict_jit = jax.jit(_predict_no_jit, static_argnums=(0, 1, 2))
 
     @property
-    def seed(self) -> tp.Union[np.ndarray, int]:
+    def seed(self) -> np.ndarray:
         """
         Current random states of the model.
         """
-        return self._rngs.internal_state[0]
+        return self._rngs.key
 
     @seed.setter
     def seed(self, seed: tp.Union[np.ndarray, int]):
-        self._rngs = hk.PRNGSequence(seed)
+        self._rngs = PRNGSequence(seed)
 
     @property
     def full_state(self) -> tp.Dict:
@@ -1190,7 +1240,7 @@ class Model:
         return states
 
     @full_state.setter
-    def full_state(self, states):
+    def full_state(self, states: tp.Dict):
         self.seed = states["seed"]
 
         if "parameters" in states:
@@ -1208,10 +1258,9 @@ class Model:
         if "optimizer_state" in states:
             self.optimizer_state = states["optimizer_state"]
 
-    def _clear_state(self):
-        self.parameters = None
-        self.states = None
-        self.metrics_states = None
+    def reset(self):
+        self.module.reset()
+        self.metrics_module.reset()
         self.initial_metrics_state = None
         self.optimizer_state = None
 
@@ -1269,7 +1318,7 @@ class Model:
                 pickle.dump(optimizer_state, f)
 
         # getting pickle errors
-        self._clear_state()
+        self.reset()
 
         try:
             path = path / "model.pkl"
@@ -1306,7 +1355,7 @@ class Model:
         self.full_state = states
 
     def summary(
-        self, x, depth: int = 3, tablefmt: str = "fancy_grid", **tablulate_kwargs
+        self, x, depth: int = 2, tablefmt: str = "fancy_grid", **tablulate_kwargs
     ):
         """
         Prints a summary of the network.
@@ -1327,6 +1376,9 @@ class Model:
         self._maybe_initialize(
             mode=Mode.predict, x=x, y=None, sample_weight=None, class_weight=None,
         )
+
+        assert self.parameters is not None
+        assert self.states is not None
 
         y_pred, context = self._predict(
             is_training=False,
@@ -1356,49 +1408,44 @@ class Model:
                 else f"{size:,} B"
             )
 
-        summaries = (
-            (tuple(name.split("/")), cls_name, value)
-            for name, cls_name, value in context.summaries
-        )
-
-        summaries = toolz.groupby(lambda x: x[0][:depth], summaries)
-        parameters = utils.split_and_merge(self.parameters)
-        states = utils.split_and_merge(self.states)
-
         table: tp.List = [["Inputs", format_output(x), "0", "0"]]
 
-        for keys, group in summaries.items():
-            output = group[-1][2]
-            class_name = group[-1][1]
+        for module, base_name, value in context.summaries:
+            base_name_parts = base_name.split("/")[1:]
+            module_depth = len(base_name_parts)
 
-            sub_params = parameters
-            sub_states = states
+            if module_depth > depth:
+                continue
 
-            try:
-                for k in keys:
-                    sub_params = sub_params[k]
-            except KeyError:
-                sub_params = {}
+            include_submodules = module_depth == depth
 
-            try:
-                for k in keys:
-                    sub_states = sub_states[k]
-            except KeyError:
-                sub_states = {}
+            params_count = (
+                module.parameters_size(include_submodules) if module is not None else 0
+            )
+            params_size = (
+                module.parameters_bytes(include_submodules) if module is not None else 0
+            )
+            states_count = (
+                module.states_size(include_submodules) if module is not None else 0
+            )
+            states_size = (
+                module.states_bytes(include_submodules) if module is not None else 0
+            )
+            class_name = f"({module.__class__.__name__})" if module is not None else ""
 
-            params_count = hk.data_structures.tree_size(sub_params)
-            params_size = format_size(hk.data_structures.tree_bytes(sub_params))
-            states_count = hk.data_structures.tree_size(sub_states)
-            states_size = format_size(hk.data_structures.tree_bytes(sub_states))
+            base_name = "/".join(base_name_parts)
+
+            if not base_name:
+                base_name = "Outputs"
 
             table.append(
                 [
-                    "/".join(keys) + f"{{pad}}  ({class_name})",
-                    format_output(output),
-                    f"{params_count:,}{{pad}}    {params_size}"
+                    f"{base_name}{{pad}}  {class_name}",
+                    format_output(value),
+                    f"{params_count:,}{{pad}}    {format_size(params_size)}"
                     if params_count > 0
                     else "0",
-                    f"{states_count:,}{{pad}}    {states_size}"
+                    f"{states_count:,}{{pad}}    {format_size(states_size)}"
                     if states_count > 0
                     else "0",
                 ]
@@ -1435,10 +1482,10 @@ class Model:
             )
         )
 
-        params_count = hk.data_structures.tree_size(self.parameters)
-        params_size = hk.data_structures.tree_bytes(self.parameters)
-        states_count = hk.data_structures.tree_size(self.states)
-        states_size = hk.data_structures.tree_bytes(self.states)
+        params_count = self.module.parameters_size()
+        params_size = self.module.parameters_bytes()
+        states_count = self.module.states_size()
+        states_size = self.module.states_bytes()
         total_count = params_count + states_count
         total_size = params_size + states_size
 

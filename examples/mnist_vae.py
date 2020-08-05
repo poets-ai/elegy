@@ -73,15 +73,16 @@ class Decoder(elegy.Module):
         output_shape: tp.Sequence[int] = MNIST_IMAGE_SHAPE,
     ):
         super().__init__()
-        self._hidden_size = hidden_size
-        self._output_shape = output_shape
+        self.output_shape = output_shape
+        self.linear1 = elegy.nn.Linear(hidden_size)
+        self.linear2 = elegy.nn.Linear(jnp.prod(output_shape))
 
     def call(self, z: np.ndarray) -> np.ndarray:
-        z = elegy.nn.Linear(self._hidden_size)(z)
+        z = self.linear1(z)
         z = jax.nn.relu(z)
 
-        logits = elegy.nn.Linear(jnp.prod(self._output_shape))(z)
-        logits = jnp.reshape(logits, (-1, *self._output_shape))
+        logits = self.linear2(z)
+        logits = jnp.reshape(logits, (-1, *self.output_shape))
 
         return logits
 

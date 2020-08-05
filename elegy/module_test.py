@@ -103,8 +103,7 @@ class ModuleTest(TestCase):
         assert m.parameters_size(include_submodules=False) == 7
 
         print(f"{m.parameters_size()=}")
-        m.clear_parameters()
-        m.clear_states()
+        m.reset()
 
         assert m.parameters == {}
         assert m.parameters_size() == 0
