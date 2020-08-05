@@ -21,7 +21,7 @@ from utils import plot_history
 Batch = Mapping[str, np.ndarray]
 np.random.seed(42)
 
-
+LATENT_SIZE = 32
 MNIST_IMAGE_SHAPE: tp.Sequence[int] = (28, 28)
 
 
@@ -45,21 +45,24 @@ class Encoder(elegy.Module):
 
     def __init__(self, hidden_size: int = 512, latent_size: int = 128):
         super().__init__()
-        self._hidden_size = hidden_size
-        self._latent_size = latent_size
+        self.flatten = elegy.nn.Flatten()
+        self.linear1 = elegy.nn.Linear(hidden_size)
+        self.linear_mean = elegy.nn.Linear(latent_size, name="linear_mean")
+        self.linear_std = elegy.nn.Linear(latent_size, name="linear_std")
 
     def call(self, x: np.ndarray) -> np.ndarray:
-        x = hk.Flatten()(x)
-        x = elegy.nn.Linear(self._hidden_size)(x)
+        x = self.flatten(x)
+        x = self.linear1(x)
         x = jax.nn.relu(x)
+        self.add_summary("relu", x)
 
-        mean = elegy.nn.Linear(self._latent_size)(x)
-        log_stddev = elegy.nn.Linear(self._latent_size)(x)
+        mean = self.linear_mean(x)
+        log_stddev = self.linear_std(x)
         stddev = jnp.exp(log_stddev)
 
-        elegy.add_loss("kl_divergence", 2e-1 * KLDivergence()(mean, stddev))
+        elegy.add_loss("kl_divergence", KLDivergence(weight=2e-1)(mean, stddev))
 
-        z = mean + stddev * jax.random.normal(hk.next_rng_key(), mean.shape)
+        z = mean + stddev * jax.random.normal(elegy.next_rng_key(), mean.shape)
 
         return z
 
@@ -80,9 +83,11 @@ class Decoder(elegy.Module):
     def call(self, z: np.ndarray) -> np.ndarray:
         z = self.linear1(z)
         z = jax.nn.relu(z)
+        self.add_summary("relu", z)
 
         logits = self.linear2(z)
         logits = jnp.reshape(logits, (-1, *self.output_shape))
+        self.add_summary("relu", z)
 
         return logits
 
@@ -93,22 +98,22 @@ class VariationalAutoEncoder(elegy.Module):
     def __init__(
         self,
         hidden_size: int = 512,
-        latent_size: int = 128,
+        latent_size: int = 32,
         output_shape: tp.Sequence[int] = MNIST_IMAGE_SHAPE,
     ):
         super().__init__()
-        self._hidden_size = hidden_size
-        self._latent_size = latent_size
-        self._output_shape = output_shape
+
+        self.encoder = Encoder(hidden_size, latent_size)
+        self.decoder = Decoder(hidden_size, output_shape)
 
     def call(self, x: np.ndarray) -> dict:
         x = x.astype(jnp.float32)
-        z = Encoder(self._hidden_size, self._latent_size)(x)
 
-        logits = Decoder(self._hidden_size, self._output_shape)(z)
+        z = self.encoder(x)
+        logits = self.decoder(z)
 
         p = jax.nn.sigmoid(logits)
-        image = jax.random.bernoulli(hk.next_rng_key(), p)
+        image = jax.random.bernoulli(elegy.next_rng_key(), p)
 
         return dict(image=image, logits=logits, det_image=p)
 
@@ -140,8 +145,10 @@ def main(
     print("X_train:", X_train.shape, X_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
 
+    vae = VariationalAutoEncoder(latent_size=LATENT_SIZE)
+
     model = elegy.Model(
-        module=VariationalAutoEncoder.defer(),
+        module=vae,
         loss=[BinaryCrossEntropy(from_logits=True, on="logits")],
         optimizer=optix.adam(1e-3),
         run_eagerly=eager,
@@ -186,28 +193,11 @@ def main(
 
     plt.show()
 
-    def slice(
-        parameters: tp.Optional[tp.Mapping[str, tp.Any]], old: str, new: str
-    ) -> tp.Dict[str, tp.Any]:
-        return (
-            {k.replace(old, new, 1): v for k, v in parameters.items() if old in k}
-            if parameters
-            else {}
-        )
-
     # sample
-    decoder = elegy.Model(
-        module=Decoder.defer(),
-        parameters=slice(
-            model.parameters, "variational_auto_encoder/decoder", "decoder"
-        ),
-        states=slice(model.states, "variational_auto_encoder/decoder", "decoder"),
-    )
+    model_decoder = elegy.Model(vae.decoder)
 
-    decoder = model.decoder
-
-    z_samples = np.random.normal(size=(12, 128))
-    samples = decoder.predict(z_samples)
+    z_samples = np.random.normal(size=(12, LATENT_SIZE))
+    samples = model_decoder.predict(z_samples)
     samples = jax.nn.sigmoid(samples)
 
     # plot and save results

@@ -16,4 +16,5 @@ from .module import (
     add_loss,
     add_metric,
     context,
+    next_rng_key,
 )

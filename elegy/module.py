@@ -503,7 +503,7 @@ def names_context(module: Module):
     if LOCAL.contexts:
         context: Context = LOCAL.contexts[-1]
 
-        class_name = module.__class__.__name__
+        class_name = module.name
 
         # get unique name
         if module in context.unique_name:

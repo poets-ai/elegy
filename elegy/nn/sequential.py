@@ -47,5 +47,13 @@ class Sequential(Module):
                 out = layer(out, *args, **kwargs)
             else:
                 out = layer(out)
+
+            if not isinstance(layer, Module):
+                name = (
+                    layer.__name__
+                    if hasattr(layer, "__name__")
+                    else layer.__class__.__name__
+                )
+                self.add_summary(name, out)
         return out
 

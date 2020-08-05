@@ -172,8 +172,9 @@ class Model:
         self._rngs = PRNGSequence(seed)
         self._parameters = parameters
         self._states = states
-        if self.metrics_module is not None:
-            self._metrics_states = metrics_states
+        self._metrics_states = (
+            metrics_states if self.metrics_module is not None else None
+        )
         self.optimizer_state = optimizer_state
         self.initial_metrics_state = initial_metrics_state
         self.run_eagerly = run_eagerly
