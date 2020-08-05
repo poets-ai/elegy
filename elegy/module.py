@@ -56,8 +56,8 @@ class Module(metaclass=ModuleMeta):
     """
 
     name: str
-    _params: tp.Dict[str, tp.Any]
-    _states: tp.Dict[str, tp.Any]
+    _params: tp.Set[str]
+    _states: tp.Set[str]
     _submodules: tp.Set[str]
 
     def __init__(self, name: tp.Optional[str] = None):
@@ -73,8 +73,8 @@ class Module(metaclass=ModuleMeta):
                 current instance is converted to ``lower_snake_case`` and used instead.
         """
         self.name = name if name else utils.lower_snake_case(self.__class__.__name__)
-        self._params = {}
-        self._states = {}
+        self._params = set()
+        self._states = set()
         self._submodules = set()
 
     def __call__(self, *args, **kwargs) -> tp.Any:
@@ -185,25 +185,26 @@ class Module(metaclass=ModuleMeta):
         if LOCAL.contexts:
             context: Context = LOCAL.contexts[-1]
 
-            if name not in self._params:
+            if not hasattr(self, name):
                 if not context.building:
                     raise ValueError(
                         f"Trying to initialize '{name}' outside of `init`."
                     )
 
-                if name in self._submodules:
-                    raise ValueError(
-                        f"Cannot use name '{name}' for parameter since a submodule "
-                        "with the same name already exists."
-                    )
+                self._params.add(name)
+                setattr(self, name, initializer(shape, dtype))
 
-                self._params[name] = initializer(shape, dtype)
+            elif name not in self._params:
+                raise ValueError(
+                    f"Class already contained a property named '{name}', "
+                    "please use a unique name for the parameter."
+                )
 
-            param = self._params[name]
+            value = getattr(self, name)
 
-            assert param.shape == tuple(shape)
+            assert value.shape == tuple(shape)
 
-            return param
+            return value
         else:
             raise ValueError(
                 "Cannot execute `get_parameter` outside of a `elegy.context`"
@@ -220,25 +221,26 @@ class Module(metaclass=ModuleMeta):
         if LOCAL.contexts:
             context: Context = LOCAL.contexts[-1]
 
-            if name not in self._states:
+            if not hasattr(self, name):
                 if not context.building:
                     raise ValueError(
                         f"Trying to initialize '{name}' outside of `init`."
                     )
 
-                if name in self._submodules:
-                    raise ValueError(
-                        f"Cannot use name '{name}' for state since a submodule "
-                        "with the same name already exists."
-                    )
+                self._states.add(name)
+                setattr(self, name, initializer(shape, dtype))
 
-                self._states[name] = initializer(shape, dtype)
+            elif name not in self._states:
+                raise ValueError(
+                    f"Class already contained a property named '{name}', "
+                    "please use a unique name for the state."
+                )
 
-            param = self._states[name]
+            value = getattr(self, name)
 
-            assert param.shape == tuple(shape)
+            assert value.shape == tuple(shape)
 
-            return param
+            return value
         else:
             raise ValueError("Cannot execute `get_state` outside of a `elegy.context`")
 
@@ -248,7 +250,9 @@ class Module(metaclass=ModuleMeta):
             context: Context = LOCAL.contexts[-1]
 
             if not context.building:
-                self._states[name] = value
+                if name not in self._states:
+                    raise ValueError(f"State '{name}' not found.")
+                setattr(self, name, value)
         else:
             raise ValueError("Cannot execute `set_state` outside of a `elegy.context`")
 
@@ -320,8 +324,15 @@ class Module(metaclass=ModuleMeta):
 
     def reset(self):
         def clear_module(module: Module):
-            module._params = {}
-            module._states = {}
+
+            for name in module._params:
+                delattr(module, name)
+
+            for name in module._states:
+                delattr(module, name)
+
+            # module._params = set()
+            # module._states = set()
 
         apply_tree(clear_module, self)
 
@@ -329,13 +340,23 @@ class Module(metaclass=ModuleMeta):
         if include_submodules:
             return sum(x.size for x in jax.tree_leaves(self.parameters))
         else:
-            return sum(x.size for x in jax.tree_leaves(self._params))
+            return sum(
+                x.size
+                for x in jax.tree_leaves(
+                    [getattr(self, key) for key in self._params if hasattr(self, key)]
+                )
+            )
 
     def states_size(self, include_submodules: bool = True):
         if include_submodules:
             return sum(x.size for x in jax.tree_leaves(self.states))
         else:
-            return sum(x.size for x in jax.tree_leaves(self._states))
+            return sum(
+                x.size
+                for x in jax.tree_leaves(
+                    [getattr(self, key) for key in self._states if hasattr(self, key)]
+                )
+            )
 
     def parameters_bytes(self, include_submodules: bool = True):
         if include_submodules:
@@ -343,13 +364,23 @@ class Module(metaclass=ModuleMeta):
                 x.size * x.dtype.itemsize for x in jax.tree_leaves(self.parameters)
             )
         else:
-            return sum(x.size * x.dtype.itemsize for x in jax.tree_leaves(self._params))
+            return sum(
+                x.size * x.dtype.itemsize
+                for x in jax.tree_leaves(
+                    [getattr(self, key) for key in self._params if hasattr(self, key)]
+                )
+            )
 
     def states_bytes(self, include_submodules: bool = True):
         if include_submodules:
             return sum(x.size * x.dtype.itemsize for x in jax.tree_leaves(self.states))
         else:
-            return sum(x.size * x.dtype.itemsize for x in jax.tree_leaves(self._states))
+            return sum(
+                x.size * x.dtype.itemsize
+                for x in jax.tree_leaves(
+                    [getattr(self, key) for key in self._states if hasattr(self, key)]
+                )
+            )
 
 
 # -------------------------------------------------------------
@@ -593,11 +624,18 @@ def get_tree(
     elif isinstance(module, tp.Dict):
         return {key: get_tree(module, dict_field) for key, module in module.items()}
     elif isinstance(module, Module):
-        node = getattr(module, dict_field).copy()
+
+        node = {
+            key: getattr(module, key)
+            for key in getattr(module, dict_field)
+            if hasattr(module, key)
+        }
+
         for submodule in module._submodules:
             value = get_tree(getattr(module, submodule), dict_field)
             if value:  # drop if empty
                 node[submodule] = value
+
         return node
     else:
         return ()
@@ -632,11 +670,11 @@ def set_tree(
 
         dict_field_value = getattr(module, dict_field)
 
-        for key in values:
+        for key, value in values.items():
             if key in module._submodules:
-                set_tree(getattr(module, key), values[key], dict_field)
-            else:
-                dict_field_value[key] = values[key]
+                set_tree(getattr(module, key), value, dict_field)
+            elif key in dict_field_value:
+                setattr(module, key, value)
 
 
 def apply_tree(f: tp.Callable, module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict]):
