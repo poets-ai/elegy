@@ -24,7 +24,6 @@ from elegy.types import PRNGKey
 T = tp.TypeVar("T")
 LOCAL = threading.local()
 LOCAL.contexts = []
-LOCAL.init_contexts = []
 
 
 def construct_module(cls, *args, **kwargs) -> "Module":
@@ -905,8 +904,10 @@ class PRNGSequence(tp.Iterator[PRNGKey]):
 
 def to_module(f):
     class MyModule(Module):
-        def __init__(self):
-            super().__init__(name=utils.lower_snake_case(f.__name__))
+        def __init__(self, name: tp.Optional[str] = None):
+            super().__init__(
+                name=utils.lower_snake_case(f.__name__) if name is None else name
+            )
             self.call = f
 
         def call(self, *args, **kwargs):

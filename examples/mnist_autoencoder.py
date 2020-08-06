@@ -45,17 +45,14 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             image = image.astype(jnp.float32) / 255.0
             x = elegy.nn.Flatten()(image)
             x = elegy.nn.sequential(
-                self,
-                [
-                    elegy.nn.Linear(self.n1),
-                    jax.nn.relu,
-                    elegy.nn.Linear(self.n2),
-                    jax.nn.relu,
-                    elegy.nn.Linear(self.n1),
-                    jax.nn.relu,
-                    elegy.nn.Linear(x.shape[-1]),
-                    jax.nn.sigmoid,
-                ],
+                elegy.nn.Linear(self.n1),
+                jax.nn.relu,
+                elegy.nn.Linear(self.n2),
+                jax.nn.relu,
+                elegy.nn.Linear(self.n1),
+                jax.nn.relu,
+                elegy.nn.Linear(x.shape[-1]),
+                jax.nn.sigmoid,
             )(x)
             return x.reshape(image.shape) * 255
 

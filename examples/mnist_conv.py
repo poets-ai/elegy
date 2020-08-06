@@ -45,8 +45,8 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             @elegy.to_module
             def ConvBlock(x, units, kernel, stride=1):
                 x = elegy.nn.Conv2D(units, kernel, stride=stride, padding="same")(x)
-                # x = elegy.nn.BatchNormalization()(x, is_training)
-                # x = elegy.nn.Dropout(0.2)(x, is_training)
+                x = elegy.nn.BatchNormalization()(x, is_training)
+                x = elegy.nn.Dropout(0.2)(x, is_training)
                 return jax.nn.relu(x)
 
             x: np.ndarray = image.astype(jnp.float32) / 255.0
