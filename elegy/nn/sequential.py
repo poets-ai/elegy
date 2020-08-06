@@ -1,3 +1,4 @@
+import functools
 import typing as tp
 
 import haiku as hk
@@ -76,6 +77,14 @@ class Sequential(Module):
     ):
         super().__init__(name=name)
         self.layers = tuple(layers())
+        # functools.wraps(self.layers[0])(self)
+        # functools.wraps(self.layers[0])(self.call)
+
+        @functools.wraps(self.layers[0])
+        def call(*args, **kwargs):
+            return sequential(*self.layers)(*args, **kwargs)
+
+        self.call = call
 
     def call(self, inputs, *args, **kwargs):
         """Connects all layers. *args and **kwargs are passed to the first layer."""

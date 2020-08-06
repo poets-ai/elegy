@@ -102,6 +102,7 @@ class Module(metaclass=ModuleMeta):
     name: str
     _params: tp.Set[str]
     _states: tp.Set[str]
+    _states_initial: tp.Set[str]
     _submodules: tp.Set[str]
     _dynamic_submodules: tp.List[str]
     _ignore: tp.Set[str]
@@ -121,6 +122,7 @@ class Module(metaclass=ModuleMeta):
         self.name = name if name else utils.lower_snake_case(self.__class__.__name__)
         self._params = set()
         self._states = set()
+        self._states_initial = set()
         self._submodules = set()
         self._dynamic_submodules = []
         self._ignore = set()
@@ -151,12 +153,18 @@ class Module(metaclass=ModuleMeta):
         Initializes your function collecting parameters and states.
         """
 
-        @functools.wraps(self.call)
+        @functools.wraps(self)
         def init_fn(*args, **kwargs):
             with context(rng=rng, building=True, get_summaries=False):
                 self(*args, **kwargs)
 
-            return self.get_parameters(), self.get_states()
+            params = self.get_parameters()
+            initial_states = self.get_states(initial=True)
+
+            self.clear_initial_states()
+            self.set_states(initial_states)
+
+            return params, initial_states
 
         return init_fn
 
@@ -275,8 +283,15 @@ class Module(metaclass=ModuleMeta):
                         f"Trying to initialize '{name}' outside of `init`."
                     )
 
+                initial_name = f"{name}__initial__"
+
                 self._states.add(name)
-                setattr(self, name, initializer(shape, dtype))
+                self._states_initial.add(initial_name)
+
+                initial_value = initializer(shape, dtype)
+
+                setattr(self, name, initial_value)
+                setattr(self, initial_name, initial_value)
 
             elif name not in self._states:
                 raise ValueError(
@@ -297,10 +312,9 @@ class Module(metaclass=ModuleMeta):
         if LOCAL.contexts:
             context: Context = LOCAL.contexts[-1]
 
-            if not context.building:
-                if name not in self._states:
-                    raise ValueError(f"State '{name}' not found.")
-                setattr(self, name, value)
+            if name not in self._states:
+                raise ValueError(f"State '{name}' not found.")
+            setattr(self, name, value)
         else:
             raise ValueError("Cannot execute `set_state` outside of a `elegy.context`")
 
@@ -359,8 +373,12 @@ class Module(metaclass=ModuleMeta):
     def set_parameters(self, values: types.Parameters):
         set_tree(self, values, "_params")
 
-    def get_states(self) -> types.States:
-        states = get_tree(self, "_states")
+    def get_states(self, initial: bool = False) -> types.States:
+        states = get_tree(
+            self,
+            "_states",
+            key_fn=(lambda key: f"{key}__initial__") if initial else None,
+        )
         assert isinstance(states, tp.Dict)
         return states
 
@@ -378,6 +396,13 @@ class Module(metaclass=ModuleMeta):
 
             # module._params = set()
             # module._states = set()
+
+        apply_tree(clear_module, self)
+
+    def clear_initial_states(self):
+        def clear_module(module: Module):
+            for name in module._states_initial:
+                delattr(module, name)
 
         apply_tree(clear_module, self)
 
@@ -705,25 +730,31 @@ class TransformedState(tp.NamedTuple):
 
 
 def get_tree(
-    module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict], dict_field: str
+    module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict],
+    dict_field: str,
+    key_fn: tp.Optional[tp.Callable[[str], str]] = None,
 ) -> tp.Union[tp.List, tp.Tuple, tp.Dict]:
 
     if isinstance(module, tp.List):
-        return [get_tree(module, dict_field) for module in module]
+        return [get_tree(module, dict_field, key_fn) for module in module]
     elif isinstance(module, tp.Tuple):
-        return tuple(get_tree(module, dict_field) for module in module)
+        return tuple(get_tree(module, dict_field, key_fn) for module in module)
     elif isinstance(module, tp.Dict):
-        return {key: get_tree(module, dict_field) for key, module in module.items()}
+        return {
+            key: get_tree(module, dict_field, key_fn) for key, module in module.items()
+        }
     elif isinstance(module, Module):
 
         node = {
-            key: getattr(module, key)
+            key: getattr(module, key_fn(key))
+            if key_fn is not None
+            else getattr(module, key)
             for key in getattr(module, dict_field)
             if hasattr(module, key)
         }
 
         for submodule in module._submodules:
-            value = get_tree(getattr(module, submodule), dict_field)
+            value = get_tree(getattr(module, submodule), dict_field, key_fn)
             if value:  # drop if empty
                 node[submodule] = value
 
@@ -853,9 +884,10 @@ def to_module(f):
     class MyModule(Module):
         def __init__(self):
             super().__init__(name=utils.lower_snake_case(f.__name__))
+            self.call = f
 
         def call(self, *args, **kwargs):
-            return f(*args, **kwargs)
+            ...
 
     MyModule.__name__ = f.__name__
 

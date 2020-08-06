@@ -12,7 +12,7 @@ class LinearTest(TestCase):
         linear = elegy.nn.Linear(5)
 
         linear.init(rng=42)(x)
-        context = linear.apply(get_summaries=True, return_context=True)(x)
+        y_pred, context = linear.apply(get_summaries=True)(x)
 
-        assert context.outputs.shape == (4, 5)
+        assert y_pred.shape == (4, 5)
         print(context)

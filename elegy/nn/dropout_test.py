@@ -16,7 +16,7 @@ class DropoutTest(TestCase):
             def call(self, x, is_training):
                 return elegy.nn.Dropout(0.5)(x, is_training)
 
-        model = elegy.Model(module=TestModule.defer())
+        model = elegy.Model(TestModule())
 
         x = jnp.ones([3, 5])
 

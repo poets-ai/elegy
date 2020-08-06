@@ -10,7 +10,12 @@ class SequentialTest(TestCase):
     @transform_and_run
     def test_connects(self):
         elegy.nn.Sequential(
-            [elegy.nn.Flatten(), elegy.nn.Linear(5), jax.nn.relu, elegy.nn.Linear(2),]
+            lambda: [
+                elegy.nn.Flatten(),
+                elegy.nn.Linear(5),
+                jax.nn.relu,
+                elegy.nn.Linear(2),
+            ]
         )(jnp.ones([10, 3]))
 
         elegy.nn.Sequential(
@@ -25,7 +30,7 @@ class SequentialTest(TestCase):
     def test_on_predict(self):
 
         model = elegy.Model(
-            module=elegy.nn.Sequential.defer(
+            elegy.nn.Sequential(
                 lambda: [
                     elegy.nn.Flatten(),
                     elegy.nn.Linear(5),

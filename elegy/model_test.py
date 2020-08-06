@@ -43,6 +43,7 @@ class MyModule(elegy.Module):
         self.bias = self.add_parameter("bias", [x.shape[-1]], jnp.float32, jnp.ones)
         return x + self.bias * 10
 
+
 class Count(elegy.Module):
     def call(self):
 
@@ -52,14 +53,13 @@ class Count(elegy.Module):
 
         return 1.0 / n
 
-class ModuleTest(TestCase):
-    def test_basic(self):
 
-    def test_get_parameters(self):
-        x = np.random.uniform(-1, 1, size=(4, 5))
+# class ModuleTest(TestCase):
+#     def test_basic(self):
 
-        module = MyModule()
-        model = elegy.Model(module)
+#     def test_get_parameters(self):
+#         x = np.random.uniform(-1, 1, size=(4, 5))
 
-        
+#         module = MyModule()
+#         model = elegy.Model(module)
 

@@ -1,3 +1,4 @@
+from elegy.module import to_module
 import functools
 
 from jax import random
@@ -52,14 +53,13 @@ def transform_and_run(
 
     @functools.wraps(f)
     def wrapper(*a, **k):
-        """Runs init and apply of f."""
-        rng = random.PRNGKey(seed) if seed is not None else None
-        transformed = hooks.transform(lambda: f(*a, **k))
-        params, state = transformed.init(rng)
-        if run_apply:
-            transformed_state = transformed.apply(
-                params, state, rng, get_summaries=True
-            )
-            return transformed_state.outputs
+
+        Module = to_module(f)
+        module = Module()
+
+        module.init(rng=42)(*a, **k)
+        y, _ = module.apply(rng=42)(*a, **k)
+
+        return y
 
     return wrapper
