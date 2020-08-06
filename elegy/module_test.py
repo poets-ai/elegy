@@ -109,13 +109,11 @@ class ModuleTest(TestCase):
         assert m.linear1.get_parameters()["w"][0, 0] == -1
         assert m.linear1.get_parameters()["b"][0] == -1
 
-        print(f"{m.parameters_size(include_submodules=False)=}")
         assert m.parameters_size(include_submodules=False) == 7
 
         current_parameters = m.get_parameters()
         current_states = m.get_states()
 
-        print(f"{m.parameters_size()=}")
         m.reset()
 
         parameters = m.get_parameters()
@@ -123,11 +121,6 @@ class ModuleTest(TestCase):
 
         assert parameters == {}
         assert m.parameters_size() == 0
-
-        print(f"{m.parameters_size()=}")
-
-        print(f"{inspect.signature(m.apply())=}")
-        print(f"{inspect.signature(m)=}")
 
         m.set_parameters(current_parameters)
         m.set_states(current_states)
@@ -224,22 +217,15 @@ class ModuleDynamicTest(TestCase):
         assert m.linear_1.get_parameters()["w"][0, 0] == -1
         assert m.linear_1.get_parameters()["b"][0] == -1
 
-        print(f"{m.parameters_size(include_submodules=False)=}")
         assert m.parameters_size(include_submodules=False) == 7
 
         current_parameters = m.get_parameters()
         current_states = m.get_states()
 
-        print(f"{m.parameters_size()=}")
         m.reset()
 
         assert m.get_parameters() == {}
         assert m.parameters_size() == 0
-
-        print(f"{m.parameters_size()=}")
-
-        print(f"{inspect.signature(m.apply())=}")
-        print(f"{inspect.signature(m)=}")
 
         m.set_parameters(current_parameters)
         m.set_states(current_states)
