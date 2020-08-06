@@ -45,19 +45,17 @@ class Encoder(elegy.Module):
 
     def __init__(self, hidden_size: int = 512, latent_size: int = 128):
         super().__init__()
-        self.flatten = elegy.nn.Flatten()
-        self.linear1 = elegy.nn.Linear(hidden_size)
-        self.linear_mean = elegy.nn.Linear(latent_size, name="linear_mean")
-        self.linear_std = elegy.nn.Linear(latent_size, name="linear_std")
+        self.hidden_size = hidden_size
+        self.latent_size = latent_size
 
     def call(self, x: np.ndarray) -> np.ndarray:
-        x = self.flatten(x)
-        x = self.linear1(x)
+        x = elegy.nn.Flatten()(x)
+        x = elegy.nn.Linear(self.hidden_size)(x)
         x = jax.nn.relu(x)
         self.add_summary("relu", x)
 
-        mean = self.linear_mean(x)
-        log_stddev = self.linear_std(x)
+        mean = elegy.nn.Linear(self.latent_size, name="linear_mean")(x)
+        log_stddev = elegy.nn.Linear(self.latent_size, name="linear_std")(x)
         stddev = jnp.exp(log_stddev)
 
         elegy.add_loss("kl_divergence", KLDivergence(weight=2e-1)(mean, stddev))
@@ -77,15 +75,14 @@ class Decoder(elegy.Module):
     ):
         super().__init__()
         self.output_shape = output_shape
-        self.linear1 = elegy.nn.Linear(hidden_size)
-        self.linear2 = elegy.nn.Linear(jnp.prod(output_shape))
+        self.hidden_size = hidden_size
 
     def call(self, z: np.ndarray) -> np.ndarray:
-        z = self.linear1(z)
+        z = elegy.nn.Linear(self.hidden_size)(z)
         z = jax.nn.relu(z)
         self.add_summary("relu", z)
 
-        logits = self.linear2(z)
+        logits = elegy.nn.Linear(jnp.prod(self.output_shape))(z)
         logits = jnp.reshape(logits, (-1, *self.output_shape))
         self.add_summary("relu", z)
 
@@ -102,15 +99,15 @@ class VariationalAutoEncoder(elegy.Module):
         output_shape: tp.Sequence[int] = MNIST_IMAGE_SHAPE,
     ):
         super().__init__()
-
-        self.encoder = Encoder(hidden_size, latent_size)
-        self.decoder = Decoder(hidden_size, output_shape)
+        self.hidden_size = hidden_size
+        self.latent_size = latent_size
+        self.output_shape = output_shape
 
     def call(self, x: np.ndarray) -> dict:
         x = x.astype(jnp.float32)
 
-        z = self.encoder(x)
-        logits = self.decoder(z)
+        z = Encoder(self.hidden_size, self.latent_size)(x)
+        logits = Decoder(self.hidden_size, self.output_shape)(z)
 
         p = jax.nn.sigmoid(logits)
         image = jax.random.bernoulli(elegy.next_rng_key(), p)

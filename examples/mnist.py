@@ -55,15 +55,16 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
         def call(self, image: jnp.ndarray):
             image = image.astype(jnp.float32) / 255.0
 
-            mlp = elegy.nn.Sequential(
-                lambda: [
+            mlp = elegy.nn.sequential(
+                self,
+                [
                     elegy.nn.Flatten(),
                     elegy.nn.Linear(self.n1),
                     jax.nn.relu,
                     elegy.nn.Linear(self.n2),
                     jax.nn.relu,
                     elegy.nn.Linear(10),
-                ]
+                ],
             )
 
             return mlp(image)

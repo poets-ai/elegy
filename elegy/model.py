@@ -232,7 +232,8 @@ class Model:
         class_weight: tp.Optional[jnp.ndarray],
     ):
 
-        maybe_jit = jax.jit if not self.run_eagerly else lambda x: x
+        # maybe_jit = jax.jit if not self.run_eagerly else lambda x: x
+        maybe_jit = lambda x: x
 
         if self.parameters is None or self.states is None:
             x_args, x_kwargs = utils.get_input_args(x, is_training=True)

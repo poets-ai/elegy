@@ -7,6 +7,30 @@ from elegy import utils
 from elegy.module import Module
 
 
+def sequential(
+    module: Module, layers: tp.Iterable[tp.Callable[..., tp.Any]]
+) -> tp.Callable[..., tp.Any]:
+    def call(inputs, *args, **kwargs):
+        """Connects all layers. *args and **kwargs are passed to the first layer."""
+        out = inputs
+        for i, layer in enumerate(layers):
+            if i == 0:
+                out = layer(out, *args, **kwargs)
+            else:
+                out = layer(out)
+
+            if not isinstance(layer, Module):
+                name = (
+                    layer.__name__
+                    if hasattr(layer, "__name__")
+                    else layer.__class__.__name__
+                )
+                module.add_summary(name, out)
+        return out
+
+    return call
+
+
 class Sequential(Module):
     """
     Sequentially calls the given list of layers.
@@ -41,19 +65,5 @@ class Sequential(Module):
 
     def call(self, inputs, *args, **kwargs):
         """Connects all layers. *args and **kwargs are passed to the first layer."""
-        out = inputs
-        for i, layer in enumerate(self.layers):
-            if i == 0:
-                out = layer(out, *args, **kwargs)
-            else:
-                out = layer(out)
-
-            if not isinstance(layer, Module):
-                name = (
-                    layer.__name__
-                    if hasattr(layer, "__name__")
-                    else layer.__class__.__name__
-                )
-                self.add_summary(name, out)
-        return out
+        return sequential(self, self.layers)(inputs, *args, **kwargs)
 

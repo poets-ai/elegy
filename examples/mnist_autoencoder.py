@@ -43,18 +43,19 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
 
         def call(self, image: jnp.ndarray):
             image = image.astype(jnp.float32) / 255.0
-            x = hk.Flatten()(image)
-            x = hk.Sequential(
+            x = elegy.nn.Flatten()(image)
+            x = elegy.nn.sequential(
+                self,
                 [
-                    hk.Linear(self.n1),
+                    elegy.nn.Linear(self.n1),
                     jax.nn.relu,
-                    hk.Linear(self.n2),
+                    elegy.nn.Linear(self.n2),
                     jax.nn.relu,
-                    hk.Linear(self.n1),
+                    elegy.nn.Linear(self.n1),
                     jax.nn.relu,
-                    hk.Linear(x.shape[-1]),
+                    elegy.nn.Linear(x.shape[-1]),
                     jax.nn.sigmoid,
-                ]
+                ],
             )(x)
             return x.reshape(image.shape) * 255
 
@@ -64,11 +65,13 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             return jnp.mean(jnp.square(x - y_pred), axis=-1)
 
     model = elegy.Model(
-        module=MLP.defer(n1=256, n2=64),
+        module=MLP(n1=256, n2=64),
         loss=MeanSquaredError(),
         optimizer=optix.rmsprop(0.001),
         run_eagerly=eager,
     )
+
+    model.summary(X_train[:64])
 
     # Notice we are not passing `y`
     history = model.fit(

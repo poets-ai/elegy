@@ -56,8 +56,8 @@ class Dropout(Module):
     def call(
         self,
         x: np.ndarray,
-        rng: tp.Optional[np.ndarray] = None,
         is_training: bool = True,
+        rng: tp.Optional[np.ndarray] = None,
     ) -> jnp.ndarray:
         """
         Arguments:
@@ -68,7 +68,7 @@ class Dropout(Module):
             x but dropped out and scaled by `1 / (1 - rate)`.
         """
         return hk.dropout(
-            rng=module.next_rng_key() if rng is None else rng,
+            rng=rng if rng is not None else module.next_rng_key(),
             rate=self.rate if is_training else 0.0,
             x=x,
         )

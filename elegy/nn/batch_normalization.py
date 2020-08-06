@@ -2,13 +2,14 @@
 # Tensorflow: https://github.com/tensorflow/tensorflow/blob/2b96f3662bd776e277f86997659e61046b56c315/tensorflow/python/keras/layers/normalization.py#L46
 # Haiku: https://github.com/deepmind/dm-haiku/blob/master/haiku/_src/batch_norm.py#L39#L194
 
+from elegy.module import Module
 import typing as tp
 
 import haiku as hk
 import numpy as np
 
 
-class BatchNormalization(hk.BatchNorm):
+class BatchNormalization(Module):
     r"""
     Normalize and create_scale inputs or activations. (Ioffe and Szegedy, 2014).
 
