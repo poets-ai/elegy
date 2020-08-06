@@ -366,7 +366,14 @@ class Module(metaclass=ModuleMeta):
             )
 
     def get_parameters(self) -> types.Parameters:
-        params = get_tree(self, "_params")
+        params = module_tree_map(
+            lambda module: {
+                key: getattr(module, key)
+                for key in getattr(module, "_params")
+                if hasattr(module, key)
+            },
+            self,
+        )
         assert isinstance(params, tp.Dict)
         return params
 
@@ -374,10 +381,15 @@ class Module(metaclass=ModuleMeta):
         set_tree(self, values, "_params")
 
     def get_states(self, initial: bool = False) -> types.States:
-        states = get_tree(
+        states = module_tree_map(
+            lambda module: {
+                key: getattr(module, key_initial) if initial else getattr(module, key)
+                for key, key_initial in zip(
+                    getattr(module, "_states"), getattr(module, "_states_initial")
+                )
+                if hasattr(module, key)
+            },
             self,
-            "_states",
-            key_fn=(lambda key: f"{key}__initial__") if initial else None,
         )
         assert isinstance(states, tp.Dict)
         return states
@@ -397,14 +409,14 @@ class Module(metaclass=ModuleMeta):
             # module._params = set()
             # module._states = set()
 
-        apply_tree(clear_module, self)
+        tree_exec(clear_module, self)
 
     def clear_initial_states(self):
         def clear_module(module: Module):
             for name in module._states_initial:
                 delattr(module, name)
 
-        apply_tree(clear_module, self)
+        tree_exec(clear_module, self)
 
     def parameters_size(self, include_submodules: bool = True):
         if include_submodules:
@@ -729,32 +741,23 @@ class TransformedState(tp.NamedTuple):
 # ------------------------------------------------------------------------
 
 
-def get_tree(
+def module_tree_map(
+    f: tp.Callable[[Module], tp.Dict[str, tp.Any]],
     module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict],
-    dict_field: str,
-    key_fn: tp.Optional[tp.Callable[[str], str]] = None,
 ) -> tp.Union[tp.List, tp.Tuple, tp.Dict]:
 
     if isinstance(module, tp.List):
-        return [get_tree(module, dict_field, key_fn) for module in module]
+        return [module_tree_map(f, module) for module in module]
     elif isinstance(module, tp.Tuple):
-        return tuple(get_tree(module, dict_field, key_fn) for module in module)
+        return tuple(module_tree_map(f, module) for module in module)
     elif isinstance(module, tp.Dict):
-        return {
-            key: get_tree(module, dict_field, key_fn) for key, module in module.items()
-        }
+        return {key: module_tree_map(f, module) for key, module in module.items()}
     elif isinstance(module, Module):
 
-        node = {
-            key: getattr(module, key_fn(key))
-            if key_fn is not None
-            else getattr(module, key)
-            for key in getattr(module, dict_field)
-            if hasattr(module, key)
-        }
+        node = f(module)
 
         for submodule in module._submodules:
-            value = get_tree(getattr(module, submodule), dict_field, key_fn)
+            value = module_tree_map(f, getattr(module, submodule))
             if value:  # drop if empty
                 node[submodule] = value
 
@@ -768,59 +771,71 @@ def set_tree(
     values: tp.Union[tp.List, tp.Tuple, tp.Dict],
     dict_field: str,
 ):
+    def f(module, values):
+        dict_field_value = getattr(module, dict_field)
+        for key, value in values.items():
+            if key in dict_field_value:
+                setattr(module, key, value)
+
+    tree_apply(f, module, values)
+
+
+def tree_apply(
+    f: tp.Callable[[Module, tp.Dict[str, tp.Any]], None],
+    module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict],
+    values: tp.Union[tp.List, tp.Tuple, tp.Dict],
+):
 
     if isinstance(module, tp.List):
         assert isinstance(values, tp.List)
 
         for module, value in zip(module, values):
-            set_tree(module, value, dict_field)
+            tree_apply(f, module, value)
 
     elif isinstance(module, tp.Tuple):
         assert isinstance(values, tp.Tuple)
 
         for module, value in zip(module, values):
-            set_tree(module, value, dict_field)
+            tree_apply(f, module, value)
 
     elif isinstance(module, tp.Dict):
         assert isinstance(values, tp.Dict)
 
         for key, value in values.items():
-            set_tree(module[key], value, dict_field)
+            tree_apply(f, module[key], value)
 
     elif isinstance(module, Module):
         assert isinstance(values, tp.Dict)
 
-        dict_field_value = getattr(module, dict_field)
+        f(module, values)
 
         for key, value in values.items():
             if key in module._submodules:
-                set_tree(getattr(module, key), value, dict_field)
-            elif key in dict_field_value:
-                setattr(module, key, value)
+                tree_apply(f, getattr(module, key), value)
 
 
-def apply_tree(f: tp.Callable, module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict]):
+def tree_exec(f: tp.Callable, module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict]):
 
     if isinstance(module, tp.List):
 
         for module in module:
-            apply_tree(f, module)
+            tree_exec(f, module)
 
     elif isinstance(module, tp.Tuple):
 
         for module in module:
-            apply_tree(f, module)
+            tree_exec(f, module)
 
     elif isinstance(module, tp.Dict):
 
         for key, value in module.items():
-            apply_tree(f, module[key])
+            tree_exec(f, module[key])
 
     elif isinstance(module, Module):
         f(module)
 
         for key in module._submodules:
-            apply_tree(f, getattr(module, key))
+            tree_exec(f, getattr(module, key))
 
 
 def leaf_isinstance(obj: tp.Any, types) -> tp.Type:
