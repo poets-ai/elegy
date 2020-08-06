@@ -4,29 +4,43 @@ import haiku as hk
 import numpy as np
 
 from elegy import utils
-from elegy.module import Module
+from elegy.module import Module, LOCAL, Context
 
 
-def sequential(
-    module: Module, layers: tp.Iterable[tp.Callable[..., tp.Any]]
-) -> tp.Callable[..., tp.Any]:
+def sequential(*layers: tp.Callable[..., tp.Any]) -> tp.Callable[..., tp.Any]:
     def call(inputs, *args, **kwargs):
         """Connects all layers. *args and **kwargs are passed to the first layer."""
-        out = inputs
-        for i, layer in enumerate(layers):
-            if i == 0:
-                out = layer(out, *args, **kwargs)
-            else:
-                out = layer(out)
 
-            if not isinstance(layer, Module):
-                name = (
-                    layer.__name__
-                    if hasattr(layer, "__name__")
-                    else layer.__class__.__name__
+        if LOCAL.contexts:
+            context: Context = LOCAL.contexts[-1]
+
+            if not context.module_c:
+                raise ValueError(
+                    "Cannot execute `sequential` outside of a module's `call` or `init`."
                 )
-                module.add_summary(name, out)
-        return out
+
+            module: Module = context.module_c[-1]
+
+            out = inputs
+            for i, layer in enumerate(layers):
+                if i == 0:
+                    out = layer(out, *args, **kwargs)
+                else:
+                    out = layer(out)
+
+                if not isinstance(layer, Module):
+                    name = (
+                        layer.__name__
+                        if hasattr(layer, "__name__")
+                        else layer.__class__.__name__
+                    )
+                    module.add_summary(name, out)
+            return out
+
+        else:
+            raise ValueError(
+                "Cannot execute `sequential` outside of an `elegy.context`"
+            )
 
     return call
 
@@ -65,5 +79,5 @@ class Sequential(Module):
 
     def call(self, inputs, *args, **kwargs):
         """Connects all layers. *args and **kwargs are passed to the first layer."""
-        return sequential(self, self.layers)(inputs, *args, **kwargs)
+        return sequential(*self.layers)(inputs, *args, **kwargs)
 

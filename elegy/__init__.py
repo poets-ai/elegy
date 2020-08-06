@@ -17,4 +17,5 @@ from .module import (
     add_metric,
     context,
     next_rng_key,
+    to_module,
 )

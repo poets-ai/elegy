@@ -40,21 +40,9 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
 
-    def to_module(f):
-        class MyModule(elegy.Module):
-            def __init__(self):
-                super().__init__(name=utils.lower_snake_case(f.__name__))
-
-            def call(self, *args, **kwargs):
-                return f(*args, **kwargs)
-
-        MyModule.__name__ = f.__name__
-
-        return MyModule
-
     class CNN(elegy.Module):
         def call(self, image: jnp.ndarray, is_training: bool):
-            @to_module
+            @elegy.to_module
             def ConvBlock(x, units, kernel, stride=1):
                 x = elegy.nn.Conv2D(units, kernel, stride=stride, padding="same")(x)
                 # x = elegy.nn.BatchNormalization()(x, is_training)
@@ -87,6 +75,8 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
 
     # show summary
     model.summary(X_train[:64])
+
+    print(model.module.get_submodules())
 
     history = model.fit(
         x=X_train,

@@ -847,3 +847,17 @@ class PRNGSequence(tp.Iterator[PRNGKey]):
         return rng_next
 
     next = __next__
+
+
+def to_module(f):
+    class MyModule(Module):
+        def __init__(self):
+            super().__init__(name=utils.lower_snake_case(f.__name__))
+
+        def call(self, *args, **kwargs):
+            return f(*args, **kwargs)
+
+    MyModule.__name__ = f.__name__
+
+    return MyModule
+
