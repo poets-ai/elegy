@@ -49,21 +49,24 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
 
         def __init__(self, n1: int = 300, n2: int = 100, **kwargs):
             super().__init__(**kwargs)
-            self.mlp = elegy.nn.Sequential(
-                [
+            self.n1 = n1
+            self.n2 = n2
+
+        def call(self, image: jnp.ndarray):
+            image = image.astype(jnp.float32) / 255.0
+
+            mlp = elegy.nn.Sequential(
+                lambda: [
                     elegy.nn.Flatten(),
-                    elegy.nn.Linear(n1),
+                    elegy.nn.Linear(self.n1),
                     jax.nn.relu,
-                    elegy.nn.Linear(n2),
+                    elegy.nn.Linear(self.n2),
                     jax.nn.relu,
                     elegy.nn.Linear(10),
                 ]
             )
 
-        def call(self, image: jnp.ndarray):
-            image = image.astype(jnp.float32) / 255.0
-
-            return self.mlp(image)
+            return mlp(image)
 
     model = elegy.Model(
         module=MLP(n1=300, n2=100),

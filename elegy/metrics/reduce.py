@@ -120,12 +120,12 @@ class Reduce(Metric):
         Returns:
             Array with the cummulative reduce.
         """
-        total = self.get_state(
+        total = self.add_state(
             "total", shape=[], dtype=self._dtype, initializer=initializers.Constant(0)
         )
 
         if self._reduction in (Reduction.SUM_OVER_BATCH_SIZE, Reduction.WEIGHTED_MEAN,):
-            count = self.get_state(
+            count = self.add_state(
                 "count",
                 shape=[],
                 dtype=jnp.int32,
@@ -143,9 +143,9 @@ class Reduce(Metric):
             dtype=self._dtype,
         )
 
-        self.set_state("total", total)
+        self.update_state("total", total)
 
         if count is not None:
-            self.set_state("count", count)
+            self.update_state("count", count)
 
         return value

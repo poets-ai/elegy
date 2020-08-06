@@ -33,11 +33,11 @@ class Sequential(Module):
 
     def __init__(
         self,
-        layers: tp.Iterable[tp.Callable[..., tp.Any]],
+        layers: tp.Callable[[], tp.Iterable[tp.Callable[..., tp.Any]]],
         name: tp.Optional[str] = None,
     ):
         super().__init__(name=name)
-        self.layers = tuple(layers)
+        self.layers = tuple(layers())
 
     def call(self, inputs, *args, **kwargs):
         """Connects all layers. *args and **kwargs are passed to the first layer."""

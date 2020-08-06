@@ -187,7 +187,7 @@ class Model:
 
     @parameters.setter
     def parameters(self, values: types.Parameters):
-        self.module.parameters = values
+        self.module.set_parameters(values)
         self._parameters = values
 
     @property
@@ -196,7 +196,7 @@ class Model:
 
     @states.setter
     def states(self, values: types.States):
-        self.module.states = values
+        self.module.set_states(values)
         self._states = values
 
     @property
@@ -206,10 +206,19 @@ class Model:
     @metrics_states.setter
     def metrics_states(self, values: types.States):
         if self.metrics_module is not None:
-            self.metrics_module.states = values
+            self.metrics_module.set_states(values)
             self._metrics_states = values
         else:
             raise ValueError("Cannot set metrics_states when metrics_module is None")
+
+    def reset_metrics(self, hard: bool = False):
+
+        if hard:
+            self.metrics_module.reset()
+            self._metrics_states = None
+            self.initial_metrics_state = None
+        elif self.initial_metrics_state is not None:
+            self.metrics_states = self.initial_metrics_state
 
     def __call__(self, *args, **kwargs):
         return self.module(*args, **kwargs)
@@ -275,14 +284,6 @@ class Model:
 
         if self.optimizer_state is None:
             self.optimizer_state = maybe_jit(self._optimizer.init)(self.parameters)
-
-    def reset_metrics(self, hard: bool = False):
-
-        if hard:
-            self.metrics_module.reset()
-            self.initial_metrics_state = None
-        elif self.initial_metrics_state is not None:
-            self.metrics_module.states = self.initial_metrics_state
 
     def train_on_batch(
         self,
@@ -1201,7 +1202,7 @@ class Model:
                 rng=net_rng,
                 get_summaries=get_summaries,
             )
-        )(*x_args, **x_kwargs,)
+        )(*x_args, **x_kwargs)
 
     _predict_jit = jax.jit(_predict_no_jit, static_argnums=(0, 1, 2))
 
