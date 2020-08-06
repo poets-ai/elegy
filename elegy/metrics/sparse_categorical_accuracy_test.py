@@ -11,6 +11,7 @@ import jax.numpy as jnp
 # debugpy.wait_for_client()
 
 
+@transform_and_run
 def test_basic():
 
     accuracy = elegy.metrics.SparseCategoricalAccuracy()

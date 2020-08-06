@@ -258,8 +258,6 @@ class Module(metaclass=ModuleMeta):
 
             value = getattr(self, name)
 
-            assert value.shape == tuple(shape)
-
             return value
         else:
             raise ValueError(
@@ -301,8 +299,6 @@ class Module(metaclass=ModuleMeta):
 
             value = getattr(self, name)
 
-            assert value.shape == tuple(shape)
-
             return value
         else:
             raise ValueError("Cannot execute `get_state` outside of a `elegy.context`")
@@ -313,8 +309,20 @@ class Module(metaclass=ModuleMeta):
             context: Context = LOCAL.contexts[-1]
 
             if name not in self._states:
-                raise ValueError(f"State '{name}' not found.")
-            setattr(self, name, value)
+                if not context.building:
+                    raise ValueError(
+                        f"Trying to initialize '{name}' outside of `init`."
+                    )
+
+                initial_name = f"{name}__initial__"
+
+                self._states.add(name)
+                self._states_initial.add(initial_name)
+
+                setattr(self, name, value)
+                setattr(self, initial_name, value)
+            else:
+                setattr(self, name, value)
         else:
             raise ValueError("Cannot execute `set_state` outside of a `elegy.context`")
 

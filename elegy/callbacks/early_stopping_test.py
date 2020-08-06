@@ -14,7 +14,7 @@ class ArrayDataAdapterTest(TestCase):
     def test_example(self):
         class MLP(elegy.Module):
             def call(self, input):
-                mlp = hk.Sequential([hk.Linear(10),])
+                mlp = elegy.nn.Sequential(lambda: [elegy.nn.Linear(10)])
                 return mlp(input)
 
         callback = elegy.callbacks.EarlyStopping(monitor="loss", patience=3)

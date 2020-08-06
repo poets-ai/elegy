@@ -10,7 +10,7 @@ import jax.numpy as jnp
 # debugpy.listen(5677)
 # debugpy.wait_for_client()
 
-
+@transform_and_run
 def test_basic():
 
     y_true = jnp.array([[0, 1, 0], [0, 0, 1]])
