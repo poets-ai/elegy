@@ -916,4 +916,3 @@ def to_module(f):
     MyModule.__name__ = f.__name__
 
     return MyModule
-

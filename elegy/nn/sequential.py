@@ -89,4 +89,3 @@ class Sequential(Module):
     def call(self, inputs, *args, **kwargs):
         """Connects all layers. *args and **kwargs are passed to the first layer."""
         return sequential(*self.layers)(inputs, *args, **kwargs)
-

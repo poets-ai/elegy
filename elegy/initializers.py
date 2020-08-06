@@ -263,4 +263,3 @@ class Orthogonal(Initializer):
         q_mat = jnp.reshape(q_mat, (n_rows,) + tuple(np.delete(shape, self.axis)))
         q_mat = jnp.moveaxis(q_mat, 0, self.axis)
         return jax.lax.convert_element_type(self.scale, dtype) * q_mat
-

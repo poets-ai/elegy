@@ -62,4 +62,3 @@ class Count(elegy.Module):
 
 #         module = MyModule()
 #         model = elegy.Model(module)
-
