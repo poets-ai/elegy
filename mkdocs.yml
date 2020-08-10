@@ -19,16 +19,9 @@ nav:
   - API Reference:
       module:
         Module: api/module/Module.md
-        Defered: api/module/Defered.md
       model:
         Model: api/model/Model.md
         load: api/model/load.md
-      hooks:
-        add_loss: api/hooks/add_loss.md
-        add_metric: api/hooks/add_metric.md
-        add_summary: api/hooks/add_summary.md
-        transform: api/hooks/transform.md
-        TransformedState: api/hooks/TransformedState.md
       nn:
         Linear: api/nn/Linear.md
         Conv2D: api/nn/Conv2D.md

@@ -77,23 +77,17 @@ class Sequential(Module):
     ):
         super().__init__(name=name)
         self.layers = tuple(layers())
-        # functools.wraps(self.layers[0])(self)
-        # functools.wraps(self.layers[0])(self.call)
 
-    def call(self, inputs, *args, **kwargs):
+        # set signature of call to the signature of of the first layer
+        # by creating a wrapper function.
+        current_call = self.call
+
+        @utils.wraps(self.layers[0])
+        def call(*args, **kwargs):
+            return current_call(*args, **kwargs)
+
+        self.call = call
+
+    def call(self, *args, **kwargs):
         """Connects all layers. *args and **kwargs are passed to the first layer."""
-        out = inputs
-        for i, layer in enumerate(self.layers):
-            if i == 0:
-                out = layer(out, *args, **kwargs)
-            else:
-                out = layer(out)
-
-            if not isinstance(layer, Module):
-                name = (
-                    layer.__name__
-                    if hasattr(layer, "__name__")
-                    else layer.__class__.__name__
-                )
-                self.add_summary(name, out)
-        return out
+        return sequential(*self.layers)(*args, **kwargs)

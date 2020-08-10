@@ -48,7 +48,7 @@ def construct_module(cls, *args, **kwargs) -> "Module":
         if key not in module._ignore and leaf_isinstance(value, Module):
             module._submodules.add(key)
 
-    functools.wraps(module.call)(module)
+    utils.wraps(module.call)(module)
 
     return module
 
@@ -142,23 +142,30 @@ class Module(metaclass=ModuleMeta):
     def call(self, *args, **kwargs):
         ...
 
-    def get_submodules(self) -> tp.Dict[str, tp.Any]:
+    @property
+    def submodules(self) -> tp.Dict[str, tp.Any]:
         return {name: getattr(self, name) for name in self._submodules}
 
     def init(
         self, rng: tp.Optional[tp.Union[np.ndarray, int]] = None
     ) -> "InitCallable":
         """
-        Initializes your function collecting parameters and states.
+        Initializes the module.
+
+        Arguments:
+            rng:
+
+        Returns:
+
         """
 
-        @functools.wraps(self)
+        @utils.wraps(self)
         def init_fn(*args, **kwargs):
             with context(rng=rng, building=True, get_summaries=False):
                 self(*args, **kwargs)
 
             params = self.get_parameters()
-            initial_states = self.get_states(initial=True)
+            initial_states = self.get_states(_initial=True)
 
             self.clear_initial_states()
             self.set_states(initial_states)
@@ -175,21 +182,21 @@ class Module(metaclass=ModuleMeta):
         get_summaries: bool = False,
     ) -> "ApplyCallable":
         """
-        Applies your function injecting parameters and states.
+        Applies your function injecting some context arguments.
 
         Arguments:
             parameters:
             states: 
             rng: 
-            get_summaries: 
-            args: 
-            kwargs: 
+            get_summaries:
 
         Returns:
-            A [`ApplyCallable`][elegy.module.ApplyCallable] partial function.
+            A function with the same signature as `call` that will
+            execute the computation given the context arguments
+            passed to `apply`.
         """
 
-        @functools.wraps(self.call)
+        @utils.wraps(self.call)
         def apply_fn(*args, **kwargs):
 
             current_parameters = self.get_parameters()
@@ -233,9 +240,23 @@ class Module(metaclass=ModuleMeta):
         self,
         name: str,
         shape: tp.Sequence[int],
-        dtype: tp.Any = jnp.float32,
-        initializer: tp.Callable[[tp.Sequence[int], tp.Any], np.ndarray] = None,
+        dtype: tp.Any,
+        initializer: tp.Callable[[tp.Sequence[int], tp.Any], np.ndarray],
     ) -> np.ndarray:
+        """
+        A hook that lets you add a parameter to the current module. The parameter will only be created once
+        during `init` and will reused afterwards.
+
+        Arguments:
+            name: The name of the parameter. It must be unique and no other field/property/method
+                of the instance can have that name.
+            shape: The shape of the parameter.
+            dtype: The type of the parameter.
+            initializer: A callable that takes in a shape and dtype and returns the initial value.
+
+        Returns:
+            The value of the parameter.
+        """
         if LOCAL.contexts:
             context: Context = LOCAL.contexts[-1]
 
@@ -266,9 +287,23 @@ class Module(metaclass=ModuleMeta):
         self,
         name: str,
         shape: tp.Sequence[int],
-        dtype: tp.Any = jnp.float32,
-        initializer: tp.Callable[[tp.Sequence[int], tp.Any], tp.Any] = None,
+        dtype: tp.Any,
+        initializer: tp.Callable[[tp.Sequence[int], tp.Any], tp.Any],
     ) -> tp.Any:
+        """
+        A hook that lets you add a state to the current module. The state will only be created once
+        during `init` and will reused afterwards.
+
+        Arguments:
+            name: The name of the state. It must be unique and no other field/property/method
+                of the instance can have that name.
+            shape: The shape of the state.
+            dtype: The type of the state.
+            initializer: A callable that takes in a shape and dtype and returns the initial value.
+
+        Returns:
+            The value of the state.
+        """
 
         if LOCAL.contexts:
             context: Context = LOCAL.contexts[-1]
@@ -302,7 +337,18 @@ class Module(metaclass=ModuleMeta):
             raise ValueError("Cannot execute `get_state` outside of a `elegy.context`")
 
     def update_state(self, name: str, value: tp.Any):
+        """
+        A hook that lets you ypdate a state of the current module, if the state does not 
+        exist it will be created.
 
+        Arguments:
+            name: The name of the state. It must be unique and no other field/property/method
+                of the instance can have that name.
+            value: The updated value of the state.
+
+        Returns:
+            The value of the state.
+        """
         if LOCAL.contexts:
             context: Context = LOCAL.contexts[-1]
 
@@ -326,30 +372,29 @@ class Module(metaclass=ModuleMeta):
 
     def add_summary(self, name: tp.Optional[str], value: np.ndarray):
         """
-        A hook that lets you define a summary within a [`transform`][elegy.hooks.transform].
+        A hook that lets you define a summary in the current module. Its primary
+        use is to keep track of certain values as they flow through the network
+        so `Model.summary()` can show a representation of architecture.
 
         ```python
-        y = jax.nn.relu(x)
-        self.add_summary("relu", "Relu", y)
+        def call(self, x):
+            ...
+            y = jax.nn.relu(x)
+            self.add_summary("relu", y)
+            ...
         ```
 
-        The metrics will be aggregated by [`transform.apply`][elegy.hooks.transform.apply]
-        and automatically handled by [`Model`][elegy.model.Model]. 
-
-        Be default `add_summary` doesn't do anything, in order to enable the collection of
-        summaries `get_summaries` must be set to `True`:
+        The summaries will be aggregated by [`apply`][elegy.module.Module.apply] 
+        if `get_summaries` is set to `True`, else this hook does nothing.
 
         ```python
         transformed_state = transform.apply(..., get_summaries=True, ...)
         ```
 
-        [`Model.summary`][elegy.model.Model.summary] will render added summaries. 
-
         Arguments:
-            name: The name of the loss. If a metric with the same
+            name: The name of the loss. If a summary with the same
                 `name` already exists a unique identifier will be generated.
-            class_name:
-            value: The value for the metric.
+            value: The value for the summary.
         """
 
         if LOCAL.contexts:
@@ -372,6 +417,12 @@ class Module(metaclass=ModuleMeta):
             )
 
     def get_parameters(self) -> types.Parameters:
+        """
+        Recursively collects a dictionary with the parameters of this module
+        and all submodules within it.
+
+        Returns:
+        """
         params = module_tree_map(
             lambda module: {
                 key: getattr(module, key)
@@ -383,13 +434,24 @@ class Module(metaclass=ModuleMeta):
         assert isinstance(params, tp.Dict)
         return params
 
-    def set_parameters(self, values: types.Parameters):
+    def set_parameters(self, values: types.Parameters) -> None:
+        """
+        Recursively sets the parameters of this module
+        and all submodules within it given a dictionary with a corresponding
+        structure.
+        """
         set_tree(self, values, "_params")
 
-    def get_states(self, initial: bool = False) -> types.States:
+    def get_states(self, _initial: bool = False) -> types.States:
+        """
+        Recursively collects a dictionary with the states of this module
+        and all submodules within it.
+
+        Returns:
+        """
         states = module_tree_map(
             lambda module: {
-                key: getattr(module, key_initial) if initial else getattr(module, key)
+                key: getattr(module, key_initial) if _initial else getattr(module, key)
                 for key, key_initial in zip(
                     getattr(module, "_states"), getattr(module, "_states_initial")
                 )
@@ -401,9 +463,19 @@ class Module(metaclass=ModuleMeta):
         return states
 
     def set_states(self, values: types.States):
+        """
+        Recursively sets the states of this module
+        and all submodules within it given a dictionary with a corresponding
+        structure.
+        """
         set_tree(self, values, "_states")
 
     def reset(self):
+        """
+        Recursively deletes the parameters and states of this module
+        and all submodules within it.
+        """
+
         def clear_module(module: Module):
 
             for name in module._params:

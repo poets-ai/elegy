@@ -178,7 +178,7 @@ class Model:
         self.initial_metrics_state = initial_metrics_state
         self.run_eagerly = run_eagerly
 
-        functools.wraps(self.module)(self)
+        utils.wraps(self.module)(self)
 
     @property
     def parameters(self) -> tp.Optional[types.Parameters]:

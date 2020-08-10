@@ -7,4 +7,16 @@
             - call
             - __init__
             - __call__
-            - defer
+            - add_parameter
+            - add_state
+            - update_state
+            - add_summary
+            - init
+            - apply
+            - call
+            - get_parameters
+            - set_parameters
+            - get_states
+            - set_states
+            - reset
+            - submodules

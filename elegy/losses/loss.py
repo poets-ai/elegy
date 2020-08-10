@@ -106,7 +106,7 @@ class Loss:
         )
         self._labels_filter = (on,) if isinstance(on, (str, int)) else on
 
-        functools.wraps(self.call)(self)
+        utils.wraps(self.call)(self)
 
     def __call__(
         self, *args, **kwargs,

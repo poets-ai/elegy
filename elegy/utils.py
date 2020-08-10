@@ -19,6 +19,10 @@ else:
 EPSILON = 1e-7
 
 
+def wraps(f):
+    return functools.wraps(f, assigned=("__doc__", "__annotations__"), updated=())
+
+
 def inject_dependencies(
     f: tp.Callable, rename: tp.Optional[tp.Dict[str, str]] = None,
 ):

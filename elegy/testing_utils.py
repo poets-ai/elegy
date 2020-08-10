@@ -1,8 +1,10 @@
-from elegy.module import to_module
 import functools
+import typing as tp
 
 from jax import random
-import typing as tp
+
+from elegy import utils
+from elegy.module import to_module
 
 
 def transform_and_run(
@@ -51,7 +53,7 @@ def transform_and_run(
     if f is None:
         return functools.partial(transform_and_run, seed=seed, run_apply=run_apply)
 
-    @functools.wraps(f)
+    @utils.wraps(f)
     def wrapper(*a, **k):
 
         Module = to_module(f)
