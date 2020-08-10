@@ -13,6 +13,8 @@ from elegy.types import ArrayHolder, ArrayLike
 from .data_adapter import DataAdapter
 from .utils import flatten, map_structure, pack_x_y_sample_weight
 
+DEFAULT_BATCH_SIZE = 32
+
 
 class ArrayDataAdapter(DataAdapter):
     """Adapter that handles NumPy and Jax numpy arrays."""
@@ -60,13 +62,22 @@ class ArrayDataAdapter(DataAdapter):
                 )
             msg += "Please provide data which shares the same first dimension."
             raise ValueError(msg)
-        num_samples = num_samples.pop()
+
+        num_samples = (
+            num_samples.pop()
+            if num_samples
+            else batch_size
+            if batch_size is not None
+            else DEFAULT_BATCH_SIZE
+        )
 
         # If batch_size is not passed but steps is, calculate from the input data.
-        if not batch_size:
+        if batch_size is None:
             # if batch_size is None and steps is None:
             #     raise ValueError("Please provide either batch_size or steps")
-            batch_size = int(math.ceil(num_samples / steps)) if steps else 32
+            batch_size = (
+                int(math.ceil(num_samples / steps)) if steps else DEFAULT_BATCH_SIZE
+            )
 
         self._size = int(math.ceil(num_samples / batch_size))
         self._batch_size = batch_size

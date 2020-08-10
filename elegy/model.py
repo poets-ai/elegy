@@ -9,7 +9,6 @@ from elegy.module import (
     ApplyContext,
     Module,
     PRNGSequence,
-    TransformedState,
 )
 from io import StringIO
 import json
@@ -500,8 +499,12 @@ class Model:
     def fit(
         self,
         x: tp.Union[
-            np.ndarray, tp.Mapping[str, np.ndarray], tp.Tuple[np.ndarray], tp.Iterable,
-        ],
+            np.ndarray,
+            tp.Mapping[str, np.ndarray],
+            tp.Tuple[np.ndarray],
+            tp.Iterable,
+            None,
+        ] = None,
         y: tp.Union[
             np.ndarray, tp.Mapping[str, np.ndarray], tp.Tuple[np.ndarray], None,
         ] = None,
@@ -670,6 +673,9 @@ class Model:
             ValueError: In case of mismatch between the provided input data
                 and what the model expects.
         """
+        if x is None:
+            x = {}
+
         if validation_split:
             # Create the validation data using the training data. Only supported for
             # `Jax Numpy` and `NumPy` input.

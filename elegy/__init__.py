@@ -12,7 +12,6 @@ from .module import (
     Context,
     InitCallable,
     Module,
-    TransformedState,
     add_loss,
     add_metric,
     context,

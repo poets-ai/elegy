@@ -186,8 +186,7 @@ class Module(metaclass=ModuleMeta):
             kwargs: 
 
         Returns:
-            A [`TransformedState`][elegy.hooks.TransformedState] namedtuple consiting 
-            of (outputs, states, losses, metrics, summaries).
+            A [`ApplyCallable`][elegy.module.ApplyCallable] partial function.
         """
 
         @functools.wraps(self.call)
@@ -720,24 +719,6 @@ class InitCallable(utils.Protocol):
 class ApplyContext(tp.NamedTuple):
     parameters: types.Parameters
     states: types.States
-    losses: tp.Dict
-    metrics: tp.Dict
-    summaries: tp.List[tp.Tuple[tp.Optional[Module], str, tp.Any]]
-
-
-class TransformedState(tp.NamedTuple):
-    """
-    A named tuple representing the outputs of [elegy.hooks.transform.apply][].
-
-    Attributes:
-        outputs: The output of the transformed function.
-        losses: The collected losses added by [`add_loss`][elegy.hooks.add_loss].
-        metrics: The collected metrics added by [`add_metric`][elegy.hooks.add_metric].
-        summaries: A list of `(name, class_name, value)` tuples
-            added by [`add_summary`][elegy.hooks.add_summary].
-    """
-
-    outputs: tp.Any
     losses: tp.Dict
     metrics: tp.Dict
     summaries: tp.List[tp.Tuple[tp.Optional[Module], str, tp.Any]]

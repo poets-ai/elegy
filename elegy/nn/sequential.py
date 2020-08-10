@@ -80,12 +80,20 @@ class Sequential(Module):
         # functools.wraps(self.layers[0])(self)
         # functools.wraps(self.layers[0])(self.call)
 
-        @functools.wraps(self.layers[0])
-        def call(*args, **kwargs):
-            return sequential(*self.layers)(*args, **kwargs)
-
-        self.call = call
-
     def call(self, inputs, *args, **kwargs):
         """Connects all layers. *args and **kwargs are passed to the first layer."""
-        return sequential(*self.layers)(inputs, *args, **kwargs)
+        out = inputs
+        for i, layer in enumerate(self.layers):
+            if i == 0:
+                out = layer(out, *args, **kwargs)
+            else:
+                out = layer(out)
+
+            if not isinstance(layer, Module):
+                name = (
+                    layer.__name__
+                    if hasattr(layer, "__name__")
+                    else layer.__class__.__name__
+                )
+                self.add_summary(name, out)
+        return out
