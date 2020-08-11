@@ -92,6 +92,9 @@ class Decoder(elegy.Module):
 class VariationalAutoEncoder(elegy.Module):
     """Main VAE model class, uses Encoder & Decoder under the hood."""
 
+    encoder: Encoder
+    decoder: Decoder
+
     def __init__(
         self,
         hidden_size: int = 512,

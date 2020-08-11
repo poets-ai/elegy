@@ -553,7 +553,7 @@ class Module(metaclass=ModuleMeta):
 
 def add_loss(name: str, value: np.ndarray):
     """
-    A hook that lets you define a loss within a [`transform`][elegy.hooks.transform].
+    A hook that lets you define a loss within a [`module`][elegy.module.Module].
 
     ```python
     w = hk.get_parameter("w", [3, 5], init=jnp.zeros)
@@ -562,7 +562,7 @@ def add_loss(name: str, value: np.ndarray):
     elegy.add_loss("l2_regularization", 0.01 * jnp.mean(w ** 2))
     ```
 
-    The loss will be aggregated by [`transform.apply`][elegy.hooks.transform.apply]
+    The loss will be aggregated by [`Module.apply`][elegy.module.Module.apply]
     and automatically handled by [`Model`][elegy.model.Model].
 
     Arguments:
@@ -584,14 +584,14 @@ def add_loss(name: str, value: np.ndarray):
 
 def add_metric(name: str, value: np.ndarray):
     """
-    A hook that lets you define a metric within a [`transform`][elegy.hooks.transform].
+    A hook that lets you define a metric within a [`module`][elegy.module.Module].
 
     ```python
     y = jax.nn.relu(x)
     elegy.add_metric("activation_mean", jnp.mean(y))
     ```
 
-    The metrics will be aggregated by [`transform.apply`][elegy.hooks.transform.apply]
+    The metrics will be aggregated by [`Module.apply`][elegy.module.Module.apply]
     and automatically handled by [`Model`][elegy.model.Model].
 
     Arguments:
@@ -638,16 +638,6 @@ def next_rng_key() -> PRNGKey:
 
 @dataclass
 class Context:
-    """
-    A named tuple representing the outputs of [elegy.hooks.transform.apply][].
-
-    Attributes:
-        losses: The collected losses added by [`add_loss`][elegy.hooks.add_loss].
-        metrics: The collected metrics added by [`add_metric`][elegy.hooks.add_metric].
-        summaries: A list of `(name, class_name, value)` tuples
-            added by [`add_summary`][elegy.hooks.add_summary].
-    """
-
     building: bool
     get_summaries: bool
     rng_sequence: tp.Optional["PRNGSequence"]

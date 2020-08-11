@@ -11,6 +11,9 @@ import numpy as np
 class Linear(Module):
     """Linear module."""
 
+    w: np.ndarray
+    b: np.ndarray
+
     def __init__(
         self,
         output_size: int,
