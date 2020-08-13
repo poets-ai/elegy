@@ -573,7 +573,9 @@ def add_loss(name: str, value: np.ndarray):
             different calls values will be added together.
         value: The value for the loss.
     """
-    name += "_loss"
+    if not name.endswith("loss"):
+        name += "_loss"
+
     if LOCAL.contexts:
         context: Context = LOCAL.contexts[-1]
 

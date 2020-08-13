@@ -1,23 +1,25 @@
 import typing as tp
 from typing import List, Tuple
 
-
 from elegy import utils
 from elegy.losses.loss import Loss
+from elegy.module import Module
 
 
-def forward_all(losses):
-    def loss_fn(**kwargs):
+class Losses(Module):
+    def __init__(self, losses):
+        super().__init__(name="losses")
+        self.losses = losses
+
+    def call(self, **kwargs):
 
         logs = {}
 
-        for context, val in apply_recursive((), losses, **kwargs):
+        for context, val in apply_recursive((), self.losses, **kwargs):
             loss_name = get_unique_name(context, logs)
             logs[loss_name] = val
 
         return logs
-
-    return loss_fn
 
 
 def apply_recursive(context: tp.Tuple[str, ...], losses, **kwargs):
@@ -49,7 +51,9 @@ def apply_recursive(context: tp.Tuple[str, ...], losses, **kwargs):
 
 def get_unique_name(context, logs):
     context = list(context)
-    context[0] += "_loss"
+
+    if not context[0].endswith("loss"):
+        context[0] += "_loss"
 
     name = "/".join(context)
 

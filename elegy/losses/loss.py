@@ -2,6 +2,7 @@
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/losses.py#L44-L201
 
 from abc import abstractmethod
+from elegy import module
 import functools
 import numpy as np
 
@@ -50,7 +51,7 @@ class Reduction(Enum):
             raise ValueError("Invalid Reduction Key %s." % key)
 
 
-class Loss:
+class Loss(module.Module):
     """
     Loss base class.
 
@@ -95,11 +96,7 @@ class Loss:
                 then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
                 check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).
         """
-        self.name = (
-            name
-            if name is not None
-            else re.sub(r"(?<!^)(?=[A-Z])", "_", self.__class__.__name__).lower()
-        )
+        super().__init__(name=name)
         self.weight = weight if weight is not None else 1.0
         self._reduction = (
             reduction if reduction is not None else Reduction.SUM_OVER_BATCH_SIZE
@@ -121,7 +118,7 @@ class Loss:
                 for index in self._labels_filter:
                     kwargs["y_pred"] = kwargs["y_pred"][index]
 
-        values = self.call(*args, **kwargs)
+        values = super().__call__(*args, **kwargs)
 
         sample_weight: tp.Optional[jnp.ndarray] = kwargs.get("sample_weight", None)
 

@@ -113,4 +113,14 @@ def split_and_merge(
 
 
 def lower_snake_case(s: str) -> str:
-    return re.sub(r"(?<!^)(?=[A-Z])", "_", s).lower()
+    s = re.sub(r"(?<!^)(?=[A-Z])", "_", s).lower()
+    parts = s.split("_")
+    output_parts = []
+
+    for i in range(len(parts)):
+        if i == 0 or len(parts[i - 1]) > 1:
+            output_parts.append(parts[i])
+        else:
+            output_parts[-1] += parts[i]
+
+    return "_".join(output_parts)

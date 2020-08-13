@@ -3,10 +3,10 @@ import typing as tp
 
 import jax.numpy as jnp
 
-from elegy.metrics import reduce
+from elegy.metrics.reduce import Reduce, Reduction
 
 
-class Sum(reduce.Reduce):
+class Sum(Reduce):
     """
     Computes the (weighted) sum of the given values.
     
@@ -52,4 +52,4 @@ class Sum(reduce.Reduce):
               then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
               check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).
         """
-        super().__init__(reduction=reduce.Reduction.SUM, name=name, dtype=dtype, on=on)
+        super().__init__(reduction=Reduction.SUM, name=name, dtype=dtype, on=on)

@@ -105,7 +105,7 @@ class Model:
     run_eagerly: bool
 
     # private fields
-    _loss_fn: tp.Optional[tp.Callable]
+    loss_module: tp.Optional[Module]
     metrics_module: tp.Optional[Module]
     _optimizer: optix.GradientTransformation
     _rngs: PRNGSequence
@@ -165,7 +165,7 @@ class Model:
         """
 
         self.module = module
-        self._loss_fn = loss_modes.forward_all(loss) if loss is not None else None
+        self.loss_module = loss_modes.Losses(loss) if loss is not None else None
         self.metrics_module = metric_modes.Metrics(metrics) if metrics else None
         self._optimizer = optimizer if optimizer is not None else optix.adam(1e-3)
         self._rngs = PRNGSequence(seed)
@@ -350,8 +350,7 @@ class Model:
             states=self.states,
             optimizer_state=self.optimizer_state,
             metrics_states=self.metrics_states,
-            net_rng=next(self._rngs),
-            metrics_rng=next(self._rngs),
+            rng=next(self._rngs),
         )
 
         if metrics_states is not None:
@@ -369,8 +368,7 @@ class Model:
         states: tp.Dict,
         optimizer_state: optix.OptState,
         metrics_states: tp.Optional[tp.Dict],
-        net_rng: jnp.ndarray,
-        metrics_rng: jnp.ndarray,
+        rng: jnp.ndarray,
     ) -> tp.Tuple[
         tp.Dict[str, jnp.ndarray],
         tp.Dict,
@@ -389,8 +387,7 @@ class Model:
             states=states,
             optimizer_state=optimizer_state,
             metrics_states=metrics_states,
-            net_rng=net_rng,
-            metrics_rng=metrics_rng,
+            rng=rng,
         )
 
     def _update_no_jit(
@@ -403,8 +400,7 @@ class Model:
         states: tp.Dict,
         optimizer_state: optix.OptState,
         metrics_states: tp.Optional[tp.Dict],
-        net_rng: jnp.ndarray,
-        metrics_rng: jnp.ndarray,
+        rng: jnp.ndarray,
     ) -> tp.Tuple[
         tp.Dict[str, jnp.ndarray],
         tp.Dict,
@@ -412,12 +408,14 @@ class Model:
         optix.OptState,
         tp.Optional[tp.Dict],
     ]:
+        net_rng, metrics_rng = jax.random.split(rng, num=2)
+
         (loss, (y_pred, context, logs)), grads = jax.value_and_grad(
             self._loss, has_aux=True
         )(
             parameters,
             states=states,
-            net_rng=net_rng,
+            rng=net_rng,
             x=x,
             y=y,
             sample_weight=sample_weight,
@@ -454,13 +452,14 @@ class Model:
         self,
         parameters: tp.Dict,
         states: tp.Dict,
-        net_rng: jnp.ndarray,
+        rng: jnp.ndarray,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
         is_training: bool,
     ):
+        rng, loss_rng = jax.random.split(rng, num=2)
 
         y_pred, context = self._predict_no_jit(
             is_training=is_training,
@@ -468,13 +467,13 @@ class Model:
             x=x,
             parameters=parameters,
             states=states,
-            net_rng=net_rng,
+            rng=rng,
         )
 
         states = context.states
 
-        logs = (
-            self._loss_fn(
+        logs, loss_context = (
+            self.loss_module.apply(rng=loss_rng)(
                 x=x,
                 y_true=y,
                 y_pred=y_pred,
@@ -484,14 +483,22 @@ class Model:
                 parameters=parameters,
                 states=states,
             )
-            if self._loss_fn is not None
-            else {}
+            if self.loss_module is not None
+            else ({}, None)
         )
 
         # get total loss
         loss = logs["loss"] = sum(logs.values()) + sum(context.losses.values())
 
         # add losses and metrics from hooks
+        if loss_context is not None:
+            logs.update(
+                {
+                    name.replace("losses/", ""): value
+                    for name, value in loss_context.metrics.items()
+                }
+            )
+
         logs.update(context.losses)
         logs.update(context.metrics)
 
@@ -1047,8 +1054,7 @@ class Model:
             parameters=self.parameters,
             states=self.states,
             metrics_states=self.metrics_states,
-            net_rng=next(self._rngs),
-            metrics_rng=next(self._rngs),
+            rng=next(self._rngs),
         )
 
         if metrics_states is not None:
@@ -1065,8 +1071,7 @@ class Model:
         parameters: tp.Dict,
         states: tp.Dict,
         metrics_states: tp.Optional[tp.Dict],
-        net_rng: jnp.ndarray,
-        metrics_rng: jnp.ndarray,
+        rng: jnp.ndarray,
     ) -> tp.Tuple[
         tp.Dict[str, jnp.ndarray], tp.Optional[tp.Dict],
     ]:
@@ -1081,8 +1086,7 @@ class Model:
             parameters=parameters,
             states=states,
             metrics_states=metrics_states,
-            net_rng=net_rng,
-            metrics_rng=metrics_rng,
+            rng=rng,
         )
 
     def _test_no_jit(
@@ -1094,16 +1098,16 @@ class Model:
         parameters: tp.Dict,
         states: tp.Dict,
         metrics_states: tp.Optional[tp.Dict],
-        net_rng: jnp.ndarray,
-        metrics_rng: jnp.ndarray,
+        rng: jnp.ndarray,
     ) -> tp.Tuple[
         tp.Dict[str, jnp.ndarray], tp.Optional[tp.Dict],
     ]:
+        net_rng, metrics_rng = jax.random.split(rng, num=2)
 
         loss, (y_pred, context, logs) = self._loss(
             parameters,
             states=states,
-            net_rng=net_rng,
+            rng=net_rng,
             x=x,
             y=y,
             sample_weight=sample_weight,
@@ -1167,7 +1171,7 @@ class Model:
             x=x,
             parameters=self.parameters,
             states=self.states,
-            net_rng=next(self._rngs),
+            rng=next(self._rngs),
         )
 
         return y_pred
@@ -1179,7 +1183,7 @@ class Model:
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         parameters: tp.Dict,
         states: tp.Dict,
-        net_rng: jnp.ndarray,
+        rng: jnp.ndarray,
     ) -> tp.Tuple[tp.Any, "ApplyContext"]:
 
         predict_fn = self._predict_no_jit if self.run_eagerly else self._predict_jit
@@ -1190,7 +1194,7 @@ class Model:
             x=x,
             parameters=parameters,
             states=states,
-            net_rng=net_rng,
+            rng=rng,
         )
 
     def _predict_no_jit(
@@ -1200,7 +1204,7 @@ class Model:
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         parameters: tp.Dict,
         states: tp.Dict,
-        net_rng: jnp.ndarray,
+        rng: jnp.ndarray,
     ) -> tp.Tuple[tp.Any, ApplyContext]:
 
         x_args, x_kwargs = utils.get_input_args(x, is_training=is_training)
@@ -1209,7 +1213,7 @@ class Model:
             self.module.apply(
                 parameters=parameters,
                 states=states,
-                rng=net_rng,
+                rng=rng,
                 get_summaries=get_summaries,
                 training=is_training,
             )
@@ -1399,7 +1403,7 @@ class Model:
             x=x,
             parameters=self.parameters,
             states=self.states,
-            net_rng=next(self._rngs),
+            rng=next(self._rngs),
         )
 
         def format_output(outputs) -> str:
