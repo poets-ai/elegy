@@ -56,7 +56,7 @@ class Dropout(Module):
     def call(
         self,
         x: np.ndarray,
-        is_training: bool = True,
+        is_training: tp.Optional[bool] = None,
         rng: tp.Optional[np.ndarray] = None,
     ) -> jnp.ndarray:
         """
@@ -67,6 +67,14 @@ class Dropout(Module):
         Returns:
             x but dropped out and scaled by `1 / (1 - rate)`.
         """
+        if is_training is None:
+            if module.LOCAL.contexts:
+                context: module.Context = module.LOCAL.contexts[-1]
+                is_training = context.training
+            else:
+                raise ValueError(
+                    "Cannot infer `is_training` outside of context. You must pass `is_training` explicitly or use `Module.apply`."
+                )
         return hk.dropout(
             rng=rng if rng is not None else module.next_rng_key(),
             rate=self.rate if is_training else 0.0,

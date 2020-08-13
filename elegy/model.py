@@ -255,6 +255,7 @@ class Model:
                         states=self.states,
                         rng=next(self._rngs),
                         get_summaries=False,
+                        training=True,
                     )
                 )
             )(*x_args, **x_kwargs)
@@ -431,7 +432,7 @@ class Model:
 
         if self.metrics_module is not None:
             metrics, metrics_context = utils.inject_dependencies(
-                self.metrics_module.apply(states=metrics_states, rng=metrics_rng,)
+                self.metrics_module.apply(states=metrics_states, rng=metrics_rng)
             )(
                 x=x,
                 y_true=y,
@@ -1112,7 +1113,9 @@ class Model:
 
         if self.metrics_module is not None:
             metrics, metrics_context = utils.inject_dependencies(
-                self.metrics_module.apply(states=metrics_states, rng=metrics_rng,)
+                self.metrics_module.apply(
+                    states=metrics_states, rng=metrics_rng, training=False
+                ),
             )(
                 x=x,
                 y_true=y,
@@ -1208,6 +1211,7 @@ class Model:
                 states=states,
                 rng=net_rng,
                 get_summaries=get_summaries,
+                training=is_training,
             )
         )(*x_args, **x_kwargs)
 

@@ -180,6 +180,7 @@ class Module(metaclass=ModuleMeta):
         states: tp.Optional[tp.Dict] = None,
         rng: tp.Optional[tp.Union[np.ndarray, int]] = None,
         get_summaries: bool = False,
+        training: bool = True,
     ) -> "ApplyCallable":
         """
         Applies your function injecting some context arguments.
@@ -211,7 +212,9 @@ class Module(metaclass=ModuleMeta):
             if states is not None:
                 self.set_states(states)
 
-            with context(rng=rng, building=False, get_summaries=get_summaries,) as ctx:
+            with context(
+                rng=rng, building=False, training=training, get_summaries=get_summaries,
+            ) as ctx:
                 outputs = self(*args, **kwargs)
 
             output_parameters = self.get_parameters()
@@ -639,6 +642,7 @@ def next_rng_key() -> PRNGKey:
 @dataclass
 class Context:
     building: bool
+    training: bool
     get_summaries: bool
     rng_sequence: tp.Optional["PRNGSequence"]
     losses: tp.Dict
@@ -656,6 +660,7 @@ def context(
     rng: tp.Union[np.ndarray, int, None] = None,
     building: bool = False,
     get_summaries: bool = False,
+    training: bool = True,
 ) -> tp.Iterator[Context]:
     """
     """
@@ -664,6 +669,7 @@ def context(
 
     ctx = Context(
         building=building,
+        training=training,
         get_summaries=get_summaries,
         rng_sequence=rng_sequence,
         losses={},
@@ -735,6 +741,7 @@ def initialization_context(module: Module):
         pop_context = True
         context = Context(
             building=False,
+            training=True,
             get_summaries=False,
             rng_sequence=None,
             losses={},

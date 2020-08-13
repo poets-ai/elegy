@@ -91,6 +91,12 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
 
     plot_history(history)
 
+    model.save("models/conv")
+
+    model = elegy.model.load("models/conv")
+
+    print(model.evaluate(x=X_test, y=y_test))
+
     # get random samples
     idxs = np.random.randint(0, 10000, size=(9,))
     x_sample = X_test[idxs]

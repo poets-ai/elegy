@@ -2,8 +2,6 @@
 # Tensorflow: https://github.com/tensorflow/tensorflow/blob/2b96f3662bd776e277f86997659e61046b56c315/tensorflow/python/keras/layers/normalization.py#L46
 # Haiku: https://github.com/deepmind/dm-haiku/blob/master/haiku/_src/batch_norm.py#L39#L194
 
-from elegy.nn.moving_averages import ExponentialMovingAverage
-from elegy import initializers
 import typing as tp
 from typing import Optional, Sequence
 
@@ -13,7 +11,9 @@ import jax.numpy as jnp
 import numpy as np
 from haiku._src import utils as haiku_utils
 
+from elegy import initializers, module
 from elegy.module import Module
+from elegy.nn.moving_averages import ExponentialMovingAverage
 
 
 class BatchNormalization(Module):
@@ -96,29 +96,38 @@ class BatchNormalization(Module):
     def call(
         self,
         inputs: jnp.ndarray,
-        is_training: bool,
+        is_training: tp.Optional[bool] = None,
         test_local_stats: bool = False,
         scale: Optional[jnp.ndarray] = None,
         offset: Optional[jnp.ndarray] = None,
     ) -> jnp.ndarray:
         """Computes the normalized version of the input.
 
-    Args:
-      inputs: An array, where the data format is ``[..., C]``.
-      is_training: Whether training is currently happening.
-      test_local_stats: Whether local stats are used when is_training=False.
-      scale: An array up to n-D. The shape of this tensor must be broadcastable
-        to the shape of ``inputs``. This is the scale applied to the normalized
-        inputs. This cannot be passed in if the module was constructed with
-        ``create_scale=True``.
-      offset: An array up to n-D. The shape of this tensor must be broadcastable
-        to the shape of ``inputs``. This is the offset applied to the normalized
-        inputs. This cannot be passed in if the module was constructed with
-        ``create_offset=True``.
+        Args:
+        inputs: An array, where the data format is ``[..., C]``.
+        is_training: Whether training is currently happening.
+        test_local_stats: Whether local stats are used when is_training=False.
+        scale: An array up to n-D. The shape of this tensor must be broadcastable
+            to the shape of ``inputs``. This is the scale applied to the normalized
+            inputs. This cannot be passed in if the module was constructed with
+            ``create_scale=True``.
+        offset: An array up to n-D. The shape of this tensor must be broadcastable
+            to the shape of ``inputs``. This is the offset applied to the normalized
+            inputs. This cannot be passed in if the module was constructed with
+            ``create_offset=True``.
 
-    Returns:
-      The array, normalized across all but the last dimension.
-    """
+        Returns:
+        The array, normalized across all but the last dimension.
+        """
+        if is_training is None:
+            if module.LOCAL.contexts:
+                context: module.Context = module.LOCAL.contexts[-1]
+                is_training = context.training
+            else:
+                raise ValueError(
+                    "Cannot infer `is_training` outside of context. You must pass `is_training` explicitly or use `Module.apply`."
+                )
+
         if self.create_scale and scale is not None:
             raise ValueError("Cannot pass `scale` at call time if `create_scale=True`.")
         if self.create_offset and offset is not None:
