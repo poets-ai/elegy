@@ -96,7 +96,7 @@ class BatchNormalization(module.Module):
     def call(
         self,
         inputs: jnp.ndarray,
-        is_training: tp.Optional[bool] = None,
+        training: tp.Optional[bool] = None,
         test_local_stats: bool = False,
         scale: Optional[jnp.ndarray] = None,
         offset: Optional[jnp.ndarray] = None,
@@ -105,8 +105,8 @@ class BatchNormalization(module.Module):
 
         Args:
         inputs: An array, where the data format is ``[..., C]``.
-        is_training: Whether training is currently happening.
-        test_local_stats: Whether local stats are used when is_training=False.
+        training: Whether training is currently happening.
+        test_local_stats: Whether local stats are used when training=False.
         scale: An array up to n-D. The shape of this tensor must be broadcastable
             to the shape of ``inputs``. This is the scale applied to the normalized
             inputs. This cannot be passed in if the module was constructed with
@@ -119,13 +119,13 @@ class BatchNormalization(module.Module):
         Returns:
         The array, normalized across all but the last dimension.
         """
-        if is_training is None:
+        if training is None:
             if module.LOCAL.contexts:
                 context: module.Context = module.LOCAL.contexts[-1]
-                is_training = context.training
+                training = context.training
             else:
                 raise ValueError(
-                    "Cannot infer `is_training` outside of context. You must pass `is_training` explicitly or use `Module.apply`."
+                    "Cannot infer `training` outside of context. You must pass `training` explicitly or use `Module.apply`."
                 )
 
         if self.create_scale and scale is not None:
@@ -144,7 +144,7 @@ class BatchNormalization(module.Module):
         else:
             axis = [i for i in range(inputs.ndim) if i != channel_index]
 
-        if is_training or test_local_stats:
+        if training or test_local_stats:
             cross_replica_axis = self.cross_replica_axis
             if self.cross_replica_axis:
                 mean = jnp.mean(inputs, axis, keepdims=True)
@@ -162,7 +162,7 @@ class BatchNormalization(module.Module):
             mean = self.mean_ema.average
             var = self.var_ema.average
 
-        if is_training:
+        if training:
             self.mean_ema(mean)
             self.var_ema(var)
 

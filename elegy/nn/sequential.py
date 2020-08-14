@@ -58,14 +58,14 @@ class Sequential(Module):
     Another restriction is that it is not possible to have extra arguments in the
     ``__call__`` method that are passed to the constituents of the module - for
     example, if there is a ``BatchNorm`` module in ``Sequential`` and the user
-    wishes to switch the ``is_training`` flag. If this is the desired use case,
+    wishes to switch the ``training`` flag. If this is the desired use case,
     the recommended solution is to subclass :class:`Module` and implement
     ``__call__``:
 
         >>> class CustomModule(hk.Module):
-        ...   def __call__(self, x, is_training):
+        ...   def __call__(self, x, training):
         ...     x = hk.Conv2D(32, 4, 2)(x)
-        ...     x = hk.BatchNorm(True, True, 0.9)(x, is_training)
+        ...     x = hk.BatchNorm(True, True, 0.9)(x, training)
         ...     x = jax.nn.relu(x)
         ...     return x
     """

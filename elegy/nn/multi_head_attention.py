@@ -102,7 +102,7 @@ class MultiHeadAttention(module.Module):
         key: tp.Optional[jnp.ndarray] = None,
         value: tp.Optional[jnp.ndarray] = None,
         mask=None,
-        is_training=None,
+        training=None,
     ):
 
         # einsum nomenclature
@@ -192,9 +192,7 @@ class MultiHeadAttention(module.Module):
         attn_coef = jax.nn.softmax(logits)
 
         # attention dropout
-        attn_coef_dropout = Dropout(self.droput_rate)(
-            attn_coef, is_training=is_training
-        )
+        attn_coef_dropout = Dropout(self.droput_rate)(attn_coef, training=training)
 
         # attention * value
         multihead_output = jnp.einsum("...HNM,...MHI->...NHI", attn_coef_dropout, value)

@@ -59,7 +59,7 @@ def get_function_args(f) -> tp.List[inspect.Parameter]:
 
 def get_input_args(
     x: tp.Union[np.ndarray, jnp.ndarray, tp.Dict[str, tp.Any], tp.Tuple],
-    is_training: bool,
+    training: bool,
 ) -> tp.Tuple[tp.Tuple, tp.Dict[str, tp.Any]]:
 
     if isinstance(x, tp.Tuple):
@@ -72,7 +72,7 @@ def get_input_args(
         args = (x,)
         kwargs = {}
 
-    apply_kwargs = dict(is_training=is_training)
+    apply_kwargs = dict(training=training)
     apply_kwargs.update(kwargs)
 
     return args, apply_kwargs

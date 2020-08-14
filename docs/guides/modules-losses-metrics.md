@@ -36,7 +36,7 @@ Elegy solves the previous problems by introducing a _dependency injection_ mecha
  | `y_pred`        | Outputs of the model                                           |        | x      | x    |
  | `sample_weight` | Importance of each sample                                      |        | x      | x    |
  | `class_weight`  | Importance of each class                                       |        | x      | x    |
- | `is_training`   | Whether training is currently in progress                      | x      | x      | x    |
+ | `training`      | Whether training is currently in progress                      | x      | x      | x    |
  | `parameters`    | The learnable parameters of the model                          |        | x      | x    |
  | `states`        | The non-learnable parameters of the model                      |        | x      | x    |
 

@@ -235,7 +235,7 @@ class Model:
         maybe_jit = lambda x: x
 
         if self.parameters is None or self.states is None:
-            x_args, x_kwargs = utils.get_input_args(x, is_training=True)
+            x_args, x_kwargs = utils.get_input_args(x, training=True)
 
             self.parameters, self.states = maybe_jit(
                 utils.inject_dependencies(self.module.init(rng=next(self._rngs)))
@@ -245,7 +245,7 @@ class Model:
             return
 
         if self.metrics_module is not None and self.metrics_states is None:
-            x_args, x_kwargs = utils.get_input_args(x, is_training=True)
+            x_args, x_kwargs = utils.get_input_args(x, training=True)
 
             context: ApplyContext
             y_pred, context = maybe_jit(
@@ -273,7 +273,7 @@ class Model:
                 y_pred=y_pred,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
-                is_training=False,
+                training=False,
                 parameters=self.parameters,
                 states=self.states,
             )
@@ -420,7 +420,7 @@ class Model:
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            is_training=True,
+            training=True,
         )
 
         states = context.states
@@ -437,7 +437,7 @@ class Model:
                 y_pred=y_pred,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
-                is_training=True,
+                training=True,
                 parameters=parameters,
                 states=states,
             )
@@ -457,12 +457,12 @@ class Model:
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
-        is_training: bool,
+        training: bool,
     ):
         rng, loss_rng = jax.random.split(rng, num=2)
 
         y_pred, context = self._predict_no_jit(
-            is_training=is_training,
+            training=training,
             get_summaries=False,
             x=x,
             parameters=parameters,
@@ -479,7 +479,7 @@ class Model:
                 y_pred=y_pred,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
-                is_training=is_training,
+                training=training,
                 parameters=parameters,
                 states=states,
             )
@@ -852,7 +852,7 @@ class Model:
             initial_epoch=0,
             epochs=1,
             shuffle=False,
-            is_training=False,
+            training=False,
         )
 
         # Container that configures and calls `tf.keras.Callback`s.
@@ -1112,7 +1112,7 @@ class Model:
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            is_training=False,
+            training=False,
         )
 
         if self.metrics_module is not None:
@@ -1126,7 +1126,7 @@ class Model:
                 y_pred=y_pred,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
-                is_training=False,
+                training=False,
                 __params=parameters,
                 __state=states,
             )
@@ -1166,7 +1166,7 @@ class Model:
         assert self.states is not None
 
         y_pred, context = self._predict(
-            False,  # is_training
+            False,  # training
             False,  # get_summaries
             x=x,
             parameters=self.parameters,
@@ -1178,7 +1178,7 @@ class Model:
 
     def _predict(
         self,
-        is_training: bool,
+        training: bool,
         get_summaries: bool,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         parameters: tp.Dict,
@@ -1189,17 +1189,12 @@ class Model:
         predict_fn = self._predict_no_jit if self.run_eagerly else self._predict_jit
 
         return predict_fn(
-            is_training,
-            get_summaries,
-            x=x,
-            parameters=parameters,
-            states=states,
-            rng=rng,
+            training, get_summaries, x=x, parameters=parameters, states=states, rng=rng,
         )
 
     def _predict_no_jit(
         self,
-        is_training: bool,
+        training: bool,
         get_summaries: bool,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         parameters: tp.Dict,
@@ -1207,7 +1202,7 @@ class Model:
         rng: jnp.ndarray,
     ) -> tp.Tuple[tp.Any, ApplyContext]:
 
-        x_args, x_kwargs = utils.get_input_args(x, is_training=is_training)
+        x_args, x_kwargs = utils.get_input_args(x, training=training)
 
         return utils.inject_dependencies(
             self.module.apply(
@@ -1215,7 +1210,7 @@ class Model:
                 states=states,
                 rng=rng,
                 get_summaries=get_summaries,
-                training=is_training,
+                training=training,
             )
         )(*x_args, **x_kwargs)
 
@@ -1398,7 +1393,7 @@ class Model:
         assert self.states is not None
 
         y_pred, context = self._predict(
-            is_training=False,
+            training=False,
             get_summaries=True,
             x=x,
             parameters=self.parameters,

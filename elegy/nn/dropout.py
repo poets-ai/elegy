@@ -21,9 +21,9 @@ class Dropout(Module):
     Inputs not set to 0 are scaled up by `1/(1 - rate)` such that the sum over
     all inputs is unchanged.
 
-    Note that the Dropout layer only applies when `is_training` is set to `True`
+    Note that the Dropout layer only applies when `training` is set to `True`
     such that no values are dropped during inference. When using `model.fit`,
-    `is_training` will be appropriately set to True automatically, and in other
+    `training` will be appropriately set to True automatically, and in other
     contexts, you can set the kwarg explicitly to True when calling the layer.
 
     ### Example
@@ -38,7 +38,7 @@ class Dropout(Module):
     # [6. 7.]
     # [8. 9.]]
 
-    outputs = dropout(data, is_training=True)
+    outputs = dropout(data, training=True)
     
     print(outputs)
     # [[ 0.    1.25]
@@ -56,27 +56,27 @@ class Dropout(Module):
     def call(
         self,
         x: np.ndarray,
-        is_training: tp.Optional[bool] = None,
+        training: tp.Optional[bool] = None,
         rng: tp.Optional[np.ndarray] = None,
     ) -> jnp.ndarray:
         """
         Arguments:
             x: The value to be dropped out.
-            is_training: Whether training is currently happening.
+            training: Whether training is currently happening.
             rng: Optional RNGKey.
         Returns:
             x but dropped out and scaled by `1 / (1 - rate)`.
         """
-        if is_training is None:
+        if training is None:
             if module.LOCAL.contexts:
                 context: module.Context = module.LOCAL.contexts[-1]
-                is_training = context.training
+                training = context.training
             else:
                 raise ValueError(
-                    "Cannot infer `is_training` outside of context. You must pass `is_training` explicitly or use `Module.apply`."
+                    "Cannot infer `training` outside of context. You must pass `training` explicitly or use `Module.apply`."
                 )
         return hk.dropout(
             rng=rng if rng is not None else module.next_rng_key(),
-            rate=self.rate if is_training else 0.0,
+            rate=self.rate if training else 0.0,
             x=x,
         )
