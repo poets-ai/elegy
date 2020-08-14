@@ -1,6 +1,5 @@
 __version__ = "0.1.5"
 
-from haiku import get_parameter, get_state, set_state
 
 from . import callbacks, initializers, losses, metrics, model, nn, regularizers
 from .losses import Loss
