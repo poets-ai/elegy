@@ -62,4 +62,3 @@ class BinaryCrossentropyTest(TestCase):
             bce_tfk(y_true, y_pred, sample_weight=jnp.array([1, 0])),
             rtol=0.0001,
         )
-
