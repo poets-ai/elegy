@@ -108,7 +108,7 @@ class Metric(Module):
                 for index in self._labels_filter:
                     kwargs["y_pred"] = kwargs["y_pred"][index]
 
-        return self.call(*args, **kwargs)
+        return super().__call__(*args, **kwargs)
 
     @abstractmethod
     def call(self, *args, **kwargs):

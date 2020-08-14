@@ -4,10 +4,10 @@ import typing as tp
 
 import jax.numpy as jnp
 
-from elegy.metrics import reduce
+from elegy.metrics.reduce import Reduce, Reduction
 
 
-class Mean(reduce.Reduce):
+class Mean(Reduce):
     """
     Computes the (weighted) mean of the given values.
     
@@ -61,7 +61,7 @@ class Mean(reduce.Reduce):
                 check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).
         """
         super().__init__(
-            reduction=reduce.Reduction.WEIGHTED_MEAN, name=name, dtype=dtype, on=on
+            reduction=Reduction.WEIGHTED_MEAN, name=name, dtype=dtype, on=on
         )
 
     def call(

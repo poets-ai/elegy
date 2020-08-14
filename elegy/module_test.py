@@ -17,14 +17,14 @@ class ModuleTest(TestCase):
             self.units = units
 
         def call(self, x):
-            w = self.add_parameter(
+            w = elegy.get_parameter(
                 "w", [x.shape[-1], self.units], jnp.float32, jnp.ones
             )
-            b = self.add_parameter("b", [self.units], jnp.float32, jnp.ones)
+            b = elegy.get_parameter("b", [self.units], jnp.float32, jnp.ones)
 
-            n = self.add_state("n", [], np.int32, jnp.zeros)
+            n = elegy.get_state("n", [], np.int32, jnp.zeros)
 
-            self.update_state("n", n + 1)
+            elegy.set_state("n", n + 1)
 
             y = jnp.dot(x, w) + b
 
@@ -42,7 +42,9 @@ class ModuleTest(TestCase):
         def call(self, x) -> np.ndarray:
             x = self.linear(x)
             x = self.linear1(x)
-            self.bias = self.add_parameter("bias", [x.shape[-1]], jnp.float32, jnp.ones)
+            self.bias = elegy.get_parameter(
+                "bias", [x.shape[-1]], jnp.float32, jnp.ones
+            )
             return x + self.bias * 10
 
     def test_basic(self):
@@ -139,14 +141,14 @@ class ModuleDynamicTest(TestCase):
             self.units = units
 
         def call(self, x):
-            w = self.add_parameter(
+            w = elegy.get_parameter(
                 "w", [x.shape[-1], self.units], jnp.float32, jnp.ones
             )
-            b = self.add_parameter("b", [self.units], jnp.float32, jnp.ones)
+            b = elegy.get_parameter("b", [self.units], jnp.float32, jnp.ones)
 
-            n = self.add_state("n", [], np.int32, jnp.zeros)
+            n = elegy.get_state("n", [], np.int32, jnp.zeros)
 
-            self.update_state("n", n + 1)
+            elegy.set_state("n", n + 1)
 
             y = jnp.dot(x, w) + b
 
@@ -159,7 +161,9 @@ class ModuleDynamicTest(TestCase):
         def call(self, x) -> np.ndarray:
             x = ModuleDynamicTest.Linear(6)(x)
             x = ModuleDynamicTest.Linear(7)(x)
-            self.bias = self.add_parameter("bias", [x.shape[-1]], jnp.float32, jnp.ones)
+            self.bias = elegy.get_parameter(
+                "bias", [x.shape[-1]], jnp.float32, jnp.ones
+            )
             return x + self.bias * 10
 
     def test_basic(self):

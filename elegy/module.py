@@ -134,7 +134,7 @@ class Module(metaclass=ModuleMeta):
         with call_context(self):
             outputs = self.call(*args, **kwargs)
 
-            self.add_summary(None, outputs)
+            add_summary(None, outputs)
 
             return outputs
 
@@ -238,186 +238,6 @@ class Module(metaclass=ModuleMeta):
             )
 
         return apply_fn
-
-    def add_parameter(
-        self,
-        name: str,
-        shape: tp.Sequence[int],
-        dtype: tp.Any,
-        initializer: tp.Callable[[tp.Sequence[int], tp.Any], np.ndarray],
-    ) -> np.ndarray:
-        """
-        A hook that lets you add a parameter to the current module. The parameter will only be created once
-        during `init` and will reused afterwards.
-
-        Arguments:
-            name: The name of the parameter. It must be unique and no other field/property/method
-                of the instance can have that name.
-            shape: The shape of the parameter.
-            dtype: The type of the parameter.
-            initializer: A callable that takes in a shape and dtype and returns the initial value.
-
-        Returns:
-            The value of the parameter.
-        """
-        if LOCAL.contexts:
-            context: Context = LOCAL.contexts[-1]
-
-            if not hasattr(self, name):
-                if not context.building:
-                    raise ValueError(
-                        f"Trying to initialize '{name}' outside of `init`."
-                    )
-
-                self._params.add(name)
-                setattr(self, name, initializer(shape, dtype))
-
-            elif name not in self._params:
-                raise ValueError(
-                    f"Class already contained a property named '{name}', "
-                    "please use a unique name for the parameter."
-                )
-
-            value = getattr(self, name)
-
-            return value
-        else:
-            raise ValueError(
-                "Cannot execute `get_parameter` outside of a `elegy.context`"
-            )
-
-    def add_state(
-        self,
-        name: str,
-        shape: tp.Sequence[int],
-        dtype: tp.Any,
-        initializer: tp.Callable[[tp.Sequence[int], tp.Any], tp.Any],
-    ) -> tp.Any:
-        """
-        A hook that lets you add a state to the current module. The state will only be created once
-        during `init` and will reused afterwards.
-
-        Arguments:
-            name: The name of the state. It must be unique and no other field/property/method
-                of the instance can have that name.
-            shape: The shape of the state.
-            dtype: The type of the state.
-            initializer: A callable that takes in a shape and dtype and returns the initial value.
-
-        Returns:
-            The value of the state.
-        """
-
-        if LOCAL.contexts:
-            context: Context = LOCAL.contexts[-1]
-
-            if not hasattr(self, name):
-                if not context.building:
-                    raise ValueError(
-                        f"Trying to initialize '{name}' outside of `init`."
-                    )
-
-                initial_name = f"{name}__initial__"
-
-                self._states.add(name)
-                self._states_initial.add(initial_name)
-
-                initial_value = initializer(shape, dtype)
-
-                setattr(self, name, initial_value)
-                setattr(self, initial_name, initial_value)
-
-            elif name not in self._states:
-                raise ValueError(
-                    f"Class already contained a property named '{name}', "
-                    "please use a unique name for the state."
-                )
-
-            value = getattr(self, name)
-
-            return value
-        else:
-            raise ValueError("Cannot execute `get_state` outside of a `elegy.context`")
-
-    def update_state(self, name: str, value: tp.Any):
-        """
-        A hook that lets you ypdate a state of the current module, if the state does not 
-        exist it will be created.
-
-        Arguments:
-            name: The name of the state. It must be unique and no other field/property/method
-                of the instance can have that name.
-            value: The updated value of the state.
-
-        Returns:
-            The value of the state.
-        """
-        if LOCAL.contexts:
-            context: Context = LOCAL.contexts[-1]
-
-            if name not in self._states:
-                if not context.building:
-                    raise ValueError(
-                        f"Trying to initialize '{name}' outside of `init`."
-                    )
-
-                initial_name = f"{name}__initial__"
-
-                self._states.add(name)
-                self._states_initial.add(initial_name)
-
-                setattr(self, name, value)
-                setattr(self, initial_name, value)
-            else:
-                setattr(self, name, value)
-        else:
-            raise ValueError("Cannot execute `set_state` outside of a `elegy.context`")
-
-    def add_summary(self, name: tp.Optional[str], value: np.ndarray):
-        """
-        A hook that lets you define a summary in the current module. Its primary
-        use is to keep track of certain values as they flow through the network
-        so `Model.summary()` can show a representation of architecture.
-
-        ```python
-        def call(self, x):
-            ...
-            y = jax.nn.relu(x)
-            self.add_summary("relu", y)
-            ...
-        ```
-
-        The summaries will be aggregated by [`apply`][elegy.module.Module.apply] 
-        if `get_summaries` is set to `True`, else this hook does nothing.
-
-        ```python
-        transformed_state = transform.apply(..., get_summaries=True, ...)
-        ```
-
-        Arguments:
-            name: The name of the loss. If a summary with the same
-                `name` already exists a unique identifier will be generated.
-            value: The value for the summary.
-        """
-
-        if LOCAL.contexts:
-            context: Context = LOCAL.contexts[-1]
-
-            if not context.get_summaries:
-                return
-
-            # name = level_names[self]
-            base_name = "/".join(context.path_names_c)
-
-            base_name = f"{base_name}/{name}" if name is not None else base_name
-            base_name = get_unique_name(context.summaries, base_name)
-            module = self if name is None else None  # pass module only if name is None
-
-            context.summaries.append((module, base_name, value))
-        else:
-            raise ValueError(
-                "Cannot execute `add_summary` outside of an `elegy.context`"
-            )
 
     def get_parameters(self) -> types.Parameters:
         """
@@ -552,6 +372,182 @@ class Module(metaclass=ModuleMeta):
 # -------------------------------------------------------------
 # hooks
 # -------------------------------------------------------------
+
+
+def get_parameter(
+    name: str,
+    shape: tp.Sequence[int],
+    dtype: tp.Any,
+    initializer: tp.Callable[[tp.Sequence[int], tp.Any], np.ndarray],
+) -> np.ndarray:
+    """
+    A hook that lets you add a parameter to the current module. The parameter will only be created once
+    during `init` and will reused afterwards.
+
+    Arguments:
+        name: The name of the parameter. It must be unique and no other field/property/method
+            of the instance can have that name.
+        shape: The shape of the parameter.
+        dtype: The type of the parameter.
+        initializer: A callable that takes in a shape and dtype and returns the initial value.
+
+    Returns:
+        The value of the parameter.
+    """
+    if LOCAL.contexts:
+        context: Context = LOCAL.contexts[-1]
+        module = context.module_c[-1]
+
+        if not hasattr(module, name):
+            if not context.building:
+                raise ValueError(f"Trying to initialize '{name}' outside of `init`.")
+
+            module._params.add(name)
+            setattr(module, name, initializer(shape, dtype))
+
+        elif name not in module._params:
+            raise ValueError(
+                f"Class already contained a property named '{name}', "
+                "please use a unique name for the parameter."
+            )
+
+        value = getattr(module, name)
+
+        return value
+    else:
+        raise ValueError("Cannot execute `get_parameter` outside of a `elegy.context`")
+
+
+def get_state(
+    name: str,
+    shape: tp.Sequence[int],
+    dtype: tp.Any,
+    initializer: tp.Callable[[tp.Sequence[int], tp.Any], tp.Any],
+) -> tp.Any:
+    """
+    A hook that lets you add a state to the current module. The state will only be created once
+    during `init` and will reused afterwards.
+
+    Arguments:
+        name: The name of the state. It must be unique and no other field/property/method
+            of the instance can have that name.
+        shape: The shape of the state.
+        dtype: The type of the state.
+        initializer: A callable that takes in a shape and dtype and returns the initial value.
+
+    Returns:
+        The value of the state.
+    """
+
+    if LOCAL.contexts:
+        context: Context = LOCAL.contexts[-1]
+        module = context.module_c[-1]
+
+        if not hasattr(module, name):
+            if not context.building:
+                raise ValueError(f"Trying to initialize '{name}' outside of `init`.")
+
+            initial_name = f"{name}__initial__"
+
+            module._states.add(name)
+            module._states_initial.add(initial_name)
+
+            initial_value = initializer(shape, dtype)
+
+            setattr(module, name, initial_value)
+            setattr(module, initial_name, initial_value)
+
+        elif name not in module._states:
+            raise ValueError(
+                f"Class already contained a property named '{name}', "
+                "please use a unique name for the state."
+            )
+
+        value = getattr(module, name)
+
+        return value
+    else:
+        raise ValueError("Cannot execute `get_state` outside of a `elegy.context`")
+
+
+def set_state(name: str, value: tp.Any):
+    """
+    A hook that lets you ypdate a state of the current module, if the state does not 
+    exist it will be created.
+
+    Arguments:
+        name: The name of the state. It must be unique and no other field/property/method
+            of the instance can have that name.
+        value: The updated value of the state.
+
+    Returns:
+        The value of the state.
+    """
+    if LOCAL.contexts:
+        context: Context = LOCAL.contexts[-1]
+        module = context.module_c[-1]
+
+        if name not in module._states:
+            if not context.building:
+                raise ValueError(f"Trying to initialize '{name}' outside of `init`.")
+
+            initial_name = f"{name}__initial__"
+
+            module._states.add(name)
+            module._states_initial.add(initial_name)
+
+            setattr(module, name, value)
+            setattr(module, initial_name, value)
+        else:
+            setattr(module, name, value)
+    else:
+        raise ValueError("Cannot execute `set_state` outside of a `elegy.context`")
+
+
+def add_summary(name: tp.Optional[str], value: np.ndarray):
+    """
+    A hook that lets you define a summary in the current module. Its primary
+    use is to keep track of certain values as they flow through the network
+    so `Model.summary()` can show a representation of architecture.
+
+    ```python
+    def call(self, x):
+        ...
+        y = jax.nn.relu(x)
+        self.add_summary("relu", y)
+        ...
+    ```
+
+    The summaries will be aggregated by [`apply`][elegy.module.Module.apply] 
+    if `get_summaries` is set to `True`, else this hook does nothing.
+
+    ```python
+    transformed_state = transform.apply(..., get_summaries=True, ...)
+    ```
+
+    Arguments:
+        name: The name of the loss. If a summary with the same
+            `name` already exists a unique identifier will be generated.
+        value: The value for the summary.
+    """
+
+    if LOCAL.contexts:
+        context: Context = LOCAL.contexts[-1]
+        module = context.module_c[-1]
+
+        if not context.get_summaries:
+            return
+
+        # name = level_names[module]
+        base_name = "/".join(context.path_names_c)
+
+        base_name = f"{base_name}/{name}" if name is not None else base_name
+        base_name = get_unique_name(context.summaries, base_name)
+        module = module if name is None else None  # pass module only if name is None
+
+        context.summaries.append((module, base_name, value))
+    else:
+        raise ValueError("Cannot execute `add_summary` outside of an `elegy.context`")
 
 
 def add_loss(name: str, value: np.ndarray):

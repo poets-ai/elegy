@@ -288,15 +288,15 @@ description = "Haiku is a library for building neural networks in JAX."
 name = "dm-haiku"
 optional = false
 python-versions = "*"
-version = "0.0.1"
+version = "0.0.2"
 
 [package.dependencies]
 absl-py = ">=0.7.1"
 numpy = ">=1.18.0"
 
 [package.extras]
-jax = ["jax (>=0.1.55)"]
-jaxlib = ["jaxlib (>=0.1.37)"]
+jax = ["jax (>=0.1.71)"]
+jaxlib = ["jaxlib (>=0.1.49)"]
 
 [[package]]
 category = "dev"
@@ -1645,7 +1645,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "4e5e7d4e417f5ed404c9a8989ea89cea00e522989873f69edd214a1a57737a1b"
+content-hash = "de5d3c43f1da10b5c18472eba78173636c6df388f6c4350bf0939bb0e1babed6"
 lock-version = "1.0"
 python-versions = "^3.6.1"
 
@@ -1824,8 +1824,8 @@ defusedxml = [
     {file = "defusedxml-0.6.0.tar.gz", hash = "sha256:f684034d135af4c6cbb949b8a4d2ed61634515257a67299e5f940fbaa34377f5"},
 ]
 dm-haiku = [
-    {file = "dm-haiku-0.0.1.tar.gz", hash = "sha256:898677a52af5bdf0c49e65e71b61802e42b3d7e59a2aa966394b1eab9846a022"},
-    {file = "dm_haiku-0.0.1-py3-none-any.whl", hash = "sha256:c645139da62b970db8bb44dacc7d2ea4dac8ecd2069bb2f464300777220ad772"},
+    {file = "dm-haiku-0.0.2.tar.gz", hash = "sha256:235f71ab023202e5d21209dd7c5d831512cb3b5cbf3794ab5a657b217c77e862"},
+    {file = "dm_haiku-0.0.2-py3-none-any.whl", hash = "sha256:2fc60a3625d7557b975a0bf9a92637dd748f169562abd9c69df125ae7a450d0c"},
 ]
 entrypoints = [
     {file = "entrypoints-0.3-py2.py3-none-any.whl", hash = "sha256:589f874b313739ad35be6e0cd7efde2a4e9b6fea91edcc34e58ecbb8dbe56d19"},

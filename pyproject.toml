@@ -10,7 +10,6 @@ version = "0.1.5"
 [tool.poetry.dependencies]
 python = "^3.6.1"
 jaxlib = "^0.1.51"
-dm-haiku = "^0.0.1"
 numpy = "^1.19.0"
 pytest = "^5.4.3"
 deepdish = "^0.3.6"
@@ -24,6 +23,7 @@ toolz = "^0.10.0"
 deepmerge = "^0.1.0"
 pyyaml = "^5.3.1"
 pytest-cov = "^2.10.0"
+dm-haiku = "^0.0.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

@@ -4,3 +4,4 @@ from .dropout import Dropout
 from .flatten import Flatten
 from .linear import Linear
 from .sequential import Sequential, sequential
+from .layer_normalization import LayerNormalization, InstanceNormalization

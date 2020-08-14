@@ -12,11 +12,11 @@ import numpy as np
 from haiku._src import utils as haiku_utils
 
 from elegy import initializers, module
-from elegy.module import Module
+from elegy import module
 from elegy.nn.moving_averages import ExponentialMovingAverage
 
 
-class BatchNormalization(Module):
+class BatchNormalization(module.Module):
     """Normalizes inputs to maintain a mean of ~0 and stddev of ~1.
 
   See: https://arxiv.org/abs/1502.03167.
@@ -170,12 +170,12 @@ class BatchNormalization(Module):
         w_dtype = inputs.dtype
 
         if self.create_scale:
-            scale = self.add_parameter("scale", w_shape, w_dtype, self.scale_init)
+            scale = module.get_parameter("scale", w_shape, w_dtype, self.scale_init)
         elif scale is None:
             scale = np.ones([], dtype=w_dtype)
 
         if self.create_offset:
-            offset = self.add_parameter("offset", w_shape, w_dtype, self.offset_init)
+            offset = module.get_parameter("offset", w_shape, w_dtype, self.offset_init)
         elif offset is None:
             offset = np.zeros([], dtype=w_dtype)
 

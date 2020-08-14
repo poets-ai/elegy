@@ -14,7 +14,11 @@ from .module import (
     Module,
     add_loss,
     add_metric,
+    get_parameter,
+    get_state,
+    add_summary,
     context,
     next_rng_key,
     to_module,
+    set_state,
 )

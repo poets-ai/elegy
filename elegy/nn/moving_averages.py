@@ -20,12 +20,11 @@ import re
 import jax
 import jax.numpy as jnp
 from haiku._src import data_structures
-from elegy import initializers
 
-from elegy.module import Module
+from elegy import initializers, module
 
 
-class ExponentialMovingAverage(Module):
+class ExponentialMovingAverage(module.Module):
     """Maintains an exponential moving average.
 
   This uses the Adam debiasing procedure.
@@ -67,8 +66,8 @@ class ExponentialMovingAverage(Module):
 
     def initialize(self, value):
         """If uninitialized sets the average to ``zeros_like`` the given value."""
-        self.add_state("hidden", value.shape, value.dtype, initializer=jnp.zeros)
-        self.add_state("average", value.shape, value.dtype, initializer=jnp.zeros)
+        module.get_state("hidden", value.shape, value.dtype, initializer=jnp.zeros)
+        module.get_state("average", value.shape, value.dtype, initializer=jnp.zeros)
 
     def call(self, value, update_stats=True):
         """Updates the EMA and returns the new value.
@@ -86,7 +85,7 @@ class ExponentialMovingAverage(Module):
         if not isinstance(value, jnp.ndarray):
             value = jnp.asarray(value)
 
-        counter = self.add_state(
+        counter = module.get_state(
             "counter",
             (),
             jnp.int32,
@@ -99,7 +98,7 @@ class ExponentialMovingAverage(Module):
             decay = self._cond(counter <= 0, 0.0, decay, value.dtype)
 
         one = jnp.ones([], value.dtype)
-        hidden = self.add_state(
+        hidden = module.get_state(
             "hidden", value.shape, value.dtype, initializer=jnp.zeros
         )
         hidden = hidden * decay + value * (one - decay)
@@ -109,18 +108,14 @@ class ExponentialMovingAverage(Module):
             average /= one - jnp.power(decay, counter)
 
         if update_stats:
-            self.update_state("counter", counter)
-            self.update_state("hidden", hidden)
-            self.update_state("average", average)
+            module.set_state("counter", counter)
+            module.set_state("hidden", hidden)
+            module.set_state("average", average)
 
         return average
 
-    # @property
-    # def average(self):
-    #     return self.add_state("average", [])
 
-
-class EMAParamsTree(Module):
+class EMAParamsTree(module.Module):
     """Maintains an exponential moving average for all parameters in a tree.
 
   While ExponentialMovingAverage is meant to be applied to single parameters

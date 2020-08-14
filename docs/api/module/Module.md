@@ -7,9 +7,9 @@
             - call
             - __init__
             - __call__
-            - add_parameter
-            - add_state
-            - update_state
+            - get_parameter
+            - get_state
+            - set_state
             - add_summary
             - init
             - apply

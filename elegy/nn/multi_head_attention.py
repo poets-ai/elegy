@@ -1,12 +1,13 @@
+from elegy import module, initializers
 import typing as tp
 
-import haiku as hk
 import jax
 import numpy as np
 from jax import numpy as jnp
+from elegy.nn.dropout import Dropout
 
 
-class MultiHeadAttention(hk.Module):
+class MultiHeadAttention(module.Module):
     r"""
     MultiHead Attention layer.
     Defines the MultiHead Attention operation as described in
@@ -69,10 +70,10 @@ class MultiHeadAttention(hk.Module):
         dropout: float = 0.0,
         use_projection_bias: bool = True,
         return_attn_coef: bool = False,
-        kernel_initializer: hk.initializers.Initializer = hk.initializers.VarianceScaling(
+        kernel_initializer: initializers.Initializer = initializers.VarianceScaling(
             scale=2.0
         ),
-        bias_initializer: hk.initializers.Initializer = hk.initializers.Constant(0.0),
+        bias_initializer: initializers.Initializer = initializers.Constant(0.0),
         # kernel_initializer: typing.Union[str, typing.Callable] = "glorot_uniform",
         # kernel_regularizer: typing.Union[str, typing.Callable] = None,
         # kernel_constraint: typing.Union[str, typing.Callable] = None,
@@ -95,7 +96,7 @@ class MultiHeadAttention(hk.Module):
         self.kernel_initializer = kernel_initializer
         self.bias_initializer = bias_initializer
 
-    def __call__(
+    def call(
         self,
         query: jnp.ndarray,
         key: tp.Optional[jnp.ndarray] = None,
@@ -141,25 +142,29 @@ class MultiHeadAttention(hk.Module):
                 )
 
         # get weights
-        query_kernel = hk.get_parameter(
+        query_kernel = module.get_parameter(
             "query_kernel",
             [self.num_heads, query.shape[-1], self.head_size],
-            init=self.kernel_initializer,
+            jnp.float32,
+            initializer=self.kernel_initializer,
         )
-        key_kernel = hk.get_parameter(
+        key_kernel = module.get_parameter(
             "key_kernel",
             [self.num_heads, key.shape[-1], self.head_size],
-            init=self.kernel_initializer,
+            jnp.float32,
+            initializer=self.kernel_initializer,
         )
-        value_kernel = hk.get_parameter(
+        value_kernel = module.get_parameter(
             "value_kernel",
             [self.num_heads, value.shape[-1], self.head_size],
-            init=self.kernel_initializer,
+            jnp.float32,
+            initializer=self.kernel_initializer,
         )
-        projection_kernel = hk.get_parameter(
-            name="projection_kernel",
-            shape=[self.num_heads, self.head_size, output_size],
-            init=self.kernel_initializer,
+        projection_kernel = module.get_parameter(
+            "projection_kernel",
+            [self.num_heads, self.head_size, output_size],
+            jnp.float32,
+            initializer=self.kernel_initializer,
         )
 
         # Linear transformations
@@ -187,8 +192,8 @@ class MultiHeadAttention(hk.Module):
         attn_coef = jax.nn.softmax(logits)
 
         # attention dropout
-        attn_coef_dropout = hk.dropout(
-            hk.next_rng_key(), self.droput_rate if is_training else 0.0, attn_coef
+        attn_coef_dropout = Dropout(self.droput_rate)(
+            attn_coef, is_training=is_training
         )
 
         # attention * value
@@ -199,8 +204,11 @@ class MultiHeadAttention(hk.Module):
         output = jnp.einsum("...NHI,HIO->...NO", multihead_output, projection_kernel)
 
         if self.use_projection_bias:
-            output += hk.get_parameter(
-                name="projection_bias", shape=[output_size], init=self.bias_initializer,
+            output += module.get_parameter(
+                "projection_bias",
+                [output_size],
+                jnp.float32,
+                initializer=self.bias_initializer,
             )
 
         if self.return_attn_coef:
@@ -209,7 +217,7 @@ class MultiHeadAttention(hk.Module):
             return output
 
 
-class TransformerEncoderLayer(hk.Module):
+class TransformerEncoderLayer(module.Module):
 
     ...
 
