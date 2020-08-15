@@ -67,7 +67,7 @@ class ConvND(module.Module):
         b_init: tp.Optional[types.Initializer] = None,
         data_format: str = "channels_last",
         mask: tp.Optional[np.ndarray] = None,
-        name: tp.Optional[str] = None,
+        **kwargs,
     ):
         """
         Initializes the module.
@@ -98,9 +98,9 @@ class ConvND(module.Module):
                 ``channels_first``, ``channels_last``, ``N...C`` or ``NC...``. By
                 default, ``channels_last``.
             mask: tp.Optional mask of the weights.
-            name: The name of the module.
+            kwargs: Additional keyword arguments passed to Module.
         """
-        super().__init__(name=name)
+        super().__init__(**kwargs)
         if num_spatial_dims <= 0:
             raise ValueError(
                 "We only support convolution operations for `num_spatial_dims` "
@@ -216,7 +216,7 @@ class Conv1D(ConvND):
         b_init: tp.Optional[types.Initializer] = None,
         data_format: str = "NWC",
         mask: tp.Optional[np.ndarray] = None,
-        name: tp.Optional[str] = None,
+        **kwargs,
     ):
         """
         Initializes the module.
@@ -243,7 +243,7 @@ class Conv1D(ConvND):
             data_format: The data format of the input. Either ``NWC`` or ``NCW``. By
                 default, ``NWC``.
             mask: tp.Optional mask of the weights.
-            name: The name of the module.
+            kwargs: Additional keyword arguments passed to Module.
         """
         super().__init__(
             num_spatial_dims=1,
@@ -257,7 +257,7 @@ class Conv1D(ConvND):
             b_init=b_init,
             data_format=data_format,
             mask=mask,
-            name=name,
+            **kwargs,
         )
 
 
@@ -278,7 +278,7 @@ class Conv2D(ConvND):
         b_init: tp.Optional[types.Initializer] = None,
         data_format: str = "NHWC",
         mask: tp.Optional[np.ndarray] = None,
-        name: tp.Optional[str] = None,
+        **kwargs,
     ):
         """
         Initializes the module.
@@ -305,7 +305,7 @@ class Conv2D(ConvND):
             data_format: The data format of the input. Either ``NHWC`` or ``NCHW``. By
                 default, ``NHWC``.
             mask: tp.Optional mask of the weights.
-            name: The name of the module.
+            kwargs: Additional keyword arguments passed to Module.
         """
         super().__init__(
             num_spatial_dims=2,
@@ -319,7 +319,7 @@ class Conv2D(ConvND):
             b_init=b_init,
             data_format=data_format,
             mask=mask,
-            name=name,
+            **kwargs,
         )
 
 
@@ -340,7 +340,7 @@ class Conv3D(ConvND):
         b_init: tp.Optional[types.Initializer] = None,
         data_format: str = "NDHWC",
         mask: tp.Optional[np.ndarray] = None,
-        name: tp.Optional[str] = None,
+        **kwargs,
     ):
         """
         Initializes the module.
@@ -367,7 +367,7 @@ class Conv3D(ConvND):
             data_format: The data format of the input. Either ``NDHWC`` or ``NCDHW``.
                 By default, ``NDHWC``.
             mask: tp.Optional mask of the weights.
-            name: The name of the module.
+            kwargs: Additional keyword arguments passed to Module.
         """
         super().__init__(
             num_spatial_dims=3,
@@ -381,7 +381,7 @@ class Conv3D(ConvND):
             b_init=b_init,
             data_format=data_format,
             mask=mask,
-            name=name,
+            **kwargs,
         )
 
 
@@ -400,7 +400,7 @@ class ConvNDTranspose(module.Module):
         b_init: tp.Optional[types.Initializer] = None,
         data_format: str = "channels_last",
         mask: tp.Optional[np.ndarray] = None,
-        name: str = None,
+        **kwargs,
     ):
         """
         Initializes the module.
@@ -422,9 +422,9 @@ class ConvNDTranspose(module.Module):
                 ``channels_first``, ``channels_last``, ``N...C`` or ``NC...``. By
                 default, ``channels_last``.
             mask: tp.Optional mask of the weights.
-            name: The name of the module.
+            kwargs: Additional keyword arguments passed to Module.
         """
-        super().__init__(name=name)
+        super().__init__(**kwargs)
 
         if num_spatial_dims <= 0:
             raise ValueError(
@@ -520,7 +520,7 @@ class Conv1DTranspose(ConvNDTranspose):
         b_init: tp.Optional[types.Initializer] = None,
         data_format: str = "NWC",
         mask: tp.Optional[np.ndarray] = None,
-        name: tp.Optional[str] = None,
+        **kwargs,
     ):
         """
         Initializes the module.
@@ -540,7 +540,7 @@ class Conv1DTranspose(ConvNDTranspose):
             data_format: The data format of the input. Either ``NWC`` or ``NCW``. By
                 default, ``NWC``.
             mask: tp.Optional mask of the weights.
-            name: The name of the module.
+            kwargs: Additional keyword arguments passed to Module.
         """
         super().__init__(
             num_spatial_dims=1,
@@ -553,7 +553,7 @@ class Conv1DTranspose(ConvNDTranspose):
             b_init=b_init,
             data_format=data_format,
             mask=mask,
-            name=name,
+            **kwargs,
         )
 
 
@@ -571,7 +571,7 @@ class Conv2DTranspose(ConvNDTranspose):
         b_init: tp.Optional[types.Initializer] = None,
         data_format: str = "NHWC",
         mask: tp.Optional[np.ndarray] = None,
-        name: tp.Optional[str] = None,
+        **kwargs,
     ):
         """
         Initializes the module.
@@ -591,7 +591,7 @@ class Conv2DTranspose(ConvNDTranspose):
             data_format: The data format of the input. Either ``NHWC`` or ``NCHW``. By
                 default, ``NHWC``.
             mask: tp.Optional mask of the weights.
-            name: The name of the module.
+            kwargs: Additional keyword arguments passed to Module.
         """
         super().__init__(
             num_spatial_dims=2,
@@ -604,7 +604,7 @@ class Conv2DTranspose(ConvNDTranspose):
             b_init=b_init,
             data_format=data_format,
             mask=mask,
-            name=name,
+            **kwargs,
         )
 
 
@@ -622,7 +622,7 @@ class Conv3DTranspose(ConvNDTranspose):
         b_init: tp.Optional[types.Initializer] = None,
         data_format: str = "NDHWC",
         mask: tp.Optional[np.ndarray] = None,
-        name: tp.Optional[str] = None,
+        **kwargs,
     ):
         """
         Initializes the module.
@@ -642,7 +642,7 @@ class Conv3DTranspose(ConvNDTranspose):
             data_format: The data format of the input. Either ``NDHWC`` or ``NCDHW``.
                 By default, ``NDHWC``.
             mask: tp.Optional mask of the weights.
-            name: The name of the module.
+            kwargs: Additional keyword arguments passed to Module.
     """
         super().__init__(
             num_spatial_dims=3,
@@ -655,5 +655,5 @@ class Conv3DTranspose(ConvNDTranspose):
             b_init=b_init,
             data_format=data_format,
             mask=mask,
-            name=name,
+            **kwargs,
         )

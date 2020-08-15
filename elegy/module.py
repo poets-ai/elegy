@@ -99,6 +99,7 @@ class Module(metaclass=ModuleMeta):
     """
 
     name: str
+    dtype: np.dtype
     _params: tp.Set[str]
     _states: tp.Set[str]
     _states_initial: tp.Set[str]
@@ -106,7 +107,7 @@ class Module(metaclass=ModuleMeta):
     _dynamic_submodules: tp.List[str]
     _ignore: tp.Set[str]
 
-    def __init__(self, name: tp.Optional[str] = None):
+    def __init__(self, name: tp.Optional[str] = None, dtype: np.dtype = jnp.float32):
         """
         Initializes the current module with the given name.
 
@@ -119,6 +120,7 @@ class Module(metaclass=ModuleMeta):
                 current instance is converted to ``lower_snake_case`` and used instead.
         """
         self.name = name if name else utils.lower_snake_case(self.__class__.__name__)
+        self.dtype = dtype
         self._params = set()
         self._states = set()
         self._states_initial = set()
@@ -376,9 +378,11 @@ class Module(metaclass=ModuleMeta):
 
 def get_parameter(
     name: str,
-    shape: tp.Sequence[int],
-    dtype: tp.Any,
-    initializer: tp.Callable[[tp.Sequence[int], tp.Any], np.ndarray],
+    shape: tp.Sequence[int] = (),
+    dtype: tp.Optional[np.dtype] = None,
+    initializer: tp.Union[
+        tp.Callable[[tp.Sequence[int], tp.Any], tp.Any], tp.Any
+    ] = jnp.zeros,
 ) -> np.ndarray:
     """
     A hook that lets you add a parameter to the current module. The parameter will only be created once
@@ -403,7 +407,17 @@ def get_parameter(
                 raise ValueError(f"Trying to initialize '{name}' outside of `init`.")
 
             module._params.add(name)
-            setattr(module, name, initializer(shape, dtype))
+
+            if dtype is None:
+                dtype = module.dtype
+
+            initial_value = (
+                initializer(shape, dtype)
+                if isinstance(initializer, tp.Callable)
+                else initializer
+            )
+
+            setattr(module, name, initial_value)
 
         elif name not in module._params:
             raise ValueError(
@@ -420,9 +434,11 @@ def get_parameter(
 
 def get_state(
     name: str,
-    shape: tp.Sequence[int],
-    dtype: tp.Any,
-    initializer: tp.Callable[[tp.Sequence[int], tp.Any], tp.Any],
+    shape: tp.Sequence[int] = (),
+    dtype: tp.Optional[np.dtype] = None,
+    initializer: tp.Union[
+        tp.Callable[[tp.Sequence[int], tp.Any], tp.Any], tp.Any
+    ] = jnp.zeros,
 ) -> tp.Any:
     """
     A hook that lets you add a state to the current module. The state will only be created once
@@ -452,7 +468,14 @@ def get_state(
             module._states.add(name)
             module._states_initial.add(initial_name)
 
-            initial_value = initializer(shape, dtype)
+            if dtype is None:
+                dtype = module.dtype
+
+            initial_value = (
+                initializer(shape, dtype)
+                if isinstance(initializer, tp.Callable)
+                else initializer
+            )
 
             setattr(module, name, initial_value)
             setattr(module, initial_name, initial_value)

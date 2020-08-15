@@ -82,13 +82,9 @@ class Reduce(Metric):
     """Encapsulates metrics that perform a reduce operation on the values."""
 
     def __init__(
-        self,
-        reduction: Reduction,
-        name: tp.Optional[str] = None,
-        dtype: tp.Optional[jnp.dtype] = None,
-        on: tp.Optional[types.IndexLike] = None,
+        self, reduction: Reduction, on: tp.Optional[types.IndexLike] = None, **kwargs
     ):
-        super().__init__(name=name, dtype=dtype, on=on)
+        super().__init__(on=on, **kwargs)
 
         self._reduction = reduction
 
@@ -119,7 +115,7 @@ class Reduce(Metric):
             Array with the cummulative reduce.
         """
         total = module.get_state(
-            "total", shape=[], dtype=self._dtype, initializer=initializers.Constant(0)
+            "total", shape=[], dtype=self.dtype, initializer=initializers.Constant(0)
         )
 
         if self._reduction in (Reduction.SUM_OVER_BATCH_SIZE, Reduction.WEIGHTED_MEAN,):
@@ -138,7 +134,7 @@ class Reduce(Metric):
             values=values,
             reduction=self._reduction,
             sample_weight=sample_weight,
-            dtype=self._dtype,
+            dtype=self.dtype,
         )
 
         module.set_state("total", total)

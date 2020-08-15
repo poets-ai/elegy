@@ -86,9 +86,9 @@ class MeanAbsolutePercentageError(Loss):
     def __init__(
         self,
         reduction: tp.Optional[Reduction] = None,
-        name: tp.Optional[str] = None,
         weight: tp.Optional[float] = None,
         on: tp.Optional[types.IndexLike] = None,
+        **kwargs
     ):
         """
         Initializes `Mean` class.
@@ -101,7 +101,6 @@ class MeanAbsolutePercentageError(Loss):
                 `elegy` `compile` and `fit`, or `SUM_OVER_BATCH_SIZE`
                 will raise an error.
                 for more details.
-            name: Optional name for the loss.
             weight: Optional weight contribution for the total loss. Defaults to `1`.
             on: A string or integer, or iterable of string or integers, that
                 indicate how to index/filter the `y_true` and `y_pred`
@@ -112,7 +111,7 @@ class MeanAbsolutePercentageError(Loss):
                 check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).
         """
 
-        return super().__init__(reduction=reduction, name=name, weight=weight, on=on)
+        return super().__init__(reduction=reduction, weight=weight, on=on, **kwargs)
 
     def call(
         self,

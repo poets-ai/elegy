@@ -60,12 +60,7 @@ class Reshape(Module):
         >>> assert mod(x).shape == (B, H, W, C, 1, D)
     """
 
-    def __init__(
-        self,
-        output_shape: types.Shape,
-        preserve_dims: int = 1,
-        name: tp.Optional[str] = None,
-    ):
+    def __init__(self, output_shape: types.Shape, preserve_dims: int = 1, **kwargs):
         """
         Constructs a ``Reshape`` module.
 
@@ -76,12 +71,12 @@ class Reshape(Module):
                 that -1 can only appear once in ``output_shape``.
                 To flatten all non-batch dimensions use :class:`Flatten`.
             preserve_dims: Number of leading dimensions that will not be reshaped.
-            name: Name of the module.
+            kwargs: Additional keyword arguments passed to Module.
 
         Raises:
             ValueError: If ``preserve_dims`` is not positive.
         """
-        super().__init__(name=name)
+        super().__init__(**kwargs)
         if preserve_dims <= 0:
             raise ValueError("Argument preserve_dims should be >= 1.")
         if output_shape.count(-1) > 1:

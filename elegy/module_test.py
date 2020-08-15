@@ -18,11 +18,11 @@ class ModuleTest(TestCase):
 
         def call(self, x):
             w = elegy.get_parameter(
-                "w", [x.shape[-1], self.units], jnp.float32, jnp.ones
+                "w", [x.shape[-1], self.units], initializer=jnp.ones
             )
-            b = elegy.get_parameter("b", [self.units], jnp.float32, jnp.ones)
+            b = elegy.get_parameter("b", [self.units], initializer=jnp.ones)
 
-            n = elegy.get_state("n", [], np.int32, jnp.zeros)
+            n = elegy.get_state("n", [], dtype=jnp.int32, initializer=jnp.zeros)
 
             elegy.set_state("n", n + 1)
 
@@ -142,11 +142,11 @@ class ModuleDynamicTest(TestCase):
 
         def call(self, x):
             w = elegy.get_parameter(
-                "w", [x.shape[-1], self.units], jnp.float32, jnp.ones
+                "w", [x.shape[-1], self.units], initializer=jnp.ones
             )
-            b = elegy.get_parameter("b", [self.units], jnp.float32, jnp.ones)
+            b = elegy.get_parameter("b", [self.units], initializer=jnp.ones)
 
-            n = elegy.get_state("n", [], np.int32, jnp.zeros)
+            n = elegy.get_state("n", [], dtype=jnp.int32, initializer=jnp.zeros)
 
             elegy.set_state("n", n + 1)
 
@@ -161,9 +161,7 @@ class ModuleDynamicTest(TestCase):
         def call(self, x) -> np.ndarray:
             x = ModuleDynamicTest.Linear(6)(x)
             x = ModuleDynamicTest.Linear(7)(x)
-            self.bias = elegy.get_parameter(
-                "bias", [x.shape[-1]], jnp.float32, jnp.ones
-            )
+            self.bias = elegy.get_parameter("bias", [x.shape[-1]], initializer=jnp.ones)
             return x + self.bias * 10
 
     def test_basic(self):

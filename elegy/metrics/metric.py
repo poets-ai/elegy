@@ -70,18 +70,11 @@ class Metric(Module):
     ```
     """
 
-    def __init__(
-        self,
-        name: tp.Optional[str] = None,
-        dtype: tp.Optional[jnp.dtype] = None,
-        on: tp.Optional[types.IndexLike] = None,
-    ):
+    def __init__(self, on: tp.Optional[types.IndexLike] = None, **kwargs):
         """
         Base Metric constructor.
 
         Arguments:
-            name: string name of the metric instance.
-            dtype: data type of the metric result.
             on: A string or integer, or iterable of string or integers, that
                 indicate how to index/filter the `y_true` and `y_pred`
                 arguments before passing them to `call`. For example if `on = "a"` then
@@ -91,11 +84,9 @@ class Metric(Module):
                 check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).
         """
 
-        super().__init__(name=name)
+        super().__init__(**kwargs)
 
-        self._dtype = self._dtype = dtype if dtype is not None else jnp.float32
         self._labels_filter = (on,) if isinstance(on, (str, int)) else on
-        self.call = utils.inject_dependencies(self.call)
 
     def __call__(self, *args, **kwargs):
 

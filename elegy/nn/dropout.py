@@ -49,8 +49,8 @@ class Dropout(Module):
     ```
     """
 
-    def __init__(self, rate, name: tp.Optional[str] = None):
-        super().__init__(name=name)
+    def __init__(self, rate, **kwargs):
+        super().__init__(**kwargs)
         self.rate = rate
 
     def call(

@@ -71,11 +71,9 @@ class Sequential(Module):
     """
 
     def __init__(
-        self,
-        layers: tp.Callable[[], tp.Iterable[tp.Callable[..., tp.Any]]],
-        name: tp.Optional[str] = None,
+        self, layers: tp.Callable[[], tp.Iterable[tp.Callable[..., tp.Any]]], **kwargs
     ):
-        super().__init__(name=name)
+        super().__init__(**kwargs)
         self.layers = tuple(layers())
 
         # set signature of call to the signature of of the first layer

@@ -20,7 +20,7 @@ class Linear(module.Module):
         with_bias: bool = True,
         w_init: tp.Optional[Initializer] = None,
         b_init: tp.Optional[Initializer] = None,
-        name: tp.Optional[str] = None,
+        **kwargs
     ):
         """
         Constructs the Linear module.
@@ -32,9 +32,9 @@ class Linear(module.Module):
                 from truncated normal, with stddev `1 / sqrt(fan_in)`. See
                 https://arxiv.org/abs/1502.03167v3.
             b_init: Optional initializer for bias. By default, zero.
-            name: Name of the module.
+            kwargs: Additional keyword arguments passed to Module.
         """
-        super().__init__(name=name)
+        super().__init__(**kwargs)
         self.input_size = None
         self.output_size = output_size
         self.with_bias = with_bias

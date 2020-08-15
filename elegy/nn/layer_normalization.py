@@ -41,24 +41,24 @@ class LayerNormalization(module.Module):
         eps: float = 1e-5,
         scale_init: Optional[initializers.Initializer] = None,
         offset_init: Optional[initializers.Initializer] = None,
-        name: Optional[str] = None,
+        **kwargs
     ):
         """Constructs a LayerNorm module.
 
     Args:
-      axis: Integer, list of integers, or slice indicating which axes to
-        normalize over.
-      create_scale: Bool, defines whether to create a trainable scale
-        per channel applied after the normalization.
-      create_offset: Bool, defines whether to create a trainable offset
-        per channel applied after normalization and scaling.
-      eps: Small epsilon to avoid division by zero variance. Defaults ``1e-5``,
-        as in the paper and Sonnet.
-      scale_init: Optional initializer for gain (aka scale). By default, one.
-      offset_init: Optional initializer for bias (aka offset). By default, zero.
-      name: The module name.
+        axis: Integer, list of integers, or slice indicating which axes to
+            normalize over.
+        create_scale: Bool, defines whether to create a trainable scale
+            per channel applied after the normalization.
+        create_offset: Bool, defines whether to create a trainable offset
+            per channel applied after normalization and scaling.
+        eps: Small epsilon to avoid division by zero variance. Defaults ``1e-5``,
+            as in the paper and Sonnet.
+        scale_init: Optional initializer for gain (aka scale). By default, one.
+        offset_init: Optional initializer for bias (aka offset). By default, zero.
+        kwargs: Additional keyword arguments passed to Module.
     """
-        super().__init__(name=name)
+        super().__init__(**kwargs)
         if not create_scale and scale_init is not None:
             raise ValueError("Cannot set `scale_init` if `create_scale=False`.")
         if not create_offset and offset_init is not None:
@@ -154,27 +154,27 @@ class InstanceNormalization(LayerNormalization):
         scale_init: Optional[initializers.Initializer] = None,
         offset_init: Optional[initializers.Initializer] = None,
         data_format: str = "channels_last",
-        name: Optional[str] = None,
+        **kwargs
     ):
         """Constructs an :class:`InstanceNormalization` module.
 
     This method creates a module which normalizes over the spatial dimensions.
 
     Args:
-      create_scale: ``bool`` representing whether to create a trainable scale
-        per channel applied after the normalization.
-      create_offset: ``bool`` representing whether to create a trainable offset
-        per channel applied after normalization and scaling.
-      eps: Small epsilon to avoid division by zero variance. Defaults to
-        ``1e-5``.
-      scale_init: Optional initializer for the scale variable. Can only be set
-        if ``create_scale=True``. By default scale is initialized to ``1``.
-      offset_init: Optional initializer for the offset variable. Can only be set
-        if ``create_offset=True``. By default offset is initialized to ``0``.
-      data_format: The data format of the input. Can be either
-        ``channels_first``, ``channels_last``, ``N...C`` or ``NC...``. By
-        default it is ``channels_last``.
-      name: Name of the module.
+        create_scale: ``bool`` representing whether to create a trainable scale
+            per channel applied after the normalization.
+        create_offset: ``bool`` representing whether to create a trainable offset
+            per channel applied after normalization and scaling.
+        eps: Small epsilon to avoid division by zero variance. Defaults to
+            ``1e-5``.
+        scale_init: Optional initializer for the scale variable. Can only be set
+            if ``create_scale=True``. By default scale is initialized to ``1``.
+        offset_init: Optional initializer for the offset variable. Can only be set
+            if ``create_offset=True``. By default offset is initialized to ``0``.
+        data_format: The data format of the input. Can be either
+            ``channels_first``, ``channels_last``, ``N...C`` or ``NC...``. By
+            default it is ``channels_last``.
+        kwargs: Additional keyword arguments passed to Module.
     """
         if hk_utils.get_channel_index(data_format) == 1:
             axis = slice(2, None)
@@ -187,5 +187,5 @@ class InstanceNormalization(LayerNormalization):
             eps=eps,
             scale_init=scale_init,
             offset_init=offset_init,
-            name=name,
+            **kwargs
         )

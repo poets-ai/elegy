@@ -31,20 +31,20 @@ class ExponentialMovingAverage(module.Module):
   See https://arxiv.org/pdf/1412.6980.pdf for details.
   """
 
-    def __init__(self, decay, zero_debias=True, warmup_length=0, name=None):
+    def __init__(self, decay, zero_debias=True, warmup_length=0, **kwargs):
         """Initializes an ExponentialMovingAverage module.
 
     Args:
-      decay: The chosen decay. Must in [0, 1). Values close to 1 result in slow
-        decay; values close to 0 result in fast decay.
-      zero_debias: Whether to run with zero-debiasing.
-      warmup_length: A positive integer, EMA has no effect until
-        the internal counter has reached `warmup_length` at which point the
-        initial value for the decaying average is initialized to the input value
-        after `warmup_length` iterations.
-      name: The name of the module.
+        decay: The chosen decay. Must in [0, 1). Values close to 1 result in slow
+            decay; values close to 0 result in fast decay.
+        zero_debias: Whether to run with zero-debiasing.
+        warmup_length: A positive integer, EMA has no effect until
+            the internal counter has reached `warmup_length` at which point the
+            initial value for the decaying average is initialized to the input value
+            after `warmup_length` iterations.
+        kwargs: Additional keyword arguments passed to Module.
     """
-        super().__init__(name=name)
+        super().__init__(**kwargs)
         self._decay = decay
         if warmup_length < 0:
             raise ValueError(
@@ -144,24 +144,24 @@ class EMAParamsTree(module.Module):
   """
 
     def __init__(
-        self, decay, zero_debias=True, warmup_length=0, ignore_regex="", name=None
+        self, decay, zero_debias=True, warmup_length=0, ignore_regex="", **kwargs
     ):
         """Initializes an EMAParamsTree module.
 
     Args:
-      decay: The chosen decay. Must in [0, 1). Values close to 1 result in slow
-        decay; values close to 0 result in fast decay.
-      zero_debias: Whether to run with zero-debiasing.
-      warmup_length: A positive integer, EMA has no effect until
-        the internal counter has reached `warmup_length` at which point the
-        initial value for the decaying average is initialized to the input value
-        after `warmup_length` iterations.
-      ignore_regex: A string. Any parameter in the tree whose name matches this
-        regex will not have any moving average applied to it. The empty string
-        means this module will EMA all parameters.
-      name: The name of the module.
+        decay: The chosen decay. Must in [0, 1). Values close to 1 result in slow
+            decay; values close to 0 result in fast decay.
+        zero_debias: Whether to run with zero-debiasing.
+        warmup_length: A positive integer, EMA has no effect until
+            the internal counter has reached `warmup_length` at which point the
+            initial value for the decaying average is initialized to the input value
+            after `warmup_length` iterations.
+        ignore_regex: A string. Any parameter in the tree whose name matches this
+            regex will not have any moving average applied to it. The empty string
+            means this module will EMA all parameters.
+        kwargs: Additional keyword arguments passed to Module.
     """
-        super().__init__(name=name)
+        super().__init__(**kwargs)
         self._decay = decay
         self._zero_debias = zero_debias
         self._warmup_length = warmup_length

@@ -75,9 +75,9 @@ class Loss(module.Module):
     def __init__(
         self,
         reduction: tp.Optional[Reduction] = None,
-        name: tp.Optional[str] = None,
         weight: tp.Optional[float] = None,
         on: tp.Optional[types.IndexLike] = None,
+        **kwargs,
     ):
         """
         Initializes `Loss` class.
@@ -86,7 +86,6 @@ class Loss(module.Module):
             reduction: (Optional) Type of `elegy.losses.Reduction` to apply to
                 loss. Default value is `SUM_OVER_BATCH_SIZE`. For almost all cases
                 this defaults to `SUM_OVER_BATCH_SIZE`.
-            name: Optional name for the loss.
             weight: Optional weight contribution for the total loss. Defaults to `1`.
             on: A string or integer, or iterable of string or integers, that
                 indicate how to index/filter the `y_true` and `y_pred`
@@ -96,7 +95,7 @@ class Loss(module.Module):
                 then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
                 check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).
         """
-        super().__init__(name=name)
+        super().__init__(**kwargs)
         self.weight = weight if weight is not None else 1.0
         self._reduction = (
             reduction if reduction is not None else Reduction.SUM_OVER_BATCH_SIZE

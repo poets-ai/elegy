@@ -46,10 +46,10 @@ class GlobalL1L2(Loss):
         l1=0.0,
         l2=0.0,
         reduction: tp.Optional[Reduction] = None,
-        name: tp.Optional[str] = None,
         weight: tp.Optional[float] = None,
+        **kwargs
     ):  # pylint: disable=redefined-outer-name
-        super().__init__(reduction=reduction, name=name, weight=weight)
+        super().__init__(reduction=reduction, weight=weight, **kwargs)
 
         self.l1 = l1
         self.l2 = l2
