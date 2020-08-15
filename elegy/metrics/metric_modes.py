@@ -9,8 +9,8 @@ import jax
 
 
 class Metrics(module.Module):
-    def __init__(self, metrics):
-        super().__init__(name="metrics")
+    def __init__(self, metrics, **kwargs):
+        super().__init__(**kwargs)
         self.metrics = metrics
 
     def call(self, logs, **kwargs):
