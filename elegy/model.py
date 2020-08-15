@@ -245,29 +245,23 @@ class Model:
             return
 
         if self.metrics_module is not None and self.metrics_states is None:
-            x_args, x_kwargs = utils.get_input_args(x, training=True)
-
             context: ApplyContext
-            y_pred, context = maybe_jit(
-                utils.inject_dependencies(
-                    self.module.apply(
-                        parameters=self.parameters,
-                        states=self.states,
-                        rng=next(self._rngs),
-                        get_summaries=False,
-                        training=True,
-                    )
-                )
-            )(*x_args, **x_kwargs)
 
-            self.parameters = context.parameters
-            self.states = context.states
+            loss, (y_pred, context, logs) = maybe_jit(self._loss)(
+                parameters=self.parameters,
+                states=self.states,
+                rng=next(self._rngs),
+                x=x,
+                y=y,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+                training=True,
+            )
 
             _, self.metrics_states = maybe_jit(
-                utils.inject_dependencies(
-                    self.metrics_module.init(rng=next(self._rngs))
-                )
+                self.metrics_module.init(rng=next(self._rngs))
             )(
+                logs,
                 x=x,
                 y_true=y,
                 y_pred=y_pred,
@@ -429,9 +423,10 @@ class Model:
         parameters = optix.apply_updates(parameters, updates)
 
         if self.metrics_module is not None:
-            metrics, metrics_context = utils.inject_dependencies(
+            logs, metrics_context = utils.inject_dependencies(
                 self.metrics_module.apply(states=metrics_states, rng=metrics_rng)
             )(
+                logs,
                 x=x,
                 y_true=y,
                 y_pred=y_pred,
@@ -442,7 +437,6 @@ class Model:
                 states=states,
             )
             metrics_states = metrics_context.states
-            logs.update(metrics)
 
         return logs, parameters, states, optimizer_state, metrics_states
 
@@ -1116,11 +1110,12 @@ class Model:
         )
 
         if self.metrics_module is not None:
-            metrics, metrics_context = utils.inject_dependencies(
+            logs, metrics_context = utils.inject_dependencies(
                 self.metrics_module.apply(
                     states=metrics_states, rng=metrics_rng, training=False
                 ),
             )(
+                logs,
                 x=x,
                 y_true=y,
                 y_pred=y_pred,
@@ -1131,7 +1126,6 @@ class Model:
                 __state=states,
             )
             metrics_states = metrics_context.states
-            logs.update(metrics)
 
         return logs, metrics_states
 
