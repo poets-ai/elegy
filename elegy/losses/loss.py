@@ -102,8 +102,6 @@ class Loss(module.Module):
         )
         self._labels_filter = (on,) if isinstance(on, (str, int)) else on
 
-        utils.wraps(self.call)(self)
-
     def __call__(
         self, *args, **kwargs,
     ):

@@ -8,14 +8,9 @@ from elegy import utils
 import jax
 
 
-class Metrics(module.Module):
-    def __init__(self, metrics, **kwargs):
-        super().__init__(**kwargs)
-        self.metrics = metrics
+class LossMetrics(Metric):
+    def call(self, logs):
 
-    def call(self, logs, **kwargs):
-
-        # Loss logs
         count = module.get_state("count", initializer=0)
         total = module.get_state("total", initializer=jax.tree_map(lambda x: 0.0, logs))
 
@@ -26,6 +21,19 @@ class Metrics(module.Module):
         module.set_state("total", total)
 
         logs = jax.tree_map(lambda total: total / count, total)
+
+        return logs
+
+
+class Metrics(Metric):
+    def __init__(self, metrics, **kwargs):
+        super().__init__(**kwargs)
+        self.metrics = metrics
+
+    def call(self, logs, **kwargs):
+
+        # Loss logs
+        logs = LossMetrics()(logs)
 
         # Metric logs
         for context, val in apply_recursive((), self.metrics, **kwargs):
