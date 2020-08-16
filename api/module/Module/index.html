@@ -7,9 +7,9 @@
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <link href="https://poets-ai.github.io/elegy/api/module/Module/" rel="canonical"/>
 <link href="../../../images/favicon.png" rel="shortcut icon"/>
-<meta content="mkdocs-1.1.2, mkdocs-material-5.5.0" name="generator"/>
+<meta content="mkdocs-1.1.2, mkdocs-material-5.5.3" name="generator"/>
 <title>Module - Elegy</title>
-<link href="../../../assets/stylesheets/main.b5d04df8.min.css" rel="stylesheet"/>
+<link href="../../../assets/stylesheets/main.947af8d5.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
 <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
@@ -136,6 +136,11 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
+<a class="md-nav__link" href="../../../guides/module-system/" title="The Module System">
+      The Module System
+    </a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="../../../guides/modules-losses-metrics/" title="Modules, Losses, and Metrics">
       Modules, Losses, and Metrics
     </a>
@@ -215,17 +220,42 @@
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.module.Module.defer">
-    defer()
+<a class="md-nav__link" href="#elegy.module.Module.apply">
+    apply()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.module.Module.get_parameters">
+    get_parameters()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.module.Module.get_states">
+    get_states()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.module.Module.init">
+    init()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.module.Module.reset">
+    reset()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.module.Module.set_parameters">
+    set_parameters()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.module.Module.set_states">
+    set_states()
   </a>
 </li>
 </ul>
 </nav>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../Defered/" title="Defered">
-      Defered
-    </a>
 </li>
 </ul>
 </nav>
@@ -262,57 +292,13 @@
 <li class="md-nav__item md-nav__item--nested">
 <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-3" id="nav-4-3" type="checkbox"/>
 <label class="md-nav__link" for="nav-4-3">
-      hooks
-      <span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
-</span>
-</label>
-<nav aria-label="hooks" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-3">
-<span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
-</span>
-        hooks
-      </label>
-<ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/add_loss/" title="add_loss">
-      add_loss
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/add_metric/" title="add_metric">
-      add_metric
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/add_summary/" title="add_summary">
-      add_summary
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/transform/" title="transform">
-      transform
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/TransformedState/" title="TransformedState">
-      TransformedState
-    </a>
-</li>
-</ul>
-</nav>
-</li>
-<li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" id="nav-4-4" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-4">
       nn
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="nn" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-4">
+<label class="md-nav__title" for="nav-4-3">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -348,15 +334,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-5" id="nav-4-5" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-5">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" id="nav-4-4" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-4">
       metrics
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="metrics" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-5">
+<label class="md-nav__title" for="nav-4-4">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -407,15 +393,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-6" id="nav-4-6" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-6">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-5" id="nav-4-5" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-5">
       losses
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="losses" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-6">
+<label class="md-nav__title" for="nav-4-5">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -461,15 +447,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-7" id="nav-4-7" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-7">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-6" id="nav-4-6" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-6">
       regularizers
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="regularizers" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-7">
+<label class="md-nav__title" for="nav-4-6">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -495,15 +481,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-8" id="nav-4-8" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-8">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-7" id="nav-4-7" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-7">
       callbacks
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="callbacks" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-8">
+<label class="md-nav__title" for="nav-4-7">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -588,8 +574,38 @@
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.module.Module.defer">
-    defer()
+<a class="md-nav__link" href="#elegy.module.Module.apply">
+    apply()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.module.Module.get_parameters">
+    get_parameters()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.module.Module.get_states">
+    get_states()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.module.Module.init">
+    init()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.module.Module.reset">
+    reset()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.module.Module.set_parameters">
+    set_parameters()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.module.Module.set_states">
+    set_states()
   </a>
 </li>
 </ul>
@@ -619,7 +635,7 @@ __call__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 </span>
 </h2>
 <div class="doc doc-contents">
-<p>Forwards all input arguments to the Module's <code>__apply__</code> method and calls
+<p>Forwards all input arguments to the Module's <code>call</code> method and calls
 <code>elegy.add_summary</code> on the outputs.</p>
 <details class="quote">
 <summary>Source code in <code>elegy/module.py</code></summary>
@@ -627,30 +643,32 @@ __call__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>140
-141
-142
-143
-144
-145
-146
-147
-148
-149</pre>
+<pre><span></span>130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140</pre>
 </div>
 </td>
 <td class="code">
 <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<pre><span></span><code><span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">:</span>
     <span class="sd">"""</span>
-<span class="sd">    Forwards all input arguments to the Module's `__apply__` method and calls</span>
+<span class="sd">    Forwards all input arguments to the Module's `call` method and calls</span>
 <span class="sd">    `elegy.add_summary` on the outputs.</span>
 <span class="sd">    """</span>
-    <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__apply__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">call_context</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="n">hooks</span><span class="o">.</span><span class="n">add_summary</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
+        <span class="n">add_summary</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">outputs</span>
+        <span class="k">return</span> <span class="n">outputs</span>
 </code></pre>
 </div>
 </td>
@@ -662,7 +680,7 @@ __call__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 <div class="doc doc-object doc-method">
 <h2 class="doc doc-heading" id="elegy.module.Module.__init__">
 <code class="highlight language-python">
-__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
+__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=&lt;</span><span class="k">class</span> <span class="err">'</span><span class="nc">jax</span><span class="o">.</span><span class="n">numpy</span><span class="o">.</span><span class="n">lax_numpy</span><span class="o">.</span><span class="n">float32</span><span class="s1">'&gt;)</span> </code>
 <span class="doc doc-properties">
 <small class="doc doc-property doc-property-special"><code>special</code></small>
 </span>
@@ -686,7 +704,7 @@ variables such that those modules are named correctly.</p>
 <td><code>name</code></td>
 <td><code>Optional[str]</code></td>
 <td>
-<p>An optional string name for the class. Must be a valid Python
+<p>An optional string name for the class. Must be a valid elsePython
 identifier. If <code>name</code> is not provided then the class name for the
 current instance is converted to <code>lower_snake_case</code> and used instead.</p>
 </td>
@@ -700,26 +718,30 @@ current instance is converted to <code>lower_snake_case</code> and used instead.
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>124
+<pre><span></span>110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
 125
 126
 127
-128
-129
-130
-131
-132
-133
-134
-135
-136
-137
-138</pre>
+128</pre>
 </div>
 </td>
 <td class="code">
 <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">float32</span><span class="p">):</span>
     <span class="sd">"""</span>
 <span class="sd">    Initializes the current module with the given name.</span>
 
@@ -727,13 +749,17 @@ current instance is converted to <code>lower_snake_case</code> and used instead.
 <span class="sd">    variables such that those modules are named correctly.</span>
 
 <span class="sd">    Arguments:</span>
-<span class="sd">        name: An optional string name for the class. Must be a valid Python</span>
+<span class="sd">        name: An optional string name for the class. Must be a valid elsePython</span>
 <span class="sd">            identifier. If ``name`` is not provided then the class name for the</span>
 <span class="sd">            current instance is converted to ``lower_snake_case`` and used instead.</span>
 <span class="sd">    """</span>
-    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
-
-    <span class="bp">self</span><span class="o">.</span><span class="n">__apply__</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">inject_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__apply__</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span> <span class="k">if</span> <span class="n">name</span> <span class="k">else</span> <span class="n">utils</span><span class="o">.</span><span class="n">lower_snake_case</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_params</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_states</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_submodules</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_dynamic_submodules</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_ignore</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 </code></pre>
 </div>
 </td>
@@ -743,24 +769,421 @@ current instance is converted to <code>lower_snake_case</code> and used instead.
 </div>
 </div>
 <div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.module.Module.defer">
+<h2 class="doc doc-heading" id="elegy.module.Module.apply">
 <code class="highlight language-python">
-defer<span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> </code>
-<span class="doc doc-properties">
-<small class="doc doc-property doc-property-classmethod"><code>classmethod</code></small>
-</span>
+apply<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">states</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">get_summaries</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> </code>
 </h2>
 <div class="doc doc-contents">
-<p>Creates a <a href="https://poets-ai.github.io/elegy/api/module/Defered/#elegy.module.Defered"><code>Defered</code></a> instance for this class.</p>
-<p>All arguments (positional and keyword) passed to <code>defer</code> must be accepted by
-the <code>Module</code>'s constructor.</p>
+<p>Applies your function injecting some context arguments.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>parameters</code></td>
+<td><code>Optional[Dict]</code></td>
+<td></td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>states</code></td>
+<td><code>Optional[Dict]</code></td>
+<td></td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>rng</code></td>
+<td><code>Optional[Union[numpy.ndarray, int]]</code></td>
+<td></td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>get_summaries</code></td>
+<td><code>bool</code></td>
+<td></td>
+<td><code>False</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ApplyCallable</code></td>
+<td>
+<p>A function with the same signature as <code>call</code> that will
+execute the computation given the context arguments
+passed to <code>apply</code>.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <details class="quote">
 <summary>Source code in <code>elegy/module.py</code></summary>
 <table class="highlighttable">
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>155
+<pre><span></span>178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241</pre>
+</div>
+</td>
+<td class="code">
+<div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">apply</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">parameters</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">states</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">rng</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">get_summaries</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">training</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"ApplyCallable"</span><span class="p">:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Applies your function injecting some context arguments.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        parameters:</span>
+<span class="sd">        states: </span>
+<span class="sd">        rng: </span>
+<span class="sd">        get_summaries:</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A function with the same signature as `call` that will</span>
+<span class="sd">        execute the computation given the context arguments</span>
+<span class="sd">        passed to `apply`.</span>
+<span class="sd">    """</span>
+
+    <span class="nd">@utils</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">apply_fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="n">current_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameters</span><span class="p">()</span>
+        <span class="n">current_states</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_states</span><span class="p">()</span>
+
+        <span class="k">assert</span> <span class="n">current_parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="n">current_states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_parameters</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_states</span><span class="p">(</span><span class="n">states</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">context</span><span class="p">(</span>
+            <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span> <span class="n">building</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span> <span class="n">get_summaries</span><span class="o">=</span><span class="n">get_summaries</span><span class="p">,</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">ctx</span><span class="p">:</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="n">output_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameters</span><span class="p">()</span>
+        <span class="n">output_states</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_states</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_parameters</span><span class="p">(</span><span class="n">current_parameters</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_states</span><span class="p">(</span><span class="n">current_states</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">outputs</span><span class="p">,</span>
+            <span class="n">ApplyContext</span><span class="p">(</span>
+                <span class="n">parameters</span><span class="o">=</span><span class="n">output_parameters</span><span class="p">,</span>
+                <span class="n">states</span><span class="o">=</span><span class="n">output_states</span><span class="p">,</span>
+                <span class="n">losses</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">losses</span><span class="p">,</span>
+                <span class="n">metrics</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">metrics</span><span class="p">,</span>
+                <span class="n">summaries</span><span class="o">=</span><span class="n">ctx</span><span class="o">.</span><span class="n">summaries</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">apply_fn</span>
+</code></pre>
+</div>
+</td>
+</tr>
+</table>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.module.Module.get_parameters">
+<code class="highlight language-python">
+get_parameters<span class="p">(</span><span class="bp">self</span><span class="p">)</span> </code>
+</h2>
+<div class="doc doc-contents">
+<p>Recursively collects a dictionary with the parameters of this module
+and all submodules within it.</p>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Dict[str, Any]</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+<summary>Source code in <code>elegy/module.py</code></summary>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span>243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259</pre>
+</div>
+</td>
+<td class="code">
+<div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">get_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">types</span><span class="o">.</span><span class="n">Parameters</span><span class="p">:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Recursively collects a dictionary with the parameters of this module</span>
+<span class="sd">    and all submodules within it.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    """</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">module_tree_map</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">module</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">key</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">"_params"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="p">},</span>
+        <span class="bp">self</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Dict</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">params</span>
+</code></pre>
+</div>
+</td>
+</tr>
+</table>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.module.Module.get_states">
+<code class="highlight language-python">
+get_states<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_initial</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> </code>
+</h2>
+<div class="doc doc-contents">
+<p>Recursively collects a dictionary with the states of this module
+and all submodules within it.</p>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Dict[str, Any]</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+<summary>Source code in <code>elegy/module.py</code></summary>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span>269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287</pre>
+</div>
+</td>
+<td class="code">
+<div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">get_states</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_initial</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">types</span><span class="o">.</span><span class="n">States</span><span class="p">:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Recursively collects a dictionary with the states of this module</span>
+<span class="sd">    and all submodules within it.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    """</span>
+    <span class="n">states</span> <span class="o">=</span> <span class="n">module_tree_map</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">module</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">key</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">as_initial</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">_initial</span>
+            <span class="k">else</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">"_states"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="p">},</span>
+        <span class="bp">self</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Dict</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">states</span>
+</code></pre>
+</div>
+</td>
+</tr>
+</table>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.module.Module.init">
+<code class="highlight language-python">
+init<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
+</h2>
+<div class="doc doc-contents">
+<p>Initializes the module.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rng</code></td>
+<td><code>Optional[Union[numpy.ndarray, int]]</code></td>
+<td></td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>InitCallable</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+<summary>Source code in <code>elegy/module.py</code></summary>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span>150
+151
+152
+153
+154
+155
 156
 157
 158
@@ -768,20 +1191,195 @@ the <code>Module</code>'s constructor.</p>
 160
 161
 162
-163</pre>
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176</pre>
 </div>
 </td>
 <td class="code">
 <div class="highlight">
-<pre><span></span><code><span class="nd">@classmethod</span>
-<span class="k">def</span> <span class="nf">defer</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Defered</span><span class="p">:</span>
+<pre><span></span><code><span class="k">def</span> <span class="nf">init</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"InitCallable"</span><span class="p">:</span>
     <span class="sd">"""</span>
-<span class="sd">    Creates a [`Defered`][elegy.module.Defered] instance for this class.</span>
+<span class="sd">    Initializes the module.</span>
 
-<span class="sd">    All arguments (positional and keyword) passed to `defer` must be accepted by</span>
-<span class="sd">    the `Module`'s constructor.</span>
+<span class="sd">    Arguments:</span>
+<span class="sd">        rng:</span>
+
+<span class="sd">    Returns:</span>
+
 <span class="sd">    """</span>
-    <span class="k">return</span> <span class="n">Defered</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@utils</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">init_fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">context</span><span class="p">(</span><span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span> <span class="n">building</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">get_summaries</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+            <span class="bp">self</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameters</span><span class="p">()</span>
+        <span class="n">initial_states</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_states</span><span class="p">(</span><span class="n">_initial</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">clear_initial_states</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_states</span><span class="p">(</span><span class="n">initial_states</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">params</span><span class="p">,</span> <span class="n">initial_states</span>
+
+    <span class="k">return</span> <span class="n">init_fn</span>
+</code></pre>
+</div>
+</td>
+</tr>
+</table>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.module.Module.reset">
+<code class="highlight language-python">
+reset<span class="p">(</span><span class="bp">self</span><span class="p">)</span> </code>
+</h2>
+<div class="doc doc-contents">
+<p>Recursively deletes the parameters and states of this module
+and all submodules within it.</p>
+<details class="quote">
+<summary>Source code in <code>elegy/module.py</code></summary>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span>297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314</pre>
+</div>
+</td>
+<td class="code">
+<div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Recursively deletes the parameters and states of this module</span>
+<span class="sd">    and all submodules within it.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="nf">clear_module</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">Module</span><span class="p">):</span>
+
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">_params</span><span class="p">:</span>
+            <span class="nb">delattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">_states</span><span class="p">:</span>
+            <span class="nb">delattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+        <span class="c1"># module._params = set()</span>
+        <span class="c1"># module._states = set()</span>
+
+    <span class="n">tree_exec</span><span class="p">(</span><span class="n">clear_module</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+</code></pre>
+</div>
+</td>
+</tr>
+</table>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.module.Module.set_parameters">
+<code class="highlight language-python">
+set_parameters<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span> </code>
+</h2>
+<div class="doc doc-contents">
+<p>Recursively sets the parameters of this module
+and all submodules within it given a dictionary with a corresponding
+structure.</p>
+<details class="quote">
+<summary>Source code in <code>elegy/module.py</code></summary>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span>261
+262
+263
+264
+265
+266
+267</pre>
+</div>
+</td>
+<td class="code">
+<div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">set_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">Parameters</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Recursively sets the parameters of this module</span>
+<span class="sd">    and all submodules within it given a dictionary with a corresponding</span>
+<span class="sd">    structure.</span>
+<span class="sd">    """</span>
+    <span class="n">set_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="s2">"_params"</span><span class="p">)</span>
+</code></pre>
+</div>
+</td>
+</tr>
+</table>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.module.Module.set_states">
+<code class="highlight language-python">
+set_states<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span> </code>
+</h2>
+<div class="doc doc-contents">
+<p>Recursively sets the states of this module
+and all submodules within it given a dictionary with a corresponding
+structure.</p>
+<details class="quote">
+<summary>Source code in <code>elegy/module.py</code></summary>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span>289
+290
+291
+292
+293
+294
+295</pre>
+</div>
+</td>
+<td class="code">
+<div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">set_states</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">States</span><span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Recursively sets the states of this module</span>
+<span class="sd">    and all submodules within it given a dictionary with a corresponding</span>
+<span class="sd">    structure.</span>
+<span class="sd">    """</span>
+    <span class="n">set_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="s2">"_states"</span><span class="p">)</span>
 </code></pre>
 </div>
 </td>
@@ -813,13 +1411,13 @@ the <code>Module</code>'s constructor.</p>
               </div>
 </div>
 </a>
-<a class="md-footer-nav__link md-footer-nav__link--next" href="../Defered/" rel="next" title="Defered">
+<a class="md-footer-nav__link md-footer-nav__link--next" href="../../model/Model/" rel="next" title="Model">
 <div class="md-footer-nav__title">
 <div class="md-ellipsis">
 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Defered
+                Model
               </div>
 </div>
 <div class="md-footer-nav__button md-icon">
@@ -858,14 +1456,14 @@ the <code>Module</code>'s constructor.</p>
 </div>
 </footer>
 </div>
-<script src="../../../assets/javascripts/vendor.92ffa368.min.js"></script>
-<script src="../../../assets/javascripts/bundle.5123e3d4.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+<script src="../../../assets/javascripts/vendor.c3dc8c49.min.js"></script>
+<script src="../../../assets/javascripts/bundle.f9edbbd5.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
 <script>
         app = initialize({
           base: "../../..",
           features: [],
           search: Object.assign({
-            worker: "../../../assets/javascripts/worker/search.a68abb33.min.js"
+            worker: "../../../assets/javascripts/worker/search.8e2cddea.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>

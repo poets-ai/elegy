@@ -7,9 +7,9 @@
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <link href="https://poets-ai.github.io/elegy/" rel="canonical"/>
 <link href="images/favicon.png" rel="shortcut icon"/>
-<meta content="mkdocs-1.1.2, mkdocs-material-5.5.0" name="generator"/>
+<meta content="mkdocs-1.1.2, mkdocs-material-5.5.3" name="generator"/>
 <title>Elegy</title>
-<link href="assets/stylesheets/main.b5d04df8.min.css" rel="stylesheet"/>
+<link href="assets/stylesheets/main.947af8d5.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
 <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
@@ -144,9 +144,23 @@
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#why-jax-haiku">
-    Why Jax + Haiku?
+<a class="md-nav__link" href="#why-jax-elegy">
+    Why Jax &amp; Elegy?
   </a>
+<nav aria-label="Why Jax &amp; Elegy?" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#why-jax">
+    Why Jax?
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#why-elegy">
+    Why Elegy?
+  </a>
+</li>
+</ul>
+</nav>
 </li>
 <li class="md-nav__item">
 <a class="md-nav__link" href="#features">
@@ -198,6 +212,11 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
+<a class="md-nav__link" href="guides/module-system/" title="The Module System">
+      The Module System
+    </a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="guides/modules-losses-metrics/" title="Modules, Losses, and Metrics">
       Modules, Losses, and Metrics
     </a>
@@ -247,11 +266,6 @@
       Module
     </a>
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="api/module/Defered/" title="Defered">
-      Defered
-    </a>
-</li>
 </ul>
 </nav>
 </li>
@@ -287,57 +301,13 @@
 <li class="md-nav__item md-nav__item--nested">
 <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-3" id="nav-4-3" type="checkbox"/>
 <label class="md-nav__link" for="nav-4-3">
-      hooks
-      <span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
-</span>
-</label>
-<nav aria-label="hooks" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-3">
-<span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
-</span>
-        hooks
-      </label>
-<ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="api/hooks/add_loss/" title="add_loss">
-      add_loss
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="api/hooks/add_metric/" title="add_metric">
-      add_metric
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="api/hooks/add_summary/" title="add_summary">
-      add_summary
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="api/hooks/transform/" title="transform">
-      transform
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="api/hooks/TransformedState/" title="TransformedState">
-      TransformedState
-    </a>
-</li>
-</ul>
-</nav>
-</li>
-<li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" id="nav-4-4" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-4">
       nn
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="nn" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-4">
+<label class="md-nav__title" for="nav-4-3">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -373,15 +343,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-5" id="nav-4-5" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-5">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" id="nav-4-4" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-4">
       metrics
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="metrics" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-5">
+<label class="md-nav__title" for="nav-4-4">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -432,15 +402,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-6" id="nav-4-6" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-6">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-5" id="nav-4-5" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-5">
       losses
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="losses" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-6">
+<label class="md-nav__title" for="nav-4-5">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -486,15 +456,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-7" id="nav-4-7" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-7">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-6" id="nav-4-6" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-6">
       regularizers
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="regularizers" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-7">
+<label class="md-nav__title" for="nav-4-6">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -520,15 +490,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-8" id="nav-4-8" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-8">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-7" id="nav-4-7" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-7">
       callbacks
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="callbacks" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-8">
+<label class="md-nav__title" for="nav-4-7">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -613,9 +583,23 @@
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#why-jax-haiku">
-    Why Jax + Haiku?
+<a class="md-nav__link" href="#why-jax-elegy">
+    Why Jax &amp; Elegy?
   </a>
+<nav aria-label="Why Jax &amp; Elegy?" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#why-jax">
+    Why Jax?
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#why-elegy">
+    Why Elegy?
+  </a>
+</li>
+</ul>
+</nav>
 </li>
 <li class="md-nav__item">
 <a class="md-nav__link" href="#features">
@@ -661,14 +645,14 @@
 <a href="https://github.com/poets-ai/elegy/issues"><img alt="Contributions welcome" src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat"/></a>
 <a href="https://github.com/poets-ai/elegy/actions?query=workflow%3A" title="GitHub+CI"><img alt="Status" src="https://github.com/poets-ai/elegy/workflows/GitHub%20CI/badge.svg"/></a></p>
 <hr/>
-<p><em>Elegy is a Neural Networks framework based on Jax and Haiku.</em> </p>
-<p>Elegy implements the Keras API but makes changes to play better with Jax &amp; Haiku and gives more flexibility around losses and metrics (more on this soon). Elegy is still in a very early stage, feel free to test it and send us your feedback!</p>
+<p><em>Elegy is a Neural Networks framework based on Jax inspired by Keras and Haiku.</em> </p>
+<p>Elegy implements the Keras API but makes changes to play better with Jax and gives more flexibility around <a href="https://poets-ai.github.io/elegy/guides/modules-losses-metrics/">losses and metrics</a>, it also ports Haiku's excellent <a href="https://poets-ai.github.io/elegy/guides/module-system/">module system</a> and makes it easier to use. Elegy is in an early stage, feel free to send us your feedback!</p>
 <h4 id="main-features">Main Features</h4>
 <ul>
 <li><strong>Familiar</strong>: Elegy should feel very familiar to Keras users.</li>
 <li><strong>Flexible</strong>: Elegy improves upon the basic Keras API by letting users optionally take more control over the definition of losses and metrics.</li>
 <li><strong>Easy-to-use</strong>: Elegy maintains all the simplicity and ease of use that Keras brings with it.</li>
-<li><strong>Compatible</strong>: Elegy strives to be compatible with the rest of the Jax and Haiku ecosystem.</li>
+<li><strong>Compatible</strong>: Elegy strives to be compatible with the rest of the Jax ecosystem.</li>
 </ul>
 <p>For more information take a look at the <a href="https://poets-ai.github.io/elegy">Documentation</a>.</p>
 <h2 id="installation">Installation</h2>
@@ -677,21 +661,19 @@
 </code></pre></div>
 <p>For Windows users we recommend the Windows subsystem for linux 2 <a href="https://docs.microsoft.com/es-es/windows/wsl/install-win10?redirectedfrom=MSDN">WSL2</a> since <a href="https://github.com/google/jax/issues/438">jax</a> does not support it yet.</p>
 <h2 id="quick-start">Quick Start</h2>
-<p>Elegy greatly simplifies the training of Deep Learning models compared to pure Jax / Haiku where, due to Jax functional nature, users have to do a lot of book keeping around the state of the model. In Elegy you just have to follow 3 basic steps:</p>
+<p>Elegy greatly simplifies the training of Deep Learning models compared to pure Jax where, due to Jax's functional nature, users have to do a lot of book keeping around the state of the model. In Elegy you just have to follow 3 basic steps:</p>
 <p><strong>1.</strong> Define the architecture inside an <code>elegy.Module</code>:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">MLP</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__apply__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="n">mlp</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">([</span>
-            <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Flatten</span><span class="p">(),</span>
-            <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">300</span><span class="p">),</span>
-            <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">,</span>
-            <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
-        <span class="p">])</span>
-        <span class="k">return</span> <span class="n">mlp</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">300</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">10</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
 </code></pre></div>
+<p>Note that we can define sub-modules on-the-fly directly in the <code>call</code> (forward) method.</p>
 <p><strong>2.</strong> Create a <code>Model</code> from this module and specify additional things like losses, metrics, and optimizers:</p>
 <div class="codehilite"><pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
-    <span class="n">module</span><span class="o">=</span><span class="n">MLP</span><span class="o">.</span><span class="n">defer</span><span class="p">(),</span>
+    <span class="n">module</span><span class="o">=</span><span class="n">MLP</span><span class="p">(),</span>
     <span class="n">loss</span><span class="o">=</span><span class="p">[</span>
         <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">SparseCategoricalCrossentropy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
         <span class="n">elegy</span><span class="o">.</span><span class="n">regularizers</span><span class="o">.</span><span class="n">GlobalL2</span><span class="p">(</span><span class="n">l</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">),</span>
@@ -715,18 +697,39 @@
 <p>And you are done! For more information check out:</p>
 <ul>
 <li>Our <a href="https://poets-ai.github.io/elegy/getting-started/">Getting Started</a> tutorial.</li>
-<li>Couple of examples in <a href="https://github.com/poets-ai/elegy/tree/master/examples">examples</a> directory.</li>
-<li>Haiku's <a href="https://github.com/deepmind/dm-haiku#user-manual">User Manual</a> and <a href="https://dm-haiku.readthedocs.io/en/latest/">Documentation</a></li>
+<li>Elegy's <a href="https://poets-ai.github.io/elegy">Documentation</a>.</li>
+<li>The <a href="https://github.com/poets-ai/elegy/tree/master/examples">examples</a> directory.</li>
 <li><a href="https://github.com/google/jax#what-is-jax">What is Jax?</a></li>
 </ul>
-<h2 id="why-jax-haiku">Why Jax + Haiku?</h2>
+<h2 id="why-jax-elegy">Why Jax &amp; Elegy?</h2>
+<p>Given all the well-stablished Deep Learning framework like TensorFlow + Keras or Pytorch + Pytorch-Lightning/Skorch, it is fair to ask why we need something like Jax + Elegy? Here are some of the reasons why this framework exists.</p>
+<h4 id="why-jax">Why Jax?</h4>
 <p><strong>Jax</strong> is a linear algebra library with the perfect recipe:
 * Numpy's familiar API
 * The speed and hardware support of XLA
 * Automatic Differentiation</p>
-<p>The awesome thing about Jax is that Deep Learning is just a usecase that it happens to excel at but you can use it for most task you would use NumPy for.</p>
-<p>On the other hand, <strong>Haiku</strong> is a Neural Networks library built on top of Jax that implements a <code>Module</code> system, common Neural Network layers, and even some full architectures. Compared to other Jax-based libraries like Trax or Flax, Haiku is very minimal, polished, well documented, and makes it super easy / clean to implement Deep Learning code! </p>
-<p>We believe that <strong>Elegy</strong> can offer the best experience for coding Deep Learning applications by leveraging the power and familiarity of Jax API, the ease-of-use of Haiku's Module system, and packaging everything on top of a convenient Keras-like API.</p>
+<p>The awesome thing about Jax is that Deep Learning is just a use-case that it happens to excel at but you can use it for most task you would use NumPy for. Jax is so compatible with Numpy that is array type actually inherits from <code>np.ndarray</code>.</p>
+<p>In a sense, Jax takes the best of both TensorFlow and Pytorch in a principled manner: while both TF and Pytorch historically converged to the same set of features, their APIs still contain quirks they have to keep for compatibility.</p>
+<h4 id="why-elegy">Why Elegy?</h4>
+<p>We believe that <strong>Elegy</strong> can offer the best experience for coding Deep Learning applications by leveraging the power and familiarity of Jax API, an easy-to-use and succinct Module system, and packaging everything on top of a convenient Keras-like API. Elegy improves upon other Deep Learning frameworks in the following ways:</p>
+<ol>
+<li>Its hook-based <a href="https://poets-ai.github.io/elegy/guides/module-system/">Module System</a> makes it easier (less verbose) to write model code compared to Keras &amp; Pytorch since it lets you declare sub-modules, parameters, and states directly on your <code>call</code> (forward) method. Thanks to this you get shape inference for free so there is no need for a <code>build</code> method (Keras) or propagating shape information all over the place (Pytorch). A naive implementation of <code>Linear</code> could be as simple as:</li>
+</ol>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">Linear</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="n">units</span>
+
+    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="s2">"w"</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">],</span> <span class="n">initializer</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="s2">"b"</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">],</span> <span class="n">initializer</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span>
+</code></pre></div>
+<ol>
+<li>It has a very flexible system for defining the inputs for <a href="https://poets-ai.github.io/elegy/guides/modules-losses-metrics/">losses and metrics</a> based on <em>dependency injection</em> in opposition to Keras rigid requirement to have matching (output, label) pairs, and being unable to use additional information like inputs, parameters, and states in the definition of losses and metrics. </li>
+<li>Its hook system preserve's <a href="https://poets-ai.github.io/elegy/guides/module-system/">reference information</a> from a module to its sub-modules, parameters, and states while maintaining a functional API. This is crucial since most Jax-based frameworks like Flax and Haiku tend to loose this information which makes it very tricky to perform tasks like transfer learning where you need to mix a pre-trained models into a new model (easier to do if you keep references).</li>
+</ol>
 <h2 id="features">Features</h2>
 <ul>
 <li><code>Model</code> estimator class</li>
@@ -807,14 +810,14 @@
 </div>
 </footer>
 </div>
-<script src="assets/javascripts/vendor.92ffa368.min.js"></script>
-<script src="assets/javascripts/bundle.5123e3d4.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+<script src="assets/javascripts/vendor.c3dc8c49.min.js"></script>
+<script src="assets/javascripts/bundle.f9edbbd5.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
 <script>
         app = initialize({
           base: ".",
           features: [],
           search: Object.assign({
-            worker: "assets/javascripts/worker/search.a68abb33.min.js"
+            worker: "assets/javascripts/worker/search.8e2cddea.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>

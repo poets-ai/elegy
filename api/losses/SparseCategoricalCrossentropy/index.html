@@ -7,9 +7,9 @@
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <link href="https://poets-ai.github.io/elegy/api/losses/SparseCategoricalCrossentropy/" rel="canonical"/>
 <link href="../../../images/favicon.png" rel="shortcut icon"/>
-<meta content="mkdocs-1.1.2, mkdocs-material-5.5.0" name="generator"/>
+<meta content="mkdocs-1.1.2, mkdocs-material-5.5.3" name="generator"/>
 <title>SparseCategoricalCrossentropy - Elegy</title>
-<link href="../../../assets/stylesheets/main.b5d04df8.min.css" rel="stylesheet"/>
+<link href="../../../assets/stylesheets/main.947af8d5.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
 <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
@@ -136,6 +136,11 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
+<a class="md-nav__link" href="../../../guides/module-system/" title="The Module System">
+      The Module System
+    </a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="../../../guides/modules-losses-metrics/" title="Modules, Losses, and Metrics">
       Modules, Losses, and Metrics
     </a>
@@ -185,11 +190,6 @@
       Module
     </a>
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../module/Defered/" title="Defered">
-      Defered
-    </a>
-</li>
 </ul>
 </nav>
 </li>
@@ -225,57 +225,13 @@
 <li class="md-nav__item md-nav__item--nested">
 <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-3" id="nav-4-3" type="checkbox"/>
 <label class="md-nav__link" for="nav-4-3">
-      hooks
-      <span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
-</span>
-</label>
-<nav aria-label="hooks" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-3">
-<span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
-</span>
-        hooks
-      </label>
-<ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/add_loss/" title="add_loss">
-      add_loss
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/add_metric/" title="add_metric">
-      add_metric
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/add_summary/" title="add_summary">
-      add_summary
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/transform/" title="transform">
-      transform
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/TransformedState/" title="TransformedState">
-      TransformedState
-    </a>
-</li>
-</ul>
-</nav>
-</li>
-<li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" id="nav-4-4" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-4">
       nn
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="nn" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-4">
+<label class="md-nav__title" for="nav-4-3">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -311,15 +267,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-5" id="nav-4-5" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-5">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" id="nav-4-4" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-4">
       metrics
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="metrics" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-5">
+<label class="md-nav__title" for="nav-4-4">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -370,15 +326,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-4-6" id="nav-4-6" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-6">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-4-5" id="nav-4-5" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-5">
       losses
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="losses" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-6">
+<label class="md-nav__title" for="nav-4-5">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -425,13 +381,13 @@
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.losses.sparse_categorical_crossentropy.SparseCategoricalCrossentropy.__apply__">
-    __apply__()
+<a class="md-nav__link" href="#elegy.losses.sparse_categorical_crossentropy.SparseCategoricalCrossentropy.__init__">
+    __init__()
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.losses.sparse_categorical_crossentropy.SparseCategoricalCrossentropy.__init__">
-    __init__()
+<a class="md-nav__link" href="#elegy.losses.sparse_categorical_crossentropy.SparseCategoricalCrossentropy.call">
+    call()
   </a>
 </li>
 </ul>
@@ -456,15 +412,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-7" id="nav-4-7" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-7">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-6" id="nav-4-6" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-6">
       regularizers
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="regularizers" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-7">
+<label class="md-nav__title" for="nav-4-6">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -490,15 +446,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-8" id="nav-4-8" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-8">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-7" id="nav-4-7" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-7">
       callbacks
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="callbacks" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-8">
+<label class="md-nav__title" for="nav-4-7">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -573,13 +529,13 @@
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.losses.sparse_categorical_crossentropy.SparseCategoricalCrossentropy.__apply__">
-    __apply__()
+<a class="md-nav__link" href="#elegy.losses.sparse_categorical_crossentropy.SparseCategoricalCrossentropy.__init__">
+    __init__()
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.losses.sparse_categorical_crossentropy.SparseCategoricalCrossentropy.__init__">
-    __init__()
+<a class="md-nav__link" href="#elegy.losses.sparse_categorical_crossentropy.SparseCategoricalCrossentropy.call">
+    call()
   </a>
 </li>
 </ul>
@@ -648,12 +604,152 @@ The shape of <code>y_true</code> is <code>[batch_size]</code> and the shape of <
 </div>
 <div class="doc doc-children">
 <div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.losses.sparse_categorical_crossentropy.SparseCategoricalCrossentropy.__apply__">
+<h2 class="doc doc-heading" id="elegy.losses.sparse_categorical_crossentropy.SparseCategoricalCrossentropy.__init__">
 <code class="highlight language-python">
-__apply__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
+__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_logits</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> </code>
 <span class="doc doc-properties">
 <small class="doc doc-property doc-property-special"><code>special</code></small>
 </span>
+</h2>
+<div class="doc doc-contents">
+<p>Initializes <code>SparseCategoricalCrossentropy</code> instance.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>from_logits</code></td>
+<td><code>bool</code></td>
+<td>
+<p>Whether <code>y_pred</code> is expected to be a logits tensor. By
+default, we assume that <code>y_pred</code> encodes a probability distribution.
+<strong>Note - Using from_logits=True is more numerically stable.</strong></p>
+</td>
+<td><code>False</code></td>
+</tr>
+<tr>
+<td><code>reduction</code></td>
+<td><code>Optional[elegy.losses.loss.Reduction]</code></td>
+<td>
+<p>(Optional) Type of <code>elegy.losses.Reduction</code> to apply to
+loss. Default value is <code>SUM_OVER_BATCH_SIZE</code>. For almost all cases
+this defaults to <code>SUM_OVER_BATCH_SIZE</code>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>weight</code></td>
+<td><code>Optional[float]</code></td>
+<td>
+<p>Optional weight contribution for the total loss. Defaults to <code>1</code>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>on</code></td>
+<td><code>Optional[Union[str, int, Iterable[Union[str, int]]]]</code></td>
+<td>
+<p>A string or integer, or iterable of string or integers, that
+indicate how to index/filter the <code>y_true</code> and <code>y_pred</code>
+arguments before passing them to <code>call</code>. For example if <code>on = "a"</code> then
+<code>y_true = y_true["a"]</code>. If <code>on</code> is an iterable
+the structures will be indexed iteratively, for example if <code>on = ["a", 0, "b"]</code>
+then <code>y_true = y_true["a"][0]["b"]</code>, same for <code>y_pred</code>. For more information
+check out <a href="https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior">Keras-like behavior</a>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+<summary>Source code in <code>elegy/losses/sparse_categorical_crossentropy.py</code></summary>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span> 86
+ 87
+ 88
+ 89
+ 90
+ 91
+ 92
+ 93
+ 94
+ 95
+ 96
+ 97
+ 98
+ 99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115</pre>
+</div>
+</td>
+<td class="code">
+<div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">from_logits</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">reduction</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">Reduction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">weight</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">on</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">IndexLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Initializes `SparseCategoricalCrossentropy` instance.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        from_logits: Whether `y_pred` is expected to be a logits tensor. By</span>
+<span class="sd">            default, we assume that `y_pred` encodes a probability distribution.</span>
+<span class="sd">            **Note - Using from_logits=True is more numerically stable.**</span>
+<span class="sd">        reduction: (Optional) Type of `elegy.losses.Reduction` to apply to</span>
+<span class="sd">            loss. Default value is `SUM_OVER_BATCH_SIZE`. For almost all cases</span>
+<span class="sd">            this defaults to `SUM_OVER_BATCH_SIZE`.</span>
+<span class="sd">        weight: Optional weight contribution for the total loss. Defaults to `1`.</span>
+<span class="sd">        on: A string or integer, or iterable of string or integers, that</span>
+<span class="sd">            indicate how to index/filter the `y_true` and `y_pred`</span>
+<span class="sd">            arguments before passing them to `call`. For example if `on = "a"` then</span>
+<span class="sd">            `y_true = y_true["a"]`. If `on` is an iterable</span>
+<span class="sd">            the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`</span>
+<span class="sd">            then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information</span>
+<span class="sd">            check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).</span>
+<span class="sd">    """</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="n">reduction</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">on</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_from_logits</span> <span class="o">=</span> <span class="n">from_logits</span>
+</code></pre>
+</div>
+</td>
+</tr>
+</table>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.losses.sparse_categorical_crossentropy.SparseCategoricalCrossentropy.call">
+<code class="highlight language-python">
+call<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
 </h2>
 <div class="doc doc-contents">
 <p>Invokes the <code>SparseCategoricalCrossentropy</code> instance.</p>
@@ -725,7 +821,8 @@ functions reduce by 1 dimension, usually axis=-1.)</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>118
+<pre><span></span>117
+118
 119
 120
 121
@@ -749,13 +846,12 @@ functions reduce by 1 dimension, usually axis=-1.)</p>
 139
 140
 141
-142
-143</pre>
+142</pre>
 </div>
 </td>
 <td class="code">
 <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">__apply__</span><span class="p">(</span>
+<pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">sample_weight</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
     <span class="sd">"""</span>
@@ -781,159 +877,6 @@ functions reduce by 1 dimension, usually axis=-1.)</p>
     <span class="k">return</span> <span class="n">sparse_categorical_crossentropy</span><span class="p">(</span>
         <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">from_logits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_from_logits</span>
     <span class="p">)</span>
-</code></pre>
-</div>
-</td>
-</tr>
-</table>
-</details>
-</div>
-</div>
-<div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.losses.sparse_categorical_crossentropy.SparseCategoricalCrossentropy.__init__">
-<code class="highlight language-python">
-__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_logits</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
-<span class="doc doc-properties">
-<small class="doc doc-property doc-property-special"><code>special</code></small>
-</span>
-</h2>
-<div class="doc doc-contents">
-<p>Initializes <code>SparseCategoricalCrossentropy</code> instance.</p>
-<p><strong>Parameters:</strong></p>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>from_logits</code></td>
-<td><code>bool</code></td>
-<td>
-<p>Whether <code>y_pred</code> is expected to be a logits tensor. By
-default, we assume that <code>y_pred</code> encodes a probability distribution.
-<strong>Note - Using from_logits=True is more numerically stable.</strong></p>
-</td>
-<td><code>False</code></td>
-</tr>
-<tr>
-<td><code>reduction</code></td>
-<td><code>Optional[elegy.losses.loss.Reduction]</code></td>
-<td>
-<p>(Optional) Type of <code>elegy.losses.Reduction</code> to apply to
-loss. Default value is <code>SUM_OVER_BATCH_SIZE</code>. For almost all cases
-this defaults to <code>SUM_OVER_BATCH_SIZE</code>.</p>
-</td>
-<td><code>None</code></td>
-</tr>
-<tr>
-<td><code>name</code></td>
-<td><code>Optional[str]</code></td>
-<td>
-<p>Optional name for the op. Defaults to 'sparse_categorical_crossentropy'.</p>
-</td>
-<td><code>None</code></td>
-</tr>
-<tr>
-<td><code>weight</code></td>
-<td><code>Optional[float]</code></td>
-<td>
-<p>Optional weight contribution for the total loss. Defaults to <code>1</code>.</p>
-</td>
-<td><code>None</code></td>
-</tr>
-<tr>
-<td><code>on</code></td>
-<td><code>Optional[Union[str, int, Iterable[Union[str, int]]]]</code></td>
-<td>
-<p>A string or integer, or iterable of string or integers, that
-indicate how to index/filter the <code>y_true</code> and <code>y_pred</code>
-arguments before passing them to <code>__apply__</code>. For example if <code>on = "a"</code> then
-<code>y_true = y_true["a"]</code>. If <code>on</code> is an iterable
-the structures will be indexed iteratively, for example if <code>on = ["a", 0, "b"]</code>
-then <code>y_true = y_true["a"][0]["b"]</code>, same for <code>y_pred</code>. For more information
-check out <a href="https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior">Keras-like behavior</a>.</p>
-</td>
-<td><code>None</code></td>
-</tr>
-</tbody>
-</table>
-<details class="quote">
-<summary>Source code in <code>elegy/losses/sparse_categorical_crossentropy.py</code></summary>
-<table class="highlighttable">
-<tr>
-<td class="linenos">
-<div class="linenodiv">
-<pre><span></span> 86
- 87
- 88
- 89
- 90
- 91
- 92
- 93
- 94
- 95
- 96
- 97
- 98
- 99
-100
-101
-102
-103
-104
-105
-106
-107
-108
-109
-110
-111
-112
-113
-114
-115
-116</pre>
-</div>
-</td>
-<td class="code">
-<div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-    <span class="bp">self</span><span class="p">,</span>
-    <span class="n">from_logits</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">reduction</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">Reduction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">name</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">weight</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">on</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">IndexLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">):</span>
-    <span class="sd">"""</span>
-<span class="sd">    Initializes `SparseCategoricalCrossentropy` instance.</span>
-
-<span class="sd">    Arguments:</span>
-<span class="sd">        from_logits: Whether `y_pred` is expected to be a logits tensor. By</span>
-<span class="sd">            default, we assume that `y_pred` encodes a probability distribution.</span>
-<span class="sd">            **Note - Using from_logits=True is more numerically stable.**</span>
-<span class="sd">        reduction: (Optional) Type of `elegy.losses.Reduction` to apply to</span>
-<span class="sd">            loss. Default value is `SUM_OVER_BATCH_SIZE`. For almost all cases</span>
-<span class="sd">            this defaults to `SUM_OVER_BATCH_SIZE`.</span>
-<span class="sd">        name: Optional name for the op. Defaults to 'sparse_categorical_crossentropy'.</span>
-<span class="sd">        weight: Optional weight contribution for the total loss. Defaults to `1`.</span>
-<span class="sd">        on: A string or integer, or iterable of string or integers, that</span>
-<span class="sd">            indicate how to index/filter the `y_true` and `y_pred`</span>
-<span class="sd">            arguments before passing them to `__apply__`. For example if `on = "a"` then</span>
-<span class="sd">            `y_true = y_true["a"]`. If `on` is an iterable</span>
-<span class="sd">            the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`</span>
-<span class="sd">            then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information</span>
-<span class="sd">            check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).</span>
-<span class="sd">    """</span>
-    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="n">reduction</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">on</span><span class="p">)</span>
-
-    <span class="bp">self</span><span class="o">.</span><span class="n">_from_logits</span> <span class="o">=</span> <span class="n">from_logits</span>
 </code></pre>
 </div>
 </td>
@@ -1010,14 +953,14 @@ check out <a href="https://poets-ai.github.io/elegy/guides/modules-losses-metric
 </div>
 </footer>
 </div>
-<script src="../../../assets/javascripts/vendor.92ffa368.min.js"></script>
-<script src="../../../assets/javascripts/bundle.5123e3d4.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+<script src="../../../assets/javascripts/vendor.c3dc8c49.min.js"></script>
+<script src="../../../assets/javascripts/bundle.f9edbbd5.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
 <script>
         app = initialize({
           base: "../../..",
           features: [],
           search: Object.assign({
-            worker: "../../../assets/javascripts/worker/search.a68abb33.min.js"
+            worker: "../../../assets/javascripts/worker/search.8e2cddea.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>

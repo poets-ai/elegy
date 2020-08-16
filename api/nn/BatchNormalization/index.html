@@ -7,9 +7,9 @@
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <link href="https://poets-ai.github.io/elegy/api/nn/BatchNormalization/" rel="canonical"/>
 <link href="../../../images/favicon.png" rel="shortcut icon"/>
-<meta content="mkdocs-1.1.2, mkdocs-material-5.5.0" name="generator"/>
+<meta content="mkdocs-1.1.2, mkdocs-material-5.5.3" name="generator"/>
 <title>BatchNormalization - Elegy</title>
-<link href="../../../assets/stylesheets/main.b5d04df8.min.css" rel="stylesheet"/>
+<link href="../../../assets/stylesheets/main.947af8d5.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
 <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
@@ -136,6 +136,11 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
+<a class="md-nav__link" href="../../../guides/module-system/" title="The Module System">
+      The Module System
+    </a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="../../../guides/modules-losses-metrics/" title="Modules, Losses, and Metrics">
       Modules, Losses, and Metrics
     </a>
@@ -185,11 +190,6 @@
       Module
     </a>
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../module/Defered/" title="Defered">
-      Defered
-    </a>
-</li>
 </ul>
 </nav>
 </li>
@@ -222,60 +222,16 @@
 </ul>
 </nav>
 </li>
-<li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-3" id="nav-4-3" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-3">
-      hooks
-      <span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
-</span>
-</label>
-<nav aria-label="hooks" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-3">
-<span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
-</span>
-        hooks
-      </label>
-<ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/add_loss/" title="add_loss">
-      add_loss
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/add_metric/" title="add_metric">
-      add_metric
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/add_summary/" title="add_summary">
-      add_summary
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/transform/" title="transform">
-      transform
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/TransformedState/" title="TransformedState">
-      TransformedState
-    </a>
-</li>
-</ul>
-</nav>
-</li>
 <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" id="nav-4-4" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-4">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-4-3" id="nav-4-3" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-3">
       nn
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="nn" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-4">
+<label class="md-nav__title" for="nav-4-3">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -320,29 +276,15 @@
 <a class="md-nav__link" href="#elegy.nn.batch_normalization.BatchNormalization">
     elegy.nn.batch_normalization.BatchNormalization
   </a>
-<nav aria-label="elegy.nn.batch_normalization.BatchNormalization" class="md-nav">
-<ul class="md-nav__list">
-<li class="md-nav__item">
-<a class="md-nav__link" href="#normalization-equations">
-    Normalization equations
-  </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#references">
-    References
-  </a>
-</li>
-</ul>
-</nav>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.batch_normalization.BatchNormalization.__call__">
-    __call__()
-  </a>
 </li>
 <li class="md-nav__item">
 <a class="md-nav__link" href="#elegy.nn.batch_normalization.BatchNormalization.__init__">
     __init__()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.nn.batch_normalization.BatchNormalization.call">
+    call()
   </a>
 </li>
 </ul>
@@ -357,15 +299,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-5" id="nav-4-5" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-5">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" id="nav-4-4" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-4">
       metrics
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="metrics" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-5">
+<label class="md-nav__title" for="nav-4-4">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -416,15 +358,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-6" id="nav-4-6" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-6">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-5" id="nav-4-5" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-5">
       losses
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="losses" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-6">
+<label class="md-nav__title" for="nav-4-5">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -470,15 +412,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-7" id="nav-4-7" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-7">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-6" id="nav-4-6" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-6">
       regularizers
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="regularizers" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-7">
+<label class="md-nav__title" for="nav-4-6">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -504,15 +446,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-8" id="nav-4-8" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-8">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-7" id="nav-4-7" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-7">
       callbacks
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="callbacks" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-8">
+<label class="md-nav__title" for="nav-4-7">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -585,29 +527,15 @@
 <a class="md-nav__link" href="#elegy.nn.batch_normalization.BatchNormalization">
     elegy.nn.batch_normalization.BatchNormalization
   </a>
-<nav aria-label="elegy.nn.batch_normalization.BatchNormalization" class="md-nav">
-<ul class="md-nav__list">
-<li class="md-nav__item">
-<a class="md-nav__link" href="#normalization-equations">
-    Normalization equations
-  </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#references">
-    References
-  </a>
-</li>
-</ul>
-</nav>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.batch_normalization.BatchNormalization.__call__">
-    __call__()
-  </a>
 </li>
 <li class="md-nav__item">
 <a class="md-nav__link" href="#elegy.nn.batch_normalization.BatchNormalization.__init__">
     __init__()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.nn.batch_normalization.BatchNormalization.call">
+    call()
   </a>
 </li>
 </ul>
@@ -625,220 +553,35 @@
 <h2 class="hidden-toc" href="#elegy.nn.batch_normalization.BatchNormalization" id="elegy.nn.batch_normalization.BatchNormalization" style="visibility: hidden; width: 0; height: 0;">
 </h2>
 <div class="doc doc-contents first">
-<p>Normalize and create_scale inputs or activations. (Ioffe and Szegedy, 2014).</p>
-<p>Normalize the activations of the previous layer at each batch,
-i.e. applies a transformation that maintains the mean activation
-close to 0 and the activation standard deviation close to 1.</p>
-<h3 id="normalization-equations">Normalization equations</h3>
-<p>Consider the intermediate activations <span><span class="MathJax_Preview">x</span><script type="math/tex">x</script></span> of a mini-batch of size
-<span><span class="MathJax_Preview">m</span><script type="math/tex">m</script></span>:
-We can compute the mean and variance of the batch</p>
-<p>\({\mu_B} = \frac{1}{m} \sum_{i=1}^{m} {x_i}\)
-\({\sigma_B^2} = \frac{1}{m} \sum_{i=1}^{m} ({x_i} - {\mu_B})^2\)</p>
-<p>and then compute a normalized \(x\), including a small factor
-\({\eps}\) for numerical stability.</p>
-<p>\(\hat{x_i} = \frac{x_i - \mu_B}{\sqrt{\sigma_B^2 + \eps}}\)</p>
-<p>And finally \(\hat{x}\) is linearly transformed by \({\gamma}\)
-and \({\beta}\), which are learned parameters:</p>
-<p>\({y_i} = {\gamma * \hat{x_i} + \beta}\)</p>
-<h3 id="references">References</h3>
+<p>Normalizes inputs to maintain a mean of ~0 and stddev of ~1.</p>
+<p>See: https://arxiv.org/abs/1502.03167.</p>
+<p>There are many different variations for how users want to manage scale and
+offset if they require them at all. These are:</p>
 <ul>
-<li><a href="https://arxiv.org/abs/1502.03167">Batch Normalization: Accelerating Deep Network Training by Reducing
-    Internal Covariate Shift</a></li>
+<li>No scale/offset in which case <code>create_*</code> should be set to <code>False</code> and
+    <code>scale</code>/<code>offset</code> aren't passed when the module is called.</li>
+<li>Trainable scale/offset in which case <code>create_*</code> should be set to
+    <code>True</code> and again <code>scale</code>/<code>offset</code> aren't passed when the module is
+    called. In this case this module creates and owns the <code>scale</code>/<code>offset</code>
+    variables.</li>
+<li>Externally generated <code>scale</code>/<code>offset</code>, such as for conditional
+    normalization, in which case <code>create_*</code> should be set to <code>False</code> and
+    then the values fed in at call time.</li>
 </ul>
+<p>NOTE: <code>jax.vmap(hk.transform(BatchNorm))</code> will update summary statistics and
+normalize values on a per-batch basis; we currently do <em>not</em> support
+normalizing across a batch axis introduced by vmap.</p>
 <div class="doc doc-children">
-<div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.nn.batch_normalization.BatchNormalization.__call__">
-<code class="highlight language-python">
-__call__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">is_training</span><span class="p">,</span> <span class="n">test_local_stats</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
-<span class="doc doc-properties">
-<small class="doc doc-property doc-property-special"><code>special</code></small>
-</span>
-</h2>
-<div class="doc doc-contents">
-<p>Computes the normalized version of the input.</p>
-<p><strong>Parameters:</strong></p>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>inputs</code></td>
-<td><code>ndarray</code></td>
-<td>
-<p>An array, where the data format is <code>[..., C]</code>.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-<tr>
-<td><code>is_training</code></td>
-<td><code>bool</code></td>
-<td>
-<p>Whether training is currently happening.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-<tr>
-<td><code>test_local_stats</code></td>
-<td><code>bool</code></td>
-<td>
-<p>Whether local stats are used when is_training=False.</p>
-</td>
-<td><code>False</code></td>
-</tr>
-<tr>
-<td><code>scale</code></td>
-<td><code>Optional[numpy.ndarray]</code></td>
-<td>
-<p>An array up to n-D. The shape of this tensor must be broadcastable
-to the shape of <code>inputs</code>. This is the scale applied to the normalized
-inputs. This cannot be passed in if the module was constructed with
-<code>create_scale=True</code>.</p>
-</td>
-<td><code>None</code></td>
-</tr>
-<tr>
-<td><code>offset</code></td>
-<td><code>Optional[numpy.ndarray]</code></td>
-<td>
-<p>An array up to n-D. The shape of this tensor must be broadcastable
-to the shape of <code>inputs</code>. This is the offset applied to the normalized
-inputs. This cannot be passed in if the module was constructed with
-<code>create_offset=True</code>.</p>
-</td>
-<td><code>None</code></td>
-</tr>
-</tbody>
-</table>
-<p><strong>Returns:</strong></p>
-<table>
-<thead>
-<tr>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>ndarray</code></td>
-<td>
-<p>The array, normalized across all but the last dimension.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<details class="quote">
-<summary>Source code in <code>elegy/nn/batch_normalization.py</code></summary>
-<table class="highlighttable">
-<tr>
-<td class="linenos">
-<div class="linenodiv">
-<pre><span></span>106
-107
-108
-109
-110
-111
-112
-113
-114
-115
-116
-117
-118
-119
-120
-121
-122
-123
-124
-125
-126
-127
-128
-129
-130
-131
-132
-133
-134
-135
-136
-137
-138
-139
-140
-141
-142
-143
-144</pre>
-</div>
-</td>
-<td class="code">
-<div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span>
-    <span class="bp">self</span><span class="p">,</span>
-    <span class="n">inputs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-    <span class="n">is_training</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-    <span class="n">test_local_stats</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">scale</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">offset</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-    <span class="sd">"""</span>
-<span class="sd">    Computes the normalized version of the input.</span>
-
-<span class="sd">    Arguments:</span>
-<span class="sd">        inputs: An array, where the data format is ``[..., C]``.</span>
-<span class="sd">        is_training: Whether training is currently happening.</span>
-<span class="sd">        test_local_stats: Whether local stats are used when is_training=False.</span>
-<span class="sd">        scale: An array up to n-D. The shape of this tensor must be broadcastable</span>
-<span class="sd">            to the shape of ``inputs``. This is the scale applied to the normalized</span>
-<span class="sd">            inputs. This cannot be passed in if the module was constructed with</span>
-<span class="sd">            ``create_scale=True``.</span>
-<span class="sd">        offset: An array up to n-D. The shape of this tensor must be broadcastable</span>
-<span class="sd">            to the shape of ``inputs``. This is the offset applied to the normalized</span>
-<span class="sd">            inputs. This cannot be passed in if the module was constructed with</span>
-<span class="sd">            ``create_offset=True``.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        The array, normalized across all but the last dimension.</span>
-<span class="sd">    """</span>
-
-    <span class="n">outputs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span>
-        <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
-        <span class="n">is_training</span><span class="o">=</span><span class="n">is_training</span><span class="p">,</span>
-        <span class="n">test_local_stats</span><span class="o">=</span><span class="n">test_local_stats</span><span class="p">,</span>
-        <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span>
-        <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">hooks</span><span class="o">.</span><span class="n">add_summary</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">outputs</span>
-</code></pre>
-</div>
-</td>
-</tr>
-</table>
-</details>
-</div>
-</div>
 <div class="doc doc-object doc-method">
 <h2 class="doc doc-heading" id="elegy.nn.batch_normalization.BatchNormalization.__init__">
 <code class="highlight language-python">
-__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">create_scale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">create_offset</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">decay_rate</span><span class="o">=</span><span class="mf">0.99</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-05</span><span class="p">,</span> <span class="n">scale_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cross_replica_axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="s1">'channels_last'</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
+__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">create_scale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">create_offset</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">decay_rate</span><span class="o">=</span><span class="mf">0.99</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-05</span><span class="p">,</span> <span class="n">scale_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cross_replica_axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="s1">'channels_last'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> </code>
 <span class="doc doc-properties">
 <small class="doc doc-property doc-property-special"><code>special</code></small>
 </span>
 </h2>
 <div class="doc doc-contents">
-<p>Creates a BatchNormalization instance.</p>
+<p>Constructs a BatchNorm module.</p>
 <p><strong>Parameters:</strong></p>
 <table>
 <thead>
@@ -854,11 +597,7 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 <td><code>create_scale</code></td>
 <td><code>bool</code></td>
 <td>
-<p>If True, multiply by <code>gamma</code>.
-If False, <code>gamma</code> is not used.
-When the next layer is linear (also e.g. <code>relu</code>),
-this can be disabled since the scaling
-will be done by the next layer.</p>
+<p>Whether to include a trainable scaling factor.</p>
 </td>
 <td><code>True</code></td>
 </tr>
@@ -866,28 +605,15 @@ will be done by the next layer.</p>
 <td><code>create_offset</code></td>
 <td><code>bool</code></td>
 <td>
-<p>If True, add offset of <code>beta</code> to normalized tensor.
-se, <code>beta</code> is ignored.</p>
+<p>Whether to include a trainable offset.</p>
 </td>
 <td><code>True</code></td>
-</tr>
-<tr>
-<td><code>axis</code></td>
-<td><code>Optional[Sequence[int]]</code></td>
-<td>
-<p>Integer, the axis that should be normalized
-(typically the features axis).
-For instance, after a <code>Conv2D</code> layer with
-<code>data_format="channels_first"</code>,
-set <code>axis=1</code> in <code>BatchNormalization</code>.</p>
-</td>
-<td><code>None</code></td>
 </tr>
 <tr>
 <td><code>decay_rate</code></td>
 <td><code>float</code></td>
 <td>
-<p>Momentum parameter for the moving average.</p>
+<p>Decay rate for EMA.</p>
 </td>
 <td><code>0.99</code></td>
 </tr>
@@ -895,22 +621,23 @@ set <code>axis=1</code> in <code>BatchNormalization</code>.</p>
 <td><code>eps</code></td>
 <td><code>float</code></td>
 <td>
-<p>Small float added to variance to avoid dividing by zero.</p>
+<p>Small epsilon to avoid division by zero variance. Defaults <code>1e-5</code>,
+as in the paper and Sonnet.</p>
 </td>
 <td><code>1e-05</code></td>
 </tr>
 <tr>
 <td><code>scale_init</code></td>
-<td><code>Optional[Callable[[Sequence[int], Any], jax.numpy.lax_numpy.ndarray]]</code></td>
+<td><code>Optional[elegy.types.Initializer]</code></td>
 <td>
-<p>Optional initializer for gain (aka create_scale). Can only be set
+<p>Optional initializer for gain (aka scale). Can only be set
 if <code>create_scale=True</code>. By default, <code>1</code>.</p>
 </td>
 <td><code>None</code></td>
 </tr>
 <tr>
 <td><code>offset_init</code></td>
-<td><code>Optional[Callable[[Sequence[int], Any], jax.numpy.lax_numpy.ndarray]]</code></td>
+<td><code>Optional[elegy.types.Initializer]</code></td>
 <td>
 <p>Optional initializer for bias (aka offset). Can only be set
 if <code>create_offset=True</code>. By default, <code>0</code>.</p>
@@ -949,12 +676,12 @@ default it is <code>channels_last</code>.</p>
 <td><code>'channels_last'</code></td>
 </tr>
 <tr>
-<td><code>name</code></td>
-<td><code>Optional[str]</code></td>
+<td><code>kwargs</code></td>
+<td><code></code></td>
 <td>
-<p>The module name.</p>
+<p>Additional keyword arguments passed to Module.</p>
 </td>
-<td><code>None</code></td>
+<td><code>{}</code></td>
 </tr>
 </tbody>
 </table>
@@ -964,65 +691,59 @@ default it is <code>channels_last</code>.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span> 46
- 47
- 48
- 49
- 50
- 51
- 52
- 53
- 54
- 55
- 56
- 57
- 58
- 59
- 60
- 61
- 62
- 63
- 64
- 65
- 66
- 67
- 68
- 69
- 70
- 71
- 72
- 73
- 74
- 75
- 76
- 77
- 78
- 79
- 80
- 81
- 82
- 83
- 84
- 85
- 86
- 87
- 88
- 89
- 90
- 91
- 92
- 93
- 94
- 95
- 96
- 97
- 98
- 99
-100
-101
-102
-103
-104</pre>
+<pre><span></span>42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94</pre>
 </div>
 </td>
 <td class="code">
@@ -1033,59 +754,282 @@ default it is <code>channels_last</code>.</p>
     <span class="n">create_offset</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">decay_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.99</span><span class="p">,</span>
     <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-5</span><span class="p">,</span>
-    <span class="n">scale_init</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">hk</span><span class="o">.</span><span class="n">initializers</span><span class="o">.</span><span class="n">Initializer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">offset_init</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">hk</span><span class="o">.</span><span class="n">initializers</span><span class="o">.</span><span class="n">Initializer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">axis</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">cross_replica_axis</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">scale_init</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">initializers</span><span class="o">.</span><span class="n">Initializer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">offset_init</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">initializers</span><span class="o">.</span><span class="n">Initializer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">axis</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">cross_replica_axis</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">data_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"channels_last"</span><span class="p">,</span>
-    <span class="n">name</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
 <span class="p">):</span>
-    <span class="sd">"""</span>
-<span class="sd">    Creates a BatchNormalization instance.</span>
+    <span class="sd">"""Constructs a BatchNorm module.</span>
 
-<span class="sd">    Arguments:</span>
-<span class="sd">        create_scale: If True, multiply by `gamma`.</span>
-<span class="sd">            If False, `gamma` is not used.</span>
-<span class="sd">            When the next layer is linear (also e.g. `relu`),</span>
-<span class="sd">            this can be disabled since the scaling</span>
-<span class="sd">            will be done by the next layer.</span>
-<span class="sd">        create_offset: If True, add offset of `beta` to normalized tensor.</span>
-<span class="sd">            se, `beta` is ignored.</span>
-<span class="sd">        axis: Integer, the axis that should be normalized</span>
-<span class="sd">            (typically the features axis).</span>
-<span class="sd">            For instance, after a `Conv2D` layer with</span>
-<span class="sd">            `data_format="channels_first"`,</span>
-<span class="sd">            set `axis=1` in `BatchNormalization`.</span>
-<span class="sd">        decay_rate: Momentum parameter for the moving average.</span>
-<span class="sd">        eps: Small float added to variance to avoid dividing by zero.</span>
-<span class="sd">        scale_init: Optional initializer for gain (aka create_scale). Can only be set</span>
-<span class="sd">            if ``create_scale=True``. By default, ``1``.</span>
-<span class="sd">        offset_init: Optional initializer for bias (aka offset). Can only be set</span>
-<span class="sd">            if ``create_offset=True``. By default, ``0``.</span>
-<span class="sd">        axis: Which axes to reduce over. The default (``None``) signifies that all</span>
-<span class="sd">            but the channel axis should be normalized. Otherwise this is a list of</span>
-<span class="sd">            axis indices which will have normalization statistics calculated.</span>
-<span class="sd">        cross_replica_axis: If not ``None``, it should be a string representing</span>
-<span class="sd">            the axis name over which this module is being run within a ``jax.pmap``.</span>
-<span class="sd">            Supplying this argument means that batch statistics are calculated</span>
-<span class="sd">            across all replicas on that axis.</span>
-<span class="sd">        data_format: The data format of the input. Can be either</span>
-<span class="sd">            ``channels_first``, ``channels_last``, ``N...C`` or ``NC...``. By</span>
-<span class="sd">            default it is ``channels_last``.</span>
-<span class="sd">        name: The module name.</span>
+<span class="sd">Args:</span>
+<span class="sd">    create_scale: Whether to include a trainable scaling factor.</span>
+<span class="sd">    create_offset: Whether to include a trainable offset.</span>
+<span class="sd">    decay_rate: Decay rate for EMA.</span>
+<span class="sd">    eps: Small epsilon to avoid division by zero variance. Defaults ``1e-5``,</span>
+<span class="sd">        as in the paper and Sonnet.</span>
+<span class="sd">    scale_init: Optional initializer for gain (aka scale). Can only be set</span>
+<span class="sd">        if ``create_scale=True``. By default, ``1``.</span>
+<span class="sd">    offset_init: Optional initializer for bias (aka offset). Can only be set</span>
+<span class="sd">        if ``create_offset=True``. By default, ``0``.</span>
+<span class="sd">    axis: Which axes to reduce over. The default (``None``) signifies that all</span>
+<span class="sd">        but the channel axis should be normalized. Otherwise this is a list of</span>
+<span class="sd">        axis indices which will have normalization statistics calculated.</span>
+<span class="sd">    cross_replica_axis: If not ``None``, it should be a string representing</span>
+<span class="sd">        the axis name over which this module is being run within a ``jax.pmap``.</span>
+<span class="sd">        Supplying this argument means that batch statistics are calculated</span>
+<span class="sd">        across all replicas on that axis.</span>
+<span class="sd">    data_format: The data format of the input. Can be either</span>
+<span class="sd">        ``channels_first``, ``channels_last``, ``N...C`` or ``NC...``. By</span>
+<span class="sd">        default it is ``channels_last``.</span>
+<span class="sd">    kwargs: Additional keyword arguments passed to Module.</span>
+<span class="sd">"""</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">create_scale</span> <span class="ow">and</span> <span class="n">scale_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Cannot set `scale_init` if `create_scale=False`"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">create_offset</span> <span class="ow">and</span> <span class="n">offset_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Cannot set `offset_init` if `create_offset=False`"</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">create_scale</span> <span class="o">=</span> <span class="n">create_scale</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">create_offset</span> <span class="o">=</span> <span class="n">create_offset</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="o">=</span> <span class="n">eps</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">scale_init</span> <span class="o">=</span> <span class="n">scale_init</span> <span class="ow">or</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ones</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">offset_init</span> <span class="o">=</span> <span class="n">offset_init</span> <span class="ow">or</span> <span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cross_replica_axis</span> <span class="o">=</span> <span class="n">cross_replica_axis</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">channel_index</span> <span class="o">=</span> <span class="n">haiku_utils</span><span class="o">.</span><span class="n">get_channel_index</span><span class="p">(</span><span class="n">data_format</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">mean_ema</span> <span class="o">=</span> <span class="n">ExponentialMovingAverage</span><span class="p">(</span><span class="n">decay_rate</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"mean_ema"</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">var_ema</span> <span class="o">=</span> <span class="n">ExponentialMovingAverage</span><span class="p">(</span><span class="n">decay_rate</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"var_ema"</span><span class="p">)</span>
+</code></pre>
+</div>
+</td>
+</tr>
+</table>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.batch_normalization.BatchNormalization.call">
+<code class="highlight language-python">
+call<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">test_local_stats</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
+</h2>
+<div class="doc doc-contents">
+<p>Computes the normalized version of the input.</p>
+<div class="admonition scale">
+<p class="admonition-title">An array up to n-D. The shape of this tensor must be broadcastable</p>
+<p>to the shape of <code>inputs</code>. This is the scale applied to the normalized
+inputs. This cannot be passed in if the module was constructed with
+<code>create_scale=True</code>.</p>
+</div>
+<div class="admonition offset">
+<p class="admonition-title">An array up to n-D. The shape of this tensor must be broadcastable</p>
+<p>to the shape of <code>inputs</code>. This is the offset applied to the normalized
+inputs. This cannot be passed in if the module was constructed with
+<code>create_offset=True</code>.</p>
+</div>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ndarray</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The array, normalized across all but the last dimension.</p>
+<details class="quote">
+<summary>Source code in <code>elegy/nn/batch_normalization.py</code></summary>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span> 96
+ 97
+ 98
+ 99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183</pre>
+</div>
+</td>
+<td class="code">
+<div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">training</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">test_local_stats</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">scale</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">offset</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">"""Computes the normalized version of the input.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">    inputs: An array, where the data format is ``[..., C]``.</span>
+<span class="sd">    training: Whether training is currently happening.</span>
+<span class="sd">    test_local_stats: Whether local stats are used when training=False.</span>
+<span class="sd">    scale: An array up to n-D. The shape of this tensor must be broadcastable</span>
+<span class="sd">        to the shape of ``inputs``. This is the scale applied to the normalized</span>
+<span class="sd">        inputs. This cannot be passed in if the module was constructed with</span>
+<span class="sd">        ``create_scale=True``.</span>
+<span class="sd">    offset: An array up to n-D. The shape of this tensor must be broadcastable</span>
+<span class="sd">        to the shape of ``inputs``. This is the offset applied to the normalized</span>
+<span class="sd">        inputs. This cannot be passed in if the module was constructed with</span>
+<span class="sd">        ``create_offset=True``.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    The array, normalized across all but the last dimension.</span>
 <span class="sd">    """</span>
-    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="n">create_scale</span><span class="o">=</span><span class="n">create_scale</span><span class="p">,</span>
-        <span class="n">create_offset</span><span class="o">=</span><span class="n">create_offset</span><span class="p">,</span>
-        <span class="n">decay_rate</span><span class="o">=</span><span class="n">decay_rate</span><span class="p">,</span>
-        <span class="n">eps</span><span class="o">=</span><span class="n">eps</span><span class="p">,</span>
-        <span class="n">scale_init</span><span class="o">=</span><span class="n">scale_init</span><span class="p">,</span>
-        <span class="n">offset_init</span><span class="o">=</span><span class="n">offset_init</span><span class="p">,</span>
-        <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span>
-        <span class="n">cross_replica_axis</span><span class="o">=</span><span class="n">cross_replica_axis</span><span class="p">,</span>
-        <span class="n">data_format</span><span class="o">=</span><span class="n">data_format</span><span class="p">,</span>
-        <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">training</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">LOCAL</span><span class="o">.</span><span class="n">contexts</span><span class="p">:</span>
+            <span class="n">context</span><span class="p">:</span> <span class="n">module</span><span class="o">.</span><span class="n">Context</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">LOCAL</span><span class="o">.</span><span class="n">contexts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">training</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">training</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"Cannot infer `training` outside of context. You must pass `training` explicitly or use `Module.apply`."</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_scale</span> <span class="ow">and</span> <span class="n">scale</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Cannot pass `scale` at call time if `create_scale=True`."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_offset</span> <span class="ow">and</span> <span class="n">offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Cannot pass `offset` at call time if `create_offset=True`."</span>
+        <span class="p">)</span>
+
+    <span class="n">channel_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_index</span>
+    <span class="k">if</span> <span class="n">channel_index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">channel_index</span> <span class="o">+=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">ndim</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">axis</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">channel_index</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">training</span> <span class="ow">or</span> <span class="n">test_local_stats</span><span class="p">:</span>
+        <span class="n">cross_replica_axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cross_replica_axis</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cross_replica_axis</span><span class="p">:</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">lax</span><span class="o">.</span><span class="n">pmean</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">cross_replica_axis</span><span class="p">)</span>
+            <span class="n">mean_of_squares</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">inputs</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">mean_of_squares</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">lax</span><span class="o">.</span><span class="n">pmean</span><span class="p">(</span><span class="n">mean_of_squares</span><span class="p">,</span> <span class="n">cross_replica_axis</span><span class="p">)</span>
+            <span class="n">var</span> <span class="o">=</span> <span class="n">mean_of_squares</span> <span class="o">-</span> <span class="n">mean</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="c1"># This uses E[(X - E[X])^2].</span>
+            <span class="c1"># TODO(tycai): Consider the faster, but possibly less stable</span>
+            <span class="c1"># E[X^2] - E[X]^2 method.</span>
+            <span class="n">var</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_ema</span><span class="o">.</span><span class="n">average</span>
+        <span class="n">var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_ema</span><span class="o">.</span><span class="n">average</span>
+
+    <span class="k">if</span> <span class="n">training</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean_ema</span><span class="p">(</span><span class="n">mean</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">var_ema</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+
+    <span class="n">w_shape</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">axis</span> <span class="k">else</span> <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">ndim</span><span class="p">)]</span>
+    <span class="n">w_dtype</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">dtype</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_scale</span><span class="p">:</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="s2">"scale"</span><span class="p">,</span> <span class="n">w_shape</span><span class="p">,</span> <span class="n">w_dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_init</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">scale</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">w_dtype</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_offset</span><span class="p">:</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="s2">"offset"</span><span class="p">,</span> <span class="n">w_shape</span><span class="p">,</span> <span class="n">w_dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset_init</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">offset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">w_dtype</span><span class="p">)</span>
+
+    <span class="n">inv</span> <span class="o">=</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">jax</span><span class="o">.</span><span class="n">lax</span><span class="o">.</span><span class="n">rsqrt</span><span class="p">(</span><span class="n">var</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">inputs</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span> <span class="o">*</span> <span class="n">inv</span> <span class="o">+</span> <span class="n">offset</span>
 </code></pre>
 </div>
 </td>
@@ -1162,14 +1106,14 @@ default it is <code>channels_last</code>.</p>
 </div>
 </footer>
 </div>
-<script src="../../../assets/javascripts/vendor.92ffa368.min.js"></script>
-<script src="../../../assets/javascripts/bundle.5123e3d4.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+<script src="../../../assets/javascripts/vendor.c3dc8c49.min.js"></script>
+<script src="../../../assets/javascripts/bundle.f9edbbd5.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
 <script>
         app = initialize({
           base: "../../..",
           features: [],
           search: Object.assign({
-            worker: "../../../assets/javascripts/worker/search.a68abb33.min.js"
+            worker: "../../../assets/javascripts/worker/search.8e2cddea.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>

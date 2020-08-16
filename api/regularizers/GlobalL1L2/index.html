@@ -7,9 +7,9 @@
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <link href="https://poets-ai.github.io/elegy/api/regularizers/GlobalL1L2/" rel="canonical"/>
 <link href="../../../images/favicon.png" rel="shortcut icon"/>
-<meta content="mkdocs-1.1.2, mkdocs-material-5.5.0" name="generator"/>
+<meta content="mkdocs-1.1.2, mkdocs-material-5.5.3" name="generator"/>
 <title>GlobalL1L2 - Elegy</title>
-<link href="../../../assets/stylesheets/main.b5d04df8.min.css" rel="stylesheet"/>
+<link href="../../../assets/stylesheets/main.947af8d5.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
 <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
@@ -136,6 +136,11 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
+<a class="md-nav__link" href="../../../guides/module-system/" title="The Module System">
+      The Module System
+    </a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="../../../guides/modules-losses-metrics/" title="Modules, Losses, and Metrics">
       Modules, Losses, and Metrics
     </a>
@@ -185,11 +190,6 @@
       Module
     </a>
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../module/Defered/" title="Defered">
-      Defered
-    </a>
-</li>
 </ul>
 </nav>
 </li>
@@ -225,57 +225,13 @@
 <li class="md-nav__item md-nav__item--nested">
 <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-3" id="nav-4-3" type="checkbox"/>
 <label class="md-nav__link" for="nav-4-3">
-      hooks
-      <span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
-</span>
-</label>
-<nav aria-label="hooks" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-3">
-<span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
-</span>
-        hooks
-      </label>
-<ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/add_loss/" title="add_loss">
-      add_loss
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/add_metric/" title="add_metric">
-      add_metric
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/add_summary/" title="add_summary">
-      add_summary
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/transform/" title="transform">
-      transform
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/TransformedState/" title="TransformedState">
-      TransformedState
-    </a>
-</li>
-</ul>
-</nav>
-</li>
-<li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" id="nav-4-4" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-4">
       nn
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="nn" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-4">
+<label class="md-nav__title" for="nav-4-3">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -311,15 +267,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-5" id="nav-4-5" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-5">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" id="nav-4-4" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-4">
       metrics
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="metrics" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-5">
+<label class="md-nav__title" for="nav-4-4">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -370,15 +326,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-6" id="nav-4-6" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-6">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-5" id="nav-4-5" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-5">
       losses
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="losses" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-6">
+<label class="md-nav__title" for="nav-4-5">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -424,15 +380,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-4-7" id="nav-4-7" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-7">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-4-6" id="nav-4-6" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-6">
       regularizers
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="regularizers" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-7">
+<label class="md-nav__title" for="nav-4-6">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -474,8 +430,8 @@
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.regularizers.global_l1l2.GlobalL1L2.__apply__">
-    __apply__()
+<a class="md-nav__link" href="#elegy.regularizers.global_l1l2.GlobalL1L2.call">
+    call()
   </a>
 </li>
 </ul>
@@ -485,15 +441,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-8" id="nav-4-8" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-8">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-7" id="nav-4-7" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-7">
       callbacks
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="callbacks" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-8">
+<label class="md-nav__title" for="nav-4-7">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -568,8 +524,8 @@
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.regularizers.global_l1l2.GlobalL1L2.__apply__">
-    __apply__()
+<a class="md-nav__link" href="#elegy.regularizers.global_l1l2.GlobalL1L2.call">
+    call()
   </a>
 </li>
 </ul>
@@ -642,12 +598,9 @@
 </table>
 <div class="doc doc-children">
 <div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.regularizers.global_l1l2.GlobalL1L2.__apply__">
+<h2 class="doc doc-heading" id="elegy.regularizers.global_l1l2.GlobalL1L2.call">
 <code class="highlight language-python">
-__apply__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> </code>
-<span class="doc doc-properties">
-<small class="doc doc-property doc-property-special"><code>special</code></small>
-</span>
+call<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span> </code>
 </h2>
 <div class="doc doc-contents">
 <p>Computes the L1 and L2 regularization penalty simultaneously.</p>
@@ -663,7 +616,7 @@ __apply__<span class="p">(</span><span class="bp">self</span><span class="p">,</
 </thead>
 <tbody>
 <tr>
-<td><code>params</code></td>
+<td><code>parameters</code></td>
 <td><code>Mapping[str, Mapping[str, jax.numpy.lax_numpy.ndarray]]</code></td>
 <td>
 <p>A structure with all the parameters of the model.</p>
@@ -678,9 +631,7 @@ __apply__<span class="p">(</span><span class="bp">self</span><span class="p">,</
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>55
-56
-57
+<pre><span></span>57
 58
 59
 60
@@ -701,17 +652,19 @@ __apply__<span class="p">(</span><span class="bp">self</span><span class="p">,</
 75
 76
 77
-78</pre>
+78
+79
+80</pre>
 </div>
 </td>
 <td class="code">
 <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">__apply__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">hk</span><span class="o">.</span><span class="n">Params</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="n">hk</span><span class="o">.</span><span class="n">Params</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
     <span class="sd">"""</span>
 <span class="sd">    Computes the L1 and L2 regularization penalty simultaneously.</span>
 
 <span class="sd">    Arguments:</span>
-<span class="sd">        params: A structure with all the parameters of the model.</span>
+<span class="sd">        parameters: A structure with all the parameters of the model.</span>
 <span class="sd">    """</span>
 
     <span class="n">regularization</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
@@ -721,12 +674,12 @@ __apply__<span class="p">(</span><span class="bp">self</span><span class="p">,</
 
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">l1</span><span class="p">:</span>
         <span class="n">regularization</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">l1</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span>
-            <span class="n">jnp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">p</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_leaves</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+            <span class="n">jnp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">p</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_leaves</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
         <span class="p">)</span>
 
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">l2</span><span class="p">:</span>
         <span class="n">regularization</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">l2</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span>
-            <span class="n">jnp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">p</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_leaves</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+            <span class="n">jnp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">p</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_leaves</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
         <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">regularization</span>
@@ -806,14 +759,14 @@ __apply__<span class="p">(</span><span class="bp">self</span><span class="p">,</
 </div>
 </footer>
 </div>
-<script src="../../../assets/javascripts/vendor.92ffa368.min.js"></script>
-<script src="../../../assets/javascripts/bundle.5123e3d4.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+<script src="../../../assets/javascripts/vendor.c3dc8c49.min.js"></script>
+<script src="../../../assets/javascripts/bundle.f9edbbd5.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
 <script>
         app = initialize({
           base: "../../..",
           features: [],
           search: Object.assign({
-            worker: "../../../assets/javascripts/worker/search.a68abb33.min.js"
+            worker: "../../../assets/javascripts/worker/search.8e2cddea.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>

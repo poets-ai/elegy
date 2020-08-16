@@ -7,9 +7,9 @@
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <link href="https://poets-ai.github.io/elegy/api/nn/Linear/" rel="canonical"/>
 <link href="../../../images/favicon.png" rel="shortcut icon"/>
-<meta content="mkdocs-1.1.2, mkdocs-material-5.5.0" name="generator"/>
+<meta content="mkdocs-1.1.2, mkdocs-material-5.5.3" name="generator"/>
 <title>Linear - Elegy</title>
-<link href="../../../assets/stylesheets/main.b5d04df8.min.css" rel="stylesheet"/>
+<link href="../../../assets/stylesheets/main.947af8d5.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
 <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
@@ -136,6 +136,11 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
+<a class="md-nav__link" href="../../../guides/module-system/" title="The Module System">
+      The Module System
+    </a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="../../../guides/modules-losses-metrics/" title="Modules, Losses, and Metrics">
       Modules, Losses, and Metrics
     </a>
@@ -185,11 +190,6 @@
       Module
     </a>
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../module/Defered/" title="Defered">
-      Defered
-    </a>
-</li>
 </ul>
 </nav>
 </li>
@@ -222,60 +222,16 @@
 </ul>
 </nav>
 </li>
-<li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-3" id="nav-4-3" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-3">
-      hooks
-      <span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
-</span>
-</label>
-<nav aria-label="hooks" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-3">
-<span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
-</span>
-        hooks
-      </label>
-<ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/add_loss/" title="add_loss">
-      add_loss
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/add_metric/" title="add_metric">
-      add_metric
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/add_summary/" title="add_summary">
-      add_summary
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/transform/" title="transform">
-      transform
-    </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/TransformedState/" title="TransformedState">
-      TransformedState
-    </a>
-</li>
-</ul>
-</nav>
-</li>
 <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" id="nav-4-4" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-4">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-4-3" id="nav-4-3" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-3">
       nn
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="nn" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-4">
+<label class="md-nav__title" for="nav-4-3">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -307,13 +263,13 @@
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.linear.Linear.__call__">
-    __call__()
+<a class="md-nav__link" href="#elegy.nn.linear.Linear.__init__">
+    __init__()
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.linear.Linear.__init__">
-    __init__()
+<a class="md-nav__link" href="#elegy.nn.linear.Linear.call">
+    call()
   </a>
 </li>
 </ul>
@@ -343,15 +299,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-5" id="nav-4-5" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-5">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-4" id="nav-4-4" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-4">
       metrics
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="metrics" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-5">
+<label class="md-nav__title" for="nav-4-4">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -402,15 +358,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-6" id="nav-4-6" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-6">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-5" id="nav-4-5" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-5">
       losses
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="losses" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-6">
+<label class="md-nav__title" for="nav-4-5">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -456,15 +412,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-7" id="nav-4-7" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-7">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-6" id="nav-4-6" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-6">
       regularizers
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="regularizers" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-7">
+<label class="md-nav__title" for="nav-4-6">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -490,15 +446,15 @@
 </nav>
 </li>
 <li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-8" id="nav-4-8" type="checkbox"/>
-<label class="md-nav__link" for="nav-4-8">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-7" id="nav-4-7" type="checkbox"/>
+<label class="md-nav__link" for="nav-4-7">
       callbacks
       <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"></path></svg>
 </span>
 </label>
 <nav aria-label="callbacks" class="md-nav" data-md-level="2">
-<label class="md-nav__title" for="nav-4-8">
+<label class="md-nav__title" for="nav-4-7">
 <span class="md-nav__icon md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </span>
@@ -573,13 +529,13 @@
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.linear.Linear.__call__">
-    __call__()
+<a class="md-nav__link" href="#elegy.nn.linear.Linear.__init__">
+    __init__()
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.linear.Linear.__init__">
-    __init__()
+<a class="md-nav__link" href="#elegy.nn.linear.Linear.call">
+    call()
   </a>
 </li>
 </ul>
@@ -600,77 +556,9 @@
 <p>Linear module.</p>
 <div class="doc doc-children">
 <div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.nn.linear.Linear.__call__">
-<code class="highlight language-python">
-__call__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span> </code>
-<span class="doc doc-properties">
-<small class="doc doc-property doc-property-special"><code>special</code></small>
-</span>
-</h2>
-<div class="doc doc-contents">
-<p><strong>Parameters:</strong></p>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>inputs</code></td>
-<td><code>ndarray</code></td>
-<td>
-<p>Input array.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-</tbody>
-</table>
-<details class="quote">
-<summary>Source code in <code>elegy/nn/linear.py</code></summary>
-<table class="highlighttable">
-<tr>
-<td class="linenos">
-<div class="linenodiv">
-<pre><span></span>40
-41
-42
-43
-44
-45
-46
-47
-48
-49</pre>
-</div>
-</td>
-<td class="code">
-<div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-    <span class="sd">"""</span>
-<span class="sd">    Arguments:</span>
-<span class="sd">        inputs: Input array.</span>
-<span class="sd">    """</span>
-    <span class="n">outputs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-
-    <span class="n">hooks</span><span class="o">.</span><span class="n">add_summary</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">outputs</span>
-</code></pre>
-</div>
-</td>
-</tr>
-</table>
-</details>
-</div>
-</div>
-<div class="doc doc-object doc-method">
 <h2 class="doc doc-heading" id="elegy.nn.linear.Linear.__init__">
 <code class="highlight language-python">
-__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_size</span><span class="p">,</span> <span class="n">with_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">w_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">b_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
+__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_size</span><span class="p">,</span> <span class="n">with_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">w_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">b_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> </code>
 <span class="doc doc-properties">
 <small class="doc doc-property doc-property-special"><code>special</code></small>
 </span>
@@ -706,7 +594,7 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 </tr>
 <tr>
 <td><code>w_init</code></td>
-<td><code>Optional[Callable[[Sequence[int], Any], jax.numpy.lax_numpy.ndarray]]</code></td>
+<td><code>Optional[elegy.types.Initializer]</code></td>
 <td>
 <p>Optional initializer for weights. By default, uses random values
 from truncated normal, with stddev <code>1 / sqrt(fan_in)</code>. See
@@ -716,19 +604,19 @@ https://arxiv.org/abs/1502.03167v3.</p>
 </tr>
 <tr>
 <td><code>b_init</code></td>
-<td><code>Optional[Callable[[Sequence[int], Any], jax.numpy.lax_numpy.ndarray]]</code></td>
+<td><code>Optional[elegy.types.Initializer]</code></td>
 <td>
 <p>Optional initializer for bias. By default, zero.</p>
 </td>
 <td><code>None</code></td>
 </tr>
 <tr>
-<td><code>name</code></td>
-<td><code>Optional[str]</code></td>
+<td><code>kwargs</code></td>
+<td><code></code></td>
 <td>
-<p>Name of the module.</p>
+<p>Additional keyword arguments passed to Module.</p>
 </td>
-<td><code>None</code></td>
+<td><code>{}</code></td>
 </tr>
 </tbody>
 </table>
@@ -738,12 +626,7 @@ https://arxiv.org/abs/1502.03167v3.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>12
-13
-14
-15
-16
-17
+<pre><span></span>17
 18
 19
 20
@@ -764,7 +647,11 @@ https://arxiv.org/abs/1502.03167v3.</p>
 35
 36
 37
-38</pre>
+38
+39
+40
+41
+42</pre>
 </div>
 </td>
 <td class="code">
@@ -773,9 +660,9 @@ https://arxiv.org/abs/1502.03167v3.</p>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">output_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">with_bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="n">w_init</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">hk</span><span class="o">.</span><span class="n">initializers</span><span class="o">.</span><span class="n">Initializer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">b_init</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">hk</span><span class="o">.</span><span class="n">initializers</span><span class="o">.</span><span class="n">Initializer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">name</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">w_init</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">Initializer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">b_init</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">Initializer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
 <span class="p">):</span>
     <span class="sd">"""</span>
 <span class="sd">    Constructs the Linear module.</span>
@@ -787,15 +674,98 @@ https://arxiv.org/abs/1502.03167v3.</p>
 <span class="sd">            from truncated normal, with stddev `1 / sqrt(fan_in)`. See</span>
 <span class="sd">            https://arxiv.org/abs/1502.03167v3.</span>
 <span class="sd">        b_init: Optional initializer for bias. By default, zero.</span>
-<span class="sd">        name: Name of the module.</span>
+<span class="sd">        kwargs: Additional keyword arguments passed to Module.</span>
 <span class="sd">    """</span>
-    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="n">output_size</span><span class="o">=</span><span class="n">output_size</span><span class="p">,</span>
-        <span class="n">with_bias</span><span class="o">=</span><span class="n">with_bias</span><span class="p">,</span>
-        <span class="n">w_init</span><span class="o">=</span><span class="n">w_init</span><span class="p">,</span>
-        <span class="n">b_init</span><span class="o">=</span><span class="n">b_init</span><span class="p">,</span>
-        <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">output_size</span> <span class="o">=</span> <span class="n">output_size</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">with_bias</span> <span class="o">=</span> <span class="n">with_bias</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">w_init</span> <span class="o">=</span> <span class="n">w_init</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">b_init</span> <span class="o">=</span> <span class="n">b_init</span> <span class="ow">or</span> <span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span>
+</code></pre>
+</div>
+</td>
+</tr>
+</table>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.linear.Linear.call">
+<code class="highlight language-python">
+call<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span> </code>
+</h2>
+<div class="doc doc-contents">
+<details class="quote">
+<summary>Source code in <code>elegy/nn/linear.py</code></summary>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span>44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73</pre>
+</div>
+</td>
+<td class="code">
+<div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">"""</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Input must not be scalar."</span><span class="p">)</span>
+
+    <span class="n">input_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">output_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_size</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">dtype</span>
+
+    <span class="n">w_init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_init</span>
+
+    <span class="k">if</span> <span class="n">w_init</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">stddev</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span>
+        <span class="n">w_init</span> <span class="o">=</span> <span class="n">TruncatedNormal</span><span class="p">(</span><span class="n">stddev</span><span class="o">=</span><span class="n">stddev</span><span class="p">)</span>
+
+    <span class="n">w</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span>
+        <span class="s2">"w"</span><span class="p">,</span> <span class="p">[</span><span class="n">input_size</span><span class="p">,</span> <span class="n">output_size</span><span class="p">],</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="n">w_init</span>
     <span class="p">)</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_bias</span><span class="p">:</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span>
+            <span class="s2">"b"</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">output_size</span><span class="p">],</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">b_init</span>
+        <span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">out</span> <span class="o">+</span> <span class="n">b</span>
+
+    <span class="k">return</span> <span class="n">out</span>
 </code></pre>
 </div>
 </td>
@@ -814,7 +784,7 @@ https://arxiv.org/abs/1502.03167v3.</p>
 <footer class="md-footer">
 <div class="md-footer-nav">
 <nav aria-label="Footer" class="md-footer-nav__inner md-grid">
-<a class="md-footer-nav__link md-footer-nav__link--prev" href="../../hooks/TransformedState/" rel="prev" title="TransformedState">
+<a class="md-footer-nav__link md-footer-nav__link--prev" href="../../model/load/" rel="prev" title="load">
 <div class="md-footer-nav__button md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </div>
@@ -823,7 +793,7 @@ https://arxiv.org/abs/1502.03167v3.</p>
 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                TransformedState
+                load
               </div>
 </div>
 </a>
@@ -872,14 +842,14 @@ https://arxiv.org/abs/1502.03167v3.</p>
 </div>
 </footer>
 </div>
-<script src="../../../assets/javascripts/vendor.92ffa368.min.js"></script>
-<script src="../../../assets/javascripts/bundle.5123e3d4.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+<script src="../../../assets/javascripts/vendor.c3dc8c49.min.js"></script>
+<script src="../../../assets/javascripts/bundle.f9edbbd5.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
 <script>
         app = initialize({
           base: "../../..",
           features: [],
           search: Object.assign({
-            worker: "../../../assets/javascripts/worker/search.a68abb33.min.js"
+            worker: "../../../assets/javascripts/worker/search.8e2cddea.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>
