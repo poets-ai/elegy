@@ -350,7 +350,7 @@ class Model:
         if metrics_states is not None:
             self.metrics_states = metrics_states
 
-        return {key: np.asarray(value) for key, value in logs.items()}
+        return logs
 
     def _update(
         self,
@@ -1054,7 +1054,7 @@ class Model:
         if metrics_states is not None:
             self.metrics_states = metrics_states
 
-        return {key: np.asarray(value) for key, value in logs.items()}
+        return logs
 
     def _test(
         self,
