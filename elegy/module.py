@@ -123,7 +123,6 @@ class Module(metaclass=ModuleMeta):
         self.dtype = dtype
         self._params = set()
         self._states = set()
-        self._states_initial = set()
         self._submodules = set()
         self._dynamic_submodules = []
         self._ignore = set()
@@ -276,10 +275,10 @@ class Module(metaclass=ModuleMeta):
         """
         states = module_tree_map(
             lambda module: {
-                key: getattr(module, key_initial) if _initial else getattr(module, key)
-                for key, key_initial in zip(
-                    getattr(module, "_states"), getattr(module, "_states_initial")
-                )
+                key: getattr(module, as_initial(key))
+                if _initial
+                else getattr(module, key)
+                for key in getattr(module, "_states")
                 if hasattr(module, key)
             },
             self,
@@ -316,8 +315,8 @@ class Module(metaclass=ModuleMeta):
 
     def clear_initial_states(self):
         def clear_module(module: Module):
-            for name in module._states_initial:
-                delattr(module, name)
+            for name in module._states:
+                delattr(module, as_initial(name))
 
         tree_exec(clear_module, self)
 
@@ -463,10 +462,8 @@ def get_state(
             if not context.building:
                 raise ValueError(f"Trying to initialize '{name}' outside of `init`.")
 
-            initial_name = f"{name}__initial__"
-
             module._states.add(name)
-            module._states_initial.add(initial_name)
+            initial_name = as_initial(name)
 
             if dtype is None:
                 dtype = module.dtype
@@ -514,10 +511,8 @@ def set_state(name: str, value: tp.Any):
             if not context.building:
                 raise ValueError(f"Trying to initialize '{name}' outside of `init`.")
 
-            initial_name = f"{name}__initial__"
-
             module._states.add(name)
-            module._states_initial.add(initial_name)
+            initial_name = as_initial(name)
 
             setattr(module, name, value)
             setattr(module, initial_name, value)
@@ -987,3 +982,7 @@ def to_module(f):
     MyModule.__name__ = f.__name__
 
     return MyModule
+
+
+def as_initial(name):
+    return f"{name}__initial__"
