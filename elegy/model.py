@@ -481,8 +481,8 @@ class Model:
             else ({}, None)
         )
 
-        # get total loss
-        loss = logs["loss"] = sum(logs.values()) + sum(context.losses.values())
+        # calculate total loss
+        loss = sum(logs.values()) + sum(context.losses.values())
 
         # add losses and metrics from hooks
         if loss_context is not None:
@@ -495,6 +495,9 @@ class Model:
 
         logs.update(context.losses)
         logs.update(context.metrics)
+
+        # set total loss
+        logs["loss"] = loss
 
         return loss, (y_pred, context, logs)
 
