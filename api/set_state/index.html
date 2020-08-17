@@ -794,23 +794,6 @@ of the instance can have that name.</p>
 </tr>
 </tbody>
 </table>
-<p><strong>Returns:</strong></p>
-<table>
-<thead>
-<tr>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code></code></td>
-<td>
-<p>The value of the state.</p>
-</td>
-</tr>
-</tbody>
-</table>
 <details class="quote">
 <summary>Source code in <code>elegy/hooks.py</code></summary>
 <table class="highlighttable">
@@ -843,15 +826,12 @@ of the instance can have that name.</p>
 159
 160
 161
-162
-163
-164
-165</pre>
+162</pre>
 </div>
 </td>
 <td class="code">
 <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">set_state</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">):</span>
+<pre><span></span><code><span class="k">def</span> <span class="nf">set_state</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="sd">"""</span>
 <span class="sd">    A hook that lets you update a state of the current module, if the state does not </span>
 <span class="sd">    exist it will be created.</span>
@@ -860,9 +840,6 @@ of the instance can have that name.</p>
 <span class="sd">        name: The name of the state. It must be unique and no other field/property/method</span>
 <span class="sd">            of the instance can have that name.</span>
 <span class="sd">        value: The updated value of the state.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        The value of the state.</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="n">LOCAL</span><span class="o">.</span><span class="n">contexts</span><span class="p">:</span>
         <span class="n">context</span><span class="p">:</span> <span class="n">Context</span> <span class="o">=</span> <span class="n">LOCAL</span><span class="o">.</span><span class="n">contexts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>

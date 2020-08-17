@@ -815,7 +815,10 @@ if <code>get_summaries</code> is set to <code>True</code>, else this hook does n
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>168
+<pre><span></span>165
+166
+167
+168
 169
 170
 171
@@ -855,15 +858,12 @@ if <code>get_summaries</code> is set to <code>True</code>, else this hook does n
 205
 206
 207
-208
-209
-210
-211</pre>
+208</pre>
 </div>
 </td>
 <td class="code">
 <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">add_summary</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">value</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+<pre><span></span><code><span class="k">def</span> <span class="nf">add_summary</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">value</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="sd">"""</span>
 <span class="sd">    A hook that lets you define a summary in the current module. Its primary</span>
 <span class="sd">    use is to keep track of certain values as they flow through the network</span>
