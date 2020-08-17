@@ -1,8 +1,18 @@
+
 # elegy.nn.Dropout
 
 ::: elegy.nn.Dropout
     selection:
         inherited_members: true
         members:
-            - __apply__
             - __init__
+            - call
+            - init
+            - apply
+            - reset
+            - get_parameters
+            - set_parameters
+            - get_states
+            - set_states
+            - submodules
+        

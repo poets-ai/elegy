@@ -1,36 +1,38 @@
 import logging
 from unittest import TestCase
 
-import haiku as hk
+
 import numpy as np
 from jax.experimental import optix
+import jax
 
 import elegy
 
 np.random.seed(42)
 
 
-class ArrayDataAdapterTest(TestCase):
+class EarlyStoppingTest(TestCase):
     def test_example(self):
         class MLP(elegy.Module):
-            def __apply__(self, input):
-                mlp = hk.Sequential([hk.Linear(10),])
-                return mlp(input)
+            def call(self, x):
+                x = elegy.nn.Linear(10)(x)
+                x = jax.lax.stop_gradient(x)
+                return x
 
         callback = elegy.callbacks.EarlyStopping(monitor="loss", patience=3)
         # This callback will stop the training when there is no improvement in
         # the for three consecutive epochs.
         model = elegy.Model(
-            module=MLP.defer(),
+            module=MLP(),
             loss=elegy.losses.MeanSquaredError(),
             optimizer=optix.rmsprop(0.01),
         )
         history = model.fit(
-            np.arange(100).reshape(5, 20).astype(np.float32),
-            np.zeros(5),
+            np.ones((5, 20)),
+            np.zeros((5, 10)),
             epochs=10,
             batch_size=1,
             callbacks=[callback],
             verbose=0,
         )
-        assert len(history.history["loss"]) == 7  # Only 7 epochs are run.
+        assert len(history.history["loss"]) == 4  # Only 4 epochs are run.

@@ -76,7 +76,7 @@ class SparseCategoricalCrossentropy(Loss):
     model = elegy.Model(
         module_fn,
         loss=lelegy.losses.SparseCategoricalCrossentropy(),
-        metrics=lelegy.metrics.Accuracy.defer(),
+        metrics=lelegy.metrics.Accuracy(),
         optimizer=optix.adam(1e-3),
     )
     
@@ -87,9 +87,9 @@ class SparseCategoricalCrossentropy(Loss):
         self,
         from_logits: bool = False,
         reduction: tp.Optional[Reduction] = None,
-        name: tp.Optional[str] = None,
         weight: tp.Optional[float] = None,
         on: tp.Optional[types.IndexLike] = None,
+        **kwargs
     ):
         """
         Initializes `SparseCategoricalCrossentropy` instance.
@@ -101,21 +101,20 @@ class SparseCategoricalCrossentropy(Loss):
             reduction: (Optional) Type of `elegy.losses.Reduction` to apply to
                 loss. Default value is `SUM_OVER_BATCH_SIZE`. For almost all cases
                 this defaults to `SUM_OVER_BATCH_SIZE`.
-            name: Optional name for the op. Defaults to 'sparse_categorical_crossentropy'.
             weight: Optional weight contribution for the total loss. Defaults to `1`.
             on: A string or integer, or iterable of string or integers, that
                 indicate how to index/filter the `y_true` and `y_pred`
-                arguments before passing them to `__apply__`. For example if `on = "a"` then
+                arguments before passing them to `call`. For example if `on = "a"` then
                 `y_true = y_true["a"]`. If `on` is an iterable
                 the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`
                 then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
                 check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).
         """
-        super().__init__(reduction=reduction, name=name, weight=weight, on=on)
+        super().__init__(reduction=reduction, weight=weight, on=on, **kwargs)
 
         self._from_logits = from_logits
 
-    def __apply__(
+    def call(
         self, y_true, y_pred, sample_weight: tp.Optional[jnp.ndarray] = None
     ) -> jnp.ndarray:
         """

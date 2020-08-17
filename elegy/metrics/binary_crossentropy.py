@@ -37,7 +37,7 @@ class BinaryCrossentropy(Mean):
     model = elegy.Model(
         module_fn,
         loss=elegy.losses.CategoricalCrossentropy(),
-        metrics=elegy.metrics.BinaryCrossentropy.defer(),
+        metrics=elegy.metrics.BinaryCrossentropy(),
     )
     ```
     """
@@ -45,9 +45,8 @@ class BinaryCrossentropy(Mean):
     def __init__(
         self,
         from_logits: bool = False,
-        name: tp.Optional[str] = None,
-        dtype: tp.Optional[jnp.dtype] = None,
         on: tp.Optional[types.IndexLike] = None,
+        **kwargs
     ):
         """
         Creates a `BinaryCrossentropy` instance.
@@ -56,21 +55,20 @@ class BinaryCrossentropy(Mean):
             from_logits: Whether `y_pred` is expected to be a logits tensor. By
                 default, we assume that `y_pred` encodes a probability distribution.
                 **Note - Using from_logits=True is more numerically stable.**
-            name: string name of the metric instance.
-            dtype: data type of the metric result.
             on: A string or integer, or iterable of string or integers, that
                 indicate how to index/filter the `y_true` and `y_pred`
-                arguments before passing them to `__apply__`. For example if `on = "a"` then
+                arguments before passing them to `call`. For example if `on = "a"` then
                 `y_true = y_true["a"]`. If `on` is an iterable
                 the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`
                 then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
                 check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).
+            kwargs: Additional keyword arguments passed to Module.
         """
 
-        super().__init__(name=name, dtype=dtype, on=on)
+        super().__init__(on=on, **kwargs)
         self._from_logits = from_logits
 
-    def __apply__(
+    def call(
         self,
         y_true: jnp.ndarray,
         y_pred: jnp.ndarray,
@@ -96,7 +94,7 @@ class BinaryCrossentropy(Mean):
                 Array with the cumulative accuracy.
         """
 
-        return super().__apply__(
+        return super().call(
             values=binary_crossentropy(
                 y_true=y_true, y_pred=y_pred, from_logits=self._from_logits
             ),

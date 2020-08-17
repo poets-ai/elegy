@@ -1,8 +1,9 @@
 # Modules, Losses, and Metrics
 
-This guide goes into depth on how modules, losses and metrics work in Elegy and how to create your own. One of our goals with Elegy was to solve Keras restrictions around the type of losses and metrics you can define.
+This guide goes into depth on how modules, losses and metrics work in Elegy when used with an `elegy.Model`. For more in-depth explanation on how they work internally check out the [Module System](../module-system) guide.
 
-When creating a complex model with multiple outputs in Keras, say `output_a` and `output_b`, you are forced to define losses and metrics per-output only:
+## Keras Limitations
+One of our goals with Elegy was to solve Keras restrictions around the type of losses and metrics you can define. When creating a complex model with multiple outputs in Keras, say `output_a` and `output_b`, you are forced to define losses and metrics per-output only:
 
 ```python
 model.compile(
@@ -21,9 +22,14 @@ This very restrictive, in particular it doesn't allow the following:
 
 1. Losses and metrics that combine multiple outputs with multiple labels.
 2. A single loss/metrics based on multiple outputs (a especial case of the previous).
-3. Losses and metrics that depend on the inputs of the model.
+3. Losses and metrics that depend on other variables such as inputs, parameters, states, etc.
 
-Most of these are usually solvable by [concatenating the outputs / labels](https://stackoverflow.com/a/57030727/2118130) or passing the inputs as labels. However it is clear that these solution are hacky at best and depending on the problem they can be insufficient. 
+Most of these are usually solvable by tricks such as:
+* [Concatenating the outputs / labels](https://stackoverflow.com/a/57030727/2118130)
+* Passing the inputs and other kind of information as labels.
+* Using the functional API which is more flexible (but it only runs on graph mode making it very painful to debug).
+ 
+It is clear that these solution are hacky, sometimes they are non-obvious, and depending on the problem they can be insufficient.
 
 ## Dependency Injection
 Elegy solves the previous problems by introducing a _dependency injection_ mechanism that allows the user to express complex functions by simply declaring the variables it wants to use **by their name**. The following parameters are available for the different callables you pass to Elegy:
@@ -36,26 +42,44 @@ Elegy solves the previous problems by introducing a _dependency injection_ mecha
  | `y_pred`        | Outputs of the model                                           |        | x      | x    |
  | `sample_weight` | Importance of each sample                                      |        | x      | x    |
  | `class_weight`  | Importance of each class                                       |        | x      | x    |
- | `is_training`   | Whether training is currently in progress                      | x      | x      | x    |
- | `params`        | The learnable parameters of the model                          |        | x      | x    |
- | `state`         | The non-learnable parameters of the model                      |        | x      | x    |
+ | `training`      | Whether training is currently in progress                      | x      | x      | x    |
+ | `parameters`    | The learnable parameters of the model                          |        | x      | x    |
+ | `states`        | The non-learnable parameters of the model                      |        | x      | x    |
 
 
 !!! Note
-    The content of `x` is technically passed to the model's `Module` but the parameter name _x_ will bare no special meaning in that context.
+    The content of `x` is technically passed to the model's `Module` but the parameter name **"x"** will bare no special meaning in that context.
 
 
 ## Modules
 Modules define the architecture of the network, their primary task (in Elegy terms) is transforming the inputs `x` into outputs `y_pred`. To make it easy to consume the content of `x`, Elegy has some special but very simple rules on how the signature of any `Module` can be structured:
 
-**1.** If `x` is a `tuple`, then `x` will be expanded positional arguments a.k.a. `*args`, this means that the module will have define **exactly** as many arguments as there are inputs. For example:
+**1.** If `x` is simply an array it will be passed directly:
+
+```python hl_lines="2 10"
+class SomeModule(elegy.Module):
+    def call(self, m):
+        ...
+
+model = elegy.Model(SomeModule(), ...)
+
+a = get_inputs()
+
+model.fit(
+    x=a,
+    ...
+)
+```
+In this case `a` is passed as `m`.
+
+**2.** If `x` is a `tuple`, then `x` will be expanded positional arguments a.k.a. `*args`, this means that the module will have define **exactly** as many arguments as there are inputs. For example:
   
 ```python hl_lines="2 10"
 class SomeModule(elegy.Module):
-    def __apply__(self, m, n):
+    def call(self, m, n):
         ...
 
-...
+model = elegy.Model(SomeModule(), ...)
 
 a, b = get_inputs()
 
@@ -66,34 +90,30 @@ model.fit(
 ```
 In this case `a` is passed as `m` and `b` is passed as `n`.
 
-**2.** If `x` is a single array it will be converted internally into a `tuple` containing that array so the module can expect it as a positional argument.
-
 **3.** If `x` is a `dict`, then `x` will be expanded as keyword arguments a.k.a. `**kwargs`, in this case the module can optionally request any key defined in `x` as an argument. For example:
 
 ```python hl_lines="2 10"
 class SomeModule(elegy.Module):
-    def __apply__(self, n):
+    def call(self, n, o):
         ...
 
-...
+model = elegy.Model(SomeModule(), ...)
 
-a, b = get_inputs()
+a, b, c = get_inputs()
 
 model.fit(
-    x={"m": a, "n": b},
+    x={"m": a, "n": b, "o": c},
     ...
 )
 ```
-Here `n` is requested by name and you get as input its value `b`, and `m` with the content of `a` is safely ignored.
-
-
+Here only `n` and `o` are requested by name and you get as input its values `b` and `c`, the variable `m` with the content of `a` is safely ignored. If you want to request all the avaiable inputs you can use `**kwargs`.
 
 ## Losses
 Losses can request all the available parameters that Elegy provides for dependency injection. A typical loss will request the `y_true` and `y_pred` values (as its common / enforced in Keras). The Mean Squared Error loss for example is easily defined in these terms:
 
 ```python hl_lines="2"
 class MSE(elegy.Loss): 
-    def __apply__(self, y_true, y_pred):
+    def call(self, y_true, y_pred):
         return jnp.mean(jnp.square(y_true - y_pred), axis=-1)
 
 ...
@@ -103,14 +123,14 @@ X_train, y_train = get_inputs()
 model.fit(
     x=X_train,
     y=y_train,
-    ...
+    loss=MSE(),
 )
 ```
-Here the input `y` is passed as `y_true` to `MSE`. However, if you for example want to build an autoencoder then, according to the math, you actually don't need `y` because you are actually trying to reconstruct `x`. It makes perfect sense for this lossto be defined in terms of `x` and Elegy lets you do exactly that:
+Here the input `y` is passed as `y_true` to `MSE`. For an auto-encoder however, it makes perfect sense to define the loss only in terms of `x` (according to the math) and Elegy lets you do exactly that:
 
 ```python hl_lines="2"
 class AutoEncoderLoss(elegy.Loss): 
-    def __apply__(self, x, y_pred):
+    def call(self, x, y_pred):
         return jnp.mean(jnp.square(x - y_pred), axis=-1)
 
 ...
@@ -118,21 +138,21 @@ class AutoEncoderLoss(elegy.Loss):
 X_train, _ = get_inputs()
 
 model.fit(
-    x=X_train
-    ...
+    x=X_train,
+    loss=AutoEncoderLoss(),
 )
 ```
 
 Notice thanks to this we didn't have to define `y` on the `fit` method.
 
 !!! Note
-    An alternative here is to just use the previous definition of `MSE` and define `y=X_train`. However, avoiding the creation of redundant information is good in general and being explicit about dependencies might help documenting the behaviour of the model in general.
+    An alternative here is to just use the previous definition of `MSE` and define `y=X_train`. However, avoiding the creation of redundant information is good in general and being explicit about dependencies helps documenting the behaviour of the model.
 
 ### Partitioning a loss
 If you have a complex loss function that is just a sum of different parts that have to be compute together you might define something like this:
 ```python
 class SomeComplexFunction(elegy.Loss): 
-    def __apply__(self, x, y_true, y_pred, params, ...):
+    def call(self, x, y_true, y_pred, parameters, ...):
         ...
         return a + b + c
 ```
@@ -140,7 +160,7 @@ Elegy lets you return a `dict` specifying the name of each part:
 
 ```python
 class SomeComplexFunction(elegy.Loss): 
-    def __apply__(self, x, y_true, y_pred, params, ...):
+    def call(self, x, y_true, y_pred, parameters, ...):
         ...
         return {
             "a": a,
@@ -175,7 +195,7 @@ However, if you have many outputs and many labels, Elegy will just pass their st
 
 ```python
 class MyLoss(Elegy.Loss):
-    def __apply__(self, y_true, y_pred):
+    def call(self, y_true, y_pred):
         return some_function(
             y_true["label_a"], y_pred["output_a"], y_true["label_b"]
         )
@@ -188,11 +208,11 @@ model = Model(
 This example assumes the `y_true` and `y_pred` are dictionaries but they can also be tuples or nested structures. This strategy gives you maximal flexibility but come with the additional cost of having to implement your own loss function. 
 
 ### Keras-like behavior
-While having this flexibility available is good, there is a common scenario that Keras covers really well: what if you really just need one loss per (label, output) pair? In other words, how can we achieve equivalent of the following Keras code in Elege?
+While having this flexibility available is good, there is a common scenario that Keras covers really well: what if you really just need one loss per (label, output) pair? In other words, how can we achieve equivalent behaviour of the following Keras code?
 
 ```python
 class MyModel(keras.Model):
-    def __apply__(self, x):
+    def call(self, x):
         ...
         return {
             "key_a": key_a,
@@ -213,11 +233,11 @@ model.compile(
     },
 )
 ```
-To recover this behavior Elegy lets each `Loss` optionally filter / index the `y_true` and `y_pred` arguments based on a string key (for `dict`s) or integer key (for `tuple`s) in the constructor's `on` parameter:
+To do this Elegy lets each `Loss` optionally filter / index the `y_true` and `y_pred` arguments based on a string key (for `dict`s) or integer key (for `tuple`s) in the constructor's `on` parameter:
 
 ```python
 class MyModule(elegy.Module):
-    def __apply__(self, x):
+    def call(self, x):
         ...
         return {
             "key_a": key_a,
@@ -226,7 +246,7 @@ class MyModule(elegy.Module):
         }
 ...
 model = elegy.Model(
-    module=MyModule.defer(),
+    module=MyModule(),
     loss=[
         elegy.losses.BinaryCrossentropy(on="key_a", weight=10.0),
         elegy.losses.MeanSquaredError(on="key_b", weight=1.0),
@@ -238,7 +258,7 @@ This is almost exactly how Keras behaves except each loss is explicitly aware of
 
 ```python
 model = elegy.Model(
-    module=MyModule.defer(),
+    module=MyModule(),
     loss=[
         lambda y_true, y_pred: elegy.losses.BinaryCrossentropy(weight=10.0)(
             y_true=y_true["key_a"],
@@ -256,29 +276,29 @@ model = elegy.Model(
     For the same reasons Elegy doesn't support the `loss_weights` parameter as defined in `keras.compile`. Nonetheless, each loss accepts a `weight` argument directly, as seen in the examples above, which you can use to recover this behavior.
 
 ## Metrics
-Metrics behave exactly like losses except for one thing: Metrics can hold state. As in Keras, Elegy metrics are cumulative metrics which update their internal state on every step. From an user's perspective this means a couple of things:
+Metrics behave exactly like losses except for one thing:
 
-1. Metrics are implemented using Haiku `Module`, this means that you can't instantiate them normally outside of Haiku, hence the `lambda` / `defer` trick.
-2. You can use `hk.get_state` and `hk.set_state` when implementing your own metrics.
+!!! Quote
+    Metrics can hold state. 
 
-Here is an example of a simple implementation of `Accuracy` which uses this cumulative behavior:
+As in Keras, Elegy metrics are cumulative so they update their internal state on every step. From a user's perspective this means that you can use the `elegy.get_state` and `elegy.set_state` hooks when implementing your own metrics.
+
+Here is an example of a simple cumulative implementation of `Accuracy` which uses state hooks:
 
 ```python
 class Accuracy(elegy.Metric):
-    def __apply__(self, y_true, y_pred):
+    def call(self, y_true, y_pred):
 
-        total = hk.get_state("total", [], init=jnp.zeros)
-        count = hk.get_state("count", [], init=jnp.zeros)
+        total = elegy.get_state("total", initializer=0)
+        count = elegy.get_state("count", initializer=0)
 
         total += jnp.sum(y_true == y_pred)
         count += jnp.prod(y_true.shape)
 
-        hk.set_state("total", total)
-        hk.set_state("count", count)
+        elegy.set_state("total", total)
+        elegy.set_state("count", count)
 
         return total / count
 ```
 
-
-## A little secret
-We think users should use the base classes provided by Elegy (Module, Loss, Metric) for convenience, being true to Haiku and Jax in general Elegy also lets you use plain functions. Be cautious when doing this since you can easily run into trouble with Haiku's scoping rules.
+For a more in-depth description of how Elegy's hook system works check out the [Module System](../module-system) guide.

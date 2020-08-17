@@ -82,7 +82,7 @@ class MeanSquaredError(Loss):
     model = elegy.Model(
         module_fn,
         loss=elegy.losses.MeanSquaredError(),
-        metrics=elegy.metrics.Mean.defer(),
+        metrics=elegy.metrics.Mean(),
     )
     ```
     """
@@ -90,9 +90,9 @@ class MeanSquaredError(Loss):
     def __init__(
         self,
         reduction: tp.Optional[Reduction] = None,
-        name: tp.Optional[str] = None,
         weight: tp.Optional[float] = None,
         on: tp.Optional[types.IndexLike] = None,
+        **kwargs
     ):
         """
         Initializes `Mean` class.
@@ -101,20 +101,19 @@ class MeanSquaredError(Loss):
             reduction: (Optional) Type of `elegy.losses.Reduction` to apply to
                 loss. Default value is `SUM_OVER_BATCH_SIZE`. For almost all cases
                 this defaults to `SUM_OVER_BATCH_SIZE`.
-            name: Optional name for the loss.
             weight: Optional weight contribution for the total loss. Defaults to `1`.
             on: A string or integer, or iterable of string or integers, that
                 indicate how to index/filter the `y_true` and `y_pred`
-                arguments before passing them to `__apply__`. For example if `on = "a"` then
+                arguments before passing them to `call`. For example if `on = "a"` then
                 `y_true = y_true["a"]`. If `on` is an iterable
                 the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`
                 then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
                 check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).
         """
 
-        return super().__init__(reduction=reduction, name=name, weight=weight, on=on)
+        return super().__init__(reduction=reduction, weight=weight, on=on, **kwargs)
 
-    def __apply__(
+    def call(
         self,
         y_true: jnp.ndarray,
         y_pred: jnp.ndarray,

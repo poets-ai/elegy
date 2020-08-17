@@ -17,7 +17,7 @@ For this you can follow these guidelines:
 * You must provide documentation for the following:
     * The class definition.
     * The `__init__` method.
-    * The `__apply__` method.
+    * The `call` method.
 * Try to port the documentation + signature from its Keras counter part.
     * If so you must give credits to the original source file.
 * You must include tests.
@@ -43,7 +43,7 @@ We use `mkdocs`. If you create a new object that requires documentation please d
     selection:
         inherited_members: true
         members:
-            - __apply__
+            - call
             - __init__
 ```
 * Add and entry to `mkdocs.yml` inside `nav` pointing to this file. Checkout `mkdocs.yml`.

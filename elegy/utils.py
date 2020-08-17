@@ -1,6 +1,8 @@
 import functools
 import inspect
+import re
 import sys
+import threading
 import typing as tp
 from deepmerge import always_merger
 
@@ -15,6 +17,10 @@ else:
 
 
 EPSILON = 1e-7
+
+
+def wraps(f):
+    return functools.wraps(f, assigned=("__doc__", "__annotations__"), updated=())
 
 
 def inject_dependencies(
@@ -53,7 +59,7 @@ def get_function_args(f) -> tp.List[inspect.Parameter]:
 
 def get_input_args(
     x: tp.Union[np.ndarray, jnp.ndarray, tp.Dict[str, tp.Any], tp.Tuple],
-    is_training: bool,
+    training: bool,
 ) -> tp.Tuple[tp.Tuple, tp.Dict[str, tp.Any]]:
 
     if isinstance(x, tp.Tuple):
@@ -66,7 +72,7 @@ def get_input_args(
         args = (x,)
         kwargs = {}
 
-    apply_kwargs = dict(is_training=is_training)
+    apply_kwargs = dict(training=training)
     apply_kwargs.update(kwargs)
 
     return args, apply_kwargs
@@ -104,3 +110,17 @@ def split_and_merge(
 
     ds = split(d)
     return toolz.reduce(always_merger.merge, ds, {})
+
+
+def lower_snake_case(s: str) -> str:
+    s = re.sub(r"(?<!^)(?=[A-Z])", "_", s).lower()
+    parts = s.split("_")
+    output_parts = []
+
+    for i in range(len(parts)):
+        if i == 0 or len(parts[i - 1]) > 1:
+            output_parts.append(parts[i])
+        else:
+            output_parts[-1] += parts[i]
+
+    return "_".join(output_parts)

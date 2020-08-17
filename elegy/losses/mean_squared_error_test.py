@@ -1,5 +1,5 @@
 import elegy
-import haiku as hk
+
 from elegy.testing_utils import transform_and_run
 import jax.numpy as jnp
 import jax
@@ -37,6 +37,7 @@ def test_basic():
     assert list(mse(y_true, y_pred)) == [0.5, 0.5]
 
 
+@transform_and_run
 def test_function():
 
     rng = jax.random.PRNGKey(42)

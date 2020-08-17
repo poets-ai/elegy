@@ -1,9 +1,11 @@
-from elegy import utils
-import jax
-from elegy.losses.loss import Loss, Reduction
-import jax.numpy as jnp
-import haiku as hk
 import typing as tp
+
+import haiku as hk
+import jax
+import jax.numpy as jnp
+
+from elegy import utils
+from elegy.losses.loss import Loss, Reduction
 
 
 class GlobalL1L2(Loss):
@@ -44,20 +46,20 @@ class GlobalL1L2(Loss):
         l1=0.0,
         l2=0.0,
         reduction: tp.Optional[Reduction] = None,
-        name: tp.Optional[str] = None,
         weight: tp.Optional[float] = None,
+        **kwargs
     ):  # pylint: disable=redefined-outer-name
-        super().__init__(reduction=reduction, name=name, weight=weight)
+        super().__init__(reduction=reduction, weight=weight, **kwargs)
 
         self.l1 = l1
         self.l2 = l2
 
-    def __apply__(self, params: hk.Params) -> jnp.ndarray:
+    def call(self, parameters: hk.Params) -> jnp.ndarray:
         """
         Computes the L1 and L2 regularization penalty simultaneously.
 
         Arguments:
-            params: A structure with all the parameters of the model.
+            parameters: A structure with all the parameters of the model.
         """
 
         regularization: jnp.ndarray = jnp.array(0.0)
@@ -67,12 +69,12 @@ class GlobalL1L2(Loss):
 
         if self.l1:
             regularization += self.l1 * sum(
-                jnp.sum(jnp.abs(p)) for p in jax.tree_leaves(params)
+                jnp.sum(jnp.abs(p)) for p in jax.tree_leaves(parameters)
             )
 
         if self.l2:
             regularization += self.l2 * sum(
-                jnp.sum(jnp.square(p)) for p in jax.tree_leaves(params)
+                jnp.sum(jnp.square(p)) for p in jax.tree_leaves(parameters)
             )
 
         return regularization

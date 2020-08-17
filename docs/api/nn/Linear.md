@@ -1,9 +1,18 @@
+
 # elegy.nn.Linear
 
 ::: elegy.nn.Linear
     selection:
         inherited_members: true
         members:
-            - __apply__
             - __init__
-            - __call__
+            - call
+            - init
+            - apply
+            - reset
+            - get_parameters
+            - set_parameters
+            - get_states
+            - set_states
+            - submodules
+        

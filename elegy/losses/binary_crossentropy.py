@@ -61,7 +61,7 @@ class BinaryCrossentropy(Loss):
     model = elegy.Model(
         module_fn,
         loss=elegy.losses.BinaryCrossentropy(),
-        metrics=elegy.metrics.Accuracy.defer(),
+        metrics=elegy.metrics.Accuracy(),
         optimizer=optix.adam(1e-3),
     )
     ```
@@ -72,9 +72,9 @@ class BinaryCrossentropy(Loss):
         from_logits: bool = False,
         label_smoothing: float = 0,
         reduction: tp.Optional[Reduction] = None,
-        name: tp.Optional[str] = None,
         weight: tp.Optional[float] = None,
         on: tp.Optional[types.IndexLike] = None,
+        **kwargs
     ):
         """
         Initializes `CategoricalCrossentropy` instance.
@@ -94,21 +94,20 @@ class BinaryCrossentropy(Loss):
                 `tf.distribute.Strategy`, outside of built-in training loops such as
                 `elegy` `compile` and `fit`, ` or `SUM_OVER_BATCH_SIZE`
                 will raise an error.
-            name: Optional name for the op.
             weight: Optional weight contribution for the total loss. Defaults to `1`.
             on: A string or integer, or iterable of string or integers, that
                 indicate how to index/filter the `y_true` and `y_pred`
-                arguments before passing them to `__apply__`. For example if `on = "a"` then
+                arguments before passing them to `call`. For example if `on = "a"` then
                 `y_true = y_true["a"]`. If `on` is an iterable
                 the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`
                 then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
                 check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).
         """
-        super().__init__(reduction=reduction, name=name, weight=weight, on=on)
+        super().__init__(reduction=reduction, weight=weight, on=on, **kwargs)
         self._from_logits = from_logits
         self._label_smoothing = label_smoothing
 
-    def __apply__(
+    def call(
         self,
         y_true: jnp.ndarray,
         y_pred: jnp.ndarray,

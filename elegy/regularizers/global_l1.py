@@ -8,6 +8,7 @@ def GlobalL1(
     l: float = 0.01,
     reduction: tp.Optional[Reduction] = None,
     name: str = "l1_regularization",
+    **kwargs
 ) -> GlobalL1L2:
     r"""
     Create a regularizer that applies an L1 regularization penalty.
@@ -31,8 +32,9 @@ def GlobalL1(
 
     Arguments:
         l: L1 regularization factor.
+        kwargs: Additional keyword arguments passed to Module.
     
     Returns:
         An L1 Regularizer with the given regularization factor.
   """
-    return GlobalL1L2(l1=l, reduction=reduction, name=name)
+    return GlobalL1L2(l1=l, reduction=reduction, name=name, **kwargs)

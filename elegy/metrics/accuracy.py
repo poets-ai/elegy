@@ -49,35 +49,29 @@ class Accuracy(Mean):
     model = elegy.Model(
         module_fn,
         loss=elegy.losses.CategoricalCrossentropy(),
-        metrics=elegy.metrics.Accuracy.defer(),
+        metrics=elegy.metrics.Accuracy(),
         optimizer=optix.adam(1e-3),
     )
     ```
     """
 
-    def __init__(
-        self,
-        name: tp.Optional[str] = None,
-        dtype: tp.Optional[jnp.dtype] = None,
-        on: tp.Optional[types.IndexLike] = None,
-    ):
+    def __init__(self, on: tp.Optional[types.IndexLike] = None, **kwargs):
         """
         Creates a `Accuracy` instance.
 
         Arguments:
-            name: string name of the metric instance.
-            dtype: data type of the metric result.
             on: A string or integer, or iterable of string or integers, that
                 indicate how to index/filter the `y_true` and `y_pred`
-                arguments before passing them to `__apply__`. For example if `on = "a"` then
+                arguments before passing them to `call`. For example if `on = "a"` then
                 `y_true = y_true["a"]`. If `on` is an iterable
                 the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`
                 then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
                 check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).
+            kwargs: Additional keyword arguments passed to Module.
         """
-        super().__init__(name=name, dtype=dtype, on=on)
+        super().__init__(on=on, **kwargs)
 
-    def __apply__(
+    def call(
         self,
         y_true: jnp.ndarray,
         y_pred: jnp.ndarray,
@@ -102,6 +96,6 @@ class Accuracy(Mean):
             Array with the cumulative accuracy.
     """
 
-        return super().__apply__(
+        return super().call(
             values=accuracy(y_true=y_true, y_pred=y_pred), sample_weight=sample_weight,
         )

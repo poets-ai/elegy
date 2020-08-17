@@ -1,56 +1,225 @@
-# Some portiong of this code are adapted from Haiku:
-# https://github.com/deepmind/dm-haiku/blob/master/haiku/_src/transform.py#L228#L300
-
-import threading
 import typing as tp
-from contextlib import contextmanager
-from dataclasses import dataclass
 
-import haiku as hk
+import jax.numpy as jnp
 import numpy as np
-from haiku._src import base
-from haiku._src import transform as src_transform
+
+from elegy import module
+from elegy.module import LOCAL, Context, as_initial, get_unique_name
+from elegy.types import PRNGKey
+
+__all__ = [
+    "add_loss",
+    "add_metric",
+    "add_summary",
+    "get_parameter",
+    "get_state",
+    "next_rng_key",
+    "set_state",
+]
 
 
-T = tp.TypeVar("T")
-LOCAL = threading.local()
-LOCAL.contexts = []
-
-
-class ElegyContext(tp.NamedTuple):
-    get_summaries: bool
-    losses: tp.Dict[str, np.ndarray]
-    metrics: tp.Dict[str, np.ndarray]
-    summaries: tp.List[tp.Tuple[str, str, tp.Any]]
-
-    @classmethod
-    def create(cls, get_summaries: bool = False):
-        return cls(get_summaries=get_summaries, losses={}, metrics={}, summaries=[])
-
-
-@contextmanager
-def elegy_context(get_summaries: bool = False):
-
-    context = ElegyContext.create(get_summaries=get_summaries)
-    LOCAL.contexts.append(context)
-    try:
-        yield context
-    finally:
-        LOCAL.contexts.pop()
-
-
-def add_loss(name: str, value: np.ndarray):
+def get_parameter(
+    name: str,
+    shape: tp.Sequence[int] = (),
+    dtype: tp.Optional[np.dtype] = None,
+    initializer: tp.Union[
+        tp.Callable[[tp.Sequence[int], tp.Any], tp.Any], tp.Any
+    ] = jnp.zeros,
+) -> np.ndarray:
     """
-    A hook that lets you define a loss within a [`transform`][elegy.hooks.transform].
+    A hook that lets you add a parameter to the current module. The parameter will only be created once
+    during `init` and will reused afterwards.
+
+    Arguments:
+        name: The name of the parameter. It must be unique and no other field/property/method
+            of the instance can have that name.
+        shape: The shape of the parameter.
+        dtype: The type of the parameter.
+        initializer: A callable that takes in a shape and dtype and returns the initial value.
+
+    Returns:
+        The value of the parameter.
+    """
+    if LOCAL.contexts:
+        context: Context = LOCAL.contexts[-1]
+        module = context.module_c[-1]
+
+        if not hasattr(module, name):
+            if not context.building:
+                raise ValueError(f"Trying to initialize '{name}' outside of `init`.")
+
+            module._params.add(name)
+
+            if dtype is None:
+                dtype = module.dtype
+
+            initial_value = (
+                initializer(shape, dtype)
+                if isinstance(initializer, tp.Callable)
+                else initializer
+            )
+
+            setattr(module, name, initial_value)
+
+        elif name not in module._params:
+            raise ValueError(
+                f"Class already contained a property named '{name}', "
+                "please use a unique name for the parameter."
+            )
+
+        value = getattr(module, name)
+
+        return value
+    else:
+        raise ValueError("Cannot execute `get_parameter` outside of a `elegy.context`")
+
+
+def get_state(
+    name: str,
+    shape: tp.Sequence[int] = (),
+    dtype: tp.Optional[np.dtype] = None,
+    initializer: tp.Union[
+        tp.Callable[[tp.Sequence[int], tp.Any], tp.Any], tp.Any
+    ] = jnp.zeros,
+) -> tp.Any:
+    """
+    A hook that lets you add a state to the current module. The state will only be created once
+    during `init` and will reused afterwards.
+
+    Arguments:
+        name: The name of the state. It must be unique and no other field/property/method
+            of the instance can have that name.
+        shape: The shape of the state.
+        dtype: The type of the state.
+        initializer: A callable that takes in a shape and dtype and returns the initial value.
+
+    Returns:
+        The value of the state.
+    """
+
+    if LOCAL.contexts:
+        context: Context = LOCAL.contexts[-1]
+        module = context.module_c[-1]
+
+        if not hasattr(module, name):
+            if not context.building:
+                raise ValueError(f"Trying to initialize '{name}' outside of `init`.")
+
+            module._states.add(name)
+            initial_name = as_initial(name)
+
+            if dtype is None:
+                dtype = module.dtype
+
+            initial_value = (
+                initializer(shape, dtype)
+                if isinstance(initializer, tp.Callable)
+                else initializer
+            )
+
+            setattr(module, name, initial_value)
+            setattr(module, initial_name, initial_value)
+
+        elif name not in module._states:
+            raise ValueError(
+                f"Class already contained a property named '{name}', "
+                "please use a unique name for the state."
+            )
+
+        value = getattr(module, name)
+
+        return value
+    else:
+        raise ValueError("Cannot execute `get_state` outside of a `elegy.context`")
+
+
+def set_state(name: str, value: tp.Any) -> None:
+    """
+    A hook that lets you update a state of the current module, if the state does not 
+    exist it will be created.
+
+    Arguments:
+        name: The name of the state. It must be unique and no other field/property/method
+            of the instance can have that name.
+        value: The updated value of the state.
+    """
+    if LOCAL.contexts:
+        context: Context = LOCAL.contexts[-1]
+        module = context.module_c[-1]
+
+        if name not in module._states:
+            if not context.building:
+                raise ValueError(f"Trying to initialize '{name}' outside of `init`.")
+
+            module._states.add(name)
+            initial_name = as_initial(name)
+
+            setattr(module, name, value)
+            setattr(module, initial_name, value)
+        else:
+            setattr(module, name, value)
+    else:
+        raise ValueError("Cannot execute `set_state` outside of a `elegy.context`")
+
+
+def add_summary(name: tp.Optional[str], value: np.ndarray) -> None:
+    """
+    A hook that lets you define a summary in the current module. Its primary
+    use is to keep track of certain values as they flow through the network
+    so `Model.summary()` can show a representation of architecture.
 
     ```python
-    w = hk.get_parameter("w", [3, 5], init=jnp.zeros)
+    def call(self, x):
+        ...
+        y = jax.nn.relu(x)
+        elegy.add_summary("relu", y)
+        ...
+    ```
+
+    The summaries will be aggregated by [`apply`][elegy.module.Module.apply] 
+    if `get_summaries` is set to `True`, else this hook does nothing.
+
+    ```python
+    transformed_state = transform.apply(..., get_summaries=True, ...)
+    ```
+
+    Arguments:
+        name: The name of the loss. If a summary with the same
+            `name` already exists a unique identifier will be generated.
+        value: The value for the summary.
+    """
+
+    if LOCAL.contexts:
+        context: Context = LOCAL.contexts[-1]
+        module = context.module_c[-1]
+
+        if not context.get_summaries:
+            return
+
+        # name = level_names[module]
+        base_name = "/".join(context.path_names_c)
+
+        base_name = f"{base_name}/{name}" if name is not None else base_name
+        base_name = get_unique_name(context.summaries, base_name)
+        module = module if name is None else None  # pass module only if name is None
+
+        context.summaries.append((module, base_name, value))
+    else:
+        raise ValueError("Cannot execute `add_summary` outside of an `elegy.context`")
+
+
+def add_loss(name: str, value: np.ndarray) -> None:
+    """
+    A hook that lets you define a loss within a [`module`][elegy.module.Module].
+
+    ```python
+    w = elegy.get_parameter("w", [3, 5], initializer=jnp.ones)
     
     # L2 regularization penalty
     elegy.add_loss("l2_regularization", 0.01 * jnp.mean(w ** 2))
     ```
 
-    The loss will be aggregated by [`transform.apply`][elegy.hooks.transform.apply]
+    The loss will be aggregated by [`Module.apply`][elegy.module.Module.apply]
     and automatically handled by [`Model`][elegy.model.Model].
 
     Arguments:
@@ -58,28 +227,30 @@ def add_loss(name: str, value: np.ndarray):
             different calls values will be added together.
         value: The value for the loss.
     """
-    name += "_loss"
+    if not name.endswith("loss"):
+        name += "_loss"
+
     if LOCAL.contexts:
-        context: ElegyContext = LOCAL.contexts[-1]
+        context: Context = LOCAL.contexts[-1]
 
         if name in context.losses:
             context.losses[name] += value
         else:
             context.losses[name] = value
     else:
-        raise ValueError("Cannot execute `add_loss` outside of an `elegy.transform`")
+        raise ValueError("Cannot execute `add_loss` outside of an `elegy.context`")
 
 
-def add_metric(name: str, value: np.ndarray):
+def add_metric(name: str, value: np.ndarray) -> None:
     """
-    A hook that lets you define a metric within a [`transform`][elegy.hooks.transform].
+    A hook that lets you define a metric within a [`module`][elegy.module.Module].
 
     ```python
     y = jax.nn.relu(x)
     elegy.add_metric("activation_mean", jnp.mean(y))
     ```
 
-    The metrics will be aggregated by [`transform.apply`][elegy.hooks.transform.apply]
+    The metrics will be aggregated by [`Module.apply`][elegy.module.Module.apply]
     and automatically handled by [`Model`][elegy.model.Model].
 
     Arguments:
@@ -88,296 +259,64 @@ def add_metric(name: str, value: np.ndarray):
         value: The value for the metric.
     """
     if LOCAL.contexts:
-        context: ElegyContext = LOCAL.contexts[-1]
+        context: Context = LOCAL.contexts[-1]
 
-        name = f"{base.current_bundle_name()}/{name}"
+        base_name = "/".join(context.path_names_c)
+        name = f"{base_name}/{name}"
         name = get_unique_name(context.metrics, name)
-
         context.metrics[name] = value
     else:
-        raise ValueError("Cannot execute `add_metric` outside of an `elegy.transform`")
+        raise ValueError("Cannot execute `add_metric` outside of an `elegy.context`")
 
 
-def add_summary(name: tp.Optional[str], class_name, value: np.ndarray):
+def next_rng_key() -> PRNGKey:
     """
-    A hook that lets you define a summary within a [`transform`][elegy.hooks.transform].
+    A hook that returns a unique JAX RNG key split from the current global key.
 
     ```python
-    y = jax.nn.relu(x)
-    elegy.add_summary("relu", "Relu", y)
+    key = elegy.next_rng_key()
+    x = jax.random.uniform(key, [])
     ```
 
-    The metrics will be aggregated by [`transform.apply`][elegy.hooks.transform.apply]
-    and automatically handled by [`Model`][elegy.model.Model]. 
-
-    Be default `add_summary` doesn't do anything, in order to enable the collection of
-    summaries `get_summaries` must be set to `True`:
-
-    ```python
-    transformed_state = transform.apply(..., get_summaries=True, ...)
-    ```
-
-    [`Model.summary`][elegy.model.Model.summary] will render added summaries. 
-
-    Arguments:
-        name: The name of the loss. If a metric with the same
-            `name` already exists a unique identifier will be generated.
-        class_name:
-        value: The value for the metric.
+    Returns:
+        A unique (within a transformed function) JAX rng key that can be used with
+        APIs such as ``jax.random.uniform``.
     """
-
     if LOCAL.contexts:
-        context: ElegyContext = LOCAL.contexts[-1]
-
-        if not context.get_summaries:
-            return
-
-        base_names = base.current_bundle_name()
-        name = f"{base_names}/{name}" if name is not None else base_names
-        name = get_unique_name(context.summaries, name)
-
-        context.summaries.append((name, class_name, value))
+        context: Context = LOCAL.contexts[-1]
+        if context.rng_sequence is not None:
+            context: Context = LOCAL.contexts[-1]
+            return next(context.rng_sequence)
+        else:
+            raise ValueError(
+                "Cannot execute `rng` not set in context, check init or apply."
+            )
     else:
-        raise ValueError("Cannot execute `add_summary` outside of an `elegy.transform`")
+        raise ValueError("Cannot execute `next_rng_key` outside of an `elegy.context`")
 
 
-def get_unique_name(
-    logs: tp.Union[tp.Dict[str, tp.Any], tp.List[tp.Tuple[str, str, tp.Any]]], name: str
-):
-
-    names: tp.Set[str] = set(logs.values()) if isinstance(logs, dict) else {
-        t[0] for t in logs
-    }
-
-    if name not in names:
-        return name
-
-    i = 1
-    while f"{name}_{i}" in names:
-        i += 1
-
-    return f"{name}_{i}"
-
-
-class TransformedState(tp.NamedTuple):
+def is_training() -> bool:
     """
-    A named tuple representing the outputs of [elegy.hooks.transform.apply][].
-
-    Attributes:
-        outputs: The output of the transformed function.
-        state: The states parameters.
-        losses: The collected losses added by [`add_loss`][elegy.hooks.add_loss].
-        metrics: The collected metrics added by [`add_metric`][elegy.hooks.add_metric].
-        summaries: A list of `(name, class_name, value)` tuples
-            added by [`add_summary`][elegy.hooks.add_summary].
-    """
-
-    outputs: tp.Any
-    state: hk.State
-    losses: hk.State
-    metrics: hk.State
-    summaries: tp.List[tp.Tuple[str, str, tp.Any]]
-
-
-class transform(tp.NamedTuple):
-    """
-    Transforms a function using Elegy modules into pure functions.
-
-    `transform` is a stronger version of 
-    [hk.transform_with_state](https://dm-haiku.readthedocs.io/en/latest/api.html?highlight=transform#haiku.transform_with_state)
-    that lets you use all of the hooks provided by Haiku plus some 
-    custom hooks from Elegy:
-    
-    - [`add_loss`][elegy.hooks.add_loss]
-    - [`add_metric`][elegy.hooks.add_metric]
-    - [`add_summary`][elegy.hooks.add_summary]
-
-    `transform.apply` return additional outputs that give you the structures
-    collected by these hooks:
+    A hook that returns the current training status.
 
     ```python
-    def f(a, b, c):
+    training = elegy.is_training()
+
+    if training:
         ...
-        elegy.add_loss("the_universe", 42)
-        ...
-    
-    transform = elegy.transform(f)
-    params, state = transform.init(rng, args=(a, b), kwargs={"c": c})  # f(a, b, c=c)
-    outputs, state, losses, metrics, summaries = transform.apply(
-        params, state, rng, args=(a, b), kwargs={"c": c}
-    )
-
-    assert losses["the_universe_loss"] == 42
-    ``` 
-    
-    As in Haiku, the `rng` argument for `apply` is optional. Contrary
-    to Haiku, `transform` is a class and not a function.
-
-    Attributes:
-        f: A function closing over [elegy.Module] instances.
-    """
-
-    f: tp.Callable
-
-    def init(
-        self,
-        rng: tp.Optional[tp.Union[np.ndarray, int]],
-        args: tp.Tuple = (),
-        kwargs: tp.Optional[tp.Dict] = None,
-    ) -> tp.Tuple[hk.Params, hk.State]:
-        """
-        Initializes your function collecting parameters and state.
-        """
-        if kwargs is None:
-            kwargs = {}
-
-        rng = src_transform.to_prng_sequence(rng, err_msg=src_transform.INIT_RNG_ERROR)
-
-        with base.new_context(rng=rng) as ctx, elegy_context():
-            self.f(*args, **kwargs)
-
-        initital_state = ctx.collect_initial_state()
-
-        return ctx.collect_params(), initital_state
-
-    def apply(
-        self,
-        params: tp.Optional[hk.Params],
-        state: tp.Optional[hk.State],
-        rng: tp.Optional[tp.Union[np.ndarray, int]] = None,
-        get_summaries: bool = False,
-        args: tp.Tuple = (),
-        kwargs: tp.Optional[tp.Dict] = None,
-    ) -> TransformedState:
-        """
-        Applies your function injecting parameters and state.
-
-        Arguments:
-            params:
-            state: 
-            rng: 
-            get_summaries: 
-            args: 
-            kwargs: 
-
-        Returns:
-            A [`TransformedState`][elegy.hooks.TransformedState] namedtuple consiting 
-            of (outputs, state, losses, metrics, summaries).
-        """
-        if kwargs is None:
-            kwargs = {}
-
-        params = src_transform.check_mapping("params", params)
-        state = src_transform.check_mapping("state", state)
-        rng = src_transform.to_prng_sequence(
-            rng,
-            err_msg=(
-                src_transform.APPLY_RNG_STATE_ERROR
-                if state
-                else src_transform.APPLY_RNG_ERROR
-            ),
-        )
-
-        with base.new_context(
-            params=params, state=state, rng=rng
-        ) as ctx, elegy_context(get_summaries=get_summaries) as elegy_ctx:
-            outputs = self.f(*args, **kwargs)
-
-        return TransformedState(
-            outputs=outputs,
-            state=ctx.collect_state(),
-            losses=elegy_ctx.losses,
-            metrics=elegy_ctx.metrics,
-            summaries=elegy_ctx.summaries,
-        )
-
-
-class HookStates(tp.NamedTuple):
-    """
-    A named tuple representing the outputs of [elegy.hooks.transform.apply][].
-
-    Attributes:
-        outputs: The output of the transformed function.
-        state: The states parameters.
-        losses: The collected losses added by [`add_loss`][elegy.hooks.add_loss].
-        metrics: The collected metrics added by [`add_metric`][elegy.hooks.add_metric].
-        summaries: A list of `(name, class_name, value)` tuples
-            added by [`add_summary`][elegy.hooks.add_summary].
-    """
-
-    params: hk.Params
-    state: hk.State
-    losses: hk.State
-    metrics: hk.State
-    summaries: tp.List[tp.Tuple[str, str, tp.Any]]
-
-
-@dataclass
-class Context:
-    _hook_states: tp.Optional[HookStates]
-
-    def collect(self) -> HookStates:
-        assert self._hook_states
-        return self._hook_states
-
-
-@contextmanager
-def context(
-    hook_states: tp.Union[HookStates, tp.Tuple[hk.Params, hk.State], None] = None,
-    rng: tp.Optional[tp.Union[np.ndarray, int]] = None,
-    get_summaries: bool = False,
-) -> tp.Iterator[Context]:
-    """
-        Applies your function injecting parameters and state.
-
-        Arguments:
-            params:
-            state: 
-            rng: 
-            get_summaries: 
-            args: 
-            kwargs: 
-
-        Returns:
-            A [`TransformedState`][elegy.hooks.TransformedState] namedtuple consiting 
-            of (outputs, state, losses, metrics, summaries).
-        """
-    context = Context(None)
-
-    if hook_states:
-
-        params, state, *_ = hook_states
-
-        params = src_transform.check_mapping("params", params)
-        state = src_transform.check_mapping("state", state)
-
-        rng = src_transform.to_prng_sequence(
-            rng,
-            err_msg=(
-                src_transform.APPLY_RNG_STATE_ERROR
-                if state
-                else src_transform.APPLY_RNG_ERROR
-            ),
-        )
     else:
-        params = None
-        state = None
+        ...
+    ```
 
-    try:
+    Returns:
+        A boolean value indicating whether training is currently happening.
+    """
+    if LOCAL.contexts:
+        context: module.Context = module.LOCAL.contexts[-1]
+        return context.training
+    else:
+        raise ValueError("Cannot execute `is_training` outside of an `elegy.context`")
 
-        with base.new_context(
-            params=params, state=state, rng=rng
-        ) as ctx, elegy_context(get_summaries=get_summaries) as elegy_ctx:
 
-            yield context
-
-        context._hook_states = HookStates(
-            params=params if params else ctx.collect_params(),
-            state=ctx.collect_state() if hook_states else ctx.collect_initial_state(),
-            losses=elegy_ctx.losses,
-            metrics=elegy_ctx.metrics,
-            summaries=elegy_ctx.summaries,
-        )
-
-    finally:
-        pass
+# patch module
+module.add_summary = add_summary

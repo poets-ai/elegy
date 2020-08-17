@@ -143,4 +143,5 @@ cython_debug/
 /test.*
 /summaries
 /runs
-/docs/guides/model
+/docs/model
+/models

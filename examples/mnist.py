@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
 
 import dataget
-import haiku as hk
+
 import jax
 import jax.numpy as jnp
 from jax.numpy.lax_numpy import mod
@@ -41,7 +41,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             super().__init__()
             self.f = f
 
-        def __apply__(self, x):
+        def call(self, x):
             return self.f(x)
 
     class MLP(elegy.Module):
@@ -52,30 +52,27 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             self.n1 = n1
             self.n2 = n2
 
-        def __apply__(self, image: jnp.ndarray, is_training: bool):
-
+        def call(self, image: jnp.ndarray):
             image = image.astype(jnp.float32) / 255.0
 
-            mlp = hk.Sequential(
-                [
-                    elegy.nn.Flatten(),
-                    elegy.nn.Linear(self.n1),
-                    jax.nn.relu,
-                    elegy.nn.Linear(self.n2),
-                    jax.nn.relu,
-                    elegy.nn.Linear(10),
-                ]
+            mlp = elegy.nn.sequential(
+                elegy.nn.Flatten(),
+                elegy.nn.Linear(self.n1),
+                jax.nn.relu,
+                elegy.nn.Linear(self.n2),
+                jax.nn.relu,
+                elegy.nn.Linear(10),
             )
 
             return mlp(image)
 
     model = elegy.Model(
-        module=MLP.defer(n1=300, n2=100),
+        module=MLP(n1=300, n2=100),
         loss=[
             elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
             elegy.regularizers.GlobalL2(l=1e-4),
         ],
-        metrics=elegy.metrics.SparseCategoricalAccuracy.defer(),
+        metrics=elegy.metrics.SparseCategoricalAccuracy(),
         optimizer=optix.adam(1e-3),
         run_eagerly=eager,
     )
@@ -92,6 +89,8 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
         shuffle=True,
         callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],
     )
+
+    print(model.module.submodules)
 
     plot_history(history)
 

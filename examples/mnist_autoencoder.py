@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
 
 import dataget
-import haiku as hk
+
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -41,34 +41,34 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             self.n1 = n1
             self.n2 = n2
 
-        def __apply__(self, image: jnp.ndarray):
+        def call(self, image: jnp.ndarray):
             image = image.astype(jnp.float32) / 255.0
-            x = hk.Flatten()(image)
-            x = hk.Sequential(
-                [
-                    hk.Linear(self.n1),
-                    jax.nn.relu,
-                    hk.Linear(self.n2),
-                    jax.nn.relu,
-                    hk.Linear(self.n1),
-                    jax.nn.relu,
-                    hk.Linear(x.shape[-1]),
-                    jax.nn.sigmoid,
-                ]
+            x = elegy.nn.Flatten()(image)
+            x = elegy.nn.sequential(
+                elegy.nn.Linear(self.n1),
+                jax.nn.relu,
+                elegy.nn.Linear(self.n2),
+                jax.nn.relu,
+                elegy.nn.Linear(self.n1),
+                jax.nn.relu,
+                elegy.nn.Linear(x.shape[-1]),
+                jax.nn.sigmoid,
             )(x)
             return x.reshape(image.shape) * 255
 
     class MeanSquaredError(elegy.Loss):
         # we request `x` instead of `y_true` since we are don't require labels in autoencoders
-        def __apply__(self, x, y_pred):
+        def call(self, x, y_pred):
             return jnp.mean(jnp.square(x - y_pred), axis=-1)
 
     model = elegy.Model(
-        module=MLP.defer(n1=256, n2=64),
+        module=MLP(n1=256, n2=64),
         loss=MeanSquaredError(),
         optimizer=optix.rmsprop(0.001),
         run_eagerly=eager,
     )
+
+    model.summary(X_train[:64])
 
     # Notice we are not passing `y`
     history = model.fit(

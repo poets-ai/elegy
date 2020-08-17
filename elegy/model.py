@@ -1,6 +1,15 @@
 # Implementation based on tf.keras.engine.training.py
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
+import re
+from elegy import types
+import functools
+from elegy.module import (
+    ApplyCallable,
+    ApplyContext,
+    Module,
+    PRNGSequence,
+)
 from io import StringIO
 import json
 import logging
@@ -13,7 +22,6 @@ from pathlib import Path
 
 import cloudpickle
 import deepdish
-import haiku as hk
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -22,7 +30,6 @@ from jax.experimental import optix
 from tabulate import tabulate
 import yaml
 
-from elegy import hooks
 from elegy.losses import loss_modes
 from elegy.metrics import metric_modes
 
@@ -37,13 +44,16 @@ from .data import (
 )
 
 
+__all__ = ["Model", "load"]
+
+
 class Mode(Enum):
     predict = 1
     test = 2
     train = 3
 
 
-class Model(object):
+class Model:
     """
     `Model` is tasked with performing training, evaluation, and inference for a given
     `elegy.Module` or `haiku.Module`.
@@ -51,7 +61,7 @@ class Model(object):
     To create a `Model` you first have to define its architecture in a `Module`:
     ```python
     class MLP(elegy.Module):
-        def __apply__(self, image: jnp.ndarray) -> jnp.ndarray:
+        def call(self, image: jnp.ndarray) -> jnp.ndarray:
             mlp = hk.Sequential([
                 hk.Flatten(),
                 hk.Linear(300),
@@ -64,12 +74,12 @@ class Model(object):
     Then you can pass this `Module` to the `Model`'s constructor and specify additional things like losses, metrics, optimizer, and callbacks:
     ```python
     model = elegy.Model(
-        module=MLP.defer(),
+        module=MLP(),
         loss=[
             elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
             elegy.regularizers.GlobalL2(l=1e-5),
         ],
-        metrics=elegy.metrics.SparseCategoricalAccuracy.defer(),
+        metrics=elegy.metrics.SparseCategoricalAccuracy(),
         optimizer=optix.rmsprop(1e-3),
     )
     ```
@@ -80,11 +90,11 @@ class Model(object):
     additional details.
 
     Attributes:
-        params: A `haiku.Params` structure with the weights of the model.
-        state: A `haiku.State` structure with non-trainable parameters of the model.
-        optimizer_state:  A `optix.OptState` structure with state of the optimizer.
-        metrics_state: A `haiku.State` structure with the state of the metrics.
-        initial_metrics_state: A `haiku.State` structure with the initial state of the metrics.
+        parameters: A `haiku.Params` structure with the weights of the model.
+        states: A `haiku.State` structure with non-trainable parameters of the model.
+        optimizer_state:  A `optix.OptState` structure with states of the optimizer.
+        metrics_states: A `haiku.State` structure with the states of the metrics.
+        initial_metrics_state: A `haiku.State` structure with the initial states of the metrics.
         run_eagerly: Settable attribute indicating whether the model should run eagerly.
             Running eagerly means that your model will be run step by step, like Python code, instead of
             using Jax's `jit` to optimize the computation. Your model might run slower, but it should become easier for you to debug 
@@ -92,39 +102,56 @@ class Model(object):
     """
 
     # public fields
-    params: tp.Optional[hk.Params]
-    state: tp.Optional[hk.State]
+    module: Module
     optimizer_state: tp.Optional[optix.OptState]
-    metrics_state: tp.Optional[hk.State]
-    initial_metrics_state: tp.Optional[hk.State]
+    initial_metrics_state: tp.Optional[tp.Dict]
     run_eagerly: bool
 
     # private fields
-    _module_fn: tp.Callable
-    _model_transform: hooks.transform
-    _loss_fn: tp.Optional[tp.Callable]
-    _metrics: tp.Optional[hk.TransformedWithState]
+    loss_module: tp.Optional[Module]
+    metrics_module: tp.Optional[Module]
     _optimizer: optix.GradientTransformation
-    _rngs: hk.PRNGSequence
+    _rngs: PRNGSequence
+    _parameters: tp.Optional[types.Parameters]
+    _states: tp.Optional[types.States]
+    _metrics_states: tp.Optional[tp.Dict]
+
+    __all__ = [
+        "evaluate",
+        "fit",
+        "load",
+        "predict",
+        "predict_on_batch",
+        "reset",
+        "reset_metrics",
+        "save",
+        "summary",
+        "test_on_batch",
+        "train_on_batch",
+        "full_state",
+        "parameters",
+        "seed",
+        "states",
+    ]
 
     def __init__(
         self,
-        module: tp.Callable,
+        module: Module,
         loss: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
         metrics: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
         optimizer: tp.Optional[optix.GradientTransformation] = None,
         run_eagerly: bool = False,
-        params: tp.Optional[hk.Params] = None,
-        state: tp.Optional[hk.State] = None,
+        parameters: tp.Optional[types.Parameters] = None,
+        states: tp.Optional[types.States] = None,
         optimizer_state: tp.Optional[optix.OptState] = None,
-        metrics_state: tp.Optional[hk.State] = None,
-        initial_metrics_state: tp.Optional[hk.State] = None,
+        metrics_states: tp.Optional[tp.Dict] = None,
+        initial_metrics_state: tp.Optional[tp.Dict] = None,
         seed: tp.Union[np.ndarray, int] = 42,
     ):
         """[summary]
 
         Arguments:
-            module: A 0-argument function that returns a Haiku or Elegy `Module` instance.
+            module: A `Module` instance.
             loss: A `elegy.Loss` or `Callable` instance representing the loss function of the network.
                 You can define more loss terms by simply passing a possibly nested structure of
                 lists and dictionaries of `elegy.Loss` or `Callable`s. Usually a plain list of losses is enough
@@ -150,38 +177,71 @@ class Model(object):
                 Running eagerly means that your model will be run step by step, like Python code, instead of
                 using Jax's `jit` to. Your model might run slower, but it should become easier for you to debug 
                 it by stepping into individual layer calls.
-            params: A `haiku.Params` structure with the weights of the model.
-            state: A `haiku.State` structure with non-trainable parameters of the model.
-            optimizer_state:  A `optix.OptState` structure with state of the optimizer.
-            metrics_state: A `haiku.State` structure with the state of the metrics.
-            initial_metrics_state: A `haiku.State` structure with the initial state of the metrics.
-            seed: The initial random state of the model.
+            parameters: A `haiku.Params` structure with the weights of the model.
+            states: A `haiku.State` structure with non-trainable parameters of the model.
+            optimizer_state:  A `optix.OptState` structure with states of the optimizer.
+            metrics_states: A `haiku.State` structure with the states of the metrics.
+            initial_metrics_state: A `haiku.State` structure with the initial states of the metrics.
+            seed: The initial random states of the model.
         """
 
-        self._module_fn = module
-        self._model_transform = hooks.transform(self._module_fn)
-        self._loss_fn = loss_modes.forward_all(loss) if loss is not None else None
-        self._metrics_transform = (
-            hk.transform_with_state(
-                utils.inject_dependencies(
-                    metric_modes.forward_all(metrics),
-                    rename={"__params": "params", "__state": "state"},
-                )
-            )
-            if metrics
-            else None
-        )
+        self.module = module
+        self.loss_module = loss_modes.Losses(loss) if loss is not None else None
+        self.metrics_module = metric_modes.Metrics(metrics) if metrics else None
         self._optimizer = optimizer if optimizer is not None else optix.adam(1e-3)
-        self._rngs = hk.PRNGSequence(seed)
-        self.params = params
-        self.state = state
+        self._rngs = PRNGSequence(seed)
+        self._parameters = parameters
+        self._states = states
+        self._metrics_states = (
+            metrics_states if self.metrics_module is not None else None
+        )
         self.optimizer_state = optimizer_state
-        self.metrics_state = metrics_state
         self.initial_metrics_state = initial_metrics_state
         self.run_eagerly = run_eagerly
 
+        utils.wraps(self.module)(self)
+
+    @property
+    def parameters(self) -> tp.Optional[types.Parameters]:
+        return self._parameters
+
+    @parameters.setter
+    def parameters(self, values: types.Parameters):
+        self.module.set_parameters(values)
+        self._parameters = values
+
+    @property
+    def states(self) -> tp.Optional[types.States]:
+        return self._states
+
+    @states.setter
+    def states(self, values: types.States):
+        self.module.set_states(values)
+        self._states = values
+
+    @property
+    def metrics_states(self) -> tp.Optional[types.States]:
+        return self._metrics_states
+
+    @metrics_states.setter
+    def metrics_states(self, values: types.States):
+        if self.metrics_module is not None:
+            self.metrics_module.set_states(values)
+            self._metrics_states = values
+        else:
+            raise ValueError("Cannot set metrics_states when metrics_module is None")
+
+    def reset_metrics(self, hard: bool = False):
+
+        if hard:
+            self.metrics_module.reset()
+            self._metrics_states = None
+            self.initial_metrics_state = None
+        elif self.initial_metrics_state is not None:
+            self.metrics_states = self.initial_metrics_state
+
     def __call__(self, *args, **kwargs):
-        return self._module_fn(*args, **kwargs)
+        return self.module(*args, **kwargs)
 
     def _maybe_initialize(
         self,
@@ -192,62 +252,55 @@ class Model(object):
         class_weight: tp.Optional[jnp.ndarray],
     ):
 
-        maybe_jit = jax.jit if self.run_eagerly else lambda x: x
+        # TODO(cgarciae): consider if maybe_jit can actually work else remove it
+        # maybe_jit = jax.jit if not self.run_eagerly else lambda x: x
+        maybe_jit = lambda x: x
 
-        if self.params is None or self.state is None:
-            x_args, x_kwargs = utils.get_input_args(x, is_training=True)
+        if self.parameters is None or self.states is None:
+            x_args, x_kwargs = utils.get_input_args(x, training=True)
 
-            self.params, self.state = maybe_jit(self._model_transform.init)(
-                rng=next(self._rngs), args=x_args, kwargs=x_kwargs
-            )
+            self.parameters, self.states = maybe_jit(
+                utils.inject_dependencies(self.module.init(rng=next(self._rngs)))
+            )(*x_args, **x_kwargs)
 
         if mode == Mode.predict:
             return
 
-        if self._metrics_transform is not None and self.metrics_state is None:
-            x_args, x_kwargs = utils.get_input_args(x, is_training=True)
+        if self.metrics_module is not None and self.metrics_states is None:
+            context: ApplyContext
 
-            transformed_state = maybe_jit(self._model_transform.apply)(
-                # required by apply
-                params=self.params,
-                state=self.state,
+            loss, (y_pred, context, logs) = maybe_jit(self._loss)(
+                parameters=self.parameters,
+                states=self.states,
                 rng=next(self._rngs),
-                get_summaries=False,
-                args=x_args,
-                kwargs=x_kwargs,
+                x=x,
+                y=y,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+                training=True,
             )
 
-            y_pred = transformed_state.outputs
-
-            _, self.metrics_state = maybe_jit(self._metrics_transform.init)(
-                # required by init
-                next(self._rngs),
-                # dependency injection
+            _, self.metrics_states = maybe_jit(
+                self.metrics_module.init(rng=next(self._rngs))
+            )(
+                logs,
                 x=x,
                 y_true=y,
                 y_pred=y_pred,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
-                is_training=False,
-                __params=self.params,  # renamed
-                __state=self.state,  # renamed
+                training=False,
+                parameters=self.parameters,
+                states=self.states,
             )
 
-            self.initial_metrics_state = self.metrics_state
+            self.initial_metrics_state = self.metrics_states
 
         if mode == Mode.test:
             return
 
         if self.optimizer_state is None:
-            self.optimizer_state = maybe_jit(self._optimizer.init)(self.params)
-
-    def reset_metrics(self, hard: bool = False):
-
-        if hard:
-            self.metrics_state = None
-            self.initial_metrics_state = None
-        else:
-            self.metrics_state = self.initial_metrics_state
+            self.optimizer_state = maybe_jit(self._optimizer.init)(self.parameters)
 
     def train_on_batch(
         self,
@@ -294,26 +347,32 @@ class Model(object):
             class_weight=class_weight,
         )
 
+        assert self.parameters is not None
+        assert self.states is not None
+        assert self.optimizer_state is not None
+
         (
             logs,
-            self.params,
-            self.state,
+            self.parameters,
+            self.states,
             self.optimizer_state,
-            self.metrics_state,
+            metrics_states,
         ) = self._update(
             x=x,
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            params=self.params,
-            state=self.state,
+            parameters=self.parameters,
+            states=self.states,
             optimizer_state=self.optimizer_state,
-            metrics_state=self.metrics_state,
-            net_rng=next(self._rngs),
-            metrics_rng=next(self._rngs),
+            metrics_states=self.metrics_states,
+            rng=next(self._rngs),
         )
 
-        return {key: np.asarray(value) for key, value in logs.items()}
+        if metrics_states is not None:
+            self.metrics_states = metrics_states
+
+        return logs
 
     def _update(
         self,
@@ -321,18 +380,17 @@ class Model(object):
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
-        params: hk.Params,
-        state: hk.State,
+        parameters: tp.Dict,
+        states: tp.Dict,
         optimizer_state: optix.OptState,
-        metrics_state: tp.Optional[hk.State],
-        net_rng: jnp.ndarray,
-        metrics_rng: jnp.ndarray,
+        metrics_states: tp.Optional[tp.Dict],
+        rng: jnp.ndarray,
     ) -> tp.Tuple[
         tp.Dict[str, jnp.ndarray],
-        hk.Params,
-        hk.State,
+        tp.Dict,
+        tp.Dict,
         optix.OptState,
-        tp.Optional[hk.State],
+        tp.Optional[tp.Dict],
     ]:
         update_fn = self._update_no_jit if self.run_eagerly else self._update_jit
 
@@ -341,12 +399,11 @@ class Model(object):
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            params=params,
-            state=state,
+            parameters=parameters,
+            states=states,
             optimizer_state=optimizer_state,
-            metrics_state=metrics_state,
-            net_rng=net_rng,
-            metrics_rng=metrics_rng,
+            metrics_states=metrics_states,
+            rng=rng,
         )
 
     def _update_no_jit(
@@ -355,115 +412,126 @@ class Model(object):
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
-        params: hk.Params,
-        state: hk.State,
+        parameters: tp.Dict,
+        states: tp.Dict,
         optimizer_state: optix.OptState,
-        metrics_state: tp.Optional[hk.State],
-        net_rng: jnp.ndarray,
-        metrics_rng: jnp.ndarray,
+        metrics_states: tp.Optional[tp.Dict],
+        rng: jnp.ndarray,
     ) -> tp.Tuple[
         tp.Dict[str, jnp.ndarray],
-        hk.Params,
-        hk.State,
+        tp.Dict,
+        tp.Dict,
         optix.OptState,
-        tp.Optional[hk.State],
+        tp.Optional[tp.Dict],
     ]:
-        (loss, (transformed_state, logs)), grads = jax.value_and_grad(
+        net_rng, metrics_rng = jax.random.split(rng, num=2)
+
+        (loss, (y_pred, context, logs)), grads = jax.value_and_grad(
             self._loss, has_aux=True
         )(
-            params,
-            state=state,
-            net_rng=net_rng,
+            parameters,
+            states=states,
+            rng=net_rng,
             x=x,
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            is_training=True,
+            training=True,
         )
 
-        y_pred = transformed_state.outputs
-        state = transformed_state.state
+        states = context.states
 
         updates, optimizer_state = self._optimizer.update(grads, optimizer_state)
-        params = optix.apply_updates(params, updates)
+        parameters = optix.apply_updates(parameters, updates)
 
-        if self._metrics_transform is not None:
-            metrics, metrics_state = self._metrics_transform.apply(
-                # required by apply
-                {},  # params
-                metrics_state,  # state
-                metrics_rng,  # rng
-                # dependency injection
+        if self.metrics_module is not None:
+            logs, metrics_context = utils.inject_dependencies(
+                self.metrics_module.apply(states=metrics_states, rng=metrics_rng)
+            )(
+                logs,
                 x=x,
                 y_true=y,
                 y_pred=y_pred,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
-                is_training=True,
-                __params=params,  # renamed
-                __state=state,  # renamed
+                training=True,
+                parameters=parameters,
+                states=states,
             )
-            logs.update(metrics)
+            metrics_states = metrics_context.states
 
-        return logs, params, state, optimizer_state, metrics_state
+        return logs, parameters, states, optimizer_state, metrics_states
 
     _update_jit = jax.jit(_update_no_jit, static_argnums=(0,))
 
     def _loss(
         self,
-        params: hk.Params,
-        state: hk.State,
-        net_rng: jnp.ndarray,
+        parameters: tp.Dict,
+        states: tp.Dict,
+        rng: jnp.ndarray,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
-        is_training: bool,
+        training: bool,
     ):
+        rng, loss_rng = jax.random.split(rng, num=2)
 
-        transformed_state = self._predict_no_jit(
-            is_training=is_training,
+        y_pred, context = self._predict_no_jit(
+            training=training,
             get_summaries=False,
             x=x,
-            params=params,
-            state=state,
-            net_rng=net_rng,
+            parameters=parameters,
+            states=states,
+            rng=rng,
         )
 
-        y_pred = transformed_state.outputs
-        state = transformed_state.state
+        states = context.states
 
-        logs = (
-            self._loss_fn(
+        logs, loss_context = (
+            self.loss_module.apply(rng=loss_rng)(
                 x=x,
                 y_true=y,
                 y_pred=y_pred,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
-                is_training=is_training,
-                params=params,
-                state=state,
+                training=training,
+                parameters=parameters,
+                states=states,
             )
-            if self._loss_fn is not None
-            else {}
+            if self.loss_module is not None
+            else ({}, None)
         )
 
-        # get total loss
-        loss = logs["loss"] = sum(logs.values()) + sum(
-            transformed_state.losses.values()
-        )
+        # calculate total loss
+        loss = sum(logs.values()) + sum(context.losses.values())
 
         # add losses and metrics from hooks
-        logs.update(transformed_state.losses)
-        logs.update(transformed_state.metrics)
+        if loss_context is not None:
+            logs.update(
+                {
+                    name.replace("losses/", ""): value
+                    for name, value in loss_context.metrics.items()
+                }
+            )
 
-        return loss, (transformed_state, logs)
+        logs.update(context.losses)
+        logs.update(context.metrics)
+
+        # set total loss
+        logs["loss"] = loss
+
+        return loss, (y_pred, context, logs)
 
     def fit(
         self,
         x: tp.Union[
-            np.ndarray, tp.Mapping[str, np.ndarray], tp.Tuple[np.ndarray], tp.Iterable,
-        ],
+            np.ndarray,
+            tp.Mapping[str, np.ndarray],
+            tp.Tuple[np.ndarray],
+            tp.Iterable,
+            None,
+        ] = None,
         y: tp.Union[
             np.ndarray, tp.Mapping[str, np.ndarray], tp.Tuple[np.ndarray], None,
         ] = None,
@@ -632,6 +700,9 @@ class Model(object):
             ValueError: In case of mismatch between the provided input data
                 and what the model expects.
         """
+        if x is None:
+            x = {}
+
         if validation_split:
             # Create the validation data using the training data. Only supported for
             # `Jax Numpy` and `NumPy` input.
@@ -800,7 +871,7 @@ class Model(object):
             initial_epoch=0,
             epochs=1,
             shuffle=False,
-            is_training=False,
+            training=False,
         )
 
         # Container that configures and calls `tf.keras.Callback`s.
@@ -991,19 +1062,24 @@ class Model(object):
             class_weight=class_weight,
         )
 
-        (logs, self.metrics_state,) = self._test(
+        assert self.parameters is not None
+        assert self.states is not None
+
+        (logs, metrics_states) = self._test(
             x=x,
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            params=self.params,
-            state=self.state,
-            metrics_state=self.metrics_state,
-            net_rng=next(self._rngs),
-            metrics_rng=next(self._rngs),
+            parameters=self.parameters,
+            states=self.states,
+            metrics_states=self.metrics_states,
+            rng=next(self._rngs),
         )
 
-        return {key: np.asarray(value) for key, value in logs.items()}
+        if metrics_states is not None:
+            self.metrics_states = metrics_states
+
+        return logs
 
     def _test(
         self,
@@ -1011,13 +1087,12 @@ class Model(object):
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
-        params: hk.Params,
-        state: hk.State,
-        metrics_state: tp.Optional[hk.State],
-        net_rng: jnp.ndarray,
-        metrics_rng: jnp.ndarray,
+        parameters: tp.Dict,
+        states: tp.Dict,
+        metrics_states: tp.Optional[tp.Dict],
+        rng: jnp.ndarray,
     ) -> tp.Tuple[
-        tp.Dict[str, jnp.ndarray], tp.Optional[hk.State],
+        tp.Dict[str, jnp.ndarray], tp.Optional[tp.Dict],
     ]:
 
         test_fn = self._test_no_jit if self.run_eagerly else self._test_jit
@@ -1027,11 +1102,10 @@ class Model(object):
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            params=params,
-            state=state,
-            metrics_state=metrics_state,
-            net_rng=net_rng,
-            metrics_rng=metrics_rng,
+            parameters=parameters,
+            states=states,
+            metrics_states=metrics_states,
+            rng=rng,
         )
 
     def _test_no_jit(
@@ -1040,47 +1114,45 @@ class Model(object):
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
-        params: hk.Params,
-        state: hk.State,
-        metrics_state: tp.Optional[hk.State],
-        net_rng: jnp.ndarray,
-        metrics_rng: jnp.ndarray,
+        parameters: tp.Dict,
+        states: tp.Dict,
+        metrics_states: tp.Optional[tp.Dict],
+        rng: jnp.ndarray,
     ) -> tp.Tuple[
-        tp.Dict[str, jnp.ndarray], tp.Optional[hk.State],
+        tp.Dict[str, jnp.ndarray], tp.Optional[tp.Dict],
     ]:
+        net_rng, metrics_rng = jax.random.split(rng, num=2)
 
-        loss, (transformed_state, logs) = self._loss(
-            params,
-            state=state,
-            net_rng=net_rng,
+        loss, (y_pred, context, logs) = self._loss(
+            parameters,
+            states=states,
+            rng=net_rng,
             x=x,
             y=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            is_training=False,
+            training=False,
         )
 
-        y_pred = transformed_state.outputs
-
-        if self._metrics_transform is not None:
-            metrics, metrics_state = self._metrics_transform.apply(
-                # required by apply
-                {},  # params
-                metrics_state,  # state
-                metrics_rng,  # rng
-                # dependency injection
+        if self.metrics_module is not None:
+            logs, metrics_context = utils.inject_dependencies(
+                self.metrics_module.apply(
+                    states=metrics_states, rng=metrics_rng, training=False
+                ),
+            )(
+                logs,
                 x=x,
                 y_true=y,
                 y_pred=y_pred,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
-                is_training=False,
-                __params=params,  # renamed
-                __state=state,  # renamed
+                training=False,
+                __params=parameters,
+                __state=states,
             )
-            logs.update(metrics)
+            metrics_states = metrics_context.states
 
-        return logs, metrics_state
+        return logs, metrics_states
 
     _test_jit = jax.jit(_test_no_jit, static_argnums=(0,))
     # ----------------------------------------------------------------
@@ -1109,122 +1181,117 @@ class Model(object):
             mode=Mode.predict, x=x, y=None, sample_weight=None, class_weight=None
         )
 
-        transformed_state = self._predict(
-            False,  # is_training
+        assert self.parameters is not None
+        assert self.states is not None
+
+        y_pred, context = self._predict(
+            False,  # training
             False,  # get_summaries
             x=x,
-            params=self.params,
-            state=self.state,
-            net_rng=next(self._rngs),
+            parameters=self.parameters,
+            states=self.states,
+            rng=next(self._rngs),
         )
 
-        return transformed_state.outputs
+        return y_pred
 
     def _predict(
         self,
-        is_training: bool,
+        training: bool,
         get_summaries: bool,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        params: hk.Params,
-        state: hk.State,
-        net_rng: jnp.ndarray,
-    ) -> hooks.TransformedState:
+        parameters: tp.Dict,
+        states: tp.Dict,
+        rng: jnp.ndarray,
+    ) -> tp.Tuple[tp.Any, "ApplyContext"]:
 
         predict_fn = self._predict_no_jit if self.run_eagerly else self._predict_jit
 
         return predict_fn(
-            is_training,
-            get_summaries,
-            x=x,
-            params=params,
-            state=state,
-            net_rng=net_rng,
+            training, get_summaries, x=x, parameters=parameters, states=states, rng=rng,
         )
 
     def _predict_no_jit(
         self,
-        is_training: bool,
+        training: bool,
         get_summaries: bool,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        params: hk.Params,
-        state: hk.State,
-        net_rng: jnp.ndarray,
-    ) -> hooks.TransformedState:
+        parameters: tp.Dict,
+        states: tp.Dict,
+        rng: jnp.ndarray,
+    ) -> tp.Tuple[tp.Any, ApplyContext]:
 
-        x_args, x_kwargs = utils.get_input_args(x, is_training=is_training)
+        x_args, x_kwargs = utils.get_input_args(x, training=training)
 
-        transformed_state = self._model_transform.apply(
-            # required by apply
-            params=params,
-            state=state,
-            rng=net_rng,
-            get_summaries=get_summaries,
-            args=x_args,
-            kwargs=x_kwargs,
-        )
-
-        return transformed_state
+        return utils.inject_dependencies(
+            self.module.apply(
+                parameters=parameters,
+                states=states,
+                rng=rng,
+                get_summaries=get_summaries,
+                training=training,
+            )
+        )(*x_args, **x_kwargs)
 
     _predict_jit = jax.jit(_predict_no_jit, static_argnums=(0, 1, 2))
 
     @property
-    def seed(self) -> tp.Union[np.ndarray, int]:
+    def seed(self) -> np.ndarray:
         """
-        Current random state of the model.
+        Current random states of the model.
         """
-        return self._rngs.internal_state[0]
+        return self._rngs.key
 
     @seed.setter
     def seed(self, seed: tp.Union[np.ndarray, int]):
-        self._rngs = hk.PRNGSequence(seed)
+        self._rngs = PRNGSequence(seed)
 
     @property
     def full_state(self) -> tp.Dict:
         """
         """
 
-        state: tp.Dict = {"seed": self.seed}
+        states: tp.Dict = {"seed": self.seed}
 
-        if self.params is not None:
-            state["params"] = self.params
+        if self.parameters is not None:
+            states["parameters"] = self.parameters
 
-        if self.state is not None:
-            state["state"] = self.state
+        if self.states is not None:
+            states["states"] = self.states
 
-        if self.metrics_state is not None:
-            state["metrics_state"] = self.metrics_state
+        if self.metrics_states is not None:
+            states["metrics_states"] = self.metrics_states
 
         if self.initial_metrics_state is not None:
-            state["initial_metrics_state"] = self.initial_metrics_state
+            states["initial_metrics_state"] = self.initial_metrics_state
 
         if self.optimizer_state is not None:
-            state["optimizer_state"] = self.optimizer_state
+            states["optimizer_state"] = self.optimizer_state
 
-        return state
+        return states
 
     @full_state.setter
-    def full_state(self, state):
-        self.seed = state["seed"]
+    def full_state(self, states: tp.Dict):
+        self.seed = states["seed"]
 
-        if "params" in state:
-            self.params = state["params"]
+        if "parameters" in states:
+            self.parameters = states["parameters"]
 
-        if "state" in state:
-            self.state = state["state"]
+        if "states" in states:
+            self.states = states["states"]
 
-        if "metrics_state" in state:
-            self.metrics_state = state["metrics_state"]
+        if "metrics_states" in states:
+            self.metrics_states = states["metrics_states"]
 
-        if "initial_metrics_state" in state:
-            self.initial_metrics_state = state["initial_metrics_state"]
+        if "initial_metrics_state" in states:
+            self.initial_metrics_state = states["initial_metrics_state"]
 
-        if "optimizer_state" in state:
-            self.optimizer_state = state["optimizer_state"]
+        if "optimizer_state" in states:
+            self.optimizer_state = states["optimizer_state"]
 
-    def _clear_state(self):
-        self.params = None
-        self.state = None
-        self.metrics_state = None
+    def reset(self):
+        self.module.reset()
+        self.metrics_module.reset()
         self.initial_metrics_state = None
         self.optimizer_state = None
 
@@ -1238,12 +1305,12 @@ class Model(object):
             as `{path}/model.pkl`, this allows you to re-instantiate 
             the model later.
         - The model parameters + states serialized into HDF5 as `{path}/parameters.h5`.
-        - The state of the optimizer serialized with `pickle` as
+        - The states of the optimizer serialized with `pickle` as
             as `{path}/optimizer_state.pkl`, allowing to resume training
             exactly where you left off. We hope to use HDF5 in the future
-            but `optix` state is incompatible with `deepdish`.
+            but `optix` states is incompatible with `deepdish`.
         
-        This allows you to save the entirety of the state of a model
+        This allows you to save the entirety of the states of a model
         in a directory structure which can be fully restored via 
         `Model.load` if the model is already instiated or `elegy.model.load`
         to load the model instance from its pickled version.
@@ -1259,30 +1326,30 @@ class Model(object):
         ```
         Arguments:
             path: path where model structure will be saved.
-            include_optimizer: If True, save optimizer's state together.
+            include_optimizer: If True, save optimizer's states together.
         """
         if isinstance(path, str):
             path = Path(path)
 
         path.mkdir(parents=True, exist_ok=True)
 
-        state = self.full_state
+        states = self.full_state
 
-        original_state = copy(state)
+        original_state = copy(states)
 
-        state.pop("metrics_state", None)
-        state.pop("initial_metrics_state", None)
+        states.pop("metrics_states", None)
+        states.pop("initial_metrics_state", None)
 
-        optimizer_state = state.pop("optimizer_state", None)
+        optimizer_state = states.pop("optimizer_state", None)
 
-        deepdish.io.save(path / "parameters.h5", state)
+        deepdish.io.save(path / "parameters.h5", states)
 
         if include_optimizer and optimizer_state is not None:
             with open(path / "optimizer_state.pkl", "wb") as f:
                 pickle.dump(optimizer_state, f)
 
         # getting pickle errors
-        self._clear_state()
+        self.reset()
 
         try:
             path = path / "model.pkl"
@@ -1308,18 +1375,18 @@ class Model(object):
         if isinstance(path, str):
             path = Path(path)
 
-        state: tp.Dict = deepdish.io.load(path / "parameters.h5")
+        states: tp.Dict = deepdish.io.load(path / "parameters.h5")
 
         optimizer_state_path = path / "optimizer_state.pkl"
 
         if optimizer_state_path.exists():
             with open(optimizer_state_path, "rb") as f:
-                state["optimizer_state"] = pickle.load(f)
+                states["optimizer_state"] = pickle.load(f)
 
-        self.full_state = state
+        self.full_state = states
 
     def summary(
-        self, x, depth: int = 3, tablefmt: str = "fancy_grid", **tablulate_kwargs
+        self, x, depth: int = 2, tablefmt: str = "fancy_grid", **tablulate_kwargs
     ):
         """
         Prints a summary of the network.
@@ -1341,13 +1408,16 @@ class Model(object):
             mode=Mode.predict, x=x, y=None, sample_weight=None, class_weight=None,
         )
 
-        transformed_state = self._predict(
-            is_training=False,
+        assert self.parameters is not None
+        assert self.states is not None
+
+        y_pred, context = self._predict(
+            training=False,
             get_summaries=True,
             x=x,
-            params=self.params,
-            state=self.state,
-            net_rng=next(self._rngs),
+            parameters=self.parameters,
+            states=self.states,
+            rng=next(self._rngs),
         )
 
         def format_output(outputs) -> str:
@@ -1369,49 +1439,44 @@ class Model(object):
                 else f"{size:,} B"
             )
 
-        summaries = (
-            (tuple(name.split("/")), cls_name, value)
-            for name, cls_name, value in transformed_state.summaries
-        )
-
-        summaries = toolz.groupby(lambda x: x[0][:depth], summaries)
-        params = utils.split_and_merge(self.params)
-        state = utils.split_and_merge(self.state)
-
         table: tp.List = [["Inputs", format_output(x), "0", "0"]]
 
-        for keys, group in summaries.items():
-            output = group[-1][2]
-            class_name = group[-1][1]
+        for module, base_name, value in context.summaries:
+            base_name_parts = base_name.split("/")[1:]
+            module_depth = len(base_name_parts)
 
-            sub_params = params
-            sub_states = state
+            if module_depth > depth:
+                continue
 
-            try:
-                for k in keys:
-                    sub_params = sub_params[k]
-            except KeyError:
-                sub_params = {}
+            include_submodules = module_depth == depth
 
-            try:
-                for k in keys:
-                    sub_states = sub_states[k]
-            except KeyError:
-                sub_states = {}
+            params_count = (
+                module.parameters_size(include_submodules) if module is not None else 0
+            )
+            params_size = (
+                module.parameters_bytes(include_submodules) if module is not None else 0
+            )
+            states_count = (
+                module.states_size(include_submodules) if module is not None else 0
+            )
+            states_size = (
+                module.states_bytes(include_submodules) if module is not None else 0
+            )
+            class_name = f"({module.__class__.__name__})" if module is not None else ""
 
-            params_count = hk.data_structures.tree_size(sub_params)
-            params_size = format_size(hk.data_structures.tree_bytes(sub_params))
-            states_count = hk.data_structures.tree_size(sub_states)
-            states_size = format_size(hk.data_structures.tree_bytes(sub_states))
+            base_name = "/".join(base_name_parts)
+
+            if not base_name:
+                base_name = "Outputs"
 
             table.append(
                 [
-                    "/".join(keys) + f"{{pad}}  ({class_name})",
-                    format_output(output),
-                    f"{params_count:,}{{pad}}    {params_size}"
+                    f"{base_name}{{pad}}  {class_name}",
+                    format_output(value),
+                    f"{params_count:,}{{pad}}    {format_size(params_size)}"
                     if params_count > 0
                     else "0",
-                    f"{states_count:,}{{pad}}    {states_size}"
+                    f"{states_count:,}{{pad}}    {format_size(states_size)}"
                     if states_count > 0
                     else "0",
                 ]
@@ -1448,10 +1513,10 @@ class Model(object):
             )
         )
 
-        params_count = hk.data_structures.tree_size(self.params)
-        params_size = hk.data_structures.tree_bytes(self.params)
-        states_count = hk.data_structures.tree_size(self.state)
-        states_size = hk.data_structures.tree_bytes(self.state)
+        params_count = self.module.parameters_size()
+        params_size = self.module.parameters_bytes()
+        states_count = self.module.states_size()
+        states_size = self.module.states_bytes()
         total_count = params_count + states_count
         total_size = params_size + states_size
 
@@ -1486,7 +1551,7 @@ def load(path: tp.Union[str, Path]) -> Model:
 
     This function will restore both the model architecture,
     that is, its `Model` class instance, along with all of its
-    parameters, state, and optimizer state.
+    parameters, states, and optimizer states.
 
     Example:
 
@@ -1512,7 +1577,7 @@ def load(path: tp.Union[str, Path]) -> Model:
 
     with open(path / "model.pkl", "rb") as f:
         try:
-            model = pickle.load(f)
+            model: Model = pickle.load(f)
         except BaseException as e:
             raise OSError(f"Could not load the model. Got exception: {e}")
 

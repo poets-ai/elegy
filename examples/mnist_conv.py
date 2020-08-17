@@ -1,9 +1,10 @@
+from elegy import utils
 import os
 from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
 
 import dataget
-import haiku as hk
+
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -40,29 +41,24 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
     print("y_test:", y_test.shape, y_test.dtype)
 
     class CNN(elegy.Module):
-        def __init__(self, n1: int = 300, n2: int = 100, **kwargs):
-            super().__init__(**kwargs)
-            self.n1 = n1
-            self.n2 = n2
-
-        def __apply__(self, image: jnp.ndarray, is_training: bool):
-            @hk.to_module
-            def conv_block(x, units, kernel, stride=1):
+        def call(self, image: jnp.ndarray, training: bool):
+            @elegy.to_module
+            def ConvBlock(x, units, kernel, stride=1):
                 x = elegy.nn.Conv2D(units, kernel, stride=stride, padding="same")(x)
-                x = elegy.nn.BatchNormalization()(x, is_training)
-                x = elegy.nn.Dropout(0.2)(x, is_training)
+                x = elegy.nn.BatchNormalization()(x, training)
+                x = elegy.nn.Dropout(0.2)(x, training)
                 return jax.nn.relu(x)
 
             x: np.ndarray = image.astype(jnp.float32) / 255.0
 
             # base
-            x = conv_block()(x, 16, [3, 3])
-            x = conv_block()(x, 32, [3, 3], stride=2)
-            x = conv_block()(x, 64, [3, 3], stride=2)
-            x = conv_block()(x, 64, [3, 3], stride=2)
+            x = ConvBlock()(x, 32, [3, 3])
+            x = ConvBlock()(x, 64, [3, 3], stride=2)
+            x = ConvBlock()(x, 64, [3, 3], stride=2)
+            x = ConvBlock()(x, 128, [3, 3], stride=2)
 
             # 1x1 Conv
-            x = hk.Linear(10)(x)
+            x = elegy.nn.Linear(10)(x)
 
             # GlobalAveragePooling2D
             x = jnp.mean(x, axis=[1, 2])
@@ -70,10 +66,10 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             return x
 
     model = elegy.Model(
-        module=CNN.defer(n1=300, n2=100),
+        module=CNN(),
         loss=elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics=elegy.metrics.SparseCategoricalAccuracy.defer(),
-        optimizer=optix.rmsprop(1e-3),
+        metrics=elegy.metrics.SparseCategoricalAccuracy(),
+        optimizer=optix.adam(1e-3),
         run_eagerly=eager,
     )
 
@@ -92,6 +88,12 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
     )
 
     plot_history(history)
+
+    model.save("models/conv")
+
+    model = elegy.model.load("models/conv")
+
+    print(model.evaluate(x=X_test, y=y_test))
 
     # get random samples
     idxs = np.random.randint(0, 10000, size=(9,))

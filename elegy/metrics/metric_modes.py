@@ -1,46 +1,66 @@
-from elegy.module import Defered
+from elegy import module, hooks
 from typing import Tuple
 from elegy.metrics.metric import Metric
 import typing as tp
-import haiku as hk
+
 
 from elegy import utils
 import jax
 
 
-def forward_all(metrics):
-    def _metrics_fn(**kwargs):
+class LossMetrics(Metric):
+    def call(self, logs):
 
-        logs = {}
+        count = hooks.get_state("count", initializer=0)
+        total = hooks.get_state("total", initializer=jax.tree_map(lambda x: 0.0, logs))
 
-        for context, val in apply_recursive((), metrics, **kwargs):
-            name = "/".join(context)
-            loss_name = get_unique_name(logs, name)
-            logs[loss_name] = val
+        count += 1
+        total = jax.tree_multimap(lambda a, b: a + b, total, logs)
+
+        hooks.set_state("count", count)
+        hooks.set_state("total", total)
+
+        logs = jax.tree_map(lambda total: total / count, total)
 
         return logs
 
-    return _metrics_fn
+
+class Metrics(Metric):
+    def __init__(self, metrics, **kwargs):
+        super().__init__(**kwargs)
+        self.metrics = metrics
+
+    def call(self, logs, **kwargs):
+
+        # Loss logs
+        logs = LossMetrics()(logs)
+
+        # Metric logs
+        for context, val in apply_recursive((), self.metrics, **kwargs):
+            name = "/".join(context)
+            name = get_unique_name(logs, name)
+            logs[name] = val
+
+        return logs
 
 
 def apply_recursive(context: tp.Tuple[str, ...], metrics, **kwargs):
 
     if isinstance(metrics, tp.Callable):
 
-        if isinstance(metrics, Defered):
-            metrics = metrics.get_instance()
-
         name = (
-            metrics.module_name if isinstance(metrics, hk.Module) else metrics.__name__
+            metrics.name
+            if isinstance(metrics, module.Module)
+            else utils.lower_snake_case(metrics.__name__)
         )
         context += (name,)
-        loss_val = utils.inject_dependencies(metrics)(**kwargs)
+        value = utils.inject_dependencies(metrics)(**kwargs)
 
-        if isinstance(loss_val, tp.Dict):
-            for name, loss_val in loss_val.items():
-                yield context + (name,), loss_val
+        if isinstance(value, tp.Dict):
+            for name, value in value.items():
+                yield context + (name,), value
         else:
-            yield context, loss_val
+            yield context, value
 
     elif isinstance(metrics, (tp.Tuple, tp.List)):
         for loss in metrics:

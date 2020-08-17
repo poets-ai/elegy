@@ -1,14 +1,7 @@
 import elegy
-import haiku as hk
+
 from elegy.testing_utils import transform_and_run
 import jax.numpy as jnp
-
-
-# import debugpy
-
-# print("Waiting for debugger...")
-# debugpy.listen(5677)
-# debugpy.wait_for_client()
 
 
 @transform_and_run

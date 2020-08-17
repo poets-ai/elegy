@@ -1,10 +1,9 @@
-from elegy import types
-from elegy import utils
-from enum import Enum
 import typing as tp
+from enum import Enum
 
-import haiku as hk
 import jax.numpy as jnp
+
+from elegy import initializers, module, types, utils, hooks
 from elegy.metrics.metric import Metric
 
 
@@ -83,13 +82,9 @@ class Reduce(Metric):
     """Encapsulates metrics that perform a reduce operation on the values."""
 
     def __init__(
-        self,
-        reduction: Reduction,
-        name: tp.Optional[str] = None,
-        dtype: tp.Optional[jnp.dtype] = None,
-        on: tp.Optional[types.IndexLike] = None,
+        self, reduction: Reduction, on: tp.Optional[types.IndexLike] = None, **kwargs
     ):
-        super().__init__(name=name, dtype=dtype, on=on)
+        super().__init__(on=on, **kwargs)
 
         self._reduction = reduction
 
@@ -104,7 +99,7 @@ class Reduce(Metric):
                 )
             )
 
-    def __apply__(
+    def call(
         self, values: jnp.ndarray, sample_weight: tp.Optional[jnp.ndarray] = None
     ) -> jnp.ndarray:
         """
@@ -119,13 +114,16 @@ class Reduce(Metric):
         Returns:
             Array with the cummulative reduce.
         """
-        total = hk.get_state(
-            "total", shape=[], dtype=self._dtype, init=hk.initializers.Constant(0)
+        total = hooks.get_state(
+            "total", shape=[], dtype=self.dtype, initializer=initializers.Constant(0)
         )
 
         if self._reduction in (Reduction.SUM_OVER_BATCH_SIZE, Reduction.WEIGHTED_MEAN,):
-            count = hk.get_state(
-                "count", shape=[], dtype=jnp.int32, init=hk.initializers.Constant(0)
+            count = hooks.get_state(
+                "count",
+                shape=[],
+                dtype=jnp.int32,
+                initializer=initializers.Constant(0),
             )
         else:
             count = None
@@ -136,12 +134,12 @@ class Reduce(Metric):
             values=values,
             reduction=self._reduction,
             sample_weight=sample_weight,
-            dtype=self._dtype,
+            dtype=self.dtype,
         )
 
-        hk.set_state("total", total)
+        hooks.set_state("total", total)
 
         if count is not None:
-            hk.set_state("count", count)
+            hooks.set_state("count", count)
 
         return value

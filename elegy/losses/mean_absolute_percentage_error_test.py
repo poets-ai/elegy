@@ -1,7 +1,7 @@
+from elegy.testing_utils import transform_and_run
 import jax
 import jax.numpy as jnp
 import tensorflow.keras as tfk
-from haiku.testing import transform_and_run
 from unittest import TestCase
 
 import elegy

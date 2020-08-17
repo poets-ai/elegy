@@ -5,10 +5,10 @@
 import typing as tp
 
 import haiku as hk
-import jax
 import jax.numpy as jnp
 import numpy as np
 
+from elegy import module, hooks
 from elegy.module import Module
 
 
@@ -21,9 +21,9 @@ class Dropout(Module):
     Inputs not set to 0 are scaled up by `1/(1 - rate)` such that the sum over
     all inputs is unchanged.
 
-    Note that the Dropout layer only applies when `is_training` is set to `True`
+    Note that the Dropout layer only applies when `training` is set to `True`
     such that no values are dropped during inference. When using `model.fit`,
-    `is_training` will be appropriately set to True automatically, and in other
+    `training` will be appropriately set to True automatically, and in other
     contexts, you can set the kwarg explicitly to True when calling the layer.
 
     ### Example
@@ -38,7 +38,7 @@ class Dropout(Module):
     # [6. 7.]
     # [8. 9.]]
 
-    outputs = dropout(data, is_training=True)
+    outputs = dropout(data, training=True)
     
     print(outputs)
     # [[ 0.    1.25]
@@ -49,23 +49,29 @@ class Dropout(Module):
     ```
     """
 
-    def __init__(self, rate, name: tp.Optional[str] = None):
-        super().__init__(name=name)
+    def __init__(self, rate, **kwargs):
+        super().__init__(**kwargs)
         self.rate = rate
 
-    def __apply__(
-        self, x: np.ndarray, is_training: bool, rng: tp.Optional[np.ndarray] = None,
+    def call(
+        self,
+        x: np.ndarray,
+        training: tp.Optional[bool] = None,
+        rng: tp.Optional[np.ndarray] = None,
     ) -> jnp.ndarray:
         """
         Arguments:
             x: The value to be dropped out.
-            is_training: Whether training is currently happening.
+            training: Whether training is currently happening.
             rng: Optional RNGKey.
         Returns:
             x but dropped out and scaled by `1 / (1 - rate)`.
         """
+        if training is None:
+            training = hooks.is_training()
+
         return hk.dropout(
-            rng=hk.next_rng_key() if rng is None else rng,
-            rate=self.rate if is_training else 0.0,
+            rng=rng if rng is not None else hooks.next_rng_key(),
+            rate=self.rate if training else 0.0,
             x=x,
         )
