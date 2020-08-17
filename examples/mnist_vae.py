@@ -52,7 +52,7 @@ class Encoder(elegy.Module):
         x = elegy.nn.Flatten()(x)
         x = elegy.nn.Linear(self.hidden_size)(x)
         x = jax.nn.relu(x)
-        self.add_summary("relu", x)
+        elegy.add_summary("relu", x)
 
         mean = elegy.nn.Linear(self.latent_size, name="linear_mean")(x)
         log_stddev = elegy.nn.Linear(self.latent_size, name="linear_std")(x)
@@ -80,11 +80,11 @@ class Decoder(elegy.Module):
     def call(self, z: np.ndarray) -> np.ndarray:
         z = elegy.nn.Linear(self.hidden_size)(z)
         z = jax.nn.relu(z)
-        self.add_summary("relu", z)
+        elegy.add_summary("relu", z)
 
         logits = elegy.nn.Linear(jnp.prod(self.output_shape))(z)
         logits = jnp.reshape(logits, (-1, *self.output_shape))
-        self.add_summary("relu", z)
+        elegy.add_summary("relu", z)
 
         return logits
 

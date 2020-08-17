@@ -4,8 +4,8 @@ import typing as tp
 import haiku as hk
 import numpy as np
 
-from elegy import utils
-from elegy.module import Module, LOCAL, Context, add_summary
+from elegy import utils, hooks
+from elegy.module import Module, LOCAL, Context
 
 
 def sequential(*layers: tp.Callable[..., tp.Any]) -> tp.Callable[..., tp.Any]:
@@ -35,7 +35,7 @@ def sequential(*layers: tp.Callable[..., tp.Any]) -> tp.Callable[..., tp.Any]:
                         if hasattr(layer, "__name__")
                         else layer.__class__.__name__
                     )
-                    add_summary(name, out)
+                    hooks.add_summary(name, out)
             return out
 
         else:

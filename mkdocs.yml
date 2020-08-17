@@ -27,6 +27,7 @@ nav:
         Linear: api/nn/Linear.md
         Conv2D: api/nn/Conv2D.md
         Flatten: api/nn/Flatten.md
+        Reshape: api/nn/Reshape.md
         BatchNormalization: api/nn/BatchNormalization.md
         Dropout: api/nn/Dropout.md
       metrics:

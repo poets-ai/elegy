@@ -3,7 +3,7 @@ from enum import Enum
 
 import jax.numpy as jnp
 
-from elegy import initializers, module, types, utils
+from elegy import initializers, module, types, utils, hooks
 from elegy.metrics.metric import Metric
 
 
@@ -114,12 +114,12 @@ class Reduce(Metric):
         Returns:
             Array with the cummulative reduce.
         """
-        total = module.get_state(
+        total = hooks.get_state(
             "total", shape=[], dtype=self.dtype, initializer=initializers.Constant(0)
         )
 
         if self._reduction in (Reduction.SUM_OVER_BATCH_SIZE, Reduction.WEIGHTED_MEAN,):
-            count = module.get_state(
+            count = hooks.get_state(
                 "count",
                 shape=[],
                 dtype=jnp.int32,
@@ -137,9 +137,9 @@ class Reduce(Metric):
             dtype=self.dtype,
         )
 
-        module.set_state("total", total)
+        hooks.set_state("total", total)
 
         if count is not None:
-            module.set_state("count", count)
+            hooks.set_state("count", count)
 
         return value

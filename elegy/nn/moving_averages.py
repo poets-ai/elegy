@@ -21,7 +21,7 @@ import jax
 import jax.numpy as jnp
 from haiku._src import data_structures
 
-from elegy import initializers, module
+from elegy import initializers, module, hooks
 
 
 class ExponentialMovingAverage(module.Module):
@@ -66,8 +66,8 @@ class ExponentialMovingAverage(module.Module):
 
     def initialize(self, value):
         """If uninitialized sets the average to ``zeros_like`` the given value."""
-        module.get_state("hidden", value.shape, value.dtype, initializer=jnp.zeros)
-        module.get_state("average", value.shape, value.dtype, initializer=jnp.zeros)
+        hooks.get_state("hidden", value.shape, value.dtype, initializer=jnp.zeros)
+        hooks.get_state("average", value.shape, value.dtype, initializer=jnp.zeros)
 
     def call(self, value, update_stats=True):
         """Updates the EMA and returns the new value.
@@ -85,7 +85,7 @@ class ExponentialMovingAverage(module.Module):
         if not isinstance(value, jnp.ndarray):
             value = jnp.asarray(value)
 
-        counter = module.get_state(
+        counter = hooks.get_state(
             "counter",
             (),
             jnp.int32,
@@ -98,7 +98,7 @@ class ExponentialMovingAverage(module.Module):
             decay = self._cond(counter <= 0, 0.0, decay, value.dtype)
 
         one = jnp.ones([], value.dtype)
-        hidden = module.get_state(
+        hidden = hooks.get_state(
             "hidden", value.shape, value.dtype, initializer=jnp.zeros
         )
         hidden = hidden * decay + value * (one - decay)
@@ -108,9 +108,9 @@ class ExponentialMovingAverage(module.Module):
             average /= one - jnp.power(decay, counter)
 
         if update_stats:
-            module.set_state("counter", counter)
-            module.set_state("hidden", hidden)
-            module.set_state("average", average)
+            hooks.set_state("counter", counter)
+            hooks.set_state("hidden", hidden)
+            hooks.set_state("average", average)
 
         return average
 

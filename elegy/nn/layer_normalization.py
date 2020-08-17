@@ -24,7 +24,7 @@ import numpy as np
 from haiku._src import utils as hk_utils
 
 # If you are forking replace this with `import haiku as hk`.
-from elegy import initializers, module
+from elegy import initializers, module, hooks
 
 
 class LayerNormalization(module.Module):
@@ -119,14 +119,14 @@ class LayerNormalization(module.Module):
 
         param_shape = inputs.shape[-1:]
         if self.create_scale:
-            scale = module.get_parameter(
+            scale = hooks.get_parameter(
                 "scale", param_shape, jnp.float32, initializer=self.scale_init
             )
         elif scale is None:
             scale = np.array(1.0, dtype=inputs.dtype)
 
         if self.create_offset:
-            offset = module.get_parameter(
+            offset = hooks.get_parameter(
                 "offset", param_shape, jnp.float32, initializer=self.offset_init
             )
         elif offset is None:

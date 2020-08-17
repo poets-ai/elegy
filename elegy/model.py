@@ -231,6 +231,7 @@ class Model:
         class_weight: tp.Optional[jnp.ndarray],
     ):
 
+        # TODO(cgarciae): consider if maybe_jit can actually work else remove it
         # maybe_jit = jax.jit if not self.run_eagerly else lambda x: x
         maybe_jit = lambda x: x
 

@@ -1,4 +1,4 @@
-from elegy import module
+from elegy import module, hooks
 from typing import Tuple
 from elegy.metrics.metric import Metric
 import typing as tp
@@ -11,14 +11,14 @@ import jax
 class LossMetrics(Metric):
     def call(self, logs):
 
-        count = module.get_state("count", initializer=0)
-        total = module.get_state("total", initializer=jax.tree_map(lambda x: 0.0, logs))
+        count = hooks.get_state("count", initializer=0)
+        total = hooks.get_state("total", initializer=jax.tree_map(lambda x: 0.0, logs))
 
         count += 1
         total = jax.tree_multimap(lambda a, b: a + b, total, logs)
 
-        module.set_state("count", count)
-        module.set_state("total", total)
+        hooks.set_state("count", count)
+        hooks.set_state("total", total)
 
         logs = jax.tree_map(lambda total: total / count, total)
 
