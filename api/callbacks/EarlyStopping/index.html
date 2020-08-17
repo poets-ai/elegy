@@ -993,7 +993,7 @@ To make it so, pass the loss or metrics at <code>model.__init__()</code>.</p>
 <span class="c1"># This callback will stop the training when there is no improvement in</span>
 <span class="c1"># the for three consecutive epochs.</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
-    <span class="n">module</span><span class="o">=</span><span class="n">MLP</span><span class="o">.</span><span class="n">defer</span><span class="p">(),</span>
+    <span class="n">module</span><span class="o">=</span><span class="n">MLP</span><span class="p">(),</span>
     <span class="n">loss</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">(),</span>
     <span class="n">optimizer</span><span class="o">=</span><span class="n">optix</span><span class="o">.</span><span class="n">rmsprop</span><span class="p">(</span><span class="mf">0.01</span><span class="p">),</span>
 <span class="p">)</span>

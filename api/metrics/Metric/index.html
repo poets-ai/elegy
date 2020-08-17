@@ -943,12 +943,12 @@
         <span class="k">return</span> <span class="n">mlp</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
-    <span class="n">module</span><span class="o">=</span><span class="n">MLP</span><span class="o">.</span><span class="n">defer</span><span class="p">(),</span>
+    <span class="n">module</span><span class="o">=</span><span class="n">MLP</span><span class="p">(),</span>
     <span class="n">loss</span><span class="o">=</span><span class="p">[</span>
         <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">SparseCategoricalCrossentropy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
     <span class="p">],</span>
     <span class="n">metrics</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">SparseCategoricalAccuracy</span><span class="o">.</span><span class="n">defer</span><span class="p">()</span>
+        <span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">SparseCategoricalAccuracy</span><span class="p">()</span>
     <span class="p">],</span>
     <span class="n">optimizer</span><span class="o">=</span><span class="n">optix</span><span class="o">.</span><span class="n">rmsprop</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">),</span>
 <span class="p">)</span>
