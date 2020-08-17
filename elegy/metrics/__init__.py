@@ -11,3 +11,24 @@ from .sparse_categorical_accuracy import (
     sparse_categorical_accuracy,
 )
 from .sum import Sum
+
+__all__ = [
+    "Accuracy",
+    "accuracy",
+    "BinaryCrossentropy",
+    "binary_crossentropy",
+    "CategoricalAccuracy",
+    "categorical_accuracy",
+    "Mean",
+    "MeanAbsoluteError",
+    "mean_absolute_error",
+    "MeanSquaredError",
+    "mean_squared_error",
+    "Metric",
+    "Reduce",
+    "reduce",
+    "SparseCategoricalAccuracy",
+    "sparse_categorical_accuracy",
+    "Sum",
+]
+

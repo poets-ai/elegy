@@ -1,17 +1,9 @@
-# elegy.Model
+
+# elegy.model.Model
 
 ::: elegy.model.Model
     selection:
+        inherited_members: true
         members:
-            - fit
-            - evaluate
-            - predict
-            - call
-            - train_on_batch
-            - test_on_batch
-            - predict_on_batch
-            - seed
-            - load
-            - save
-            - summary
-            - __init__
+            - __NONE__
+        

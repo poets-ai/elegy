@@ -1,9 +1,18 @@
+
 # elegy.nn.BatchNormalization
 
 ::: elegy.nn.BatchNormalization
     selection:
         inherited_members: true
         members:
-            - call
             - __init__
-            - __call__
+            - call
+            - init
+            - apply
+            - reset
+            - get_parameters
+            - set_parameters
+            - get_states
+            - set_states
+            - submodules
+        

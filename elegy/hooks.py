@@ -7,6 +7,16 @@ from elegy import module
 from elegy.module import LOCAL, Context, as_initial, get_unique_name
 from elegy.types import PRNGKey
 
+__all__ = [
+    "add_loss",
+    "add_metric",
+    "add_summary",
+    "get_parameter",
+    "get_state",
+    "next_rng_key",
+    "set_state",
+]
+
 
 def get_parameter(
     name: str,

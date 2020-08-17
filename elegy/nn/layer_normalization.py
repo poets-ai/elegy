@@ -143,7 +143,7 @@ class LayerNormalization(module.Module):
 class InstanceNormalization(LayerNormalization):
     """Normalizes inputs along the spatial dimensions.
 
-  See :class:`LayerNorm` for more details.
+  See `LayerNorm` for more details.
   """
 
     def __init__(
@@ -156,7 +156,7 @@ class InstanceNormalization(LayerNormalization):
         data_format: str = "channels_last",
         **kwargs
     ):
-        """Constructs an :class:`InstanceNormalization` module.
+        """Constructs an `InstanceNormalization` module.
 
     This method creates a module which normalizes over the spatial dimensions.
 

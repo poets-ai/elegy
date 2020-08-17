@@ -76,8 +76,6 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
     # show summary
     model.summary(X_train[:64])
 
-    print(model.module.submodules)
-
     history = model.fit(
         x=X_train,
         y=y_train,

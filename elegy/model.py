@@ -44,6 +44,9 @@ from .data import (
 )
 
 
+__all__ = ["Model", "load"]
+
+
 class Mode(Enum):
     predict = 1
     test = 2

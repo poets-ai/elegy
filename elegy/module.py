@@ -21,6 +21,15 @@ import numpy as np
 from elegy import types, utils
 from elegy.types import PRNGKey
 
+__all__ = [
+    # "ApplyCallable",
+    # "ApplyContext",
+    # "Context",
+    # "InitCallable",
+    "Module",
+    "to_module",
+]
+
 T = tp.TypeVar("T")
 LOCAL = threading.local()
 LOCAL.contexts = []
@@ -107,6 +116,19 @@ class Module(metaclass=ModuleMeta):
     _dynamic_submodules: tp.List[str]
     _ignore: tp.Set[str]
 
+    __all__ = [
+        "__init__",
+        "call",
+        "init",
+        "apply",
+        "reset",
+        "get_parameters",
+        "set_parameters",
+        "get_states",
+        "set_states",
+        "submodules",
+    ]
+
     def __init__(self, name: tp.Optional[str] = None, dtype: np.dtype = jnp.float32):
         """
         Initializes the current module with the given name.
@@ -145,6 +167,9 @@ class Module(metaclass=ModuleMeta):
 
     @property
     def submodules(self) -> tp.Dict[str, tp.Any]:
+        """
+        A dictionary with all submodules contained in this Module.
+        """
         return {name: getattr(self, name) for name in self._submodules}
 
     def init(

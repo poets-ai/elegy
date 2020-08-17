@@ -11,3 +11,19 @@ from .sparse_categorical_crossentropy import (
     SparseCategoricalCrossentropy,
     sparse_categorical_crossentropy,
 )
+
+__all__ = [
+    "BinaryCrossentropy",
+    "binary_crossentropy",
+    "CategoricalCrossentropy",
+    "Loss",
+    "Reduction",
+    "MeanAbsoluteError",
+    "mean_absolute_error",
+    "MeanAbsolutePercentageError",
+    "mean_percentage_absolute_error",
+    "MeanSquaredError",
+    "mean_squared_error",
+    "SparseCategoricalCrossentropy",
+    "sparse_categorical_crossentropy",
+]

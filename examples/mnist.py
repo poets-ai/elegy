@@ -82,13 +82,15 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
     history = model.fit(
         x=X_train,
         y=y_train,
-        epochs=100,
-        steps_per_epoch=200,
+        epochs=1,
+        steps_per_epoch=2,
         batch_size=64,
         validation_data=(X_test, y_test),
         shuffle=True,
         callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],
     )
+
+    print(model.module.submodules)
 
     plot_history(history)
 

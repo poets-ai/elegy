@@ -1,7 +1,17 @@
 __version__ = "0.1.5"
 
 
-from . import callbacks, initializers, losses, metrics, model, nn, regularizers
+from . import (
+    callbacks,
+    initializers,
+    losses,
+    metrics,
+    model,
+    nn,
+    regularizers,
+    module,
+    hooks,
+)
 from .hooks import (
     add_loss,
     add_metric,
@@ -20,6 +30,33 @@ from .module import (
     Context,
     InitCallable,
     Module,
-    context,
     to_module,
 )
+
+__all__ = [
+    "module",
+    "hooks",
+    "callbacks",
+    "initializers",
+    "losses",
+    "metrics",
+    "model",
+    "nn",
+    "regularizers",
+    "add_loss",
+    "add_metric",
+    "add_summary",
+    "get_parameter",
+    "get_state",
+    "next_rng_key",
+    "set_state",
+    "Loss",
+    "Metric",
+    "Model",
+    # "ApplyCallable",
+    # "ApplyContext",
+    # "Context",
+    # "InitCallable",
+    "Module",
+    "to_module",
+]

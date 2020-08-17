@@ -21,6 +21,16 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
+__all__ = [
+    "Constant",
+    "Orthogonal",
+    "RandomNormal",
+    "RandomUniform",
+    "TruncatedNormal",
+    "UniformScaling",
+    "VarianceScaling",
+]
+
 
 def _compute_fans(shape):
     """Computes the number of input and output units for a weight shape."""
