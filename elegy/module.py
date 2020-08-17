@@ -495,8 +495,6 @@ def initialization_context(module: Module):
         )
         LOCAL.contexts.append(context)
 
-    current_module = context.module_c
-
     context.inside_call_c.append(False)
     context.module_c.append(module)
 

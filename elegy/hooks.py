@@ -125,7 +125,7 @@ def get_state(
 
 def set_state(name: str, value: tp.Any):
     """
-    A hook that lets you ypdate a state of the current module, if the state does not 
+    A hook that lets you update a state of the current module, if the state does not 
     exist it will be created.
 
     Arguments:
@@ -206,7 +206,7 @@ def add_loss(name: str, value: np.ndarray):
     A hook that lets you define a loss within a [`module`][elegy.module.Module].
 
     ```python
-    w = hk.get_parameter("w", [3, 5], init=jnp.zeros)
+    w = elegy.get_parameter("w", [3, 5], initializer=jnp.ones)
     
     # L2 regularization penalty
     elegy.add_loss("l2_regularization", 0.01 * jnp.mean(w ** 2))
@@ -264,10 +264,10 @@ def add_metric(name: str, value: np.ndarray):
 
 def next_rng_key() -> PRNGKey:
     """
-    Returns a unique JAX RNG key split from the current global key.
+    A hook that returns a unique JAX RNG key split from the current global key.
 
     ```python
-    key = hk.next_rng_key()
+    key = elegy.next_rng_key()
     x = jax.random.uniform(key, [])
     ```
 
@@ -289,6 +289,21 @@ def next_rng_key() -> PRNGKey:
 
 
 def is_training() -> bool:
+    """
+    A hook that returns the current training status.
+
+    ```python
+    training = elegy.is_training()
+
+    if training:
+        ...
+    else:
+        ...
+    ```
+
+    Returns:
+        A boolean value indicating whether training is currently happening.
+    """
     if LOCAL.contexts:
         context: module.Context = module.LOCAL.contexts[-1]
         return context.training
