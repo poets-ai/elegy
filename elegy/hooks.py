@@ -133,7 +133,7 @@ def get_state(
         raise ValueError("Cannot execute `get_state` outside of a `elegy.context`")
 
 
-def set_state(name: str, value: tp.Any):
+def set_state(name: str, value: tp.Any) -> None:
     """
     A hook that lets you update a state of the current module, if the state does not 
     exist it will be created.
@@ -142,9 +142,6 @@ def set_state(name: str, value: tp.Any):
         name: The name of the state. It must be unique and no other field/property/method
             of the instance can have that name.
         value: The updated value of the state.
-
-    Returns:
-        The value of the state.
     """
     if LOCAL.contexts:
         context: Context = LOCAL.contexts[-1]
@@ -165,7 +162,7 @@ def set_state(name: str, value: tp.Any):
         raise ValueError("Cannot execute `set_state` outside of a `elegy.context`")
 
 
-def add_summary(name: tp.Optional[str], value: np.ndarray):
+def add_summary(name: tp.Optional[str], value: np.ndarray) -> None:
     """
     A hook that lets you define a summary in the current module. Its primary
     use is to keep track of certain values as they flow through the network
@@ -211,7 +208,7 @@ def add_summary(name: tp.Optional[str], value: np.ndarray):
         raise ValueError("Cannot execute `add_summary` outside of an `elegy.context`")
 
 
-def add_loss(name: str, value: np.ndarray):
+def add_loss(name: str, value: np.ndarray) -> None:
     """
     A hook that lets you define a loss within a [`module`][elegy.module.Module].
 
@@ -244,7 +241,7 @@ def add_loss(name: str, value: np.ndarray):
         raise ValueError("Cannot execute `add_loss` outside of an `elegy.context`")
 
 
-def add_metric(name: str, value: np.ndarray):
+def add_metric(name: str, value: np.ndarray) -> None:
     """
     A hook that lets you define a metric within a [`module`][elegy.module.Module].
 
