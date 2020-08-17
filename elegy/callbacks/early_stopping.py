@@ -34,7 +34,7 @@ class EarlyStopping(Callback):
     # This callback will stop the training when there is no improvement in
     # the for three consecutive epochs.
     model = elegy.Model(
-        module=MLP.defer(),
+        module=MLP(),
         loss=elegy.losses.MeanSquaredError(),
         optimizer=optix.rmsprop(0.01),
     )

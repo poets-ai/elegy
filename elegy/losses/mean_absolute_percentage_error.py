@@ -78,7 +78,7 @@ class MeanAbsolutePercentageError(Loss):
     model = elegy.Model(
         module_fn,
         loss=elegy.losses.MeanAbsolutePercentageError(),
-        metrics=elegy.metrics.Mean.defer(),
+        metrics=elegy.metrics.Mean(),
     )
     ```
     """

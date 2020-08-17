@@ -28,7 +28,7 @@ class MeanAbsoluteError(Mean):
     model = elegy.Model(
         module_fn,
         loss=elegy.losses.CategoricalCrossentropy(),
-        metrics=elegy.metrics.MeanAbsoluteError.defer(),
+        metrics=elegy.metrics.MeanAbsoluteError(),
     )
     ```
     """

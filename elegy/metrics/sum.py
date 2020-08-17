@@ -27,7 +27,7 @@ class Sum(Reduce):
     model = elegy.Model(
         module_fn,
         loss=elegy.losses.CategoricalCrossentropy(),
-        metrics=elegy.metrics.Sum.defer(name='sum_1'),
+        metrics=elegy.metrics.Sum(name='sum_1'),
     )
     model = elegy.Model(inputs, outputs)
     ```

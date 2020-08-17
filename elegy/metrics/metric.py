@@ -34,12 +34,12 @@ class Metric(Module):
             return mlp(image)
 
     model = elegy.Model(
-        module=MLP.defer(),
+        module=MLP(),
         loss=[
             elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
         ],
         metrics=[
-            elegy.metrics.SparseCategoricalAccuracy.defer()
+            elegy.metrics.SparseCategoricalAccuracy()
         ],
         optimizer=optix.rmsprop(1e-3),
     )

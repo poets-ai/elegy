@@ -246,7 +246,7 @@ class MyModule(elegy.Module):
         }
 ...
 model = elegy.Model(
-    module=MyModule.defer(),
+    module=MyModule(),
     loss=[
         elegy.losses.BinaryCrossentropy(on="key_a", weight=10.0),
         elegy.losses.MeanSquaredError(on="key_b", weight=1.0),
@@ -258,7 +258,7 @@ This is almost exactly how Keras behaves except each loss is explicitly aware of
 
 ```python
 model = elegy.Model(
-    module=MyModule.defer(),
+    module=MyModule(),
     loss=[
         lambda y_true, y_pred: elegy.losses.BinaryCrossentropy(weight=10.0)(
             y_true=y_true["key_a"],

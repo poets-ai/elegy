@@ -82,7 +82,7 @@ class MeanAbsoluteError(Loss):
     model = elegy.Model(
         module_fn,
         loss=elegy.losses.MeanAbsoluteError(),
-        metrics=elegy.metrics.Mean.defer(),
+        metrics=elegy.metrics.Mean(),
     )
     ```
     """

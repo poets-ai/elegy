@@ -54,7 +54,7 @@ model = elegy.Model(
         elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
         elegy.regularizers.GlobalL2(l=1e-5),
     ],
-    metrics=elegy.metrics.SparseCategoricalAccuracy.defer(),
+    metrics=elegy.metrics.SparseCategoricalAccuracy(),
     optimizer=optix.rmsprop(1e-3),
 )
 ```

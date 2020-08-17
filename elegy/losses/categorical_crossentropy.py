@@ -74,7 +74,7 @@ class CategoricalCrossentropy(Loss):
     model = elegy.Model(
         module_fn,
         loss=elegy.losses.CategoricalCrossentropy(),
-        metrics=elegy.metrics.Accuracy.defer(),
+        metrics=elegy.metrics.Accuracy(),
         optimizer=optix.adam(1e-3),
     )
     ```

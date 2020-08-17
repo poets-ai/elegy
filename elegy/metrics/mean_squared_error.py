@@ -28,7 +28,7 @@ class MeanSquaredError(Mean):
     model = elegy.Model(
         module_fn,
         loss=elegy.losses.CategoricalCrossentropy(),
-        metrics=elegy.metrics.MeanSquaredError.defer(),
+        metrics=elegy.metrics.MeanSquaredError(),
     )
     ```
     """

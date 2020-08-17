@@ -37,7 +37,7 @@ class BinaryCrossentropy(Mean):
     model = elegy.Model(
         module_fn,
         loss=elegy.losses.CategoricalCrossentropy(),
-        metrics=elegy.metrics.BinaryCrossentropy.defer(),
+        metrics=elegy.metrics.BinaryCrossentropy(),
     )
     ```
     """

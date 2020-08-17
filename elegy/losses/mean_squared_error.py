@@ -82,7 +82,7 @@ class MeanSquaredError(Loss):
     model = elegy.Model(
         module_fn,
         loss=elegy.losses.MeanSquaredError(),
-        metrics=elegy.metrics.Mean.defer(),
+        metrics=elegy.metrics.Mean(),
     )
     ```
     """

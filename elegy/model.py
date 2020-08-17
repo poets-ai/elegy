@@ -74,12 +74,12 @@ class Model:
     Then you can pass this `Module` to the `Model`'s constructor and specify additional things like losses, metrics, optimizer, and callbacks:
     ```python
     model = elegy.Model(
-        module=MLP.defer(),
+        module=MLP(),
         loss=[
             elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
             elegy.regularizers.GlobalL2(l=1e-5),
         ],
-        metrics=elegy.metrics.SparseCategoricalAccuracy.defer(),
+        metrics=elegy.metrics.SparseCategoricalAccuracy(),
         optimizer=optix.rmsprop(1e-3),
     )
     ```
