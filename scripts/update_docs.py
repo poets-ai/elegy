@@ -48,8 +48,6 @@ with open("mkdocs.yml", "r") as f:
 ]
 
 
-print(api_reference_index)
-
 api_reference = jax.tree_map(
     lambda s: s.name_path.replace("elegy", "api").replace(".", "/") + ".md", docs_info
 )

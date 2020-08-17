@@ -116,6 +116,24 @@ class Model:
     _states: tp.Optional[types.States]
     _metrics_states: tp.Optional[tp.Dict]
 
+    __all__ = [
+        "evaluate",
+        "fit",
+        "load",
+        "predict",
+        "predict_on_batch",
+        "reset",
+        "reset_metrics",
+        "save",
+        "summary",
+        "test_on_batch",
+        "train_on_batch",
+        "full_state",
+        "parameters",
+        "seed",
+        "states",
+    ]
+
     def __init__(
         self,
         module: Module,

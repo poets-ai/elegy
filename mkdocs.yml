@@ -23,6 +23,17 @@ nav:
     add_loss: api/add_loss.md
     add_metric: api/add_metric.md
     add_summary: api/add_summary.md
+    callbacks:
+      CSVLogger: api/callbacks/CSVLogger.md
+      Callback: api/callbacks/Callback.md
+      CallbackList: api/callbacks/CallbackList.md
+      EarlyStopping: api/callbacks/EarlyStopping.md
+      History: api/callbacks/History.md
+      LambdaCallback: api/callbacks/LambdaCallback.md
+      ModelCheckpoint: api/callbacks/ModelCheckpoint.md
+      RemoteMonitor: api/callbacks/RemoteMonitor.md
+      TensorBoard: api/callbacks/TensorBoard.md
+      TerminateOnNaN: api/callbacks/TerminateOnNaN.md
     get_parameter: api/get_parameter.md
     get_state: api/get_state.md
     hooks:

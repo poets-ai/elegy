@@ -45,6 +45,25 @@ Attributes:
     model (elegy.model.Model): Reference of the model being trained.
   """
 
+    __all__ = [
+        "on_epoch_begin",
+        "on_epoch_end",
+        "on_predict_batch_begin",
+        "on_predict_batch_end",
+        "on_predict_begin",
+        "on_predict_end",
+        "on_test_batch_begin",
+        "on_test_batch_end",
+        "on_test_begin",
+        "on_test_end",
+        "on_train_batch_begin",
+        "on_train_batch_end",
+        "on_train_begin",
+        "on_train_end",
+        "set_model",
+        "set_params",
+    ]
+
     def __init__(self):
         self.model = None
         # Whether this Callback should only run on the chief worker in a
