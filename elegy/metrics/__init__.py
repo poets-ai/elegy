@@ -31,4 +31,3 @@ __all__ = [
     "sparse_categorical_accuracy",
     "Sum",
 ]
-

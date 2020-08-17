@@ -7,4 +7,3 @@ __all__ = [
     "GlobalL1",
     "GlobalL2",
 ]
-
