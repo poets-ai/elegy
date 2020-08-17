@@ -82,8 +82,8 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
     history = model.fit(
         x=X_train,
         y=y_train,
-        epochs=1,
-        steps_per_epoch=2,
+        epochs=100,
+        steps_per_epoch=200,
         batch_size=64,
         validation_data=(X_test, y_test),
         shuffle=True,
