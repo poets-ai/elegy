@@ -992,7 +992,7 @@ other areas like web development have proven valuable, React Hooks being a recen
 </table>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>If you use existing <code>Module</code>s you might not need to worry much about this, but keep these in might
+<p>If you use existing <code>Module</code>s you might not need to worry much about these hooks, but keep them in mind
 if you are developing your own custom modules.</p>
 </div>
 <h3 id="module-hooks-functional-style">Module Hooks: Functional Style</h3>
@@ -1003,8 +1003,8 @@ of other frameworks, now we will go beyond. The first thing we need to know is t
 <p><strong>Modules are hooks</strong></p>
 </div>
 <p>This means that module <em>instantiation</em> taps into the hook system, and that hooks are
-aware of the module in which they are executing. In practice this will mean that we
-will be able to move a lot of the code usually defined on the <code>__init__</code> method to
+aware of the module in which they are executing in. In practice this will mean that we
+will be able to move a lot of the code defined on the <code>__init__</code> method to
 the <code>call</code> method:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">Linear</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_out</span><span class="p">):</span>
@@ -1047,8 +1047,8 @@ on the <code>Linear</code> module to the <code>call</code> method:</p>
 
         <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span>
 </code></pre></div>
-<p>As you see this not allows us to do shape inference since we have access
-to the inputs when defining our parameters. Second, we also moved the instantiation
+<p>As you see this allows us to do shape inference since we have access
+to the inputs when defining our parameter's shape. Second, we also moved the instantiation
 of the <code>Linear</code> modules in <code>MLP</code> from <code>__init__</code> to <code>call</code>:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">MLP</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
@@ -1061,7 +1061,7 @@ of the <code>Linear</code> modules in <code>MLP</code> from <code>__init__</code
 </code></pre></div>
 <p>Here we are using Modules as hooks. While it may <em>appear</em> as if we are instantiating
 3 new <code>Linear</code> modules on every <code>call</code>, Elegy is actually caching them behind the scenes
-with the help of Python's metaclasses. There is one important rule you have to follow:</p>
+with the help of Python metaclasses. There is one important rule you have to follow:</p>
 <div class="admonition quote">
 <p class="admonition-title">Quote</p>
 <p>You must use Module hooks <strong>unconditionally</strong></p>
