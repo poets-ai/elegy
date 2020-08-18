@@ -31,6 +31,7 @@ from .module import (
     InitCallable,
     Module,
     to_module,
+    PRNGSequence,
 )
 
 __all__ = [
@@ -59,4 +60,5 @@ __all__ = [
     # "InitCallable",
     "Module",
     "to_module",
+    "PRNGSequence",
 ]

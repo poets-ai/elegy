@@ -20,6 +20,7 @@ nav:
     Metric: api/Metric.md
     Model: api/Model.md
     Module: api/Module.md
+    PRNGSequence: api/PRNGSequence.md
     add_loss: api/add_loss.md
     add_metric: api/add_metric.md
     add_summary: api/add_summary.md
