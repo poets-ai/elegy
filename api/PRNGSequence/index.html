@@ -5,11 +5,11 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<link href="https://poets-ai.github.io/elegy/api/nn/sequential/" rel="canonical"/>
-<link href="../../../images/favicon.png" rel="shortcut icon"/>
+<link href="https://poets-ai.github.io/elegy/api/PRNGSequence/" rel="canonical"/>
+<link href="../../images/favicon.png" rel="shortcut icon"/>
 <meta content="mkdocs-1.1.2, mkdocs-material-5.5.3" name="generator"/>
-<title>sequential - Elegy</title>
-<link href="../../../assets/stylesheets/main.947af8d5.min.css" rel="stylesheet"/>
+<title>PRNGSequence - Elegy</title>
+<link href="../../assets/stylesheets/main.947af8d5.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
 <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
@@ -19,7 +19,7 @@
 <input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
 <label class="md-overlay" for="__drawer"></label>
 <div data-md-component="skip">
-<a class="md-skip" href="#elegynnsequential">
+<a class="md-skip" href="#elegyprngsequence">
           Skip to content
         </a>
 </div>
@@ -40,7 +40,7 @@
           </span>
 <span class="md-header-nav__topic md-ellipsis">
             
-              sequential
+              PRNGSequence
             
           </span>
 </div>
@@ -110,12 +110,12 @@
 </div>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../.." title="Introduction">
+<a class="md-nav__link" href="../.." title="Introduction">
       Introduction
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../../getting-started/" title="Getting Started">
+<a class="md-nav__link" href="../../getting-started/" title="Getting Started">
       Getting Started
     </a>
 </li>
@@ -136,17 +136,17 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../../guides/module-system/" title="The Module System">
+<a class="md-nav__link" href="../../guides/module-system/" title="The Module System">
       The Module System
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../../guides/modules-losses-metrics/" title="Modules, Losses, and Metrics">
+<a class="md-nav__link" href="../../guides/modules-losses-metrics/" title="Modules, Losses, and Metrics">
       Modules, Losses, and Metrics
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../../guides/contributing/" title="Contibuting">
+<a class="md-nav__link" href="../../guides/contributing/" title="Contibuting">
       Contibuting
     </a>
 </li>
@@ -170,42 +170,64 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../Loss/" title="Loss">
+<a class="md-nav__link" href="../Loss/" title="Loss">
       Loss
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../Metric/" title="Metric">
+<a class="md-nav__link" href="../Metric/" title="Metric">
       Metric
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../Model/" title="Model">
+<a class="md-nav__link" href="../Model/" title="Model">
       Model
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../Module/" title="Module">
+<a class="md-nav__link" href="../Module/" title="Module">
       Module
     </a>
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../PRNGSequence/" title="PRNGSequence">
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+        PRNGSequence
+        <span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
+</span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./" title="PRNGSequence">
       PRNGSequence
     </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.module.PRNGSequence">
+    elegy.module.PRNGSequence
+  </a>
+</li>
+</ul>
+</nav>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../add_loss/" title="add_loss">
+<a class="md-nav__link" href="../add_loss/" title="add_loss">
       add_loss
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../add_metric/" title="add_metric">
+<a class="md-nav__link" href="../add_metric/" title="add_metric">
       add_metric
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../add_summary/" title="add_summary">
+<a class="md-nav__link" href="../add_summary/" title="add_summary">
       add_summary
     </a>
 </li>
@@ -226,52 +248,52 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/CSVLogger/" title="CSVLogger">
+<a class="md-nav__link" href="../callbacks/CSVLogger/" title="CSVLogger">
       CSVLogger
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/Callback/" title="Callback">
+<a class="md-nav__link" href="../callbacks/Callback/" title="Callback">
       Callback
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/CallbackList/" title="CallbackList">
+<a class="md-nav__link" href="../callbacks/CallbackList/" title="CallbackList">
       CallbackList
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/EarlyStopping/" title="EarlyStopping">
+<a class="md-nav__link" href="../callbacks/EarlyStopping/" title="EarlyStopping">
       EarlyStopping
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/History/" title="History">
+<a class="md-nav__link" href="../callbacks/History/" title="History">
       History
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/LambdaCallback/" title="LambdaCallback">
+<a class="md-nav__link" href="../callbacks/LambdaCallback/" title="LambdaCallback">
       LambdaCallback
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/ModelCheckpoint/" title="ModelCheckpoint">
+<a class="md-nav__link" href="../callbacks/ModelCheckpoint/" title="ModelCheckpoint">
       ModelCheckpoint
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/RemoteMonitor/" title="RemoteMonitor">
+<a class="md-nav__link" href="../callbacks/RemoteMonitor/" title="RemoteMonitor">
       RemoteMonitor
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/TensorBoard/" title="TensorBoard">
+<a class="md-nav__link" href="../callbacks/TensorBoard/" title="TensorBoard">
       TensorBoard
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../callbacks/TerminateOnNaN/" title="TerminateOnNaN">
+<a class="md-nav__link" href="../callbacks/TerminateOnNaN/" title="TerminateOnNaN">
       TerminateOnNaN
     </a>
 </li>
@@ -279,12 +301,12 @@
 </nav>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../get_parameter/" title="get_parameter">
+<a class="md-nav__link" href="../get_parameter/" title="get_parameter">
       get_parameter
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../get_state/" title="get_state">
+<a class="md-nav__link" href="../get_state/" title="get_state">
       get_state
     </a>
 </li>
@@ -305,37 +327,37 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/add_loss/" title="add_loss">
+<a class="md-nav__link" href="../hooks/add_loss/" title="add_loss">
       add_loss
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/add_metric/" title="add_metric">
+<a class="md-nav__link" href="../hooks/add_metric/" title="add_metric">
       add_metric
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/add_summary/" title="add_summary">
+<a class="md-nav__link" href="../hooks/add_summary/" title="add_summary">
       add_summary
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/get_parameter/" title="get_parameter">
+<a class="md-nav__link" href="../hooks/get_parameter/" title="get_parameter">
       get_parameter
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/get_state/" title="get_state">
+<a class="md-nav__link" href="../hooks/get_state/" title="get_state">
       get_state
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/next_rng_key/" title="next_rng_key">
+<a class="md-nav__link" href="../hooks/next_rng_key/" title="next_rng_key">
       next_rng_key
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../hooks/set_state/" title="set_state">
+<a class="md-nav__link" href="../hooks/set_state/" title="set_state">
       set_state
     </a>
 </li>
@@ -359,37 +381,37 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../initializers/Constant/" title="Constant">
+<a class="md-nav__link" href="../initializers/Constant/" title="Constant">
       Constant
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../initializers/Orthogonal/" title="Orthogonal">
+<a class="md-nav__link" href="../initializers/Orthogonal/" title="Orthogonal">
       Orthogonal
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../initializers/RandomNormal/" title="RandomNormal">
+<a class="md-nav__link" href="../initializers/RandomNormal/" title="RandomNormal">
       RandomNormal
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../initializers/RandomUniform/" title="RandomUniform">
+<a class="md-nav__link" href="../initializers/RandomUniform/" title="RandomUniform">
       RandomUniform
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../initializers/TruncatedNormal/" title="TruncatedNormal">
+<a class="md-nav__link" href="../initializers/TruncatedNormal/" title="TruncatedNormal">
       TruncatedNormal
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../initializers/UniformScaling/" title="UniformScaling">
+<a class="md-nav__link" href="../initializers/UniformScaling/" title="UniformScaling">
       UniformScaling
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../initializers/VarianceScaling/" title="VarianceScaling">
+<a class="md-nav__link" href="../initializers/VarianceScaling/" title="VarianceScaling">
       VarianceScaling
     </a>
 </li>
@@ -413,67 +435,67 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../losses/BinaryCrossentropy/" title="BinaryCrossentropy">
+<a class="md-nav__link" href="../losses/BinaryCrossentropy/" title="BinaryCrossentropy">
       BinaryCrossentropy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../losses/CategoricalCrossentropy/" title="CategoricalCrossentropy">
+<a class="md-nav__link" href="../losses/CategoricalCrossentropy/" title="CategoricalCrossentropy">
       CategoricalCrossentropy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../losses/Loss/" title="Loss">
+<a class="md-nav__link" href="../losses/Loss/" title="Loss">
       Loss
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../losses/MeanAbsoluteError/" title="MeanAbsoluteError">
+<a class="md-nav__link" href="../losses/MeanAbsoluteError/" title="MeanAbsoluteError">
       MeanAbsoluteError
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../losses/MeanAbsolutePercentageError/" title="MeanAbsolutePercentageError">
+<a class="md-nav__link" href="../losses/MeanAbsolutePercentageError/" title="MeanAbsolutePercentageError">
       MeanAbsolutePercentageError
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../losses/MeanSquaredError/" title="MeanSquaredError">
+<a class="md-nav__link" href="../losses/MeanSquaredError/" title="MeanSquaredError">
       MeanSquaredError
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../losses/Reduction/" title="Reduction">
+<a class="md-nav__link" href="../losses/Reduction/" title="Reduction">
       Reduction
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../losses/SparseCategoricalCrossentropy/" title="SparseCategoricalCrossentropy">
+<a class="md-nav__link" href="../losses/SparseCategoricalCrossentropy/" title="SparseCategoricalCrossentropy">
       SparseCategoricalCrossentropy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../losses/binary_crossentropy/" title="binary_crossentropy">
+<a class="md-nav__link" href="../losses/binary_crossentropy/" title="binary_crossentropy">
       binary_crossentropy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../losses/mean_absolute_error/" title="mean_absolute_error">
+<a class="md-nav__link" href="../losses/mean_absolute_error/" title="mean_absolute_error">
       mean_absolute_error
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../losses/mean_percentage_absolute_error/" title="mean_percentage_absolute_error">
+<a class="md-nav__link" href="../losses/mean_percentage_absolute_error/" title="mean_percentage_absolute_error">
       mean_percentage_absolute_error
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../losses/mean_squared_error/" title="mean_squared_error">
+<a class="md-nav__link" href="../losses/mean_squared_error/" title="mean_squared_error">
       mean_squared_error
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../losses/sparse_categorical_crossentropy/" title="sparse_categorical_crossentropy">
+<a class="md-nav__link" href="../losses/sparse_categorical_crossentropy/" title="sparse_categorical_crossentropy">
       sparse_categorical_crossentropy
     </a>
 </li>
@@ -497,87 +519,87 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/Accuracy/" title="Accuracy">
+<a class="md-nav__link" href="../metrics/Accuracy/" title="Accuracy">
       Accuracy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/BinaryCrossentropy/" title="BinaryCrossentropy">
+<a class="md-nav__link" href="../metrics/BinaryCrossentropy/" title="BinaryCrossentropy">
       BinaryCrossentropy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/CategoricalAccuracy/" title="CategoricalAccuracy">
+<a class="md-nav__link" href="../metrics/CategoricalAccuracy/" title="CategoricalAccuracy">
       CategoricalAccuracy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/Mean/" title="Mean">
+<a class="md-nav__link" href="../metrics/Mean/" title="Mean">
       Mean
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/MeanAbsoluteError/" title="MeanAbsoluteError">
+<a class="md-nav__link" href="../metrics/MeanAbsoluteError/" title="MeanAbsoluteError">
       MeanAbsoluteError
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/MeanSquaredError/" title="MeanSquaredError">
+<a class="md-nav__link" href="../metrics/MeanSquaredError/" title="MeanSquaredError">
       MeanSquaredError
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/Metric/" title="Metric">
+<a class="md-nav__link" href="../metrics/Metric/" title="Metric">
       Metric
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/Reduce/" title="Reduce">
+<a class="md-nav__link" href="../metrics/Reduce/" title="Reduce">
       Reduce
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/SparseCategoricalAccuracy/" title="SparseCategoricalAccuracy">
+<a class="md-nav__link" href="../metrics/SparseCategoricalAccuracy/" title="SparseCategoricalAccuracy">
       SparseCategoricalAccuracy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/Sum/" title="Sum">
+<a class="md-nav__link" href="../metrics/Sum/" title="Sum">
       Sum
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/accuracy/" title="accuracy">
+<a class="md-nav__link" href="../metrics/accuracy/" title="accuracy">
       accuracy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/binary_crossentropy/" title="binary_crossentropy">
+<a class="md-nav__link" href="../metrics/binary_crossentropy/" title="binary_crossentropy">
       binary_crossentropy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/categorical_accuracy/" title="categorical_accuracy">
+<a class="md-nav__link" href="../metrics/categorical_accuracy/" title="categorical_accuracy">
       categorical_accuracy
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/mean_absolute_error/" title="mean_absolute_error">
+<a class="md-nav__link" href="../metrics/mean_absolute_error/" title="mean_absolute_error">
       mean_absolute_error
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/mean_squared_error/" title="mean_squared_error">
+<a class="md-nav__link" href="../metrics/mean_squared_error/" title="mean_squared_error">
       mean_squared_error
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/reduce/" title="reduce">
+<a class="md-nav__link" href="../metrics/reduce/" title="reduce">
       reduce
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../metrics/sparse_categorical_accuracy/" title="sparse_categorical_accuracy">
+<a class="md-nav__link" href="../metrics/sparse_categorical_accuracy/" title="sparse_categorical_accuracy">
       sparse_categorical_accuracy
     </a>
 </li>
@@ -601,12 +623,12 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../model/Model/" title="Model">
+<a class="md-nav__link" href="../model/Model/" title="Model">
       Model
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../model/load/" title="load">
+<a class="md-nav__link" href="../model/load/" title="load">
       load
     </a>
 </li>
@@ -630,12 +652,12 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../module/Module/" title="Module">
+<a class="md-nav__link" href="../module/Module/" title="Module">
       Module
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../module/to_module/" title="to_module">
+<a class="md-nav__link" href="../module/to_module/" title="to_module">
       to_module
     </a>
 </li>
@@ -643,12 +665,12 @@
 </nav>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../next_rng_key/" title="next_rng_key">
+<a class="md-nav__link" href="../next_rng_key/" title="next_rng_key">
       next_rng_key
     </a>
 </li>
-<li class="md-nav__item md-nav__item--active md-nav__item--nested">
-<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-4-19" id="nav-4-19" type="checkbox"/>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-19" id="nav-4-19" type="checkbox"/>
 <label class="md-nav__link" for="nav-4-19">
       nn
       <span class="md-nav__icon md-icon">
@@ -664,91 +686,69 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../BatchNormalization/" title="BatchNormalization">
+<a class="md-nav__link" href="../nn/BatchNormalization/" title="BatchNormalization">
       BatchNormalization
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../Conv1D/" title="Conv1D">
+<a class="md-nav__link" href="../nn/Conv1D/" title="Conv1D">
       Conv1D
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../Conv2D/" title="Conv2D">
+<a class="md-nav__link" href="../nn/Conv2D/" title="Conv2D">
       Conv2D
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../Conv3D/" title="Conv3D">
+<a class="md-nav__link" href="../nn/Conv3D/" title="Conv3D">
       Conv3D
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../ConvND/" title="ConvND">
+<a class="md-nav__link" href="../nn/ConvND/" title="ConvND">
       ConvND
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../Dropout/" title="Dropout">
+<a class="md-nav__link" href="../nn/Dropout/" title="Dropout">
       Dropout
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../Flatten/" title="Flatten">
+<a class="md-nav__link" href="../nn/Flatten/" title="Flatten">
       Flatten
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../InstanceNormalization/" title="InstanceNormalization">
+<a class="md-nav__link" href="../nn/InstanceNormalization/" title="InstanceNormalization">
       InstanceNormalization
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../LayerNormalization/" title="LayerNormalization">
+<a class="md-nav__link" href="../nn/LayerNormalization/" title="LayerNormalization">
       LayerNormalization
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../Linear/" title="Linear">
+<a class="md-nav__link" href="../nn/Linear/" title="Linear">
       Linear
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../Reshape/" title="Reshape">
+<a class="md-nav__link" href="../nn/Reshape/" title="Reshape">
       Reshape
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../Sequential/" title="Sequential">
+<a class="md-nav__link" href="../nn/Sequential/" title="Sequential">
       Sequential
     </a>
 </li>
-<li class="md-nav__item md-nav__item--active">
-<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
-<label class="md-nav__link md-nav__link--active" for="__toc">
-        sequential
-        <span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
-</span>
-</label>
-<a class="md-nav__link md-nav__link--active" href="./" title="sequential">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../nn/sequential/" title="sequential">
       sequential
     </a>
-<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
-<label class="md-nav__title" for="__toc">
-<span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
-</span>
-      Table of contents
-    </label>
-<ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.sequential">
-    elegy.nn.sequential_module.sequential
-  </a>
-</li>
-</ul>
-</nav>
 </li>
 </ul>
 </nav>
@@ -770,17 +770,17 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../regularizers/GlobalL1/" title="GlobalL1">
+<a class="md-nav__link" href="../regularizers/GlobalL1/" title="GlobalL1">
       GlobalL1
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../regularizers/GlobalL1L2/" title="GlobalL1L2">
+<a class="md-nav__link" href="../regularizers/GlobalL1L2/" title="GlobalL1L2">
       GlobalL1L2
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../regularizers/GlobalL2/" title="GlobalL2">
+<a class="md-nav__link" href="../regularizers/GlobalL2/" title="GlobalL2">
       GlobalL2
     </a>
 </li>
@@ -788,12 +788,12 @@
 </nav>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../set_state/" title="set_state">
+<a class="md-nav__link" href="../set_state/" title="set_state">
       set_state
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../to_module/" title="to_module">
+<a class="md-nav__link" href="../to_module/" title="to_module">
       to_module
     </a>
 </li>
@@ -817,8 +817,8 @@
     </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.sequential">
-    elegy.nn.sequential_module.sequential
+<a class="md-nav__link" href="#elegy.module.PRNGSequence">
+    elegy.module.PRNGSequence
   </a>
 </li>
 </ul>
@@ -828,217 +828,14 @@
 </div>
 <div class="md-content">
 <article class="md-content__inner md-typeset">
-<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/nn/sequential.md" title="Edit this page">
+<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/PRNGSequence.md" title="Edit this page">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
 </a>
-<h1 id="elegynnsequential">elegy.nn.sequential</h1>
-<div class="doc doc-object doc-function">
-<h2 class="hidden-toc" href="#elegy.nn.sequential_module.sequential" id="elegy.nn.sequential_module.sequential" style="visibility: hidden; width: 0; height: 0;">
+<h1 id="elegyprngsequence">elegy.PRNGSequence</h1>
+<div class="doc doc-object doc-class">
+<h2 class="hidden-toc" href="#elegy.module.PRNGSequence" id="elegy.module.PRNGSequence" style="visibility: hidden; width: 0; height: 0;">
 </h2>
 <div class="doc doc-contents first">
-<p>Connects all layers. <em>args and </em>*kwargs are passed to the first layer.</p>
-<div class="codehilite">
-<pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-    <span class="n">mlp</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">sequential</span><span class="p">(</span>
-        <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">64</span><span class="p">),</span>
-        <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">,</span>
-        <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span>
-        <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">,</span>
-        <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
-        <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">softmax</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">y</span> <span class="o">=</span> <span class="n">mlp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-    <span class="o">...</span>
-</code></pre>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p><code>sequential</code> is not a <code>Module</code>, that is, it wont create a scope over the layers it runs, 
-in constrast to <code>Sequential</code> layers are eagerly instantiate outside of <code>sequential</code> 
-and just passed to it to automate the execution.</p>
-</div>
-<p><strong>Parameters:</strong></p>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>layers</code></td>
-<td><code>Callable[..., Any]</code></td>
-<td>
-<p>Modules or functions passed as <code>*args</code></p>
-</td>
-<td><code>()</code></td>
-</tr>
-</tbody>
-</table>
-<p><strong>Returns:</strong></p>
-<table>
-<thead>
-<tr>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>Callable[..., Any]</code></td>
-<td>
-<p>A callable that waits for the inputs and applies the layers sequentially.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<details class="quote">
-<summary>Source code in <code>elegy/nn/sequential_module.py</code></summary>
-<table class="highlighttable">
-<tr>
-<td class="linenos">
-<div class="linenodiv">
-<pre><span></span>11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
-36
-37
-38
-39
-40
-41
-42
-43
-44
-45
-46
-47
-48
-49
-50
-51
-52
-53
-54
-55
-56
-57
-58
-59
-60
-61
-62
-63
-64
-65
-66
-67
-68
-69
-70
-71
-72
-73
-74</pre>
-</div>
-</td>
-<td class="code">
-<div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">sequential</span><span class="p">(</span><span class="o">*</span><span class="n">layers</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">]:</span>
-    <span class="sd">"""</span>
-<span class="sd">    Connects all layers. *args and **kwargs are passed to the first layer.</span>
-
-<span class="sd">    ```python</span>
-<span class="sd">    def call(self, x):</span>
-<span class="sd">        mlp = elegy.nn.sequential(</span>
-<span class="sd">            elegy.nn.Linear(64),</span>
-<span class="sd">            jax.nn.relu,</span>
-<span class="sd">            elegy.nn.Linear(32),</span>
-<span class="sd">            jax.nn.relu,</span>
-<span class="sd">            elegy.nn.Linear(10),</span>
-<span class="sd">            jax.nn.softmax,</span>
-<span class="sd">        )</span>
-<span class="sd">        y = mlp(x)</span>
-<span class="sd">        ...</span>
-<span class="sd">    ```</span>
-
-<span class="sd">    !!! Note</span>
-<span class="sd">        `sequential` is not a `Module`, that is, it wont create a scope over the layers it runs, </span>
-<span class="sd">        in constrast to `Sequential` layers are eagerly instantiate outside of `sequential` </span>
-<span class="sd">        and just passed to it to automate the execution.</span>
-
-<span class="sd">    Arguments:</span>
-<span class="sd">        layers: Modules or functions passed as `*args`</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        A callable that waits for the inputs and applies the layers sequentially.</span>
-<span class="sd">    """</span>
-
-    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-
-        <span class="k">if</span> <span class="n">LOCAL</span><span class="o">.</span><span class="n">contexts</span><span class="p">:</span>
-            <span class="n">context</span><span class="p">:</span> <span class="n">Context</span> <span class="o">=</span> <span class="n">LOCAL</span><span class="o">.</span><span class="n">contexts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">context</span><span class="o">.</span><span class="n">module_c</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">"Cannot execute `sequential` outside of a module's `call` or `init`."</span>
-                <span class="p">)</span>
-
-            <span class="n">module</span><span class="p">:</span> <span class="n">Module</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">module_c</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-
-            <span class="n">out</span> <span class="o">=</span> <span class="n">inputs</span>
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">layers</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">out</span> <span class="o">=</span> <span class="n">layer</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">out</span> <span class="o">=</span> <span class="n">layer</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">Module</span><span class="p">):</span>
-                    <span class="n">name</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="n">layer</span><span class="o">.</span><span class="vm">__name__</span>
-                        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">"__name__"</span><span class="p">)</span>
-                        <span class="k">else</span> <span class="n">layer</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
-                    <span class="p">)</span>
-                    <span class="n">hooks</span><span class="o">.</span><span class="n">add_summary</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">out</span>
-
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">"Cannot execute `sequential` outside of an `elegy.context`"</span>
-            <span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">call</span>
-</code></pre>
-</div>
-</td>
-</tr>
-</table>
-</details>
 </div>
 </div>
 </article>
@@ -1048,7 +845,7 @@ and just passed to it to automate the execution.</p>
 <footer class="md-footer">
 <div class="md-footer-nav">
 <nav aria-label="Footer" class="md-footer-nav__inner md-grid">
-<a class="md-footer-nav__link md-footer-nav__link--prev" href="../Sequential/" rel="prev" title="Sequential">
+<a class="md-footer-nav__link md-footer-nav__link--prev" href="../Module/" rel="prev" title="Module">
 <div class="md-footer-nav__button md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </div>
@@ -1057,17 +854,17 @@ and just passed to it to automate the execution.</p>
 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Sequential
+                Module
               </div>
 </div>
 </a>
-<a class="md-footer-nav__link md-footer-nav__link--next" href="../../regularizers/GlobalL1/" rel="next" title="GlobalL1">
+<a class="md-footer-nav__link md-footer-nav__link--next" href="../add_loss/" rel="next" title="add_loss">
 <div class="md-footer-nav__title">
 <div class="md-ellipsis">
 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                GlobalL1
+                add_loss
               </div>
 </div>
 <div class="md-footer-nav__button md-icon">
@@ -1106,14 +903,14 @@ and just passed to it to automate the execution.</p>
 </div>
 </footer>
 </div>
-<script src="../../../assets/javascripts/vendor.c3dc8c49.min.js"></script>
-<script src="../../../assets/javascripts/bundle.f9edbbd5.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+<script src="../../assets/javascripts/vendor.c3dc8c49.min.js"></script>
+<script src="../../assets/javascripts/bundle.f9edbbd5.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
 <script>
         app = initialize({
-          base: "../../..",
+          base: "../..",
           features: [],
           search: Object.assign({
-            worker: "../../../assets/javascripts/worker/search.8e2cddea.min.js"
+            worker: "../../assets/javascripts/worker/search.8e2cddea.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>
