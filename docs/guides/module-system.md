@@ -258,7 +258,12 @@ these reference don't change during execution. Each submodule gets assigned to a
 a unique field name based on its class name and order of creation. You can
 customize this name by using the `name` argument available in the `Module`'s constructor.
 
-### Managing Parameters and States
+### Managing State
+
+A big theme in Jax is that is that state and computation are separate, this is a requirement
+because in order for combinators like `jax.grad` and `jax.jit` to work you need pure functions,
+and pure functions usually require you to extract state and turn it into an input. To achieve this
+we will use additional feature from `init` and `apply` that where created for this purpose:
 
 ```python hl_lines="4 5"
 x = np.random.uniform(size=(15, 3))
@@ -268,7 +273,16 @@ parameters, states = mlp.init(rng=next(rngs))(x)
 y_pred, ctx = mlp.apply(parameters=parameters, states=states, rng=next(rngs))(x)
 ```
 
+The first thing is that `init` actually returns the initial `parameters` and `states`,
+these are dictionaries whose structure has a 1-to-1 correspondence with the structure of 
+the network. The second is that `apply` accepts these parameters and states as arguments. 
+This is a right step in the right direction since now our state is externalized.
+
 ### Low-level Training Loop
+
+Using the previous plus regular jax we can actually implement a basic training loop
+for our module. We will go ahead and show the solution and explain it afterwards:
+
 ```python
 def loss(parameters, rng, x, y):
     y_pred, ctx = mlp.apply(parameters=parameters, states=states, rng=rng, training=True)(x)
@@ -278,10 +292,10 @@ def loss(parameters, rng, x, y):
 @jax.jit
 def update(parameters, rng, x, y):
     gradients = jax.grad(loss)(parameters, rng, x, y)
-    new_parameters = jax.tree_multimap(
+    parameters = jax.tree_multimap(
         lambda p, g: p - 0.001 * g, parameters, gradients
     )
-    return new_parameters
+    return parameters
 
 
 x = np.random.uniform(size=(15, 3))
@@ -294,6 +308,11 @@ for step in range(1000):
 
 mlp.set_parameters(parameters)
 ```
+
+Here we created the functions `loss` and `update`, plus a minimal training loop.
+In order to for us to be able to calculate gradients of the loss with respect
+to the parameters we need for `loss` to take them an argument along with the 
+inputs `x` and labels `y`:
 
 ```python hl_lines="1 8"
 def loss(parameters, rng, x, y):
@@ -304,11 +323,16 @@ def loss(parameters, rng, x, y):
 @jax.jit
 def update(parameters, rng, x, y):
     gradients = jax.grad(loss)(parameters, rng, x, y)
-    new_parameters = jax.tree_multimap(
+    parameters = jax.tree_multimap(
         lambda p, g: p - 0.001 * g, parameters, gradients
     )
-    return new_parameters
+    return parameters
 ```
+
+Note that `grad` by default calculate the gradient of the function
+with respect to the first argument, which in this case is a structure
+with all the parameters. Because we are using `jax.jit` we also require
+that any desired changes propagated as outputs:
 
 ```python hl_lines="7 12"
 def loss(parameters, rng, x, y):
@@ -319,13 +343,17 @@ def loss(parameters, rng, x, y):
 @jax.jit
 def update(parameters, rng, x, y):
     gradients = jax.grad(loss)(parameters, rng, x, y)
-    new_parameters = jax.tree_multimap(
+    parameters = jax.tree_multimap(
         lambda p, g: p - 0.001 * g, parameters, gradients
     )
-    return new_parameters
+    return parameters
 ```
 
-```python hl_lines="6 8"
+The strategy is to iteratively update the parameters of the
+network by feeding them as inputs and reassigning them after
+the output.
+
+```python hl_lines="7 9"
 x = np.random.uniform(size=(15, 3))
 y = np.random.uniform(size=(15, 1))
 mlp = MLP()
@@ -336,7 +364,15 @@ for step in range(1000):
 
 mlp.set_parameters(parameters)
 ```
+
+Note that once we are done training we can actually insert these learned parameters
+back into our module objects by using `set_parameters`.
+
 ### High Level Equivalent
+
+If all this seems a bit too manual for you don't worry, you can can easily express 
+all the previous in a few lines of code using an `elegy.Model`:
+
 ```python
 model = elegy.Model(
     module=elegy.nn.Sequential(
