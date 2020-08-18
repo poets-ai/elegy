@@ -67,7 +67,7 @@ In Elegy we have the following list of hooks:
 | `add_summary`   | Lets us declare a summary in some intermediate layer.                                                           |
 
 !!! Note
-    If you use existing `Module`s you might not need to worry much about this, but keep these in might
+    If you use existing `Module`s you might not need to worry much about these hooks, but keep them in mind
     if you are developing your own custom modules.
 
 ### Module Hooks: Functional Style
@@ -78,8 +78,8 @@ of other frameworks, now we will go beyond. The first thing we need to know is t
     **Modules are hooks**
 
 This means that module _instantiation_ taps into the hook system, and that hooks are
-aware of the module in which they are executing. In practice this will mean that we
-will be able to move a lot of the code usually defined on the `__init__` method to
+aware of the module in which they are executing in. In practice this will mean that we
+will be able to move a lot of the code defined on the `__init__` method to
 the `call` method:
 
 ```python
@@ -128,8 +128,8 @@ class Linear(elegy.Module):
         return jnp.dot(x, w) + b
 ```
 
-As you see this not allows us to do shape inference since we have access
-to the inputs when defining our parameters. Second, we also moved the instantiation
+As you see this allows us to do shape inference since we have access
+to the inputs when defining our parameter's shape. Second, we also moved the instantiation
 of the `Linear` modules in `MLP` from `__init__` to `call`:
 
 ```python hl_lines="3 5 7"
@@ -145,7 +145,7 @@ class MLP(elegy.Module):
 
 Here we are using Modules as hooks. While it may _appear_ as if we are instantiating
 3 new `Linear` modules on every `call`, Elegy is actually caching them behind the scenes
-with the help of Python's metaclasses. There is one important rule you have to follow:
+with the help of Python metaclasses. There is one important rule you have to follow:
 
 !!! Quote
     You must use Module hooks **unconditionally**
