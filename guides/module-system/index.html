@@ -1064,10 +1064,10 @@ of the <code>Linear</code> modules in <code>MLP</code> from <code>__init__</code
 with the help of Python metaclasses. There is one important rule you have to follow:</p>
 <div class="admonition quote">
 <p class="admonition-title">Quote</p>
-<p>You must use Module hooks <strong>unconditionally</strong></p>
+<p>You must use hooks <strong>unconditionally</strong></p>
 </div>
-<p>This moto comes from React and it means that the module always has to call the same amount 
-of submodule hooks in the same order. For example the following code is invalid:</p>
+<p>This moto comes from React and it means that the module always has to call the same amount
+of hooks, and for module hooks specifically they must be called in the same order. For example the following code is invalid:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">])(</span><span class="n">x</span><span class="p">)</span>
@@ -1166,7 +1166,7 @@ we will use additional feature from <code>init</code> and <code>apply</code> tha
 <p>The first thing is that <code>init</code> actually returns the initial <code>parameters</code> and <code>states</code>,
 these are dictionaries whose structure has a 1-to-1 correspondence with the structure of 
 the network. The second is that <code>apply</code> accepts these parameters and states as arguments. 
-This is a right step in the right direction since now our state is externalized.</p>
+This is a step in the right direction since now our state is externalized.</p>
 <h3 id="low-level-training-loop">Low-level Training Loop</h3>
 <p>Using the previous plus regular jax we can actually implement a basic training loop
 for our module. We will go ahead and show the solution and explain it afterwards:</p>
