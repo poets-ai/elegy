@@ -148,10 +148,10 @@ Here we are using Modules as hooks. While it may _appear_ as if we are instantia
 with the help of Python metaclasses. There is one important rule you have to follow:
 
 !!! Quote
-    You must use Module hooks **unconditionally**
+    You must use hooks **unconditionally**
 
-This moto comes from React and it means that the module always has to call the same amount 
-of submodule hooks in the same order. For example the following code is invalid:
+This moto comes from React and it means that the module always has to call the same amount
+of hooks, and for module hooks specifically they must be called in the same order. For example the following code is invalid:
 
 ```python
 def call(self, x):
@@ -276,7 +276,7 @@ y_pred, ctx = mlp.apply(parameters=parameters, states=states, rng=next(rngs))(x)
 The first thing is that `init` actually returns the initial `parameters` and `states`,
 these are dictionaries whose structure has a 1-to-1 correspondence with the structure of 
 the network. The second is that `apply` accepts these parameters and states as arguments. 
-This is a right step in the right direction since now our state is externalized.
+This is a step in the right direction since now our state is externalized.
 
 ### Low-level Training Loop
 
