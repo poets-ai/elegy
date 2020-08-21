@@ -10,7 +10,7 @@ class PrecisionTest(unittest.TestCase):
     def test_basic(self):
 
         precision = elegy.metrics.Precision()
-        
+
         result = precision(
             y_true=jnp.array([0, 1, 1, 1]), y_pred=jnp.array([1, 0, 1, 1])
         )

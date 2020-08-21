@@ -11,12 +11,8 @@ class RecallTest(unittest.TestCase):
 
         recall = elegy.metrics.Recall()
 
-        result = recall(
-            y_true=jnp.array([0, 1, 1, 1]), y_pred=jnp.array([1, 0, 1, 1])
-        )
+        result = recall(y_true=jnp.array([0, 1, 1, 1]), y_pred=jnp.array([1, 0, 1, 1]))
         assert result == 0.6666667
 
-        result = recall(
-            y_true=jnp.array([1, 1, 1, 1]), y_pred=jnp.array([1, 0, 0, 0])
-        )
+        result = recall(y_true=jnp.array([1, 1, 1, 1]), y_pred=jnp.array([1, 0, 0, 0]))
         assert result == 0.42857143
