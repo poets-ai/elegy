@@ -1,4 +1,6 @@
 from .accuracy import Accuracy, accuracy
+from .precision import Precision, precision
+from .recall import Recall, recall
 from .binary_crossentropy import BinaryCrossentropy, binary_crossentropy
 from .categorical_accuracy import CategoricalAccuracy, categorical_accuracy
 from .mean import Mean
@@ -15,6 +17,10 @@ from .sum import Sum
 __all__ = [
     "Accuracy",
     "accuracy",
+    "Precision",
+    "precision",
+    "Recall",
+    "recall",
     "BinaryCrossentropy",
     "binary_crossentropy",
     "CategoricalAccuracy",

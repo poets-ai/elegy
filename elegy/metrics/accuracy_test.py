@@ -24,6 +24,6 @@ class AccuracyTest(unittest.TestCase):
         assert result == 0.75
 
         result = accuracy(
-            y_true=jnp.array([1, 1, 1, 1]), y_pred=jnp.array([1, 0, 0, 0])
+            y_true=jnp.array([1, 1, 1, 1]), y_pred=jnp.array([1, 0, 0, 0]) 
         )
         assert result == 0.5
