@@ -1,4 +1,5 @@
 from .accuracy import Accuracy, accuracy
+from .binary_accuracy import BinaryAccuracy, binary_accuracy
 from .binary_crossentropy import BinaryCrossentropy, binary_crossentropy
 from .categorical_accuracy import CategoricalAccuracy, categorical_accuracy
 from .mean import Mean
@@ -30,4 +31,6 @@ __all__ = [
     "SparseCategoricalAccuracy",
     "sparse_categorical_accuracy",
     "Sum",
+    "BinaryAccuracy",
+    "binary_accuracy",
 ]
