@@ -13,7 +13,7 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
 import typer
-from jax.experimental import optix
+import optax
 
 import elegy
 from utils import plot_history
@@ -150,7 +150,7 @@ def main(
     model = elegy.Model(
         module=vae,
         loss=[BinaryCrossEntropy(from_logits=True, on="logits")],
-        optimizer=optix.adam(1e-3),
+        optimizer=optax.adam(1e-3),
         run_eagerly=eager,
     )
 

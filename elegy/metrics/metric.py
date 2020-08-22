@@ -41,7 +41,7 @@ class Metric(Module):
         metrics=[
             elegy.metrics.SparseCategoricalAccuracy()
         ],
-        optimizer=optix.rmsprop(1e-3),
+        optimizer=optax.rmsprop(1e-3),
     )
     ```
 

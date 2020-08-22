@@ -55,7 +55,7 @@ model = elegy.Model(
         elegy.regularizers.GlobalL2(l=1e-5),
     ],
     metrics=elegy.metrics.SparseCategoricalAccuracy(),
-    optimizer=optix.rmsprop(1e-3),
+    optimizer=optax.rmsprop(1e-3),
 )
 ```
 **3.** Train the model using the `fit` method:
