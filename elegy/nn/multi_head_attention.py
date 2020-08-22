@@ -224,4 +224,3 @@ class MultiHeadAttention(module.Module):
             return output, attn_coef
         else:
             return output
-
