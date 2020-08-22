@@ -141,18 +141,18 @@ class CallbackList(object):
             batch_hook(batch, logs)
         self._delta_ts[hook_name].append(time.time() - t_before_callbacks)
 
-        delta_t_median = np.median(self._delta_ts[hook_name])
-        if (
-            self._delta_t_batch > 0.0
-            and delta_t_median > 0.95 * self._delta_t_batch
-            and delta_t_median > 0.1
-        ):
-            logging.warning(
-                "Method (%s) is slow compared "
-                "to the batch update (%f). Check your callbacks.",
-                hook_name,
-                delta_t_median,
-            )
+        # delta_t_median = np.median(self._delta_ts[hook_name])
+        # if (
+        #     self._delta_t_batch > 0.0
+        #     and delta_t_median > 0.95 * self._delta_t_batch
+        #     and delta_t_median > 0.1
+        # ):
+        #     logging.warning(
+        #         "Method (%s) is slow compared "
+        #         "to the batch update (%f). Check your callbacks.",
+        #         hook_name,
+        #         delta_t_median,
+        #     )
 
     def _call_begin_hook(self, mode):
         """Helper function for on_{train|test|predict}_begin methods."""
