@@ -60,4 +60,3 @@ class BinaryCrossentropyTest(TestCase):
             tm(y_true, y_pred, sample_weight=sample_weight),
             em(y_true, y_pred, sample_weight=sample_weight),
         )
-
