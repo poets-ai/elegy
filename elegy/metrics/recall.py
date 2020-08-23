@@ -28,7 +28,7 @@ class Recall(Mean):
     Use `sample_weight` of 0 to mask values.
 
     ```python
-    recall = elegy.metrics.Recall()
+        recall = elegy.metrics.Recall()
 
         result = recall(
             y_true=jnp.array([0, 1, 1, 1]), y_pred=jnp.array([1, 0, 1, 1])
@@ -44,7 +44,7 @@ class Recall(Mean):
     Usage with elegy API:
 
     ```python
-    model = elegy.Model(
+        model = elegy.Model(
         module_fn,
         loss=elegy.losses.CategoricalCrossentropy(),
         metrics=elegy.metrics.Recall(),

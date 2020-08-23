@@ -28,7 +28,7 @@ class Precision(Mean):
     Use `sample_weight` of 0 to mask values.
 
     ```python
-    precision = elegy.metrics.Precision()
+        precision = elegy.metrics.Precision()
 
         result = precision(
             y_true=jnp.array([0, 1, 1, 1]), y_pred=jnp.array([1, 0, 1, 1])
@@ -44,7 +44,7 @@ class Precision(Mean):
     Usage with elegy API:
 
     ```python
-    model = elegy.Model(
+        model = elegy.Model(
         module_fn,
         loss=elegy.losses.CategoricalCrossentropy(),
         metrics=elegy.metrics.Precision(),
