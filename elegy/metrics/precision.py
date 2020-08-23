@@ -7,7 +7,11 @@ import jax.numpy as jnp
 from elegy.metrics.mean import Mean
 
 
-def precision(y_true: jnp.ndarray, y_pred: jnp.ndarray) -> jnp.ndarray:
+def precision(
+    y_true: jnp.ndarray, y_pred: jnp.ndarray, thresholds: jnp.ndarray
+) -> jnp.ndarray:
+
+    y_pred = (y_pred > thresholds).astype(jnp.float32)
 
     if y_true.dtype != y_pred.dtype:
         y_pred = y_pred.astype(y_true.dtype)
@@ -49,7 +53,9 @@ class Precision(Mean):
     ```
     """
 
-    def __init__(self, on: tp.Optional[types.IndexLike] = None, **kwargs):
+    def __init__(
+        self, on: tp.Optional[types.IndexLike] = None, thresholds=None, **kwargs
+    ):
         """
         Creates a `Precision` instance.
 
@@ -61,8 +67,16 @@ class Precision(Mean):
                 the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`
                 then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
                 check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).
+
+            thresholds: (Optional) A float value or a python list/tuple of float threshold 
+                values in [0, 1]. A threshold is compared with prediction values to determine 
+                the truth value of predictions (i.e., above the threshold is true, below is false). 
+                One metric value is generated for each threshold value. If neither thresholds is set 
+                the default is to calculate precision with thresholds=0.5. 
+                
             kwargs: Additional keyword arguments passed to Module.
         """
+        self.thresholds = 0.5 if thresholds is None else thresholds
         super().__init__(on=on, **kwargs)
 
     def call(
@@ -91,5 +105,6 @@ class Precision(Mean):
     """
 
         return super().call(
-            values=precision(y_true=y_true, y_pred=y_pred), sample_weight=sample_weight,
+            values=precision(y_true=y_true, y_pred=y_pred, thresholds=self.thresholds),
+            sample_weight=sample_weight,
         )
