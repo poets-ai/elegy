@@ -8,13 +8,15 @@ from elegy.metrics.mean import Mean
 
 
 def recall(
-    y_true: jnp.ndarray, y_pred: jnp.ndarray, thresholds: jnp.ndarray
+    y_true: jnp.ndarray, y_pred: jnp.ndarray, thresholds: jnp.ndarray, sample_weight = None
 ) -> jnp.ndarray:
 
     y_pred = (y_pred > thresholds).astype(jnp.float32)
 
     if y_true.dtype != y_pred.dtype:
         y_pred = y_pred.astype(y_true.dtype)
+    
+    sample_weight = sample_weight if sample_weight is None else sample_weight[y_true == 1]
 
     return (y_true[y_true == 1] == y_pred[y_true == 1]).astype(jnp.float32)
 
@@ -76,9 +78,8 @@ class Recall(Mean):
                 
             kwargs: Additional keyword arguments passed to Module.
         """
-
-        self.thresholds = 0.5 if thresholds is None else thresholds
         super().__init__(on=on, **kwargs)
+        self.thresholds = 0.5 if thresholds is None else thresholds
 
     def call(
         self,
@@ -104,8 +105,9 @@ class Recall(Mean):
         Returns:
             Array with the cumulative recall.
     """
+        values, sample_weight = recall(y_true=y_true, y_pred=y_pred, thresholds=self.thresholds) 
 
         return super().call(
-            values=recall(y_true=y_true, y_pred=y_pred, thresholds=self.thresholds),
+            values=values,
             sample_weight=sample_weight,
         )

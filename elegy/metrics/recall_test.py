@@ -10,36 +10,49 @@ class RecallTest(unittest.TestCase):
     @transform_and_run
     def test_basic(self):
 
-        recall = elegy.metrics.Recall()
+        y_true = (np.random.uniform(0, 1, size=(5, 6, 7)) > 0.5).astype(np.float32)
+        y_pred = np.random.uniform(0, 1, size=(5, 6, 7))
+        sample_weight = np.expand_dims(np.random.uniform(0, 1, size=(6, 7)), axis = 0)
 
-        result = recall(y_true=jnp.array([0, 1, 1, 1]), y_pred=jnp.array([1, 0, 1, 1]))
-        assert np.isclose(result, 0.6666667)
+        assert np.allclose(
+            tfk.metrics.Recall()(y_true, y_pred),
+            elegy.metrics.Recall()(y_true, y_pred),
+        )
 
-        result = recall(y_true=jnp.array([1, 1, 1, 1]), y_pred=jnp.array([1, 0, 0, 0]))
-        assert np.isclose(result, 0.42857143)
-
-        result = recall(
-            y_true=jnp.array(
-                [[0, 1, 1, 1], [0, 0, 1, 0], [0, 1, 1, 0], [1, 0, 1, 0], [0, 0, 1, 1]]
+        assert np.allclose(
+            tfk.metrics.Recall(thresholds=0.3)(y_true, y_pred),
+            elegy.metrics.Recall(thresholds=0.3)(y_true, y_pred),
+        )
+            
+        assert np.allclose(
+            tfk.metrics.Recall(thresholds=0.3)(
+                y_true, y_pred, sample_weight=sample_weight
             ),
-            y_pred=jnp.array(
-                [[1, 0, 1, 1], [1, 0, 1, 1], [0, 0, 0, 1], [1, 1, 1, 1], [1, 0, 0, 1]]
+            elegy.metrics.Recall(thresholds=0.3)(
+                y_true, y_pred, sample_weight=sample_weight
             ),
         )
-        assert np.isclose(result, 0.5294118)
 
-        result = recall(
-            y_true=jnp.array(
-                [[0, 1, 1, 1], [0, 0, 1, 0], [0, 1, 1, 0], [1, 0, 1, 0], [0, 0, 1, 1]]
-            ),
-            y_pred=jnp.array(
-                [
-                    [0.8, 0.0, 0.6, 0.7],
-                    [0.6, 0.0, 0.6, 0.6],
-                    [0.0, 0.0, 0.0, 0.7],
-                    [0.7, 0.8, 0.6, 0.9],
-                    [0.9, 0.0, 0.0, 0.8],
-                ]
-            ),
+    def test_cummulative(self):
+        tm = tfk.metrics.Recall(thresholds=0.3)
+        em = elegy.metrics.Recall(thresholds=0.3)
+
+        # 1st run
+        y_true = (np.random.uniform(0, 1, size=(5, 6, 7)) > 0.5).astype(np.float32)
+        y_pred = np.random.uniform(0, 1, size=(5, 6, 7))
+        sample_weight = np.expand_dims(np.random.uniform(0, 1, size=(6, 7)), axis=0)
+
+        assert np.allclose(
+            tm(y_true, y_pred, sample_weight=sample_weight),
+            em(y_true, y_pred, sample_weight=sample_weight),
         )
-        assert np.isclose(result, 0.5555556)
+
+        # 2nd run
+        y_true = (np.random.uniform(0, 1, size=(5, 6, 7)) > 0.5).astype(np.float32)
+        y_pred = np.random.uniform(0, 1, size=(5, 6, 7))
+        sample_weight = np.expand_dims(np.random.uniform(0, 1, size=(6, 7)), axis=0)
+
+        assert np.allclose(
+            tm(y_true, y_pred, sample_weight=sample_weight),
+            em(y_true, y_pred, sample_weight=sample_weight),
+        )

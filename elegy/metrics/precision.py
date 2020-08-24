@@ -8,15 +8,17 @@ from elegy.metrics.mean import Mean
 
 
 def precision(
-    y_true: jnp.ndarray, y_pred: jnp.ndarray, thresholds: jnp.ndarray
+    y_true: jnp.ndarray, y_pred: jnp.ndarray, thresholds: jnp.ndarray, sample_weight = None
 ) -> jnp.ndarray:
 
     y_pred = (y_pred > thresholds).astype(jnp.float32)
 
     if y_true.dtype != y_pred.dtype:
         y_pred = y_pred.astype(y_true.dtype)
+        
+    sample_weight = sample_weight if sample_weight is None else sample_weight[y_pred == 1]
 
-    return (y_true[y_pred == 1] == y_pred[y_pred == 1]).astype(jnp.float32)
+    return (y_true[y_pred == 1] == y_pred[y_pred == 1]).astype(jnp.float32), sample_weight
 
 
 class Precision(Mean):
@@ -76,8 +78,8 @@ class Precision(Mean):
                 
             kwargs: Additional keyword arguments passed to Module.
         """
-        self.thresholds = 0.5 if thresholds is None else thresholds
         super().__init__(on=on, **kwargs)
+        self.thresholds = 0.5 if thresholds is None else thresholds
 
     def call(
         self,
@@ -103,8 +105,9 @@ class Precision(Mean):
         Returns:
             Array with the cumulative precision.
     """
+        values, sample_weight = precision(y_true=y_true, y_pred=y_pred, thresholds=self.thresholds, sample_weight=sample_weight)
 
         return super().call(
-            values=precision(y_true=y_true, y_pred=y_pred, thresholds=self.thresholds),
+            values=values,
             sample_weight=sample_weight,
         )
