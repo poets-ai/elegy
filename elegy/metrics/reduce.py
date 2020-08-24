@@ -2,6 +2,7 @@ import typing as tp
 from enum import Enum
 
 import jax.numpy as jnp
+import numpy as np
 
 from elegy import initializers, module, types, utils, hooks
 from elegy.metrics.metric import Metric
@@ -18,7 +19,7 @@ def reduce(
     count: tp.Optional[jnp.ndarray],
     values: jnp.ndarray,
     reduction: Reduction,
-    sample_weight: tp.Optional[jnp.ndarray],
+    sample_weight: tp.Optional[np.ndarray],
     dtype: jnp.dtype,
 ) -> tp.Tuple[jnp.ndarray, jnp.ndarray, tp.Optional[jnp.ndarray]]:
 
@@ -30,23 +31,18 @@ def reduce(
         #     values, sample_weight=sample_weight
         # )
 
-        # try:
-        #     # Broadcast weights if possible.
-        #     sample_weight = weights_broadcast_ops.broadcast_weights(
-        #         sample_weight, values
-        #     )
-        # except ValueError:
-        #     # Reduce values to same ndim as weight array
-        #     ndim = K.ndim(values)
-        #     weight_ndim = K.ndim(sample_weight)
-        #     if reduction == metrics_utils.Reduction.SUM:
-        #         values = math_ops.reduce_sum(
-        #             values, axis=list(range(weight_ndim, ndim))
-        #         )
-        #     else:
-        #         values = math_ops.reduce_mean(
-        #             values, axis=list(range(weight_ndim, ndim))
-        #         )
+        try:
+            # Broadcast weights if possible.
+            sample_weight = jnp.broadcast_to(sample_weight, values.shape)
+        except ValueError:
+            # Reduce values to same ndim as weight array
+            ndim = values.ndim
+            weight_ndim = sample_weight.ndim
+            if reduction == Reduction.SUM:
+                values = jnp.sum(values, axis=list(range(weight_ndim, ndim)))
+            else:
+                values = jnp.mean(values, axis=list(range(weight_ndim, ndim)))
+
         values = values * sample_weight
 
     value_sum = jnp.sum(values)
