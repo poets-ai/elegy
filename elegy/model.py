@@ -372,6 +372,8 @@ class Model:
         if metrics_states is not None:
             self.metrics_states = metrics_states
 
+        # logs = jax.tree_map(np.asarray, logs)
+
         return logs
 
     def _update(
@@ -1078,6 +1080,8 @@ class Model:
 
         if metrics_states is not None:
             self.metrics_states = metrics_states
+
+        # logs = jax.tree_map(np.asarray, logs)
 
         return logs
 
