@@ -8,17 +8,24 @@ from elegy.metrics.mean import Mean
 
 
 def precision(
-    y_true: jnp.ndarray, y_pred: jnp.ndarray, thresholds: jnp.ndarray, sample_weight = None
+    y_true: jnp.ndarray, y_pred: jnp.ndarray, threshold: jnp.ndarray, sample_weight=None
 ) -> jnp.ndarray:
 
-    y_pred = (y_pred > thresholds).astype(jnp.float32)
+    y_pred = (y_pred > threshold).astype(jnp.float32)
 
     if y_true.dtype != y_pred.dtype:
         y_pred = y_pred.astype(y_true.dtype)
-        
-    sample_weight = sample_weight if sample_weight is None else (y_pred * sample_weight)[y_pred == 1]
 
-    return (y_true[y_pred == 1] == y_pred[y_pred == 1]).astype(jnp.float32), sample_weight
+    sample_weight = (
+        sample_weight
+        if sample_weight is None
+        else (y_pred * sample_weight)[y_pred == 1]
+    )
+
+    return (
+        (y_true[y_pred == 1] == y_pred[y_pred == 1]).astype(jnp.float32),
+        sample_weight,
+    )
 
 
 class Precision(Mean):
@@ -56,7 +63,7 @@ class Precision(Mean):
     """
 
     def __init__(
-        self, on: tp.Optional[types.IndexLike] = None, thresholds=None, **kwargs
+        self, on: tp.Optional[types.IndexLike] = None, threshold=None, **kwargs
     ):
         """
         Creates a `Precision` instance.
@@ -70,16 +77,16 @@ class Precision(Mean):
                 then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
                 check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).
 
-            thresholds: (Optional) A float value or a python list/tuple of float threshold 
+            threshold: (Optional) A float value or a python list/tuple of float threshold 
                 values in [0, 1]. A threshold is compared with prediction values to determine 
                 the truth value of predictions (i.e., above the threshold is true, below is false). 
-                One metric value is generated for each threshold value. If neither thresholds is set 
-                the default is to calculate precision with thresholds=0.5. 
+                One metric value is generated for each threshold value. If neither threshold is set 
+                the default is to calculate precision with threshold=0.5. 
                 
             kwargs: Additional keyword arguments passed to Module.
         """
         super().__init__(on=on, **kwargs)
-        self.thresholds = 0.5 if thresholds is None else thresholds
+        self.threshold = 0.5 if threshold is None else threshold
 
     def call(
         self,
@@ -93,21 +100,17 @@ class Precision(Mean):
         Arguments:
             y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
             y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
-            sample_weight: Optional `sample_weight` acts as a
-                coefficient for the metric. If a scalar is provided, then the metric is
-                simply scaled by the given value. If `sample_weight` is a tensor of size
-                `[batch_size]`, then the metric for each sample of the batch is rescaled
-                by the corresponding element in the `sample_weight` vector. If the shape
-                of `sample_weight` is `[batch_size, d0, .. dN-1]` (or can be broadcasted
-                to this shape), then each metric element of `y_pred` is scaled by the
-                corresponding value of `sample_weight`. (Note on `dN-1`: all metric
-                functions reduce by 1 dimension, usually the last axis (-1)).
+            sample_weight: Optional weighting of each example. Defaults to 1. Can be a
+                `Tensor` whose rank is either 0, or the same rank as `y_true`, and must
+                be broadcastable to `y_true`.
         Returns:
             Array with the cumulative precision.
     """
-        values, sample_weight = precision(y_true=y_true, y_pred=y_pred, thresholds=self.thresholds, sample_weight=sample_weight)
-
-        return super().call(
-            values=values,
+        values, sample_weight = precision(
+            y_true=y_true,
+            y_pred=y_pred,
+            threshold=self.threshold,
             sample_weight=sample_weight,
         )
+
+        return super().call(values=values, sample_weight=sample_weight,)

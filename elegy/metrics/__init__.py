@@ -1,6 +1,7 @@
 from .accuracy import Accuracy, accuracy
 from .precision import Precision, precision
 from .recall import Recall, recall
+from .binary_accuracy import BinaryAccuracy, binary_accuracy
 from .binary_crossentropy import BinaryCrossentropy, binary_crossentropy
 from .categorical_accuracy import CategoricalAccuracy, categorical_accuracy
 from .mean import Mean
