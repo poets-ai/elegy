@@ -36,4 +36,6 @@ __all__ = [
     "SparseCategoricalAccuracy",
     "sparse_categorical_accuracy",
     "Sum",
+    "BinaryAccuracy",
+    "binary_accuracy",
 ]
