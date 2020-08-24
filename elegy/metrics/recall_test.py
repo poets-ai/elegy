@@ -1,12 +1,14 @@
-import unittest
-import elegy
+from unittest import TestCase
 
-from elegy.testing_utils import transform_and_run
 import jax.numpy as jnp
+import tensorflow.keras as tfk
 import numpy as np
 
+import elegy
+from elegy.testing_utils import transform_and_run
 
-class RecallTest(unittest.TestCase):
+
+class RecallTest(TestCase):
     @transform_and_run
     def test_basic(self):
 
@@ -16,12 +18,12 @@ class RecallTest(unittest.TestCase):
 
         assert np.allclose(
             tfk.metrics.Recall()(y_true, y_pred),
-            elegy.metrics.Recall()(y_true, y_pred),
+            elegy.metrics.Recall()(jnp.asarray(y_true), jnp.asarray(y_pred)),
         )
 
         assert np.allclose(
             tfk.metrics.Recall(thresholds=0.3)(y_true, y_pred),
-            elegy.metrics.Recall(thresholds=0.3)(y_true, y_pred),
+            elegy.metrics.Recall(thresholds=0.3)(jnp.asarray(y_true), jnp.asarray(y_pred)),
         )
             
         assert np.allclose(
@@ -29,10 +31,11 @@ class RecallTest(unittest.TestCase):
                 y_true, y_pred, sample_weight=sample_weight
             ),
             elegy.metrics.Recall(thresholds=0.3)(
-                y_true, y_pred, sample_weight=sample_weight
+                jnp.asarray(y_true), jnp.asarray(y_pred), sample_weight=jnp.asarray(sample_weight)
             ),
         )
-
+    
+    @transform_and_run
     def test_cummulative(self):
         tm = tfk.metrics.Recall(thresholds=0.3)
         em = elegy.metrics.Recall(thresholds=0.3)
@@ -44,7 +47,7 @@ class RecallTest(unittest.TestCase):
 
         assert np.allclose(
             tm(y_true, y_pred, sample_weight=sample_weight),
-            em(y_true, y_pred, sample_weight=sample_weight),
+            em(jnp.asarray(y_true), jnp.asarray(y_pred), sample_weight=jnp.asarray(sample_weight)),
         )
 
         # 2nd run
@@ -54,5 +57,5 @@ class RecallTest(unittest.TestCase):
 
         assert np.allclose(
             tm(y_true, y_pred, sample_weight=sample_weight),
-            em(y_true, y_pred, sample_weight=sample_weight),
+            em(jnp.asarray(y_true), jnp.asarray(y_pred), sample_weight=jnp.asarray(sample_weight)),
         )

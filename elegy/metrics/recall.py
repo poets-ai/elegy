@@ -16,9 +16,9 @@ def recall(
     if y_true.dtype != y_pred.dtype:
         y_pred = y_pred.astype(y_true.dtype)
     
-    sample_weight = sample_weight if sample_weight is None else sample_weight[y_true == 1]
+    sample_weight = sample_weight if sample_weight is None else (y_true * sample_weight)[y_true == 1]
 
-    return (y_true[y_true == 1] == y_pred[y_true == 1]).astype(jnp.float32)
+    return (y_true[y_true == 1] == y_pred[y_true == 1]).astype(jnp.float32), sample_weight
 
 
 class Recall(Mean):
@@ -105,7 +105,7 @@ class Recall(Mean):
         Returns:
             Array with the cumulative recall.
     """
-        values, sample_weight = recall(y_true=y_true, y_pred=y_pred, thresholds=self.thresholds) 
+        values, sample_weight = recall(y_true=y_true, y_pred=y_pred, thresholds=self.thresholds, sample_weight=sample_weight) 
 
         return super().call(
             values=values,

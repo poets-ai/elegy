@@ -16,7 +16,7 @@ def precision(
     if y_true.dtype != y_pred.dtype:
         y_pred = y_pred.astype(y_true.dtype)
         
-    sample_weight = sample_weight if sample_weight is None else sample_weight[y_pred == 1]
+    sample_weight = sample_weight if sample_weight is None else (y_pred * sample_weight)[y_pred == 1]
 
     return (y_true[y_pred == 1] == y_pred[y_pred == 1]).astype(jnp.float32), sample_weight
 

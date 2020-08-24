@@ -12,36 +12,18 @@ class PrecisionTest(TestCase):
     @transform_and_run
     def test_compatibility(self):
 
-
-        a = tfk.metrics.Precision(thresholds=0.3)(
-                np.array([0, 1, 1, 1]), np.array([0, 0, 1 , 1]), sample_weight=np.array([0, 1, 1, 0])
-            )
-
-        b = elegy.metrics.Precision(thresholds=0.3)(
-                np.array([0, 1, 1, 1]), np.array([0, 0, 1, 1]), sample_weight=np.array([0, 1, 1, 1])
-            )
-
-
-        a = tfk.metrics.Precision(thresholds=0.3)(
-                np.array([0, 1, 1, 1]), np.array([0, 0, 0 , 1]), sample_weight=np.array([0, 0, 1, 0])
-            )
-
-        b = elegy.metrics.Precision(thresholds=0.3)(
-                np.array([0, 1, 1, 1]), np.array([0, 0, 0, 1]), sample_weight=np.array([0, 0, 1, 1])
-            )
-
         y_true = (np.random.uniform(0, 1, size=(5, 6, 7)) > 0.5).astype(np.float32)
         y_pred = np.random.uniform(0, 1, size=(5, 6, 7))
         sample_weight = np.expand_dims(np.random.uniform(0, 1, size=(6, 7)), axis = 0)
 
         assert np.allclose(
             tfk.metrics.Precision()(y_true, y_pred),
-            elegy.metrics.Precision()(y_true, y_pred),
+            elegy.metrics.Precision()(jnp.asarray(y_true), jnp.asarray(y_pred)),
         )
 
         assert np.allclose(
             tfk.metrics.Precision(thresholds=0.3)(y_true, y_pred),
-            elegy.metrics.Precision(thresholds=0.3)(y_true, y_pred),
+            elegy.metrics.Precision(thresholds=0.3)(jnp.asarray(y_true), jnp.asarray(y_pred)),
         )
             
         assert np.allclose(
@@ -49,7 +31,7 @@ class PrecisionTest(TestCase):
                 y_true, y_pred, sample_weight=sample_weight
             ),
             elegy.metrics.Precision(thresholds=0.3)(
-                y_true, y_pred, sample_weight=sample_weight
+                jnp.asarray(y_true), jnp.asarray(y_pred), sample_weight=jnp.asarray(sample_weight)
             ),
         )
 
@@ -65,7 +47,7 @@ class PrecisionTest(TestCase):
 
         assert np.allclose(
             tm(y_true, y_pred, sample_weight=sample_weight),
-            em(y_true, y_pred, sample_weight=sample_weight),
+            em(jnp.asarray(y_true), jnp.asarray(y_pred), sample_weight=jnp.asarray(sample_weight)),
         )
 
         # 2nd run
@@ -75,8 +57,5 @@ class PrecisionTest(TestCase):
 
         assert np.allclose(
             tm(y_true, y_pred, sample_weight=sample_weight),
-            em(y_true, y_pred, sample_weight=sample_weight),
+            em(jnp.asarray(y_true), jnp.asarray(y_pred), sample_weight=jnp.asarray(sample_weight)),
         )
-
-test = PrecisionTest()
-test.test_compatibility()
