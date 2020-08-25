@@ -56,7 +56,7 @@ class CategoricalAccuracy(Mean):
         module_fn,
         loss=elegy.losses.CategoricalCrossentropy(),
         metrics=elegy.metrics.CategoricalAccuracy(),
-        optimizer=optix.adam(1e-3),
+        optimizer=optax.adam(1e-3),
     )
     ```
     """

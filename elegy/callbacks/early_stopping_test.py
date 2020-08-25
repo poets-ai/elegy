@@ -3,7 +3,7 @@ from unittest import TestCase
 
 
 import numpy as np
-from jax.experimental import optix
+import optax
 import jax
 
 import elegy
@@ -25,7 +25,7 @@ class EarlyStoppingTest(TestCase):
         model = elegy.Model(
             module=MLP(),
             loss=elegy.losses.MeanSquaredError(),
-            optimizer=optix.rmsprop(0.01),
+            optimizer=optax.rmsprop(0.01),
         )
         history = model.fit(
             np.ones((5, 20)),

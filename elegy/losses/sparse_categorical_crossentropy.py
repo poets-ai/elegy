@@ -77,7 +77,7 @@ class SparseCategoricalCrossentropy(Loss):
         module_fn,
         loss=lelegy.losses.SparseCategoricalCrossentropy(),
         metrics=lelegy.metrics.Accuracy(),
-        optimizer=optix.adam(1e-3),
+        optimizer=optax.adam(1e-3),
     )
     
     ```

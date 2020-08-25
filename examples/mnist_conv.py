@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tensorboardX.writer import SummaryWriter
 import typer
-from jax.experimental import optix
+import optax
 
 import elegy
 from elegy.callbacks.tensorboard import TensorBoard
@@ -69,7 +69,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
         module=CNN(),
         loss=elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
         metrics=elegy.metrics.SparseCategoricalAccuracy(),
-        optimizer=optix.adam(1e-3),
+        optimizer=optax.adam(1e-3),
         run_eagerly=eager,
     )
 

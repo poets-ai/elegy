@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tensorboardX.writer import SummaryWriter
 import typer
-from jax.experimental import optix
+import optax
 
 import elegy
 from utils import plot_history
@@ -64,7 +64,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
     model = elegy.Model(
         module=MLP(n1=256, n2=64),
         loss=MeanSquaredError(),
-        optimizer=optix.rmsprop(0.001),
+        optimizer=optax.rmsprop(0.001),
         run_eagerly=eager,
     )
 

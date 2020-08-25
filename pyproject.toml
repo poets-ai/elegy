@@ -24,6 +24,7 @@ deepmerge = "^0.1.0"
 pyyaml = "^5.3.1"
 pytest-cov = "^2.10.0"
 dm-haiku = "^0.0.2"
+optax = "^0.0.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
