@@ -594,6 +594,11 @@
     </a>
 </li>
 <li class="md-nav__item">
+<a class="md-nav__link" href="../../metrics/BinaryAccuracy/" title="BinaryAccuracy">
+      BinaryAccuracy
+    </a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="../../metrics/BinaryCrossentropy/" title="BinaryCrossentropy">
       BinaryCrossentropy
     </a>
@@ -641,6 +646,11 @@
 <li class="md-nav__item">
 <a class="md-nav__link" href="../../metrics/accuracy/" title="accuracy">
       accuracy
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../metrics/binary_accuracy/" title="binary_accuracy">
+      binary_accuracy
     </a>
 </li>
 <li class="md-nav__item">
@@ -1000,7 +1010,7 @@ To make it so, pass the loss or metrics at <code>model.__init__()</code>.</p>
 <span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
     <span class="n">module</span><span class="o">=</span><span class="n">MLP</span><span class="p">(),</span>
     <span class="n">loss</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">(),</span>
-    <span class="n">optimizer</span><span class="o">=</span><span class="n">optix</span><span class="o">.</span><span class="n">rmsprop</span><span class="p">(</span><span class="mf">0.01</span><span class="p">),</span>
+    <span class="n">optimizer</span><span class="o">=</span><span class="n">optax</span><span class="o">.</span><span class="n">rmsprop</span><span class="p">(</span><span class="mf">0.01</span><span class="p">),</span>
 <span class="p">)</span>
 <span class="n">history</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
     <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>

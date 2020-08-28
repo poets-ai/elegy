@@ -554,6 +554,11 @@
     </a>
 </li>
 <li class="md-nav__item">
+<a class="md-nav__link" href="../api/metrics/BinaryAccuracy/" title="BinaryAccuracy">
+      BinaryAccuracy
+    </a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="../api/metrics/BinaryCrossentropy/" title="BinaryCrossentropy">
       BinaryCrossentropy
     </a>
@@ -601,6 +606,11 @@
 <li class="md-nav__item">
 <a class="md-nav__link" href="../api/metrics/accuracy/" title="accuracy">
       accuracy
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../api/metrics/binary_accuracy/" title="binary_accuracy">
+      binary_accuracy
     </a>
 </li>
 <li class="md-nav__item">
@@ -2155,7 +2165,7 @@ y_test: (10000,) uint8
 <div class="prompt input_prompt">In [3]:</div>
 <div class="inner_cell">
 <div class="input_area">
-<div class="highlight highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span> <span class="nn">jax.experimental</span> <span class="kn">import</span> <span class="n">optix</span>
+<div class="highlight highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span> <span class="nn">optax</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
     <span class="n">module</span><span class="o">=</span><span class="n">MLP</span><span class="p">(</span><span class="n">n1</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">n2</span><span class="o">=</span><span class="mi">100</span><span class="p">),</span>
@@ -2164,7 +2174,7 @@ y_test: (10000,) uint8
         <span class="n">elegy</span><span class="o">.</span><span class="n">regularizers</span><span class="o">.</span><span class="n">GlobalL2</span><span class="p">(</span><span class="n">l</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">),</span>
     <span class="p">],</span>
     <span class="n">metrics</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">SparseCategoricalAccuracy</span><span class="p">(),</span>
-    <span class="n">optimizer</span><span class="o">=</span><span class="n">optix</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">),</span>
+    <span class="n">optimizer</span><span class="o">=</span><span class="n">optax</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">),</span>
 <span class="p">)</span>
 </pre></div>
 </div>
