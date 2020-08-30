@@ -14,7 +14,7 @@ def binary_accuracy(
 ) -> np.ndarray:
     """
     Calculates how often predictions matches binary labels.
-    
+
     Standalone usage:
 
     ```python
@@ -28,7 +28,7 @@ def binary_accuracy(
         y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
         threshold: Float representing the threshold for deciding whether
             prediction values are 1 or 0.
-    
+
     Returns:
         Binary accuracy values. shape = `[batch_size, d0, .. dN-1]`
     """
