@@ -10,6 +10,28 @@ from elegy.testing_utils import transform_and_run
 
 class BinaryCrossentropyTest(TestCase):
     @transform_and_run
+    def test_example(self):
+        y_true = np.array([[1], [1], [0], [0]])
+        y_pred = np.array([[1], [1], [0], [0]])
+        m = elegy.metrics.binary_accuracy(y_true, y_pred)
+        assert m.shape == (4,)
+
+        m = elegy.metrics.BinaryAccuracy()
+        result = m(
+            y_true=np.array([[1], [1], [0], [0]]),
+            y_pred=np.array([[0.98], [1], [0], [0.6]]),
+        )
+        assert result == 0.75
+
+        m = elegy.metrics.BinaryAccuracy()
+        result = m(
+            y_true=np.array([[1], [1], [0], [0]]),
+            y_pred=np.array([[0.98], [1], [0], [0.6]]),
+            sample_weight=np.array([1, 0, 0, 1]),
+        )
+        assert result == 0.5
+
+    @transform_and_run
     def test_compatibility(self):
 
         y_true = (np.random.uniform(0, 1, size=(5, 6, 7)) > 0.5).astype(np.float32)
