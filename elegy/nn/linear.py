@@ -42,8 +42,7 @@ class Linear(module.Module):
         self.b_init = b_init or jnp.zeros
 
     def call(self, inputs: np.ndarray) -> np.ndarray:
-        """
-        """
+        """"""
         if not inputs.shape:
             raise ValueError("Input must not be scalar.")
 

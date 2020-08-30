@@ -30,7 +30,7 @@ class Dropout(Module):
     ```python
     dropout = elegy.nn.Dropout(0.2)
     data = np.arange(10).reshape(5, 2).astype(np.float32)
-    
+
     print(data)
     # [[0. 1.]
     # [2. 3.]
@@ -39,7 +39,7 @@ class Dropout(Module):
     # [8. 9.]]
 
     outputs = dropout(data, training=True)
-    
+
     print(outputs)
     # [[ 0.    1.25]
     # [ 2.5   3.75]

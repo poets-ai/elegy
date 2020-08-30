@@ -27,7 +27,9 @@ from elegy import initializers, module, types, hooks
 
 
 def to_dimension_numbers(
-    num_spatial_dims: int, channels_last: bool, transpose: bool,
+    num_spatial_dims: int,
+    channels_last: bool,
+    transpose: bool,
 ) -> lax.ConvDimensionNumbers:
     """Create a `lax.ConvDimensionNumbers` for the given inputs."""
     num_dims = num_spatial_dims + 2
@@ -643,7 +645,7 @@ class Conv3DTranspose(ConvNDTranspose):
                 By default, ``NDHWC``.
             mask: tp.Optional mask of the weights.
             kwargs: Additional keyword arguments passed to Module.
-    """
+        """
         super().__init__(
             num_spatial_dims=3,
             output_channels=output_channels,

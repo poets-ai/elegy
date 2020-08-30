@@ -8,7 +8,10 @@ from elegy import types, utils
 from elegy.losses.loss import Loss, Reduction
 
 
-def smooth_labels(labels: jnp.ndarray, smoothing: jnp.ndarray,) -> jnp.ndarray:
+def smooth_labels(
+    labels: jnp.ndarray,
+    smoothing: jnp.ndarray,
+) -> jnp.ndarray:
     smooth_positives = 1.0 - smoothing
     smooth_negatives = smoothing / labels.shape[-1]
     return smooth_positives * labels + smooth_negatives
@@ -44,7 +47,7 @@ class CategoricalCrossentropy(Loss):
     In the snippet below, there is `# classes` floating pointing values per
     example. The shape of both `y_pred` and `y_true` are
     `[batch_size, num_classes]`.
-    
+
     Usage:
     ```python
     y_true = jnp.array([[0, 1, 0], [0, 0, 1]])
@@ -91,7 +94,7 @@ class CategoricalCrossentropy(Loss):
     ):
         """
         Initializes `CategoricalCrossentropy` instance.
-        
+
         Arguments:
             from_logits: Whether `y_pred` is expected to be a logits tensor. By
                 default, we assume that `y_pred` encodes a probability distribution.
@@ -126,7 +129,7 @@ class CategoricalCrossentropy(Loss):
     ) -> jnp.ndarray:
         """
         Invokes the `CategoricalCrossentropy` instance.
-        
+
         Arguments:
             y_true: Ground truth values.
             y_pred: The predicted values.

@@ -10,12 +10,12 @@ def mean_percentage_absolute_error(
 ) -> jnp.ndarray:
     """
     Computes the mean absolute percentage error (MAPE) between labels and predictions.
-    
+
     After computing the absolute distance between the true value and the prediction value
-    and divide by the true value, the mean value over the last dimension is returned. 
-    
+    and divide by the true value, the mean value over the last dimension is returned.
+
     Usage:
-    
+
     ```python
     rng = jax.random.PRNGKey(42)
 
@@ -28,7 +28,7 @@ def mean_percentage_absolute_error(
 
     assert jnp.array_equal(loss, 100. * jnp.mean(jnp.abs((y_pred - y_true) / jnp.clip(y_true, utils.EPSILON, None))))
     ```
-    
+
     Arguments:
         y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
         y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
@@ -143,7 +143,7 @@ class MeanAbsolutePercentageError(Loss):
             Weighted loss float `Tensor`. If `reduction` is `NONE`, this has
                 shape `[batch_size, d0, .. dN-1]`; otherwise, it is scalar. (Note `dN-1`
                 because all loss functions reduce by 1 dimension, usually axis=-1.)
-        
+
         Raises:
             ValueError: If the shape of `sample_weight` is invalid.
         """

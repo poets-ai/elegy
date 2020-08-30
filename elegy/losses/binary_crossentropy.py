@@ -81,7 +81,7 @@ class BinaryCrossentropy(Loss):
     ):
         """
         Initializes `CategoricalCrossentropy` instance.
-        
+
         Arguments:
             from_logits: Whether `y_pred` is expected to be a logits tensor. By
                 default, we assume that `y_pred` encodes a probability distribution.

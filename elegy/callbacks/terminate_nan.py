@@ -6,8 +6,7 @@ from .callback import Callback
 
 
 class TerminateOnNaN(Callback):
-    """Callback that terminates training when a NaN loss is encountered.
-    """
+    """Callback that terminates training when a NaN loss is encountered."""
 
     def on_batch_end(self, batch, logs=None):
         logs = logs or {}

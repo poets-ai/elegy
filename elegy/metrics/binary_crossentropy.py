@@ -17,7 +17,7 @@ class BinaryCrossentropy(Mean):
     ```python
     y_true=jnp.array([[0., 1.], [0., 0.]]),
     y_pred=jnp.array([[0.6, 0.4], [0.4, 0.6]])
-    
+
     bce = elegy.metrics.BinaryCrossentropy()
     result = bce(
         y_true=y_true,
@@ -76,22 +76,22 @@ class BinaryCrossentropy(Mean):
     ) -> jnp.ndarray:
 
         """
-            Accumulates metric statistics. `y_true` and `y_pred` should have the same shape.
-            
-            Arguments:
-                y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
-                y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
-                sample_weight: Optional `sample_weight` acts as a
-                    coefficient for the metric. If a scalar is provided, then the metric is
-                    simply scaled by the given value. If `sample_weight` is a tensor of size
-                    `[batch_size]`, then the metric for each sample of the batch is rescaled
-                    by the corresponding element in the `sample_weight` vector. If the shape
-                    of `sample_weight` is `[batch_size, d0, .. dN-1]` (or can be broadcasted
-                    to this shape), then each metric element of `y_pred` is scaled by the
-                    corresponding value of `sample_weight`. (Note on `dN-1`: all metric
-                    functions reduce by 1 dimension, usually the last axis (-1)).
-            Returns:
-                Array with the cumulative accuracy.
+        Accumulates metric statistics. `y_true` and `y_pred` should have the same shape.
+
+        Arguments:
+            y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
+            y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
+            sample_weight: Optional `sample_weight` acts as a
+                coefficient for the metric. If a scalar is provided, then the metric is
+                simply scaled by the given value. If `sample_weight` is a tensor of size
+                `[batch_size]`, then the metric for each sample of the batch is rescaled
+                by the corresponding element in the `sample_weight` vector. If the shape
+                of `sample_weight` is `[batch_size, d0, .. dN-1]` (or can be broadcasted
+                to this shape), then each metric element of `y_pred` is scaled by the
+                corresponding value of `sample_weight`. (Note on `dN-1`: all metric
+                functions reduce by 1 dimension, usually the last axis (-1)).
+        Returns:
+            Array with the cumulative accuracy.
         """
 
         return super().call(
