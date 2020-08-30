@@ -1,30 +1,40 @@
-from elegy import types
-from elegy import utils
 import typing as tp
 
 import jax.numpy as jnp
+import numpy as np
 
-from elegy.metrics.mean import Mean
+from elegy import types, utils
 from elegy.metrics.accuracy import accuracy
+from elegy.metrics.mean import Mean
 
 
-def binary_accuracy(y_true, y_pred, threshold=0.5):
-    """Calculates how often predictions matches binary labels.
-  Standalone usage:
-  >>> y_true = [[1], [1], [0], [0]]
-  >>> y_pred = [[1], [1], [0], [0]]
-  >>> m = tf.keras.metrics.binary_accuracy(y_true, y_pred)
-  >>> assert m.shape == (4,)
-  >>> m.numpy()
-  array([1., 1., 1., 1.], dtype=float32)
-  Args:
-    y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
-    y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
-    threshold: (Optional) Float representing the threshold for deciding whether
-      prediction values are 1 or 0.
-  Returns:
-    Binary accuracy values. shape = `[batch_size, d0, .. dN-1]`
-  """
+def binary_accuracy(
+    y_true: np.ndarray, y_pred: np.ndarray, threshold: float = 0.5
+) -> np.ndarray:
+    """
+    Calculates how often predictions matches binary labels.
+    
+    Standalone usage:
+
+    ```python
+    y_true = np.array([[1], [1], [0], [0]])
+    y_pred = np.array([[1], [1], [0], [0]])
+    m = elegy.metrics.binary_accuracy(y_true, y_pred)
+    assert m.shape == (4,)
+    ```
+    Arguments:
+        y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
+        y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
+        threshold: Float representing the threshold for deciding whether
+            prediction values are 1 or 0.
+    
+    Returns:
+        Binary accuracy values. shape = `[batch_size, d0, .. dN-1]`
+    """
+    assert abs(y_pred.ndim - y_true.ndim) <= 1
+
+    y_true, y_pred = utils.maybe_expand_dims(y_true, y_pred)
+
     y_pred = y_pred > threshold
     return jnp.mean(y_true == y_pred, axis=-1)
 
@@ -45,20 +55,28 @@ class BinaryAccuracy(Mean):
         threshold: (Optional) Float representing the threshold for deciding
         whether prediction values are 1 or 0.
     Standalone usage:
-    >>> m = tf.keras.metrics.BinaryAccuracy()
-    >>> m.update_state([[1], [1], [0], [0]], [[0.98], [1], [0], [0.6]])
-    >>> m.result().numpy()
-    0.75
-    >>> m.reset_states()
-    >>> m.update_state([[1], [1], [0], [0]], [[0.98], [1], [0], [0.6]],
-    ...                sample_weight=[1, 0, 0, 1])
-    >>> m.result().numpy()
-    0.5
-    Usage with `compile()` API:
     ```python
-    model.compile(optimizer='sgd',
-                    loss='mse',
-                    metrics=[tf.keras.metrics.BinaryAccuracy()])
+    m = elegy.metrics.BinaryAccuracy()
+    result = m(
+        y_true=np.array([[1], [1], [0], [0]]),
+        y_pred=np.array([[0.98], [1], [0], [0.6]]),
+    )
+    assert result == 0.75
+
+    m = elegy.metrics.BinaryAccuracy()
+    result = m(
+        y_true=np.array([[1], [1], [0], [0]]),
+        y_pred=np.array([[0.98], [1], [0], [0.6]]),
+        sample_weight=np.array([1, 0, 0, 1]),
+    )
+    assert result == 0.5
+    ```
+    Usage with `Model` API:
+    ```python
+    model = elegy.Model(
+        ...
+        metrics=[tf.keras.metrics.BinaryAccuracy()],
+    )
     ```
     """
 
@@ -69,7 +87,8 @@ class BinaryAccuracy(Mean):
         Creates a `CategoricalAccuracy` instance.
         
         Arguments:
-            threshold: 
+            threshold: Float representing the threshold for deciding whether
+                prediction values are 1 or 0.
             on: A string or integer, or iterable of string or integers, that
                 indicate how to index/filter the `y_true` and `y_pred`
                 arguments before passing them to `call`. For example if `on = "a"` then

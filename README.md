@@ -55,7 +55,7 @@ model = elegy.Model(
         elegy.regularizers.GlobalL2(l=1e-5),
     ],
     metrics=elegy.metrics.SparseCategoricalAccuracy(),
-    optimizer=optix.rmsprop(1e-3),
+    optimizer=optax.rmsprop(1e-3),
 )
 ```
 **3.** Train the model using the `fit` method:
@@ -108,11 +108,11 @@ class Linear(elegy.Module):
         self.units = units
 
     def call(self, x):
-        w = self.get_parameter("w", [x.shape[-1], self.units], initializer=jnp.ones)
-        b = self.get_parameter("b", [self.units], initializer=jnp.ones)
+        w = elegy.get_parameter("w", [x.shape[-1], self.units], initializer=jnp.ones)
+        b = elegy.get_parameter("b", [self.units], initializer=jnp.ones)
 
         return jnp.dot(x, w) + b
-``` 
+```
 2. It has a very flexible system for defining the inputs for [losses and metrics](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/) based on _dependency injection_ in opposition to Keras rigid requirement to have matching (output, label) pairs, and being unable to use additional information like inputs, parameters, and states in the definition of losses and metrics. 
 3. Its hook system preserve's [reference information](https://poets-ai.github.io/elegy/guides/module-system/) from a module to its sub-modules, parameters, and states while maintaining a functional API. This is crucial since most Jax-based frameworks like Flax and Haiku tend to loose this information which makes it very tricky to perform tasks like transfer learning where you need to mix a pre-trained models into a new model (easier to do if you keep references).
 
@@ -146,7 +146,7 @@ To cite this project:
 author = {PoetsAI},
 title = {Elegy: A Keras-like deep learning framework based on Jax},
 url = {https://github.com/poets-ai/elegy},
-version = {0.2.0},
+version = {0.2.1},
 year = {2020},
 }
 ```

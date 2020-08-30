@@ -55,7 +55,7 @@ model = elegy.Model(
         elegy.regularizers.GlobalL2(l=1e-5),
     ],
     metrics=elegy.metrics.SparseCategoricalAccuracy(),
-    optimizer=optix.rmsprop(1e-3),
+    optimizer=optax.rmsprop(1e-3),
 )
 ```
 **3.** Train the model using the `fit` method:
@@ -108,8 +108,8 @@ class Linear(elegy.Module):
         self.units = units
 
     def call(self, x):
-        w = self.get_parameter("w", [x.shape[-1], self.units], initializer=jnp.ones)
-        b = self.get_parameter("b", [self.units], initializer=jnp.ones)
+        w = elegy.get_parameter("w", [x.shape[-1], self.units], initializer=jnp.ones)
+        b = elegy.get_parameter("b", [self.units], initializer=jnp.ones)
 
         return jnp.dot(x, w) + b
 ``` 
@@ -146,7 +146,7 @@ To cite this project:
 author = {PoetsAI},
 title = {Elegy: A Keras-like deep learning framework based on Jax},
 url = {https://github.com/poets-ai/elegy},
-version = {0.2.0},
+version = {0.2.1},
 year = {2020},
 }
 ```

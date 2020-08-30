@@ -69,6 +69,7 @@ nav:
       sparse_categorical_crossentropy: api/losses/sparse_categorical_crossentropy.md
     metrics:
       Accuracy: api/metrics/Accuracy.md
+      BinaryAccuracy: api/metrics/BinaryAccuracy.md
       BinaryCrossentropy: api/metrics/BinaryCrossentropy.md
       CategoricalAccuracy: api/metrics/CategoricalAccuracy.md
       Mean: api/metrics/Mean.md
@@ -79,6 +80,7 @@ nav:
       SparseCategoricalAccuracy: api/metrics/SparseCategoricalAccuracy.md
       Sum: api/metrics/Sum.md
       accuracy: api/metrics/accuracy.md
+      binary_accuracy: api/metrics/binary_accuracy.md
       binary_crossentropy: api/metrics/binary_crossentropy.md
       categorical_accuracy: api/metrics/categorical_accuracy.md
       mean_absolute_error: api/metrics/mean_absolute_error.md

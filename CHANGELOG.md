@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.1] - 2020-08-25
+* Uses `optax` instead of `optix`.
+* Implements `BinaryAccuracy`.
+
+* Big refactor. Elegy has its own Module system independent of Haiku and its now incompatible with it. #85
 ## [0.2.0] - 2020-08-17
 * Big refactor. Elegy has its own Module system independent of Haiku and its now incompatible with it. #85
 

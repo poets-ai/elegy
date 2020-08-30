@@ -36,7 +36,7 @@ class EarlyStopping(Callback):
     model = elegy.Model(
         module=MLP(),
         loss=elegy.losses.MeanSquaredError(),
-        optimizer=optix.rmsprop(0.01),
+        optimizer=optax.rmsprop(0.01),
     )
     history = model.fit(
         np.arange(100).reshape(5, 20).astype(np.float32),

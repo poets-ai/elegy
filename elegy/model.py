@@ -26,7 +26,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import toolz
-from jax.experimental import optix
+import optax
 from tabulate import tabulate
 import yaml
 
@@ -80,7 +80,7 @@ class Model:
             elegy.regularizers.GlobalL2(l=1e-5),
         ],
         metrics=elegy.metrics.SparseCategoricalAccuracy(),
-        optimizer=optix.rmsprop(1e-3),
+        optimizer=optax.rmsprop(1e-3),
     )
     ```
     
@@ -92,7 +92,7 @@ class Model:
     Attributes:
         parameters: A `haiku.Params` structure with the weights of the model.
         states: A `haiku.State` structure with non-trainable parameters of the model.
-        optimizer_state:  A `optix.OptState` structure with states of the optimizer.
+        optimizer_state:  A `optax.OptState` structure with states of the optimizer.
         metrics_states: A `haiku.State` structure with the states of the metrics.
         initial_metrics_state: A `haiku.State` structure with the initial states of the metrics.
         run_eagerly: Settable attribute indicating whether the model should run eagerly.
@@ -103,14 +103,14 @@ class Model:
 
     # public fields
     module: Module
-    optimizer_state: tp.Optional[optix.OptState]
+    optimizer_state: tp.Optional[optax.OptState]
     initial_metrics_state: tp.Optional[tp.Dict]
     run_eagerly: bool
 
     # private fields
     loss_module: tp.Optional[Module]
     metrics_module: tp.Optional[Module]
-    _optimizer: optix.GradientTransformation
+    _optimizer: optax.GradientTransformation
     _rngs: PRNGSequence
     _parameters: tp.Optional[types.Parameters]
     _states: tp.Optional[types.States]
@@ -139,11 +139,11 @@ class Model:
         module: Module,
         loss: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
         metrics: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
-        optimizer: tp.Optional[optix.GradientTransformation] = None,
+        optimizer: tp.Optional[optax.GradientTransformation] = None,
         run_eagerly: bool = False,
         parameters: tp.Optional[types.Parameters] = None,
         states: tp.Optional[types.States] = None,
-        optimizer_state: tp.Optional[optix.OptState] = None,
+        optimizer_state: tp.Optional[optax.OptState] = None,
         metrics_states: tp.Optional[tp.Dict] = None,
         initial_metrics_state: tp.Optional[tp.Dict] = None,
         seed: tp.Union[np.ndarray, int] = 42,
@@ -170,7 +170,7 @@ class Model:
                 of the labels and outputs of the network. Elegy's metrics system is more flexible than
                 the one provided by Keras, for more information on how to mimick Keras behavior checkout the 
                 [Losses and Metrics Guide](https://poets-ai.github.io/elegy/guides/losses-and-metrics)`.
-            optimizer: A `optix` optimizer instance. Optix is a very flexible library for defining
+            optimizer: A `optax` optimizer instance. Optix is a very flexible library for defining
                 optimization pipelines with things like learning rate schedules, this means that
                 there is no need for a `LearningRateScheduler` callback in Elegy.
             run_eagerly: Settable attribute indicating whether the model should run eagerly.
@@ -179,7 +179,7 @@ class Model:
                 it by stepping into individual layer calls.
             parameters: A `haiku.Params` structure with the weights of the model.
             states: A `haiku.State` structure with non-trainable parameters of the model.
-            optimizer_state:  A `optix.OptState` structure with states of the optimizer.
+            optimizer_state:  A `optax.OptState` structure with states of the optimizer.
             metrics_states: A `haiku.State` structure with the states of the metrics.
             initial_metrics_state: A `haiku.State` structure with the initial states of the metrics.
             seed: The initial random states of the model.
@@ -188,7 +188,7 @@ class Model:
         self.module = module
         self.loss_module = loss_modes.Losses(loss) if loss is not None else None
         self.metrics_module = metric_modes.Metrics(metrics) if metrics else None
-        self._optimizer = optimizer if optimizer is not None else optix.adam(1e-3)
+        self._optimizer = optimizer if optimizer is not None else optax.adam(1e-3)
         self._rngs = PRNGSequence(seed)
         self._parameters = parameters
         self._states = states
@@ -384,14 +384,14 @@ class Model:
         class_weight: tp.Optional[jnp.ndarray],
         parameters: tp.Dict,
         states: tp.Dict,
-        optimizer_state: optix.OptState,
+        optimizer_state: optax.OptState,
         metrics_states: tp.Optional[tp.Dict],
         rng: jnp.ndarray,
     ) -> tp.Tuple[
         tp.Dict[str, jnp.ndarray],
         tp.Dict,
         tp.Dict,
-        optix.OptState,
+        optax.OptState,
         tp.Optional[tp.Dict],
     ]:
         update_fn = self._update_no_jit if self.run_eagerly else self._update_jit
@@ -416,14 +416,14 @@ class Model:
         class_weight: tp.Optional[jnp.ndarray],
         parameters: tp.Dict,
         states: tp.Dict,
-        optimizer_state: optix.OptState,
+        optimizer_state: optax.OptState,
         metrics_states: tp.Optional[tp.Dict],
         rng: jnp.ndarray,
     ) -> tp.Tuple[
         tp.Dict[str, jnp.ndarray],
         tp.Dict,
         tp.Dict,
-        optix.OptState,
+        optax.OptState,
         tp.Optional[tp.Dict],
     ]:
         net_rng, metrics_rng = jax.random.split(rng, num=2)
@@ -443,8 +443,10 @@ class Model:
 
         states = context.states
 
-        updates, optimizer_state = self._optimizer.update(grads, optimizer_state)
-        parameters = optix.apply_updates(parameters, updates)
+        updates, optimizer_state = self._optimizer.update(
+            grads, optimizer_state, parameters
+        )
+        parameters = optax.apply_updates(parameters, updates)
 
         if self.metrics_module is not None:
             logs, metrics_context = utils.inject_dependencies(
@@ -1312,7 +1314,7 @@ class Model:
         - The states of the optimizer serialized with `pickle` as
             as `{path}/optimizer_state.pkl`, allowing to resume training
             exactly where you left off. We hope to use HDF5 in the future
-            but `optix` states is incompatible with `deepdish`.
+            but `optax` states is incompatible with `deepdish`.
         
         This allows you to save the entirety of the states of a model
         in a directory structure which can be fully restored via 

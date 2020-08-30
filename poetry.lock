@@ -150,6 +150,25 @@ python-versions = "*"
 version = "3.0.4"
 
 [[package]]
+category = "main"
+description = "Chex: Testing made fun, in JAX!"
+name = "chex"
+optional = false
+python-versions = ">=3.6"
+version = "0.0.2"
+
+[package.dependencies]
+absl-py = ">=0.9.0"
+jax = ">=0.1.55"
+jaxlib = ">=0.1.37"
+numpy = ">=1.18.0"
+toolz = ">=0.9.0"
+
+[package.dependencies.dataclasses]
+python = "<3.7"
+version = "0.7"
+
+[[package]]
 category = "dev"
 description = "Composable command line interface toolkit"
 name = "click"
@@ -211,7 +230,7 @@ six = "*"
 [[package]]
 category = "main"
 description = "A backport of the dataclasses module for Python 3.6"
-marker = "python_version >= \"3.6\" and python_version < \"3.7\""
+marker = "python_version >= \"3.6\" and python_version < \"3.7\" or python_version < \"3.7\""
 name = "dataclasses"
 optional = false
 python-versions = ">=3.6, <3.7"
@@ -539,6 +558,19 @@ name = "ipython-genutils"
 optional = false
 python-versions = "*"
 version = "0.2.0"
+
+[[package]]
+category = "main"
+description = "Differentiate, compile, and transform Numpy code."
+name = "jax"
+optional = false
+python-versions = ">=3.6"
+version = "0.1.75"
+
+[package.dependencies]
+absl-py = "*"
+numpy = ">=1.12"
+opt_einsum = "*"
 
 [[package]]
 category = "main"
@@ -936,7 +968,7 @@ signals = ["blinker"]
 signedtoken = ["cryptography", "pyjwt (>=1.0.0)"]
 
 [[package]]
-category = "dev"
+category = "main"
 description = "Optimizing numpys einsum function"
 name = "opt-einsum"
 optional = false
@@ -949,6 +981,21 @@ numpy = ">=1.7"
 [package.extras]
 docs = ["sphinx (1.2.3)", "sphinxcontrib-napoleon", "sphinx-rtd-theme", "numpydoc"]
 tests = ["pytest", "pytest-cov", "pytest-pep8"]
+
+[[package]]
+category = "main"
+description = "A gradient processing and optimisation library in JAX."
+name = "optax"
+optional = false
+python-versions = "*"
+version = "0.0.1"
+
+[package.dependencies]
+absl-py = ">=0.7.1"
+chex = ">=0.0.2"
+jax = ">=0.1.55"
+jaxlib = ">=0.1.37"
+numpy = ">=1.18.0"
 
 [[package]]
 category = "main"
@@ -1645,7 +1692,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "de5d3c43f1da10b5c18472eba78173636c6df388f6c4350bf0939bb0e1babed6"
+content-hash = "a17414c831cc823c1c7e457893f8c85b1c0f3851461160f3ef8328b759cbb926"
 lock-version = "1.0"
 python-versions = "^3.6.1"
 
@@ -1705,6 +1752,10 @@ certifi = [
 chardet = [
     {file = "chardet-3.0.4-py2.py3-none-any.whl", hash = "sha256:fc323ffcaeaed0e0a02bf4d117757b98aed530d9ed4531e3e15460124c106691"},
     {file = "chardet-3.0.4.tar.gz", hash = "sha256:84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae"},
+]
+chex = [
+    {file = "chex-0.0.2-py3-none-any.whl", hash = "sha256:030e52437babe16c228712a27070bde27b3e04c14af7d566cf49210ab5e1572e"},
+    {file = "chex-0.0.2.tar.gz", hash = "sha256:9dcf29880740985c30e9248127b0acb7bdc76f915afdd555ebd0f9c1322a2778"},
 ]
 click = [
     {file = "click-7.1.2-py2.py3-none-any.whl", hash = "sha256:dacca89f4bfadd5de3d7489b7c8a566eee0d3676333fbb50030263894c38c0dc"},
@@ -1980,6 +2031,9 @@ ipython-genutils = [
     {file = "ipython_genutils-0.2.0-py2.py3-none-any.whl", hash = "sha256:72dd37233799e619666c9f639a9da83c34013a73e8bbc79a7a6348d93c61fab8"},
     {file = "ipython_genutils-0.2.0.tar.gz", hash = "sha256:eb2e116e75ecef9d4d228fdc66af54269afa26ab4463042e33785b887c628ba8"},
 ]
+jax = [
+    {file = "jax-0.1.75.tar.gz", hash = "sha256:140b0b7ff9e7483c3efae54fa3dd2cc86559536482ea15d2b2cad6001780c85e"},
+]
 jaxlib = [
     {file = "jaxlib-0.1.52-cp36-none-macosx_10_9_x86_64.whl", hash = "sha256:7f089df0a9cd76164a125e6fc6660f32c9708fedd2dc80d1ac9816a0d0ef2526"},
     {file = "jaxlib-0.1.52-cp36-none-manylinux2010_x86_64.whl", hash = "sha256:b98b96e2b583796df94e20d9f3f56b1f86523a31c6388abc8d5e351d35bc4e9c"},
@@ -2204,6 +2258,10 @@ oauthlib = [
 opt-einsum = [
     {file = "opt_einsum-3.3.0-py3-none-any.whl", hash = "sha256:2455e59e3947d3c275477df7f5205b30635e266fe6dc300e3d9f9646bfcea147"},
     {file = "opt_einsum-3.3.0.tar.gz", hash = "sha256:59f6475f77bbc37dcf7cd748519c0ec60722e91e63ca114e68821c0c54a46549"},
+]
+optax = [
+    {file = "optax-0.0.1-py3-none-any.whl", hash = "sha256:037e67da96c2ca586422819feda06e4291a31e1fef7adad07d7946851309de44"},
+    {file = "optax-0.0.1.tar.gz", hash = "sha256:ed3dddb3973ee65ad12048ed589d384efc0fa6b096bed2c75ed008aef4ad720c"},
 ]
 packaging = [
     {file = "packaging-20.4-py2.py3-none-any.whl", hash = "sha256:998416ba6962ae7fbd6596850b80e17859a5753ba17c32284f67bfff33784181"},

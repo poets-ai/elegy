@@ -16,8 +16,8 @@ class Linear(elegy.Module):
         self.units = units
 
     def call(self, x):
-        w = self.get_parameter("w", [x.shape[-1], self.units], jnp.float32, jnp.ones)
-        b = self.get_parameter("b", [self.units], jnp.float32, jnp.ones)
+        w = elegy.get_parameter("w", [x.shape[-1], self.units], jnp.float32, jnp.ones)
+        b = elegy.get_parameter("b", [self.units], jnp.float32, jnp.ones)
 
         n = self.get_state("n", [], np.int32, jnp.zeros)
 
@@ -40,7 +40,7 @@ class MyModule(elegy.Module):
     def call(self, x) -> np.ndarray:
         x = self.linear(x)
         x = self.linear1(x)
-        self.bias = self.get_parameter("bias", [x.shape[-1]], jnp.float32, jnp.ones)
+        self.bias = elegy.get_parameter("bias", [x.shape[-1]], jnp.float32, jnp.ones)
         return x + self.bias * 10
 
 

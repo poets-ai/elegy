@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tensorboardX.writer import SummaryWriter
 import typer
-from jax.experimental import optix
+import optax
 
 import elegy
 from utils import plot_history
@@ -73,7 +73,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             elegy.regularizers.GlobalL2(l=1e-4),
         ],
         metrics=elegy.metrics.SparseCategoricalAccuracy(),
-        optimizer=optix.adam(1e-3),
+        optimizer=optax.adamw(1e-3),
         run_eagerly=eager,
     )
 

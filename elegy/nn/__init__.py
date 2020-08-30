@@ -5,6 +5,7 @@ from .flatten import Flatten, Reshape
 from .linear import Linear
 from .sequential_module import Sequential, sequential
 from .layer_normalization import LayerNormalization, InstanceNormalization
+from .embedding import Embedding, EmbedLookupStyle
 
 __all__ = [
     "BatchNormalization",
@@ -20,4 +21,6 @@ __all__ = [
     "sequential",
     "LayerNormalization",
     "InstanceNormalization",
+    "Embedding",
+    "EmbedLookupStyle",
 ]

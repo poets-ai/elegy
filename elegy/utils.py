@@ -19,6 +19,18 @@ else:
 EPSILON = 1e-7
 
 
+def maybe_expand_dims(a: np.ndarray, b: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
+    assert np.prod(a.shape) == np.prod(b.shape)
+
+    if a.ndim < b.ndim:
+        a = a[..., None]
+
+    if b.ndim < a.ndim:
+        b = b[..., None]
+
+    return a, b
+
+
 def wraps(f):
     return functools.wraps(f, assigned=("__doc__", "__annotations__"), updated=())
 
