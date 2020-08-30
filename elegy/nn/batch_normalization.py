@@ -104,20 +104,20 @@ class BatchNormalization(module.Module):
         """Computes the normalized version of the input.
 
         Args:
-        inputs: An array, where the data format is ``[..., C]``.
-        training: Whether training is currently happening.
-        test_local_stats: Whether local stats are used when training=False.
-        scale: An array up to n-D. The shape of this tensor must be broadcastable
-            to the shape of ``inputs``. This is the scale applied to the normalized
-            inputs. This cannot be passed in if the module was constructed with
-            ``create_scale=True``.
-        offset: An array up to n-D. The shape of this tensor must be broadcastable
-            to the shape of ``inputs``. This is the offset applied to the normalized
-            inputs. This cannot be passed in if the module was constructed with
-            ``create_offset=True``.
+            inputs: An array, where the data format is ``[..., C]``.
+            training: Whether training is currently happening.
+            test_local_stats: Whether local stats are used when training=False.
+            scale: An array up to n-D. The shape of this tensor must be broadcastable
+                to the shape of ``inputs``. This is the scale applied to the normalized
+                inputs. This cannot be passed in if the module was constructed with
+                ``create_scale=True``.
+            offset: An array up to n-D. The shape of this tensor must be broadcastable
+                to the shape of ``inputs``. This is the offset applied to the normalized
+                inputs. This cannot be passed in if the module was constructed with
+                ``create_offset=True``.
 
         Returns:
-        The array, normalized across all but the last dimension.
+            The array, normalized across all but the last dimension.
         """
         if training is None:
             training = hooks.is_training()
