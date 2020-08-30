@@ -13,13 +13,13 @@ class GlobalL1L2(Loss):
     A regularizer that applies both L1 and L2 regularization penalties.
 
     The L1 regularization penalty is computed as:
-    
+
     $$
     \ell_1\,\,penalty =\ell_1\sum_{i=0}^n|x_i|
     $$
-    
+
     The L2 regularization penalty is computed as
-    
+
     $$\ell_2\,\,penalty =\ell_2\sum_{i=0}^nx_i^2$$
 
 
@@ -35,7 +35,7 @@ class GlobalL1L2(Loss):
         metrics=lambda: elegy.metrics.SparseCategoricalAccuracy(),
     )
     ```
-    
+
     Attributes:
         l1: L1 regularization factor.
         l2: L2 regularization factor.

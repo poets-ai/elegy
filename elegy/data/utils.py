@@ -27,7 +27,8 @@ def map_append(output, batch_output):
 
 
 def map_structure(
-    f: Multimap, *structure: tp.Union[types.ArrayHolder, None],
+    f: Multimap,
+    *structure: tp.Union[types.ArrayHolder, None],
 ) -> types.Container[tp.Union[types.T, None]]:
 
     if isinstance(structure[0], tp.Tuple):
@@ -144,7 +145,7 @@ def train_validation_split(arrays, validation_split, shuffle=True):
             become the validation split.
     Returns:
         `(train_arrays, validation_arrays)`
-  """
+    """
 
     def _can_split(t):
         supported_types = (jnp.ndarray, np.ndarray)

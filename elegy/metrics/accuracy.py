@@ -21,25 +21,25 @@ def accuracy(y_true: jnp.ndarray, y_pred: jnp.ndarray) -> jnp.ndarray:
 
 class Accuracy(Mean):
     """
-    Calculates how often predictions equals labels. This metric creates two local variables, 
+    Calculates how often predictions equals labels. This metric creates two local variables,
     `total` and `count` that are used to compute the frequency with which `y_pred` matches `y_true`. This frequency is
     ultimately returned as `binary accuracy`: an idempotent operation that simply
-    divides `total` by `count`. If `sample_weight` is `None`, weights default to 1. 
+    divides `total` by `count`. If `sample_weight` is `None`, weights default to 1.
     Use `sample_weight` of 0 to mask values.
 
     ```python
     accuracy = elegy.metrics.Accuracy()
 
     result = accuracy(
-        y_true=jnp.array([1, 1, 1, 1]), 
+        y_true=jnp.array([1, 1, 1, 1]),
         y_pred=jnp.array([0, 1, 1, 1])
-    ) 
+    )
     assert result == 0.75  # 3 / 4
 
     result = accuracy(
-        y_true=jnp.array([1, 1, 1, 1]), 
+        y_true=jnp.array([1, 1, 1, 1]),
         y_pred=jnp.array([1, 0, 0, 0])
-    ) 
+    )
     assert result == 0.5  # 4 / 8
     ```
 
@@ -79,7 +79,7 @@ class Accuracy(Mean):
     ) -> jnp.ndarray:
         """
         Accumulates metric statistics. `y_true` and `y_pred` should have the same shape.
-        
+
         Arguments:
             y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
             y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
@@ -94,8 +94,9 @@ class Accuracy(Mean):
                 functions reduce by 1 dimension, usually the last axis (-1)).
         Returns:
             Array with the cumulative accuracy.
-    """
+        """
 
         return super().call(
-            values=accuracy(y_true=y_true, y_pred=y_pred), sample_weight=sample_weight,
+            values=accuracy(y_true=y_true, y_pred=y_pred),
+            sample_weight=sample_weight,
         )

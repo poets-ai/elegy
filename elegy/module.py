@@ -78,7 +78,8 @@ class ModuleMeta(ABCMeta):
 
                 if len(parent_module._dynamic_submodules) > index:
                     module = getattr(
-                        parent_module, parent_module._dynamic_submodules[index],
+                        parent_module,
+                        parent_module._dynamic_submodules[index],
                     )
                 else:
                     if not context.building:
@@ -213,8 +214,8 @@ class Module(metaclass=ModuleMeta):
 
         Arguments:
             parameters:
-            states: 
-            rng: 
+            states:
+            rng:
             get_summaries:
 
         Returns:
@@ -239,7 +240,10 @@ class Module(metaclass=ModuleMeta):
                 self.set_states(states)
 
             with context(
-                rng=rng, building=False, training=training, get_summaries=get_summaries,
+                rng=rng,
+                building=False,
+                training=training,
+                get_summaries=get_summaries,
             ) as ctx:
                 outputs = self(*args, **kwargs)
 
@@ -427,8 +431,7 @@ def context(
     get_summaries: bool = False,
     training: bool = True,
 ) -> tp.Iterator[Context]:
-    """
-    """
+    """"""
 
     rng_sequence = PRNGSequence(rng) if rng is not None else None
 

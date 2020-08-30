@@ -9,46 +9,46 @@ from .callback import Callback
 
 class LambdaCallback(Callback):
     r"""Callback for creating simple, custom callbacks on-the-fly.
-    
-This callback is constructed with anonymous functions that will be called
-at the appropriate time. Note that the callbacks expects positional
-arguments, as:
 
-- `on_epoch_begin` and `on_epoch_end` expect two positional arguments:
-    `epoch`, `logs`
-- `on_train_batch_begin` and `on_train_batch_end` expect two positional arguments:
-    `batch`, `logs`
-- `on_train_begin` and `on_train_end` expect one positional argument:
-    `logs`
+    This callback is constructed with anonymous functions that will be called
+    at the appropriate time. Note that the callbacks expects positional
+    arguments, as:
 
-Example:
+    - `on_epoch_begin` and `on_epoch_end` expect two positional arguments:
+        `epoch`, `logs`
+    - `on_train_batch_begin` and `on_train_batch_end` expect two positional arguments:
+        `batch`, `logs`
+    - `on_train_begin` and `on_train_end` expect one positional argument:
+        `logs`
 
-    ```python
-    # Print the batch number at the beginning of every batch.
-    batch_print_callback = LambdaCallback(
-        on_train_batch_begin=lambda batch,logs: print(batch))
+    Example:
 
-    # Stream the epoch loss to a file in JSON format. The file content
-    # is not well-formed JSON but rather has a JSON object per line.
-    import json
-    json_log = open('loss_log.json', mode='wt', buffering=1)
-    json_logging_callback = LambdaCallback(
-        on_epoch_end=lambda epoch, logs: json_log.write(
-            json.dumps({'epoch': epoch, 'loss': logs['loss']}) + '\n'),
-        on_train_end=lambda logs: json_log.close()
-    )
+        ```python
+        # Print the batch number at the beginning of every batch.
+        batch_print_callback = LambdaCallback(
+            on_train_batch_begin=lambda batch,logs: print(batch))
 
-    # Terminate some processes after having finished model training.
-    processes = ...
-    cleanup_callback = LambdaCallback(
-        on_train_end=lambda logs: [
-            p.terminate() for p in processes if p.is_alive()])
+        # Stream the epoch loss to a file in JSON format. The file content
+        # is not well-formed JSON but rather has a JSON object per line.
+        import json
+        json_log = open('loss_log.json', mode='wt', buffering=1)
+        json_logging_callback = LambdaCallback(
+            on_epoch_end=lambda epoch, logs: json_log.write(
+                json.dumps({'epoch': epoch, 'loss': logs['loss']}) + '\n'),
+            on_train_end=lambda logs: json_log.close()
+        )
 
-    model.fit(...,
-                callbacks=[batch_print_callback,
-                        json_logging_callback,
-                        cleanup_callback])
-    ```
+        # Terminate some processes after having finished model training.
+        processes = ...
+        cleanup_callback = LambdaCallback(
+            on_train_end=lambda logs: [
+                p.terminate() for p in processes if p.is_alive()])
+
+        model.fit(...,
+                    callbacks=[batch_print_callback,
+                            json_logging_callback,
+                            cleanup_callback])
+        ```
     """
 
     def __init__(

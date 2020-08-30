@@ -135,7 +135,7 @@ def get_state(
 
 def set_state(name: str, value: tp.Any) -> None:
     """
-    A hook that lets you update a state of the current module, if the state does not 
+    A hook that lets you update a state of the current module, if the state does not
     exist it will be created.
 
     Arguments:
@@ -176,7 +176,7 @@ def add_summary(name: tp.Optional[str], value: np.ndarray) -> None:
         ...
     ```
 
-    The summaries will be aggregated by [`apply`][elegy.module.Module.apply] 
+    The summaries will be aggregated by [`apply`][elegy.module.Module.apply]
     if `get_summaries` is set to `True`, else this hook does nothing.
 
     ```python
@@ -214,7 +214,7 @@ def add_loss(name: str, value: np.ndarray) -> None:
 
     ```python
     w = elegy.get_parameter("w", [3, 5], initializer=jnp.ones)
-    
+
     # L2 regularization penalty
     elegy.add_loss("l2_regularization", 0.01 * jnp.mean(w ** 2))
     ```

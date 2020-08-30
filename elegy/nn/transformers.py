@@ -15,7 +15,7 @@ from elegy.nn.sequential_module import sequential
 class TransformerEncoderLayer(Module):
     r"""
     TransformerEncoderLayer is made up of self-attn and feedforward network.
-    
+
     This standard encoder layer is based on the paper "Attention Is All You Need".
     Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez,
     Lukasz Kaiser, and Illia Polosukhin. 2017. Attention is all you need. In Advances in
@@ -74,7 +74,9 @@ class TransformerEncoderLayer(Module):
         )
 
         src2 = MultiHeadAttention(
-            self.head_size, self.num_heads, dropout=self.dropout,
+            self.head_size,
+            self.num_heads,
+            dropout=self.dropout,
         )(src, mask=mask)
         src = src + Dropout(self.dropout)(src2)
         src = LayerNormalization()(src)
@@ -100,7 +102,7 @@ class TransformerEncoder(Module):
 
     Examples::
         >>> transformer_encoder = elegy.nn.TransformerEncoder(
-                lambda: elegy.nn.TransformerEncoderLayer(head_size=512, num_heads=8), 
+                lambda: elegy.nn.TransformerEncoderLayer(head_size=512, num_heads=8),
                 num_layers=6,
             )
         >>> src = torch.rand(10, 32, 512)
@@ -213,7 +215,9 @@ class TransformerDecoderLayer(Module):
         tgt = tgt + Dropout(self.dropout)(tgt2)
         tgt = LayerNormalization()(tgt)
         tgt2 = MultiHeadAttention(self.head_size, self.num_heads, dropout=self.dropout)(
-            tgt, memory, mask=memory_mask,
+            tgt,
+            memory,
+            mask=memory_mask,
         )
         tgt = tgt + Dropout(self.dropout)(tgt2)
         tgt = LayerNormalization()(tgt)
@@ -385,7 +389,7 @@ class Transformer(Module):
             positions. If a ByteTensor is provided, the non-zero positions are not allowed to attend
             while the zero positions will be unchanged. If a BoolTensor is provided, positions with ``True``
             are not allowed to attend while ``False`` values will be unchanged. If a FloatTensor
-            is provided, it will be added to the attention weight. 
+            is provided, it will be added to the attention weight.
             [src/tgt/memory]_key_padding_mask provides specified elements in the key to be ignored by
             the attention. If a ByteTensor is provided, the non-zero positions will be ignored while the zero
             positions will be unchanged. If a BoolTensor is provided, the positions with the

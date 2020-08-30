@@ -14,7 +14,7 @@ class DataAdapter(object):
     In order to simplify the training code path, all the input data
     object will be converted to a `generator` if possible.
     The sample usage of this class is like:
-    
+
     ```
     x = list(range(100))
     adapter_cls = [ArrayDataAdapter, ..., ListsOfScalarsDataAdapter]
@@ -25,20 +25,20 @@ class DataAdapter(object):
     for data in dataset():
       # training
     ```
-  """
+    """
 
     @staticmethod
     def can_handle(x, y=None):
         """Whether the current DataAdapter could handle the input x and y.
-    Structure wise, x and y can be single object, or list of objects if there
-    multiple input/output, or dictionary of objects when the intput/output are
-    named.
-    Arguments:
-      x: input features.
-      y: target labels. Note that y could be None in the case of prediction.
-    Returns:
-      boolean
-    """
+        Structure wise, x and y can be single object, or list of objects if there
+        multiple input/output, or dictionary of objects when the intput/output are
+        named.
+        Arguments:
+          x: input features.
+          y: target labels. Note that y could be None in the case of prediction.
+        Returns:
+          boolean
+        """
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -93,23 +93,23 @@ class DataAdapter(object):
     @abc.abstractmethod
     def batch_size(self):
         """Return the batch size of the dataset created.
-    For certain type of the data input, the batch size is known, and even
-    required, like numpy array. Where as for generator, the batch is unknown
-    unless we take a peek.
-    Returns:
-      int, the batch size of the dataset, or None if it is unknown.
-    """
+        For certain type of the data input, the batch size is known, and even
+        required, like numpy array. Where as for generator, the batch is unknown
+        unless we take a peek.
+        Returns:
+          int, the batch size of the dataset, or None if it is unknown.
+        """
         raise NotImplementedError
 
     def representative_batch_size(self):
         """Return a representative size for batches in the dataset.
-    This is not guaranteed to be the batch size for all batches in the
-    dataset. It just needs to be a rough approximation for batch sizes in
-    the dataset.
-    Returns:
-      int, a representative size for batches found in the dataset,
-      or None if it is unknown.
-    """
+        This is not guaranteed to be the batch size for all batches in the
+        dataset. It just needs to be a rough approximation for batch sizes in
+        the dataset.
+        Returns:
+          int, a representative size for batches found in the dataset,
+          or None if it is unknown.
+        """
         return self.batch_size()
 
     @abc.abstractmethod
@@ -120,8 +120,8 @@ class DataAdapter(object):
     @abc.abstractmethod
     def partial_batch_size(self):
         """The size of the final partial batch for dataset.
-    Will return None if has_partial_batch is False or batch_size is None.
-    """
+        Will return None if has_partial_batch is False or batch_size is None.
+        """
         raise NotImplementedError
 
     @abc.abstractmethod

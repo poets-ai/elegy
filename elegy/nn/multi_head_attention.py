@@ -56,7 +56,7 @@ class MultiHeadAttention(module.Module):
         bias_initializer: initializer, initializer for the bias weights.
         bias_regularizer: regularizer, regularizer for the bias weights.
         bias_constraint: constraint, constraint for the bias weights.
-    
+
     """
 
     def __init__(

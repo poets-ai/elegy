@@ -19,25 +19,25 @@ from elegy.nn.moving_averages import ExponentialMovingAverage
 class BatchNormalization(module.Module):
     """Normalizes inputs to maintain a mean of ~0 and stddev of ~1.
 
-  See: https://arxiv.org/abs/1502.03167.
+    See: https://arxiv.org/abs/1502.03167.
 
-  There are many different variations for how users want to manage scale and
-  offset if they require them at all. These are:
+    There are many different variations for how users want to manage scale and
+    offset if they require them at all. These are:
 
-    - No scale/offset in which case ``create_*`` should be set to ``False`` and
-      ``scale``/``offset`` aren't passed when the module is called.
-    - Trainable scale/offset in which case ``create_*`` should be set to
-      ``True`` and again ``scale``/``offset`` aren't passed when the module is
-      called. In this case this module creates and owns the ``scale``/``offset``
-      variables.
-    - Externally generated ``scale``/``offset``, such as for conditional
-      normalization, in which case ``create_*`` should be set to ``False`` and
-      then the values fed in at call time.
+      - No scale/offset in which case ``create_*`` should be set to ``False`` and
+        ``scale``/``offset`` aren't passed when the module is called.
+      - Trainable scale/offset in which case ``create_*`` should be set to
+        ``True`` and again ``scale``/``offset`` aren't passed when the module is
+        called. In this case this module creates and owns the ``scale``/``offset``
+        variables.
+      - Externally generated ``scale``/``offset``, such as for conditional
+        normalization, in which case ``create_*`` should be set to ``False`` and
+        then the values fed in at call time.
 
-  NOTE: ``jax.vmap(hk.transform(BatchNorm))`` will update summary statistics and
-  normalize values on a per-batch basis; we currently do *not* support
-  normalizing across a batch axis introduced by vmap.
-  """
+    NOTE: ``jax.vmap(hk.transform(BatchNorm))`` will update summary statistics and
+    normalize values on a per-batch basis; we currently do *not* support
+    normalizing across a batch axis introduced by vmap.
+    """
 
     def __init__(
         self,
@@ -54,28 +54,28 @@ class BatchNormalization(module.Module):
     ):
         """Constructs a BatchNorm module.
 
-    Args:
-        create_scale: Whether to include a trainable scaling factor.
-        create_offset: Whether to include a trainable offset.
-        decay_rate: Decay rate for EMA.
-        eps: Small epsilon to avoid division by zero variance. Defaults ``1e-5``,
-            as in the paper and Sonnet.
-        scale_init: Optional initializer for gain (aka scale). Can only be set
-            if ``create_scale=True``. By default, ``1``.
-        offset_init: Optional initializer for bias (aka offset). Can only be set
-            if ``create_offset=True``. By default, ``0``.
-        axis: Which axes to reduce over. The default (``None``) signifies that all
-            but the channel axis should be normalized. Otherwise this is a list of
-            axis indices which will have normalization statistics calculated.
-        cross_replica_axis: If not ``None``, it should be a string representing
-            the axis name over which this module is being run within a ``jax.pmap``.
-            Supplying this argument means that batch statistics are calculated
-            across all replicas on that axis.
-        data_format: The data format of the input. Can be either
-            ``channels_first``, ``channels_last``, ``N...C`` or ``NC...``. By
-            default it is ``channels_last``.
-        kwargs: Additional keyword arguments passed to Module.
-    """
+        Args:
+            create_scale: Whether to include a trainable scaling factor.
+            create_offset: Whether to include a trainable offset.
+            decay_rate: Decay rate for EMA.
+            eps: Small epsilon to avoid division by zero variance. Defaults ``1e-5``,
+                as in the paper and Sonnet.
+            scale_init: Optional initializer for gain (aka scale). Can only be set
+                if ``create_scale=True``. By default, ``1``.
+            offset_init: Optional initializer for bias (aka offset). Can only be set
+                if ``create_offset=True``. By default, ``0``.
+            axis: Which axes to reduce over. The default (``None``) signifies that all
+                but the channel axis should be normalized. Otherwise this is a list of
+                axis indices which will have normalization statistics calculated.
+            cross_replica_axis: If not ``None``, it should be a string representing
+                the axis name over which this module is being run within a ``jax.pmap``.
+                Supplying this argument means that batch statistics are calculated
+                across all replicas on that axis.
+            data_format: The data format of the input. Can be either
+                ``channels_first``, ``channels_last``, ``N...C`` or ``NC...``. By
+                default it is ``channels_last``.
+            kwargs: Additional keyword arguments passed to Module.
+        """
         super().__init__(**kwargs)
         if not create_scale and scale_init is not None:
             raise ValueError("Cannot set `scale_init` if `create_scale=False`")

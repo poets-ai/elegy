@@ -99,14 +99,14 @@ class Reduce(Metric):
         self, values: jnp.ndarray, sample_weight: tp.Optional[jnp.ndarray] = None
     ) -> jnp.ndarray:
         """
-        Accumulates statistics for computing the reduction metric. For example, if `values` is [1, 3, 5, 7] 
-        and reduction=SUM_OVER_BATCH_SIZE, then the value of `result()` is 4. If the `sample_weight` 
+        Accumulates statistics for computing the reduction metric. For example, if `values` is [1, 3, 5, 7]
+        and reduction=SUM_OVER_BATCH_SIZE, then the value of `result()` is 4. If the `sample_weight`
         is specified as [1, 1, 0, 0] then value of `result()` would be 2.
-        
+
         Arguments:
             values: Per-example value.
             sample_weight: Optional weighting of each example. Defaults to 1.
-        
+
         Returns:
             Array with the cummulative reduce.
         """
@@ -114,7 +114,10 @@ class Reduce(Metric):
             "total", shape=[], dtype=self.dtype, initializer=initializers.Constant(0)
         )
 
-        if self._reduction in (Reduction.SUM_OVER_BATCH_SIZE, Reduction.WEIGHTED_MEAN,):
+        if self._reduction in (
+            Reduction.SUM_OVER_BATCH_SIZE,
+            Reduction.WEIGHTED_MEAN,
+        ):
             count = hooks.get_state(
                 "count",
                 shape=[],

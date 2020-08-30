@@ -70,7 +70,7 @@ class Model:
             ])
             return mlp(image)
     ```
-    
+
     Then you can pass this `Module` to the `Model`'s constructor and specify additional things like losses, metrics, optimizer, and callbacks:
     ```python
     model = elegy.Model(
@@ -83,7 +83,7 @@ class Model:
         optimizer=optax.rmsprop(1e-3),
     )
     ```
-    
+
     Once the model is created, you can train the model with `model.fit()`, or use the model
     to do prediction with `model.predict()`.
     Checkout [Getting Started](https://poets-ai.github.io/elegy/getting-started) for
@@ -97,7 +97,7 @@ class Model:
         initial_metrics_state: A `haiku.State` structure with the initial states of the metrics.
         run_eagerly: Settable attribute indicating whether the model should run eagerly.
             Running eagerly means that your model will be run step by step, like Python code, instead of
-            using Jax's `jit` to optimize the computation. Your model might run slower, but it should become easier for you to debug 
+            using Jax's `jit` to optimize the computation. Your model might run slower, but it should become easier for you to debug
             it by stepping into individual layer calls.
     """
 
@@ -159,7 +159,7 @@ class Model:
                 which might be useful e.g. to group things in tensorboard. Contrary to Keras convention,
                 in Elegy there is no relation between the structure of `loss` with the structure
                 of the labels and outputs of the network. Elegy's loss system is more flexible than
-                the one provided by Keras, for more information on how to mimick Keras behavior checkout the 
+                the one provided by Keras, for more information on how to mimick Keras behavior checkout the
                 [Losses and Metrics Guide](https://poets-ai.github.io/elegy/guides/losses-and-metrics)`.
             metrics: A `elegy.Metric` or `Callable` instance representing the loss function of the network.
                 You can define more metrics terms by simply passing a possibly nested structure of
@@ -168,14 +168,14 @@ class Model:
                 which might be useful e.g. to group things in tensorboard. Contrary to Keras convention,
                 in Elegy there is no relation between the structure of `metrics` with the structure
                 of the labels and outputs of the network. Elegy's metrics system is more flexible than
-                the one provided by Keras, for more information on how to mimick Keras behavior checkout the 
+                the one provided by Keras, for more information on how to mimick Keras behavior checkout the
                 [Losses and Metrics Guide](https://poets-ai.github.io/elegy/guides/losses-and-metrics)`.
             optimizer: A `optax` optimizer instance. Optix is a very flexible library for defining
                 optimization pipelines with things like learning rate schedules, this means that
                 there is no need for a `LearningRateScheduler` callback in Elegy.
             run_eagerly: Settable attribute indicating whether the model should run eagerly.
                 Running eagerly means that your model will be run step by step, like Python code, instead of
-                using Jax's `jit` to. Your model might run slower, but it should become easier for you to debug 
+                using Jax's `jit` to. Your model might run slower, but it should become easier for you to debug
                 it by stepping into individual layer calls.
             parameters: A `haiku.Params` structure with the weights of the model.
             states: A `haiku.State` structure with non-trainable parameters of the model.
@@ -331,11 +331,11 @@ class Model:
                 weight (float) to apply to the model's loss for the samples from this
                 class during training. This can be useful to tell the model to "pay
                 more attention" to samples from an under-represented class.
-        
+
         Returns:
             A `logs` dictionary of containing the main `loss` as well as all
-            other losses and metrics. 
-        
+            other losses and metrics.
+
         Raises:
             ValueError: In case of invalid user-provided arguments.
         """
@@ -537,7 +537,10 @@ class Model:
             None,
         ] = None,
         y: tp.Union[
-            np.ndarray, tp.Mapping[str, np.ndarray], tp.Tuple[np.ndarray], None,
+            np.ndarray,
+            tp.Mapping[str, np.ndarray],
+            tp.Tuple[np.ndarray],
+            None,
         ] = None,
         batch_size: tp.Optional[int] = None,
         epochs: int = 1,
@@ -559,7 +562,7 @@ class Model:
 
         Arguments:
             x: Input data. It could be:
-                
+
                 - A Numpy or Jax array (or array-like), or a list of arrays
                     (in case the model has multiple inputs).
                 - A dict mapping input names to the corresponding arrays,
@@ -669,7 +672,7 @@ class Model:
                 validation every 2 epochs. If a Container, specifies the epochs on
                 which to run validation, e.g. `validation_freq=[1, 2, 10]` runs
                 validation at the end of the 1st, 2nd, and 10th epochs.
-        
+
         Unpacking behavior for iterator-like inputs:
 
         A common pattern is to pass a generator, which will in fact
@@ -682,7 +685,7 @@ class Model:
         should still adhere to the top-level tuple structure.
         e.g. `({"x0": x0, "x1": x1}, y)`. Elegy will not attempt to separate
         features, targets, and weights from the keys of a single dict.
-        
+
         A notable unsupported data type is the namedtuple. The reason is that
         it behaves like both an ordered datatype (tuple) and a mapping
         datatype (dict). So given a namedtuple of the form:
@@ -694,7 +697,7 @@ class Model:
         and sample_weight or passed through as a single element to `x`. As a
         result the data processing code will simply raise a ValueError if it
         encounters a namedtuple. (Along with instructions to remedy the issue.)
-       
+
         Returns:
             A `History` object. Its `History.history` attribute is
             a record of training loss values and metrics values
@@ -800,7 +803,10 @@ class Model:
     def evaluate(
         self,
         x: tp.Union[
-            np.ndarray, tp.Mapping[str, np.ndarray], tp.Tuple[np.ndarray], tp.Iterable,
+            np.ndarray,
+            tp.Mapping[str, np.ndarray],
+            tp.Tuple[np.ndarray],
+            tp.Iterable,
         ],
         y: tp.Union[
             jnp.ndarray,
@@ -816,55 +822,55 @@ class Model:
         callbacks: tp.Union[tp.List[Callback], CallbackList, None] = None,
     ) -> tp.Dict[str, np.ndarray]:
         """Returns the loss value & metrics values for the model in test mode.
-            Computation is done in batches.
+        Computation is done in batches.
 
-            Arguments:
-                x: Input data. It could be:
+        Arguments:
+            x: Input data. It could be:
 
-                    - A Numpy or Jax array (or array-like), or a list of arrays
-                        (in case the model has multiple inputs).
-                    - A dict mapping input names to the corresponding arrays,
-                        if the model has named inputs.
-                    - A generator returning `(inputs,)`, `(inputs, targets)`
-                        or `(inputs, targets, sample_weights)`.
+                - A Numpy or Jax array (or array-like), or a list of arrays
+                    (in case the model has multiple inputs).
+                - A dict mapping input names to the corresponding arrays,
+                    if the model has named inputs.
+                - A generator returning `(inputs,)`, `(inputs, targets)`
+                    or `(inputs, targets, sample_weights)`.
 
-                    A more detailed description of
-                    unpacking behavior for iterator types generator
-                    is given in the `Unpacking behavior for iterator-like inputs` section
-                    of `Model.fit`.
-                y: Target data. Like the input data `x`,
-                    it could be either Numpy or Jax array(s).
-                    It should be consistent with `x`. If `x` is a generator,
-                    `y` should not be specified (since targets will be obtained from `x`).
-                verbose: 0, 1, or 2. Verbosity mode.
-                    0 = silent, 1 = progress bar, 2 = one line per epoch.
-                batch_size: Integer or `None`.
-                    Number of samples per gradient update.
-                    If unspecified, `batch_size` will default to 32.
-                    Do not specify the `batch_size` if your data is in the
-                    form of generator (since they generate batches).
-                sample_weight: Optional Numpy/Jax array of weights for
-                    the training samples, used for weighting the loss function
-                    (during training only). You can either pass a flat (1D)
-                    Numpy array with the same length as the input samples
-                    (1:1 mapping between weights and samples). This argument is not
-                    supported when `x` is generator, instead provide the sample_weights
-                    as the third element of `x`.
-                steps: Integer or `None`. Total number of steps (batches of samples)
-                    before declaring the evaluation round finished. Ignored with the
-                    default value of `None`. This
-                    argument is not supported with array inputs.
-                callbacks: List of [elegy.callbacks.callback.Callback][] instances.
-                    List of callbacks to apply during training.
+                A more detailed description of
+                unpacking behavior for iterator types generator
+                is given in the `Unpacking behavior for iterator-like inputs` section
+                of `Model.fit`.
+            y: Target data. Like the input data `x`,
+                it could be either Numpy or Jax array(s).
+                It should be consistent with `x`. If `x` is a generator,
+                `y` should not be specified (since targets will be obtained from `x`).
+            verbose: 0, 1, or 2. Verbosity mode.
+                0 = silent, 1 = progress bar, 2 = one line per epoch.
+            batch_size: Integer or `None`.
+                Number of samples per gradient update.
+                If unspecified, `batch_size` will default to 32.
+                Do not specify the `batch_size` if your data is in the
+                form of generator (since they generate batches).
+            sample_weight: Optional Numpy/Jax array of weights for
+                the training samples, used for weighting the loss function
+                (during training only). You can either pass a flat (1D)
+                Numpy array with the same length as the input samples
+                (1:1 mapping between weights and samples). This argument is not
+                supported when `x` is generator, instead provide the sample_weights
+                as the third element of `x`.
+            steps: Integer or `None`. Total number of steps (batches of samples)
+                before declaring the evaluation round finished. Ignored with the
+                default value of `None`. This
+                argument is not supported with array inputs.
+            callbacks: List of [elegy.callbacks.callback.Callback][] instances.
+                List of callbacks to apply during training.
 
-            See the discussion of `Unpacking behavior for iterator-like inputs` for
-             [`Model.fit`][elegy.model.Model.fit].
+        See the discussion of `Unpacking behavior for iterator-like inputs` for
+         [`Model.fit`][elegy.model.Model.fit].
 
-            Returns:
-                A dictionary for mapping the losses and metrics names to the values obtained.
-            Raises:
-                ValueError: in case of invalid arguments.
-            """
+        Returns:
+            A dictionary for mapping the losses and metrics names to the values obtained.
+        Raises:
+            ValueError: in case of invalid arguments.
+        """
 
         data_handler = DataHandler(
             x=x,
@@ -902,7 +908,9 @@ class Model:
                     x_batch, y_batch, sample_weight = unpack_x_y_sample_weight(batch)
 
                     tmp_logs = self.test_on_batch(
-                        x=x_batch, y=y_batch, sample_weight=sample_weight,
+                        x=x_batch,
+                        y=y_batch,
+                        sample_weight=sample_weight,
                     )
                     tmp_logs.update({"size": data_handler.batch_size})
                     logs = tmp_logs
@@ -915,7 +923,10 @@ class Model:
     def predict(
         self,
         x: tp.Union[
-            np.ndarray, tp.Mapping[str, np.ndarray], tp.Tuple[np.ndarray], tp.Iterable,
+            np.ndarray,
+            tp.Mapping[str, np.ndarray],
+            tp.Tuple[np.ndarray],
+            tp.Iterable,
         ],
         verbose: int = 0,
         batch_size: tp.Optional[int] = None,
@@ -1005,7 +1016,11 @@ class Model:
                         )
                     else:
 
-                        outputs = map_structure(map_append, outputs, batch_outputs,)
+                        outputs = map_structure(
+                            map_append,
+                            outputs,
+                            batch_outputs,
+                        )
 
                     callbacks.on_predict_batch_end(
                         step,
@@ -1038,10 +1053,10 @@ class Model:
         Test the model on a single batch of samples.
 
         Arguments:
-            x: Input data. It could be: 
+            x: Input data. It could be:
 
                 - A Numpy array (or array-like), or a list
-                    of arrays (in case the model has multiple inputs). 
+                    of arrays (in case the model has multiple inputs).
                 - A dict mapping input names to the corresponding arrays, if
                     the model has named inputs.
             y: Target data. Like the input data `x`, it could be either Numpy
@@ -1051,10 +1066,10 @@ class Model:
                 temporal data, you can pass a 2D array with shape (samples,
                 sequence_length), to apply a different weight to every timestep of
                 every sample.
-        
+
         Returns:
             A `logs` dictionary of containing the main `loss` as well as all
-            other losses and metrics. 
+            other losses and metrics.
         Raises:
             ValueError: In case of invalid user-provided arguments.
         """
@@ -1097,9 +1112,7 @@ class Model:
         states: tp.Dict,
         metrics_states: tp.Optional[tp.Dict],
         rng: jnp.ndarray,
-    ) -> tp.Tuple[
-        tp.Dict[str, jnp.ndarray], tp.Optional[tp.Dict],
-    ]:
+    ) -> tp.Tuple[tp.Dict[str, jnp.ndarray], tp.Optional[tp.Dict],]:
 
         test_fn = self._test_no_jit if self.run_eagerly else self._test_jit
 
@@ -1124,9 +1137,7 @@ class Model:
         states: tp.Dict,
         metrics_states: tp.Optional[tp.Dict],
         rng: jnp.ndarray,
-    ) -> tp.Tuple[
-        tp.Dict[str, jnp.ndarray], tp.Optional[tp.Dict],
-    ]:
+    ) -> tp.Tuple[tp.Dict[str, jnp.ndarray], tp.Optional[tp.Dict],]:
         net_rng, metrics_rng = jax.random.split(rng, num=2)
 
         loss, (y_pred, context, logs) = self._loss(
@@ -1170,15 +1181,15 @@ class Model:
     ) -> tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]:
         """
         Returns predictions for a single batch of samples.
-        
+
         Arguments:
-            x: Input data. A Numpy/Jax array (or array-like), or possibly 
-                nested python structure of dict, list, tuple that contain 
+            x: Input data. A Numpy/Jax array (or array-like), or possibly
+                nested python structure of dict, list, tuple that contain
                 arrays as leafs.
-        
+
         Returns:
             Jax array(s) of predictions.
-        
+
         Raises:
             ValueError: In case of mismatch between given number of inputs and
                 expectations of the model.
@@ -1214,7 +1225,12 @@ class Model:
         predict_fn = self._predict_no_jit if self.run_eagerly else self._predict_jit
 
         return predict_fn(
-            training, get_summaries, x=x, parameters=parameters, states=states, rng=rng,
+            training,
+            get_summaries,
+            x=x,
+            parameters=parameters,
+            states=states,
+            rng=rng,
         )
 
     def _predict_no_jit(
@@ -1254,8 +1270,7 @@ class Model:
 
     @property
     def full_state(self) -> tp.Dict:
-        """
-        """
+        """"""
 
         states: tp.Dict = {"seed": self.seed}
 
@@ -1308,16 +1323,16 @@ class Model:
         It creates a directory that includes:
 
         - The `Model` object instance serialized with `pickle` as
-            as `{path}/model.pkl`, this allows you to re-instantiate 
+            as `{path}/model.pkl`, this allows you to re-instantiate
             the model later.
         - The model parameters + states serialized into HDF5 as `{path}/parameters.h5`.
         - The states of the optimizer serialized with `pickle` as
             as `{path}/optimizer_state.pkl`, allowing to resume training
             exactly where you left off. We hope to use HDF5 in the future
             but `optax` states is incompatible with `deepdish`.
-        
+
         This allows you to save the entirety of the states of a model
-        in a directory structure which can be fully restored via 
+        in a directory structure which can be fully restored via
         `Model.load` if the model is already instiated or `elegy.model.load`
         to load the model instance from its pickled version.
 
@@ -1326,7 +1341,7 @@ class Model:
 
         model.save('my_model')  # creates folder at 'my_model'
         del model  # deletes the existing model
-        
+
         # returns a model identical to the previous one
         model = elegy.model.load('my_model')
         ```
@@ -1369,10 +1384,10 @@ class Model:
     def load(self, path: tp.Union[str, Path]) -> None:
         """
         Loads all weights + states from a folder structure.
-        
+
         You can load states from other models that have slightly different architecture
-        as long as long as it preserves the ordering of the `haiku.Params` + `haiku.State` 
-        structures, adding or removing layers is fine as long as they don't have weights, 
+        as long as long as it preserves the ordering of the `haiku.Params` + `haiku.State`
+        structures, adding or removing layers is fine as long as they don't have weights,
         new layers with weights will be initialized from scratch.
 
         Arguments:
@@ -1400,7 +1415,7 @@ class Model:
         Arguments:
             x: A sample of inputs to the network.
             depth: The level number of nested level which will be showed.
-                Information about summaries from modules deeper than `depth` 
+                Information about summaries from modules deeper than `depth`
                 will be aggregated together.
             tablefmt: A string represeting the style of the table generated by
                 `tabulate`. See
@@ -1411,7 +1426,11 @@ class Model:
                 for more options.
         """
         self._maybe_initialize(
-            mode=Mode.predict, x=x, y=None, sample_weight=None, class_weight=None,
+            mode=Mode.predict,
+            x=x,
+            y=None,
+            sample_weight=None,
+            class_weight=None,
         )
 
         assert self.parameters is not None
@@ -1566,7 +1585,7 @@ def load(path: tp.Union[str, Path]) -> Model:
 
     model.save('my_model')  # creates folder at 'my_model'
     del model  # deletes the existing model
-    
+
     # returns a model identical to the previous one
     model = elegy.model.load('my_model')
     ```

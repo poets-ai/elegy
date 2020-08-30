@@ -21,7 +21,11 @@ class GeneratorDataAdapter(DataAdapter):
         return (hasattr(x, "__next__") or hasattr(x, "next")) and hasattr(x, "__iter__")
 
     def __init__(
-        self, x: tp.Union[tp.Iterable], y=None, sample_weights=None, **kwargs,
+        self,
+        x: tp.Union[tp.Iterable],
+        y=None,
+        sample_weights=None,
+        **kwargs,
     ):
         # Generators should never shuffle as exhausting the generator in order to
         # shuffle the batches is inefficient.

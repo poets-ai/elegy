@@ -16,12 +16,12 @@ from .progbar_logger import ProgbarLogger
 class ModeKeys(object):
     """Standard names for model modes.
 
-  The following standard keys are defined:
+    The following standard keys are defined:
 
-  * `TRAIN`: training/fitting mode.
-  * `TEST`: testing/evaluation mode.
-  * `PREDICT`: prediction/inference mode.
-  """
+    * `TRAIN`: training/fitting mode.
+    * `TEST`: testing/evaluation mode.
+    * `PREDICT`: prediction/inference mode.
+    """
 
     TRAIN = "train"
     TEST = "test"
@@ -41,16 +41,16 @@ class CallbackList(object):
     ):
         """Creates a container for `Callbacks`.
 
-    Arguments:
-      callbacks: List of `Callback` instances.
-      add_history: Whether a `History` callback should be added, if one does not
-        already exist in `callback`s.
-      add_progbar: Whether a `ProgbarLogger` callback should be added, if one
-        does not already exist in `callback`s.
-      model: The `Model` these `Callback`s are used with.`
-      **params: If provided, parameters will be passed to each `Callback` via
-        `Callback.set_params`.
-    """
+        Arguments:
+          callbacks: List of `Callback` instances.
+          add_history: Whether a `History` callback should be added, if one does not
+            already exist in `callback`s.
+          add_progbar: Whether a `ProgbarLogger` callback should be added, if one
+            does not already exist in `callback`s.
+          model: The `Model` these `Callback`s are used with.`
+          **params: If provided, parameters will be passed to each `Callback` via
+            `Callback.set_params`.
+        """
         self.callbacks = callbacks if callbacks else []
         self._add_default_callbacks(add_history, add_progbar)
 
@@ -185,13 +185,13 @@ class CallbackList(object):
     def on_epoch_begin(self, epoch, logs=None):
         """Calls the `on_epoch_begin` methods of its callbacks.
 
-    This function should only be called during TRAIN mode.
+        This function should only be called during TRAIN mode.
 
-    Arguments:
-        epoch: integer, index of epoch.
-        logs: dict. Currently no data is passed to this argument for this method
-          but that may change in the future.
-    """
+        Arguments:
+            epoch: integer, index of epoch.
+            logs: dict. Currently no data is passed to this argument for this method
+              but that may change in the future.
+        """
         logs = self._process_logs(logs)
         for callback in self.callbacks:
             callback.on_epoch_begin(epoch, logs)
@@ -200,14 +200,14 @@ class CallbackList(object):
     def on_epoch_end(self, epoch, logs=None):
         """Calls the `on_epoch_end` methods of its callbacks.
 
-    This function should only be called during TRAIN mode.
+        This function should only be called during TRAIN mode.
 
-    Arguments:
-        epoch: integer, index of epoch.
-        logs: dict, metric results for this training epoch, and for the
-          validation epoch if validation is performed. Validation result keys
-          are prefixed with `val_`.
-    """
+        Arguments:
+            epoch: integer, index of epoch.
+            logs: dict, metric results for this training epoch, and for the
+              validation epoch if validation is performed. Validation result keys
+              are prefixed with `val_`.
+        """
         logs = self._process_logs(logs)
         for callback in self.callbacks:
             callback.on_epoch_end(epoch, logs)
@@ -215,11 +215,11 @@ class CallbackList(object):
     def on_train_batch_begin(self, batch, logs=None):
         """Calls the `on_train_batch_begin` methods of its callbacks.
 
-    Arguments:
-        batch: integer, index of batch within the current epoch.
-        logs: dict. Has keys `batch` and `size` representing the current batch
-          number and the size of the batch.
-    """
+        Arguments:
+            batch: integer, index of batch within the current epoch.
+            logs: dict. Has keys `batch` and `size` representing the current batch
+              number and the size of the batch.
+        """
         # TODO(b/150629188): Make ProgBarLogger callback not use batch hooks
         # when verbose != 1
         if self._should_call_train_batch_hooks:
@@ -229,10 +229,10 @@ class CallbackList(object):
     def on_train_batch_end(self, batch, logs=None):
         """Calls the `on_train_batch_end` methods of its callbacks.
 
-    Arguments:
-        batch: integer, index of batch within the current epoch.
-        logs: dict. Metric results for this batch.
-    """
+        Arguments:
+            batch: integer, index of batch within the current epoch.
+            logs: dict. Metric results for this batch.
+        """
         if self._should_call_train_batch_hooks:
             logs = self._process_logs(logs)
             self._call_batch_hook(ModeKeys.TRAIN, "end", batch, logs=logs)
@@ -240,11 +240,11 @@ class CallbackList(object):
     def on_test_batch_begin(self, batch, logs=None):
         """Calls the `on_test_batch_begin` methods of its callbacks.
 
-    Arguments:
-        batch: integer, index of batch within the current epoch.
-        logs: dict. Has keys `batch` and `size` representing the current batch
-          number and the size of the batch.
-    """
+        Arguments:
+            batch: integer, index of batch within the current epoch.
+            logs: dict. Has keys `batch` and `size` representing the current batch
+              number and the size of the batch.
+        """
         if self._should_call_test_batch_hooks:
             logs = self._process_logs(logs)
             self._call_batch_hook(ModeKeys.TEST, "begin", batch, logs=logs)
@@ -252,10 +252,10 @@ class CallbackList(object):
     def on_test_batch_end(self, batch, logs=None):
         """Calls the `on_test_batch_end` methods of its callbacks.
 
-    Arguments:
-        batch: integer, index of batch within the current epoch.
-        logs: dict. Metric results for this batch.
-    """
+        Arguments:
+            batch: integer, index of batch within the current epoch.
+            logs: dict. Metric results for this batch.
+        """
         if self._should_call_test_batch_hooks:
             logs = self._process_logs(logs)
             self._call_batch_hook(ModeKeys.TEST, "end", batch, logs=logs)
@@ -263,11 +263,11 @@ class CallbackList(object):
     def on_predict_batch_begin(self, batch, logs=None):
         """Calls the `on_predict_batch_begin` methods of its callbacks.
 
-    Arguments:
-        batch: integer, index of batch within the current epoch.
-        logs: dict. Has keys `batch` and `size` representing the current batch
-          number and the size of the batch.
-    """
+        Arguments:
+            batch: integer, index of batch within the current epoch.
+            logs: dict. Has keys `batch` and `size` representing the current batch
+              number and the size of the batch.
+        """
         if self._should_call_predict_batch_hooks:
             logs = self._process_logs(logs)
             self._call_batch_hook(ModeKeys.PREDICT, "begin", batch, logs=logs)
@@ -275,10 +275,10 @@ class CallbackList(object):
     def on_predict_batch_end(self, batch, logs=None):
         """Calls the `on_predict_batch_end` methods of its callbacks.
 
-    Arguments:
-        batch: integer, index of batch within the current epoch.
-        logs: dict. Metric results for this batch.
-    """
+        Arguments:
+            batch: integer, index of batch within the current epoch.
+            logs: dict. Metric results for this batch.
+        """
         if self._should_call_predict_batch_hooks:
             logs = self._process_logs(logs)
             self._call_batch_hook(ModeKeys.PREDICT, "end", batch, logs=logs)
@@ -286,10 +286,10 @@ class CallbackList(object):
     def on_train_begin(self, logs=None):
         """Calls the `on_train_begin` methods of its callbacks.
 
-    Arguments:
-        logs: dict. Currently no data is passed to this argument for this method
-          but that may change in the future.
-    """
+        Arguments:
+            logs: dict. Currently no data is passed to this argument for this method
+              but that may change in the future.
+        """
         logs = self._process_logs(logs)
         for callback in self.callbacks:
             callback.on_train_begin(logs)
@@ -297,10 +297,10 @@ class CallbackList(object):
     def on_train_end(self, logs=None):
         """Calls the `on_train_end` methods of its callbacks.
 
-    Arguments:
-        logs: dict. Currently no data is passed to this argument for this method
-          but that may change in the future.
-    """
+        Arguments:
+            logs: dict. Currently no data is passed to this argument for this method
+              but that may change in the future.
+        """
         logs = self._process_logs(logs)
         for callback in self.callbacks:
             callback.on_train_end(logs)
@@ -308,10 +308,10 @@ class CallbackList(object):
     def on_test_begin(self, logs=None):
         """Calls the `on_test_begin` methods of its callbacks.
 
-    Arguments:
-        logs: dict. Currently no data is passed to this argument for this method
-          but that may change in the future.
-    """
+        Arguments:
+            logs: dict. Currently no data is passed to this argument for this method
+              but that may change in the future.
+        """
         logs = self._process_logs(logs)
         for callback in self.callbacks:
             callback.on_test_begin(logs)
@@ -319,10 +319,10 @@ class CallbackList(object):
     def on_test_end(self, logs=None):
         """Calls the `on_test_end` methods of its callbacks.
 
-    Arguments:
-        logs: dict. Currently no data is passed to this argument for this method
-          but that may change in the future.
-    """
+        Arguments:
+            logs: dict. Currently no data is passed to this argument for this method
+              but that may change in the future.
+        """
         logs = self._process_logs(logs)
         for callback in self.callbacks:
             callback.on_test_end(logs)
@@ -330,10 +330,10 @@ class CallbackList(object):
     def on_predict_begin(self, logs=None):
         """Calls the 'on_predict_begin` methods of its callbacks.
 
-    Arguments:
-        logs: dict. Currently no data is passed to this argument for this method
-          but that may change in the future.
-    """
+        Arguments:
+            logs: dict. Currently no data is passed to this argument for this method
+              but that may change in the future.
+        """
         logs = self._process_logs(logs)
         for callback in self.callbacks:
             callback.on_predict_begin(logs)
@@ -341,10 +341,10 @@ class CallbackList(object):
     def on_predict_end(self, logs=None):
         """Calls the `on_predict_end` methods of its callbacks.
 
-    Arguments:
-        logs: dict. Currently no data is passed to this argument for this method
-          but that may change in the future.
-    """
+        Arguments:
+            logs: dict. Currently no data is passed to this argument for this method
+              but that may change in the future.
+        """
         logs = self._process_logs(logs)
         for callback in self.callbacks:
             callback.on_predict_end(logs)

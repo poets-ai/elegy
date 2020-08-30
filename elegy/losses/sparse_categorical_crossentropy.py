@@ -71,7 +71,7 @@ class SparseCategoricalCrossentropy(Loss):
     ```
 
     Usage with the `Elegy` API:
-    
+
     ```python
     model = elegy.Model(
         module_fn,
@@ -79,7 +79,7 @@ class SparseCategoricalCrossentropy(Loss):
         metrics=lelegy.metrics.Accuracy(),
         optimizer=optax.adam(1e-3),
     )
-    
+
     ```
     """
 
@@ -93,7 +93,7 @@ class SparseCategoricalCrossentropy(Loss):
     ):
         """
         Initializes `SparseCategoricalCrossentropy` instance.
-        
+
         Arguments:
             from_logits: Whether `y_pred` is expected to be a logits tensor. By
                 default, we assume that `y_pred` encodes a probability distribution.
@@ -119,7 +119,7 @@ class SparseCategoricalCrossentropy(Loss):
     ) -> jnp.ndarray:
         """
         Invokes the `SparseCategoricalCrossentropy` instance.
-        
+
         Arguments:
             y_true: Ground truth values.
             y_pred: The predicted values.
@@ -132,7 +132,7 @@ class SparseCategoricalCrossentropy(Loss):
                 broadcasted to this shape), then each loss element of `y_pred` is scaled
                 by the corresponding value of `sample_weight`. (Note on`dN-1`: all loss
                 functions reduce by 1 dimension, usually axis=-1.)
-        
+
         Returns:
             Loss values per sample.
         """

@@ -20,30 +20,30 @@ def is_default(method):
 class Callback(object):
     """Abstract base class used to build new callbacks.
 
-The `logs` dictionary that callback methods
-take as argument will contain keys for quantities relevant to
-the current batch or epoch.
+    The `logs` dictionary that callback methods
+    take as argument will contain keys for quantities relevant to
+    the current batch or epoch.
 
-Currently, the `.fit()` method of the `Model` class
-will include the following quantities in the `logs` that
-it passes to its callbacks:
-    
-```python
-on_epoch_end: logs include `acc` and `loss`, and
-    optionally include `val_loss`
-    (if validation is enabled in `fit`), and `val_acc`
-    (if validation and accuracy monitoring are enabled).
-on_train_batch_begin: logs include `size`,
-    the number of samples in the current batch.
-on_train_batch_end: logs include `loss`, and optionally `acc`
-    (if accuracy monitoring is enabled).
-```
+    Currently, the `.fit()` method of the `Model` class
+    will include the following quantities in the `logs` that
+    it passes to its callbacks:
 
-Attributes:
-    params (dict):  Training parameters
-        (eg. verbosity, batch size, number of epochs...).
-    model (elegy.model.Model): Reference of the model being trained.
-  """
+    ```python
+    on_epoch_end: logs include `acc` and `loss`, and
+        optionally include `val_loss`
+        (if validation is enabled in `fit`), and `val_acc`
+        (if validation and accuracy monitoring are enabled).
+    on_train_batch_begin: logs include `size`,
+        the number of samples in the current batch.
+    on_train_batch_end: logs include `loss`, and optionally `acc`
+        (if accuracy monitoring is enabled).
+    ```
+
+    Attributes:
+        params (dict):  Training parameters
+            (eg. verbosity, batch size, number of epochs...).
+        model (elegy.model.Model): Reference of the model being trained.
+    """
 
     __all__ = [
         "on_epoch_begin",
@@ -106,7 +106,7 @@ Attributes:
             logs: dict, metric results for this training epoch, and for the
                 validation epoch if validation is performed. Validation result keys
                 are prefixed with `val_`.
-    """
+        """
         pass
 
     # @doc_controls.for_subclass_implementers
@@ -122,7 +122,7 @@ Attributes:
             batch: integer, index of batch within the current epoch.
             logs: dict. Has keys `batch` and `size` representing the current batch
                 number and the size of the batch.
-    """
+        """
         pass
 
     # @doc_controls.for_subclass_implementers
@@ -137,7 +137,7 @@ Attributes:
         Arguments:
             batch: integer, index of batch within the current epoch.
             logs: dict. Metric results for this batch.
-    """
+        """
         pass
 
     # @doc_controls.for_subclass_implementers
@@ -156,7 +156,7 @@ Attributes:
             batch: integer, index of batch within the current epoch.
             logs: dict. Has keys `batch` and `size` representing the current batch
                 number and the size of the batch.
-    """
+        """
         pass
 
     # @doc_controls.for_subclass_implementers
@@ -174,7 +174,7 @@ Attributes:
         Arguments:
             batch: integer, index of batch within the current epoch.
             logs: dict. Metric results for this batch.
-    """
+        """
         pass
 
     # @doc_controls.for_subclass_implementers
@@ -190,7 +190,7 @@ Attributes:
             batch: integer, index of batch within the current epoch.
             logs: dict. Has keys `batch` and `size` representing the current batch
                 number and the size of the batch.
-    """
+        """
         pass
 
     # @doc_controls.for_subclass_implementers
@@ -205,7 +205,7 @@ Attributes:
         Arguments:
             batch: integer, index of batch within the current epoch.
             logs: dict. Metric results for this batch.
-    """
+        """
         pass
 
     # @doc_controls.for_subclass_implementers
