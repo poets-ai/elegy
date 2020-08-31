@@ -726,6 +726,16 @@
     </a>
 </li>
 <li class="md-nav__item">
+<a class="md-nav__link" href="../../nn/EmbedLookupStyle/" title="EmbedLookupStyle">
+      EmbedLookupStyle
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../nn/Embedding/" title="Embedding">
+      Embedding
+    </a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="../../nn/Flatten/" title="Flatten">
       Flatten
     </a>
@@ -857,7 +867,7 @@ so <code>Model.summary()</code> can show a representation of architecture.</p>
     <span class="o">...</span>
 </code></pre>
 </div>
-<p>The summaries will be aggregated by <a href="https://poets-ai.github.io/elegy/api/module/Module/#elegy.module.Module.apply"><code>apply</code></a> 
+<p>The summaries will be aggregated by <a href="https://poets-ai.github.io/elegy/api/module/Module/#elegy.module.Module.apply"><code>apply</code></a>
 if <code>get_summaries</code> is set to <code>True</code>, else this hook does nothing.</p>
 <div class="codehilite">
 <pre><span></span><code><span class="n">transformed_state</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">get_summaries</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
@@ -961,7 +971,7 @@ if <code>get_summaries</code> is set to <code>True</code>, else this hook does n
 <span class="sd">        ...</span>
 <span class="sd">    ```</span>
 
-<span class="sd">    The summaries will be aggregated by [`apply`][elegy.module.Module.apply] </span>
+<span class="sd">    The summaries will be aggregated by [`apply`][elegy.module.Module.apply]</span>
 <span class="sd">    if `get_summaries` is set to `True`, else this hook does nothing.</span>
 
 <span class="sd">    ```python</span>

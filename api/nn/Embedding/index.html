@@ -5,10 +5,10 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<link href="https://poets-ai.github.io/elegy/api/nn/Sequential/" rel="canonical"/>
+<link href="https://poets-ai.github.io/elegy/api/nn/Embedding/" rel="canonical"/>
 <link href="../../../images/favicon.png" rel="shortcut icon"/>
 <meta content="mkdocs-1.1.2, mkdocs-material-5.5.3" name="generator"/>
-<title>Sequential - Elegy</title>
+<title>Embedding - Elegy</title>
 <link href="../../../assets/stylesheets/main.947af8d5.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
@@ -19,7 +19,7 @@
 <input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
 <label class="md-overlay" for="__drawer"></label>
 <div data-md-component="skip">
-<a class="md-skip" href="#elegynnsequential">
+<a class="md-skip" href="#elegynnembedding">
           Skip to content
         </a>
 </div>
@@ -40,7 +40,7 @@
           </span>
 <span class="md-header-nav__topic md-ellipsis">
             
-              Sequential
+              Embedding
             
           </span>
 </div>
@@ -708,10 +708,82 @@
       EmbedLookupStyle
     </a>
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../Embedding/" title="Embedding">
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+        Embedding
+        <span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
+</span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./" title="Embedding">
       Embedding
     </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding">
+    elegy.nn.embedding.Embedding
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding.submodules">
+    submodules
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding.__init__">
+    __init__()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding.apply">
+    apply()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding.call">
+    call()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding.get_parameters">
+    get_parameters()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding.get_states">
+    get_states()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding.init">
+    init()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding.reset">
+    reset()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding.set_parameters">
+    set_parameters()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding.set_states">
+    set_states()
+  </a>
+</li>
+</ul>
+</nav>
 </li>
 <li class="md-nav__item">
 <a class="md-nav__link" href="../Flatten/" title="Flatten">
@@ -738,77 +810,10 @@
       Reshape
     </a>
 </li>
-<li class="md-nav__item md-nav__item--active">
-<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
-<label class="md-nav__link md-nav__link--active" for="__toc">
-        Sequential
-        <span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
-</span>
-</label>
-<a class="md-nav__link md-nav__link--active" href="./" title="Sequential">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../Sequential/" title="Sequential">
       Sequential
     </a>
-<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
-<label class="md-nav__title" for="__toc">
-<span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
-</span>
-      Table of contents
-    </label>
-<ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.Sequential">
-    elegy.nn.sequential_module.Sequential
-  </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.Sequential.submodules">
-    submodules
-  </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.Sequential.apply">
-    apply()
-  </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.Sequential.call">
-    call()
-  </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.Sequential.get_parameters">
-    get_parameters()
-  </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.Sequential.get_states">
-    get_states()
-  </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.Sequential.init">
-    init()
-  </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.Sequential.reset">
-    reset()
-  </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.Sequential.set_parameters">
-    set_parameters()
-  </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.Sequential.set_states">
-    set_states()
-  </a>
-</li>
-</ul>
-</nav>
 </li>
 <li class="md-nav__item">
 <a class="md-nav__link" href="../sequential/" title="sequential">
@@ -882,52 +887,57 @@
     </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.Sequential">
-    elegy.nn.sequential_module.Sequential
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding">
+    elegy.nn.embedding.Embedding
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.Sequential.submodules">
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding.submodules">
     submodules
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.Sequential.apply">
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding.__init__">
+    __init__()
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding.apply">
     apply()
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.Sequential.call">
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding.call">
     call()
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.Sequential.get_parameters">
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding.get_parameters">
     get_parameters()
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.Sequential.get_states">
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding.get_states">
     get_states()
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.Sequential.init">
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding.init">
     init()
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.Sequential.reset">
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding.reset">
     reset()
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.Sequential.set_parameters">
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding.set_parameters">
     set_parameters()
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.nn.sequential_module.Sequential.set_states">
+<a class="md-nav__link" href="#elegy.nn.embedding.Embedding.set_states">
     set_states()
   </a>
 </li>
@@ -938,37 +948,18 @@
 </div>
 <div class="md-content">
 <article class="md-content__inner md-typeset">
-<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/nn/Sequential.md" title="Edit this page">
+<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/nn/Embedding.md" title="Edit this page">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
 </a>
-<h1 id="elegynnsequential">elegy.nn.Sequential</h1>
+<h1 id="elegynnembedding">elegy.nn.Embedding</h1>
 <div class="doc doc-object doc-class">
-<h2 class="hidden-toc" href="#elegy.nn.sequential_module.Sequential" id="elegy.nn.sequential_module.Sequential" style="visibility: hidden; width: 0; height: 0;">
+<h2 class="hidden-toc" href="#elegy.nn.embedding.Embedding" id="elegy.nn.embedding.Embedding" style="visibility: hidden; width: 0; height: 0;">
 </h2>
 <div class="doc doc-contents first">
-<p>Sequentially calls the given list of layers.</p>
-<p>Note that <code>Sequential</code> is limited in the range of possible architectures
-it can handle. This is a deliberate design decision; <code>Sequential</code> is only
-meant to be used for the simple case of fusing together modules/ops where
-the input of a particular module/op is the output of the previous one.</p>
-<p>Another restriction is that it is not possible to have extra arguments in the
-<code>call</code> method that are passed to the constituents of the module - for
-example, if there is a <code>BatchNorm</code> module in <code>Sequential</code> and the user
-wishes to switch the <code>training</code> flag. If this is the desired use case,
-the recommended solution is to subclass <code>Module</code> and implement
-<code>call</code>:</p>
-<div class="codehilite">
-<pre><span></span><code><span class="k">class</span> <span class="nc">CustomModule</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">training</span><span class="p">):</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2D</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">)(</span><span class="n">x</span><span class="p">,</span> <span class="n">training</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">x</span>
-</code></pre>
-</div>
+<p>Module for embedding tokens in a low-dimensional space.</p>
 <div class="doc doc-children">
 <div class="doc doc-object doc-attribute">
-<h2 class="doc doc-heading" id="elegy.nn.sequential_module.Sequential.submodules">
+<h2 class="doc doc-heading" id="elegy.nn.embedding.Embedding.submodules">
 <code class="highlight">
 submodules: <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> </code>
 <span class="doc doc-properties">
@@ -982,7 +973,231 @@ submodules: <span class="n">Dict</span><span class="p">[</span><span class="nb">
 </div>
 </div>
 <div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.nn.sequential_module.Sequential.apply">
+<h2 class="doc doc-heading" id="elegy.nn.embedding.Embedding.__init__">
+<code class="highlight language-python">
+__init__<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vocab_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">embed_dim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">embedding_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">w_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lookup_style</span><span class="o">=</span><span class="s1">'ARRAY_INDEX'</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
+<span class="doc doc-properties">
+<small class="doc doc-property doc-property-special"><code>special</code></small>
+</span>
+</h2>
+<div class="doc doc-contents">
+<p>Constructs an Embed module.</p>
+<div class="admonition vocab_size">
+<p class="admonition-title">The number of unique tokens to embed. If not provided, an</p>
+<p>existing vocabulary matrix from which <code>vocab_size</code> can be inferred
+must be provided as <code>existing_vocab</code>.</p>
+</div>
+<div class="admonition embed_dim">
+<p class="admonition-title">Number of dimensions to assign to each embedding. If an</p>
+<p>existing vocabulary matrix initializes the module, this should not be
+provided as it will be inferred.</p>
+</div>
+<div class="admonition embedding_matrix">
+<p class="admonition-title">A matrix-like object equivalent in size to</p>
+<p><code>[vocab_size, embed_dim]</code>. If given, it is used as the initial value
+for the embedding matrix and neither <code>vocab_size</code> or <code>embed_dim</code>
+need be given. If they are given, their values are checked to be
+consistent with the dimensions of <code>embedding_matrix</code>.</p>
+</div>
+<div class="admonition w_init">
+<p class="admonition-title">An initializer for the embeddings matrix. As a default,</p>
+<p>embeddings are initialized via a truncated normal distribution.</p>
+</div>
+<div class="admonition lookup_style">
+<p class="admonition-title">One of the enum values of :class:<code>EmbedLookupStyle</code></p>
+<p>determining how to access the value of the embbeddings given an ID.
+Regardless the input should be a dense array of integer values
+representing ids. This setting changes how internally this module maps
+those ides to embeddings. The result is the same, but the speed and
+memory tradeoffs are different. It default to using numpy-style array
+indexing. This value is only the default for the module, and at any
+given invocation can be overriden in :meth:<code>__call__</code>.</p>
+</div>
+<p>name: Optional name for this module.</p>
+<div class="admonition valueerror">
+<p class="admonition-title">If none of <code>embed_dim</code>, <code>embedding_matrix</code> and</p>
+<p><code>vocab_size</code> are supplied, or if <code>embedding_matrix</code> is supplied
+and <code>embed_dim</code> or <code>vocab_size</code> is not consistent with the
+supplied matrix.</p>
+</div>
+<details class="quote">
+<summary>Source code in <code>elegy/nn/embedding.py</code></summary>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span> 31
+ 32
+ 33
+ 34
+ 35
+ 36
+ 37
+ 38
+ 39
+ 40
+ 41
+ 42
+ 43
+ 44
+ 45
+ 46
+ 47
+ 48
+ 49
+ 50
+ 51
+ 52
+ 53
+ 54
+ 55
+ 56
+ 57
+ 58
+ 59
+ 60
+ 61
+ 62
+ 63
+ 64
+ 65
+ 66
+ 67
+ 68
+ 69
+ 70
+ 71
+ 72
+ 73
+ 74
+ 75
+ 76
+ 77
+ 78
+ 79
+ 80
+ 81
+ 82
+ 83
+ 84
+ 85
+ 86
+ 87
+ 88
+ 89
+ 90
+ 91
+ 92
+ 93
+ 94
+ 95
+ 96
+ 97
+ 98
+ 99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109</pre>
+</div>
+</td>
+<td class="code">
+<div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">vocab_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">embed_dim</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">embedding_matrix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">w_init</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">initializers</span><span class="o">.</span><span class="n">Initializer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">lookup_style</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EmbedLookupStyle</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"ARRAY_INDEX"</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Constructs an Embed module.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">    vocab_size: The number of unique tokens to embed. If not provided, an</span>
+<span class="sd">        existing vocabulary matrix from which ``vocab_size`` can be inferred</span>
+<span class="sd">        must be provided as ``existing_vocab``.</span>
+<span class="sd">    embed_dim: Number of dimensions to assign to each embedding. If an</span>
+<span class="sd">        existing vocabulary matrix initializes the module, this should not be</span>
+<span class="sd">        provided as it will be inferred.</span>
+<span class="sd">    embedding_matrix: A matrix-like object equivalent in size to</span>
+<span class="sd">        ``[vocab_size, embed_dim]``. If given, it is used as the initial value</span>
+<span class="sd">        for the embedding matrix and neither ``vocab_size`` or ``embed_dim``</span>
+<span class="sd">        need be given. If they are given, their values are checked to be</span>
+<span class="sd">        consistent with the dimensions of ``embedding_matrix``.</span>
+<span class="sd">    w_init: An initializer for the embeddings matrix. As a default,</span>
+<span class="sd">        embeddings are initialized via a truncated normal distribution.</span>
+<span class="sd">    lookup_style: One of the enum values of :class:`EmbedLookupStyle`</span>
+<span class="sd">        determining how to access the value of the embbeddings given an ID.</span>
+<span class="sd">        Regardless the input should be a dense array of integer values</span>
+<span class="sd">        representing ids. This setting changes how internally this module maps</span>
+<span class="sd">        those ides to embeddings. The result is the same, but the speed and</span>
+<span class="sd">        memory tradeoffs are different. It default to using numpy-style array</span>
+<span class="sd">        indexing. This value is only the default for the module, and at any</span>
+<span class="sd">        given invocation can be overriden in :meth:`__call__`.</span>
+<span class="sd">    name: Optional name for this module.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">    ValueError: If none of ``embed_dim``, ``embedding_matrix`` and</span>
+<span class="sd">        ``vocab_size`` are supplied, or if ``embedding_matrix`` is supplied</span>
+<span class="sd">        and ``embed_dim`` or ``vocab_size`` is not consistent with the</span>
+<span class="sd">        supplied matrix.</span>
+<span class="sd">    """</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">embedding_matrix</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="n">vocab_size</span> <span class="ow">and</span> <span class="n">embed_dim</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Embedding must be supplied either with an initial `embedding_matrix` "</span>
+            <span class="s2">"or with `embed_dim` and `vocab_size`."</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">embedding_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">embedding_matrix</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">embedding_matrix</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">vocab_size</span> <span class="ow">and</span> <span class="n">embedding_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">vocab_size</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"An `embedding_matrix` was supplied but the `vocab_size` of "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">vocab_size</span><span class="si">}</span><span class="s2"> was not consistent with its shape "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">embedding_matrix</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">embed_dim</span> <span class="ow">and</span> <span class="n">embedding_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">embed_dim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"An `embedding_matrix` was supplied but the `embed_dim` of "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">embed_dim</span><span class="si">}</span><span class="s2"> was not consistent with its shape "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">embedding_matrix</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span> <span class="o">=</span> <span class="n">hooks</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span>
+            <span class="s2">"embeddings"</span><span class="p">,</span>
+            <span class="n">embedding_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">initializer</span><span class="o">=</span><span class="k">lambda</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">:</span> <span class="n">embedding_matrix</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">embed_dim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="n">vocab_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="n">w_init</span> <span class="o">=</span> <span class="n">w_init</span> <span class="ow">or</span> <span class="n">initializers</span><span class="o">.</span><span class="n">TruncatedNormal</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span> <span class="o">=</span> <span class="n">hooks</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span>
+            <span class="s2">"embeddings"</span><span class="p">,</span> <span class="p">[</span><span class="n">vocab_size</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">],</span> <span class="n">initializer</span><span class="o">=</span><span class="n">w_init</span>
+        <span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">vocab_size</span> <span class="o">=</span> <span class="n">vocab_size</span> <span class="ow">or</span> <span class="n">embedding_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">embed_dim</span> <span class="o">=</span> <span class="n">embed_dim</span> <span class="ow">or</span> <span class="n">embedding_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lookup_style</span> <span class="o">=</span> <span class="n">lookup_style</span>
+</code></pre>
+</div>
+</td>
+</tr>
+</table>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.embedding.Embedding.apply">
 <code class="highlight language-python">
 apply<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">states</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">get_summaries</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> </code>
 <span class="doc doc-properties">
@@ -1048,7 +1263,7 @@ passed to <code>apply</code>.</p>
 </tbody>
 </table>
 <details class="quote">
-<summary>Source code in <code>elegy/nn/sequential_module.py</code></summary>
+<summary>Source code in <code>elegy/nn/embedding.py</code></summary>
 <table class="highlighttable">
 <tr>
 <td class="linenos">
@@ -1200,28 +1415,181 @@ passed to <code>apply</code>.</p>
 </div>
 </div>
 <div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.nn.sequential_module.Sequential.call">
+<h2 class="doc doc-heading" id="elegy.nn.embedding.Embedding.call">
 <code class="highlight language-python">
-call<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> </code>
+call<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="n">lookup_style</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
 </h2>
 <div class="doc doc-contents">
-<p>Connects all layers. <em>args and </em>*kwargs are passed to the first layer.</p>
+<p>Lookup embeddings.</p>
+<p>Looks up an embedding vector for each value in <code>ids</code>. All ids must be
+within <code>[0, vocab_size)</code> to prevent <code>NaN</code>\ s from propagating.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ids</code></td>
+<td><code>ndarray</code></td>
+<td>
+<p>integer array.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>lookup_style</code></td>
+<td><code>Optional[Union[str, elegy.nn.embedding.EmbedLookupStyle]]</code></td>
+<td>
+<p>Overrides the <code>lookup_style</code> given in the constructor.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ndarray</code></td>
+<td>
+<p>Tensor of <code>ids.shape + [embedding_dim]</code>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exceptions:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AttributeError</code></td>
+<td>
+<p>If <code>lookup_style</code> is not valid.</p>
+</td>
+</tr>
+<tr>
+<td><code>ValueError</code></td>
+<td>
+<p>If <code>ids</code> is not an integer array.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <details class="quote">
-<summary>Source code in <code>elegy/nn/sequential_module.py</code></summary>
+<summary>Source code in <code>elegy/nn/embedding.py</code></summary>
 <table class="highlighttable">
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>119
+<pre><span></span>111
+112
+113
+114
+115
+116
+117
+118
+119
 120
-121</pre>
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154</pre>
 </div>
 </td>
 <td class="code">
 <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">"""Connects all layers. *args and **kwargs are passed to the first layer."""</span>
-    <span class="k">return</span> <span class="n">sequential</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">)(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">ids</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">lookup_style</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EmbedLookupStyle</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Lookup embeddings.</span>
+
+<span class="sd">    Looks up an embedding vector for each value in ``ids``. All ids must be</span>
+<span class="sd">    within ``[0, vocab_size)`` to prevent ``NaN``\ s from propagating.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ids: integer array.</span>
+<span class="sd">        lookup_style: Overrides the ``lookup_style`` given in the constructor.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tensor of ``ids.shape + [embedding_dim]``.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        AttributeError: If ``lookup_style`` is not valid.</span>
+<span class="sd">        ValueError: If ``ids`` is not an integer array.</span>
+<span class="sd">    """</span>
+    <span class="c1"># TODO(tomhennigan) Consider removing asarray here.</span>
+    <span class="n">ids</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">jnp</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">ids</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Embedding's __call__ method must take an array of "</span>
+            <span class="s2">"integer dtype but was called with an array of "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ids</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="n">lookup_style</span> <span class="o">=</span> <span class="n">lookup_style</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookup_style</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lookup_style</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">lookup_style</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">EmbedLookupStyle</span><span class="p">,</span> <span class="n">lookup_style</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">lookup_style</span> <span class="o">==</span> <span class="n">EmbedLookupStyle</span><span class="o">.</span><span class="n">ARRAY_INDEX</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span><span class="p">[(</span><span class="n">ids</span><span class="p">,)]</span>
+
+    <span class="k">elif</span> <span class="n">lookup_style</span> <span class="o">==</span> <span class="n">EmbedLookupStyle</span><span class="o">.</span><span class="n">ONE_HOT</span><span class="p">:</span>
+        <span class="n">one_hot_ids</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">one_hot</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocab_size</span><span class="p">)[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span> <span class="o">*</span> <span class="n">one_hot_ids</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">lookup_style</span><span class="si">}</span><span class="s2"> is not supported by Embedding."</span><span class="p">)</span>
 </code></pre>
 </div>
 </td>
@@ -1231,7 +1599,7 @@ call<span class="p">(</span><span class="bp">self</span><span class="p">,</span>
 </div>
 </div>
 <div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.nn.sequential_module.Sequential.get_parameters">
+<h2 class="doc doc-heading" id="elegy.nn.embedding.Embedding.get_parameters">
 <code class="highlight language-python">
 get_parameters<span class="p">(</span><span class="bp">self</span><span class="p">)</span> </code>
 <span class="doc doc-properties">
@@ -1257,7 +1625,7 @@ and all submodules within it.</p>
 </tbody>
 </table>
 <details class="quote">
-<summary>Source code in <code>elegy/nn/sequential_module.py</code></summary>
+<summary>Source code in <code>elegy/nn/embedding.py</code></summary>
 <table class="highlighttable">
 <tr>
 <td class="linenos">
@@ -1309,7 +1677,7 @@ and all submodules within it.</p>
 </div>
 </div>
 <div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.nn.sequential_module.Sequential.get_states">
+<h2 class="doc doc-heading" id="elegy.nn.embedding.Embedding.get_states">
 <code class="highlight language-python">
 get_states<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_initial</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> </code>
 <span class="doc doc-properties">
@@ -1335,7 +1703,7 @@ and all submodules within it.</p>
 </tbody>
 </table>
 <details class="quote">
-<summary>Source code in <code>elegy/nn/sequential_module.py</code></summary>
+<summary>Source code in <code>elegy/nn/embedding.py</code></summary>
 <table class="highlighttable">
 <tr>
 <td class="linenos">
@@ -1391,7 +1759,7 @@ and all submodules within it.</p>
 </div>
 </div>
 <div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.nn.sequential_module.Sequential.init">
+<h2 class="doc doc-heading" id="elegy.nn.embedding.Embedding.init">
 <code class="highlight language-python">
 init<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> </code>
 <span class="doc doc-properties">
@@ -1435,7 +1803,7 @@ init<span class="p">(</span><span class="bp">self</span><span class="p">,</span>
 </tbody>
 </table>
 <details class="quote">
-<summary>Source code in <code>elegy/nn/sequential_module.py</code></summary>
+<summary>Source code in <code>elegy/nn/embedding.py</code></summary>
 <table class="highlighttable">
 <tr>
 <td class="linenos">
@@ -1507,7 +1875,7 @@ init<span class="p">(</span><span class="bp">self</span><span class="p">,</span>
 </div>
 </div>
 <div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.nn.sequential_module.Sequential.reset">
+<h2 class="doc doc-heading" id="elegy.nn.embedding.Embedding.reset">
 <code class="highlight language-python">
 reset<span class="p">(</span><span class="bp">self</span><span class="p">)</span> </code>
 <span class="doc doc-properties">
@@ -1518,7 +1886,7 @@ reset<span class="p">(</span><span class="bp">self</span><span class="p">)</span
 <p>Recursively deletes the parameters and states of this module
 and all submodules within it.</p>
 <details class="quote">
-<summary>Source code in <code>elegy/nn/sequential_module.py</code></summary>
+<summary>Source code in <code>elegy/nn/embedding.py</code></summary>
 <table class="highlighttable">
 <tr>
 <td class="linenos">
@@ -1572,7 +1940,7 @@ and all submodules within it.</p>
 </div>
 </div>
 <div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.nn.sequential_module.Sequential.set_parameters">
+<h2 class="doc doc-heading" id="elegy.nn.embedding.Embedding.set_parameters">
 <code class="highlight language-python">
 set_parameters<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span> </code>
 <span class="doc doc-properties">
@@ -1584,7 +1952,7 @@ set_parameters<span class="p">(</span><span class="bp">self</span><span class="p
 and all submodules within it given a dictionary with a corresponding
 structure.</p>
 <details class="quote">
-<summary>Source code in <code>elegy/nn/sequential_module.py</code></summary>
+<summary>Source code in <code>elegy/nn/embedding.py</code></summary>
 <table class="highlighttable">
 <tr>
 <td class="linenos">
@@ -1616,7 +1984,7 @@ structure.</p>
 </div>
 </div>
 <div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="elegy.nn.sequential_module.Sequential.set_states">
+<h2 class="doc doc-heading" id="elegy.nn.embedding.Embedding.set_states">
 <code class="highlight language-python">
 set_states<span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span> </code>
 <span class="doc doc-properties">
@@ -1628,7 +1996,7 @@ set_states<span class="p">(</span><span class="bp">self</span><span class="p">,<
 and all submodules within it given a dictionary with a corresponding
 structure.</p>
 <details class="quote">
-<summary>Source code in <code>elegy/nn/sequential_module.py</code></summary>
+<summary>Source code in <code>elegy/nn/embedding.py</code></summary>
 <table class="highlighttable">
 <tr>
 <td class="linenos">
@@ -1669,7 +2037,7 @@ structure.</p>
 <footer class="md-footer">
 <div class="md-footer-nav">
 <nav aria-label="Footer" class="md-footer-nav__inner md-grid">
-<a class="md-footer-nav__link md-footer-nav__link--prev" href="../Reshape/" rel="prev" title="Reshape">
+<a class="md-footer-nav__link md-footer-nav__link--prev" href="../EmbedLookupStyle/" rel="prev" title="EmbedLookupStyle">
 <div class="md-footer-nav__button md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </div>
@@ -1678,17 +2046,17 @@ structure.</p>
 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Reshape
+                EmbedLookupStyle
               </div>
 </div>
 </a>
-<a class="md-footer-nav__link md-footer-nav__link--next" href="../sequential/" rel="next" title="sequential">
+<a class="md-footer-nav__link md-footer-nav__link--next" href="../Flatten/" rel="next" title="Flatten">
 <div class="md-footer-nav__title">
 <div class="md-ellipsis">
 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                sequential
+                Flatten
               </div>
 </div>
 <div class="md-footer-nav__button md-icon">

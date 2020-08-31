@@ -704,6 +704,16 @@
     </a>
 </li>
 <li class="md-nav__item">
+<a class="md-nav__link" href="../../nn/EmbedLookupStyle/" title="EmbedLookupStyle">
+      EmbedLookupStyle
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../nn/Embedding/" title="Embedding">
+      Embedding
+    </a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="../../nn/Flatten/" title="Flatten">
       Flatten
     </a>
@@ -857,7 +867,7 @@
 <pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
     <span class="n">module_fn</span><span class="p">,</span>
     <span class="n">loss</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">SparseCategoricalCrossentropy</span><span class="p">(),</span> 
+        <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">SparseCategoricalCrossentropy</span><span class="p">(),</span>
         <span class="n">elegy</span><span class="o">.</span><span class="n">regularizers</span><span class="o">.</span><span class="n">GlobalL1</span><span class="p">(</span><span class="n">l</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">)</span>
     <span class="p">],</span>
     <span class="n">metrics</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">SparseCategoricalAccuracy</span><span class="p">(),</span>
@@ -973,7 +983,7 @@
 <span class="sd">    model = elegy.Model(</span>
 <span class="sd">        module_fn,</span>
 <span class="sd">        loss=[</span>
-<span class="sd">            elegy.losses.SparseCategoricalCrossentropy(), </span>
+<span class="sd">            elegy.losses.SparseCategoricalCrossentropy(),</span>
 <span class="sd">            elegy.regularizers.GlobalL1(l=1e-5)</span>
 <span class="sd">        ],</span>
 <span class="sd">        metrics=lambda: elegy.metrics.SparseCategoricalAccuracy(),</span>
@@ -986,7 +996,7 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        An L1 Regularizer with the given regularization factor.</span>
-<span class="sd">  """</span>
+<span class="sd">    """</span>
     <span class="k">return</span> <span class="n">GlobalL1L2</span><span class="p">(</span><span class="n">l1</span><span class="o">=</span><span class="n">l</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="n">reduction</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre>
 </div>

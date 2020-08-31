@@ -5,10 +5,10 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<link href="https://poets-ai.github.io/elegy/api/initializers/Orthogonal/" rel="canonical"/>
+<link href="https://poets-ai.github.io/elegy/api/nn/EmbedLookupStyle/" rel="canonical"/>
 <link href="../../../images/favicon.png" rel="shortcut icon"/>
 <meta content="mkdocs-1.1.2, mkdocs-material-5.5.3" name="generator"/>
-<title>Orthogonal - Elegy</title>
+<title>EmbedLookupStyle - Elegy</title>
 <link href="../../../assets/stylesheets/main.947af8d5.min.css" rel="stylesheet"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
@@ -19,7 +19,7 @@
 <input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
 <label class="md-overlay" for="__drawer"></label>
 <div data-md-component="skip">
-<a class="md-skip" href="#elegyinitializersorthogonal">
+<a class="md-skip" href="#elegynnembedlookupstyle">
           Skip to content
         </a>
 </div>
@@ -40,7 +40,7 @@
           </span>
 <span class="md-header-nav__topic md-ellipsis">
             
-              Orthogonal
+              EmbedLookupStyle
             
           </span>
 </div>
@@ -342,8 +342,8 @@
 </ul>
 </nav>
 </li>
-<li class="md-nav__item md-nav__item--active md-nav__item--nested">
-<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-4-13" id="nav-4-13" type="checkbox"/>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-13" id="nav-4-13" type="checkbox"/>
 <label class="md-nav__link" for="nav-4-13">
       initializers
       <span class="md-nav__icon md-icon">
@@ -359,59 +359,37 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../Constant/" title="Constant">
+<a class="md-nav__link" href="../../initializers/Constant/" title="Constant">
       Constant
     </a>
 </li>
-<li class="md-nav__item md-nav__item--active">
-<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
-<label class="md-nav__link md-nav__link--active" for="__toc">
-        Orthogonal
-        <span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
-</span>
-</label>
-<a class="md-nav__link md-nav__link--active" href="./" title="Orthogonal">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../initializers/Orthogonal/" title="Orthogonal">
       Orthogonal
     </a>
-<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
-<label class="md-nav__title" for="__toc">
-<span class="md-nav__icon md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
-</span>
-      Table of contents
-    </label>
-<ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.initializers.Orthogonal">
-    elegy.initializers.Orthogonal
-  </a>
-</li>
-</ul>
-</nav>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../RandomNormal/" title="RandomNormal">
+<a class="md-nav__link" href="../../initializers/RandomNormal/" title="RandomNormal">
       RandomNormal
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../RandomUniform/" title="RandomUniform">
+<a class="md-nav__link" href="../../initializers/RandomUniform/" title="RandomUniform">
       RandomUniform
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../TruncatedNormal/" title="TruncatedNormal">
+<a class="md-nav__link" href="../../initializers/TruncatedNormal/" title="TruncatedNormal">
       TruncatedNormal
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../UniformScaling/" title="UniformScaling">
+<a class="md-nav__link" href="../../initializers/UniformScaling/" title="UniformScaling">
       UniformScaling
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../VarianceScaling/" title="VarianceScaling">
+<a class="md-nav__link" href="../../initializers/VarianceScaling/" title="VarianceScaling">
       VarianceScaling
     </a>
 </li>
@@ -679,8 +657,8 @@
       next_rng_key
     </a>
 </li>
-<li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="nav-4-19" id="nav-4-19" type="checkbox"/>
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" data-md-toggle="nav-4-19" id="nav-4-19" type="checkbox"/>
 <label class="md-nav__link" for="nav-4-19">
       nn
       <span class="md-nav__icon md-icon">
@@ -696,77 +674,99 @@
       </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../nn/BatchNormalization/" title="BatchNormalization">
+<a class="md-nav__link" href="../BatchNormalization/" title="BatchNormalization">
       BatchNormalization
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../nn/Conv1D/" title="Conv1D">
+<a class="md-nav__link" href="../Conv1D/" title="Conv1D">
       Conv1D
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../nn/Conv2D/" title="Conv2D">
+<a class="md-nav__link" href="../Conv2D/" title="Conv2D">
       Conv2D
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../nn/Conv3D/" title="Conv3D">
+<a class="md-nav__link" href="../Conv3D/" title="Conv3D">
       Conv3D
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../nn/ConvND/" title="ConvND">
+<a class="md-nav__link" href="../ConvND/" title="ConvND">
       ConvND
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../nn/Dropout/" title="Dropout">
+<a class="md-nav__link" href="../Dropout/" title="Dropout">
       Dropout
     </a>
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="../../nn/EmbedLookupStyle/" title="EmbedLookupStyle">
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+        EmbedLookupStyle
+        <span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"></path></svg>
+</span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./" title="EmbedLookupStyle">
       EmbedLookupStyle
     </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#elegy.nn.embedding.EmbedLookupStyle">
+    elegy.nn.embedding.EmbedLookupStyle
+  </a>
+</li>
+</ul>
+</nav>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../nn/Embedding/" title="Embedding">
+<a class="md-nav__link" href="../Embedding/" title="Embedding">
       Embedding
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../nn/Flatten/" title="Flatten">
+<a class="md-nav__link" href="../Flatten/" title="Flatten">
       Flatten
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../nn/InstanceNormalization/" title="InstanceNormalization">
+<a class="md-nav__link" href="../InstanceNormalization/" title="InstanceNormalization">
       InstanceNormalization
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../nn/LayerNormalization/" title="LayerNormalization">
+<a class="md-nav__link" href="../LayerNormalization/" title="LayerNormalization">
       LayerNormalization
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../nn/Linear/" title="Linear">
+<a class="md-nav__link" href="../Linear/" title="Linear">
       Linear
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../nn/Reshape/" title="Reshape">
+<a class="md-nav__link" href="../Reshape/" title="Reshape">
       Reshape
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../nn/Sequential/" title="Sequential">
+<a class="md-nav__link" href="../Sequential/" title="Sequential">
       Sequential
     </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="../../nn/sequential/" title="sequential">
+<a class="md-nav__link" href="../sequential/" title="sequential">
       sequential
     </a>
 </li>
@@ -837,8 +837,8 @@
     </label>
 <ul class="md-nav__list" data-md-scrollfix="">
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.initializers.Orthogonal">
-    elegy.initializers.Orthogonal
+<a class="md-nav__link" href="#elegy.nn.embedding.EmbedLookupStyle">
+    elegy.nn.embedding.EmbedLookupStyle
   </a>
 </li>
 </ul>
@@ -848,15 +848,15 @@
 </div>
 <div class="md-content">
 <article class="md-content__inner md-typeset">
-<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/initializers/Orthogonal.md" title="Edit this page">
+<a class="md-content__button md-icon" href="https://github.com/poets-ai/elegy/edit/master/docs/api/nn/EmbedLookupStyle.md" title="Edit this page">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
 </a>
-<h1 id="elegyinitializersorthogonal">elegy.initializers.Orthogonal</h1>
+<h1 id="elegynnembedlookupstyle">elegy.nn.EmbedLookupStyle</h1>
 <div class="doc doc-object doc-class">
-<h2 class="hidden-toc" href="#elegy.initializers.Orthogonal" id="elegy.initializers.Orthogonal" style="visibility: hidden; width: 0; height: 0;">
+<h2 class="hidden-toc" href="#elegy.nn.embedding.EmbedLookupStyle" id="elegy.nn.embedding.EmbedLookupStyle" style="visibility: hidden; width: 0; height: 0;">
 </h2>
 <div class="doc doc-contents first">
-<p>Uniform scaling initializer.</p>
+<p>How to return the embedding matrices given IDs.</p>
 </div>
 </div>
 </article>
@@ -866,7 +866,7 @@
 <footer class="md-footer">
 <div class="md-footer-nav">
 <nav aria-label="Footer" class="md-footer-nav__inner md-grid">
-<a class="md-footer-nav__link md-footer-nav__link--prev" href="../Constant/" rel="prev" title="Constant">
+<a class="md-footer-nav__link md-footer-nav__link--prev" href="../Dropout/" rel="prev" title="Dropout">
 <div class="md-footer-nav__button md-icon">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
 </div>
@@ -875,17 +875,17 @@
 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Constant
+                Dropout
               </div>
 </div>
 </a>
-<a class="md-footer-nav__link md-footer-nav__link--next" href="../RandomNormal/" rel="next" title="RandomNormal">
+<a class="md-footer-nav__link md-footer-nav__link--next" href="../Embedding/" rel="next" title="Embedding">
 <div class="md-footer-nav__title">
 <div class="md-ellipsis">
 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                RandomNormal
+                Embedding
               </div>
 </div>
 <div class="md-footer-nav__button md-icon">

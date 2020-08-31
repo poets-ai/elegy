@@ -776,6 +776,16 @@
     </a>
 </li>
 <li class="md-nav__item">
+<a class="md-nav__link" href="../../nn/EmbedLookupStyle/" title="EmbedLookupStyle">
+      EmbedLookupStyle
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../nn/Embedding/" title="Embedding">
+      Embedding
+    </a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="../../nn/Flatten/" title="Flatten">
       Flatten
     </a>
@@ -984,33 +994,37 @@ Use <code>sample_weight</code> of 0 to mask values.</p>
 <td><code>threshold</code></td>
 <td><code></code></td>
 <td>
-<p>(Optional) Float representing the threshold for deciding</p>
+<p>(Optional) Float representing the threshold for deciding
+whether prediction values are 1 or 0.</p>
 </td>
 <td><em>required</em></td>
 </tr>
 </tbody>
 </table>
 <p>Standalone usage:</p>
-<blockquote>
-<blockquote>
-<blockquote>
-<p>m = tf.keras.metrics.BinaryAccuracy()
-m.update_state([[1], [1], [0], [0]], [[0.98], [1], [0], [0.6]])
-m.result().numpy()
-0.75
-m.reset_states()
-m.update_state([[1], [1], [0], [0]], [[0.98], [1], [0], [0.6]],
-...                sample_weight=[1, 0, 0, 1])
-m.result().numpy()
-0.5
-Usage with <code>compile()</code> API:</p>
-</blockquote>
-</blockquote>
-</blockquote>
 <div class="codehilite">
-<pre><span></span><code><span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">optimizer</span><span class="o">=</span><span class="s1">'sgd'</span><span class="p">,</span>
-                <span class="n">loss</span><span class="o">=</span><span class="s1">'mse'</span><span class="p">,</span>
-                <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">BinaryAccuracy</span><span class="p">()])</span>
+<pre><span></span><code><span class="n">m</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">BinaryAccuracy</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">m</span><span class="p">(</span>
+    <span class="n">y_true</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">]]),</span>
+    <span class="n">y_pred</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.98</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.6</span><span class="p">]]),</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="mf">0.75</span>
+
+<span class="n">m</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">BinaryAccuracy</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">m</span><span class="p">(</span>
+    <span class="n">y_true</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">]]),</span>
+    <span class="n">y_pred</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.98</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.6</span><span class="p">]]),</span>
+    <span class="n">sample_weight</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="mf">0.5</span>
+</code></pre>
+</div>
+<p>Usage with <code>Model</code> API:</p>
+<div class="codehilite">
+<pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
+    <span class="o">...</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">BinaryAccuracy</span><span class="p">()],</span>
+<span class="p">)</span>
 </code></pre>
 </div>
 <div class="doc doc-children">
@@ -1052,7 +1066,10 @@ __init__<span class="p">(</span><span class="bp">self</span><span class="p">,</s
 <tr>
 <td><code>threshold</code></td>
 <td><code>float</code></td>
-<td></td>
+<td>
+<p>Float representing the threshold for deciding whether
+prediction values are 1 or 0.</p>
+</td>
 <td><code>0.5</code></td>
 </tr>
 <tr>
@@ -1085,25 +1102,26 @@ check out <a href="https://poets-ai.github.io/elegy/guides/modules-losses-metric
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>65
-66
-67
-68
-69
-70
-71
-72
-73
-74
-75
-76
-77
-78
-79
-80
-81
-82
-83</pre>
+<pre><span></span> 84
+ 85
+ 86
+ 87
+ 88
+ 89
+ 90
+ 91
+ 92
+ 93
+ 94
+ 95
+ 96
+ 97
+ 98
+ 99
+100
+101
+102
+103</pre>
 </div>
 </td>
 <td class="code">
@@ -1115,7 +1133,8 @@ check out <a href="https://poets-ai.github.io/elegy/guides/modules-losses-metric
 <span class="sd">    Creates a `CategoricalAccuracy` instance.</span>
 
 <span class="sd">    Arguments:</span>
-<span class="sd">        threshold: </span>
+<span class="sd">        threshold: Float representing the threshold for deciding whether</span>
+<span class="sd">            prediction values are 1 or 0.</span>
 <span class="sd">        on: A string or integer, or iterable of string or integers, that</span>
 <span class="sd">            indicate how to index/filter the `y_true` and `y_pred`</span>
 <span class="sd">            arguments before passing them to `call`. For example if `on = "a"` then</span>
@@ -1207,8 +1226,7 @@ passed to <code>apply</code>.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>203
-204
+<pre><span></span>204
 205
 206
 207
@@ -1270,7 +1288,11 @@ passed to <code>apply</code>.</p>
 263
 264
 265
-266</pre>
+266
+267
+268
+269
+270</pre>
 </div>
 </td>
 <td class="code">
@@ -1288,8 +1310,8 @@ passed to <code>apply</code>.</p>
 
 <span class="sd">    Arguments:</span>
 <span class="sd">        parameters:</span>
-<span class="sd">        states: </span>
-<span class="sd">        rng: </span>
+<span class="sd">        states:</span>
+<span class="sd">        rng:</span>
 <span class="sd">        get_summaries:</span>
 
 <span class="sd">    Returns:</span>
@@ -1314,7 +1336,10 @@ passed to <code>apply</code>.</p>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_states</span><span class="p">(</span><span class="n">states</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="n">context</span><span class="p">(</span>
-            <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span> <span class="n">building</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span> <span class="n">get_summaries</span><span class="o">=</span><span class="n">get_summaries</span><span class="p">,</span>
+            <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span>
+            <span class="n">building</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span>
+            <span class="n">get_summaries</span><span class="o">=</span><span class="n">get_summaries</span><span class="p">,</span>
         <span class="p">)</span> <span class="k">as</span> <span class="n">ctx</span><span class="p">:</span>
             <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
@@ -1422,27 +1447,7 @@ functions reduce by 1 dimension, usually the last axis (-1)).</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span> 85
- 86
- 87
- 88
- 89
- 90
- 91
- 92
- 93
- 94
- 95
- 96
- 97
- 98
- 99
-100
-101
-102
-103
-104
-105
+<pre><span></span>105
 106
 107
 108
@@ -1452,7 +1457,27 @@ functions reduce by 1 dimension, usually the last axis (-1)).</p>
 112
 113
 114
-115</pre>
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135</pre>
 </div>
 </td>
 <td class="code">
@@ -1480,7 +1505,7 @@ functions reduce by 1 dimension, usually the last axis (-1)).</p>
 <span class="sd">            functions reduce by 1 dimension, usually the last axis (-1)).</span>
 <span class="sd">    Returns:</span>
 <span class="sd">        Array with the cumulative accuracy.</span>
-<span class="sd">"""</span>
+<span class="sd">    """</span>
 
     <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">call</span><span class="p">(</span>
         <span class="n">values</span><span class="o">=</span><span class="n">binary_accuracy</span><span class="p">(</span>
@@ -1528,11 +1553,7 @@ and all submodules within it.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>268
-269
-270
-271
-272
+<pre><span></span>272
 273
 274
 275
@@ -1544,7 +1565,11 @@ and all submodules within it.</p>
 281
 282
 283
-284</pre>
+284
+285
+286
+287
+288</pre>
 </div>
 </td>
 <td class="code">
@@ -1606,11 +1631,7 @@ and all submodules within it.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>294
-295
-296
-297
-298
+<pre><span></span>298
 299
 300
 301
@@ -1624,7 +1645,11 @@ and all submodules within it.</p>
 309
 310
 311
-312</pre>
+312
+313
+314
+315
+316</pre>
 </div>
 </td>
 <td class="code">
@@ -1706,8 +1731,7 @@ init<span class="p">(</span><span class="bp">self</span><span class="p">,</span>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>175
-176
+<pre><span></span>176
 177
 178
 179
@@ -1732,7 +1756,8 @@ init<span class="p">(</span><span class="bp">self</span><span class="p">,</span>
 198
 199
 200
-201</pre>
+201
+202</pre>
 </div>
 </td>
 <td class="code">
@@ -1789,11 +1814,7 @@ and all submodules within it.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>322
-323
-324
-325
-326
+<pre><span></span>326
 327
 328
 329
@@ -1806,7 +1827,11 @@ and all submodules within it.</p>
 336
 337
 338
-339</pre>
+339
+340
+341
+342
+343</pre>
 </div>
 </td>
 <td class="code">
@@ -1855,13 +1880,13 @@ structure.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>286
-287
-288
-289
-290
+<pre><span></span>290
 291
-292</pre>
+292
+293
+294
+295
+296</pre>
 </div>
 </td>
 <td class="code">
@@ -1899,13 +1924,13 @@ structure.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>314
-315
-316
-317
-318
+<pre><span></span>318
 319
-320</pre>
+320
+321
+322
+323
+324</pre>
 </div>
 </td>
 <td class="code">

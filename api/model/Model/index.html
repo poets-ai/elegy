@@ -635,11 +635,6 @@
   </a>
 </li>
 <li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.model.Model.full_state">
-    full_state
-  </a>
-</li>
-<li class="md-nav__item">
 <a class="md-nav__link" href="#elegy.model.Model.seed">
     seed
   </a>
@@ -781,6 +776,16 @@
     </a>
 </li>
 <li class="md-nav__item">
+<a class="md-nav__link" href="../../nn/EmbedLookupStyle/" title="EmbedLookupStyle">
+      EmbedLookupStyle
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../nn/Embedding/" title="Embedding">
+      Embedding
+    </a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="../../nn/Flatten/" title="Flatten">
       Flatten
     </a>
@@ -884,11 +889,6 @@
 <li class="md-nav__item">
 <a class="md-nav__link" href="#elegy.model.Model">
     elegy.model.Model
-  </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#elegy.model.Model.full_state">
-    full_state
   </a>
 </li>
 <li class="md-nav__item">
@@ -1039,25 +1039,13 @@ additional details.</p>
 <td>
 <p>Settable attribute indicating whether the model should run eagerly.
 Running eagerly means that your model will be run step by step, like Python code, instead of
-using Jax's <code>jit</code> to optimize the computation. Your model might run slower, but it should become easier for you to debug 
+using Jax's <code>jit</code> to optimize the computation. Your model might run slower, but it should become easier for you to debug
 it by stepping into individual layer calls.</p>
 </td>
 </tr>
 </tbody>
 </table>
 <div class="doc doc-children">
-<div class="doc doc-object doc-attribute">
-<h2 class="doc doc-heading" id="elegy.model.Model.full_state">
-<code class="highlight">
-full_state: <span class="n">Dict</span> </code>
-<span class="doc doc-properties">
-<small class="doc doc-property doc-property-property"><code>property</code></small>
-<small class="doc doc-property doc-property-writable"><code>writable</code></small>
-</span>
-</h2>
-<div class="doc doc-contents">
-</div>
-</div>
 <div class="doc doc-object doc-attribute">
 <h2 class="doc doc-heading" id="elegy.model.Model.seed">
 <code class="highlight">
@@ -1220,10 +1208,7 @@ List of callbacks to apply during training.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>800
-801
-802
-803
+<pre><span></span>803
 804
 805
 806
@@ -1333,7 +1318,15 @@ List of callbacks to apply during training.</p>
 910
 911
 912
-913</pre>
+913
+914
+915
+916
+917
+918
+919
+920
+921</pre>
 </div>
 </td>
 <td class="code">
@@ -1341,7 +1334,10 @@ List of callbacks to apply during training.</p>
 <pre><span></span><code><span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">x</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">tp</span><span class="o">.</span><span class="n">Iterable</span><span class="p">,</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Iterable</span><span class="p">,</span>
     <span class="p">],</span>
     <span class="n">y</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span>
         <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -1357,55 +1353,55 @@ List of callbacks to apply during training.</p>
     <span class="n">callbacks</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">Callback</span><span class="p">],</span> <span class="n">CallbackList</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
     <span class="sd">"""Returns the loss value &amp; metrics values for the model in test mode.</span>
-<span class="sd">        Computation is done in batches.</span>
+<span class="sd">    Computation is done in batches.</span>
 
-<span class="sd">        Arguments:</span>
-<span class="sd">            x: Input data. It could be:</span>
+<span class="sd">    Arguments:</span>
+<span class="sd">        x: Input data. It could be:</span>
 
-<span class="sd">                - A Numpy or Jax array (or array-like), or a list of arrays</span>
-<span class="sd">                    (in case the model has multiple inputs).</span>
-<span class="sd">                - A dict mapping input names to the corresponding arrays,</span>
-<span class="sd">                    if the model has named inputs.</span>
-<span class="sd">                - A generator returning `(inputs,)`, `(inputs, targets)`</span>
-<span class="sd">                    or `(inputs, targets, sample_weights)`.</span>
+<span class="sd">            - A Numpy or Jax array (or array-like), or a list of arrays</span>
+<span class="sd">                (in case the model has multiple inputs).</span>
+<span class="sd">            - A dict mapping input names to the corresponding arrays,</span>
+<span class="sd">                if the model has named inputs.</span>
+<span class="sd">            - A generator returning `(inputs,)`, `(inputs, targets)`</span>
+<span class="sd">                or `(inputs, targets, sample_weights)`.</span>
 
-<span class="sd">                A more detailed description of</span>
-<span class="sd">                unpacking behavior for iterator types generator</span>
-<span class="sd">                is given in the `Unpacking behavior for iterator-like inputs` section</span>
-<span class="sd">                of `Model.fit`.</span>
-<span class="sd">            y: Target data. Like the input data `x`,</span>
-<span class="sd">                it could be either Numpy or Jax array(s).</span>
-<span class="sd">                It should be consistent with `x`. If `x` is a generator,</span>
-<span class="sd">                `y` should not be specified (since targets will be obtained from `x`).</span>
-<span class="sd">            verbose: 0, 1, or 2. Verbosity mode.</span>
-<span class="sd">                0 = silent, 1 = progress bar, 2 = one line per epoch.</span>
-<span class="sd">            batch_size: Integer or `None`.</span>
-<span class="sd">                Number of samples per gradient update.</span>
-<span class="sd">                If unspecified, `batch_size` will default to 32.</span>
-<span class="sd">                Do not specify the `batch_size` if your data is in the</span>
-<span class="sd">                form of generator (since they generate batches).</span>
-<span class="sd">            sample_weight: Optional Numpy/Jax array of weights for</span>
-<span class="sd">                the training samples, used for weighting the loss function</span>
-<span class="sd">                (during training only). You can either pass a flat (1D)</span>
-<span class="sd">                Numpy array with the same length as the input samples</span>
-<span class="sd">                (1:1 mapping between weights and samples). This argument is not</span>
-<span class="sd">                supported when `x` is generator, instead provide the sample_weights</span>
-<span class="sd">                as the third element of `x`.</span>
-<span class="sd">            steps: Integer or `None`. Total number of steps (batches of samples)</span>
-<span class="sd">                before declaring the evaluation round finished. Ignored with the</span>
-<span class="sd">                default value of `None`. This</span>
-<span class="sd">                argument is not supported with array inputs.</span>
-<span class="sd">            callbacks: List of [elegy.callbacks.callback.Callback][] instances.</span>
-<span class="sd">                List of callbacks to apply during training.</span>
+<span class="sd">            A more detailed description of</span>
+<span class="sd">            unpacking behavior for iterator types generator</span>
+<span class="sd">            is given in the `Unpacking behavior for iterator-like inputs` section</span>
+<span class="sd">            of `Model.fit`.</span>
+<span class="sd">        y: Target data. Like the input data `x`,</span>
+<span class="sd">            it could be either Numpy or Jax array(s).</span>
+<span class="sd">            It should be consistent with `x`. If `x` is a generator,</span>
+<span class="sd">            `y` should not be specified (since targets will be obtained from `x`).</span>
+<span class="sd">        verbose: 0, 1, or 2. Verbosity mode.</span>
+<span class="sd">            0 = silent, 1 = progress bar, 2 = one line per epoch.</span>
+<span class="sd">        batch_size: Integer or `None`.</span>
+<span class="sd">            Number of samples per gradient update.</span>
+<span class="sd">            If unspecified, `batch_size` will default to 32.</span>
+<span class="sd">            Do not specify the `batch_size` if your data is in the</span>
+<span class="sd">            form of generator (since they generate batches).</span>
+<span class="sd">        sample_weight: Optional Numpy/Jax array of weights for</span>
+<span class="sd">            the training samples, used for weighting the loss function</span>
+<span class="sd">            (during training only). You can either pass a flat (1D)</span>
+<span class="sd">            Numpy array with the same length as the input samples</span>
+<span class="sd">            (1:1 mapping between weights and samples). This argument is not</span>
+<span class="sd">            supported when `x` is generator, instead provide the sample_weights</span>
+<span class="sd">            as the third element of `x`.</span>
+<span class="sd">        steps: Integer or `None`. Total number of steps (batches of samples)</span>
+<span class="sd">            before declaring the evaluation round finished. Ignored with the</span>
+<span class="sd">            default value of `None`. This</span>
+<span class="sd">            argument is not supported with array inputs.</span>
+<span class="sd">        callbacks: List of [elegy.callbacks.callback.Callback][] instances.</span>
+<span class="sd">            List of callbacks to apply during training.</span>
 
-<span class="sd">        See the discussion of `Unpacking behavior for iterator-like inputs` for</span>
-<span class="sd">         [`Model.fit`][elegy.model.Model.fit].</span>
+<span class="sd">    See the discussion of `Unpacking behavior for iterator-like inputs` for</span>
+<span class="sd">     [`Model.fit`][elegy.model.Model.fit].</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            A dictionary for mapping the losses and metrics names to the values obtained.</span>
-<span class="sd">        Raises:</span>
-<span class="sd">            ValueError: in case of invalid arguments.</span>
-<span class="sd">        """</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        A dictionary for mapping the losses and metrics names to the values obtained.</span>
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: in case of invalid arguments.</span>
+<span class="sd">    """</span>
 
     <span class="n">data_handler</span> <span class="o">=</span> <span class="n">DataHandler</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
@@ -1443,7 +1439,9 @@ List of callbacks to apply during training.</p>
                 <span class="n">x_batch</span><span class="p">,</span> <span class="n">y_batch</span><span class="p">,</span> <span class="n">sample_weight</span> <span class="o">=</span> <span class="n">unpack_x_y_sample_weight</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
 
                 <span class="n">tmp_logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_on_batch</span><span class="p">(</span>
-                    <span class="n">x</span><span class="o">=</span><span class="n">x_batch</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y_batch</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span>
+                    <span class="n">x</span><span class="o">=</span><span class="n">x_batch</span><span class="p">,</span>
+                    <span class="n">y</span><span class="o">=</span><span class="n">y_batch</span><span class="p">,</span>
+                    <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">tmp_logs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">"size"</span><span class="p">:</span> <span class="n">data_handler</span><span class="o">.</span><span class="n">batch_size</span><span class="p">})</span>
                 <span class="n">logs</span> <span class="o">=</span> <span class="n">tmp_logs</span>
@@ -2037,7 +2035,10 @@ and what the model expects.</p>
 795
 796
 797
-798</pre>
+798
+799
+800
+801</pre>
 </div>
 </td>
 <td class="code">
@@ -2052,7 +2053,10 @@ and what the model expects.</p>
         <span class="kc">None</span><span class="p">,</span>
     <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">y</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="kc">None</span><span class="p">,</span>
     <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">batch_size</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">epochs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
@@ -2327,8 +2331,8 @@ load<span class="p">(</span><span class="bp">self</span><span class="p">,</span>
 <div class="doc doc-contents">
 <p>Loads all weights + states from a folder structure.</p>
 <p>You can load states from other models that have slightly different architecture
-as long as long as it preserves the ordering of the <code>haiku.Params</code> + <code>haiku.State</code> 
-structures, adding or removing layers is fine as long as they don't have weights, 
+as long as long as it preserves the ordering of the <code>haiku.Params</code> + <code>haiku.State</code>
+structures, adding or removing layers is fine as long as they don't have weights,
 new layers with weights will be initialized from scratch.</p>
 <p><strong>Parameters:</strong></p>
 <table>
@@ -2357,22 +2361,7 @@ new layers with weights will be initialized from scratch.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>1369
-1370
-1371
-1372
-1373
-1374
-1375
-1376
-1377
-1378
-1379
-1380
-1381
-1382
-1383
-1384
+<pre><span></span>1384
 1385
 1386
 1387
@@ -2380,7 +2369,22 @@ new layers with weights will be initialized from scratch.</p>
 1389
 1390
 1391
-1392</pre>
+1392
+1393
+1394
+1395
+1396
+1397
+1398
+1399
+1400
+1401
+1402
+1403
+1404
+1405
+1406
+1407</pre>
 </div>
 </td>
 <td class="code">
@@ -2390,8 +2394,8 @@ new layers with weights will be initialized from scratch.</p>
 <span class="sd">    Loads all weights + states from a folder structure.</span>
 
 <span class="sd">    You can load states from other models that have slightly different architecture</span>
-<span class="sd">    as long as long as it preserves the ordering of the `haiku.Params` + `haiku.State` </span>
-<span class="sd">    structures, adding or removing layers is fine as long as they don't have weights, </span>
+<span class="sd">    as long as long as it preserves the ordering of the `haiku.Params` + `haiku.State`</span>
+<span class="sd">    structures, adding or removing layers is fine as long as they don't have weights,</span>
 <span class="sd">    new layers with weights will be initialized from scratch.</span>
 
 <span class="sd">    Arguments:</span>
@@ -2545,15 +2549,7 @@ that is not a multiple of the batch size.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span> 915
- 916
- 917
- 918
- 919
- 920
- 921
- 922
- 923
+<pre><span></span> 923
  924
  925
  926
@@ -2649,7 +2645,22 @@ that is not a multiple of the batch size.</p>
 1016
 1017
 1018
-1019</pre>
+1019
+1020
+1021
+1022
+1023
+1024
+1025
+1026
+1027
+1028
+1029
+1030
+1031
+1032
+1033
+1034</pre>
 </div>
 </td>
 <td class="code">
@@ -2657,7 +2668,10 @@ that is not a multiple of the batch size.</p>
 <pre><span></span><code><span class="k">def</span> <span class="nf">predict</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">x</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">tp</span><span class="o">.</span><span class="n">Iterable</span><span class="p">,</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="n">tp</span><span class="o">.</span><span class="n">Iterable</span><span class="p">,</span>
     <span class="p">],</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="n">batch_size</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -2747,7 +2761,11 @@ that is not a multiple of the batch size.</p>
                     <span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
 
-                    <span class="n">outputs</span> <span class="o">=</span> <span class="n">map_structure</span><span class="p">(</span><span class="n">map_append</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">batch_outputs</span><span class="p">,)</span>
+                    <span class="n">outputs</span> <span class="o">=</span> <span class="n">map_structure</span><span class="p">(</span>
+                        <span class="n">map_append</span><span class="p">,</span>
+                        <span class="n">outputs</span><span class="p">,</span>
+                        <span class="n">batch_outputs</span><span class="p">,</span>
+                    <span class="p">)</span>
 
                 <span class="n">callbacks</span><span class="o">.</span><span class="n">on_predict_batch_end</span><span class="p">(</span>
                     <span class="n">step</span><span class="p">,</span>
@@ -2789,8 +2807,8 @@ predict_on_batch<span class="p">(</span><span class="bp">self</span><span class=
 <td><code>x</code></td>
 <td><code>Union[jax.numpy.lax_numpy.ndarray, Mapping[str, Any], Tuple]</code></td>
 <td>
-<p>Input data. A Numpy/Jax array (or array-like), or possibly 
-nested python structure of dict, list, tuple that contain 
+<p>Input data. A Numpy/Jax array (or array-like), or possibly
+nested python structure of dict, list, tuple that contain
 arrays as leafs.</p>
 </td>
 <td><em>required</em></td>
@@ -2838,18 +2856,7 @@ expectations of the model.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>1168
-1169
-1170
-1171
-1172
-1173
-1174
-1175
-1176
-1177
-1178
-1179
+<pre><span></span>1179
 1180
 1181
 1182
@@ -2872,7 +2879,18 @@ expectations of the model.</p>
 1199
 1200
 1201
-1202</pre>
+1202
+1203
+1204
+1205
+1206
+1207
+1208
+1209
+1210
+1211
+1212
+1213</pre>
 </div>
 </td>
 <td class="code">
@@ -2884,8 +2902,8 @@ expectations of the model.</p>
 <span class="sd">    Returns predictions for a single batch of samples.</span>
 
 <span class="sd">    Arguments:</span>
-<span class="sd">        x: Input data. A Numpy/Jax array (or array-like), or possibly </span>
-<span class="sd">            nested python structure of dict, list, tuple that contain </span>
+<span class="sd">        x: Input data. A Numpy/Jax array (or array-like), or possibly</span>
+<span class="sd">            nested python structure of dict, list, tuple that contain</span>
 <span class="sd">            arrays as leafs.</span>
 
 <span class="sd">    Returns:</span>
@@ -2930,7 +2948,7 @@ save<span class="p">(</span><span class="bp">self</span><span class="p">,</span>
 <p>It creates a directory that includes:</p>
 <ul>
 <li>The <code>Model</code> object instance serialized with <code>pickle</code> as
-    as <code>{path}/model.pkl</code>, this allows you to re-instantiate 
+    as <code>{path}/model.pkl</code>, this allows you to re-instantiate
     the model later.</li>
 <li>The model parameters + states serialized into HDF5 as <code>{path}/parameters.h5</code>.</li>
 <li>The states of the optimizer serialized with <code>pickle</code> as
@@ -2939,7 +2957,7 @@ save<span class="p">(</span><span class="bp">self</span><span class="p">,</span>
     but <code>optax</code> states is incompatible with <code>deepdish</code>.</li>
 </ul>
 <p>This allows you to save the entirety of the states of a model
-in a directory structure which can be fully restored via 
+in a directory structure which can be fully restored via
 <code>Model.load</code> if the model is already instiated or <code>elegy.model.load</code>
 to load the model instance from its pickled version.</p>
 <div class="codehilite">
@@ -2987,22 +3005,7 @@ to load the model instance from its pickled version.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>1304
-1305
-1306
-1307
-1308
-1309
-1310
-1311
-1312
-1313
-1314
-1315
-1316
-1317
-1318
-1319
+<pre><span></span>1319
 1320
 1321
 1322
@@ -3050,7 +3053,22 @@ to load the model instance from its pickled version.</p>
 1364
 1365
 1366
-1367</pre>
+1367
+1368
+1369
+1370
+1371
+1372
+1373
+1374
+1375
+1376
+1377
+1378
+1379
+1380
+1381
+1382</pre>
 </div>
 </td>
 <td class="code">
@@ -3062,7 +3080,7 @@ to load the model instance from its pickled version.</p>
 <span class="sd">    It creates a directory that includes:</span>
 
 <span class="sd">    - The `Model` object instance serialized with `pickle` as</span>
-<span class="sd">        as `{path}/model.pkl`, this allows you to re-instantiate </span>
+<span class="sd">        as `{path}/model.pkl`, this allows you to re-instantiate</span>
 <span class="sd">        the model later.</span>
 <span class="sd">    - The model parameters + states serialized into HDF5 as `{path}/parameters.h5`.</span>
 <span class="sd">    - The states of the optimizer serialized with `pickle` as</span>
@@ -3071,7 +3089,7 @@ to load the model instance from its pickled version.</p>
 <span class="sd">        but `optax` states is incompatible with `deepdish`.</span>
 
 <span class="sd">    This allows you to save the entirety of the states of a model</span>
-<span class="sd">    in a directory structure which can be fully restored via </span>
+<span class="sd">    in a directory structure which can be fully restored via</span>
 <span class="sd">    `Model.load` if the model is already instiated or `elegy.model.load`</span>
 <span class="sd">    to load the model instance from its pickled version.</span>
 
@@ -3158,7 +3176,7 @@ summary<span class="p">(</span><span class="bp">self</span><span class="p">,</sp
 <td><code>int</code></td>
 <td>
 <p>The level number of nested level which will be showed.
-Information about summaries from modules deeper than <code>depth</code> 
+Information about summaries from modules deeper than <code>depth</code>
 will be aggregated together.</p>
 </td>
 <td><code>2</code></td>
@@ -3192,22 +3210,7 @@ for more options.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>1394
-1395
-1396
-1397
-1398
-1399
-1400
-1401
-1402
-1403
-1404
-1405
-1406
-1407
-1408
-1409
+<pre><span></span>1409
 1410
 1411
 1412
@@ -3349,7 +3352,26 @@ for more options.</p>
 1548
 1549
 1550
-1551</pre>
+1551
+1552
+1553
+1554
+1555
+1556
+1557
+1558
+1559
+1560
+1561
+1562
+1563
+1564
+1565
+1566
+1567
+1568
+1569
+1570</pre>
 </div>
 </td>
 <td class="code">
@@ -3363,7 +3385,7 @@ for more options.</p>
 <span class="sd">    Arguments:</span>
 <span class="sd">        x: A sample of inputs to the network.</span>
 <span class="sd">        depth: The level number of nested level which will be showed.</span>
-<span class="sd">            Information about summaries from modules deeper than `depth` </span>
+<span class="sd">            Information about summaries from modules deeper than `depth`</span>
 <span class="sd">            will be aggregated together.</span>
 <span class="sd">        tablefmt: A string represeting the style of the table generated by</span>
 <span class="sd">            `tabulate`. See</span>
@@ -3374,7 +3396,11 @@ for more options.</p>
 <span class="sd">            for more options.</span>
 <span class="sd">    """</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_maybe_initialize</span><span class="p">(</span>
-        <span class="n">mode</span><span class="o">=</span><span class="n">Mode</span><span class="o">.</span><span class="n">predict</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">class_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">mode</span><span class="o">=</span><span class="n">Mode</span><span class="o">.</span><span class="n">predict</span><span class="p">,</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">class_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
@@ -3542,10 +3568,10 @@ test_on_batch<span class="p">(</span><span class="bp">self</span><span class="p"
 <td><code>x</code></td>
 <td><code>Union[jax.numpy.lax_numpy.ndarray, Mapping[str, Any], Tuple]</code></td>
 <td>
-<p>Input data. It could be: </p>
+<p>Input data. It could be:</p>
 <ul>
 <li>A Numpy array (or array-like), or a list
-    of arrays (in case the model has multiple inputs). </li>
+    of arrays (in case the model has multiple inputs).</li>
 <li>A dict mapping input names to the corresponding arrays, if
     the model has named inputs.</li>
 </ul>
@@ -3588,7 +3614,7 @@ every sample.</p>
 <td><code>Dict[str, jax.numpy.lax_numpy.ndarray]</code></td>
 <td>
 <p>A <code>logs</code> dictionary of containing the main <code>loss</code> as well as all
-other losses and metrics. </p>
+other losses and metrics.</p>
 </td>
 </tr>
 </tbody>
@@ -3616,22 +3642,7 @@ other losses and metrics. </p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>1030
-1031
-1032
-1033
-1034
-1035
-1036
-1037
-1038
-1039
-1040
-1041
-1042
-1043
-1044
-1045
+<pre><span></span>1045
 1046
 1047
 1048
@@ -3674,7 +3685,22 @@ other losses and metrics. </p>
 1085
 1086
 1087
-1088</pre>
+1088
+1089
+1090
+1091
+1092
+1093
+1094
+1095
+1096
+1097
+1098
+1099
+1100
+1101
+1102
+1103</pre>
 </div>
 </td>
 <td class="code">
@@ -3690,10 +3716,10 @@ other losses and metrics. </p>
 <span class="sd">    Test the model on a single batch of samples.</span>
 
 <span class="sd">    Arguments:</span>
-<span class="sd">        x: Input data. It could be: </span>
+<span class="sd">        x: Input data. It could be:</span>
 
 <span class="sd">            - A Numpy array (or array-like), or a list</span>
-<span class="sd">                of arrays (in case the model has multiple inputs). </span>
+<span class="sd">                of arrays (in case the model has multiple inputs).</span>
 <span class="sd">            - A dict mapping input names to the corresponding arrays, if</span>
 <span class="sd">                the model has named inputs.</span>
 <span class="sd">        y: Target data. Like the input data `x`, it could be either Numpy</span>
@@ -3706,7 +3732,7 @@ other losses and metrics. </p>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        A `logs` dictionary of containing the main `loss` as well as all</span>
-<span class="sd">        other losses and metrics. </span>
+<span class="sd">        other losses and metrics.</span>
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError: In case of invalid user-provided arguments.</span>
 <span class="sd">    """</span>
@@ -3826,7 +3852,7 @@ more attention" to samples from an under-represented class.</p>
 <td><code>Dict[str, numpy.ndarray]</code></td>
 <td>
 <p>A <code>logs</code> dictionary of containing the main <code>loss</code> as well as all
-other losses and metrics. </p>
+other losses and metrics.</p>
 </td>
 </tr>
 </tbody>
@@ -3963,7 +3989,7 @@ other losses and metrics. </p>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        A `logs` dictionary of containing the main `loss` as well as all</span>
-<span class="sd">        other losses and metrics. </span>
+<span class="sd">        other losses and metrics.</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError: In case of invalid user-provided arguments.</span>

@@ -771,6 +771,16 @@
     </a>
 </li>
 <li class="md-nav__item">
+<a class="md-nav__link" href="../nn/EmbedLookupStyle/" title="EmbedLookupStyle">
+      EmbedLookupStyle
+    </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../nn/Embedding/" title="Embedding">
+      Embedding
+    </a>
+</li>
+<li class="md-nav__item">
 <a class="md-nav__link" href="../nn/Flatten/" title="Flatten">
       Flatten
     </a>
@@ -1168,8 +1178,7 @@ passed to <code>apply</code>.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>203
-204
+<pre><span></span>204
 205
 206
 207
@@ -1231,7 +1240,11 @@ passed to <code>apply</code>.</p>
 263
 264
 265
-266</pre>
+266
+267
+268
+269
+270</pre>
 </div>
 </td>
 <td class="code">
@@ -1249,8 +1262,8 @@ passed to <code>apply</code>.</p>
 
 <span class="sd">    Arguments:</span>
 <span class="sd">        parameters:</span>
-<span class="sd">        states: </span>
-<span class="sd">        rng: </span>
+<span class="sd">        states:</span>
+<span class="sd">        rng:</span>
 <span class="sd">        get_summaries:</span>
 
 <span class="sd">    Returns:</span>
@@ -1275,7 +1288,10 @@ passed to <code>apply</code>.</p>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_states</span><span class="p">(</span><span class="n">states</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="n">context</span><span class="p">(</span>
-            <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span> <span class="n">building</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span> <span class="n">get_summaries</span><span class="o">=</span><span class="n">get_summaries</span><span class="p">,</span>
+            <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span>
+            <span class="n">building</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span>
+            <span class="n">get_summaries</span><span class="o">=</span><span class="n">get_summaries</span><span class="p">,</span>
         <span class="p">)</span> <span class="k">as</span> <span class="n">ctx</span><span class="p">:</span>
             <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
@@ -1340,11 +1356,7 @@ and all submodules within it.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>268
-269
-270
-271
-272
+<pre><span></span>272
 273
 274
 275
@@ -1356,7 +1368,11 @@ and all submodules within it.</p>
 281
 282
 283
-284</pre>
+284
+285
+286
+287
+288</pre>
 </div>
 </td>
 <td class="code">
@@ -1418,11 +1434,7 @@ and all submodules within it.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>294
-295
-296
-297
-298
+<pre><span></span>298
 299
 300
 301
@@ -1436,7 +1448,11 @@ and all submodules within it.</p>
 309
 310
 311
-312</pre>
+312
+313
+314
+315
+316</pre>
 </div>
 </td>
 <td class="code">
@@ -1518,8 +1534,7 @@ init<span class="p">(</span><span class="bp">self</span><span class="p">,</span>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>175
-176
+<pre><span></span>176
 177
 178
 179
@@ -1544,7 +1559,8 @@ init<span class="p">(</span><span class="bp">self</span><span class="p">,</span>
 198
 199
 200
-201</pre>
+201
+202</pre>
 </div>
 </td>
 <td class="code">
@@ -1601,11 +1617,7 @@ and all submodules within it.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>322
-323
-324
-325
-326
+<pre><span></span>326
 327
 328
 329
@@ -1618,7 +1630,11 @@ and all submodules within it.</p>
 336
 337
 338
-339</pre>
+339
+340
+341
+342
+343</pre>
 </div>
 </td>
 <td class="code">
@@ -1667,13 +1683,13 @@ structure.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>286
-287
-288
-289
-290
+<pre><span></span>290
 291
-292</pre>
+292
+293
+294
+295
+296</pre>
 </div>
 </td>
 <td class="code">
@@ -1711,13 +1727,13 @@ structure.</p>
 <tr>
 <td class="linenos">
 <div class="linenodiv">
-<pre><span></span>314
-315
-316
-317
-318
+<pre><span></span>318
 319
-320</pre>
+320
+321
+322
+323
+324</pre>
 </div>
 </td>
 <td class="code">
