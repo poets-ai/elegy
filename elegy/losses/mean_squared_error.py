@@ -10,16 +10,16 @@ from elegy.losses.loss import Loss, Reduction
 def mean_squared_error(y_true: jnp.ndarray, y_pred: jnp.ndarray) -> jnp.ndarray:
     """
     Computes the mean squared error between labels and predictions.
-    
+
     After computing the squared distance between the inputs, the mean value over
     the last dimension is returned.
-    
+
     ```python
     loss = mean(square(y_true - y_pred), axis=-1)
     ```
 
     Usage:
-    
+
     ```python
     rng = jax.random.PRNGKey(42)
 
@@ -32,11 +32,11 @@ def mean_squared_error(y_true: jnp.ndarray, y_pred: jnp.ndarray) -> jnp.ndarray:
 
     assert jnp.array_equal(loss, jnp.mean(jnp.square(y_true - y_pred), axis=-1))
     ```
-    
+
     Arguments:
         y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
         y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
-    
+
     Returns:
         Mean squared error values. shape = `[batch_size, d0, .. dN-1]`.
     """
@@ -143,7 +143,7 @@ class MeanSquaredError(Loss):
             Weighted loss float `Tensor`. If `reduction` is `NONE`, this has
                 shape `[batch_size, d0, .. dN-1]`; otherwise, it is scalar. (Note `dN-1`
                 because all loss functions reduce by 1 dimension, usually axis=-1.)
-        
+
         Raises:
             ValueError: If the shape of `sample_weight` is invalid.
         """

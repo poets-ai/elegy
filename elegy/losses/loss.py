@@ -21,7 +21,7 @@ from elegy import utils
 class Reduction(Enum):
     """
     Types of loss reduction.
-    
+
     Contains the following values:
     * `NONE`: Weighted losses with one dimension reduced (axis=-1, or axis
         specified by loss function). When this reduction type used with built-in
@@ -81,7 +81,7 @@ class Loss(module.Module):
     ):
         """
         Initializes `Loss` class.
-        
+
         Arguments:
             reduction: (Optional) Type of `elegy.losses.Reduction` to apply to
                 loss. Default value is `SUM_OVER_BATCH_SIZE`. For almost all cases
@@ -103,7 +103,9 @@ class Loss(module.Module):
         self._labels_filter = (on,) if isinstance(on, (str, int)) else on
 
     def __call__(
-        self, *args, **kwargs,
+        self,
+        *args,
+        **kwargs,
     ):
 
         if self._labels_filter is not None:

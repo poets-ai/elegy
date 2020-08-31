@@ -27,8 +27,8 @@ def sequential(*layers: tp.Callable[..., tp.Any]) -> tp.Callable[..., tp.Any]:
     ```
 
     !!! Note
-        `sequential` is not a `Module`, that is, it wont create a scope over the layers it runs, 
-        in constrast to `Sequential` layers are eagerly instantiate outside of `sequential` 
+        `sequential` is not a `Module`, that is, it wont create a scope over the layers it runs,
+        in constrast to `Sequential` layers are eagerly instantiate outside of `sequential`
         and just passed to it to automate the execution.
 
     Arguments:

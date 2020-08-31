@@ -11,9 +11,9 @@ def GlobalL2(
 ) -> GlobalL1L2:
     r"""
     Create a regularizer that applies an L2 regularization penalty.
-  
+
     The L2 regularization penalty is computed as:
-    
+
     $$\ell_2\,\,penalty =\ell_2\sum_{i=0}^nx_i^2$$
 
     Usage:
@@ -28,10 +28,10 @@ def GlobalL2(
         metrics=lambda: elegy.metrics.SparseCategoricalAccuracy(),
     )
     ```
-    
+
     Arguments:
         l: L2 regularization factor.
-  
+
     Returns:
         An L2 Regularizer with the given regularization factor.
     """

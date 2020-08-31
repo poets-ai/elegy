@@ -10,7 +10,7 @@ from elegy.metrics.mean import Mean
 class MeanAbsoluteError(Mean):
     """
     Computes the cumulative mean absolute error between `y_true` and `y_pred`.
-    
+
     Usage:
     ```python
     mae = elegy.metrics.MeanAbsoluteError()
@@ -23,7 +23,7 @@ class MeanAbsoluteError(Mean):
     ```
 
     Usage with elegy API:
-    
+
     ```python
     model = elegy.Model(
         module_fn,
@@ -57,7 +57,7 @@ class MeanAbsoluteError(Mean):
     ) -> jnp.ndarray:
         """
         Accumulates metric statistics. `y_true` and `y_pred` should have the same shape.
-        
+
         Arguments:
             y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
             y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
@@ -72,6 +72,6 @@ class MeanAbsoluteError(Mean):
                 functions reduce by 1 dimension, usually the last axis (-1)).
         Returns:
             Array with the cumulative accuracy.
-    """
+        """
 
         return super().call(values=mean_absolute_error(y_true=y_true, y_pred=y_pred))

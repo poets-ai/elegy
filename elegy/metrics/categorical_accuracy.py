@@ -21,30 +21,30 @@ class CategoricalAccuracy(Mean):
     Calculates how often predictions matches one-hot labels.
     You can provide logits of classes as `y_pred`, since argmax of
     logits and probabilities are same.
-    
+
     This metric creates two local variables, `total` and `count` that are used to
     compute the frequency with which `y_pred` matches `y_true`. This frequency is
     ultimately returned as `categorical accuracy`: an idempotent operation that
     simply divides `total` by `count`.
-    
+
     `y_pred` and `y_true` should be passed in as vectors of probabilities, rather
     than as labels. If necessary, use `tf.one_hot` to expand `y_true` as a vector.
     If `sample_weight` is `None`, weights default to 1.
     Use `sample_weight` of 0 to mask values.
-    
+
     Usage:
 
     ```python
     accuracy = elegy.metrics.CategoricalAccuracy()
 
     result = accuracy(
-        y_true=jnp.array([[0, 0, 1], [0, 1, 0]]), 
+        y_true=jnp.array([[0, 0, 1], [0, 1, 0]]),
         y_pred=jnp.array([[0.1, 0.9, 0.8], [0.05, 0.95, 0]]),
     )
     assert result == 0.5  # 1/2
 
     result = accuracy(
-        y_true=jnp.array([[0, 1, 0], [0, 1, 0]]), 
+        y_true=jnp.array([[0, 1, 0], [0, 1, 0]]),
         y_pred=jnp.array([[0.1, 0.9, 0.8], [0.05, 0.95, 0]]),
     )
     assert result ==  0.75  # 3/4
@@ -64,7 +64,7 @@ class CategoricalAccuracy(Mean):
     def __init__(self, on: tp.Optional[types.IndexLike] = None, **kwargs):
         """
         Creates a `CategoricalAccuracy` instance.
-        
+
         Arguments:
             on: A string or integer, or iterable of string or integers, that
                 indicate how to index/filter the `y_true` and `y_pred`
@@ -85,7 +85,7 @@ class CategoricalAccuracy(Mean):
     ) -> jnp.ndarray:
         """
         Accumulates metric statistics. `y_true` and `y_pred` should have the same shape.
-        
+
         Arguments:
             y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
             y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
@@ -100,7 +100,7 @@ class CategoricalAccuracy(Mean):
                 functions reduce by 1 dimension, usually the last axis (-1)).
         Returns:
             Array with the cumulative accuracy.
-    """
+        """
 
         return super().call(
             values=categorical_accuracy(y_true=y_true, y_pred=y_pred),

@@ -102,12 +102,12 @@ class DataHandler(object):
     @property
     def inferred_steps(self):
         """The inferred steps per epoch of the created `Dataset`.
-            This will be `None` in the case where:
-            (1) A generator `Dataset` was passed to the `DataHandler`, and
-            (2) `steps_per_epoch` was not provided, and
-            (3) The first epoch of iteration has not yet completed.
-            Returns:
-            The inferred steps per epoch of the created `Dataset`.
+        This will be `None` in the case where:
+        (1) A generator `Dataset` was passed to the `DataHandler`, and
+        (2) `steps_per_epoch` was not provided, and
+        (3) The first epoch of iteration has not yet completed.
+        Returns:
+        The inferred steps per epoch of the created `Dataset`.
         """
         return self._inferred_steps
 

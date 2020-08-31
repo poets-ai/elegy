@@ -20,7 +20,7 @@ def sparse_categorical_accuracy(
 class SparseCategoricalAccuracy(Mean):
     """
     Calculates how often predictions matches integer labels.
-    
+
     You can provide logits of classes as `y_pred`, since argmax of
     logits and probabilities are same.
     This metric creates two local variables, `total` and `count` that are used to
@@ -29,13 +29,13 @@ class SparseCategoricalAccuracy(Mean):
     that simply divides `total` by `count`.
     If `sample_weight` is `None`, weights default to 1.
     Use `sample_weight` of 0 to mask values.
-    
+
     Usage:
     ```python
     accuracy = elegy.metrics.SparseCategoricalAccuracy()
 
     result = accuracy(
-        y_true=jnp.array([2, 1]), 
+        y_true=jnp.array([2, 1]),
         y_pred=jnp.array([[0.1, 0.9, 0.8], [0.05, 0.95, 0]])
     )
     assert result == 0.5  # 1/2
@@ -46,7 +46,7 @@ class SparseCategoricalAccuracy(Mean):
     )
     assert result == 0.75  # 3/4
     ```
-    
+
     Usage with elegy API:
 
     ```python
@@ -84,7 +84,7 @@ class SparseCategoricalAccuracy(Mean):
         """
         Accumulates metric statistics. `y_true` and `y_pred` should have the same shape except
         `y_true` should not have the last dimension of `y_pred`.
-        
+
         Arguments:
             y_true: Sparse ground truth values. shape = `[batch_size, d0, .. dN-1]`.
             y_pred: The predicted values. shape = `[batch_size, d0, .. dN-1, dN]`.
@@ -99,7 +99,7 @@ class SparseCategoricalAccuracy(Mean):
                 functions reduce by 1 dimension, usually the last axis (-1)).
         Returns:
             Array with the cumulative accuracy.
-    """
+        """
 
         return super().call(
             values=sparse_categorical_accuracy(y_true=y_true, y_pred=y_pred),

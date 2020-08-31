@@ -6,10 +6,10 @@ from .callback import Callback
 class History(Callback):
     """Callback that records events into a `History` object.
 
-  This callback is automatically applied to
-  every Keras model. The `History` object
-  gets returned by the `fit` method of models.
-  """
+    This callback is automatically applied to
+    every Keras model. The `History` object
+    gets returned by the `fit` method of models.
+    """
 
     def __init__(self):
         super(History, self).__init__()

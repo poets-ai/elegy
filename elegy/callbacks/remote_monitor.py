@@ -16,12 +16,12 @@ from .callback import Callback
 class RemoteMonitor(Callback):
     """Callback used to stream events to a server.
 
-Requires the `requests` library.
-Events are sent to `root + '/publish/epoch/end/'` by default. Calls are
-HTTP POST, with a `data` argument which is a
-JSON-encoded dictionary of event data.
-If send_as_json is set to True, the content type of the request will be
-application/json. Otherwise the serialized JSON will be sent within a form.
+    Requires the `requests` library.
+    Events are sent to `root + '/publish/epoch/end/'` by default. Calls are
+    HTTP POST, with a `data` argument which is a
+    JSON-encoded dictionary of event data.
+    If send_as_json is set to True, the content type of the request will be
+    application/json. Otherwise the serialized JSON will be sent within a form.
     """
 
     def __init__(

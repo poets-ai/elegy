@@ -170,7 +170,13 @@ class ModelCheckpoint(Callback):
                             print(
                                 "\nEpoch %05d: %s improved from %0.5f to %0.5f,"
                                 " saving model to %s"
-                                % (epoch + 1, self.monitor, self.best, current, path,)
+                                % (
+                                    epoch + 1,
+                                    self.monitor,
+                                    self.best,
+                                    current,
+                                    path,
+                                )
                             )
                         self.best = current
                         self.model.save(path)

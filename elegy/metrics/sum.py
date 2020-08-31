@@ -9,19 +9,19 @@ from elegy.metrics.reduce import Reduce, Reduction
 class Sum(Reduce):
     """
     Computes the (weighted) sum of the given values.
-    
+
     For example, if values is [1, 3, 5, 7] then the sum is 16.
     If the weights were specified as [1, 1, 0, 0] then the sum would be 4.
     This metric creates one variable, `total`, that is used to compute the sum of
     `values`. This is ultimately returned as `sum`.
     If `sample_weight` is `None`, weights default to 1.  Use `sample_weight` of 0
     to mask values.
-    
+
     Usage:
     ```python
     m = elegy.metrics.Sum()
     assert 16.0 == m([1, 3, 5, 7])
-    ``` 
+    ```
     Usage with Elegy API:
     ```python
     model = elegy.Model(
