@@ -146,7 +146,7 @@ To cite this project:
 author = {PoetsAI},
 title = {Elegy: A Keras-like deep learning framework based on Jax},
 url = {https://github.com/poets-ai/elegy},
-version = {0.2.1},
+version = {0.2.2},
 year = {2020},
 }
 ```
