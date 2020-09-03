@@ -1,5 +1,3 @@
-import functools
-import re
 import threading
 import typing as tp
 from abc import ABCMeta, abstractmethod
@@ -55,7 +53,7 @@ def construct_module(cls, *args, **kwargs) -> "Module":
 
     for key, value in vars(module).items():
         if key not in module._ignore and leaf_isinstance(value, Module):
-            module._submodules.add(key)
+            module._submodules.append(key)
 
     utils.wraps(module.call)(module)
 
@@ -91,7 +89,7 @@ class ModuleMeta(ABCMeta):
 
                     name = get_unique_name(parent_module, module.name)
                     setattr(parent_module, name, module)
-                    parent_module._submodules.add(name)
+                    parent_module._submodules.append(name)
                     parent_module._dynamic_submodules.append(name)
 
                 assert module is not None
@@ -110,12 +108,12 @@ class Module(metaclass=ModuleMeta):
 
     name: str
     dtype: np.dtype
-    _params: tp.Set[str]
-    _states: tp.Set[str]
-    _states_initial: tp.Set[str]
-    _submodules: tp.Set[str]
+    _params: tp.List[str]
+    _states: tp.List[str]
+    _states_initial: tp.List[str]
+    _submodules: tp.List[str]
     _dynamic_submodules: tp.List[str]
-    _ignore: tp.Set[str]
+    _ignore: tp.List[str]
 
     __all__ = [
         "__init__",
@@ -144,11 +142,11 @@ class Module(metaclass=ModuleMeta):
         """
         self.name = name if name else utils.lower_snake_case(self.__class__.__name__)
         self.dtype = dtype
-        self._params = set()
-        self._states = set()
-        self._submodules = set()
+        self._params = []
+        self._states = []
+        self._submodules = []
         self._dynamic_submodules = []
-        self._ignore = set()
+        self._ignore = []
 
     def __call__(self, *args, **kwargs) -> tp.Any:
         """

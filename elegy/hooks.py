@@ -48,7 +48,7 @@ def get_parameter(
             if not context.building:
                 raise ValueError(f"Trying to initialize '{name}' outside of `init`.")
 
-            module._params.add(name)
+            module._params.append(name)
 
             if dtype is None:
                 dtype = module.dtype
@@ -105,7 +105,7 @@ def get_state(
             if not context.building:
                 raise ValueError(f"Trying to initialize '{name}' outside of `init`.")
 
-            module._states.add(name)
+            module._states.append(name)
             initial_name = as_initial(name)
 
             if dtype is None:
@@ -151,7 +151,7 @@ def set_state(name: str, value: tp.Any) -> None:
             if not context.building:
                 raise ValueError(f"Trying to initialize '{name}' outside of `init`.")
 
-            module._states.add(name)
+            module._states.append(name)
             initial_name = as_initial(name)
 
             setattr(module, name, value)
