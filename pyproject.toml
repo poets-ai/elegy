@@ -14,7 +14,7 @@ homepage = "https://poets-ai.github.io/elegy"
 [tool.poetry.dependencies]
 python = "^3.6.1"
 jaxlib = "^0.1.51"
-numpy = "^1.19.0"
+numpy = "^1.0.0"
 pytest = "^5.4.3"
 deepdish = "^0.3.6"
 typing_extensions = { version = "^3.7.4", python = "<3.8" }
