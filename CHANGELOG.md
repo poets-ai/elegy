@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.2.2] - 2020-08-31
+* Fixes `metrics.BinaryAccuracy` and `losses.BinaryCrossentropy`
+
 ## [0.2.1] - 2020-08-25
 * Uses `optax` instead of `optix`.
 * Implements `BinaryAccuracy`.

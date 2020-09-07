@@ -5,9 +5,9 @@ Elegy interacts with Jax at the lower level, certain details about the hooks sys
 differs from other Deep Learning frameworks.
 
 ### Traditional Object Oriented Style
-We will begin by exploring other frameworks define Modules / Layers. It is very common to use
+We will begin by exploring how other frameworks define Modules / Layers. It is very common to use
 Object Oriented architectures as backbones of Module systems as it helps frameworks keep
-track of the parameters and states each module might require. Here we will create a some
+track of the parameters and states each module might require. Here we will create some
 very basic `Linear` and `MLP` modules which will seem very familiar:
 
 ```python
@@ -42,7 +42,7 @@ class MLP(elegy.Module):
 Here we just defined a simple linear layer and used it inside a `MLP` with 3 layers. Pytorch and Keras 
 users should feel very familiar with this type of code: we define parameters 
 or other submodules in the `__init__` method, and use them during the `call` (forward) method.
-Keras users users might complain that if we do things this way we loose the ability to do 
+Keras users might complain that if we do things this way we loose the ability to do 
 shape inference, but don't worry, we will fix that latter.
 
 Fow now it is important to notice that here we use our first hook: `get_parameter`.
@@ -59,9 +59,9 @@ In Elegy we have the following list of hooks:
 | --------------- | --------------------------------------------------------------------------------------------------------------- |
 | `get_parameter` | Gives us access to a trainable parameter.                                                                       |
 | `get_state`     | Gives us access to some state. This is used in layers like `BatchNormalization` and in most of the metrics.     |
-| `set_state`     | Lets us update a state. When used in conjunction with `get_state` it lets use express an iterative computation. |
+| `set_state`     | Lets us update a state. When used in conjunction with `get_state` it lets us express an iterative computation. |
 | `next_rng_key`  | Gives us access to a unique `PRNGKey` we can pass to functions like `jax.random.uniform` and friends.           |
-| `is_training`   | Tells use whether training is currently happening or not.                                                       |
+| `is_training`   | Tells us whether training is currently happening or not.                                                       |
 | `add_loss`      | Lets us declare a loss in some intermediate layer.                                                              |
 | `add_metric`    | Lets us declare a metric in some intermediate layer.                                                            |
 | `add_summary`   | Lets us declare a summary in some intermediate layer.                                                           |
@@ -150,7 +150,7 @@ with the help of Python metaclasses. There is one important rule you have to fol
 !!! Quote
     You must use hooks **unconditionally**
 
-This moto comes from React and it means that the module always has to call the same amount
+This motto comes from React and it means that the module always has to call the same amount
 of hooks, and for module hooks specifically they must be called in the same order. For example the following code is invalid:
 
 ```python
@@ -260,7 +260,7 @@ customize this name by using the `name` argument available in the `Module`'s con
 
 ### Managing State
 
-A big theme in Jax is that is that state and computation are separate, this is a requirement
+A big theme in Jax is that state and computation are separate, this is a requirement
 because in order for combinators like `jax.grad` and `jax.jit` to work you need pure functions,
 and pure functions usually require you to extract state and turn it into an input. To achieve this
 we will use additional feature from `init` and `apply` that where created for this purpose:
@@ -301,6 +301,7 @@ def update(parameters, rng, x, y):
 x = np.random.uniform(size=(15, 3))
 y = np.random.uniform(size=(15, 1))
 mlp = MLP()
+rngs = elegy.PRNGSequence(42)
 parameters, states = mlp.init(rng=next(rngs))(x)
 
 for step in range(1000):
@@ -311,7 +312,7 @@ mlp.set_parameters(parameters)
 
 Here we created the functions `loss` and `update`, plus a minimal training loop.
 In order to for us to be able to calculate gradients of the loss with respect
-to the parameters we need for `loss` to take them an argument along with the 
+to the parameters we need for `loss` to take them as an argument along with the 
 inputs `x` and labels `y`:
 
 ```python hl_lines="1 8"
@@ -332,7 +333,7 @@ def update(parameters, rng, x, y):
 Note that `grad` by default calculate the gradient of the function
 with respect to the first argument, which in this case is a structure
 with all the parameters. Because we are using `jax.jit` we also require
-that any desired changes propagated as outputs:
+that any desired changes propagates as outputs:
 
 ```python hl_lines="7 12"
 def loss(parameters, rng, x, y):

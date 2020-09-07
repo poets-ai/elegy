@@ -93,7 +93,7 @@ class Reshape(Module):
         """
         Arguments:
             inputs: the array to be reshaped.
-        
+
         Returns:
             A reshaped array.
         """
@@ -133,6 +133,8 @@ class Flatten(Reshape):
     """
 
     def __init__(
-        self, preserve_dims: int = 1, name: tp.Optional[str] = None,
+        self,
+        preserve_dims: int = 1,
+        name: tp.Optional[str] = None,
     ):
         super().__init__(output_shape=(-1,), preserve_dims=preserve_dims, name=name)

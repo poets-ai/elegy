@@ -10,7 +10,7 @@ from elegy.metrics.mean import Mean
 class MeanSquaredError(Mean):
     """
     Computes the cumulative mean squared error between `y_true` and `y_pred`.
-    
+
     Usage:
     ```python
     mse = elegy.metrics.MeanSquaredError()
@@ -23,7 +23,7 @@ class MeanSquaredError(Mean):
     ```
 
     Usage with elegy API:
-    
+
     ```python
     model = elegy.Model(
         module_fn,
@@ -57,7 +57,7 @@ class MeanSquaredError(Mean):
     ) -> jnp.ndarray:
         """
         Accumulates metric statistics. `y_true` and `y_pred` should have the same shape.
-        
+
         Arguments:
             y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
             y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
@@ -72,6 +72,6 @@ class MeanSquaredError(Mean):
                 functions reduce by 1 dimension, usually the last axis (-1)).
         Returns:
             Array with the cumulative accuracy.
-    """
+        """
 
         return super().call(values=mean_squared_error(y_true=y_true, y_pred=y_pred))

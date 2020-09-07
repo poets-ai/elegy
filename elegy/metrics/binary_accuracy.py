@@ -13,7 +13,7 @@ def binary_accuracy(
 ) -> np.ndarray:
     """
     Calculates how often predictions matches binary labels.
-    
+
     Standalone usage:
 
     ```python
@@ -27,7 +27,7 @@ def binary_accuracy(
         y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
         threshold: Float representing the threshold for deciding whether
             prediction values are 1 or 0.
-    
+
     Returns:
         Binary accuracy values. shape = `[batch_size, d0, .. dN-1]`
     """
@@ -53,7 +53,7 @@ class BinaryAccuracy(Mean):
         name: (Optional) string name of the metric instance.
         dtype: (Optional) data type of the metric result.
         threshold: (Optional) Float representing the threshold for deciding
-        whether prediction values are 1 or 0.
+            whether prediction values are 1 or 0.
     Standalone usage:
     ```python
     m = elegy.metrics.BinaryAccuracy()
@@ -85,7 +85,7 @@ class BinaryAccuracy(Mean):
     ):
         """
         Creates a `CategoricalAccuracy` instance.
-        
+
         Arguments:
             threshold: Float representing the threshold for deciding whether
                 prediction values are 1 or 0.
@@ -109,7 +109,7 @@ class BinaryAccuracy(Mean):
     ) -> jnp.ndarray:
         """
         Accumulates metric statistics. `y_true` and `y_pred` should have the same shape.
-        
+
         Arguments:
             y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
             y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
@@ -124,7 +124,7 @@ class BinaryAccuracy(Mean):
                 functions reduce by 1 dimension, usually the last axis (-1)).
         Returns:
             Array with the cumulative accuracy.
-    """
+        """
 
         return super().call(
             values=binary_accuracy(
