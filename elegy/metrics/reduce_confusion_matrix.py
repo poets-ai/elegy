@@ -37,7 +37,7 @@ def reduce(
             sample_weight = jnp.broadcast_to(sample_weight, y_true.shape)
         except ValueError as e:
             raise e
-            
+
     if reduction == Reduction.TRUE_POSITIVES:
         if sample_weight is not None:
             y_true = y_true * sample_weight
@@ -51,7 +51,7 @@ def reduce(
             y_pred = y_pred * sample_weight
         mask = y_pred == 1
         value = jnp.sum(y_true[mask] == 0)
-    
+
     if reduction == Reduction.FALSE_NEGATIVES:
         if sample_weight is not None:
             y_true = y_true * sample_weight
@@ -65,7 +65,7 @@ def reduce(
             y_pred = y_pred * sample_weight
         mask = y_true == 0
         value = jnp.sum(y_pred[mask] == 0)
-    
+
     cm_metric += value
     return cm_metric
 
@@ -92,25 +92,31 @@ class ReduceConfusionMatrix(Metric):
             )
 
     def call(
-        self, y_true: jnp.ndarray, y_pred: jnp.ndarray, 
-        sample_weight: tp.Optional[jnp.ndarray] = None
+        self,
+        y_true: jnp.ndarray,
+        y_pred: jnp.ndarray,
+        sample_weight: tp.Optional[jnp.ndarray] = None,
     ) -> jnp.ndarray:
         """
-        Accumulates statistics for computing the reduction metric. For example, if `values` is [1, 3, 5, 7] 
-        and reduction=SUM_OVER_BATCH_SIZE, then the value of `result()` is 4. If the `sample_weight` 
-        is specified as [1, 1, 0, 0] then value of `result()` would be 2.
+        Accumulates confusion matrix metrics for computing the reduction metric.
         
         Arguments:
-            values: Per-example value.
+            y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
+
+            y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
+
             sample_weight: Optional weighting of each example. Defaults to 1.
         
         Returns:
-            Array with the cummulative reduce.
+            Array with the cummulative reduce metric.
         """
 
-        if self._reduction in (Reduction.FALSE_NEGATIVES, Reduction.FALSE_POSITIVES, 
-                               Reduction.TRUE_POSITIVES, Reduction.TRUE_NEGATIVES
-                               ):
+        if self._reduction in (
+            Reduction.FALSE_NEGATIVES,
+            Reduction.FALSE_POSITIVES,
+            Reduction.TRUE_POSITIVES,
+            Reduction.TRUE_NEGATIVES,
+        ):
             cm_metric = hooks.get_state(
                 self._reduction.value,
                 shape=[],

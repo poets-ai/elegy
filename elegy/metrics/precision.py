@@ -10,21 +10,29 @@ from elegy.metrics.metric import Metric
 
 
 def precision(
-    y_true: jnp.ndarray, y_pred: jnp.ndarray, threshold: jnp.ndarray, class_id: jnp.ndarray, 
-    sample_weight: jnp.ndarray, true_positives: ReduceConfusionMatrix, false_positives: ReduceConfusionMatrix
+    y_true: jnp.ndarray,
+    y_pred: jnp.ndarray,
+    threshold: jnp.ndarray,
+    class_id: jnp.ndarray,
+    sample_weight: jnp.ndarray,
+    true_positives: ReduceConfusionMatrix,
+    false_positives: ReduceConfusionMatrix,
 ) -> jnp.ndarray:
 
-    #TODO: class_id behavior
+    # TODO: class_id behavior
     y_pred = (y_pred > threshold).astype(jnp.float32)
 
     if y_true.dtype != y_pred.dtype:
         y_pred = y_pred.astype(y_true.dtype)
-    
-    true_positives = true_positives(y_true=y_true, y_pred=y_pred, sample_weight=sample_weight)
-    false_positives =  false_positives(y_true=y_true, y_pred=y_pred, sample_weight=sample_weight)
 
-    return jnp.nan_to_num(jnp.divide(true_positives,
-                                 true_positives + false_positives))
+    true_positives = true_positives(
+        y_true=y_true, y_pred=y_pred, sample_weight=sample_weight
+    )
+    false_positives = false_positives(
+        y_true=y_true, y_pred=y_pred, sample_weight=sample_weight
+    )
+
+    return jnp.nan_to_num(jnp.divide(true_positives, true_positives + false_positives))
 
 
 class Precision(Metric):
@@ -69,7 +77,11 @@ class Precision(Metric):
     """
 
     def __init__(
-        self, on: tp.Optional[types.IndexLike] = None, threshold = None, class_id = None, **kwargs
+        self,
+        on: tp.Optional[types.IndexLike] = None,
+        threshold=None,
+        class_id=None,
+        **kwargs
     ):
         """
         Creates a `Precision` instance.
@@ -99,7 +111,9 @@ class Precision(Metric):
         self.threshold = 0.5 if threshold is None else threshold
         self.class_id = 1 if class_id is None else class_id
         self.true_positives = ReduceConfusionMatrix(reduction=Reduction.TRUE_POSITIVES)
-        self.false_positives =  ReduceConfusionMatrix(reduction=Reduction.FALSE_POSITIVES)
+        self.false_positives = ReduceConfusionMatrix(
+            reduction=Reduction.FALSE_POSITIVES
+        )
 
     def call(
         self,
@@ -122,6 +136,12 @@ class Precision(Metric):
             Array with the cumulative precision.
         """
 
-        return precision(y_true=y_true, y_pred=y_pred, sample_weight=sample_weight,
-                         threshold=self.threshold, class_id=self.class_id,
-                         true_positives=self.true_positives, false_positives=self.false_positives)
+        return precision(
+            y_true=y_true,
+            y_pred=y_pred,
+            sample_weight=sample_weight,
+            threshold=self.threshold,
+            class_id=self.class_id,
+            true_positives=self.true_positives,
+            false_positives=self.false_positives,
+        )

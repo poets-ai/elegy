@@ -14,7 +14,9 @@ class RecallTest(TestCase):
 
         y_true = (np.random.uniform(0, 1, size=(5, 6, 7)) > 0.5).astype(np.float32)
         y_pred = np.random.uniform(0, 1, size=(5, 6, 7))
-        sample_weight = np.expand_dims((np.random.uniform(0, 1, size=(6, 7)) > 0.5).astype(int), axis=0)
+        sample_weight = np.expand_dims(
+            (np.random.uniform(0, 1, size=(6, 7)) > 0.5).astype(int), axis=0
+        )
 
         assert np.allclose(
             tfk.metrics.Recall()(y_true, y_pred),
@@ -47,7 +49,9 @@ class RecallTest(TestCase):
         # 1st run
         y_true = (np.random.uniform(0, 1, size=(5, 6, 7)) > 0.5).astype(np.float32)
         y_pred = np.random.uniform(0, 1, size=(5, 6, 7))
-        sample_weight = np.expand_dims((np.random.uniform(0, 1, size=(6, 7)) > 0.5).astype(int), axis=0)
+        sample_weight = np.expand_dims(
+            (np.random.uniform(0, 1, size=(6, 7)) > 0.5).astype(int), axis=0
+        )
 
         assert np.allclose(
             tm(y_true, y_pred, sample_weight=sample_weight),
@@ -61,7 +65,9 @@ class RecallTest(TestCase):
         # 2nd run
         y_true = (np.random.uniform(0, 1, size=(5, 6, 7)) > 0.5).astype(np.float32)
         y_pred = np.random.uniform(0, 1, size=(5, 6, 7))
-        sample_weight = np.expand_dims((np.random.uniform(0, 1, size=(6, 7)) > 0.5).astype(int), axis=0)
+        sample_weight = np.expand_dims(
+            (np.random.uniform(0, 1, size=(6, 7)) > 0.5).astype(int), axis=0
+        )
 
         assert np.allclose(
             tm(y_true, y_pred, sample_weight=sample_weight),
