@@ -7,9 +7,7 @@ from elegy import utils
 ArrayLike = tp.Union[np.ndarray, np.ndarray]
 T = tp.TypeVar("T")
 Container = tp.Union[
-    T,
-    tp.Tuple["Container", ...],
-    tp.Dict[str, "Container"],
+    T, tp.Tuple["Container", ...], tp.Dict[str, "Container"],
 ]
 ArrayHolder = Container[ArrayLike]
 

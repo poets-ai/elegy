@@ -27,9 +27,7 @@ from elegy import initializers, module, types, hooks
 
 
 def to_dimension_numbers(
-    num_spatial_dims: int,
-    channels_last: bool,
-    transpose: bool,
+    num_spatial_dims: int, channels_last: bool, transpose: bool,
 ) -> lax.ConvDimensionNumbers:
     """Create a `lax.ConvDimensionNumbers` for the given inputs."""
     num_dims = num_spatial_dims + 2

@@ -97,6 +97,5 @@ class Accuracy(Mean):
         """
 
         return super().call(
-            values=accuracy(y_true=y_true, y_pred=y_pred),
-            sample_weight=sample_weight,
+            values=accuracy(y_true=y_true, y_pred=y_pred), sample_weight=sample_weight,
         )

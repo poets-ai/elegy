@@ -103,9 +103,7 @@ class Loss(module.Module):
         self._labels_filter = (on,) if isinstance(on, (str, int)) else on
 
     def __call__(
-        self,
-        *args,
-        **kwargs,
+        self, *args, **kwargs,
     ):
 
         if self._labels_filter is not None:

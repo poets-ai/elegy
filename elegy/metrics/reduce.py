@@ -114,10 +114,7 @@ class Reduce(Metric):
             "total", shape=[], dtype=self.dtype, initializer=initializers.Constant(0)
         )
 
-        if self._reduction in (
-            Reduction.SUM_OVER_BATCH_SIZE,
-            Reduction.WEIGHTED_MEAN,
-        ):
+        if self._reduction in (Reduction.SUM_OVER_BATCH_SIZE, Reduction.WEIGHTED_MEAN,):
             count = hooks.get_state(
                 "count",
                 shape=[],

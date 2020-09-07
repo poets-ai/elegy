@@ -27,8 +27,7 @@ def map_append(output, batch_output):
 
 
 def map_structure(
-    f: Multimap,
-    *structure: tp.Union[types.ArrayHolder, None],
+    f: Multimap, *structure: tp.Union[types.ArrayHolder, None],
 ) -> types.Container[tp.Union[types.T, None]]:
 
     if isinstance(structure[0], tp.Tuple):

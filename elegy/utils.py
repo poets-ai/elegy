@@ -36,8 +36,7 @@ def wraps(f):
 
 
 def inject_dependencies(
-    f: tp.Callable,
-    rename: tp.Optional[tp.Dict[str, str]] = None,
+    f: tp.Callable, rename: tp.Optional[tp.Dict[str, str]] = None,
 ):
     f_params = get_function_args(f)
 
