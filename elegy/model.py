@@ -537,7 +537,10 @@ class Model:
             None,
         ] = None,
         y: tp.Union[
-            np.ndarray, tp.Mapping[str, np.ndarray], tp.Tuple[np.ndarray], None,
+            np.ndarray,
+            tp.Mapping[str, np.ndarray],
+            tp.Tuple[np.ndarray],
+            None,
         ] = None,
         batch_size: tp.Optional[int] = None,
         epochs: int = 1,
@@ -800,7 +803,10 @@ class Model:
     def evaluate(
         self,
         x: tp.Union[
-            np.ndarray, tp.Mapping[str, np.ndarray], tp.Tuple[np.ndarray], tp.Iterable,
+            np.ndarray,
+            tp.Mapping[str, np.ndarray],
+            tp.Tuple[np.ndarray],
+            tp.Iterable,
         ],
         y: tp.Union[
             jnp.ndarray,
@@ -902,7 +908,9 @@ class Model:
                     x_batch, y_batch, sample_weight = unpack_x_y_sample_weight(batch)
 
                     tmp_logs = self.test_on_batch(
-                        x=x_batch, y=y_batch, sample_weight=sample_weight,
+                        x=x_batch,
+                        y=y_batch,
+                        sample_weight=sample_weight,
                     )
                     tmp_logs.update({"size": data_handler.batch_size})
                     logs = tmp_logs
@@ -915,7 +923,10 @@ class Model:
     def predict(
         self,
         x: tp.Union[
-            np.ndarray, tp.Mapping[str, np.ndarray], tp.Tuple[np.ndarray], tp.Iterable,
+            np.ndarray,
+            tp.Mapping[str, np.ndarray],
+            tp.Tuple[np.ndarray],
+            tp.Iterable,
         ],
         verbose: int = 0,
         batch_size: tp.Optional[int] = None,
@@ -1005,7 +1016,11 @@ class Model:
                         )
                     else:
 
-                        outputs = map_structure(map_append, outputs, batch_outputs,)
+                        outputs = map_structure(
+                            map_append,
+                            outputs,
+                            batch_outputs,
+                        )
 
                     callbacks.on_predict_batch_end(
                         step,
@@ -1097,9 +1112,7 @@ class Model:
         states: tp.Dict,
         metrics_states: tp.Optional[tp.Dict],
         rng: jnp.ndarray,
-    ) -> tp.Tuple[
-        tp.Dict[str, jnp.ndarray], tp.Optional[tp.Dict],
-    ]:
+    ) -> tp.Tuple[tp.Dict[str, jnp.ndarray], tp.Optional[tp.Dict],]:
 
         test_fn = self._test_no_jit if self.run_eagerly else self._test_jit
 
@@ -1124,9 +1137,7 @@ class Model:
         states: tp.Dict,
         metrics_states: tp.Optional[tp.Dict],
         rng: jnp.ndarray,
-    ) -> tp.Tuple[
-        tp.Dict[str, jnp.ndarray], tp.Optional[tp.Dict],
-    ]:
+    ) -> tp.Tuple[tp.Dict[str, jnp.ndarray], tp.Optional[tp.Dict],]:
         net_rng, metrics_rng = jax.random.split(rng, num=2)
 
         loss, (y_pred, context, logs) = self._loss(
@@ -1214,7 +1225,12 @@ class Model:
         predict_fn = self._predict_no_jit if self.run_eagerly else self._predict_jit
 
         return predict_fn(
-            training, get_summaries, x=x, parameters=parameters, states=states, rng=rng,
+            training,
+            get_summaries,
+            x=x,
+            parameters=parameters,
+            states=states,
+            rng=rng,
         )
 
     def _predict_no_jit(
@@ -1410,7 +1426,11 @@ class Model:
                 for more options.
         """
         self._maybe_initialize(
-            mode=Mode.predict, x=x, y=None, sample_weight=None, class_weight=None,
+            mode=Mode.predict,
+            x=x,
+            y=None,
+            sample_weight=None,
+            class_weight=None,
         )
 
         assert self.parameters is not None

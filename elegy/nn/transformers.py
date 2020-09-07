@@ -74,7 +74,9 @@ class TransformerEncoderLayer(Module):
         )
 
         src2 = MultiHeadAttention(
-            self.head_size, self.num_heads, dropout=self.dropout,
+            self.head_size,
+            self.num_heads,
+            dropout=self.dropout,
         )(src, mask=mask)
         src = src + Dropout(self.dropout)(src2)
         src = LayerNormalization()(src)
@@ -213,7 +215,9 @@ class TransformerDecoderLayer(Module):
         tgt = tgt + Dropout(self.dropout)(tgt2)
         tgt = LayerNormalization()(tgt)
         tgt2 = MultiHeadAttention(self.head_size, self.num_heads, dropout=self.dropout)(
-            tgt, memory, mask=memory_mask,
+            tgt,
+            memory,
+            mask=memory_mask,
         )
         tgt = tgt + Dropout(self.dropout)(tgt2)
         tgt = LayerNormalization()(tgt)

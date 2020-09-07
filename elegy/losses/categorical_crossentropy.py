@@ -8,7 +8,10 @@ from elegy import types, utils
 from elegy.losses.loss import Loss, Reduction
 
 
-def smooth_labels(labels: jnp.ndarray, smoothing: jnp.ndarray,) -> jnp.ndarray:
+def smooth_labels(
+    labels: jnp.ndarray,
+    smoothing: jnp.ndarray,
+) -> jnp.ndarray:
     smooth_positives = 1.0 - smoothing
     smooth_negatives = smoothing / labels.shape[-1]
     return smooth_positives * labels + smooth_negatives

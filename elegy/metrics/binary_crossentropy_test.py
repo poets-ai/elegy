@@ -17,7 +17,10 @@ class BinaryCrossentropyTest(TestCase):
 
         # Standard BCE, considering prediction tensor as probabilities
         bce = elegy.metrics.BinaryCrossentropy()
-        result = bce(y_true=y_true, y_pred=y_pred,)
+        result = bce(
+            y_true=y_true,
+            y_pred=y_pred,
+        )
         assert jnp.isclose(result, 0.815, rtol=0.01)
 
         # Standard BCE, considering prediction tensor as logits

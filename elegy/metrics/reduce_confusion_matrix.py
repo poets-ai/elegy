@@ -99,14 +99,14 @@ class ReduceConfusionMatrix(Metric):
     ) -> jnp.ndarray:
         """
         Accumulates confusion matrix metrics for computing the reduction metric.
-        
+
         Arguments:
             y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
 
             y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
 
             sample_weight: Optional weighting of each example. Defaults to 1.
-        
+
         Returns:
             Array with the cummulative reduce metric.
         """

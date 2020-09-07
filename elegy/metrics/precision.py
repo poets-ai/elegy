@@ -41,13 +41,13 @@ class Precision(Metric):
     that are used to compute the precision. This value is ultimately returned as
     `precision`, an idempotent operation that simply divides `true_positives`
     by the sum of `true_positives` and `false_positives`.
-    
+
     If `sample_weight` is `None`, weights default to 1. Use `sample_weight` of 0 to mask values.
 
     If sample_weight is None, weights default to 1. Use sample_weight of 0 to mask values.
-    
-    If class_id is specified, we calculate precision by considering only the entries in the batch 
-    for which class_id is above the threshold and computing the fraction of them for which class_id 
+
+    If class_id is specified, we calculate precision by considering only the entries in the batch
+    for which class_id is above the threshold and computing the fraction of them for which class_id
     is indeed a correct label.
 
     ```python
@@ -95,16 +95,16 @@ class Precision(Metric):
                 then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
                 check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).
 
-            threshold: (Optional) A float value or a python list/tuple of float threshold 
-                values in [0, 1]. A threshold is compared with prediction values to determine 
-                the truth value of predictions (i.e., above the threshold is true, below is false). 
-                One metric value is generated for each threshold value. If neither threshold is set 
-                the default is to calculate precision with threshold=0.5. 
-            
+            threshold: (Optional) A float value or a python list/tuple of float threshold
+                values in [0, 1]. A threshold is compared with prediction values to determine
+                the truth value of predictions (i.e., above the threshold is true, below is false).
+                One metric value is generated for each threshold value. If neither threshold is set
+                the default is to calculate precision with threshold=0.5.
+
             class_id: (Optional) Integer class ID for which we want binary metrics.
                 This must be in the half-open interval `[0, num_classes)`, where
                 `num_classes` is the last dimension of predictions.
-            
+
             kwargs: Additional keyword arguments passed to Module.
         """
         super().__init__(on=on, **kwargs)
@@ -123,12 +123,12 @@ class Precision(Metric):
     ) -> jnp.ndarray:
         """
         Accumulates metric statistics. `y_true` and `y_pred` should have the same shape.
-        
+
         Arguments:
             y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
-            
+
             y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
-            
+
             sample_weight: Optional weighting of each example. Defaults to 1. Can be a
                 `Tensor` whose rank is either 0, or the same rank as `y_true`, and must
                 be broadcastable to `y_true`.
