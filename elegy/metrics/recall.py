@@ -4,37 +4,42 @@ import typing as tp
 
 import jax.numpy as jnp
 
-from elegy.metrics.mean import Mean
+from elegy.metrics.reduce_confusion_matrix import Reduction, ReduceConfusionMatrix
+from elegy.metrics.metric import Metric
 
 
 def recall(
-    y_true: jnp.ndarray, y_pred: jnp.ndarray, threshold: jnp.ndarray, sample_weight=None
+    y_true: jnp.ndarray, y_pred: jnp.ndarray, threshold: jnp.ndarray, class_id: jnp.ndarray, 
+    sample_weight: jnp.ndarray, true_positives: ReduceConfusionMatrix, false_negatives: ReduceConfusionMatrix
 ) -> jnp.ndarray:
 
+    #TODO: class_id behavior
     y_pred = (y_pred > threshold).astype(jnp.float32)
 
     if y_true.dtype != y_pred.dtype:
         y_pred = y_pred.astype(y_true.dtype)
 
-    sample_weight = (
-        sample_weight
-        if sample_weight is None
-        else (y_true * sample_weight)[y_true == 1]
-    )
+    true_positives = true_positives(y_true=y_true, y_pred=y_pred, sample_weight=sample_weight)
+    false_negatives =  false_negatives(y_true=y_true, y_pred=y_pred, sample_weight=sample_weight)
 
-    return (
-        (y_true[y_true == 1] == y_pred[y_true == 1]).astype(jnp.float32),
-        sample_weight,
-    )
+    return jnp.nan_to_num(jnp.divide(true_positives,
+                                 true_positives + false_negatives))
 
 
-class Recall(Mean):
+class Recall(Metric):
     """
-    Calculates how often predictions equals labels when real classes are equal to one. This metric creates two local variables, 
-    `total` and `count` that are used to compute the frequency with which `y_pred` matches `y_true`. This frequency is
-    ultimately returned as `binary recall`: an idempotent operation that simply
-    divides `total` by `count`. If `sample_weight` is `None`, weights default to 1. 
-    Use `sample_weight` of 0 to mask values.
+    This metric creates two local variables, `true_positives` and
+    `false_negatives`, that are used to compute the recall. This value is
+    ultimately returned as `recall`, an idempotent operation that simply divides
+    `true_positives` by the sum of `true_positives` and `false_negatives`.
+    
+    If `sample_weight` is `None`, weights default to 1. Use `sample_weight` of 0 to mask values.
+
+    If sample_weight is None, weights default to 1. Use sample_weight of 0 to mask values.
+    
+    If class_id is specified, we calculate recall by considering only the entries in the batch 
+    for which class_id is above the threshold and computing the fraction of them for which class_id 
+    is indeed a correct label.
 
     ```python
         recall = elegy.metrics.Recall()
@@ -63,7 +68,7 @@ class Recall(Mean):
     """
 
     def __init__(
-        self, on: tp.Optional[types.IndexLike] = None, threshold=None, **kwargs
+        self, on: tp.Optional[types.IndexLike] = None, threshold = None, class_id = None, **kwargs
     ):
         """
         Creates a `Recall` instance.
@@ -81,12 +86,19 @@ class Recall(Mean):
                 values in [0, 1]. A threshold is compared with prediction values to determine 
                 the truth value of predictions (i.e., above the threshold is true, below is false). 
                 One metric value is generated for each threshold value. If neither threshold is set 
-                the default is to calculate precision with threshold=0.5. 
+                the default is to calculate recall with threshold=0.5. 
+
+            class_id: (Optional) Integer class ID for which we want binary metrics.
+                This must be in the half-open interval `[0, num_classes)`, where
+                `num_classes` is the last dimension of predictions.    
                 
             kwargs: Additional keyword arguments passed to Module.
         """
         super().__init__(on=on, **kwargs)
         self.threshold = 0.5 if threshold is None else threshold
+        self.class_id = 1 if class_id is None else class_id
+        self.true_positives = ReduceConfusionMatrix(reduction=Reduction.TRUE_POSITIVES)
+        self.false_negatives =  ReduceConfusionMatrix(reduction=Reduction.FALSE_NEGATIVES)
 
     def call(
         self,
@@ -99,18 +111,16 @@ class Recall(Mean):
         
         Arguments:
             y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
+            
             y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
+            
             sample_weight: Optional weighting of each example. Defaults to 1. Can be a
-            `Tensor` whose rank is either 0, or the same rank as `y_true`, and must
-            be broadcastable to `y_true`.
+                `Tensor` whose rank is either 0, or the same rank as `y_true`, and must
+                be broadcastable to `y_true`.
         Returns:
             Array with the cumulative recall.
-    """
-        values, sample_weight = recall(
-            y_true=y_true,
-            y_pred=y_pred,
-            threshold=self.threshold,
-            sample_weight=sample_weight,
-        )
+        """
 
-        return super().call(values=values, sample_weight=sample_weight,)
+        return recall(y_true=y_true, y_pred=y_pred, sample_weight=sample_weight,
+                      threshold=self.threshold, class_id=self.class_id,
+                      true_positives=self.true_positives, false_negatives=self.false_negatives)

@@ -14,6 +14,7 @@ def precision(
     sample_weight: jnp.ndarray, true_positives: ReduceConfusionMatrix, false_positives: ReduceConfusionMatrix
 ) -> jnp.ndarray:
 
+    #TODO: class_id behavior
     y_pred = (y_pred > threshold).astype(jnp.float32)
 
     if y_true.dtype != y_pred.dtype:
@@ -28,10 +29,10 @@ def precision(
 
 class Precision(Metric):
     """
-    Calculates how often predictions equals labels when predictions classes are equal to one.
-    This metric creates two local variables, `total` and `count` that are used to compute the 
-    frequency with which `y_pred` matches `y_true`. This frequency is ultimately returned as 
-    `binary precision`: an idempotent operation that simply divides `total` by `count`. 
+    The metric creates two local variables, `true_positives` and `false_positives`
+    that are used to compute the precision. This value is ultimately returned as
+    `precision`, an idempotent operation that simply divides `true_positives`
+    by the sum of `true_positives` and `false_positives`.
     
     If `sample_weight` is `None`, weights default to 1. Use `sample_weight` of 0 to mask values.
 
