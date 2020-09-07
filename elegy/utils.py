@@ -19,6 +19,17 @@ else:
 EPSILON = 1e-7
 
 
+class Empty:
+    pass
+
+
+class ModuleOrderError(Exception):
+    pass
+
+
+EMPTY = Empty()
+
+
 def maybe_expand_dims(a: np.ndarray, b: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
     assert np.prod(a.shape) == np.prod(b.shape)
 

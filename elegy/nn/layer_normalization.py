@@ -119,14 +119,14 @@ class LayerNormalization(module.Module):
 
         param_shape = inputs.shape[-1:]
         if self.create_scale:
-            scale = hooks.get_parameter(
+            scale = self.add_parameter(
                 "scale", param_shape, jnp.float32, initializer=self.scale_init
             )
         elif scale is None:
             scale = np.array(1.0, dtype=inputs.dtype)
 
         if self.create_offset:
-            offset = hooks.get_parameter(
+            offset = self.add_parameter(
                 "offset", param_shape, jnp.float32, initializer=self.offset_init
             )
         elif offset is None:

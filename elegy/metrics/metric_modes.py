@@ -17,8 +17,8 @@ class LossMetrics(Metric):
         count += 1
         total = jax.tree_multimap(lambda a, b: a + b, total, logs)
 
-        hooks.set_state("count", count)
-        hooks.set_state("total", total)
+        self.update_parameter("count", count)
+        self.update_parameter("total", total)
 
         logs = jax.tree_map(lambda total: total / count, total)
 
@@ -38,7 +38,7 @@ class Metrics(Metric):
         # Metric logs
         for context, val in apply_recursive((), self.metrics, **kwargs):
             name = "/".join(context)
-            name = get_unique_name(logs, name)
+            name = get_unique_metric_name(logs, name)
             logs[name] = val
 
         return logs
@@ -72,7 +72,7 @@ def apply_recursive(context: tp.Tuple[str, ...], metrics, **kwargs):
         raise TypeError(f"Invalid type {type(metrics)}")
 
 
-def get_unique_name(logs, name):
+def get_unique_metric_name(logs, name):
 
     if name not in logs:
         return name

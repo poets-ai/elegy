@@ -5,7 +5,7 @@ import haiku as hk
 import numpy as np
 
 from elegy import utils, hooks
-from elegy.module import Module, LOCAL, Context
+from elegy.module import Module, LOCAL, LocalContext
 
 
 def sequential(*layers: tp.Callable[..., tp.Any]) -> tp.Callable[..., tp.Any]:

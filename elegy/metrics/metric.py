@@ -49,7 +49,7 @@ class Metric(Module):
 
     * `call()`: All state variables should be created in this method by
         calling `haiku.get_state()`, update this state by calling
-        `haiku.set_state(...)`, and return a result based on these states.
+        `haiku.update_parameter(...)`, and return a result based on these states.
 
     Example subclass implementation:
 
@@ -63,8 +63,8 @@ class Metric(Module):
             total += jnp.sum(y_true == y_pred)
             count += jnp.prod(y_true.shape)
 
-            hk.set_state("total", total)
-            hk.set_state("count", count)
+            hk.update_parameter("total", total)
+            hk.update_parameter("count", count)
 
             return total / count
     ```

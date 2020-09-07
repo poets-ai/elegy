@@ -8,7 +8,7 @@ from elegy.module import (
     ApplyCallable,
     ApplyContext,
     Module,
-    PRNGSequence,
+    RNG,
 )
 from io import StringIO
 import json
@@ -111,7 +111,7 @@ class Model:
     loss_module: tp.Optional[Module]
     metrics_module: tp.Optional[Module]
     _optimizer: optax.GradientTransformation
-    _rngs: PRNGSequence
+    _rngs: RNG
     _parameters: tp.Optional[types.Parameters]
     _states: tp.Optional[types.States]
     _metrics_states: tp.Optional[tp.Dict]
@@ -189,7 +189,7 @@ class Model:
         self.loss_module = loss_modes.Losses(loss) if loss is not None else None
         self.metrics_module = metric_modes.Metrics(metrics) if metrics else None
         self._optimizer = optimizer if optimizer is not None else optax.adam(1e-3)
-        self._rngs = PRNGSequence(seed)
+        self._rngs = RNG(seed)
         self._parameters = parameters
         self._states = states
         self._metrics_states = (
@@ -1266,7 +1266,7 @@ class Model:
 
     @seed.setter
     def seed(self, seed: tp.Union[np.ndarray, int]):
-        self._rngs = PRNGSequence(seed)
+        self._rngs = RNG(seed)
 
     @property
     def full_state(self) -> tp.Dict:

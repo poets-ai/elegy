@@ -16,7 +16,7 @@ class Losses(Module):
         logs = {}
 
         for context, val in apply_recursive((), self.losses, **kwargs):
-            loss_name = get_unique_name(context, logs)
+            loss_name = get_unique_loss_name(context, logs)
             logs[loss_name] = val
 
         return logs
@@ -49,7 +49,7 @@ def apply_recursive(context: tp.Tuple[str, ...], losses, **kwargs):
         raise TypeError(f"Invalid type {type(losses)}")
 
 
-def get_unique_name(context, logs):
+def get_unique_loss_name(context, logs):
     context = list(context)
 
     if not context[0].endswith("loss"):

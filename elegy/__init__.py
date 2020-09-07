@@ -12,26 +12,20 @@ from . import (
     module,
     hooks,
 )
-from .hooks import (
-    add_loss,
-    add_metric,
-    add_summary,
-    get_parameter,
-    get_state,
-    next_rng_key,
-    set_state,
-)
 from .losses import Loss
 from .metrics import Metric
 from .model import Model
 from .module import (
     ApplyCallable,
     ApplyContext,
-    Context,
     InitCallable,
     Module,
     to_module,
-    PRNGSequence,
+    RNG,
+    add_loss,
+    add_metric,
+    add_summary,
+    context,
 )
 
 __all__ = [
@@ -44,13 +38,11 @@ __all__ = [
     "model",
     "nn",
     "regularizers",
+    "context",
     "add_loss",
     "add_metric",
     "add_summary",
-    "get_parameter",
-    "get_state",
     "next_rng_key",
-    "set_state",
     "Loss",
     "Metric",
     "Model",
@@ -60,5 +52,5 @@ __all__ = [
     # "InitCallable",
     "Module",
     "to_module",
-    "PRNGSequence",
+    "RNG",
 ]

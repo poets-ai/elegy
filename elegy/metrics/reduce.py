@@ -136,9 +136,9 @@ class Reduce(Metric):
             dtype=self.dtype,
         )
 
-        hooks.set_state("total", total)
+        self.update_parameter("total", total)
 
         if count is not None:
-            hooks.set_state("count", count)
+            self.update_parameter("count", count)
 
         return value

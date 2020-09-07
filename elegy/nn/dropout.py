@@ -68,7 +68,7 @@ class Dropout(Module):
             x but dropped out and scaled by `1 / (1 - rate)`.
         """
         if training is None:
-            training = hooks.is_training()
+            training = hooks.training()
 
         return hk.dropout(
             rng=rng if rng is not None else hooks.next_rng_key(),

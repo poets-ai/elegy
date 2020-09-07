@@ -108,9 +108,9 @@ class ExponentialMovingAverage(module.Module):
             average /= one - jnp.power(decay, counter)
 
         if update_stats:
-            hooks.set_state("counter", counter)
-            hooks.set_state("hidden", hidden)
-            hooks.set_state("average", average)
+            self.update_parameter("counter", counter)
+            self.update_parameter("hidden", hidden)
+            self.update_parameter("average", average)
 
         return average
 

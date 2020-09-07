@@ -14,12 +14,12 @@ very basic `Linear` and `MLP` modules which will seem very familiar:
 class Linear(elegy.Module):
     def __init__(self, n_in, n_out):
         super().__init__()
-        self.w = elegy.get_parameter(
+        self.w = self.add_parameter(
             "w",
             [x.shape[-1], self.n_out],
             initializer=elegy.initializers.RandomUniform(),
         )
-        self.b = elegy.get_parameter("b", [n_out], initializer=elegy.initializers.RandomUniform())
+        self.b = self.add_parameter("b", [n_out], initializer=elegy.initializers.RandomUniform())
 
     def call(self, x):
         return jnp.dot(x, self.w) + self.b
@@ -55,16 +55,16 @@ other areas like web development have proven valuable, React Hooks being a recen
 In Elegy we have the following list of hooks:
 
 
-| Hook            | Description                                                                                                     |
-| --------------- | --------------------------------------------------------------------------------------------------------------- |
-| `get_parameter` | Gives us access to a trainable parameter.                                                                       |
-| `get_state`     | Gives us access to some state. This is used in layers like `BatchNormalization` and in most of the metrics.     |
-| `set_state`     | Lets us update a state. When used in conjunction with `get_state` it lets us express an iterative computation. |
-| `next_rng_key`  | Gives us access to a unique `PRNGKey` we can pass to functions like `jax.random.uniform` and friends.           |
-| `is_training`   | Tells us whether training is currently happening or not.                                                       |
-| `add_loss`      | Lets us declare a loss in some intermediate layer.                                                              |
-| `add_metric`    | Lets us declare a metric in some intermediate layer.                                                            |
-| `add_summary`   | Lets us declare a summary in some intermediate layer.                                                           |
+| Hook               | Description                                                                                                    |
+| ------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `get_parameter`    | Gives us access to a trainable parameter.                                                                      |
+| `get_state`        | Gives us access to some state. This is used in layers like `BatchNormalization` and in most of the metrics.    |
+| `update_parameter` | Lets us update a state. When used in conjunction with `get_state` it lets us express an iterative computation. |
+| `next_rng_key`     | Gives us access to a unique `PRNGKey` we can pass to functions like `jax.random.uniform` and friends.          |
+| `training`         | Tells us whether training is currently happening or not.                                                       |
+| `add_loss`         | Lets us declare a loss in some intermediate layer.                                                             |
+| `add_metric`       | Lets us declare a metric in some intermediate layer.                                                           |
+| `add_summary`      | Lets us declare a summary in some intermediate layer.                                                          |
 
 !!! Note
     If you use existing `Module`s you might not need to worry much about these hooks, but keep them in mind
@@ -89,12 +89,12 @@ class Linear(elegy.Module):
         self.n_out = n_out
 
     def call(self, x):
-        w = elegy.get_parameter(
+        w = self.add_parameter(
             "w",
             [x.shape[-1], self.n_out],
             initializer=elegy.initializers.RandomUniform(),
         )
-        b = elegy.get_parameter("b", [self.n_out], initializer=jnp.zeros)
+        b = self.add_parameter("b", [self.n_out], initializer=jnp.zeros)
 
         return jnp.dot(x, w) + b
 
@@ -118,12 +118,12 @@ class Linear(elegy.Module):
         self.n_out = n_out
 
     def call(self, x):
-        w = elegy.get_parameter(
+        w = self.add_parameter(
             "w",
             [x.shape[-1], self.n_out],
             initializer=elegy.initializers.RandomUniform(),
         )
-        b = elegy.get_parameter("b", [self.n_out], initializer=jnp.zeros)
+        b = self.add_parameter("b", [self.n_out], initializer=jnp.zeros)
 
         return jnp.dot(x, w) + b
 ```
@@ -200,7 +200,7 @@ to manage your modules:
 ```python
 x = np.random.uniform(size=(15, 3))
 mlp = MLP()
-rngs = elegy.PRNGSequence(42)
+rngs = elegy.RNG(42)
 mlp.init(rng=next(rngs))(x)
 y_pred, ctx = mlp.apply(rng=next(rngs))(x)
 ```
@@ -211,7 +211,7 @@ it an `rng` key.
 ```python hl_lines="4"
 x = np.random.uniform(size=(15, 3))
 mlp = MLP()
-rngs = elegy.PRNGSequence(42)
+rngs = elegy.RNG(42)
 mlp.init(rng=next(rngs))(x)
 y_pred, ctx = mlp.apply(rng=next(rngs))(x)
 ```
@@ -225,7 +225,7 @@ a context:
 ```python hl_lines="5"
 x = np.random.uniform(size=(15, 3))
 mlp = MLP()
-rngs = elegy.PRNGSequence(42)
+rngs = elegy.RNG(42)
 mlp.init(rng=next(rngs))(x)
 y_pred, ctx = mlp.apply(rng=next(rngs))(x)
 ```
@@ -247,7 +247,7 @@ of the module:
 ```python hl_lines="5 7"
 x = np.random.uniform(size=(15, 3))
 mlp = MLP()
-rngs = elegy.PRNGSequence(42)
+rngs = elegy.RNG(42)
 mlp.init(rng=next(rngs))(x)
 linear, linear_1, linear_2 = mlp.linear, mlp.linear_1, mlp.linear_2
 y_pred, ctx = mlp.apply(rng=next(rngs))(x)
@@ -268,7 +268,7 @@ we will use additional feature from `init` and `apply` that where created for th
 ```python hl_lines="4 5"
 x = np.random.uniform(size=(15, 3))
 mlp = MLP()
-rngs = elegy.PRNGSequence(42)
+rngs = elegy.RNG(42)
 parameters, states = mlp.init(rng=next(rngs))(x)
 y_pred, ctx = mlp.apply(parameters=parameters, states=states, rng=next(rngs))(x)
 ```
@@ -301,7 +301,7 @@ def update(parameters, rng, x, y):
 x = np.random.uniform(size=(15, 3))
 y = np.random.uniform(size=(15, 1))
 mlp = MLP()
-rngs = elegy.PRNGSequence(42)
+rngs = elegy.RNG(42)
 parameters, states = mlp.init(rng=next(rngs))(x)
 
 for step in range(1000):

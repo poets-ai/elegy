@@ -1,7 +1,7 @@
 
-# elegy.set_state
+# self.update_parameter
 
-::: elegy.set_state
+::: self.update_parameter
     selection:
         inherited_members: true
         members:

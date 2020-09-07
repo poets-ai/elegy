@@ -108,8 +108,8 @@ class Linear(elegy.Module):
         self.units = units
 
     def call(self, x):
-        w = elegy.get_parameter("w", [x.shape[-1], self.units], initializer=jnp.ones)
-        b = elegy.get_parameter("b", [self.units], initializer=jnp.ones)
+        w = self.add_parameter("w", [x.shape[-1], self.units], initializer=jnp.ones)
+        b = self.add_parameter("b", [self.units], initializer=jnp.ones)
 
         return jnp.dot(x, w) + b
 ```

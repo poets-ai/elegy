@@ -1,7 +1,7 @@
 
-# elegy.hooks.set_state
+# elegy.self.update_parameter
 
-::: elegy.hooks.set_state
+::: elegy.self.update_parameter
     selection:
         inherited_members: true
         members:

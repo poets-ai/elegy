@@ -1,7 +1,7 @@
 
-# elegy.PRNGSequence
+# elegy.RNG
 
-::: elegy.PRNGSequence
+::: elegy.RNG
     selection:
         inherited_members: true
         members:

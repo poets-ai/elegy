@@ -1,7 +1,7 @@
 
-# elegy.get_parameter
+# self.add_parameter
 
-::: elegy.get_parameter
+::: self.add_parameter
     selection:
         inherited_members: true
         members:

@@ -1,3 +1,5 @@
+from elegy.utils import EMPTY, Empty, ModuleOrderError
+from elegy.random import RNG
 import threading
 import typing as tp
 from abc import ABCMeta, abstractmethod
@@ -9,7 +11,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 
 # -----------------------------------------------------------------
-# PRNGSequence
+# RNG
 # ----------------------------------------------------------------
 import haiku as hk
 import jax
@@ -17,7 +19,6 @@ import jax.numpy as jnp
 import numpy as np
 
 from elegy import types, utils
-from elegy.types import PRNGKey
 
 __all__ = [
     # "ApplyCallable",
@@ -26,16 +27,111 @@ __all__ = [
     # "InitCallable",
     "Module",
     "to_module",
+    "add_loss",
+    "add_metric",
+    "add_summary",
+    "next_rng_key",
 ]
 
 T = tp.TypeVar("T")
-LOCAL = threading.local()
-LOCAL.contexts = []
+
+
+class LocalContext(utils.Protocol):
+    rng: RNG
+    training: bool
+    initializing: bool
+    losses: tp.Optional[tp.Dict[str, tp.Any]]
+    metrics: tp.Optional[tp.Dict[str, tp.Any]]
+    summaries: tp.Optional[tp.List[tp.Tuple[tp.Optional["Module"], str, np.ndarray]]]
+    names: tp.Optional[tp.List[str]]
+    level_names: tp.Optional[tp.List[tp.List[str]]]
+    module: tp.Optional["Module"]
+    inside_call: tp.Optional[bool]
+    module_index: tp.Optional[int]
+
+
+@dataclass
+class _LocalContext(threading.local):
+    rng: RNG
+    training: bool
+    initializing: bool
+    losses: tp.Optional[tp.Dict[str, tp.Any]]
+    metrics: tp.Optional[tp.Dict[str, tp.Any]]
+    summaries: tp.Optional[tp.List[tp.Tuple[tp.Optional["Module"], str, np.ndarray]]]
+    names: tp.Optional[tp.List[str]]
+    level_names: tp.Optional[tp.List[tp.List[str]]]
+    module: tp.Optional["Module"]
+    inside_call: tp.Optional[bool]
+    module_index: tp.Optional[int]
+
+
+LOCAL: LocalContext = _LocalContext(
+    rng=RNG(42),
+    training=True,
+    initializing=False,
+    losses=None,
+    metrics=None,
+    summaries=None,
+    names=None,
+    level_names=None,
+    module=None,
+    inside_call=None,
+    module_index=None,
+)
+
+
+@contextmanager
+def context(
+    rng: tp.Union[Empty, RNG] = EMPTY,
+    training: tp.Union[Empty, bool] = EMPTY,
+    initializing: tp.Union[Empty, bool] = EMPTY,
+    losses: tp.Union[Empty, tp.Dict[str, tp.Any]] = EMPTY,
+    metrics: tp.Union[Empty, tp.Dict[str, tp.Any]] = EMPTY,
+    summaries: tp.Union[
+        Empty, tp.List[tp.Tuple[tp.Optional["Module"], str, np.ndarray]]
+    ] = EMPTY,
+    names: tp.Union[Empty, tp.List[str]] = EMPTY,
+    level_names: tp.Union[Empty, tp.List[tp.List[str]]] = EMPTY,
+    module: tp.Union[Empty, "Module"] = EMPTY,
+    inside_call: tp.Union[Empty, bool] = EMPTY,
+    module_index: tp.Union[Empty, int] = EMPTY,
+) -> tp.Iterator[LocalContext]:
+
+    global LOCAL
+    current = LOCAL
+
+    if not isinstance(metrics, Empty) or not isinstance(summaries, Empty):
+        if isinstance(names, Empty):
+            names = []
+
+        if isinstance(level_names, Empty):
+            level_names = [[]]
+
+    LOCAL = _LocalContext(
+        rng=rng if not isinstance(rng, Empty) else current.rng,
+        training=training if not isinstance(training, Empty) else current.training,
+        initializing=initializing
+        if not isinstance(initializing, Empty)
+        else current.initializing,
+        losses=losses if not isinstance(losses, Empty) else None,
+        metrics=metrics if not isinstance(metrics, Empty) else None,
+        summaries=summaries if not isinstance(summaries, Empty) else None,
+        names=names if not isinstance(names, Empty) else None,
+        level_names=level_names if not isinstance(level_names, Empty) else None,
+        module=module if not isinstance(module, Empty) else None,
+        inside_call=inside_call if not isinstance(inside_call, Empty) else None,
+        module_index=module_index if not isinstance(module_index, Empty) else None,
+    )
+
+    try:
+        yield LOCAL
+    finally:
+        LOCAL = current
 
 
 def construct_module(cls, *args, **kwargs) -> "Module":
     module: Module = cls.__new__(cls, *args, **kwargs)
-    with initialization_context(module):
+    with instantiation_context(module):
         cls.__init__(module, *args, **kwargs)
 
     assert module is not None
@@ -62,42 +158,46 @@ def construct_module(cls, *args, **kwargs) -> "Module":
 
 class ModuleMeta(ABCMeta):
     def __call__(cls: tp.Type[T], *args, **kwargs) -> "Module":
-        module: Module
-        context: Context
 
-        if LOCAL.contexts:
-            context = LOCAL.contexts[-1]
-            parent_module = context.module_c[-1] if context.module_c else None
+        # Set unique on parent when using inside `call`
+        if LOCAL.inside_call:
+            assert LOCAL.module_index is not None
+            assert LOCAL.module
 
-            # Set unique on parent when using inside `call`
-            if parent_module is not None and context.inside_call_c[-1]:
-                index = context.index_c[-1]
-                assert parent_module is not None
+            index = LOCAL.module_index
+            parent = LOCAL.module
 
-                if len(parent_module._dynamic_submodules) > index:
-                    module = getattr(
-                        parent_module,
-                        parent_module._dynamic_submodules[index],
+            if len(parent._dynamic_submodules) > index:
+                module = getattr(
+                    parent,
+                    parent._dynamic_submodules[index],
+                )
+                assert isinstance(module, Module)
+
+                if not isinstance(module, cls):
+                    raise ModuleOrderError(
+                        f"Error retrieving module, expected type {cls.__name__}, got {module}. "
+                        "This is probably due to control flow, you must guarantee that the same amount "
+                        "of submodules will be created every time and that their order is the same."
                     )
-                else:
-                    if not context.building:
-                        raise ValueError(
-                            f"Trying to create module of type'{cls.__name__}' outside of `init`."
-                        )
+            else:
+                if not LOCAL.initializing:
+                    raise ValueError(
+                        f"Trying to create module of type'{cls.__name__}' outside of `init`."
+                    )
 
-                    module = construct_module(cls, *args, **kwargs)
+                module = construct_module(cls, *args, **kwargs)
 
-                    name = get_unique_name(parent_module, module.name)
-                    setattr(parent_module, name, module)
-                    parent_module._submodules.append(name)
-                    parent_module._dynamic_submodules.append(name)
+                name = get_unique_name(set(vars(parent)), module.name)
+                setattr(parent, name, module)
+                parent._submodules.append(name)
+                parent._dynamic_submodules.append(name)
 
-                assert module is not None
-                context.index_c[-1] += 1
+            LOCAL.module_index += 1
 
-                return module
-
-        return construct_module(cls, *args, **kwargs)
+            return module
+        else:
+            return construct_module(cls, *args, **kwargs)
 
 
 class Module(metaclass=ModuleMeta):
@@ -156,7 +256,7 @@ class Module(metaclass=ModuleMeta):
         with call_context(self):
             outputs = self.call(*args, **kwargs)
 
-            add_summary(None, outputs)
+            add_summary(self, outputs)
 
             return outputs
 
@@ -171,101 +271,158 @@ class Module(metaclass=ModuleMeta):
         """
         return {name: getattr(self, name) for name in self._submodules}
 
-    def init(
-        self, rng: tp.Optional[tp.Union[np.ndarray, int]] = None
-    ) -> "InitCallable":
+    def init(self, *args, **kwargs) -> None:
         """
         Initializes the module.
 
         Arguments:
-            rng:
-
-        Returns:
-
+            x: sample inputs.
         """
 
-        @utils.wraps(self)
-        def init_fn(*args, **kwargs):
-            with context(rng=rng, building=True, get_summaries=False):
-                self(*args, **kwargs)
+        with init_context():
+            self(*args, **kwargs)
 
-            params = self.get_parameters()
-            initial_states = self.get_states(_initial=True)
+    # def apply(
+    #     self,
+    #     parameters: tp.Optional[tp.Dict] = None,
+    #     states: tp.Optional[tp.Dict] = None,
+    #     rng: tp.Optional[tp.Union[np.ndarray, int]] = None,
+    #     get_summaries: bool = False,
+    #     training: bool = True,
+    # ) -> "ApplyCallable":
+    #     """
+    #     Applies your function injecting some context arguments.
 
-            self.clear_initial_states()
-            self.set_states(initial_states)
+    #     Arguments:
+    #         parameters:
+    #         states:
+    #         rng:
+    #         get_summaries:
 
-            return params, initial_states
+    #     Returns:
+    #         A function with the same signature as `call` that will
+    #         execute the computation given the context arguments
+    #         passed to `apply`.
+    #     """
 
-        return init_fn
+    #     @utils.wraps(self.call)
+    #     def apply_fn(*args, **kwargs):
 
-    def apply(
+    #         current_parameters = self.get_parameters()
+    #         current_states = self.get_states()
+
+    #         assert current_parameters is not None
+    #         assert current_states is not None
+
+    #         if parameters is not None:
+    #             self.set_parameters(parameters)
+
+    #         if states is not None:
+    #             self.set_states(states)
+
+    #         with context(
+    #             rng=rng,
+    #             building=False,
+    #             training=training,
+    #             get_summaries=get_summaries,
+    #         ) as ctx:
+    #             outputs = self(*args, **kwargs)
+
+    #         output_parameters = self.get_parameters()
+    #         output_states = self.get_states()
+
+    #         if parameters is not None:
+    #             self.set_parameters(current_parameters)
+
+    #         if states is not None:
+    #             self.set_states(current_states)
+
+    #         return (
+    #             outputs,
+    #             ApplyContext(
+    #                 parameters=output_parameters,
+    #                 states=output_states,
+    #                 losses=ctx.losses,
+    #                 metrics=ctx.metrics,
+    #                 summaries=ctx.summaries,
+    #             ),
+    #         )
+
+    #     return apply_fn
+
+    def add_parameter(
         self,
-        parameters: tp.Optional[tp.Dict] = None,
-        states: tp.Optional[tp.Dict] = None,
-        rng: tp.Optional[tp.Union[np.ndarray, int]] = None,
-        get_summaries: bool = False,
-        training: bool = True,
-    ) -> "ApplyCallable":
+        name: str,
+        shape: tp.Sequence[int] = (),
+        dtype: tp.Optional[np.dtype] = None,
+        initializer: tp.Union[
+            tp.Callable[[tp.Sequence[int], tp.Any], tp.Any], tp.Any
+        ] = jnp.zeros,
+        trainable: bool = True,
+    ) -> np.ndarray:
         """
-        Applies your function injecting some context arguments.
+        A hook that lets you add a parameter to the current module. The parameter will only be created once
+        during `init` and will reused afterwards.
 
         Arguments:
-            parameters:
-            states:
-            rng:
-            get_summaries:
+            name: The name of the parameter. It must be unique and no other field/property/method
+                of the instance can have that name.
+            shape: The shape of the parameter.
+            dtype: The type of the parameter.
+            initializer: A callable that takes in a shape and dtype and returns the initial value.
 
         Returns:
-            A function with the same signature as `call` that will
-            execute the computation given the context arguments
-            passed to `apply`.
+            The value of the parameter.
         """
 
-        @utils.wraps(self.call)
-        def apply_fn(*args, **kwargs):
+        if not hasattr(self, name):
+            if not module_initializing():
+                raise ValueError(f"Trying to initialize '{name}' outside of `init`.")
 
-            current_parameters = self.get_parameters()
-            current_states = self.get_states()
+            if trainable:
+                self._params.append(name)
+            else:
+                self._states.append(name)
 
-            assert current_parameters is not None
-            assert current_states is not None
+            if dtype is None:
+                dtype = self.dtype
 
-            if parameters is not None:
-                self.set_parameters(parameters)
-
-            if states is not None:
-                self.set_states(states)
-
-            with context(
-                rng=rng,
-                building=False,
-                training=training,
-                get_summaries=get_summaries,
-            ) as ctx:
-                outputs = self(*args, **kwargs)
-
-            output_parameters = self.get_parameters()
-            output_states = self.get_states()
-
-            if parameters is not None:
-                self.set_parameters(current_parameters)
-
-            if states is not None:
-                self.set_states(current_states)
-
-            return (
-                outputs,
-                ApplyContext(
-                    parameters=output_parameters,
-                    states=output_states,
-                    losses=ctx.losses,
-                    metrics=ctx.metrics,
-                    summaries=ctx.summaries,
-                ),
+            initial_value = (
+                initializer(shape, dtype)
+                if isinstance(initializer, tp.Callable)
+                else initializer
             )
 
-        return apply_fn
+            setattr(self, name, initial_value)
+
+        elif name not in self._params + self._states:
+            raise ValueError(
+                f"Class already contained a property named '{name}', "
+                "please use a unique name for the parameter."
+            )
+
+        value = getattr(self, name)
+
+        return value
+
+    def update_parameter(self, name: str, value: tp.Any) -> None:
+        """
+        A hook that lets you update a state of the current module, if the state does not
+        exist it will be created.
+
+        Arguments:
+            name: The name of the state. It must be unique and no other field/property/method
+                of the instance can have that name.
+            value: The updated value of the state.
+        """
+
+        if hasattr(self, name):
+            if module_initializing():
+                return
+
+            setattr(self, name, value)
+        else:
+            raise ValueError(f"Parameter {name} not found in {self}.")
 
     def get_parameters(self) -> types.Parameters:
         """
@@ -401,137 +558,284 @@ class Module(metaclass=ModuleMeta):
 # hooks
 # -------------------------------------------------------------
 
-# this funtion is patched in hooks
-def add_summary(name: tp.Optional[str], value: np.ndarray):
-    raise NotImplementedError()
+
+@tp.overload
+def rng() -> RNG:
+    ...
 
 
-@dataclass
-class Context:
-    building: bool
-    training: bool
-    get_summaries: bool
-    rng_sequence: tp.Optional["PRNGSequence"]
-    losses: tp.Dict
-    metrics: tp.Dict
-    summaries: tp.List[tp.Tuple[tp.Optional[Module], str, tp.Any]]
-    path_names_c: tp.List[str]
-    level_names_c: tp.List[tp.Dict[Module, str]]
-    inside_call_c: tp.List[bool]
-    module_c: tp.List[Module]
-    index_c: tp.List[int]
+@tp.overload
+def rng(key: int) -> RNG:
+    ...
+
+
+@tp.overload
+def rng(key: np.ndarray) -> RNG:
+    ...
+
+
+def rng(key: tp.Union[int, np.ndarray, Empty] = EMPTY) -> RNG:
+
+    if not isinstance(key, Empty):
+        LOCAL.rng = RNG(key)
+
+    return LOCAL.rng
+
+
+def next_rng_key() -> np.ndarray:
+    return LOCAL.rng()
+
+
+def module_initializing() -> bool:
+    return LOCAL.initializing
+
+
+@tp.overload
+def training() -> bool:
+    ...
+
+
+@tp.overload
+def training(status: bool) -> bool:
+    ...
+
+
+def training(status: tp.Union[bool, Empty] = EMPTY) -> bool:
+    """
+    A hook that gets/sets the current training status.
+
+    ```python
+    training = elegy.training()
+
+    if training:
+        ...
+    else:
+        ...
+    ```
+
+    Returns:
+        A boolean value indicating whether training is currently happening.
+    """
+
+    if not isinstance(status, Empty):
+        LOCAL.training = status
+
+    return LOCAL.training
+
+
+@tp.overload
+def losses() -> tp.Optional[tp.Dict[str, tp.Any]]:
+    ...
+
+
+@tp.overload
+def losses(
+    initial: tp.Optional[tp.Dict[str, tp.Any]]
+) -> tp.Optional[tp.Dict[str, tp.Any]]:
+    ...
+
+
+def losses(
+    initial: tp.Union[tp.Dict[str, tp.Any], None, Empty] = EMPTY
+) -> tp.Optional[tp.Dict[str, tp.Any]]:
+
+    if not isinstance(initial, Empty):
+        LOCAL.losses = initial
+
+    return LOCAL.losses
+
+
+@tp.overload
+def metrics() -> tp.Optional[tp.Dict[str, tp.Any]]:
+    ...
+
+
+@tp.overload
+def metrics(
+    initial: tp.Optional[tp.Dict[str, tp.Any]]
+) -> tp.Optional[tp.Dict[str, tp.Any]]:
+    ...
+
+
+def metrics(
+    initial: tp.Union[tp.Dict[str, tp.Any], None, Empty] = EMPTY
+) -> tp.Optional[tp.Dict[str, tp.Any]]:
+
+    if not isinstance(initial, Empty):
+        LOCAL.metrics = initial
+
+    return LOCAL.metrics
+
+
+def base_name() -> str:
+    assert LOCAL.names
+    return "/".join(LOCAL.names)
 
 
 @contextmanager
-def context(
-    rng: tp.Union[np.ndarray, int, None] = None,
-    building: bool = False,
-    get_summaries: bool = False,
-    training: bool = True,
-) -> tp.Iterator[Context]:
-    """"""
+def name_context(name: str) -> tp.Iterator[str]:
 
-    rng_sequence = PRNGSequence(rng) if rng is not None else None
+    if LOCAL.names is None or LOCAL.level_names is None:
+        yield ""
+        return
 
-    ctx = Context(
-        building=building,
-        training=training,
-        get_summaries=get_summaries,
-        rng_sequence=rng_sequence,
-        losses={},
-        metrics={},
-        summaries=[],
-        path_names_c=[],
-        level_names_c=[],
-        inside_call_c=[],
-        module_c=[],
-        index_c=[],
-    )
+    name = get_unique_name(set(LOCAL.level_names[-1]), name)
 
-    LOCAL.contexts.append(ctx)
-
-    if rng is not None:
-        rng = hk.PRNGSequence(rng)
+    LOCAL.names.append(name)
+    LOCAL.level_names[-1].append(name)  # add name to current level
+    LOCAL.level_names.append([])  # create new level for children
 
     try:
-        yield ctx
+        yield name
     finally:
-        LOCAL.contexts.pop()
+        LOCAL.names.pop()
+        LOCAL.level_names.pop()  #
 
 
 @contextmanager
 def call_context(module: Module):
 
-    if LOCAL.contexts:
-        context: Context = LOCAL.contexts[-1]
+    prev_module = LOCAL.module
+    prev_inside_call = LOCAL.inside_call
+    prev_module_index = LOCAL.module_index
 
-        if context.level_names_c:
-            level_names = context.level_names_c[-1]
+    LOCAL.module = module
+    LOCAL.inside_call = True
+    LOCAL.module_index = 0
 
-            if module not in level_names:
-                name = get_unique_name(set(level_names.values()), module.name)
-                level_names[module] = name
-            else:
-                name = level_names[module]
-
-        else:
-            name = module.name
-
-        context.path_names_c.append(name)
-        context.inside_call_c.append(True)
-        context.module_c.append(module)
-        context.index_c.append(0)
-        context.level_names_c.append({})
+    with name_context(module.name):
 
         try:
             yield
         finally:
-            context.path_names_c.pop()
-            context.inside_call_c.pop()
-            context.module_c.pop()
-            context.index_c.pop()
-            context.level_names_c.pop()
-    else:
-        raise ValueError("Cannot execute `call` outside of a `elegy.context`")
+            LOCAL.module = prev_module
+            LOCAL.inside_call = prev_inside_call
+            LOCAL.module_index = prev_module_index
 
 
 @contextmanager
-def initialization_context(module: Module):
+def instantiation_context(module: Module):
 
-    context: Context
+    prev_module = LOCAL.module
+    prev_inside_call = LOCAL.inside_call
 
-    if LOCAL.contexts:
-        pop_context = False
-        context = LOCAL.contexts[-1]
-    else:
-        pop_context = True
-        context = Context(
-            building=False,
-            training=True,
-            get_summaries=False,
-            rng_sequence=None,
-            losses={},
-            metrics={},
-            summaries=[],
-            path_names_c=[],
-            level_names_c=[],
-            inside_call_c=[],
-            module_c=[],
-            index_c=[],
-        )
-        LOCAL.contexts.append(context)
-
-    context.inside_call_c.append(False)
-    context.module_c.append(module)
+    LOCAL.inside_call = False
 
     try:
         yield
     finally:
-        if pop_context:
-            LOCAL.contexts.pop()
-        else:
-            context.inside_call_c.pop()
-            context.module_c.pop()
+        LOCAL.module = prev_module
+        LOCAL.inside_call = prev_inside_call
+
+
+def add_summary(module_or_name: tp.Union[Module, str], value: np.ndarray) -> None:
+    """
+    A hook that lets you define a summary in the current module. Its primary
+    use is to keep track of certain values as they flow through the network
+    so `Model.summary()` can show a representation of architecture.
+
+    ```python
+    def call(self, x):
+        ...
+        y = jax.nn.relu(x)
+        elegy.add_summary("relu", y)
+        ...
+    ```
+
+    The summaries will be aggregated by [`apply`][elegy.module.Module.apply]
+    if `get_summaries` is set to `True`, else this hook does nothing.
+
+    ```python
+    transformed_state = transform.apply(..., get_summaries=True, ...)
+    ```
+
+    Arguments:
+        name: The name of the loss. If a summary with the same
+            `name` already exists a unique identifier will be generated.
+        value: The value for the summary.
+    """
+
+    if LOCAL.summaries is None:
+        return
+
+    name = base_name()
+
+    if isinstance(module_or_name, str):
+        name = f"{name}/{module_or_name}"
+        name = get_unique_name({t[1] for t in LOCAL.summaries}, name)
+        module = None
+    else:
+        module = module_or_name
+
+    LOCAL.summaries.append((module, name, value))
+
+
+def add_loss(name: str, value: np.ndarray) -> None:
+    """
+    A hook that lets you define a loss within a [`module`][elegy.module.Module].
+
+    ```python
+    w = self.add_parameter("w", [3, 5], initializer=jnp.ones)
+
+    # L2 regularization penalty
+    elegy.add_loss("l2_regularization", 0.01 * jnp.mean(w ** 2))
+    ```
+
+    The loss will be aggregated by [`Module.apply`][elegy.module.Module.apply]
+    and automatically handled by [`Model`][elegy.model.Model].
+
+    Arguments:
+        name: The name of the loss. If a `name` is repeated on
+            different calls values will be added together.
+        value: The value for the loss.
+    """
+    if LOCAL.losses is None:
+        return
+
+    if not name.endswith("loss"):
+        name += "_loss"
+
+    if name in LOCAL.losses:
+        LOCAL.losses[name] += value
+    else:
+        LOCAL.losses[name] = value
+
+
+def add_metric(name: str, value: np.ndarray) -> None:
+    """
+    A hook that lets you define a metric within a [`module`][elegy.module.Module].
+
+    ```python
+    y = jax.nn.relu(x)
+    elegy.add_metric("activation_mean", jnp.mean(y))
+    ```
+
+    The metrics will be aggregated by [`Module.apply`][elegy.module.Module.apply]
+    and automatically handled by [`Model`][elegy.model.Model].
+
+    Arguments:
+        name: The name of the loss. If a metric with the same
+            `name` already exists a unique identifier will be generated.
+        value: The value for the metric.
+    """
+    if LOCAL.metrics is None:
+        return
+
+    name = f"{base_name()}/{name}"
+    name = get_unique_name(set(LOCAL.metrics), name)
+    LOCAL.metrics[name] = value
+
+
+@contextmanager
+def init_context():
+    prev_initializing = LOCAL.initializing
+
+    LOCAL.initializing = True
+
+    try:
+        yield
+    finally:
+        LOCAL.initializing = prev_initializing
 
 
 # ------------------------------------------------------------------------
@@ -635,7 +939,10 @@ def tree_apply(
                 tree_apply(f, getattr(module, key), value)
 
 
-def tree_exec(f: tp.Callable, module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict]):
+def tree_exec(
+    f: tp.Callable[[Module], tp.Any],
+    module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict],
+):
 
     if isinstance(module, tp.List):
 
@@ -670,23 +977,9 @@ def leaf_isinstance(obj: tp.Any, types) -> tp.Type:
 
 
 def get_unique_name(
-    logs: tp.Union[
-        tp.Set[str],
-        tp.Dict[str, tp.Any],
-        tp.List[tp.Tuple[tp.Optional[Module], str, tp.Any]],
-        Module,
-    ],
+    names: tp.Set[str],
     name: str,
 ):
-
-    if isinstance(logs, dict):
-        names = set(logs.keys())
-    elif isinstance(logs, tp.List):
-        names = {t[1] for t in logs}
-    elif isinstance(logs, Module):
-        names = set(vars(logs).keys())
-    else:
-        names = logs
 
     if name not in names:
         return name
@@ -696,24 +989,6 @@ def get_unique_name(
         i += 1
 
     return f"{name}_{i}"
-
-
-hk.PRNGSequence
-
-
-class PRNGSequence(tp.Iterator[PRNGKey]):
-    key: np.ndarray
-
-    def __init__(self, key: tp.Union[int, np.ndarray]):
-        self.key = (
-            jax.random.PRNGKey(key) if isinstance(key, int) or key.shape == () else key
-        )
-
-    def __next__(self) -> np.ndarray:
-        self.key, rng_next = tuple(jax.random.split(self.key, 2))
-        return rng_next
-
-    next = __next__
 
 
 def to_module(f):
