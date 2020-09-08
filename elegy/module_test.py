@@ -61,33 +61,33 @@ class ModuleTest(TestCase):
         m.init(x)
 
         parameters = m.get_parameters()
-        states = m.get_states()
+        state = m.get_parameters(non_trainable=True)
 
         assert "bias" in parameters
         assert "linear" in parameters
         assert "w" in parameters["linear"]
         assert "b" in parameters["linear"]
-        assert states["linear"]["n"] == 0
-        assert states["linear1"]["n"] == 0
+        assert parameters["linear"]["n"] == 0
+        assert parameters["linear1"]["n"] == 0
         assert "linear1" in parameters
 
-        with elegy.context(losses={}, metrics={}, summaries=[]) as ctx:
+        with elegy.context(hooks=True) as ctx:
             y: jnp.ndarray = m(x)
+            y2: jnp.ndarray = m.call_jit(x)
 
         assert ctx.losses
         assert ctx.metrics
         assert ctx.summaries
 
         parameters = m.get_parameters()
-        states = m.get_states()
 
         assert y.shape == (4, 7)
         assert "bias" in parameters
         assert "linear" in parameters
         assert "w" in parameters["linear"]
         assert "b" in parameters["linear"]
-        assert m.linear.get_states()["n"] == 1
-        assert states["linear"]["n"] == 1
+        assert m.linear.get_parameters()["n"] == 1
+        assert parameters["linear"]["n"] == 1
         assert "linear1" in parameters
 
         assert "activation_sum_loss" in ctx.losses
@@ -104,7 +104,6 @@ class ModuleTest(TestCase):
         m.set_parameters(jax.tree_map(lambda x: -x, parameters))
 
         parameters = m.get_parameters()
-        states = m.get_states()
 
         assert parameters["bias"][0] == -1
         assert m.linear.get_parameters()["w"][0, 0] == -1
@@ -115,18 +114,15 @@ class ModuleTest(TestCase):
         assert m.parameters_size(include_submodules=False) == 7
 
         current_parameters = m.get_parameters()
-        current_states = m.get_states()
 
         m.reset()
 
         parameters = m.get_parameters()
-        states = m.get_states()
 
         assert parameters == {}
         assert m.parameters_size() == 0
 
         m.set_parameters(current_parameters)
-        m.set_states(current_states)
 
         assert m.get_parameters()["bias"][0] == -1
         assert m.linear.get_parameters()["w"][0, 0] == -1
@@ -190,11 +186,11 @@ class ModuleDynamicTest(TestCase):
         assert "linear" in m.get_parameters()
         assert "w" in m.get_parameters()["linear"]
         assert "b" in m.get_parameters()["linear"]
-        assert m.linear.get_states()["n"] == 0
-        assert m.get_states()["linear"]["n"] == 0
+        assert m.linear.get_parameters()["n"] == 0
+        assert m.get_parameters()["linear"]["n"] == 0
         assert "linear_1" in m.get_parameters()
 
-        with elegy.context(losses={}, metrics={}, summaries=[]) as ctx:
+        with elegy.context(hooks=True) as ctx:
             y: jnp.ndarray = m(x)
 
         assert ctx.losses
@@ -206,8 +202,8 @@ class ModuleDynamicTest(TestCase):
         assert "linear" in m.get_parameters()
         assert "w" in m.get_parameters()["linear"]
         assert "b" in m.get_parameters()["linear"]
-        assert m.linear.get_states()["n"] == 1
-        assert m.get_states()["linear"]["n"] == 1
+        assert m.linear.get_parameters()["n"] == 1
+        assert m.get_parameters()["linear"]["n"] == 1
         assert "linear_1" in m.get_parameters()
 
         assert "activation_sum_loss" in ctx.losses
@@ -232,7 +228,6 @@ class ModuleDynamicTest(TestCase):
         assert m.parameters_size(include_submodules=False) == 7
 
         current_parameters = m.get_parameters()
-        current_states = m.get_states()
 
         m.reset()
 
@@ -240,7 +235,6 @@ class ModuleDynamicTest(TestCase):
         assert m.parameters_size() == 0
 
         m.set_parameters(current_parameters)
-        m.set_states(current_states)
 
         assert m.get_parameters()["bias"][0] == -1
         assert m.linear.get_parameters()["w"][0, 0] == -1

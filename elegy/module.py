@@ -1,28 +1,22 @@
-from elegy.utils import EMPTY, Empty, ModuleOrderError
-from elegy.random import RNG
+import functools
 import threading
 import typing as tp
 from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
-
-# -------------------------------------------------------------
-# context
-# -------------------------------------------------------------
 from dataclasses import dataclass
 
-# -----------------------------------------------------------------
-# RNG
-# ----------------------------------------------------------------
 import haiku as hk
 import jax
 import jax.numpy as jnp
 import numpy as np
 
 from elegy import types, utils
+from elegy.random import RNG
+from elegy.utils import EMPTY, Empty, Mode, ModuleOrderError
 
 __all__ = [
     # "ApplyCallable",
-    # "ApplyContext",
+    # "LocalContext",
     # "Context",
     # "InitCallable",
     "Module",
@@ -38,7 +32,7 @@ T = tp.TypeVar("T")
 
 class LocalContext(utils.Protocol):
     rng: RNG
-    training: bool
+    mode: Mode
     initializing: bool
     losses: tp.Optional[tp.Dict[str, tp.Any]]
     metrics: tp.Optional[tp.Dict[str, tp.Any]]
@@ -53,7 +47,7 @@ class LocalContext(utils.Protocol):
 @dataclass
 class _LocalContext(threading.local):
     rng: RNG
-    training: bool
+    mode: Mode
     initializing: bool
     losses: tp.Optional[tp.Dict[str, tp.Any]]
     metrics: tp.Optional[tp.Dict[str, tp.Any]]
@@ -67,7 +61,7 @@ class _LocalContext(threading.local):
 
 LOCAL: LocalContext = _LocalContext(
     rng=RNG(42),
-    training=True,
+    mode=Mode.train,
     initializing=False,
     losses=None,
     metrics=None,
@@ -82,45 +76,26 @@ LOCAL: LocalContext = _LocalContext(
 
 @contextmanager
 def context(
-    rng: tp.Union[Empty, RNG] = EMPTY,
-    training: tp.Union[Empty, bool] = EMPTY,
-    initializing: tp.Union[Empty, bool] = EMPTY,
-    losses: tp.Union[Empty, tp.Dict[str, tp.Any]] = EMPTY,
-    metrics: tp.Union[Empty, tp.Dict[str, tp.Any]] = EMPTY,
-    summaries: tp.Union[
-        Empty, tp.List[tp.Tuple[tp.Optional["Module"], str, np.ndarray]]
-    ] = EMPTY,
-    names: tp.Union[Empty, tp.List[str]] = EMPTY,
-    level_names: tp.Union[Empty, tp.List[tp.List[str]]] = EMPTY,
-    module: tp.Union[Empty, "Module"] = EMPTY,
-    inside_call: tp.Union[Empty, bool] = EMPTY,
-    module_index: tp.Union[Empty, int] = EMPTY,
+    rng: tp.Optional[RNG] = None,
+    mode: tp.Optional[Mode] = None,
+    hooks: bool = False,
 ) -> tp.Iterator[LocalContext]:
 
     global LOCAL
     current = LOCAL
 
-    if not isinstance(metrics, Empty) or not isinstance(summaries, Empty):
-        if isinstance(names, Empty):
-            names = []
-
-        if isinstance(level_names, Empty):
-            level_names = [[]]
-
     LOCAL = _LocalContext(
-        rng=rng if not isinstance(rng, Empty) else current.rng,
-        training=training if not isinstance(training, Empty) else current.training,
-        initializing=initializing
-        if not isinstance(initializing, Empty)
-        else current.initializing,
-        losses=losses if not isinstance(losses, Empty) else None,
-        metrics=metrics if not isinstance(metrics, Empty) else None,
-        summaries=summaries if not isinstance(summaries, Empty) else None,
-        names=names if not isinstance(names, Empty) else None,
-        level_names=level_names if not isinstance(level_names, Empty) else None,
-        module=module if not isinstance(module, Empty) else None,
-        inside_call=inside_call if not isinstance(inside_call, Empty) else None,
-        module_index=module_index if not isinstance(module_index, Empty) else None,
+        rng=rng if rng is not None else current.rng,
+        mode=mode if mode is not None else current.mode,
+        initializing=False,
+        losses={} if hooks else None,
+        metrics={} if hooks else None,
+        summaries=[] if hooks else None,
+        names=[] if hooks else None,
+        level_names=[[]] if hooks else None,
+        module=None,
+        inside_call=None,
+        module_index=None,
     )
 
     try:
@@ -152,6 +127,7 @@ def construct_module(cls, *args, **kwargs) -> "Module":
             module._submodules.append(key)
 
     utils.wraps(module.call)(module)
+    # utils.wraps(module.call)(module.init)
 
     return module
 
@@ -260,9 +236,39 @@ class Module(metaclass=ModuleMeta):
 
             return outputs
 
+    def __init_subclass__(cls, *args, **kwargs):
+        super().__init_subclass__(*args, **kwargs)
+        utils.wraps(cls.call)(cls.init)
+
     @abstractmethod
     def call(self, *args, **kwargs):
         ...
+
+    def call_jit(self, *args, **kwargs):
+
+        outputs, parameters = self._call_jit(
+            mode(), rng(), self.get_parameters(), args, kwargs
+        )
+
+        self.set_parameters(parameters)
+
+        return outputs
+
+    @functools.partial(jax.jit, static_argnums=(0, 1))
+    def _call_jit(
+        self,
+        mode: Mode,
+        rng: RNG,
+        parameters: tp.Dict,
+        args,
+        kwargs,
+    ):
+        self.set_parameters(parameters)
+
+        with rng_context(rng), mode_context(mode):
+            outputs = self(*args, **kwargs)
+
+        return outputs, self.get_parameters()
 
     @property
     def submodules(self) -> tp.Dict[str, tp.Any]:
@@ -281,74 +287,6 @@ class Module(metaclass=ModuleMeta):
 
         with init_context():
             self(*args, **kwargs)
-
-    # def apply(
-    #     self,
-    #     parameters: tp.Optional[tp.Dict] = None,
-    #     states: tp.Optional[tp.Dict] = None,
-    #     rng: tp.Optional[tp.Union[np.ndarray, int]] = None,
-    #     get_summaries: bool = False,
-    #     training: bool = True,
-    # ) -> "ApplyCallable":
-    #     """
-    #     Applies your function injecting some context arguments.
-
-    #     Arguments:
-    #         parameters:
-    #         states:
-    #         rng:
-    #         get_summaries:
-
-    #     Returns:
-    #         A function with the same signature as `call` that will
-    #         execute the computation given the context arguments
-    #         passed to `apply`.
-    #     """
-
-    #     @utils.wraps(self.call)
-    #     def apply_fn(*args, **kwargs):
-
-    #         current_parameters = self.get_parameters()
-    #         current_states = self.get_states()
-
-    #         assert current_parameters is not None
-    #         assert current_states is not None
-
-    #         if parameters is not None:
-    #             self.set_parameters(parameters)
-
-    #         if states is not None:
-    #             self.set_states(states)
-
-    #         with context(
-    #             rng=rng,
-    #             building=False,
-    #             training=training,
-    #             get_summaries=get_summaries,
-    #         ) as ctx:
-    #             outputs = self(*args, **kwargs)
-
-    #         output_parameters = self.get_parameters()
-    #         output_states = self.get_states()
-
-    #         if parameters is not None:
-    #             self.set_parameters(current_parameters)
-
-    #         if states is not None:
-    #             self.set_states(current_states)
-
-    #         return (
-    #             outputs,
-    #             ApplyContext(
-    #                 parameters=output_parameters,
-    #                 states=output_states,
-    #                 losses=ctx.losses,
-    #                 metrics=ctx.metrics,
-    #                 summaries=ctx.summaries,
-    #             ),
-    #         )
-
-    #     return apply_fn
 
     def add_parameter(
         self,
@@ -424,17 +362,34 @@ class Module(metaclass=ModuleMeta):
         else:
             raise ValueError(f"Parameter {name} not found in {self}.")
 
-    def get_parameters(self) -> types.Parameters:
+    def get_parameters(
+        self,
+        trainable: tp.Optional[bool] = None,
+        non_trainable: tp.Optional[bool] = None,
+    ) -> types.Parameters:
         """
         Recursively collects a dictionary with the parameters of this module
         and all submodules within it.
 
         Returns:
         """
+        if trainable is None and non_trainable is None:
+            trainable = True
+            non_trainable = True
+
+        if not trainable and not non_trainable:
+            raise ValueError(
+                f"Must specify either trainable or non_trainable, "
+                "got trainable = {trainable}, non_trainable = {non_trainable}"
+            )
+
         params = module_tree_map(
             lambda module: {
                 key: getattr(module, key)
-                for key in getattr(module, "_params")
+                for key in (
+                    (module._params if trainable else [])
+                    + (module._states if non_trainable else [])
+                )
                 if hasattr(module, key)
             },
             self,
@@ -448,35 +403,7 @@ class Module(metaclass=ModuleMeta):
         and all submodules within it given a dictionary with a corresponding
         structure.
         """
-        set_tree(self, values, "_params")
-
-    def get_states(self, _initial: bool = False) -> types.States:
-        """
-        Recursively collects a dictionary with the states of this module
-        and all submodules within it.
-
-        Returns:
-        """
-        states = module_tree_map(
-            lambda module: {
-                key: getattr(module, as_initial(key))
-                if _initial
-                else getattr(module, key)
-                for key in getattr(module, "_states")
-                if hasattr(module, key)
-            },
-            self,
-        )
-        assert isinstance(states, tp.Dict)
-        return states
-
-    def set_states(self, values: types.States):
-        """
-        Recursively sets the states of this module
-        and all submodules within it given a dictionary with a corresponding
-        structure.
-        """
-        set_tree(self, values, "_states")
+        set_tree(self, values, ["_params", "_states"])
 
     def reset(self):
         """
@@ -494,13 +421,6 @@ class Module(metaclass=ModuleMeta):
 
             # module._params = set()
             # module._states = set()
-
-        tree_exec(clear_module, self)
-
-    def clear_initial_states(self):
-        def clear_module(module: Module):
-            for name in module._states:
-                delattr(module, as_initial(name))
 
         tree_exec(clear_module, self)
 
@@ -582,7 +502,7 @@ def rng(key: tp.Union[int, np.ndarray, Empty] = EMPTY) -> RNG:
     return LOCAL.rng
 
 
-def next_rng_key() -> np.ndarray:
+def next_rng_key() -> jnp.ndarray:
     return LOCAL.rng()
 
 
@@ -590,17 +510,21 @@ def module_initializing() -> bool:
     return LOCAL.initializing
 
 
-@tp.overload
 def training() -> bool:
+    return mode() == Mode.train
+
+
+@tp.overload
+def mode() -> Mode:
     ...
 
 
 @tp.overload
-def training(status: bool) -> bool:
+def mode(status: Mode) -> Mode:
     ...
 
 
-def training(status: tp.Union[bool, Empty] = EMPTY) -> bool:
+def mode(status: tp.Union[Mode, Empty] = EMPTY) -> Mode:
     """
     A hook that gets/sets the current training status.
 
@@ -618,9 +542,9 @@ def training(status: tp.Union[bool, Empty] = EMPTY) -> bool:
     """
 
     if not isinstance(status, Empty):
-        LOCAL.training = status
+        LOCAL.mode = status
 
-    return LOCAL.training
+    return LOCAL.mode
 
 
 @tp.overload
@@ -670,6 +594,28 @@ def metrics(
 def base_name() -> str:
     assert LOCAL.names
     return "/".join(LOCAL.names)
+
+
+@contextmanager
+def rng_context(rng: RNG):
+    current_rng = LOCAL.rng
+    LOCAL.rng = rng
+
+    try:
+        yield
+    finally:
+        LOCAL.rng = current_rng
+
+
+@contextmanager
+def mode_context(mode: Mode):
+    current_mode = LOCAL.mode
+    LOCAL.mode = mode
+
+    try:
+        yield
+    finally:
+        LOCAL.mode = current_mode
 
 
 @contextmanager
@@ -844,21 +790,13 @@ def init_context():
 
 
 class ApplyCallable(utils.Protocol):
-    def __call__(self, *args, **kwargs) -> tp.Tuple[tp.Any, "ApplyContext"]:
+    def __call__(self, *args, **kwargs) -> tp.Tuple[tp.Any, "LocalContext"]:
         ...
 
 
 class InitCallable(utils.Protocol):
     def __call__(self, *args, **kwargs) -> tp.Tuple[types.Parameters, types.States]:
         ...
-
-
-class ApplyContext(tp.NamedTuple):
-    parameters: types.Parameters
-    states: types.States
-    losses: tp.Dict
-    metrics: tp.Dict
-    summaries: tp.List[tp.Tuple[tp.Optional[Module], str, tp.Any]]
 
 
 # ------------------------------------------------------------------------
@@ -894,12 +832,12 @@ def module_tree_map(
 def set_tree(
     module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict],
     values: tp.Union[tp.List, tp.Tuple, tp.Dict],
-    dict_field: str,
+    field_names: tp.List[str],
 ):
     def f(module, values):
-        dict_field_value = getattr(module, dict_field)
+        names = sum((getattr(module, field_name) for field_name in field_names), [])
         for key, value in values.items():
-            if key in dict_field_value:
+            if key in names:
                 setattr(module, key, value)
 
     tree_apply(f, module, values)

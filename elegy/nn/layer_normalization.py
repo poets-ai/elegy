@@ -24,7 +24,7 @@ import numpy as np
 from haiku._src import utils as hk_utils
 
 # If you are forking replace this with `import haiku as hk`.
-from elegy import initializers, module, hooks
+from elegy import initializers, module
 
 
 class LayerNormalization(module.Module):

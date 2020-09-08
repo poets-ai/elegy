@@ -11,7 +11,7 @@ import jax.numpy as jnp
 import numpy as np
 from haiku._src import utils as haiku_utils
 
-from elegy import initializers, module, hooks
+from elegy import initializers, module
 from elegy import module
 from elegy.nn.moving_averages import ExponentialMovingAverage
 

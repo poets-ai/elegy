@@ -8,7 +8,7 @@ import haiku as hk
 import jax.numpy as jnp
 import numpy as np
 
-from elegy import module, hooks
+from elegy import module
 from elegy.module import Module
 
 

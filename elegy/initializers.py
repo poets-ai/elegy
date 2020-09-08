@@ -15,7 +15,7 @@
 # ==============================================================================
 """Haiku initializers."""
 
-from elegy import module, hooks
+from elegy import module
 from elegy.types import DType, Initializer, Shape
 import jax
 import jax.numpy as jnp
@@ -82,7 +82,7 @@ class RandomNormal(Initializer):
     def __call__(self, shape: Shape, dtype: DType) -> np.ndarray:
         m = jax.lax.convert_element_type(self.mean, dtype)
         s = jax.lax.convert_element_type(self.stddev, dtype)
-        return m + s * jax.random.normal(hooks.next_rng_key(), shape, dtype)
+        return m + s * jax.random.normal(module.next_rng_key(), shape, dtype)
 
 
 class TruncatedNormal(Initializer):
@@ -104,7 +104,7 @@ class TruncatedNormal(Initializer):
         m = jax.lax.convert_element_type(self.mean, dtype)
         s = jax.lax.convert_element_type(self.stddev, dtype)
         unscaled = jax.random.truncated_normal(
-            hooks.next_rng_key(), -2.0, 2.0, shape, dtype
+            module.next_rng_key(), -2.0, 2.0, shape, dtype
         )
         return s * unscaled + m
 
@@ -125,7 +125,7 @@ class RandomUniform(Initializer):
 
     def __call__(self, shape: Shape, dtype: DType) -> np.ndarray:
         return jax.random.uniform(
-            hooks.next_rng_key(), shape, dtype, self.minval, self.maxval
+            module.next_rng_key(), shape, dtype, self.minval, self.maxval
         )
 
 

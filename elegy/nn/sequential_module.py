@@ -4,7 +4,7 @@ import typing as tp
 import haiku as hk
 import numpy as np
 
-from elegy import utils, hooks
+from elegy import utils
 from elegy.module import Module, LOCAL, LocalContext
 
 

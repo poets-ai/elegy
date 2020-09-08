@@ -23,7 +23,7 @@ import numpy as np
 from haiku._src import utils as hk_utils
 from jax import lax
 
-from elegy import initializers, module, types, hooks
+from elegy import initializers, module, types
 
 
 def to_dimension_numbers(

@@ -4,7 +4,7 @@ import jax
 import numpy as np
 from jax import numpy as jnp
 
-from elegy import initializers, module, hooks
+from elegy import initializers, module
 from elegy.nn.dropout import Dropout
 from elegy.nn.layer_normalization import LayerNormalization
 from elegy.nn.linear import Linear

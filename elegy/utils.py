@@ -1,3 +1,4 @@
+from enum import Enum
 import functools
 import inspect
 import re
@@ -17,6 +18,12 @@ else:
 
 
 EPSILON = 1e-7
+
+
+class Mode(Enum):
+    predict = 1
+    test = 2
+    train = 3
 
 
 class Empty:
@@ -42,8 +49,13 @@ def maybe_expand_dims(a: np.ndarray, b: np.ndarray) -> tp.Tuple[np.ndarray, np.n
     return a, b
 
 
-def wraps(f):
-    return functools.wraps(f, assigned=("__doc__", "__annotations__"), updated=())
+def wraps(f, docs: bool = True):
+    assigments = ("__annotations__",)
+
+    if docs:
+        assigments += ("__doc__",)
+
+    return functools.wraps(f, assigned=assigments, updated=())
 
 
 def inject_dependencies(

@@ -10,14 +10,13 @@ from . import (
     nn,
     regularizers,
     module,
-    hooks,
 )
 from .losses import Loss
 from .metrics import Metric
 from .model import Model
 from .module import (
     ApplyCallable,
-    ApplyContext,
+    LocalContext,
     InitCallable,
     Module,
     to_module,
@@ -30,7 +29,6 @@ from .module import (
 
 __all__ = [
     "module",
-    "hooks",
     "callbacks",
     "initializers",
     "losses",
@@ -47,7 +45,7 @@ __all__ = [
     "Metric",
     "Model",
     # "ApplyCallable",
-    # "ApplyContext",
+    # "LocalContext",
     # "Context",
     # "InitCallable",
     "Module",

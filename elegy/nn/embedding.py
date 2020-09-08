@@ -2,7 +2,6 @@
 
 """Modules for performing embedding lookups in Haiku."""
 
-from elegy import hooks
 import enum
 from typing import Optional, Union
 

@@ -1,6 +1,6 @@
 from elegy.initializers import TruncatedNormal
 from elegy.types import Initializer
-from elegy import module, hooks
+from elegy import module
 import typing as tp
 import jax.numpy as jnp
 import haiku as hk

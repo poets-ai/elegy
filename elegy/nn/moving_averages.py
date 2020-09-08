@@ -21,7 +21,7 @@ import jax
 import jax.numpy as jnp
 from haiku._src import data_structures
 
-from elegy import initializers, module, hooks
+from elegy import initializers, module
 
 
 class ExponentialMovingAverage(module.Module):

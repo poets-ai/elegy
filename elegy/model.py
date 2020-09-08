@@ -1,23 +1,17 @@
 # Implementation based on tf.keras.engine.training.py
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
-import re
-from elegy import types
+from elegy.utils import Mode
 import functools
-from elegy.module import (
-    ApplyCallable,
-    ApplyContext,
-    Module,
-    RNG,
-)
-from io import StringIO
 import json
 import logging
 import pickle
+import re
 import typing as tp
 from copy import copy
 from enum import Enum
 from functools import partial
+from io import StringIO
 from pathlib import Path
 
 import cloudpickle
@@ -25,13 +19,17 @@ import deepdish
 import jax
 import jax.numpy as jnp
 import numpy as np
-import toolz
 import optax
-from tabulate import tabulate
+import toolz
 import yaml
+from tabulate import tabulate
 
+from elegy import module as hooks
+from elegy import types
 from elegy.losses import loss_modes
 from elegy.metrics import metric_modes
+from elegy.metrics.metric_modes import LossMetrics
+from elegy.module import RNG, ApplyCallable, LocalContext, Module
 
 from . import utils
 from .callbacks import Callback, CallbackList, History
@@ -43,14 +41,69 @@ from .data import (
     unpack_x_y_sample_weight,
 )
 
-
 __all__ = ["Model", "load"]
 
 
-class Mode(Enum):
-    predict = 1
-    test = 2
-    train = 3
+class ModelModule(Module):
+    def __init__(
+        self,
+        module: Module,
+        loss_module: tp.Optional[Module],
+        metrics_module: tp.Optional[Module],
+    ):
+        self.module = module
+        self.loss_module = loss_module
+        self.metrics_module = metrics_module
+
+    def call(
+        self,
+        mode: Mode,
+        x,
+        y_true: tp.Optional[tp.Any] = None,
+        sample_weight: tp.Optional[jnp.ndarray] = None,
+        class_weight: tp.Optional[jnp.ndarray] = None,
+    ):
+        training = mode == Mode.train
+
+        x_args, x_kwargs = utils.get_input_args(x, training=training)
+        y_pred = utils.inject_dependencies(self.module)(*x_args, **x_kwargs)
+
+        if mode == Mode.predict:
+            return y_pred
+
+        loss_logs = (
+            self.loss_module(
+                x=x,
+                y_true=y_true,
+                y_pred=y_pred,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+                training=training,
+                parameters=self.module.get_parameters(),
+                states=self.module.get_states(),
+            )
+            if self.loss_module is not None
+            else {}
+        )
+
+        loss_logs = (
+            self.metrics_module(
+                x=x,
+                y_true=y_true,
+                y_pred=y_pred,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+                training=training,
+                parameters=self.module.get_parameters(),
+                states=self.module.get_states(),
+            )
+            if self.loss_module is not None
+            else {}
+        )
+
+        metric_logs = self.metrics_module(loss_logs)
+
+        return y_pred, loss_logs, metric_logs
 
 
 class Model:
@@ -259,20 +312,22 @@ class Model:
         if self.parameters is None or self.states is None:
             x_args, x_kwargs = utils.get_input_args(x, training=True)
 
-            self.parameters, self.states = maybe_jit(
-                utils.inject_dependencies(self.module.init(rng=next(self._rngs)))
-            )(*x_args, **x_kwargs)
+            with context(rng=self._rngs):
+                utils.inject_dependencies(self.module.init)(*x_args, **x_kwargs)
+
+            self.parameters = self.module.get_parameters()
+            self.states = self.module.get_states()
 
         if mode == Mode.predict:
             return
 
         if self.metrics_module is not None and self.metrics_states is None:
-            context: ApplyContext
+            context: LocalContext
 
-            loss, (y_pred, context, logs) = maybe_jit(self._loss)(
+            loss, (y_pred, context, logs) = self._loss_fn(
                 parameters=self.parameters,
                 states=self.states,
-                rng=next(self._rngs),
+                rng=self._rngs(),
                 x=x,
                 y=y,
                 sample_weight=sample_weight,
@@ -280,20 +335,20 @@ class Model:
                 training=True,
             )
 
-            _, self.metrics_states = maybe_jit(
-                self.metrics_module.init(rng=next(self._rngs))
-            )(
-                logs,
-                x=x,
-                y_true=y,
-                y_pred=y_pred,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                training=False,
-                parameters=self.parameters,
-                states=self.states,
-            )
+            with context(rng=self._rngs):
+                self.metrics_module.init(
+                    logs,
+                    x=x,
+                    y_true=y,
+                    y_pred=y_pred,
+                    sample_weight=sample_weight,
+                    class_weight=class_weight,
+                    training=False,
+                    parameters=self.parameters,
+                    states=self.states,
+                )
 
+            self.metrics_states = self.metrics_module.get_states()
             self.initial_metrics_state = self.metrics_states
 
         if mode == Mode.test:
@@ -366,7 +421,7 @@ class Model:
             states=self.states,
             optimizer_state=self.optimizer_state,
             metrics_states=self.metrics_states,
-            rng=next(self._rngs),
+            rng=self._rngs(),
         )
 
         if metrics_states is not None:
@@ -429,7 +484,7 @@ class Model:
         net_rng, metrics_rng = jax.random.split(rng, num=2)
 
         (loss, (y_pred, context, logs)), grads = jax.value_and_grad(
-            self._loss, has_aux=True
+            self._loss_fn, has_aux=True
         )(
             parameters,
             states=states,
@@ -468,44 +523,39 @@ class Model:
 
     _update_jit = jax.jit(_update_no_jit, static_argnums=(0,))
 
-    def _loss(
+    def _loss_fn(
         self,
         parameters: tp.Dict,
-        states: tp.Dict,
-        rng: jnp.ndarray,
         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
         sample_weight: tp.Optional[jnp.ndarray],
         class_weight: tp.Optional[jnp.ndarray],
         training: bool,
     ):
-        rng, loss_rng = jax.random.split(rng, num=2)
+        self.module.set_parameters(parameters)
 
-        y_pred, context = self._predict_no_jit(
-            training=training,
-            get_summaries=False,
+        y_pred = self._predict_fn(
             x=x,
-            parameters=parameters,
-            states=states,
-            rng=rng,
+            training=training,
         )
 
         states = context.states
 
-        logs, loss_context = (
-            self.loss_module.apply(rng=loss_rng)(
-                x=x,
-                y_true=y,
-                y_pred=y_pred,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                training=training,
-                parameters=parameters,
-                states=states,
+        with context(rng=loss_rng, training=training) as loss_context:
+            logs = (
+                self.loss_module(rng=loss_rng)(
+                    x=x,
+                    y_true=y,
+                    y_pred=y_pred,
+                    sample_weight=sample_weight,
+                    class_weight=class_weight,
+                    training=training,
+                    parameters=parameters,
+                    states=states,
+                )
+                if self.loss_module is not None
+                else {}
             )
-            if self.loss_module is not None
-            else ({}, None)
-        )
 
         # calculate total loss
         loss = sum(logs.values()) + sum(context.losses.values())
@@ -1140,7 +1190,7 @@ class Model:
     ) -> tp.Tuple[tp.Dict[str, jnp.ndarray], tp.Optional[tp.Dict],]:
         net_rng, metrics_rng = jax.random.split(rng, num=2)
 
-        loss, (y_pred, context, logs) = self._loss(
+        loss, (y_pred, context, logs) = self._loss_fn(
             parameters,
             states=states,
             rng=net_rng,
@@ -1220,7 +1270,7 @@ class Model:
         parameters: tp.Dict,
         states: tp.Dict,
         rng: jnp.ndarray,
-    ) -> tp.Tuple[tp.Any, "ApplyContext"]:
+    ) -> tp.Tuple[tp.Any, "LocalContext"]:
 
         predict_fn = self._predict_no_jit if self.run_eagerly else self._predict_jit
 
@@ -1233,6 +1283,12 @@ class Model:
             rng=rng,
         )
 
+    def _predict_fn(self, x, training: bool) -> tp.Any:
+        x_args, x_kwargs = utils.get_input_args(x, training=training)
+        y_pred = utils.inject_dependencies(self.module)(*x_args, **x_kwargs)
+
+        return y_pred
+
     def _predict_no_jit(
         self,
         training: bool,
@@ -1241,19 +1297,17 @@ class Model:
         parameters: tp.Dict,
         states: tp.Dict,
         rng: jnp.ndarray,
-    ) -> tp.Tuple[tp.Any, ApplyContext]:
+    ) -> tp.Tuple[tp.Any, LocalContext]:
 
         x_args, x_kwargs = utils.get_input_args(x, training=training)
 
-        return utils.inject_dependencies(
-            self.module.apply(
-                parameters=parameters,
-                states=states,
-                rng=rng,
-                get_summaries=get_summaries,
-                training=training,
-            )
-        )(*x_args, **x_kwargs)
+        self.module.set_parameters(parameters)
+        self.module.set_states(states)
+
+        with context(rng=rng, training=training, hooks=get_summaries) as ctx:
+            y_pred = utils.inject_dependencies(self.module)(*x_args, **x_kwargs)
+
+        return y_pred, ctx
 
     _predict_jit = jax.jit(_predict_no_jit, static_argnums=(0, 1, 2))
 

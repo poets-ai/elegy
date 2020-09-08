@@ -1,4 +1,4 @@
-from elegy import module, hooks
+from elegy import module
 from typing import Tuple
 from elegy.metrics.metric import Metric
 import typing as tp
