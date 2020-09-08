@@ -71,13 +71,17 @@ class ModuleTest(TestCase):
         assert parameters["linear1"]["n"] == 0
         assert "linear1" in parameters
 
-        with elegy.context(hooks=True) as ctx:
+        with elegy.context(hooks=True):
             y: jnp.ndarray = m(x)
-            y2: jnp.ndarray = m.call_jit(x)
+            # y2: jnp.ndarray = m.call_jit(x)
 
-        assert ctx.losses
-        assert ctx.metrics
-        assert ctx.summaries
+            losses = elegy.get_losses()
+            metrics = elegy.get_metrics()
+            summaries = elegy.get_summaries()
+
+        assert losses
+        assert metrics
+        assert summaries
 
         parameters = m.get_parameters()
 
@@ -90,16 +94,16 @@ class ModuleTest(TestCase):
         assert parameters["linear"]["n"] == 1
         assert "linear1" in parameters
 
-        assert "activation_sum_loss" in ctx.losses
-        assert "my_module/linear/activation_mean" in ctx.metrics
-        assert "my_module/linear_1/activation_mean" in ctx.metrics
+        assert "activation_sum_loss" in losses
+        assert "my_module/linear/activation_mean" in metrics
+        assert "my_module/linear_1/activation_mean" in metrics
 
-        assert ctx.summaries[0][:2] == (m.linear, "my_module/linear")
-        assert ctx.summaries[0][2].shape == (4, 6)
-        assert ctx.summaries[1][:2] == (m.linear1, "my_module/linear_1")
-        assert ctx.summaries[1][2].shape == (4, 7)
-        assert ctx.summaries[2][:2] == (m, "my_module")
-        assert ctx.summaries[2][2].shape == (4, 7)
+        assert summaries[0][:2] == (m.linear, "my_module/linear")
+        assert summaries[0][2].shape == (4, 6)
+        assert summaries[1][:2] == (m.linear1, "my_module/linear_1")
+        assert summaries[1][2].shape == (4, 7)
+        assert summaries[2][:2] == (m, "my_module")
+        assert summaries[2][2].shape == (4, 7)
 
         m.set_parameters(jax.tree_map(lambda x: -x, parameters))
 
@@ -180,7 +184,7 @@ class ModuleDynamicTest(TestCase):
 
         m = ModuleDynamicTest.MyModule()
 
-        m.init(x)
+        m.init_jit(x)
 
         assert "bias" in m.get_parameters()
         assert "linear" in m.get_parameters()
@@ -191,11 +195,20 @@ class ModuleDynamicTest(TestCase):
         assert "linear_1" in m.get_parameters()
 
         with elegy.context(hooks=True) as ctx:
-            y: jnp.ndarray = m(x)
+            # y: jnp.ndarray = m(x)
+            y: jnp.ndarray = m.jit(x)
 
-        assert ctx.losses
-        assert ctx.metrics
-        assert ctx.summaries
+            losses = elegy.get_losses()
+            metrics = elegy.get_metrics()
+            summaries = elegy.get_summaries()
+
+        assert losses
+        assert metrics
+        assert summaries
+
+        assert ctx.losses is losses
+        assert ctx.metrics is metrics
+        assert ctx.summaries is summaries
 
         assert y.shape == (4, 7)
         assert "bias" in m.get_parameters()
@@ -206,16 +219,16 @@ class ModuleDynamicTest(TestCase):
         assert m.get_parameters()["linear"]["n"] == 1
         assert "linear_1" in m.get_parameters()
 
-        assert "activation_sum_loss" in ctx.losses
-        assert "my_module/linear/activation_mean" in ctx.metrics
-        assert "my_module/linear_1/activation_mean" in ctx.metrics
+        assert "activation_sum_loss" in losses
+        assert "my_module/linear/activation_mean" in metrics
+        assert "my_module/linear_1/activation_mean" in metrics
 
-        assert ctx.summaries[0][:2] == (m.linear, "my_module/linear")
-        assert ctx.summaries[0][2].shape == (4, 6)
-        assert ctx.summaries[1][:2] == (m.linear_1, "my_module/linear_1")
-        assert ctx.summaries[1][2].shape == (4, 7)
-        assert ctx.summaries[2][:2] == (m, "my_module")
-        assert ctx.summaries[2][2].shape == (4, 7)
+        assert summaries[0][:2] == (m.linear, "my_module/linear")
+        assert summaries[0][2].shape == (4, 6)
+        assert summaries[1][:2] == (m.linear_1, "my_module/linear_1")
+        assert summaries[1][2].shape == (4, 7)
+        assert summaries[2][:2] == (m, "my_module")
+        assert summaries[2][2].shape == (4, 7)
 
         m.set_parameters(jax.tree_map(lambda x: -x, m.get_parameters()))
 

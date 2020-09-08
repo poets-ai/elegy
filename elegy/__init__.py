@@ -15,9 +15,7 @@ from .losses import Loss
 from .metrics import Metric
 from .model import Model
 from .module import (
-    ApplyCallable,
     LocalContext,
-    InitCallable,
     Module,
     to_module,
     RNG,
@@ -25,6 +23,9 @@ from .module import (
     add_metric,
     add_summary,
     context,
+    get_losses,
+    get_metrics,
+    get_summaries,
 )
 
 __all__ = [
@@ -40,14 +41,13 @@ __all__ = [
     "add_loss",
     "add_metric",
     "add_summary",
+    "get_losses",
+    "get_metrics",
+    "get_summaries",
     "next_rng_key",
     "Loss",
     "Metric",
     "Model",
-    # "ApplyCallable",
-    # "LocalContext",
-    # "Context",
-    # "InitCallable",
     "Module",
     "to_module",
     "RNG",

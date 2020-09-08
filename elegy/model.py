@@ -29,7 +29,7 @@ from elegy import types
 from elegy.losses import loss_modes
 from elegy.metrics import metric_modes
 from elegy.metrics.metric_modes import LossMetrics
-from elegy.module import RNG, ApplyCallable, LocalContext, Module
+from elegy.module import RNG, LocalContext, Module
 
 from . import utils
 from .callbacks import Callback, CallbackList, History

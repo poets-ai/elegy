@@ -15,10 +15,6 @@ from elegy.random import RNG
 from elegy.utils import EMPTY, Empty, Mode, ModuleOrderError
 
 __all__ = [
-    # "ApplyCallable",
-    # "LocalContext",
-    # "Context",
-    # "InitCallable",
     "Module",
     "to_module",
     "add_loss",
@@ -81,27 +77,32 @@ def context(
     hooks: bool = False,
 ) -> tp.Iterator[LocalContext]:
 
-    global LOCAL
-    current = LOCAL
+    prev_rng = LOCAL.rng
+    prev_mode = LOCAL.mode
+    prev_losses = LOCAL.losses
+    prev_metrics = LOCAL.metrics
+    prev_summaries = LOCAL.summaries
+    prev_names = LOCAL.names
+    prev_level_names = LOCAL.level_names
 
-    LOCAL = _LocalContext(
-        rng=rng if rng is not None else current.rng,
-        mode=mode if mode is not None else current.mode,
-        initializing=False,
-        losses={} if hooks else None,
-        metrics={} if hooks else None,
-        summaries=[] if hooks else None,
-        names=[] if hooks else None,
-        level_names=[[]] if hooks else None,
-        module=None,
-        inside_call=None,
-        module_index=None,
-    )
+    LOCAL.rng = rng if rng is not None else LOCAL.rng
+    LOCAL.mode = mode if mode is not None else LOCAL.mode
+    LOCAL.losses = {} if hooks else LOCAL.losses
+    LOCAL.metrics = {} if hooks else LOCAL.metrics
+    LOCAL.summaries = [] if hooks else LOCAL.summaries
+    LOCAL.names = [] if hooks else LOCAL.names
+    LOCAL.level_names = [[]] if hooks else LOCAL.level_names
 
     try:
-        yield LOCAL
+        yield _LocalContext(**vars(LOCAL))
     finally:
-        LOCAL = current
+        LOCAL.rng = prev_rng
+        LOCAL.mode = prev_mode
+        LOCAL.losses = prev_losses
+        LOCAL.metrics = prev_metrics
+        LOCAL.summaries = prev_summaries
+        LOCAL.names = prev_names
+        LOCAL.level_names = prev_level_names
 
 
 def construct_module(cls, *args, **kwargs) -> "Module":
@@ -244,7 +245,7 @@ class Module(metaclass=ModuleMeta):
     def call(self, *args, **kwargs):
         ...
 
-    def call_jit(self, *args, **kwargs):
+    def jit(self, *args, **kwargs):
 
         outputs, parameters = self._call_jit(
             mode(), rng(), self.get_parameters(), args, kwargs
@@ -265,10 +266,28 @@ class Module(metaclass=ModuleMeta):
     ):
         self.set_parameters(parameters)
 
-        with rng_context(rng), mode_context(mode):
+        with context(rng=rng, mode=mode):
             outputs = self(*args, **kwargs)
 
         return outputs, self.get_parameters()
+
+    def init_jit(self, *args, **kwargs):
+        parameters = self._init_jit(mode(), rng(), args, kwargs)
+        self.set_parameters(parameters)
+
+    @functools.partial(jax.jit, static_argnums=(0, 1))
+    def _init_jit(
+        self,
+        mode: Mode,
+        rng: RNG,
+        args,
+        kwargs,
+    ):
+
+        with context(rng=rng, mode=mode):
+            self.init(*args, **kwargs)
+
+        return self.get_parameters()
 
     @property
     def submodules(self) -> tp.Dict[str, tp.Any]:
@@ -437,7 +456,9 @@ class Module(metaclass=ModuleMeta):
 
     def states_size(self, include_submodules: bool = True):
         if include_submodules:
-            return sum(x.size for x in jax.tree_leaves(self.get_states()))
+            return sum(
+                x.size for x in jax.tree_leaves(self.get_parameters(non_trainable=True))
+            )
         else:
             return sum(
                 x.size
@@ -547,48 +568,18 @@ def mode(status: tp.Union[Mode, Empty] = EMPTY) -> Mode:
     return LOCAL.mode
 
 
-@tp.overload
-def losses() -> tp.Optional[tp.Dict[str, tp.Any]]:
-    ...
-
-
-@tp.overload
-def losses(
-    initial: tp.Optional[tp.Dict[str, tp.Any]]
-) -> tp.Optional[tp.Dict[str, tp.Any]]:
-    ...
-
-
-def losses(
-    initial: tp.Union[tp.Dict[str, tp.Any], None, Empty] = EMPTY
-) -> tp.Optional[tp.Dict[str, tp.Any]]:
-
-    if not isinstance(initial, Empty):
-        LOCAL.losses = initial
-
+def get_losses() -> tp.Optional[tp.Dict[str, tp.Any]]:
     return LOCAL.losses
 
 
-@tp.overload
-def metrics() -> tp.Optional[tp.Dict[str, tp.Any]]:
-    ...
-
-
-@tp.overload
-def metrics(
-    initial: tp.Optional[tp.Dict[str, tp.Any]]
-) -> tp.Optional[tp.Dict[str, tp.Any]]:
-    ...
-
-
-def metrics(
-    initial: tp.Union[tp.Dict[str, tp.Any], None, Empty] = EMPTY
-) -> tp.Optional[tp.Dict[str, tp.Any]]:
-
-    if not isinstance(initial, Empty):
-        LOCAL.metrics = initial
-
+def get_metrics() -> tp.Optional[tp.Dict[str, tp.Any]]:
     return LOCAL.metrics
+
+
+def get_summaries() -> tp.Optional[
+    tp.List[tp.Tuple[tp.Optional["Module"], str, np.ndarray]]
+]:
+    return LOCAL.summaries
 
 
 def base_name() -> str:
@@ -782,21 +773,6 @@ def init_context():
         yield
     finally:
         LOCAL.initializing = prev_initializing
-
-
-# ------------------------------------------------------------------------
-# transform
-# ------------------------------------------------------------------------
-
-
-class ApplyCallable(utils.Protocol):
-    def __call__(self, *args, **kwargs) -> tp.Tuple[tp.Any, "LocalContext"]:
-        ...
-
-
-class InitCallable(utils.Protocol):
-    def __call__(self, *args, **kwargs) -> tp.Tuple[types.Parameters, types.States]:
-        ...
 
 
 # ------------------------------------------------------------------------
