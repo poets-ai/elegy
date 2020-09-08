@@ -264,7 +264,7 @@ class Orthogonal(Initializer):
         n_rows = shape[self.axis]
         n_cols = np.prod(shape) // n_rows
         matrix_shape = (n_rows, n_cols) if n_rows > n_cols else (n_cols, n_rows)
-        norm_dst = jax.random.normal(hooks.next_rng_key(), matrix_shape, dtype)
+        norm_dst = jax.random.normal(module.next_rng_key(), matrix_shape, dtype)
         q_mat, r_mat = jnp.linalg.qr(norm_dst)
         # Enforce Q is uniformly distributed
         q_mat *= jnp.sign(jnp.diag(r_mat))

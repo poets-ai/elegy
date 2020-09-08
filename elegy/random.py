@@ -28,3 +28,6 @@ class RNG:
     @classmethod
     def tree_unflatten(cls, _aux_data, children):
         return cls(*children)
+
+    def __repr__(self) -> str:
+        return f"RNG(key={self.key})"

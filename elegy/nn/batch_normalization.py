@@ -120,7 +120,7 @@ class BatchNormalization(module.Module):
             The array, normalized across all but the last dimension.
         """
         if training is None:
-            training = hooks.training()
+            training = module.is_training()
 
         if self.create_scale and scale is not None:
             raise ValueError("Cannot pass `scale` at call time if `create_scale=True`.")

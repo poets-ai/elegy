@@ -26,6 +26,11 @@ from .module import (
     get_losses,
     get_metrics,
     get_summaries,
+    next_rng_key,
+    get_rng,
+    set_rng,
+    get_mode,
+    set_mode,
 )
 
 __all__ = [
@@ -51,4 +56,8 @@ __all__ = [
     "Module",
     "to_module",
     "RNG",
+    "get_rng",
+    "set_rng",
+    "get_mode",
+    "set_mode",
 ]

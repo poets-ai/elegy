@@ -247,11 +247,12 @@ class Module(metaclass=ModuleMeta):
 
     def jit(self, *args, **kwargs):
 
-        outputs, parameters = self._call_jit(
-            mode(), rng(), self.get_parameters(), args, kwargs
+        outputs, parameters, rng = self._call_jit(
+            get_mode(), get_rng(), self.get_parameters(), args, kwargs
         )
 
         self.set_parameters(parameters)
+        set_rng(rng)
 
         return outputs
 
@@ -269,11 +270,13 @@ class Module(metaclass=ModuleMeta):
         with context(rng=rng, mode=mode):
             outputs = self(*args, **kwargs)
 
-        return outputs, self.get_parameters()
+        return outputs, self.get_parameters(), rng
 
     def init_jit(self, *args, **kwargs):
-        parameters = self._init_jit(mode(), rng(), args, kwargs)
+        parameters, rng = self._init_jit(get_mode(), get_rng(), args, kwargs)
+
         self.set_parameters(parameters)
+        set_rng(rng)
 
     @functools.partial(jax.jit, static_argnums=(0, 1))
     def _init_jit(
@@ -287,7 +290,7 @@ class Module(metaclass=ModuleMeta):
         with context(rng=rng, mode=mode):
             self.init(*args, **kwargs)
 
-        return self.get_parameters()
+        return self.get_parameters(), rng
 
     @property
     def submodules(self) -> tp.Dict[str, tp.Any]:
@@ -500,27 +503,12 @@ class Module(metaclass=ModuleMeta):
 # -------------------------------------------------------------
 
 
-@tp.overload
-def rng() -> RNG:
-    ...
-
-
-@tp.overload
-def rng(key: int) -> RNG:
-    ...
-
-
-@tp.overload
-def rng(key: np.ndarray) -> RNG:
-    ...
-
-
-def rng(key: tp.Union[int, np.ndarray, Empty] = EMPTY) -> RNG:
-
-    if not isinstance(key, Empty):
-        LOCAL.rng = RNG(key)
-
+def get_rng() -> RNG:
     return LOCAL.rng
+
+
+def set_rng(rng: RNG) -> None:
+    LOCAL.rng = rng
 
 
 def next_rng_key() -> jnp.ndarray:
@@ -531,41 +519,16 @@ def module_initializing() -> bool:
     return LOCAL.initializing
 
 
-def training() -> bool:
-    return mode() == Mode.train
+def is_training() -> bool:
+    return get_mode() == Mode.train
 
 
-@tp.overload
-def mode() -> Mode:
-    ...
-
-
-@tp.overload
-def mode(status: Mode) -> Mode:
-    ...
-
-
-def mode(status: tp.Union[Mode, Empty] = EMPTY) -> Mode:
-    """
-    A hook that gets/sets the current training status.
-
-    ```python
-    training = elegy.training()
-
-    if training:
-        ...
-    else:
-        ...
-    ```
-
-    Returns:
-        A boolean value indicating whether training is currently happening.
-    """
-
-    if not isinstance(status, Empty):
-        LOCAL.mode = status
-
+def get_mode() -> Mode:
     return LOCAL.mode
+
+
+def set_mode(mode: Mode) -> None:
+    LOCAL.mode = mode
 
 
 def get_losses() -> tp.Optional[tp.Dict[str, tp.Any]]:

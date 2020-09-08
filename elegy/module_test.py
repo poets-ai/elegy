@@ -148,6 +148,8 @@ class ModuleDynamicTest(TestCase):
             w = self.add_parameter("w", [x.shape[-1], self.units], initializer=jnp.ones)
             b = self.add_parameter("b", [self.units], initializer=jnp.ones)
 
+            elegy.next_rng_key()
+
             n = self.add_parameter(
                 "n", [], dtype=jnp.int32, initializer=jnp.zeros, trainable=False
             )
@@ -181,11 +183,12 @@ class ModuleDynamicTest(TestCase):
 
     def test_get_parameters(self):
         x = np.random.uniform(-1, 1, size=(4, 5))
-
+        initial_key = elegy.get_rng().key
         m = ModuleDynamicTest.MyModule()
 
         m.init_jit(x)
 
+        assert not jnp.allclose(initial_key, elegy.get_rng().key)
         assert "bias" in m.get_parameters()
         assert "linear" in m.get_parameters()
         assert "w" in m.get_parameters()["linear"]
