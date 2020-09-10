@@ -20,6 +20,15 @@ else:
 EPSILON = 1e-7
 
 
+class TrivialPytree:
+    def tree_flatten(self):
+        return tuple(vars(self).values()), None
+
+    @classmethod
+    def tree_unflatten(cls, _aux_data, children):
+        return cls(*children)
+
+
 class Mode(Enum):
     predict = 1
     test = 2

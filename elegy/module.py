@@ -39,6 +39,15 @@ class LocalContext(utils.Protocol):
     inside_call: tp.Optional[bool]
     module_index: tp.Optional[int]
 
+    def dynamic_context(self) -> "DynamicContext":
+        ...
+
+    def static_context(self) -> "StaticContext":
+        ...
+
+    def set_from(self, statics: "StaticContext", dynamics: "DynamicContext"):
+        ...
+
 
 @dataclass
 class _LocalContext(threading.local):
@@ -53,6 +62,39 @@ class _LocalContext(threading.local):
     module: tp.Optional["Module"]
     inside_call: tp.Optional[bool]
     module_index: tp.Optional[int]
+
+    def dynamic_context(self) -> "DynamicContext":
+        return DynamicContext(rng=self.rng)
+
+    def static_context(self) -> "StaticContext":
+        return StaticContext(
+            mode=self.mode,
+            initializing=self.initializing,
+            losses=self.losses,
+            metrics=self.metrics,
+            summaries=self.summaries,
+            names=self.names,
+            level_names=self.level_names,
+            module=self.module,
+            inside_call=self.inside_call,
+            module_index=self.module_index,
+        )
+
+    def set_from(self, static: "StaticContext", dynamic: "DynamicContext"):
+        # dynamic
+        self.rng = dynamic.rng
+
+        # static
+        self.mode = static.mode
+        self.initializing = static.initializing
+        self.losses = static.losses
+        self.metrics = static.metrics
+        self.summaries = static.summaries
+        self.names = static.names
+        self.level_names = static.level_names
+        self.module = static.module
+        self.inside_call = static.inside_call
+        self.module_index = static.module_index
 
 
 LOCAL: LocalContext = _LocalContext(
@@ -73,7 +115,7 @@ LOCAL: LocalContext = _LocalContext(
 @contextmanager
 def context(
     rng: tp.Optional[RNG] = None,
-    mode: tp.Optional[Mode] = None,
+    mode: tp.Optional[tp.Union[Mode, str]] = None,
     hooks: bool = False,
 ) -> tp.Iterator[LocalContext]:
 
@@ -86,7 +128,13 @@ def context(
     prev_level_names = LOCAL.level_names
 
     LOCAL.rng = rng if rng is not None else LOCAL.rng
-    LOCAL.mode = mode if mode is not None else LOCAL.mode
+    LOCAL.mode = (
+        Mode[mode]
+        if isinstance(mode, str)
+        else mode
+        if isinstance(mode, Mode)
+        else LOCAL.mode
+    )
     LOCAL.losses = {} if hooks else LOCAL.losses
     LOCAL.metrics = {} if hooks else LOCAL.metrics
     LOCAL.summaries = [] if hooks else LOCAL.summaries
@@ -527,7 +575,10 @@ def get_mode() -> Mode:
     return LOCAL.mode
 
 
-def set_mode(mode: Mode) -> None:
+def set_mode(mode: tp.Union[Mode, str]) -> None:
+    if isinstance(mode, str):
+        mode = Mode[mode]
+
     LOCAL.mode = mode
 
 
@@ -736,6 +787,166 @@ def init_context():
         yield
     finally:
         LOCAL.initializing = prev_initializing
+
+
+def get_dynamic_context() -> "DynamicContext":
+    return LOCAL.dynamic_context()
+
+
+def get_static_context() -> "StaticContext":
+    return LOCAL.static_context()
+
+
+def set_context(static: "StaticContext", dynamic: "DynamicContext"):
+    LOCAL.set_from(static, dynamic)
+
+
+# -------------------------------------------------------------
+# transforms
+# -------------------------------------------------------------
+
+
+class DynamicContext(tp.NamedTuple):
+    rng: RNG
+
+
+class StaticContext(tp.NamedTuple):
+    mode: Mode
+    initializing: bool
+    losses: tp.Optional[tp.Dict[str, tp.Any]]
+    metrics: tp.Optional[tp.Dict[str, tp.Any]]
+    summaries: tp.Optional[tp.List[tp.Tuple[tp.Optional["Module"], str, np.ndarray]]]
+    names: tp.Optional[tp.List[str]]
+    level_names: tp.Optional[tp.List[tp.List[str]]]
+    module: tp.Optional["Module"]
+    inside_call: tp.Optional[bool]
+    module_index: tp.Optional[int]
+
+
+def jit(
+    f: tp.Union[tp.Callable, Module],
+    modules: tp.Optional[tp.Union[Module, tp.List[Module]]] = None,
+    **kwargs,
+):
+    static_argnums = tuple(kwargs.pop("static_argnums", ()))
+
+    if modules is None:
+        modules = []
+    elif isinstance(modules, Module):
+        modules = [modules]
+
+    if isinstance(f, Module):
+
+        if modules is not None and f not in modules:
+            modules.append(f)
+        elif modules is None:
+            modules = [f]
+
+    static_argnums = (0,) + tuple(i + 3 for i in static_argnums)
+
+    def jit_fn(
+        statics: StaticContext,
+        dynamics: DynamicContext,
+        parameters_list: tp.List[tp.Dict],
+        *args,
+    ) -> tp.Tuple[tp.Any, StaticContext, DynamicContext, tp.List]:
+        assert isinstance(modules, list)
+
+        # set global state
+        set_context(statics, dynamics)
+
+        # set params to modules
+        for module, parameters in zip(modules, parameters_list):
+            module.set_parameters(parameters)
+
+        outputs = f(*args)
+
+        parameters_list = [module.get_parameters() for module in modules]
+
+        return (
+            outputs,
+            get_static_context(),
+            get_dynamic_context(),
+            parameters_list,
+        )
+
+    jit_fn = jax.jit(jit_fn, static_argnums, **kwargs)
+
+    @functools.wraps(f)
+    def wrapper(*args):
+
+        statics = get_static_context()
+        dynamics = get_dynamic_context()
+        parameters_list = [module.get_parameters() for module in modules]
+
+        static_argnums
+        arg_list = list(enumerate([statics, dynamics, parameters_list] + list(args)))
+
+        outputs, statics, dynamics, parameters_list = jit_fn(
+            statics,
+            dynamics,
+            parameters_list,
+            *args,
+        )
+
+        # set global state
+        set_context(statics, dynamics)
+
+        # set params to modules
+        for module, parameters in zip(modules, parameters_list):
+            module.set_parameters(parameters)
+
+        return outputs
+
+    return wrapper
+
+
+def get_trainable_parameters(modules: tp.List[Module]) -> tp.List[tp.Any]:
+    return [module.get_parameters(trainable=True) for module in modules]
+
+
+def value_and_grad(
+    f: tp.Union[tp.Callable, Module],
+    modules: tp.Optional[tp.Union[Module, tp.List[Module]]] = None,
+    parameters_fn: tp.Callable[
+        [tp.List[Module]], tp.List[tp.Any]
+    ] = get_trainable_parameters,
+    **kwargs,
+):
+    if modules is None:
+        modules = []
+    elif isinstance(modules, Module):
+        modules = [modules]
+
+    if isinstance(f, Module):
+
+        if modules is not None and f not in modules:
+            modules.append(f)
+        elif modules is None:
+            modules = [f]
+
+    assert len(modules) > 0
+
+    def grad_fn(parameters_list, *args, **kwargs):
+        assert isinstance(parameters_list, list)
+        assert isinstance(modules, list)
+
+        for module, parameters in zip(modules, parameters_list):
+            module.set_parameters(parameters)
+
+        return f(*args, **kwargs)
+
+    grad_fn = jax.value_and_grad(grad_fn, **kwargs)
+
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        assert isinstance(modules, list)
+
+        parameters_list = parameters_fn(modules)
+
+        return grad_fn(parameters_list, *args, **kwargs)
+
+    return wrapper
 
 
 # ------------------------------------------------------------------------

@@ -31,6 +31,12 @@ from .module import (
     set_rng,
     get_mode,
     set_mode,
+    jit,
+    value_and_grad,
+    is_training,
+    get_static_context,
+    get_dynamic_context,
+    set_context,
 )
 
 __all__ = [
@@ -60,4 +66,10 @@ __all__ = [
     "set_rng",
     "get_mode",
     "set_mode",
+    "jit",
+    "is_training",
+    "get_static_context",
+    "get_dynamic_context",
+    "set_context",
+    "value_and_grad",
 ]

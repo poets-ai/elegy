@@ -1,3 +1,4 @@
+from elegy.utils import TrivialPytree
 import typing as tp
 
 import jax
@@ -10,7 +11,7 @@ from elegy.types import PRNGKey
 
 
 @jax.tree_util.register_pytree_node_class
-class RNG:
+class RNG(TrivialPytree):
     key: jnp.ndarray
 
     def __init__(self, key: tp.Union[int, jnp.ndarray]):
@@ -21,13 +22,6 @@ class RNG:
     def __call__(self) -> np.ndarray:
         self.key = jax.random.split(self.key, 1)[0]
         return self.key
-
-    def tree_flatten(self):
-        return (self.key,), None
-
-    @classmethod
-    def tree_unflatten(cls, _aux_data, children):
-        return cls(*children)
 
     def __repr__(self) -> str:
         return f"RNG(key={self.key})"

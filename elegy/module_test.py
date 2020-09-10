@@ -257,3 +257,52 @@ class ModuleDynamicTest(TestCase):
         assert m.linear.get_parameters()["b"][0] == -1
         assert m.linear_1.get_parameters()["w"][0, 0] == -1
         assert m.linear_1.get_parameters()["b"][0] == -1
+
+
+class TestTransforms(TestCase):
+    def test_jit(self):
+
+        total_called = 0
+
+        class SomeModule(elegy.Module):
+            n: jnp.ndarray
+
+            def call(self, x):
+                nonlocal total_called
+
+                total_called += 1
+
+                n = self.add_parameter("n", initializer=0)
+                self.update_parameter("n", n + 1)
+
+                if elegy.is_training():
+                    return x + 1
+                else:
+                    return x - 1
+
+        m = SomeModule()
+
+        assert total_called == 0
+
+        m.init(0)
+        assert total_called == 1
+
+        m_jit = elegy.jit(m)
+
+        assert m.n == 0
+
+        y = m_jit(0)
+
+        assert y == 1
+        assert m.n == 1
+        assert total_called == 2
+
+        y = m_jit(0)
+        assert m.n == 2
+        assert total_called == 2
+
+        elegy.set_mode("test")
+        y = m_jit(0)
+        assert y == -1
+        assert total_called == 3
+        assert m.n == 3
