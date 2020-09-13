@@ -384,7 +384,7 @@ class Module(metaclass=ModuleMeta):
         """
 
         if not hasattr(self, name):
-            if not module_initializing():
+            if not is_initializing():
                 raise ValueError(f"Trying to initialize '{name}' outside of `init`.")
 
             if trainable:
@@ -425,7 +425,7 @@ class Module(metaclass=ModuleMeta):
         """
 
         if hasattr(self, name):
-            if module_initializing():
+            if is_initializing():
                 return
 
             setattr(self, name, value)
@@ -563,7 +563,7 @@ def next_rng_key() -> jnp.ndarray:
     return LOCAL.rng()
 
 
-def module_initializing() -> bool:
+def is_initializing() -> bool:
     return LOCAL.initializing
 
 
