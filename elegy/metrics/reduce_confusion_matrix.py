@@ -84,7 +84,7 @@ class ReduceConfusionMatrix(Metric):
             Reduction.TRUE_POSITIVES,
             Reduction.FALSE_POSITIVES,
             Reduction.FALSE_NEGATIVES,
-            Reduction.TRUE_NEGATIVES
+            Reduction.TRUE_NEGATIVES,
         ):
             raise NotImplementedError(
                 "reduction {reduction} not implemented".format(
@@ -118,7 +118,7 @@ class ReduceConfusionMatrix(Metric):
             dtype=jnp.int32,
             initializer=initializers.Constant(0),
         )
-        
+
         cm_metric = reduce(
             cm_metric=cm_metric,
             y_true=y_true,
