@@ -4,11 +4,14 @@ import typing as tp
 from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass
+from io import StringIO
 
 import haiku as hk
 import jax
 import jax.numpy as jnp
 import numpy as np
+import yaml
+from tabulate import tabulate
 
 from elegy import types, utils
 from elegy.random import RNG
@@ -28,7 +31,7 @@ T = tp.TypeVar("T")
 
 class LocalContext(utils.Protocol):
     rng: RNG
-    mode: Mode
+    training: bool
     initializing: bool
     losses: tp.Optional[tp.Dict[str, tp.Any]]
     metrics: tp.Optional[tp.Dict[str, tp.Any]]
@@ -52,7 +55,7 @@ class LocalContext(utils.Protocol):
 @dataclass
 class _LocalContext(threading.local):
     rng: RNG
-    mode: Mode
+    training: bool
     initializing: bool
     losses: tp.Optional[tp.Dict[str, tp.Any]]
     metrics: tp.Optional[tp.Dict[str, tp.Any]]
@@ -68,7 +71,7 @@ class _LocalContext(threading.local):
 
     def static_context(self) -> "StaticContext":
         return StaticContext(
-            mode=self.mode,
+            training=self.training,
             initializing=self.initializing,
             losses=self.losses,
             metrics=self.metrics,
@@ -85,7 +88,7 @@ class _LocalContext(threading.local):
         self.rng = dynamic.rng
 
         # static
-        self.mode = static.mode
+        self.training = static.training
         self.initializing = static.initializing
         self.losses = static.losses
         self.metrics = static.metrics
@@ -99,7 +102,7 @@ class _LocalContext(threading.local):
 
 LOCAL: LocalContext = _LocalContext(
     rng=RNG(42),
-    mode=Mode.train,
+    training=True,
     initializing=False,
     losses=None,
     metrics=None,
@@ -112,15 +115,15 @@ LOCAL: LocalContext = _LocalContext(
 )
 
 
-@contextmanager
 def context(
     rng: tp.Optional[RNG] = None,
-    mode: tp.Optional[tp.Union[Mode, str]] = None,
+    training: tp.Optional[bool] = None,
     hooks: bool = False,
-) -> tp.Iterator[LocalContext]:
+    summaries: bool = False,
+) -> tp.ContextManager[LocalContext]:
 
     prev_rng = LOCAL.rng
-    prev_mode = LOCAL.mode
+    prev_training = LOCAL.training
     prev_losses = LOCAL.losses
     prev_metrics = LOCAL.metrics
     prev_summaries = LOCAL.summaries
@@ -128,29 +131,32 @@ def context(
     prev_level_names = LOCAL.level_names
 
     LOCAL.rng = rng if rng is not None else LOCAL.rng
-    LOCAL.mode = (
-        Mode[mode]
-        if isinstance(mode, str)
-        else mode
-        if isinstance(mode, Mode)
-        else LOCAL.mode
-    )
+    LOCAL.training = training if training is not None else LOCAL.training
     LOCAL.losses = {} if hooks else LOCAL.losses
     LOCAL.metrics = {} if hooks else LOCAL.metrics
-    LOCAL.summaries = [] if hooks else LOCAL.summaries
-    LOCAL.names = [] if hooks else LOCAL.names
-    LOCAL.level_names = [[]] if hooks else LOCAL.level_names
+    LOCAL.summaries = [] if summaries else LOCAL.summaries
+    LOCAL.names = [] if hooks or summaries else LOCAL.names
+    LOCAL.level_names = [[]] if hooks or summaries else LOCAL.level_names
 
     try:
         yield _LocalContext(**vars(LOCAL))
     finally:
+        # clean
+        if LOCAL.level_names is not None:
+            assert len(LOCAL.level_names) == 1
+            LOCAL.level_names[0] = []
+
+        # revert
         LOCAL.rng = prev_rng
-        LOCAL.mode = prev_mode
+        LOCAL.training = prev_training
         LOCAL.losses = prev_losses
         LOCAL.metrics = prev_metrics
         LOCAL.summaries = prev_summaries
         LOCAL.names = prev_names
         LOCAL.level_names = prev_level_names
+
+
+context = contextmanager(context)
 
 
 def construct_module(cls, *args, **kwargs) -> "Module":
@@ -172,11 +178,8 @@ def construct_module(cls, *args, **kwargs) -> "Module":
         )
 
     for key, value in vars(module).items():
-        if key not in module._ignore and leaf_isinstance(value, Module):
+        if not key.startswith("_") and leaf_isinstance(value, Module):
             module._submodules.append(key)
-
-    utils.wraps(module.call)(module)
-    # utils.wraps(module.call)(module.init)
 
     return module
 
@@ -233,13 +236,12 @@ class Module(metaclass=ModuleMeta):
 
     name: str
     dtype: np.dtype
+    _initialized: bool
     _params: tp.List[str]
     _states: tp.List[str]
     _states_initial: tp.List[str]
     _submodules: tp.List[str]
     _dynamic_submodules: tp.List[str]
-    _ignore: tp.List[str]
-    _initialized: bool
 
     __all__ = [
         "__init__",
@@ -249,7 +251,6 @@ class Module(metaclass=ModuleMeta):
         "reset",
         "get_parameters",
         "set_parameters",
-        "get_states",
         "set_states",
         "submodules",
     ]
@@ -272,8 +273,24 @@ class Module(metaclass=ModuleMeta):
         self._states = []
         self._submodules = []
         self._dynamic_submodules = []
-        self._ignore = []
         self._initialized = False
+
+        utils.wraps(self.call)(self)
+        self.jit = jit(self)
+        self.init_jit = jit(self.init, modules=self)
+
+    @property
+    def initialized(self) -> bool:
+        return self._initialized
+
+    @initialized.setter
+    def initialized(self, value: bool):
+
+        tree_exec(self._init_true, self)
+
+    @staticmethod
+    def _init_true(module: "Module"):
+        module._initialized = True
 
     def __call__(self, *args, **kwargs) -> tp.Any:
         """
@@ -313,7 +330,7 @@ class Module(metaclass=ModuleMeta):
         with init_context():
             self(*args, **kwargs)
 
-        self._initialized = True
+        self.initialized = True
 
     def add_parameter(
         self,
@@ -392,7 +409,6 @@ class Module(metaclass=ModuleMeta):
     def get_parameters(
         self,
         trainable: tp.Optional[bool] = None,
-        non_trainable: tp.Optional[bool] = None,
     ) -> types.Parameters:
         """
         Recursively collects a dictionary with the parameters of this module
@@ -400,15 +416,13 @@ class Module(metaclass=ModuleMeta):
 
         Returns:
         """
-        if trainable is None and non_trainable is None:
+        if trainable is None:
             trainable = True
             non_trainable = True
-
-        if not trainable and not non_trainable:
-            raise ValueError(
-                f"Must specify either trainable or non_trainable, "
-                "got trainable = {trainable}, non_trainable = {non_trainable}"
-            )
+        elif trainable:
+            non_trainable = False
+        else:
+            non_trainable = True
 
         params = module_tree_map(
             lambda module: {
@@ -465,7 +479,7 @@ class Module(metaclass=ModuleMeta):
     def states_size(self, include_submodules: bool = True):
         if include_submodules:
             return sum(
-                x.size for x in jax.tree_leaves(self.get_parameters(non_trainable=True))
+                x.size for x in jax.tree_leaves(self.get_parameters(trainable=False))
             )
         else:
             return sum(
@@ -492,7 +506,8 @@ class Module(metaclass=ModuleMeta):
     def states_bytes(self, include_submodules: bool = True):
         if include_submodules:
             return sum(
-                x.size * x.dtype.itemsize for x in jax.tree_leaves(self.get_states())
+                x.size * x.dtype.itemsize
+                for x in jax.tree_leaves(self.get_parameters(trainable=False))
             )
         else:
             return sum(
@@ -521,25 +536,15 @@ class Module(metaclass=ModuleMeta):
                 See [python-tabulate](https://github.com/astanin/python-tabulate)
                 for more options.
         """
-        self._maybe_initialize(
-            mode=Mode.predict,
-            x=x,
-            y=None,
-            sample_weight=None,
-            class_weight=None,
-        )
+        if not self.initialized:
+            self.init(x)
 
-        assert self.parameters is not None
-        assert self.states is not None
+        with context(summaries=True):
+            self(x)
 
-        y_pred, context = self._predict(
-            training=False,
-            get_summaries=True,
-            x=x,
-            parameters=self.parameters,
-            states=self.states,
-            rng=next(self._rngs),
-        )
+            summaries = get_summaries()
+
+        assert summaries is not None
 
         def format_output(outputs) -> str:
             file = StringIO()
@@ -562,7 +567,7 @@ class Module(metaclass=ModuleMeta):
 
         table: tp.List = [["Inputs", format_output(x), "0", "0"]]
 
-        for module, base_name, value in context.summaries:
+        for module, base_name, value in summaries:
             base_name_parts = base_name.split("/")[1:]
             module_depth = len(base_name_parts)
 
@@ -634,10 +639,10 @@ class Module(metaclass=ModuleMeta):
             )
         )
 
-        params_count = self.module.parameters_size()
-        params_size = self.module.parameters_bytes()
-        states_count = self.module.states_size()
-        states_size = self.module.states_bytes()
+        params_count = self.parameters_size()
+        params_size = self.parameters_bytes()
+        states_count = self.states_size()
+        states_size = self.states_bytes()
         total_count = params_count + states_count
         total_size = params_size + states_size
 
@@ -671,6 +676,10 @@ class Module(metaclass=ModuleMeta):
 # -------------------------------------------------------------
 
 
+def get_module() -> tp.Optional[Module]:
+    return LOCAL.module
+
+
 def get_rng() -> RNG:
     return LOCAL.rng
 
@@ -688,18 +697,7 @@ def is_initializing() -> bool:
 
 
 def is_training() -> bool:
-    return get_mode() == Mode.train
-
-
-def get_mode() -> Mode:
-    return LOCAL.mode
-
-
-def set_mode(mode: tp.Union[Mode, str]) -> None:
-    if isinstance(mode, str):
-        mode = Mode[mode]
-
-    LOCAL.mode = mode
+    return LOCAL.training
 
 
 def get_losses() -> tp.Optional[tp.Dict[str, tp.Any]]:
@@ -717,8 +715,7 @@ def get_summaries() -> tp.Optional[
 
 
 def base_name() -> str:
-    assert LOCAL.names
-    return "/".join(LOCAL.names)
+    return "/".join(LOCAL.names) if LOCAL.names is not None else ""
 
 
 @contextmanager
@@ -733,14 +730,14 @@ def rng_context(rng: RNG):
 
 
 @contextmanager
-def mode_context(mode: Mode):
-    current_mode = LOCAL.mode
-    LOCAL.mode = mode
+def training_context(training: bool):
+    current_training = LOCAL.training
+    LOCAL.training = training
 
     try:
         yield
     finally:
-        LOCAL.mode = current_mode
+        LOCAL.training = current_training
 
 
 @contextmanager
@@ -832,7 +829,7 @@ def add_summary(module_or_name: tp.Union[Module, str], value: np.ndarray) -> Non
     name = base_name()
 
     if isinstance(module_or_name, str):
-        name = f"{name}/{module_or_name}"
+        name = f"{name}/{module_or_name}" if name else module_or_name
         name = get_unique_name({t[1] for t in LOCAL.summaries}, name)
         module = None
     else:
@@ -897,8 +894,7 @@ def add_metric(name: str, value: np.ndarray) -> None:
     LOCAL.metrics[name] = value
 
 
-@contextmanager
-def init_context():
+def init_context() -> tp.ContextManager:
     prev_initializing = LOCAL.initializing
 
     LOCAL.initializing = True
@@ -907,6 +903,9 @@ def init_context():
         yield
     finally:
         LOCAL.initializing = prev_initializing
+
+
+init_context = contextmanager(init_context)
 
 
 def get_dynamic_context() -> "DynamicContext":
@@ -931,7 +930,7 @@ class DynamicContext(tp.NamedTuple):
 
 
 class StaticContext(tp.NamedTuple):
-    mode: Mode
+    training: bool
     initializing: bool
     losses: tp.Optional[tp.Dict[str, tp.Any]]
     metrics: tp.Optional[tp.Dict[str, tp.Any]]
@@ -961,6 +960,9 @@ def jit(
             modules.append(f)
         elif modules is None:
             modules = [f]
+
+    if len(modules) < 1:
+        raise ValueError("No module specified")
 
     static_argnums = (0,) + tuple(i + 3 for i in static_argnums)
 
@@ -994,13 +996,12 @@ def jit(
 
     @functools.wraps(f)
     def wrapper(*args):
+        assert isinstance(modules, list)
 
         statics = get_static_context()
         dynamics = get_dynamic_context()
         parameters_list = [module.get_parameters() for module in modules]
-
         static_argnums
-        arg_list = list(enumerate([statics, dynamics, parameters_list] + list(args)))
 
         outputs, statics, dynamics, parameters_list = jit_fn(
             statics,
@@ -1033,6 +1034,8 @@ def value_and_grad(
     ] = get_trainable_parameters,
     **kwargs,
 ):
+    is_list = isinstance(modules, tp.List)
+
     if modules is None:
         modules = []
     elif isinstance(modules, Module):
@@ -1051,11 +1054,24 @@ def value_and_grad(
         assert isinstance(parameters_list, list)
         assert isinstance(modules, list)
 
+        # set traced parameters
         for module, parameters in zip(modules, parameters_list):
             module.set_parameters(parameters)
 
-        return f(*args, **kwargs)
+        outputs = f(*args, **kwargs)
 
+        loss = outputs[0] if isinstance(outputs, tuple) else outputs
+
+        parameters_list = [module.get_parameters() for module in modules]
+
+        return loss, (
+            outputs,
+            get_static_context(),
+            get_dynamic_context(),
+            parameters_list,
+        )
+
+    kwargs["has_aux"] = True
     grad_fn = jax.value_and_grad(grad_fn, **kwargs)
 
     @functools.wraps(f)
@@ -1064,7 +1080,23 @@ def value_and_grad(
 
         parameters_list = parameters_fn(modules)
 
-        return grad_fn(parameters_list, *args, **kwargs)
+        (_loss, (outputs, statics, dynamics, parameters_list)), grads = grad_fn(
+            parameters_list, *args, **kwargs
+        )
+
+        parameters_list
+
+        # set global state
+        set_context(statics, dynamics)
+
+        # set original untraced parameters
+        for module, parameters in zip(modules, parameters_list):
+            module.set_parameters(parameters)
+
+        if not is_list:
+            grads = grads[0]
+
+        return outputs, grads
 
     return wrapper
 

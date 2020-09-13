@@ -283,78 +283,8 @@ class Model:
         else:
             raise ValueError("Cannot set metrics_states when metrics_module is None")
 
-    def reset_metrics(self, hard: bool = False):
-
-        if hard:
-            self.metrics_module.reset()
-            self._metrics_states = None
-            self.initial_metrics_state = None
-        elif self.initial_metrics_state is not None:
-            self.metrics_states = self.initial_metrics_state
-
     def __call__(self, *args, **kwargs):
         return self.module(*args, **kwargs)
-
-    def _maybe_initialize(
-        self,
-        mode: Mode,
-        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
-        sample_weight: tp.Optional[jnp.ndarray],
-        class_weight: tp.Optional[jnp.ndarray],
-    ):
-
-        # TODO(cgarciae): consider if maybe_jit can actually work else remove it
-        # maybe_jit = jax.jit if not self.run_eagerly else lambda x: x
-        maybe_jit = lambda x: x
-
-        if self.parameters is None or self.states is None:
-            x_args, x_kwargs = utils.get_input_args(x, training=True)
-
-            with context(rng=self._rngs):
-                utils.inject_dependencies(self.module.init)(*x_args, **x_kwargs)
-
-            self.parameters = self.module.get_parameters()
-            self.states = self.module.get_states()
-
-        if mode == Mode.predict:
-            return
-
-        if self.metrics_module is not None and self.metrics_states is None:
-            context: LocalContext
-
-            loss, (y_pred, context, logs) = self._loss_fn(
-                parameters=self.parameters,
-                states=self.states,
-                rng=self._rngs(),
-                x=x,
-                y=y,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                training=True,
-            )
-
-            with context(rng=self._rngs):
-                self.metrics_module.init(
-                    logs,
-                    x=x,
-                    y_true=y,
-                    y_pred=y_pred,
-                    sample_weight=sample_weight,
-                    class_weight=class_weight,
-                    training=False,
-                    parameters=self.parameters,
-                    states=self.states,
-                )
-
-            self.metrics_states = self.metrics_module.get_states()
-            self.initial_metrics_state = self.metrics_states
-
-        if mode == Mode.test:
-            return
-
-        if self.optimizer_state is None:
-            self.optimizer_state = maybe_jit(self._optimizer.init)(self.parameters)
 
     def train_on_batch(
         self,

@@ -110,19 +110,24 @@ class Reduce(Metric):
         Returns:
             Array with the cummulative reduce.
         """
-        total = hooks.get_state(
-            "total", shape=[], dtype=self.dtype, initializer=initializers.Constant(0)
+        total = self.add_parameter(
+            "total",
+            shape=[],
+            dtype=self.dtype,
+            initializer=initializers.Constant(0),
+            trainable=False,
         )
 
         if self._reduction in (
             Reduction.SUM_OVER_BATCH_SIZE,
             Reduction.WEIGHTED_MEAN,
         ):
-            count = hooks.get_state(
+            count = self.add_parameter(
                 "count",
                 shape=[],
                 dtype=jnp.int32,
                 initializer=initializers.Constant(0),
+                trainable=False,
             )
         else:
             count = None

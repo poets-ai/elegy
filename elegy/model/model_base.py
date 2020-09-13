@@ -1,6 +1,9 @@
+from elegy.utils import Mode
 import typing as tp
 
 import jax
+import jax.numpy as jnp
+import numpy as np
 import optax
 
 from elegy import module, utils
@@ -25,9 +28,10 @@ class ModelBase(Module):
         self.loss = Losses(loss) if loss is not None else None
         self.metrics = Metrics(metrics) if metrics else None
         self.optimizer = Optimizer(optimizer) if optimizer is not None else None
-        self.predict_step_jit = elegy_jit(self.predict_step)
-        self.test_step_jit = elegy_jit(self.test_step)
-        self.train_step_jit = elegy_jit(self.train_step)
+        self._predict_step_jit = elegy_jit(self.predict_fn, modules=self)
+        self._test_step_jit = elegy_jit(self.test_fn, modules=self)
+        self._train_step_jit = elegy_jit(self.train_fn, modules=self)
+        self.initial_metrics_state: tp.Optional[tp.Dict[str, tp.Any]] = None
 
         if self.module is not None:
             utils.wraps(self.module)(self)
@@ -38,27 +42,47 @@ class ModelBase(Module):
         else:
             raise NotImplementedError("Must provide 'module' or implement 'call'.")
 
-    def predict_step(self, x):
+    def reset_metrics(self, hard: bool = False):
+        if hard:
+            self.metrics.reset()
+            self.initial_metrics_state = None
+        elif self.initial_metrics_state is not None:
+            self.metrics.set_parameters(self.initial_metrics_state)
+
+    def predict_fn(self, x: tp.Any = ()):
 
         x_args, x_kwargs = utils.get_input_args(x, training=module.is_training())
         y_pred = utils.inject_dependencies(self)(*x_args, **x_kwargs)
 
         return y_pred
 
-    def test_step(self, x, y_true, sample_weight, class_weight):
+    def predict_step(self, x: tp.Any = ()):
+        with module.context(training=False, hooks=False):
+            return self.predict_fn(x=x)
 
-        y_pred = self.predict_step(x)
+    def predict_step_jit(self, x: tp.Any = ()):
+        with module.context(training=False, hooks=False):
+            return self._predict_step_jit(x)
+
+    def loss_fn(
+        self,
+        x: tp.Any = (),
+        y: tp.Any = None,
+        sample_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[np.ndarray] = None,
+    ):
+        y_pred = self.predict_fn(x)
 
         if self.loss is not None:
             loss_logs = self.loss(
                 x=x,
-                y_true=y_true,
+                y_true=y,
                 y_pred=y_pred,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 training=module.is_training(),
                 parameters=self.module.get_parameters(trainable=True),
-                states=self.module.get_parameters(non_trainable=True),
+                states=self.module.get_parameters(trainable=False),
             )
         else:
             loss_logs = {}
@@ -70,39 +94,97 @@ class ModelBase(Module):
 
         loss = sum(loss_logs.values()) + sum(hooks_losses_logs.values())
 
+        total_loss_logs = {}
+        total_loss_logs.update(hooks_losses_logs)
+        total_loss_logs.update(loss_logs)
+        total_loss_logs["loss"] = loss
+
+        return loss, y_pred, total_loss_logs
+
+    def test_fn(
+        self,
+        x: tp.Any = (),
+        y: tp.Any = None,
+        sample_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[np.ndarray] = None,
+        get_gradients: bool = False,
+    ) -> tp.Tuple[np.ndarray, tp.Dict, tp.Optional[tp.Dict]]:
+
+        if get_gradients:
+            (loss, y_pred, total_loss_logs), grads = module.value_and_grad(
+                self.loss_fn, modules=self.module
+            )(x, y, sample_weight, class_weight)
+        else:
+            grads = None
+            loss, y_pred, total_loss_logs = self.loss_fn(
+                x, y, sample_weight, class_weight
+            )
+
         if self.metrics is not None:
-            metric_logs = self.metrics(
+            logs = self.metrics(
+                total_loss_logs,
                 x=x,
-                y_true=y_true,
+                y_true=y,
                 y_pred=y_pred,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 training=module.is_training(),
                 parameters=self.module.get_parameters(trainable=True),
-                states=self.module.get_parameters(non_trainable=True),
+                states=self.module.get_parameters(trainable=False),
             )
         else:
-            metric_logs = {}
+            logs = {}
 
-        loss_metrics_logs = {}
-        loss_metrics_logs.update(hooks_losses_logs)
-        loss_metrics_logs.update(loss_logs)
-        loss_metrics_logs["loss"] = loss
+        return loss, logs, grads
 
-        loss_metrics_logs = LossMetrics()(loss_metrics_logs)
+    def test_step(
+        self,
+        x: tp.Any = (),
+        y: tp.Any = None,
+        sample_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[np.ndarray] = None,
+        get_gradients: bool = False,
+    ) -> tp.Tuple[np.ndarray, tp.Dict, tp.Optional[tp.Dict]]:
 
-        logs = {}
-        logs.update(metric_logs)
-        logs.update(loss_metrics_logs)
+        with module.context(training=False, hooks=True):
+            return self.test_fn(
+                x=x,
+                y=y,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+                get_gradients=get_gradients,
+            )
 
-        return loss, logs
+    def test_step_jit(
+        self,
+        x: tp.Any = (),
+        y: tp.Any = None,
+        sample_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[np.ndarray] = None,
+    ):
+        with module.context(training=False, hooks=True):
+            return self._test_step_jit(x, y, sample_weight, class_weight)
 
-    def train_step(self, x, y_true, sample_weight, class_weight):
+    def train_fn(
+        self,
+        x: tp.Any = (),
+        y: tp.Any = None,
+        sample_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[np.ndarray] = None,
+    ) -> tp.Dict[str, tp.Any]:
         assert self.optimizer is not None
 
-        ((_, logs), grads) = module.value_and_grad(self.test_step, has_aux=True)(
-            x, y_true, sample_weight, class_weight
+        print("train_fn")
+
+        loss, logs, grads = self.test_fn(
+            x=x,
+            y=y,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            get_gradients=True,
         )
+
+        assert grads is not None
 
         parameters = self.module.get_parameters(trainable=True)
 
@@ -112,6 +194,72 @@ class ModelBase(Module):
             self.module.set_parameters(parameters)
 
         return logs
+
+    def train_step(
+        self,
+        x: tp.Any = (),
+        y: tp.Any = None,
+        sample_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[np.ndarray] = None,
+    ) -> tp.Dict[str, tp.Any]:
+
+        with module.context(training=True, hooks=True):
+            return self.train_fn(
+                x=x, y=y, sample_weight=sample_weight, class_weight=class_weight
+            )
+
+    def train_step_jit(
+        self,
+        x: tp.Any = (),
+        y: tp.Any = None,
+        sample_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[np.ndarray] = None,
+    ):
+        with module.context(training=True, hooks=True):
+            outputs = self._train_step_jit(x, y, sample_weight, class_weight)
+
+        return outputs
+
+    def maybe_initialize(
+        self,
+        mode: Mode,
+        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple] = (),
+        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
+        sample_weight: tp.Optional[jnp.ndarray] = None,
+        class_weight: tp.Optional[jnp.ndarray] = None,
+    ):
+
+        with module.init_context(), module.context(training=True, hooks=True):
+
+            if not self.module.initialized:
+                self.predict_fn(x=x)
+                self.module.initialized = True
+
+            if mode == Mode.test and not self.metrics.initialized:
+
+                self.test_fn(
+                    x=x,
+                    y=y,
+                    sample_weight=sample_weight,
+                    class_weight=class_weight,
+                )
+                self.metrics.initialized = True
+
+                self.initial_metrics_state = self.metrics.get_parameters(
+                    trainable=False
+                )
+
+            elif mode == Mode.train and not self.optimizer.initialized:
+                self.train_fn(
+                    x=x,
+                    y=y,
+                    sample_weight=sample_weight,
+                    class_weight=class_weight,
+                )
+                self.metrics.initialized = True
+                self.optimizer.initialized = True
+
+                self
 
 
 class Optimizer(Module):
@@ -200,7 +348,7 @@ class Losses(Module):
 class LossMetrics(Metric):
     def call(self, logs):
 
-        count = self.add_parameter("count", initializer=0, trainable=False)
+        count = self.add_parameter("count", initializer=jnp.zeros, trainable=False)
         total = self.add_parameter(
             "total", initializer=jax.tree_map(lambda x: 0.0, logs), trainable=False
         )

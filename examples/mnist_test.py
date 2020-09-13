@@ -1,3 +1,4 @@
+from elegy.utils import Mode
 from elegy.model.model_base import ModelBase
 import os
 from datetime import datetime
@@ -16,6 +17,11 @@ import optax
 
 import elegy
 from utils import plot_history
+
+
+def random_batch(x, y, batch_size):
+    idx = np.random.choice(len(x), batch_size)
+    return x[idx], y[idx]
 
 
 def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
@@ -70,9 +76,41 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
         # run_eagerly=eager,
     )
 
-    exit()
+    model.maybe_initialize(
+        mode=Mode.train,
+        x=X_train[:64],
+        y=y_train[:64],
+    )
+    model.module.summary(X_train[:64])
 
-    model.summary(X_train[:64])
+    for epoch in range(100):
+
+        model.reset_metrics()
+        for step in range(200):
+            x_sample, y_sample = random_batch(X_train, y_train, 64)
+
+            logs = model.train_step_jit(
+                x_sample, y_sample, sample_weight=None, class_weight=None
+            )
+
+            print(
+                f"[TRAIN] epoch: {epoch},",
+                ", ".join(f"{k}: {float(v):.3f}" for k, v in logs.items()),
+            )
+
+        model.reset_metrics()
+        for test_step in range(10):
+            x_sample, y_sample = random_batch(X_test, y_test, 64)
+            loss, logs, grads = model.test_step_jit(
+                x_sample, y_sample, sample_weight=None, class_weight=None
+            )
+
+        print(
+            f"[TEST] epoch: {epoch},",
+            ", ".join(f"{k}: {float(v):.3f}" for k, v in logs.items()),
+        )
+
+    exit()
 
     history = model.fit(
         x=X_train,

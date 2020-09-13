@@ -6,6 +6,7 @@ import sys
 import threading
 import typing as tp
 from deepmerge import always_merger
+from functools import total_ordering
 
 import jax.numpy as jnp
 import numpy as np
@@ -29,10 +30,16 @@ class TrivialPytree:
         return cls(*children)
 
 
+@total_ordering
 class Mode(Enum):
     predict = 1
     test = 2
     train = 3
+
+    def __lt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value < other.value
+        return NotImplemented
 
 
 class Empty:
