@@ -81,9 +81,10 @@ class ReduceConfusionMatrix(Metric):
         self._reduction = reduction
 
         if self._reduction not in (
-            Reduction.FALSE_NEGATIVES,
-            Reduction.FALSE_POSITIVES,
             Reduction.TRUE_POSITIVES,
+            Reduction.FALSE_POSITIVES,
+            Reduction.FALSE_NEGATIVES,
+            Reduction.TRUE_NEGATIVES
         ):
             raise NotImplementedError(
                 "reduction {reduction} not implemented".format(
@@ -111,21 +112,13 @@ class ReduceConfusionMatrix(Metric):
             Array with the cummulative reduce metric.
         """
 
-        if self._reduction in (
-            Reduction.FALSE_NEGATIVES,
-            Reduction.FALSE_POSITIVES,
-            Reduction.TRUE_POSITIVES,
-            Reduction.TRUE_NEGATIVES,
-        ):
-            cm_metric = hooks.get_state(
-                self._reduction.value,
-                shape=[],
-                dtype=jnp.int32,
-                initializer=initializers.Constant(0),
-            )
-        else:
-            count = None
-
+        cm_metric = hooks.get_state(
+            "cm_metric",
+            shape=[],
+            dtype=jnp.int32,
+            initializer=initializers.Constant(0),
+        )
+        
         cm_metric = reduce(
             cm_metric=cm_metric,
             y_true=y_true,
@@ -136,6 +129,6 @@ class ReduceConfusionMatrix(Metric):
         )
 
         if cm_metric is not None:
-            hooks.set_state(self._reduction.value, cm_metric)
+            hooks.set_state("cm_metric", cm_metric)
 
         return cm_metric
