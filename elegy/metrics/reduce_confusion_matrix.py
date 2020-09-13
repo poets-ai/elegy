@@ -128,7 +128,6 @@ class ReduceConfusionMatrix(Metric):
             dtype=self.dtype,
         )
 
-        if cm_metric is not None:
-            hooks.set_state("cm_metric", cm_metric)
+        hooks.set_state("cm_metric", cm_metric)
 
         return cm_metric
