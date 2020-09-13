@@ -19,7 +19,7 @@ class ModelBase(Module):
         optimizer: tp.Optional[optax.GradientTransformation] = None,
         **kwargs,
     ):
-        super.__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.module = module
         self.loss = Losses(loss) if loss is not None else None
