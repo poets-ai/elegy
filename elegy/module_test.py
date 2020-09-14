@@ -61,7 +61,7 @@ class ModuleTest(TestCase):
         m.init(x)
 
         parameters = m.get_parameters()
-        state = m.get_parameters(non_trainable=True)
+        state = m.get_parameters(trainable=False)
 
         assert "bias" in parameters
         assert "linear" in parameters
@@ -71,7 +71,7 @@ class ModuleTest(TestCase):
         assert parameters["linear1"]["n"] == 0
         assert "linear1" in parameters
 
-        with elegy.context(hooks=True):
+        with elegy.context(hooks=True, summaries=True):
             y: jnp.ndarray = m(x)
             # y2: jnp.ndarray = m.call_jit(x)
 
@@ -197,7 +197,7 @@ class ModuleDynamicTest(TestCase):
         assert m.get_parameters()["linear"]["n"] == 0
         assert "linear_1" in m.get_parameters()
 
-        with elegy.context(hooks=True) as ctx:
+        with elegy.context(hooks=True, summaries=True):
             # y: jnp.ndarray = m(x)
             y: jnp.ndarray = m.jit(x)
 
@@ -208,10 +208,6 @@ class ModuleDynamicTest(TestCase):
         assert losses
         assert metrics
         assert summaries
-
-        assert ctx.losses is losses
-        assert ctx.metrics is metrics
-        assert ctx.summaries is summaries
 
         assert y.shape == (4, 7)
         assert "bias" in m.get_parameters()
@@ -260,6 +256,84 @@ class ModuleDynamicTest(TestCase):
 
 
 class TestTransforms(TestCase):
+    def test_simple_0(self):
+
+        total_called = 0
+
+        @jax.jit
+        def f(params, x):
+            nonlocal total_called
+
+            total_called += 1
+
+            y = params["w"] * x + params["b"]
+            params["w"] += 1.0
+
+            return params, y
+
+        params = {"w": jnp.array(1.0), "b": jnp.array(2.0)}
+        params, outputs = f(params, 1)
+        # m.set_parameters(params)
+
+        print(params, type(params))
+
+        assert total_called == 1
+
+        params = {"b": params["b"], "w": params["w"]}
+        params, outputs = f(params, 1)
+        # m.set_parameters(params)
+
+        assert total_called == 1
+
+    def test_simple(self):
+
+        total_called = 0
+
+        class SomeModule(elegy.Module):
+            n: jnp.ndarray
+
+            def call(self, x):
+                nonlocal total_called
+
+                total_called += 1
+
+                n = self.add_parameter("n", initializer=jnp.array(0))
+                self.update_parameter("n", n + 1)
+
+                if elegy.is_training():
+                    return x + 1
+                else:
+                    return x - 1
+
+        m = SomeModule()
+
+        @jax.jit
+        def f(params, x):
+
+            m.set_parameters(params)
+
+            outputs = m(x)
+
+            return m.get_parameters(), outputs
+
+        assert total_called == 0
+
+        m.init(1)
+        assert total_called == 1
+
+        params = m.get_parameters()
+        params, outputs = f(params, 1)
+        m.set_parameters(params)
+
+        assert total_called == 2
+
+        params = m.get_parameters()
+        print(params)
+        params, outputs = f(params, 1)
+        m.set_parameters(params)
+
+        assert total_called == 2
+
     def test_jit(self):
 
         total_called = 0
@@ -272,7 +346,7 @@ class TestTransforms(TestCase):
 
                 total_called += 1
 
-                n = self.add_parameter("n", initializer=0)
+                n = self.add_parameter("n", initializer=jnp.array(0))
                 self.update_parameter("n", n + 1)
 
                 if elegy.is_training():
@@ -301,8 +375,38 @@ class TestTransforms(TestCase):
         assert m.n == 2
         assert total_called == 2
 
-        elegy.set_mode("test")
+        elegy.set_training(False)
         y = m_jit(0)
         assert y == -1
         assert total_called == 3
         assert m.n == 3
+
+        with elegy.context(training=True):
+            y = m_jit(0)
+            assert y == 1
+            assert total_called == 3
+            assert m.n == 4
+
+        with elegy.context(training=True, hooks=True):
+            y = m_jit(0)
+            assert y == 1
+            assert total_called == 4
+            assert m.n == 5
+
+        with elegy.context(training=True, hooks=True):
+            y = m_jit(0)
+            assert y == 1
+            assert total_called == 4
+            assert m.n == 6
+
+        with elegy.context(training=True, hooks=True, summaries=True):
+            y = m_jit(0)
+            assert y == 1
+            assert total_called == 5
+            assert m.n == 7
+
+        with elegy.context(training=False, hooks=True, summaries=True):
+            y = m_jit(0)
+            assert y == -1
+            assert total_called == 6
+            assert m.n == 8

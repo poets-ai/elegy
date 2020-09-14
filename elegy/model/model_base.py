@@ -350,7 +350,9 @@ class LossMetrics(Metric):
 
         count = self.add_parameter("count", initializer=jnp.zeros, trainable=False)
         total = self.add_parameter(
-            "total", initializer=jax.tree_map(lambda x: 0.0, logs), trainable=False
+            "total",
+            initializer=lambda *args: jax.tree_map(lambda x: jnp.array(0.0), logs),
+            trainable=False,
         )
 
         count += 1

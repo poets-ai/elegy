@@ -29,6 +29,25 @@ __all__ = [
 T = tp.TypeVar("T")
 
 
+class DynamicContext(tp.NamedTuple):
+    rng: RNG
+
+
+class StaticContext(tp.NamedTuple):
+    training: bool
+    initializing: bool
+    losses: tp.Optional[tp.Tuple[tp.Tuple[str, tp.Any], ...]]
+    metrics: tp.Optional[tp.Tuple[tp.Tuple[str, tp.Any], ...]]
+    summaries: tp.Optional[
+        tp.Tuple[tp.Tuple[tp.Optional["Module"], str, np.ndarray], ...]
+    ]
+    names: tp.Optional[tp.Tuple[str, ...]]
+    level_names: tp.Optional[tp.Tuple[str, ...]]
+    module: tp.Optional["Module"]
+    inside_call: tp.Optional[bool]
+    module_index: tp.Optional[int]
+
+
 class LocalContext(utils.Protocol):
     rng: RNG
     training: bool
@@ -37,7 +56,7 @@ class LocalContext(utils.Protocol):
     metrics: tp.Optional[tp.Dict[str, tp.Any]]
     summaries: tp.Optional[tp.List[tp.Tuple[tp.Optional["Module"], str, np.ndarray]]]
     names: tp.Optional[tp.List[str]]
-    level_names: tp.Optional[tp.List[tp.List[str]]]
+    level_names: tp.Optional[tp.List[str]]
     module: tp.Optional["Module"]
     inside_call: tp.Optional[bool]
     module_index: tp.Optional[int]
@@ -61,7 +80,7 @@ class _LocalContext(threading.local):
     metrics: tp.Optional[tp.Dict[str, tp.Any]]
     summaries: tp.Optional[tp.List[tp.Tuple[tp.Optional["Module"], str, np.ndarray]]]
     names: tp.Optional[tp.List[str]]
-    level_names: tp.Optional[tp.List[tp.List[str]]]
+    level_names: tp.Optional[tp.List[str]]
     module: tp.Optional["Module"]
     inside_call: tp.Optional[bool]
     module_index: tp.Optional[int]
@@ -73,11 +92,13 @@ class _LocalContext(threading.local):
         return StaticContext(
             training=self.training,
             initializing=self.initializing,
-            losses=self.losses,
-            metrics=self.metrics,
-            summaries=self.summaries,
-            names=self.names,
-            level_names=self.level_names,
+            losses=tuple(self.losses.items()) if self.losses is not None else None,
+            metrics=tuple(self.metrics.items()) if self.metrics is not None else None,
+            summaries=tuple(self.summaries) if self.summaries is not None else None,
+            names=tuple(self.names) if self.names is not None else None,
+            level_names=tuple(self.level_names)
+            if self.level_names is not None
+            else None,
             module=self.module,
             inside_call=self.inside_call,
             module_index=self.module_index,
@@ -90,11 +111,15 @@ class _LocalContext(threading.local):
         # static
         self.training = static.training
         self.initializing = static.initializing
-        self.losses = static.losses
-        self.metrics = static.metrics
-        self.summaries = static.summaries
-        self.names = static.names
-        self.level_names = static.level_names
+        self.losses = dict(static.losses) if static.losses is not None else None
+        self.metrics = dict(static.metrics) if static.metrics is not None else None
+        self.summaries = (
+            list(static.summaries) if static.summaries is not None else None
+        )
+        self.names = list(static.names) if static.names is not None else None
+        self.level_names = (
+            list(static.level_names) if static.level_names is not None else None
+        )
         self.module = static.module
         self.inside_call = static.inside_call
         self.module_index = static.module_index
@@ -136,15 +161,14 @@ def context(
     LOCAL.metrics = {} if hooks else LOCAL.metrics
     LOCAL.summaries = [] if summaries else LOCAL.summaries
     LOCAL.names = [] if hooks or summaries else LOCAL.names
-    LOCAL.level_names = [[]] if hooks or summaries else LOCAL.level_names
+    LOCAL.level_names = [] if hooks or summaries else LOCAL.level_names
 
     try:
         yield _LocalContext(**vars(LOCAL))
     finally:
-        # clean
-        if LOCAL.level_names is not None:
-            assert len(LOCAL.level_names) == 1
-            LOCAL.level_names[0] = []
+        # # clean
+        # if LOCAL.level_names is not None:
+        #     LOCAL.level_names.clear()
 
         # revert
         LOCAL.rng = prev_rng
@@ -696,6 +720,10 @@ def is_initializing() -> bool:
     return LOCAL.initializing
 
 
+def set_training(training: bool) -> None:
+    LOCAL.training = training
+
+
 def is_training() -> bool:
     return LOCAL.training
 
@@ -747,17 +775,19 @@ def name_context(name: str) -> tp.Iterator[str]:
         yield ""
         return
 
-    name = get_unique_name(set(LOCAL.level_names[-1]), name)
+    current_level_names = LOCAL.level_names
 
+    name = get_unique_name(set(current_level_names), name)
+
+    current_level_names.append(name)  # add name to current level
     LOCAL.names.append(name)
-    LOCAL.level_names[-1].append(name)  # add name to current level
-    LOCAL.level_names.append([])  # create new level for children
+    LOCAL.level_names = []  # create new level for children
 
     try:
         yield name
     finally:
         LOCAL.names.pop()
-        LOCAL.level_names.pop()  #
+        LOCAL.level_names = current_level_names
 
 
 @contextmanager
@@ -925,23 +955,6 @@ def set_context(static: "StaticContext", dynamic: "DynamicContext"):
 # -------------------------------------------------------------
 
 
-class DynamicContext(tp.NamedTuple):
-    rng: RNG
-
-
-class StaticContext(tp.NamedTuple):
-    training: bool
-    initializing: bool
-    losses: tp.Optional[tp.Dict[str, tp.Any]]
-    metrics: tp.Optional[tp.Dict[str, tp.Any]]
-    summaries: tp.Optional[tp.List[tp.Tuple[tp.Optional["Module"], str, np.ndarray]]]
-    names: tp.Optional[tp.List[str]]
-    level_names: tp.Optional[tp.List[tp.List[str]]]
-    module: tp.Optional["Module"]
-    inside_call: tp.Optional[bool]
-    module_index: tp.Optional[int]
-
-
 def jit(
     f: tp.Union[tp.Callable, Module],
     modules: tp.Optional[tp.Union[Module, tp.List[Module]]] = None,
@@ -1002,6 +1015,8 @@ def jit(
         dynamics = get_dynamic_context()
         parameters_list = [module.get_parameters() for module in modules]
         static_argnums
+
+        utils.statics = statics
 
         outputs, statics, dynamics, parameters_list = jit_fn(
             statics,

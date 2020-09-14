@@ -93,10 +93,10 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
                 x_sample, y_sample, sample_weight=None, class_weight=None
             )
 
-            print(
-                f"[TRAIN] epoch: {epoch},",
-                ", ".join(f"{k}: {float(v):.3f}" for k, v in logs.items()),
-            )
+        print(
+            f"[TRAIN] epoch: {epoch},",
+            ", ".join(f"{k}: {float(v):.3f}" for k, v in logs.items()),
+        )
 
         model.reset_metrics()
         for test_step in range(10):
@@ -110,47 +110,22 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             ", ".join(f"{k}: {float(v):.3f}" for k, v in logs.items()),
         )
 
-    exit()
-
-    history = model.fit(
-        x=X_train,
-        y=y_train,
-        epochs=100,
-        steps_per_epoch=200,
-        batch_size=64,
-        validation_data=(X_test, y_test),
-        shuffle=True,
-        callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],
-    )
-
-    print(model.module.submodules)
-
-    plot_history(history)
-
     # get random samples
     idxs = np.random.randint(0, 10000, size=(9,))
     x_sample = X_test[idxs]
 
     # get predictions
-    y_pred = model.predict(x=x_sample)
+    y_pred = model.predict_step(x=x_sample)
 
     # plot and save results
-    with SummaryWriter(os.path.join(logdir, "val")) as tbwriter:
-        figure = plt.figure(figsize=(12, 12))
-        for i in range(3):
-            for j in range(3):
-                k = 3 * i + j
-                plt.subplot(3, 3, k + 1)
-                plt.title(f"{np.argmax(y_pred[k])}")
-                plt.imshow(x_sample[k], cmap="gray")
-        tbwriter.add_figure("Predictions", figure, 100)
+    for i in range(3):
+        for j in range(3):
+            k = 3 * i + j
+            plt.subplot(3, 3, k + 1)
+            plt.title(f"{np.argmax(y_pred[k])}")
+            plt.imshow(x_sample[k], cmap="gray")
 
     plt.show()
-
-    print(
-        "\n\n\nMetrics and images can be explored using tensorboard using:",
-        f"\n \t\t\t tensorboard --logdir {logdir}",
-    )
 
 
 if __name__ == "__main__":
