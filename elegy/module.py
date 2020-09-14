@@ -1014,9 +1014,7 @@ def jit(
         statics = get_static_context()
         dynamics = get_dynamic_context()
         parameters_list = [module.get_parameters() for module in modules]
-        static_argnums
-
-        utils.statics = statics
+        # static_argnums
 
         outputs, statics, dynamics, parameters_list = jit_fn(
             statics,
