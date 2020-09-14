@@ -93,19 +93,19 @@ class Model(ModelBase):
     """
 
     # public fields
-    module: Module
-    optimizer_state: tp.Optional[optax.OptState]
-    initial_metrics_state: tp.Optional[tp.Dict]
-    run_eagerly: bool
+    # module: Module
+    # optimizer_state: tp.Optional[optax.OptState]
+    # initial_metrics_state: tp.Optional[tp.Dict]
+    # run_eagerly: bool
 
-    # private fields
-    loss_module: tp.Optional[Module]
-    metrics_module: tp.Optional[Module]
-    _optimizer: optax.GradientTransformation
-    _rngs: RNG
-    _parameters: tp.Optional[types.Parameters]
-    _states: tp.Optional[types.States]
-    _metrics_states: tp.Optional[tp.Dict]
+    # # private fields
+    # loss_module: tp.Optional[Module]
+    # metrics_module: tp.Optional[Module]
+    # _optimizer: optax.GradientTransformation
+    # _rngs: RNG
+    # _parameters: tp.Optional[types.Parameters]
+    # _states: tp.Optional[types.States]
+    # _metrics_states: tp.Optional[tp.Dict]
 
     __all__ = [
         "evaluate",
