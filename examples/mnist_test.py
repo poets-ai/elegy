@@ -73,15 +73,10 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
         ],
         metrics=elegy.metrics.SparseCategoricalAccuracy(),
         optimizer=optax.adamw(1e-3),
-        # run_eagerly=eager,
+        run_eagerly=eager,
     )
 
-    model.maybe_initialize(
-        mode=Mode.train,
-        x=X_train[:64],
-        y=y_train[:64],
-    )
-    model.module.summary(X_train[:64])
+    model.summary(X_train[:64])
 
     for epoch in range(100):
 
@@ -89,7 +84,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
         for step in range(200):
             x_sample, y_sample = random_batch(X_train, y_train, 64)
 
-            logs = model.train_step_jit(
+            logs = model.train_on_batch(
                 x_sample, y_sample, sample_weight=None, class_weight=None
             )
 
@@ -101,7 +96,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
         model.reset_metrics()
         for test_step in range(10):
             x_sample, y_sample = random_batch(X_test, y_test, 64)
-            loss, logs, grads = model.test_step_jit(
+            logs = model.test_on_batch(
                 x_sample, y_sample, sample_weight=None, class_weight=None
             )
 
@@ -115,7 +110,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
     x_sample = X_test[idxs]
 
     # get predictions
-    y_pred = model.predict_step(x=x_sample)
+    y_pred = model.predict_on_batch(x=x_sample)
 
     # plot and save results
     for i in range(3):
