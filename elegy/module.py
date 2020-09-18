@@ -1,3 +1,4 @@
+from elegy.frozen_dict import FrozenDict
 import functools
 import threading
 import typing as tp
@@ -36,8 +37,8 @@ class DynamicContext(tp.NamedTuple):
 class StaticContext(tp.NamedTuple):
     training: bool
     initializing: bool
-    losses: tp.Optional[tp.Tuple[tp.Tuple[str, tp.Any], ...]]
-    metrics: tp.Optional[tp.Tuple[tp.Tuple[str, tp.Any], ...]]
+    losses: tp.Optional[FrozenDict[str, tp.Any]]
+    metrics: tp.Optional[FrozenDict[str, tp.Any]]
     summaries: tp.Optional[
         tp.Tuple[tp.Tuple[tp.Optional["Module"], str, np.ndarray], ...]
     ]
@@ -92,8 +93,8 @@ class _LocalContext(threading.local):
         return StaticContext(
             training=self.training,
             initializing=self.initializing,
-            losses=tuple(self.losses.items()) if self.losses is not None else None,
-            metrics=tuple(self.metrics.items()) if self.metrics is not None else None,
+            losses=FrozenDict(self.losses) if self.losses is not None else None,
+            metrics=FrozenDict(self.metrics) if self.metrics is not None else None,
             summaries=tuple(self.summaries) if self.summaries is not None else None,
             names=tuple(self.names) if self.names is not None else None,
             level_names=tuple(self.level_names)
@@ -111,8 +112,8 @@ class _LocalContext(threading.local):
         # static
         self.training = static.training
         self.initializing = static.initializing
-        self.losses = dict(static.losses) if static.losses is not None else None
-        self.metrics = dict(static.metrics) if static.metrics is not None else None
+        self.losses = static.losses.unfreeze() if static.losses is not None else None
+        self.metrics = static.metrics.unfreeze() if static.metrics is not None else None
         self.summaries = (
             list(static.summaries) if static.summaries is not None else None
         )
@@ -261,11 +262,11 @@ class Module(metaclass=ModuleMeta):
     name: str
     dtype: np.dtype
     _initialized: bool
-    _params: tp.List[str]
-    _states: tp.List[str]
+    _params: tp.Dict[str, bool]
     _states_initial: tp.List[str]
     _submodules: tp.List[str]
     _dynamic_submodules: tp.List[str]
+    _trainable: bool
 
     __all__ = [
         "__init__",
@@ -293,11 +294,12 @@ class Module(metaclass=ModuleMeta):
         """
         self.name = name if name else utils.lower_snake_case(self.__class__.__name__)
         self.dtype = dtype
-        self._params = []
+        self._params = {}
         self._states = []
         self._submodules = []
         self._dynamic_submodules = []
         self._initialized = False
+        self._trainable = True
 
         utils.wraps(self.call)(self)
         self.jit = jit(self)
@@ -309,12 +311,23 @@ class Module(metaclass=ModuleMeta):
 
     @initialized.setter
     def initialized(self, value: bool):
-
-        tree_exec(self._init_true, self)
+        tree_exec(lambda module: self._set_initialized(module, value), self)
 
     @staticmethod
-    def _init_true(module: "Module"):
-        module._initialized = True
+    def _set_initialized(module: "Module", value: bool):
+        module._initialized = value
+
+    @property
+    def trainable(self) -> bool:
+        return self._trainable
+
+    @trainable.setter
+    def trainable(self, value: bool):
+        tree_exec(lambda module: self._set_trainable(module, value), self)
+
+    @staticmethod
+    def _set_trainable(module: "Module", value: bool):
+        module._trainable = value
 
     def __call__(self, *args, **kwargs) -> tp.Any:
         """
@@ -385,10 +398,7 @@ class Module(metaclass=ModuleMeta):
             if not is_initializing():
                 raise ValueError(f"Trying to initialize '{name}' outside of `init`.")
 
-            if trainable:
-                self._params.append(name)
-            else:
-                self._states.append(name)
+            self._params[name] = trainable
 
             if dtype is None:
                 dtype = self.dtype
@@ -401,7 +411,7 @@ class Module(metaclass=ModuleMeta):
 
             setattr(self, name, initial_value)
 
-        elif name not in self._params + self._states:
+        elif name not in self._params:
             raise ValueError(
                 f"Class already contained a property named '{name}', "
                 "please use a unique name for the parameter."
@@ -440,22 +450,16 @@ class Module(metaclass=ModuleMeta):
 
         Returns:
         """
-        if trainable is None:
-            trainable = True
-            non_trainable = True
-        elif trainable:
-            non_trainable = False
-        else:
-            non_trainable = True
 
         params = module_tree_map(
             lambda module: {
                 key: getattr(module, key)
-                for key in (
-                    (module._params if trainable else [])
-                    + (module._states if non_trainable else [])
-                )
+                for key, param_is_trainable in module._params.items()
                 if hasattr(module, key)
+                and (
+                    trainable is None
+                    or trainable == (param_is_trainable and module.trainable)
+                )
             },
             self,
         )
@@ -468,7 +472,42 @@ class Module(metaclass=ModuleMeta):
         and all submodules within it given a dictionary with a corresponding
         structure.
         """
-        set_tree(self, values, ["_params", "_states"])
+
+        def f(module: Module, values: tp.Dict[str, tp.Any]):
+            for key, value in values.items():
+                if key in module._params:
+                    setattr(module, key, value)
+
+        tree_apply(f, self, values)
+
+    def get_states(self) -> tp.Dict[str, tp.Any]:
+        """
+        Recursively collects a dictionary with the static (non-array) states of this module
+        and all submodules within it.
+
+        Returns:
+        """
+
+        params = module_tree_map(
+            lambda module: dict(
+                trainable=module._trainable,
+            ),
+            self,
+        )
+        assert isinstance(params, tp.Dict)
+        return params
+
+    def set_states(self, values: tp.Dict[str, tp.Any]) -> None:
+        """
+        Recursively sets the states (non-arrays) of this module
+        and all submodules within it given a dictionary with a corresponding
+        structure.
+        """
+
+        def f(module: Module, states):
+            module._trainable = states["trainable"]
+
+        tree_apply(f, self, values)
 
     def reset(self):
         """
@@ -977,32 +1016,35 @@ def jit(
     if len(modules) < 1:
         raise ValueError("No module specified")
 
-    static_argnums = (0,) + tuple(i + 3 for i in static_argnums)
+    static_argnums = (0, 1) + tuple(i + 4 for i in static_argnums)
 
     def jit_fn(
+        states_tuple: tp.Tuple[FrozenDict[str, tp.Any], ...],
         statics: StaticContext,
         dynamics: DynamicContext,
-        parameters_list: tp.List[tp.Dict],
+        parameters_tuple: tp.Tuple[tp.Dict, ...],
         *args,
-    ) -> tp.Tuple[tp.Any, StaticContext, DynamicContext, tp.List]:
+    ) -> tp.Tuple[tp.Any, StaticContext, DynamicContext, tp.Tuple]:
         assert isinstance(modules, list)
+
+        # states_tuple is not set because its static, therefore no need to propagate down
 
         # set global state
         set_context(statics, dynamics)
 
         # set params to modules
-        for module, parameters in zip(modules, parameters_list):
+        for module, parameters in zip(modules, parameters_tuple):
             module.set_parameters(parameters)
 
         outputs = f(*args)
 
-        parameters_list = [module.get_parameters() for module in modules]
+        parameters_tuple = tuple(module.get_parameters() for module in modules)
 
         return (
             outputs,
             get_static_context(),
             get_dynamic_context(),
-            parameters_list,
+            parameters_tuple,
         )
 
     jit_fn = jax.jit(jit_fn, static_argnums, **kwargs)
@@ -1011,15 +1053,19 @@ def jit(
     def wrapper(*args):
         assert isinstance(modules, list)
 
+        states_tuple = utils.to_static(
+            tuple(FrozenDict(module.get_states()) for module in modules)
+        )
         statics = get_static_context()
         dynamics = get_dynamic_context()
-        parameters_list = [module.get_parameters() for module in modules]
+        parameters_tuple = tuple(module.get_parameters() for module in modules)
         # static_argnums
 
-        outputs, statics, dynamics, parameters_list = jit_fn(
+        outputs, statics, dynamics, parameters_tuple = jit_fn(
+            states_tuple,
             statics,
             dynamics,
-            parameters_list,
+            parameters_tuple,
             *args,
         )
 
@@ -1027,7 +1073,7 @@ def jit(
         set_context(statics, dynamics)
 
         # set params to modules
-        for module, parameters in zip(modules, parameters_list):
+        for module, parameters in zip(modules, parameters_tuple):
             module.set_parameters(parameters)
 
         return outputs
@@ -1063,25 +1109,25 @@ def value_and_grad(
 
     assert len(modules) > 0
 
-    def grad_fn(parameters_list, *args, **kwargs):
-        assert isinstance(parameters_list, list)
+    def grad_fn(parameters_tuple: tp.Tuple[tp.Dict, ...], *args, **kwargs):
+        assert isinstance(parameters_tuple, tuple)
         assert isinstance(modules, list)
 
         # set traced parameters
-        for module, parameters in zip(modules, parameters_list):
+        for module, parameters in zip(modules, parameters_tuple):
             module.set_parameters(parameters)
 
         outputs = f(*args, **kwargs)
 
         loss = outputs[0] if isinstance(outputs, tuple) else outputs
 
-        parameters_list = [module.get_parameters() for module in modules]
+        parameters_tuple = tuple(module.get_parameters() for module in modules)
 
         return loss, (
             outputs,
             get_static_context(),
             get_dynamic_context(),
-            parameters_list,
+            parameters_tuple,
         )
 
     kwargs["has_aux"] = True
@@ -1091,19 +1137,19 @@ def value_and_grad(
     def wrapper(*args, **kwargs):
         assert isinstance(modules, list)
 
-        parameters_list = parameters_fn(modules)
+        parameters_tuple = tuple(parameters_fn(modules))
 
-        (_loss, (outputs, statics, dynamics, parameters_list)), grads = grad_fn(
-            parameters_list, *args, **kwargs
+        (_loss, (outputs, statics, dynamics, parameters_tuple)), grads = grad_fn(
+            parameters_tuple, *args, **kwargs
         )
 
-        parameters_list
+        parameters_tuple
 
         # set global state
         set_context(statics, dynamics)
 
         # set original untraced parameters
-        for module, parameters in zip(modules, parameters_list):
+        for module, parameters in zip(modules, parameters_tuple):
             module.set_parameters(parameters)
 
         if not is_list:
@@ -1136,26 +1182,12 @@ def module_tree_map(
 
         for submodule in module._submodules:
             value = module_tree_map(f, getattr(module, submodule))
-            if value:  # drop if empty
-                node[submodule] = value
+            # if value:  # drop if empty
+            node[submodule] = value
 
         return node
     else:
         return ()
-
-
-def set_tree(
-    module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict],
-    values: tp.Union[tp.List, tp.Tuple, tp.Dict],
-    field_names: tp.List[str],
-):
-    def f(module, values):
-        names = sum((getattr(module, field_name) for field_name in field_names), [])
-        for key, value in values.items():
-            if key in names:
-                setattr(module, key, value)
-
-    tree_apply(f, module, values)
 
 
 def tree_apply(

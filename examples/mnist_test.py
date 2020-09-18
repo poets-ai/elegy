@@ -80,13 +80,13 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
 
     for epoch in range(100):
 
+        logs = {}
+
         model.reset_metrics()
         for step in range(200):
             x_sample, y_sample = random_batch(X_train, y_train, 64)
 
-            logs = model.train_on_batch(
-                x_sample, y_sample, sample_weight=None, class_weight=None
-            )
+            logs = model.train_on_batch(x_sample, y_sample)
 
         print(
             f"[TRAIN] epoch: {epoch},",
@@ -96,9 +96,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
         model.reset_metrics()
         for test_step in range(10):
             x_sample, y_sample = random_batch(X_test, y_test, 64)
-            logs = model.test_on_batch(
-                x_sample, y_sample, sample_weight=None, class_weight=None
-            )
+            logs = model.test_on_batch(x_sample, y_sample)
 
         print(
             f"[TEST] epoch: {epoch},",

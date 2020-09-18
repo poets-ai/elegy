@@ -123,7 +123,7 @@ class ModuleTest(TestCase):
 
         parameters = m.get_parameters()
 
-        assert parameters == {}
+        assert jax.tree_leaves(parameters) == []
         assert m.parameters_size() == 0
 
         m.set_parameters(current_parameters)
@@ -243,7 +243,7 @@ class ModuleDynamicTest(TestCase):
 
         m.reset()
 
-        assert m.get_parameters() == {}
+        assert jax.tree_leaves(m.get_parameters()) == []
         assert m.parameters_size() == 0
 
         m.set_parameters(current_parameters)
@@ -410,3 +410,126 @@ class TestTransforms(TestCase):
             assert y == -1
             assert total_called == 6
             assert m.n == 8
+
+
+class TestOthers(TestCase):
+    def test_trainable(self):
+        class SomeModule(elegy.Module):
+            linear: elegy.nn.Linear
+
+            def call(self, x):
+                return elegy.nn.Linear(10)(x)
+
+        x = np.random.uniform(-1, 1, size=(4, 5))
+        m = SomeModule()
+        m.init(x)
+
+        params = m.get_parameters(trainable=True)
+        assert "linear" in params
+        assert "w" in params["linear"]
+        assert "b" in params["linear"]
+
+        m.linear.trainable = False
+
+        params = m.get_parameters(trainable=True)
+        assert "w" not in params["linear"]
+        assert "b" not in params["linear"]
+
+        params = m.get_parameters(trainable=False)
+        assert "w" in params["linear"]
+        assert "b" in params["linear"]
+
+        m.trainable = True
+
+        params = m.get_parameters(trainable=True)
+        assert "w" in params["linear"]
+        assert "b" in params["linear"]
+
+        m.trainable = False
+
+        params = m.get_parameters(trainable=True)
+        assert "w" not in params["linear"]
+        assert "b" not in params["linear"]
+
+    def test_trainable_jit(self):
+        total_called = 0
+
+        class SomeModule(elegy.Module):
+            linear: elegy.nn.Linear
+
+            def call(self, x):
+                nonlocal total_called
+                total_called += 1
+                return elegy.nn.Linear(10)(x)
+
+        x = np.random.uniform(-1, 1, size=(4, 5))
+        m = SomeModule()
+        m_jit = elegy.jit(m)
+
+        m.init(x)
+        assert total_called == 1
+
+        m_jit(x)
+        assert total_called == 2
+
+        m_jit(x)
+        assert total_called == 2
+
+        m.linear.trainable = False
+        m_jit(x)
+        assert total_called == 3
+
+        m_jit(x)
+        assert total_called == 3
+
+        m.trainable = True
+        m_jit(x)
+        assert total_called == 3
+
+        m.trainable = False
+        m_jit(x)
+        assert total_called == 4
+
+        m_jit(x)
+        assert total_called == 4
+
+    def test_trainable_jit_method(self):
+        total_called = 0
+
+        class SomeModule(elegy.Module):
+            linear: elegy.nn.Linear
+
+            def call(self, x):
+                nonlocal total_called
+                total_called += 1
+                return elegy.nn.Linear(10)(x)
+
+        x = np.random.uniform(-1, 1, size=(4, 5))
+        m = SomeModule()
+
+        m.init_jit(x)
+        assert total_called == 1
+
+        m.jit(x)
+        assert total_called == 2
+
+        m.jit(x)
+        assert total_called == 2
+
+        m.linear.trainable = False
+        m.jit(x)
+        assert total_called == 3
+
+        m.jit(x)
+        assert total_called == 3
+
+        m.trainable = True
+        m.jit(x)
+        assert total_called == 3
+
+        m.trainable = False
+        m.jit(x)
+        assert total_called == 4
+
+        m.jit(x)
+        assert total_called == 4

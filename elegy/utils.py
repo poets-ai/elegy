@@ -1,3 +1,4 @@
+from elegy.frozen_dict import FrozenDict
 from enum import Enum
 import functools
 import inspect
@@ -176,3 +177,13 @@ def lower_snake_case(s: str) -> str:
             output_parts[-1] += parts[i]
 
     return "_".join(output_parts)
+
+
+def to_static(structure: tp.Any) -> tp.Any:
+
+    if isinstance(structure, (tp.Dict, FrozenDict)):
+        return tuple((k, to_static(v)) for k, v in structure.items())
+    elif isinstance(structure, (tp.List, tp.Tuple)):
+        return tuple(to_static(v) for v in structure)
+    else:
+        return structure
