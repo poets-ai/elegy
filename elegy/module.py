@@ -334,6 +334,13 @@ class Module(metaclass=ModuleMeta):
         Forwards all input arguments to the Module's `call` method and calls
         `elegy.add_summary` on the outputs.
         """
+        if (
+            LOCAL.inside_call is None
+            and not LOCAL.initializing
+            and not self.initialized
+        ):
+            self.init(*args, **kwargs)
+
         with call_context(self):
             outputs = self.call(*args, **kwargs)
 
@@ -963,7 +970,7 @@ def add_metric(name: str, value: np.ndarray) -> None:
     LOCAL.metrics[name] = value
 
 
-def init_context() -> tp.ContextManager:
+def init_context() -> tp.ContextManager[None]:
     prev_initializing = LOCAL.initializing
 
     LOCAL.initializing = True

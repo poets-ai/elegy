@@ -27,7 +27,7 @@ class ModelBase(Module):
 
         self.module = module
         self.loss = Losses(loss) if loss is not None else None
-        self.metrics = Metrics(metrics) if metrics else None
+        self.metrics = Metrics(metrics)
         self.optimizer = Optimizer(optimizer) if optimizer is not None else None
         self._predict_step_jit = elegy_jit(self.predict_fn, modules=self)
         self._test_step_jit = elegy_jit(self.test_fn, modules=self)
@@ -148,20 +148,17 @@ class ModelBase(Module):
                 x, y, sample_weight, class_weight
             )
 
-        if self.metrics is not None:
-            logs = self.metrics(
-                total_loss_logs,
-                x=x,
-                y_true=y,
-                y_pred=y_pred,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                training=module.is_training(),
-                parameters=self.module.get_parameters(trainable=True),
-                states=self.module.get_parameters(trainable=False),
-            )
-        else:
-            logs = {}
+        logs = self.metrics(
+            total_loss_logs,
+            x=x,
+            y_true=y,
+            y_pred=y_pred,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            training=module.is_training(),
+            parameters=self.module.get_parameters(trainable=True),
+            states=self.module.get_parameters(trainable=False),
+        )
 
         return loss, logs, grads
 
@@ -354,12 +351,16 @@ class ModelBase(Module):
     ):
 
         with module.init_context(), module.context(training=True, hooks=True):
+            assert self.module is not None
 
             if not self.module.initialized:
                 self.predict_fn(x=x)
                 self.module.initialized = True
 
-            if mode == Mode.test and not self.metrics.initialized:
+            if mode == Mode.predict:
+                return
+
+            if self.metrics is not None and not self.metrics.initialized:
 
                 self.test_fn(
                     x=x,
@@ -373,20 +374,17 @@ class ModelBase(Module):
                     trainable=False
                 )
 
-            elif mode == Mode.train and not self.optimizer.initialized:
+            if mode == Mode.test:
+                return
+
+            if self.optimizer is not None and not self.optimizer.initialized:
                 self.train_fn(
                     x=x,
                     y=y,
                     sample_weight=sample_weight,
                     class_weight=class_weight,
                 )
-                self.metrics.initialized = True
                 self.optimizer.initialized = True
-
-                if self.initial_metrics_state is None:
-                    self.initial_metrics_state = self.metrics.get_parameters(
-                        trainable=False
-                    )
 
     def summary(
         self, x, depth: int = 2, tablefmt: str = "fancy_grid", **tablulate_kwargs
@@ -519,7 +517,7 @@ class LossMetrics(Metric):
 class Metrics(Metric):
     def __init__(self, metrics, **kwargs):
         super().__init__(**kwargs)
-        self.metrics = metrics
+        self.metrics = metrics if metrics is not None else tuple()
 
     def call(self, logs, **kwargs):
 

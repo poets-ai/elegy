@@ -58,9 +58,9 @@ def transform_and_run(
 
         Module = to_module(f)
         module = Module()
-
-        params, states = module.init(rng=42)(*a, **k)
-        y, _ = module.apply(rng=42, parameters=params, states=states)(*a, **k)
+        
+        module.init(*a, **k)
+        y = module(*a, **k)
 
         return y
 
