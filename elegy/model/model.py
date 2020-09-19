@@ -121,7 +121,6 @@ class Model(ModelBase):
         "train_on_batch",
         "full_state",
         "parameters",
-        "seed",
         "states",
     ]
 
@@ -163,17 +162,15 @@ class Model(ModelBase):
                 Running eagerly means that your model will be run step by step, like Python code, instead of
                 using Jax's `jit` to. Your model might run slower, but it should become easier for you to debug
                 it by stepping into individual layer calls.
-            parameters: A `haiku.Params` structure with the weights of the model.
-            states: A `haiku.State` structure with non-trainable parameters of the model.
-            optimizer_state:  A `optax.OptState` structure with states of the optimizer.
-            metrics_states: A `haiku.State` structure with the states of the metrics.
-            initial_metrics_state: A `haiku.State` structure with the initial states of the metrics.
-            seed: The initial random states of the model.
         """
         super().__init__(
-            module=module, loss=loss, metrics=metrics, optimizer=optimizer, **kwargs
+            module=module,
+            loss=loss,
+            metrics=metrics,
+            optimizer=optimizer,
+            run_eagerly=run_eagerly,
+            **kwargs,
         )
-        self.run_eagerly = run_eagerly
 
     def __call__(self, *args, **kwargs):
         return self.module(*args, **kwargs)
@@ -694,56 +691,8 @@ class Model(ModelBase):
             raise ValueError("Expected `validation_freq` to be a list or int.")
 
     # ----------------------------------------------------------------
-    # predict
+    # save
     # ----------------------------------------------------------------
-
-    @property
-    def full_state(self) -> tp.Dict:
-        """"""
-
-        states: tp.Dict = {"seed": self.seed}
-
-        if self.parameters is not None:
-            states["parameters"] = self.parameters
-
-        if self.states is not None:
-            states["states"] = self.states
-
-        if self.metrics_states is not None:
-            states["metrics_states"] = self.metrics_states
-
-        if self.initial_metrics_state is not None:
-            states["initial_metrics_state"] = self.initial_metrics_state
-
-        if self.optimizer_state is not None:
-            states["optimizer_state"] = self.optimizer_state
-
-        return states
-
-    @full_state.setter
-    def full_state(self, states: tp.Dict):
-        self.seed = states["seed"]
-
-        if "parameters" in states:
-            self.parameters = states["parameters"]
-
-        if "states" in states:
-            self.states = states["states"]
-
-        if "metrics_states" in states:
-            self.metrics_states = states["metrics_states"]
-
-        if "initial_metrics_state" in states:
-            self.initial_metrics_state = states["initial_metrics_state"]
-
-        if "optimizer_state" in states:
-            self.optimizer_state = states["optimizer_state"]
-
-    def reset(self):
-        self.module.reset()
-        self.metrics.reset()
-        self.initial_metrics_state = None
-        self.optimizer_state = None
 
     def save(self, path: tp.Union[str, Path], include_optimizer: bool = True) -> None:
         """
@@ -783,24 +732,6 @@ class Model(ModelBase):
 
         path.mkdir(parents=True, exist_ok=True)
 
-        # states = self.full_state
-
-        # original_state = copy(states)
-
-        # states.pop("metrics_states", None)
-        # states.pop("initial_metrics_state", None)
-
-        # optimizer_state = states.pop("optimizer_state", None)
-
-        # deepdish.io.save(path / "parameters.h5", states)
-
-        # if include_optimizer and optimizer_state is not None:
-        #     with open(path / "optimizer_state.pkl", "wb") as f:
-        #         pickle.dump(optimizer_state, f)
-
-        # # getting pickle errors
-        # self.reset()
-
         try:
             path = path / "model.pkl"
             with open(path, "wb") as f:
@@ -824,16 +755,6 @@ class Model(ModelBase):
         """
         if isinstance(path, str):
             path = Path(path)
-
-        # states: tp.Dict = deepdish.io.load(path / "parameters.h5")
-
-        # optimizer_state_path = path / "optimizer_state.pkl"
-
-        # if optimizer_state_path.exists():
-        #     with open(optimizer_state_path, "rb") as f:
-        #         states["optimizer_state"] = pickle.load(f)
-
-        # self.full_state = states
 
         model = load(path)
         self.set_parameters(model.get_parameters())
@@ -874,7 +795,5 @@ def load(path: tp.Union[str, Path]) -> Model:
             model: Model = pickle.load(f)
         except BaseException as e:
             raise OSError(f"Could not load the model. Got exception: {e}")
-
-    # model.load(path)
 
     return model
