@@ -146,7 +146,7 @@ def reduce_loss(values, sample_weight, weight, reduction):
     elif reduction == Reduction.SUM:
         loss = jnp.sum(values)
     elif reduction == Reduction.SUM_OVER_BATCH_SIZE:
-        loss = jnp.sum(values) / jnp.prod(values.shape)
+        loss = jnp.sum(values) / jnp.prod(jnp.array(values.shape))
     else:
         raise ValueError(f"Invalid reduction '{reduction}'")
 

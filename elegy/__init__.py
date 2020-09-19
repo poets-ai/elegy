@@ -1,43 +1,34 @@
 __version__ = "0.2.2"
 
 
-from . import (
-    callbacks,
-    initializers,
-    losses,
-    metrics,
-    model,
-    nn,
-    regularizers,
-    module,
-)
+from . import callbacks, initializers, losses, metrics, model, module, nn, regularizers
 from .losses import Loss
 from .metrics import Metric
 from .model import Model
 from .module import (
+    RNG,
     LocalContext,
     Module,
-    to_module,
-    RNG,
     add_loss,
     add_metric,
     add_summary,
-    context,
-    training_context,
-    name_context,
+    get_dynamic_context,
     get_losses,
     get_metrics,
-    get_summaries,
-    next_rng_key,
     get_rng,
-    set_rng,
-    jit,
-    value_and_grad,
-    is_training,
-    set_training,
     get_static_context,
-    get_dynamic_context,
+    get_summaries,
+    hooks_context,
+    is_training,
+    jit,
+    name_context,
+    next_rng_key,
     set_context,
+    set_rng,
+    set_training,
+    to_module,
+    training_context,
+    value_and_grad,
 )
 
 __all__ = [
@@ -49,7 +40,7 @@ __all__ = [
     "model",
     "nn",
     "regularizers",
-    "context",
+    "hooks_context",
     "training_context",
     "name_context",
     "add_loss",

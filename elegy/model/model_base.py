@@ -1,16 +1,19 @@
-from elegy.utils import Mode
+from io import StringIO
 import typing as tp
 
 import jax
 import jax.numpy as jnp
 import numpy as np
 import optax
+import yaml
+from tabulate import tabulate
 
 from elegy import module, utils
 from elegy.losses.loss import Loss
 from elegy.metrics.metric import Metric
-from elegy.module import Module
+from elegy.module import Module, get_summaries, hooks_context
 from elegy.module import jit as elegy_jit
+from elegy.utils import Mode
 
 
 class ModelBase(Module):
@@ -61,11 +64,11 @@ class ModelBase(Module):
         return y_pred
 
     def predict_step(self, x: tp.Any = ()):
-        with module.training_context(training=False, hooks=False):
+        with module.training_context(training=False):
             return self.predict_fn(x=x)
 
     def predict_step_jit(self, x: tp.Any = ()):
-        with module.context(training=False, hooks=False):
+        with module.training_context(training=False):
             return self._predict_step_jit(x)
 
     def predict_on_batch(
@@ -171,7 +174,7 @@ class ModelBase(Module):
         get_gradients: bool = False,
     ) -> tp.Tuple[np.ndarray, tp.Dict, tp.Optional[tp.Dict]]:
 
-        with module.context(training=False, hooks=True):
+        with module.training_context(training=False), module.hooks_context():
             return self.test_fn(
                 x=x,
                 y=y,
@@ -187,7 +190,7 @@ class ModelBase(Module):
         sample_weight: tp.Optional[np.ndarray] = None,
         class_weight: tp.Optional[np.ndarray] = None,
     ):
-        with module.context(training=False, hooks=True):
+        with module.training_context(training=False), module.hooks_context():
             return self._test_step_jit(x, y, sample_weight, class_weight)
 
     def test_on_batch(
@@ -275,7 +278,7 @@ class ModelBase(Module):
         class_weight: tp.Optional[np.ndarray] = None,
     ) -> tp.Dict[str, tp.Any]:
 
-        with module.context(training=True, hooks=True):
+        with module.training_context(training=True), module.hooks_context():
             return self.train_fn(
                 x=x, y=y, sample_weight=sample_weight, class_weight=class_weight
             )
@@ -287,7 +290,7 @@ class ModelBase(Module):
         sample_weight: tp.Optional[np.ndarray] = None,
         class_weight: tp.Optional[np.ndarray] = None,
     ):
-        with module.context(training=True, hooks=True):
+        with module.training_context(training=True), module.hooks_context():
             outputs = self._train_step_jit(x, y, sample_weight, class_weight)
 
         return outputs
@@ -350,7 +353,9 @@ class ModelBase(Module):
         class_weight: tp.Optional[jnp.ndarray] = None,
     ):
 
-        with module.init_context(), module.context(training=True, hooks=True):
+        with module.init_context(), module.training_context(
+            training=True
+        ), module.hooks_context():
             assert self.module is not None
 
             if not self.module.initialized:
@@ -405,8 +410,137 @@ class ModelBase(Module):
                 See [python-tabulate](https://github.com/astanin/python-tabulate)
                 for more options.
         """
-        return self.module.summary(
-            x, depth=depth, tablefmt=tablefmt, **tablulate_kwargs
+        self.maybe_initialize(mode=Mode.predict, x=x)
+
+        with hooks_context(summaries=True):
+            self.predict_fn(x)
+
+            summaries = get_summaries()
+
+        assert summaries is not None
+
+        def format_output(outputs) -> str:
+            file = StringIO()
+            outputs = jax.tree_map(lambda x: f"{x.shape}{{pad}}  {x.dtype}", outputs)
+            yaml.safe_dump(
+                outputs, file, default_flow_style=False, indent=2, explicit_end=False
+            )
+            return file.getvalue().replace("\n...", "")
+
+        def format_size(size):
+            return (
+                f"{size / 1e9 :,.1f} GB"
+                if size > 1e9
+                else f"{size / 1e6 :,.1f} MB"
+                if size > 1e6
+                else f"{size / 1e3 :,.1f} KB"
+                if size > 1e3
+                else f"{size:,} B"
+            )
+
+        table: tp.List = [["Inputs", format_output(x), "0", "0"]]
+
+        for module, base_name, value in summaries:
+            base_name_parts = base_name.split("/")[1:]
+            module_depth = len(base_name_parts)
+
+            if module_depth > depth:
+                continue
+
+            include_submodules = module_depth == depth
+
+            params_count = (
+                module.parameters_size(include_submodules) if module is not None else 0
+            )
+            params_size = (
+                module.parameters_bytes(include_submodules) if module is not None else 0
+            )
+            states_count = (
+                module.states_size(include_submodules) if module is not None else 0
+            )
+            states_size = (
+                module.states_bytes(include_submodules) if module is not None else 0
+            )
+            class_name = f"({module.__class__.__name__})" if module is not None else ""
+
+            base_name = "/".join(base_name_parts)
+
+            if not base_name:
+                base_name = "Outputs"
+
+            table.append(
+                [
+                    f"{base_name}{{pad}}  {class_name}",
+                    format_output(value),
+                    f"{params_count:,}{{pad}}    {format_size(params_size)}"
+                    if params_count > 0
+                    else "0",
+                    f"{states_count:,}{{pad}}    {format_size(states_size)}"
+                    if states_count > 0
+                    else "0",
+                ]
+            )
+
+        # add papdding
+        for col in range(4):
+            max_length = max(
+                len(line.split("{pad}")[0])
+                for row in table
+                for line in row[col].split("\n")
+            )
+
+            for row in table:
+                row[col] = "\n".join(
+                    line.format(
+                        pad=" " * (max_length - len(line.rstrip().split("{pad}")[0]))
+                    )
+                    for line in row[col].rstrip().split("\n")
+                )
+
+        print(
+            "\n"
+            + tabulate(
+                table,
+                headers=[
+                    "Layer",
+                    "Outputs Shape",
+                    "Trainable\nParameters",
+                    "Non-trainable\nParameters",
+                ],
+                tablefmt=tablefmt,
+                **tablulate_kwargs,
+            )
+        )
+
+        params_count = self.parameters_size()
+        params_size = self.parameters_bytes()
+        states_count = self.states_size()
+        states_size = self.states_bytes()
+        total_count = params_count + states_count
+        total_size = params_size + states_size
+
+        print(
+            tabulate(
+                [
+                    [
+                        f"Total Parameters:",
+                        f"{total_count:,}",
+                        f"{format_size(total_size)}" if total_count > 0 else "",
+                    ],
+                    [
+                        f"Trainable Parameters:",
+                        f"{params_count:,}",
+                        f"{format_size(params_size)}" if params_count > 0 else "",
+                    ],
+                    [
+                        f"Non-trainable Parameters:",
+                        f"{states_count:,}",
+                        f"{format_size(states_size)}" if states_count > 0 else "",
+                    ],
+                ],
+                tablefmt="plain",
+            )
+            + "\n"
         )
 
 

@@ -1,3 +1,4 @@
+from elegy.module import hooks_context
 import inspect
 from unittest import TestCase
 import jax
@@ -71,7 +72,7 @@ class ModuleTest(TestCase):
         assert parameters["linear1"]["n"] == 0
         assert "linear1" in parameters
 
-        with elegy.context(hooks=True, summaries=True):
+        with elegy.hooks_context(summaries=True):
             y: jnp.ndarray = m(x)
             # y2: jnp.ndarray = m.call_jit(x)
 
@@ -197,7 +198,7 @@ class ModuleDynamicTest(TestCase):
         assert m.get_parameters()["linear"]["n"] == 0
         assert "linear_1" in m.get_parameters()
 
-        with elegy.context(hooks=True, summaries=True):
+        with elegy.hooks_context(summaries=True):
             # y: jnp.ndarray = m(x)
             y: jnp.ndarray = m.jit(x)
 
@@ -272,7 +273,7 @@ class ModuleDynamicTest(TestCase):
         assert "b" in m.get_parameters()["linear"]
         assert "linear_1" in m.get_parameters()
 
-        with elegy.context(hooks=True, summaries=True):
+        with elegy.hooks_context(summaries=True):
             # y: jnp.ndarray = m(x)
             y: jnp.ndarray = m.jit(x)
 
@@ -456,31 +457,35 @@ class TestTransforms(TestCase):
             assert total_called == 3
             assert m.n == 3
 
-            with elegy.context(training=True):
+            with elegy.training_context(training=True):
                 y = m_jit(0)
                 assert y == 1
                 assert total_called == 3
                 assert m.n == 4
 
-            with elegy.context(training=True, hooks=True):
+            with elegy.training_context(training=True), elegy.hooks_context():
                 y = m_jit(0)
                 assert y == 1
                 assert total_called == 4
                 assert m.n == 5
 
-            with elegy.context(training=True, hooks=True):
+            with elegy.training_context(training=True), elegy.hooks_context():
                 y = m_jit(0)
                 assert y == 1
                 assert total_called == 4
                 assert m.n == 6
 
-            with elegy.context(training=True, hooks=True, summaries=True):
+            with elegy.training_context(training=True), elegy.hooks_context(
+                summaries=True
+            ):
                 y = m_jit(0)
                 assert y == 1
                 assert total_called == 5
                 assert m.n == 7
 
-            with elegy.context(training=False, hooks=True, summaries=True):
+            with elegy.training_context(training=False), elegy.hooks_context(
+                summaries=True
+            ):
                 y = m_jit(0)
                 assert y == -1
                 assert total_called == 6
@@ -533,31 +538,35 @@ class TestTransforms(TestCase):
             assert total_called == 3
             assert m.n == 4
 
-            with elegy.context(training=True):
+            with elegy.training_context(training=True):
                 y = m_jit(0)
                 assert y == 1
                 assert total_called == 3
                 assert m.n == 5
 
-            with elegy.context(training=True, hooks=True):
+            with elegy.training_context(training=True), elegy.hooks_context():
                 y = m_jit(0)
                 assert y == 1
                 assert total_called == 4
                 assert m.n == 6
 
-            with elegy.context(training=True, hooks=True):
+            with elegy.training_context(training=True), elegy.hooks_context():
                 y = m_jit(0)
                 assert y == 1
                 assert total_called == 4
                 assert m.n == 7
 
-            with elegy.context(training=True, hooks=True, summaries=True):
+            with elegy.training_context(training=True), elegy.hooks_context(
+                summaries=True
+            ):
                 y = m_jit(0)
                 assert y == 1
                 assert total_called == 5
                 assert m.n == 8
 
-            with elegy.context(training=False, hooks=True, summaries=True):
+            with elegy.training_context(training=False), elegy.hooks_context(
+                summaries=True
+            ):
                 y = m_jit(0)
                 assert y == -1
                 assert total_called == 6

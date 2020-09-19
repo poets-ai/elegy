@@ -59,7 +59,7 @@ def reduce(
 
     else:
         if sample_weight is None:
-            num_values = jnp.prod(values.shape).astype(dtype)
+            num_values = jnp.prod(jnp.array(values.shape)).astype(dtype)
         else:
             num_values = jnp.sum(sample_weight)
 
