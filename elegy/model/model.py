@@ -783,23 +783,23 @@ class Model(ModelBase):
 
         path.mkdir(parents=True, exist_ok=True)
 
-        states = self.full_state
+        # states = self.full_state
 
-        original_state = copy(states)
+        # original_state = copy(states)
 
-        states.pop("metrics_states", None)
-        states.pop("initial_metrics_state", None)
+        # states.pop("metrics_states", None)
+        # states.pop("initial_metrics_state", None)
 
-        optimizer_state = states.pop("optimizer_state", None)
+        # optimizer_state = states.pop("optimizer_state", None)
 
-        deepdish.io.save(path / "parameters.h5", states)
+        # deepdish.io.save(path / "parameters.h5", states)
 
-        if include_optimizer and optimizer_state is not None:
-            with open(path / "optimizer_state.pkl", "wb") as f:
-                pickle.dump(optimizer_state, f)
+        # if include_optimizer and optimizer_state is not None:
+        #     with open(path / "optimizer_state.pkl", "wb") as f:
+        #         pickle.dump(optimizer_state, f)
 
-        # getting pickle errors
-        self.reset()
+        # # getting pickle errors
+        # self.reset()
 
         try:
             path = path / "model.pkl"
@@ -808,7 +808,7 @@ class Model(ModelBase):
         except BaseException as e:
             print(f"Error occurred saving the model object at {path}\nContinuing....")
 
-        self.full_state = original_state
+        # self.full_state = original_state
 
     def load(self, path: tp.Union[str, Path]) -> None:
         """
@@ -825,15 +825,18 @@ class Model(ModelBase):
         if isinstance(path, str):
             path = Path(path)
 
-        states: tp.Dict = deepdish.io.load(path / "parameters.h5")
+        # states: tp.Dict = deepdish.io.load(path / "parameters.h5")
 
-        optimizer_state_path = path / "optimizer_state.pkl"
+        # optimizer_state_path = path / "optimizer_state.pkl"
 
-        if optimizer_state_path.exists():
-            with open(optimizer_state_path, "rb") as f:
-                states["optimizer_state"] = pickle.load(f)
+        # if optimizer_state_path.exists():
+        #     with open(optimizer_state_path, "rb") as f:
+        #         states["optimizer_state"] = pickle.load(f)
 
-        self.full_state = states
+        # self.full_state = states
+
+        model = load(path)
+        self.set_parameters(model.get_parameters())
 
 
 def load(path: tp.Union[str, Path]) -> Model:
@@ -872,6 +875,6 @@ def load(path: tp.Union[str, Path]) -> Model:
         except BaseException as e:
             raise OSError(f"Could not load the model. Got exception: {e}")
 
-    model.load(path)
+    # model.load(path)
 
     return model
