@@ -58,7 +58,7 @@ def transform_and_run(
 
         Module = to_module(f)
         module = Module()
-        
+
         module.init(*a, **k)
         y = module(*a, **k)
 
