@@ -13,7 +13,7 @@ import jax.numpy as jnp
 
 
 class AccuracyTest(unittest.TestCase):
-    @transform_and_run
+    # @transform_and_run
     def test_basic(self):
 
         accuracy = elegy.metrics.Accuracy()

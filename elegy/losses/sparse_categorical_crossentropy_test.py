@@ -4,7 +4,7 @@ from elegy.testing_utils import transform_and_run
 import jax.numpy as jnp
 
 
-@transform_and_run
+# @transform_and_run
 def test_basic():
 
     y_true = jnp.array([1, 2])

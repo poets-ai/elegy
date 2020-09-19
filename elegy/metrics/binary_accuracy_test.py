@@ -9,7 +9,7 @@ from elegy.testing_utils import transform_and_run
 
 
 class BinaryCrossentropyTest(TestCase):
-    @transform_and_run
+    # @transform_and_run
     def test_example(self):
         y_true = np.array([[1], [1], [0], [0]])
         y_pred = np.array([[1], [1], [0], [0]])
@@ -31,7 +31,7 @@ class BinaryCrossentropyTest(TestCase):
         )
         assert result == 0.5
 
-    @transform_and_run
+    # @transform_and_run
     def test_compatibility(self):
 
         y_true = (np.random.uniform(0, 1, size=(5, 6, 7)) > 0.5).astype(np.float32)
@@ -57,7 +57,7 @@ class BinaryCrossentropyTest(TestCase):
             ),
         )
 
-    @transform_and_run
+    # @transform_and_run
     def test_cummulative(self):
 
         tm = tfk.metrics.BinaryAccuracy(threshold=0.3)

@@ -89,7 +89,6 @@ class Sequential(Module):
     def __init__(
         self, layers: tp.Callable[[], tp.Iterable[tp.Callable[..., tp.Any]]], **kwargs
     ):
-        super().__init__(**kwargs)
         self.layers = tuple(layers())
 
         # set signature of call to the signature of of the first layer
@@ -101,6 +100,7 @@ class Sequential(Module):
             return current_call(*args, **kwargs)
 
         self.call = call
+        super().__init__(**kwargs)
 
     def call(self, *args, **kwargs):
         """Connects all layers. *args and **kwargs are passed to the first layer."""

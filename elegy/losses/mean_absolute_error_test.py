@@ -12,7 +12,7 @@ import jax
 # debugpy.wait_for_client()
 
 
-@transform_and_run
+# @transform_and_run
 def test_basic():
 
     y_true = jnp.array([[0.0, 1.0], [0.0, 0.0]])
@@ -37,7 +37,7 @@ def test_basic():
     assert list(mae(y_true, y_pred)) == [0.5, 0.5]
 
 
-@transform_and_run
+# @transform_and_run
 def test_function():
 
     rng = jax.random.PRNGKey(42)

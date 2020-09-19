@@ -6,7 +6,7 @@ import elegy
 
 
 class BatchNormalizationTest(TestCase):
-    @transform_and_run
+    # @transform_and_run
     def test_connects(self):
         elegy.nn.BatchNormalization()(jnp.ones([3, 3]), training=True)
 

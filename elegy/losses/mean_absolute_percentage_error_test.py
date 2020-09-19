@@ -9,7 +9,7 @@ from elegy import utils
 
 
 class MeanAbsolutePercentageErrorTest(TestCase):
-    @transform_and_run
+    # @transform_and_run
     def test_basic(self):
         y_true = jnp.array([[1.0, 1.0], [0.9, 0.0]])
         y_pred = jnp.array([[1.0, 1.0], [1.0, 0.0]])
@@ -39,7 +39,7 @@ class MeanAbsolutePercentageErrorTest(TestCase):
         result = mape(y_true, y_pred)
         assert jnp.all(jnp.isclose(result, [0.0, 5.6], rtol=0.01))
 
-    @transform_and_run
+    # @transform_and_run
     def test_function(self):
 
         y_true = jnp.array([[1.0, 1.0], [0.9, 0.0]])

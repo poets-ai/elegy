@@ -4,7 +4,7 @@ import jax.numpy as jnp
 import tensorflow.keras as tfk
 
 
-@transform_and_run
+# @transform_and_run
 def test_basic():
     y_true = jnp.array([[0.0, 1.0], [0.0, 0.0]])
     y_pred = jnp.array([[0.6, 0.4], [0.4, 0.6]])
@@ -32,7 +32,7 @@ def test_basic():
     assert jnp.all(jnp.isclose(result, [0.916, 0.713], rtol=0.01))
 
 
-@transform_and_run
+# @transform_and_run
 def test_compatibility():
 
     # Input:  true (y_true) and predicted (y_pred) tensors

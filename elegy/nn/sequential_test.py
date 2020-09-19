@@ -7,7 +7,7 @@ import elegy
 
 
 class SequentialTest(TestCase):
-    @transform_and_run
+    # @transform_and_run
     def test_connects(self):
         elegy.nn.Sequential(
             lambda: [

@@ -37,6 +37,7 @@ class DynamicContext(tp.NamedTuple):
 class StaticContext(tp.NamedTuple):
     training: bool
     initializing: bool
+    accept_updates: bool
     losses: tp.Optional[FrozenDict[str, tp.Any]]
     metrics: tp.Optional[FrozenDict[str, tp.Any]]
     summaries: tp.Optional[
@@ -53,6 +54,7 @@ class LocalContext(utils.Protocol):
     rng: RNG
     training: bool
     initializing: bool
+    accept_updates: bool
     losses: tp.Optional[tp.Dict[str, tp.Any]]
     metrics: tp.Optional[tp.Dict[str, tp.Any]]
     summaries: tp.Optional[tp.List[tp.Tuple[tp.Optional["Module"], str, np.ndarray]]]
@@ -77,6 +79,7 @@ class _LocalContext(threading.local):
     rng: RNG
     training: bool
     initializing: bool
+    accept_updates: bool
     losses: tp.Optional[tp.Dict[str, tp.Any]]
     metrics: tp.Optional[tp.Dict[str, tp.Any]]
     summaries: tp.Optional[tp.List[tp.Tuple[tp.Optional["Module"], str, np.ndarray]]]
@@ -93,6 +96,7 @@ class _LocalContext(threading.local):
         return StaticContext(
             training=self.training,
             initializing=self.initializing,
+            accept_updates=self.accept_updates,
             losses=FrozenDict(self.losses) if self.losses is not None else None,
             metrics=FrozenDict(self.metrics) if self.metrics is not None else None,
             summaries=tuple(self.summaries) if self.summaries is not None else None,
@@ -112,6 +116,7 @@ class _LocalContext(threading.local):
         # static
         self.training = static.training
         self.initializing = static.initializing
+        self.accept_updates = static.accept_updates
         self.losses = static.losses.unfreeze() if static.losses is not None else None
         self.metrics = static.metrics.unfreeze() if static.metrics is not None else None
         self.summaries = (
@@ -130,6 +135,7 @@ LOCAL: LocalContext = _LocalContext(
     rng=RNG(42),
     training=True,
     initializing=False,
+    accept_updates=True,
     losses=None,
     metrics=None,
     summaries=None,
@@ -147,6 +153,16 @@ def context(
     hooks: bool = False,
     summaries: bool = False,
 ) -> tp.ContextManager[LocalContext]:
+    return _context(rng=rng, training=training, hooks=hooks, summaries=summaries)
+
+
+@contextmanager
+def _context(
+    rng: tp.Optional[RNG] = None,
+    training: tp.Optional[bool] = None,
+    hooks: bool = False,
+    summaries: bool = False,
+) -> tp.Iterator[LocalContext]:
 
     prev_rng = LOCAL.rng
     prev_training = LOCAL.training
@@ -179,9 +195,6 @@ def context(
         LOCAL.summaries = prev_summaries
         LOCAL.names = prev_names
         LOCAL.level_names = prev_level_names
-
-
-context = contextmanager(context)
 
 
 def construct_module(cls, *args, **kwargs) -> "Module":
@@ -334,15 +347,21 @@ class Module(metaclass=ModuleMeta):
         Forwards all input arguments to the Module's `call` method and calls
         `elegy.add_summary` on the outputs.
         """
-        if (
+        should_initialize = (
             LOCAL.inside_call is None
             and not LOCAL.initializing
             and not self.initialized
-        ):
-            self.init(*args, **kwargs)
+        )
 
         with call_context(self):
-            outputs = self.call(*args, **kwargs)
+
+            if should_initialize:
+                with init_context(accept_updates=True):
+                    outputs = self.call(*args, **kwargs)
+
+                self.initialized = True
+            else:
+                outputs = self.call(*args, **kwargs)
 
             add_summary(self, outputs)
 
@@ -371,7 +390,7 @@ class Module(metaclass=ModuleMeta):
             x: sample inputs.
         """
 
-        with init_context():
+        with init_context(accept_updates=False):
             self(*args, **kwargs)
 
         self.initialized = True
@@ -440,7 +459,7 @@ class Module(metaclass=ModuleMeta):
         """
 
         if hasattr(self, name):
-            if is_initializing():
+            if not accepting_updates():
                 return
 
             setattr(self, name, value)
@@ -746,132 +765,6 @@ class Module(metaclass=ModuleMeta):
 # -------------------------------------------------------------
 
 
-def get_module() -> tp.Optional[Module]:
-    return LOCAL.module
-
-
-def get_rng() -> RNG:
-    return LOCAL.rng
-
-
-def set_rng(rng: RNG) -> None:
-    LOCAL.rng = rng
-
-
-def next_rng_key() -> jnp.ndarray:
-    return LOCAL.rng()
-
-
-def is_initializing() -> bool:
-    return LOCAL.initializing
-
-
-def set_training(training: bool) -> None:
-    LOCAL.training = training
-
-
-def is_training() -> bool:
-    return LOCAL.training
-
-
-def get_losses() -> tp.Optional[tp.Dict[str, tp.Any]]:
-    return LOCAL.losses
-
-
-def get_metrics() -> tp.Optional[tp.Dict[str, tp.Any]]:
-    return LOCAL.metrics
-
-
-def get_summaries() -> tp.Optional[
-    tp.List[tp.Tuple[tp.Optional["Module"], str, np.ndarray]]
-]:
-    return LOCAL.summaries
-
-
-def base_name() -> str:
-    return "/".join(LOCAL.names) if LOCAL.names is not None else ""
-
-
-@contextmanager
-def rng_context(rng: RNG):
-    current_rng = LOCAL.rng
-    LOCAL.rng = rng
-
-    try:
-        yield
-    finally:
-        LOCAL.rng = current_rng
-
-
-@contextmanager
-def training_context(training: bool):
-    current_training = LOCAL.training
-    LOCAL.training = training
-
-    try:
-        yield
-    finally:
-        LOCAL.training = current_training
-
-
-@contextmanager
-def name_context(name: str) -> tp.Iterator[str]:
-
-    if LOCAL.names is None or LOCAL.level_names is None:
-        yield ""
-        return
-
-    current_level_names = LOCAL.level_names
-
-    name = get_unique_name(set(current_level_names), name)
-
-    current_level_names.append(name)  # add name to current level
-    LOCAL.names.append(name)
-    LOCAL.level_names = []  # create new level for children
-
-    try:
-        yield name
-    finally:
-        LOCAL.names.pop()
-        LOCAL.level_names = current_level_names
-
-
-@contextmanager
-def call_context(module: Module):
-
-    prev_module = LOCAL.module
-    prev_inside_call = LOCAL.inside_call
-    prev_module_index = LOCAL.module_index
-
-    LOCAL.module = module
-    LOCAL.inside_call = True
-    LOCAL.module_index = 0
-
-    with name_context(module.name):
-
-        try:
-            yield
-        finally:
-            LOCAL.module = prev_module
-            LOCAL.inside_call = prev_inside_call
-            LOCAL.module_index = prev_module_index
-
-
-@contextmanager
-def instantiation_context(module: Module):
-
-    prev_module = LOCAL.module
-    prev_inside_call = LOCAL.inside_call
-
-    LOCAL.inside_call = False
-
-    try:
-        yield
-    finally:
-        LOCAL.module = prev_module
-        LOCAL.inside_call = prev_inside_call
-
-
 def add_summary(module_or_name: tp.Union[Module, str], value: np.ndarray) -> None:
     """
     A hook that lets you define a summary in the current module. Its primary
@@ -970,18 +863,178 @@ def add_metric(name: str, value: np.ndarray) -> None:
     LOCAL.metrics[name] = value
 
 
-def init_context() -> tp.ContextManager[None]:
+def get_module() -> tp.Optional[Module]:
+    return LOCAL.module
+
+
+def get_rng() -> RNG:
+    return LOCAL.rng
+
+
+def set_rng(rng: RNG) -> None:
+    LOCAL.rng = rng
+
+
+def next_rng_key() -> jnp.ndarray:
+    return LOCAL.rng()
+
+
+def is_initializing() -> bool:
+    return LOCAL.initializing
+
+
+def accepting_updates() -> bool:
+    return LOCAL.accept_updates
+
+
+def set_training(training: bool) -> None:
+    LOCAL.training = training
+
+
+def is_training() -> bool:
+    return LOCAL.training
+
+
+def get_losses() -> tp.Optional[tp.Dict[str, tp.Any]]:
+    return LOCAL.losses
+
+
+def get_metrics() -> tp.Optional[tp.Dict[str, tp.Any]]:
+    return LOCAL.metrics
+
+
+def get_summaries() -> tp.Optional[
+    tp.List[tp.Tuple[tp.Optional["Module"], str, np.ndarray]]
+]:
+    return LOCAL.summaries
+
+
+def base_name() -> str:
+    return "/".join(LOCAL.names) if LOCAL.names is not None else ""
+
+
+# -----------------------------------------------------------------------------
+# context managers
+# -----------------------------------------------------------------------------
+
+
+def rng_context(rng: RNG) -> tp.ContextManager[None]:
+    return _rng_context(rng)
+
+
+@contextmanager
+def _rng_context(rng: RNG):
+    current_rng = LOCAL.rng
+    LOCAL.rng = rng
+
+    try:
+        yield
+    finally:
+        LOCAL.rng = current_rng
+
+
+def training_context(training: bool) -> tp.ContextManager[None]:
+    return _training_context(training)
+
+
+@contextmanager
+def _training_context(training: bool):
+    current_training = LOCAL.training
+    LOCAL.training = training
+
+    try:
+        yield
+    finally:
+        LOCAL.training = current_training
+
+
+def name_context(name: str) -> tp.ContextManager[str]:
+    return _name_context(name)
+
+
+@contextmanager
+def _name_context(name: str) -> tp.Iterator[str]:
+
+    if LOCAL.names is None or LOCAL.level_names is None:
+        yield ""
+        return
+
+    current_level_names = LOCAL.level_names
+
+    name = get_unique_name(set(current_level_names), name)
+
+    current_level_names.append(name)  # add name to current level
+    LOCAL.names.append(name)
+    LOCAL.level_names = []  # create new level for children
+
+    try:
+        yield name
+    finally:
+        LOCAL.names.pop()
+        LOCAL.level_names = current_level_names
+
+
+def call_context(module: Module) -> tp.ContextManager[None]:
+    return _call_context(module)
+
+
+@contextmanager
+def _call_context(module: Module):
+
+    prev_module = LOCAL.module
+    prev_inside_call = LOCAL.inside_call
+    prev_module_index = LOCAL.module_index
+
+    LOCAL.module = module
+    LOCAL.inside_call = True
+    LOCAL.module_index = 0
+
+    with name_context(module.name):
+
+        try:
+            yield
+        finally:
+            LOCAL.module = prev_module
+            LOCAL.inside_call = prev_inside_call
+            LOCAL.module_index = prev_module_index
+
+
+def instantiation_context(module: Module) -> tp.ContextManager[None]:
+    return _instantiation_context(module)
+
+
+@contextmanager
+def _instantiation_context(module: Module):
+
+    prev_module = LOCAL.module
+    prev_inside_call = LOCAL.inside_call
+
+    LOCAL.inside_call = False
+
+    try:
+        yield
+    finally:
+        LOCAL.module = prev_module
+        LOCAL.inside_call = prev_inside_call
+
+
+def init_context(accept_updates: bool = True) -> tp.ContextManager[None]:
+    return _init_context(accept_updates=accept_updates)
+
+
+@contextmanager
+def _init_context(accept_updates: bool = True) -> tp.Iterator[None]:
     prev_initializing = LOCAL.initializing
+    prev_accept_updates = LOCAL.accept_updates
 
     LOCAL.initializing = True
+    LOCAL.accept_updates = accept_updates
 
     try:
         yield
     finally:
         LOCAL.initializing = prev_initializing
-
-
-init_context = contextmanager(init_context)
+        LOCAL.accept_updates = prev_accept_updates
 
 
 def get_dynamic_context() -> "DynamicContext":
@@ -1025,7 +1078,7 @@ def jit(
 
     static_argnums = (0, 1) + tuple(i + 4 for i in static_argnums)
 
-    def jit_fn(
+    def _jit_fn(
         states_tuple: tp.Tuple[FrozenDict[str, tp.Any], ...],
         statics: StaticContext,
         dynamics: DynamicContext,
@@ -1054,7 +1107,7 @@ def jit(
             parameters_tuple,
         )
 
-    jit_fn = jax.jit(jit_fn, static_argnums, **kwargs)
+    jit_fn = jax.jit(_jit_fn, static_argnums, **kwargs)
 
     @functools.wraps(f)
     def wrapper(*args):
@@ -1116,7 +1169,7 @@ def value_and_grad(
 
     assert len(modules) > 0
 
-    def grad_fn(parameters_tuple: tp.Tuple[tp.Dict, ...], *args, **kwargs):
+    def _grad_fn(parameters_tuple: tp.Tuple[tp.Dict, ...], *args, **kwargs):
         assert isinstance(parameters_tuple, tuple)
         assert isinstance(modules, list)
 
@@ -1138,7 +1191,7 @@ def value_and_grad(
         )
 
     kwargs["has_aux"] = True
-    grad_fn = jax.value_and_grad(grad_fn, **kwargs)
+    grad_fn = jax.value_and_grad(_grad_fn, **kwargs)
 
     @functools.wraps(f)
     def wrapper(*args, **kwargs):

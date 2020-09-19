@@ -61,7 +61,7 @@ class ModelBase(Module):
         return y_pred
 
     def predict_step(self, x: tp.Any = ()):
-        with module.context(training=False, hooks=False):
+        with module.training_context(training=False, hooks=False):
             return self.predict_fn(x=x)
 
     def predict_step_jit(self, x: tp.Any = ()):
