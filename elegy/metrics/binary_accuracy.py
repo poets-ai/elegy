@@ -1,12 +1,11 @@
-from elegy import types
-from elegy import utils
 import typing as tp
 
 import jax.numpy as jnp
 import numpy as np
 
-from elegy.metrics.mean import Mean
+from elegy import types, utils
 from elegy.metrics.accuracy import accuracy
+from elegy.metrics.mean import Mean
 
 
 def binary_accuracy(
