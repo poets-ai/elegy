@@ -1,6 +1,7 @@
 import elegy
 
 from elegy.testing_utils import transform_and_run
+from elegy import utils
 import jax.numpy as jnp
 import jax
 
@@ -27,14 +28,18 @@ def test_basic():
     assert msle(y_true, y_pred, sample_weight=jnp.array([0.7, 0.3])) == 0.12011322
 
     # Using 'sum' reduction type.
-    msle = elegy.losses.MeanSquaredLogarithmicError(reduction=elegy.losses.Reduction.SUM)
+    msle = elegy.losses.MeanSquaredLogarithmicError(
+        reduction=elegy.losses.Reduction.SUM
+    )
 
     assert msle(y_true, y_pred) == 0.48045287
 
     # Using 'none' reduction type.
-    msle = elegy.losses.MeanSquaredLogarithmicError(reduction=elegy.losses.Reduction.NONE)
+    msle = elegy.losses.MeanSquaredLogarithmicError(
+        reduction=elegy.losses.Reduction.NONE
+    )
 
-    assert list(msle(y_true, y_pred)) == [0.24022643, 0.24022643]
+    assert jnp.equal(msle(y_true, y_pred), jnp.array([0.24022643, 0.24022643])).all()
 
 
 @transform_and_run
@@ -48,7 +53,7 @@ def test_function():
     loss = elegy.losses.mean_squared_logarithmic_error(y_true, y_pred)
 
     assert loss.shape == (2,)
-    
+
     first_log = jnp.log(jnp.maximum(y_true, utils.EPSILON) + 1.0)
     second_log = jnp.log(jnp.maximum(y_pred, utils.EPSILON) + 1.0)
     assert jnp.array_equal(loss, jnp.mean(jnp.square(first_log - second_log), axis=-1))
