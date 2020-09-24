@@ -7,7 +7,9 @@ from elegy import utils
 from elegy.losses.loss import Loss, Reduction
 
 
-def  mean_squared_logarithmic_error(y_true: jnp.ndarray, y_pred: jnp.ndarray) -> jnp.ndarray:
+def mean_squared_logarithmic_error(
+    y_true: jnp.ndarray, y_pred: jnp.ndarray
+) -> jnp.ndarray:
     """
     Computes the mean squared logarithmic error between labels and predictions.
 
@@ -42,9 +44,9 @@ def  mean_squared_logarithmic_error(y_true: jnp.ndarray, y_pred: jnp.ndarray) ->
     first_log = jnp.log(jnp.maximum(y_true, utils.EPSILON) + 1.0)
     second_log = jnp.log(jnp.maximum(y_pred, utils.EPSILON) + 1.0)
 
-
     return jnp.mean(jnp.square(first_log - second_log), axis=-1)
-    
+
+
 class MeanSquaredLogarithmicError(Loss):
     """
     Computes the mean squared logarithmic errors between labels and predictions.
