@@ -7,7 +7,10 @@ from .mean_absolute_percentage_error import (
     mean_percentage_absolute_error,
 )
 from .mean_squared_error import MeanSquaredError, mean_squared_error
-from .mean_squared_logarithmic_error import MeanSquaredLogarithmicError, mean_squared_logarithmic_error
+from .mean_squared_logarithmic_error import (
+    MeanSquaredLogarithmicError,
+    mean_squared_logarithmic_error,
+)
 from .sparse_categorical_crossentropy import (
     SparseCategoricalCrossentropy,
     sparse_categorical_crossentropy,
