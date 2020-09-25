@@ -14,7 +14,7 @@ def mean_squared_logarithmic_error(
     Computes the mean squared logarithmic error between labels and predictions.
 
      ```python
-    loss = square(log(y_true + 1.) - log(y_pred + 1.))
+    loss = mean(square(log(y_true + 1) - log(y_pred + 1)), axis=-1)
     ```
 
     Usage:
@@ -29,7 +29,9 @@ def mean_squared_logarithmic_error(
 
     assert loss.shape == (2,)
 
-    assert jnp.array_equal(loss, jnp.mean(jnp.square(jy_true - y_pred), axis=-1))
+    first_log = jnp.log(jnp.maximum(y_true, utils.EPSILON) + 1.0)
+    second_log = jnp.log(jnp.maximum(y_pred, utils.EPSILON) + 1.0)
+    assert jnp.array_equal(loss, jnp.mean(jnp.square(first_log - second_log), axis=-1))
     ```
 
     Arguments:
@@ -51,7 +53,7 @@ class MeanSquaredLogarithmicError(Loss):
     """
     Computes the mean squared logarithmic errors between labels and predictions.
 
-    `square(log(y_true + 1.) - log(y_pred + 1.))`
+    `loss = mean(square(log(y_true + 1) - log(y_pred + 1)), axis=-1)`
 
     Usage:
 
@@ -62,20 +64,20 @@ class MeanSquaredLogarithmicError(Loss):
     # Using 'auto'/'sum_over_batch_size' reduction type.
     msle = elegy.losses.MeanSquaredLogarithmicError()
 
-    assert msle(y_true, y_pred) == 0.5
+    assert msle(y_true, y_pred) == 0.24022643
 
     # Calling with 'sample_weight'.
-    assert msle(y_true, y_pred, sample_weight=jnp.array([0.7, 0.3])) == 0.25
+    assert msle(y_true, y_pred, sample_weight=jnp.array([0.7, 0.3])) = 0.12011322
 
     # Using 'sum' reduction type.
     msle = elegy.losses.MeanSquaredLogarithmicError(reduction=elegy.losses.Reduction.SUM)
 
-    assert msle(y_true, y_pred) == 1.0
+    assert msle(y_true, y_pred) == 0.48045287
 
     # Using 'none' reduction type.
     msle = elegy.losses.MeanSquaredLogarithmicError(reduction=elegy.losses.Reduction.NONE)
 
-    assert list(mse(y_true, y_pred)) == [0.5, 0.5]
+    assert jnp.equal(msle(y_true, y_pred), jnp.array([0.24022643, 0.24022643])).all()
     ```
     Usage with the Elegy API:
 
