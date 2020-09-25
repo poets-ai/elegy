@@ -14,7 +14,7 @@ nav:
 - Guides:
     The Module System: guides/module-system.md
     Modules, Losses, and Metrics: guides/modules-losses-metrics.md
-    Contibuting: guides/contributing.md
+    Contributing: guides/contributing.md
 - API Reference:
     Loss: api/Loss.md
     Metric: api/Metric.md
