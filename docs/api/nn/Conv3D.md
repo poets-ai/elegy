@@ -1,7 +1,6 @@
 
 # elegy.nn.Conv3D
-
-::: elegy.nn.Conv3D
+::: elegy.nn.conv.Conv3D
     selection:
         inherited_members: true
         members:

@@ -190,7 +190,7 @@ class CallbackList(object):
         Arguments:
             epoch: integer, index of epoch.
             logs: dict. Currently no data is passed to this argument for this method
-              but that may change in the future.
+                but that may change in the future.
         """
         logs = self._process_logs(logs)
         for callback in self.callbacks:
@@ -205,8 +205,8 @@ class CallbackList(object):
         Arguments:
             epoch: integer, index of epoch.
             logs: dict, metric results for this training epoch, and for the
-              validation epoch if validation is performed. Validation result keys
-              are prefixed with `val_`.
+                validation epoch if validation is performed. Validation result keys
+                are prefixed with `val_`.
         """
         logs = self._process_logs(logs)
         for callback in self.callbacks:
@@ -218,7 +218,7 @@ class CallbackList(object):
         Arguments:
             batch: integer, index of batch within the current epoch.
             logs: dict. Has keys `batch` and `size` representing the current batch
-              number and the size of the batch.
+                number and the size of the batch.
         """
         # TODO(b/150629188): Make ProgBarLogger callback not use batch hooks
         # when verbose != 1
@@ -243,7 +243,7 @@ class CallbackList(object):
         Arguments:
             batch: integer, index of batch within the current epoch.
             logs: dict. Has keys `batch` and `size` representing the current batch
-              number and the size of the batch.
+                number and the size of the batch.
         """
         if self._should_call_test_batch_hooks:
             logs = self._process_logs(logs)
@@ -266,7 +266,7 @@ class CallbackList(object):
         Arguments:
             batch: integer, index of batch within the current epoch.
             logs: dict. Has keys `batch` and `size` representing the current batch
-              number and the size of the batch.
+                number and the size of the batch.
         """
         if self._should_call_predict_batch_hooks:
             logs = self._process_logs(logs)
@@ -288,7 +288,7 @@ class CallbackList(object):
 
         Arguments:
             logs: dict. Currently no data is passed to this argument for this method
-              but that may change in the future.
+                but that may change in the future.
         """
         logs = self._process_logs(logs)
         for callback in self.callbacks:
@@ -299,7 +299,7 @@ class CallbackList(object):
 
         Arguments:
             logs: dict. Currently no data is passed to this argument for this method
-              but that may change in the future.
+                but that may change in the future.
         """
         logs = self._process_logs(logs)
         for callback in self.callbacks:
@@ -310,7 +310,7 @@ class CallbackList(object):
 
         Arguments:
             logs: dict. Currently no data is passed to this argument for this method
-              but that may change in the future.
+                but that may change in the future.
         """
         logs = self._process_logs(logs)
         for callback in self.callbacks:
@@ -321,7 +321,7 @@ class CallbackList(object):
 
         Arguments:
             logs: dict. Currently no data is passed to this argument for this method
-              but that may change in the future.
+                but that may change in the future.
         """
         logs = self._process_logs(logs)
         for callback in self.callbacks:
@@ -332,7 +332,7 @@ class CallbackList(object):
 
         Arguments:
             logs: dict. Currently no data is passed to this argument for this method
-              but that may change in the future.
+                but that may change in the future.
         """
         logs = self._process_logs(logs)
         for callback in self.callbacks:
@@ -343,7 +343,7 @@ class CallbackList(object):
 
         Arguments:
             logs: dict. Currently no data is passed to this argument for this method
-              but that may change in the future.
+                but that may change in the future.
         """
         logs = self._process_logs(logs)
         for callback in self.callbacks:

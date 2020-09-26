@@ -1,7 +1,6 @@
 
 # elegy.nn.LayerNormalization
-
-::: elegy.nn.LayerNormalization
+::: elegy.nn.layer_normalization.LayerNormalization
     selection:
         inherited_members: true
         members:
