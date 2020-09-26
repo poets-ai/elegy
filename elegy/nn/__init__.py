@@ -1,4 +1,5 @@
 from .batch_normalization import BatchNormalization
+from .group_normalization import GroupNormalization
 from .conv import Conv1D, Conv2D, Conv3D, ConvND
 from .dropout import Dropout
 from .flatten import Flatten, Reshape
@@ -10,6 +11,7 @@ from .pool import MaxPool, AvgPool
 
 __all__ = [
     "BatchNormalization",
+    "GroupNormalization",
     "Conv1D",
     "Conv2D",
     "Conv3D",
