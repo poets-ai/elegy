@@ -1,7 +1,7 @@
 
 # elegy.callbacks.ModelCheckpoint
 
-::: elegy.callbacks.ModelCheckpoint
+::: elegy.callbacks.model_checkpoint.ModelCheckpoint
     selection:
         inherited_members: true
         members:

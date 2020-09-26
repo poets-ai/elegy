@@ -1,7 +1,7 @@
 
 # elegy.callbacks.Callback
 
-::: elegy.callbacks.Callback
+::: elegy.callbacks.callback.Callback
     selection:
         inherited_members: true
         members:

@@ -1,7 +1,7 @@
 
 # elegy.metrics.CategoricalAccuracy
 
-::: elegy.metrics.CategoricalAccuracy
+::: elegy.metrics.categorical_accuracy.CategoricalAccuracy
     selection:
         inherited_members: true
         members:
@@ -12,7 +12,6 @@
             - reset
             - get_parameters
             - set_parameters
-            - get_states
             - set_states
             - submodules
         

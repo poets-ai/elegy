@@ -9,134 +9,141 @@ theme:
     logo: fontawesome/solid/infinity
     repo: octicons/mark-github-16
 nav:
-  - Introduction: index.md
-  - Getting Started: getting-started.ipynb
-  - Guides:
-      The Module System: guides/module-system.md
-      Modules, Losses, and Metrics: guides/modules-losses-metrics.md
-      Contibuting: guides/contributing.md
-  - API Reference:
-      Loss: api/Loss.md
-      Metric: api/Metric.md
-      Model: api/Model.md
-      Module: api/Module.md
-      RNG: api/RNG.md
-      add_loss: api/add_loss.md
-      add_metric: api/add_metric.md
-      add_summary: api/add_summary.md
-      callbacks:
-        CSVLogger: api/callbacks/CSVLogger.md
-        Callback: api/callbacks/Callback.md
-        CallbackList: api/callbacks/CallbackList.md
-        EarlyStopping: api/callbacks/EarlyStopping.md
-        History: api/callbacks/History.md
-        LambdaCallback: api/callbacks/LambdaCallback.md
-        ModelCheckpoint: api/callbacks/ModelCheckpoint.md
-        RemoteMonitor: api/callbacks/RemoteMonitor.md
-        TensorBoard: api/callbacks/TensorBoard.md
-        TerminateOnNaN: api/callbacks/TerminateOnNaN.md
-      get_parameter: api/get_parameter.md
-      get_state: api/get_state.md
-      hooks:
-        add_loss: api/hooks/add_loss.md
-        add_metric: api/hooks/add_metric.md
-        add_summary: api/hooks/add_summary.md
-        get_parameter: api/hooks/get_parameter.md
-        get_state: api/hooks/get_state.md
-        next_rng_key: api/hooks/next_rng_key.md
-        update_parameter: api/hooks/update_parameter.md
-      initializers:
-        Constant: api/initializers/Constant.md
-        Orthogonal: api/initializers/Orthogonal.md
-        RandomNormal: api/initializers/RandomNormal.md
-        RandomUniform: api/initializers/RandomUniform.md
-        TruncatedNormal: api/initializers/TruncatedNormal.md
-        UniformScaling: api/initializers/UniformScaling.md
-        VarianceScaling: api/initializers/VarianceScaling.md
-      losses:
-        BinaryCrossentropy: api/losses/BinaryCrossentropy.md
-        CategoricalCrossentropy: api/losses/CategoricalCrossentropy.md
-        Loss: api/losses/Loss.md
-        MeanAbsoluteError: api/losses/MeanAbsoluteError.md
-        MeanAbsolutePercentageError: api/losses/MeanAbsolutePercentageError.md
-        MeanSquaredError: api/losses/MeanSquaredError.md
-        Reduction: api/losses/Reduction.md
-        SparseCategoricalCrossentropy: api/losses/SparseCategoricalCrossentropy.md
-        binary_crossentropy: api/losses/binary_crossentropy.md
-        mean_absolute_error: api/losses/mean_absolute_error.md
-        mean_percentage_absolute_error: api/losses/mean_percentage_absolute_error.md
-        mean_squared_error: api/losses/mean_squared_error.md
-        sparse_categorical_crossentropy: api/losses/sparse_categorical_crossentropy.md
-      metrics:
-        Accuracy: api/metrics/Accuracy.md
-        BinaryAccuracy: api/metrics/BinaryAccuracy.md
-        BinaryCrossentropy: api/metrics/BinaryCrossentropy.md
-        CategoricalAccuracy: api/metrics/CategoricalAccuracy.md
-        Mean: api/metrics/Mean.md
-        MeanAbsoluteError: api/metrics/MeanAbsoluteError.md
-        MeanSquaredError: api/metrics/MeanSquaredError.md
-        Metric: api/metrics/Metric.md
-        Reduce: api/metrics/Reduce.md
-        SparseCategoricalAccuracy: api/metrics/SparseCategoricalAccuracy.md
-        Sum: api/metrics/Sum.md
-        accuracy: api/metrics/accuracy.md
-        binary_accuracy: api/metrics/binary_accuracy.md
-        binary_crossentropy: api/metrics/binary_crossentropy.md
-        categorical_accuracy: api/metrics/categorical_accuracy.md
-        mean_absolute_error: api/metrics/mean_absolute_error.md
-        mean_squared_error: api/metrics/mean_squared_error.md
-        reduce: api/metrics/reduce.md
-        sparse_categorical_accuracy: api/metrics/sparse_categorical_accuracy.md
-      model:
-        Model: api/model/Model.md
-        load: api/model/load.md
-      module:
-        Module: api/module/Module.md
-        to_module: api/module/to_module.md
-      next_rng_key: api/next_rng_key.md
-      nn:
-        BatchNormalization: api/nn/BatchNormalization.md
-        Conv1D: api/nn/Conv1D.md
-        Conv2D: api/nn/Conv2D.md
-        Conv3D: api/nn/Conv3D.md
-        ConvND: api/nn/ConvND.md
-        Dropout: api/nn/Dropout.md
-        EmbedLookupStyle: api/nn/EmbedLookupStyle.md
-        Embedding: api/nn/Embedding.md
-        Flatten: api/nn/Flatten.md
-        InstanceNormalization: api/nn/InstanceNormalization.md
-        LayerNormalization: api/nn/LayerNormalization.md
-        Linear: api/nn/Linear.md
-        Reshape: api/nn/Reshape.md
-        Sequential: api/nn/Sequential.md
-        sequential: api/nn/sequential.md
-      regularizers:
-        GlobalL1: api/regularizers/GlobalL1.md
-        GlobalL1L2: api/regularizers/GlobalL1L2.md
-        GlobalL2: api/regularizers/GlobalL2.md
-      update_parameter: api/update_parameter.md
-      to_module: api/to_module.md
+- Introduction: index.md
+- Getting Started: getting-started.ipynb
+- Guides:
+    The Module System: guides/module-system.md
+    Modules, Losses, and Metrics: guides/modules-losses-metrics.md
+    Contibuting: guides/contributing.md
+- API Reference:
+    Loss: api/Loss.md
+    Metric: api/Metric.md
+    Model: api/Model.md
+    Module: api/Module.md
+    RNG: api/RNG.md
+    add_loss: api/add_loss.md
+    add_metric: api/add_metric.md
+    add_summary: api/add_summary.md
+    callbacks:
+      CSVLogger: api/callbacks/CSVLogger.md
+      Callback: api/callbacks/Callback.md
+      CallbackList: api/callbacks/CallbackList.md
+      EarlyStopping: api/callbacks/EarlyStopping.md
+      History: api/callbacks/History.md
+      LambdaCallback: api/callbacks/LambdaCallback.md
+      ModelCheckpoint: api/callbacks/ModelCheckpoint.md
+      RemoteMonitor: api/callbacks/RemoteMonitor.md
+      TensorBoard: api/callbacks/TensorBoard.md
+      TerminateOnNaN: api/callbacks/TerminateOnNaN.md
+    get_dynamic_context: api/get_dynamic_context.md
+    get_losses: api/get_losses.md
+    get_metrics: api/get_metrics.md
+    get_rng: api/get_rng.md
+    get_static_context: api/get_static_context.md
+    get_summaries: api/get_summaries.md
+    hooks_context: api/hooks_context.md
+    initializers:
+      Constant: api/initializers/Constant.md
+      Orthogonal: api/initializers/Orthogonal.md
+      RandomNormal: api/initializers/RandomNormal.md
+      RandomUniform: api/initializers/RandomUniform.md
+      TruncatedNormal: api/initializers/TruncatedNormal.md
+      UniformScaling: api/initializers/UniformScaling.md
+      VarianceScaling: api/initializers/VarianceScaling.md
+    is_training: api/is_training.md
+    jit: api/jit.md
+    losses:
+      BinaryCrossentropy: api/losses/BinaryCrossentropy.md
+      CategoricalCrossentropy: api/losses/CategoricalCrossentropy.md
+      Loss: api/losses/Loss.md
+      MeanAbsoluteError: api/losses/MeanAbsoluteError.md
+      MeanAbsolutePercentageError: api/losses/MeanAbsolutePercentageError.md
+      MeanSquaredError: api/losses/MeanSquaredError.md
+      Reduction: api/losses/Reduction.md
+      SparseCategoricalCrossentropy: api/losses/SparseCategoricalCrossentropy.md
+      binary_crossentropy: api/losses/binary_crossentropy.md
+      mean_absolute_error: api/losses/mean_absolute_error.md
+      mean_percentage_absolute_error: api/losses/mean_percentage_absolute_error.md
+      mean_squared_error: api/losses/mean_squared_error.md
+      sparse_categorical_crossentropy: api/losses/sparse_categorical_crossentropy.md
+    metrics:
+      Accuracy: api/metrics/Accuracy.md
+      BinaryAccuracy: api/metrics/BinaryAccuracy.md
+      BinaryCrossentropy: api/metrics/BinaryCrossentropy.md
+      CategoricalAccuracy: api/metrics/CategoricalAccuracy.md
+      Mean: api/metrics/Mean.md
+      MeanAbsoluteError: api/metrics/MeanAbsoluteError.md
+      MeanSquaredError: api/metrics/MeanSquaredError.md
+      Metric: api/metrics/Metric.md
+      Reduce: api/metrics/Reduce.md
+      SparseCategoricalAccuracy: api/metrics/SparseCategoricalAccuracy.md
+      Sum: api/metrics/Sum.md
+      accuracy: api/metrics/accuracy.md
+      binary_accuracy: api/metrics/binary_accuracy.md
+      binary_crossentropy: api/metrics/binary_crossentropy.md
+      categorical_accuracy: api/metrics/categorical_accuracy.md
+      mean_absolute_error: api/metrics/mean_absolute_error.md
+      mean_squared_error: api/metrics/mean_squared_error.md
+      reduce: api/metrics/reduce.md
+      sparse_categorical_accuracy: api/metrics/sparse_categorical_accuracy.md
+    module:
+      Module: api/module/Module.md
+      add_loss: api/module/add_loss.md
+      add_metric: api/module/add_metric.md
+      add_summary: api/module/add_summary.md
+      next_rng_key: api/module/next_rng_key.md
+      to_module: api/module/to_module.md
+    name_context: api/name_context.md
+    next_rng_key: api/next_rng_key.md
+    nn:
+      AvgPool: api/nn/AvgPool.md
+      BatchNormalization: api/nn/BatchNormalization.md
+      Conv1D: api/nn/Conv1D.md
+      Conv2D: api/nn/Conv2D.md
+      Conv3D: api/nn/Conv3D.md
+      ConvND: api/nn/ConvND.md
+      Dropout: api/nn/Dropout.md
+      EmbedLookupStyle: api/nn/EmbedLookupStyle.md
+      Embedding: api/nn/Embedding.md
+      Flatten: api/nn/Flatten.md
+      InstanceNormalization: api/nn/InstanceNormalization.md
+      LayerNormalization: api/nn/LayerNormalization.md
+      Linear: api/nn/Linear.md
+      MaxPool: api/nn/MaxPool.md
+      Reshape: api/nn/Reshape.md
+      Sequential: api/nn/Sequential.md
+      sequential: api/nn/sequential.md
+    regularizers:
+      GlobalL1: api/regularizers/GlobalL1.md
+      GlobalL1L2: api/regularizers/GlobalL1L2.md
+      GlobalL2: api/regularizers/GlobalL2.md
+    set_context: api/set_context.md
+    set_rng: api/set_rng.md
+    set_training: api/set_training.md
+    to_module: api/to_module.md
+    training_context: api/training_context.md
+    value_and_grad: api/value_and_grad.md
 extra:
   search:
     language: en
   social:
-    - icon: octicons/mark-github-16
-      link: https://github.com/cgarciae
-    - icon: octicons/mark-github-16
-      link: https://github.com/charlielito
-    - icon: fontawesome/brands/twitter
-      link: https://twitter.com/cgarciae88
-    - icon: fontawesome/brands/linkedin
-      link: https://www.linkedin.com/in/cgarciae
-    - icon: fontawesome/brands/linkedin
-      link: https://www.linkedin.com/in/calvarez92
+  - icon: octicons/mark-github-16
+    link: https://github.com/cgarciae
+  - icon: octicons/mark-github-16
+    link: https://github.com/charlielito
+  - icon: fontawesome/brands/twitter
+    link: https://twitter.com/cgarciae88
+  - icon: fontawesome/brands/linkedin
+    link: https://www.linkedin.com/in/cgarciae
+  - icon: fontawesome/brands/linkedin
+    link: https://www.linkedin.com/in/calvarez92
 markdown_extensions:
-  - admonition
-  - codehilite
-  - pymdownx.arithmatex
+- admonition
+- codehilite
+- pymdownx.arithmatex
 plugins:
-  - search
-  - mkdocstrings
-  - mkdocs-jupyter
+- search
+- mkdocstrings
+- mkdocs-jupyter
 extra_javascript:
-  - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML
+- https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML

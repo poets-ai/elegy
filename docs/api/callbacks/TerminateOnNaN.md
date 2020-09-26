@@ -1,7 +1,7 @@
 
 # elegy.callbacks.TerminateOnNaN
 
-::: elegy.callbacks.TerminateOnNaN
+::: elegy.callbacks.terminate_nan.TerminateOnNaN
     selection:
         inherited_members: true
         members:

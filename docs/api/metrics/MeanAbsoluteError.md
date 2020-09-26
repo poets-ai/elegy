@@ -1,7 +1,7 @@
 
 # elegy.metrics.MeanAbsoluteError
 
-::: elegy.metrics.MeanAbsoluteError
+::: elegy.metrics.mean_absolute_error.MeanAbsoluteError
     selection:
         inherited_members: true
         members:
@@ -12,7 +12,6 @@
             - reset
             - get_parameters
             - set_parameters
-            - get_states
             - set_states
             - submodules
         

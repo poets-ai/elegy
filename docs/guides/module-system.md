@@ -55,16 +55,14 @@ other areas like web development have proven valuable, React Hooks being a recen
 In Elegy we have the following list of hooks:
 
 
-| Hook               | Description                                                                                                    |
-| ------------------ | -------------------------------------------------------------------------------------------------------------- |
-| `get_parameter`    | Gives us access to a trainable parameter.                                                                      |
-| `get_state`        | Gives us access to some state. This is used in layers like `BatchNormalization` and in most of the metrics.    |
-| `update_parameter` | Lets us update a state. When used in conjunction with `get_state` it lets us express an iterative computation. |
-| `next_rng_key`     | Gives us access to a unique `PRNGKey` we can pass to functions like `jax.random.uniform` and friends.          |
-| `training`         | Tells us whether training is currently happening or not.                                                       |
-| `add_loss`         | Lets us declare a loss in some intermediate layer.                                                             |
-| `add_metric`       | Lets us declare a metric in some intermediate layer.                                                           |
-| `add_summary`      | Lets us declare a summary in some intermediate layer.                                                          |
+| Owner    | Hook                   | Description                                                                                           |
+| -------- | ---------------------- | ----------------------------------------------------------------------------------------------------- |
+| Method   | `Module.add_parameter` | Gives us access to trainable and non-trainable parameters.                                            |
+| Method   | `Module.add_loss`      | Lets us declare a loss from some intermediate module.                                                 |
+| Method   | `Module.add_metric`    | Lets us declare a metric in some intermediate module.                                                 |
+| Method   | `Module.add_summary`   | Lets us declare a summary in some intermediate module.                                                |
+| Function | `elegy.training`       | Tells us whether training is currently happening or not.                                              |
+| Function | `elegy.next_rng_key`   | Gives us access to a unique `PRNGKey` we can pass to functions like `jax.random.uniform` and friends. |
 
 !!! Note
     If you use existing `Module`s you might not need to worry much about these hooks, but keep them in mind
