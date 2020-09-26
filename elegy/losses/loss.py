@@ -72,6 +72,9 @@ class Loss(module.Module):
     details on this.
     """
 
+    # Methods used for auto docs
+    __all__ = ["__init__", "call"]
+
     def __init__(
         self,
         reduction: tp.Optional[Reduction] = None,

@@ -1,7 +1,6 @@
 
 # elegy.nn.Conv2D
-
-::: elegy.nn.Conv2D
+::: elegy.nn.conv.Conv2D
     selection:
         inherited_members: true
         members:

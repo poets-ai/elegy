@@ -1,7 +1,6 @@
 
 # elegy.nn.Linear
-
-::: elegy.nn.Linear
+::: elegy.nn.linear.Linear
     selection:
         inherited_members: true
         members:

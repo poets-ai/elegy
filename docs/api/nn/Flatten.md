@@ -1,7 +1,6 @@
 
 # elegy.nn.Flatten
-
-::: elegy.nn.Flatten
+::: elegy.nn.flatten.Flatten
     selection:
         inherited_members: true
         members:

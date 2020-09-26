@@ -1,9 +1,5 @@
 
 # elegy.PRNGSequence
-
-::: elegy.PRNGSequence
+::: elegy.module.PRNGSequence
     selection:
         inherited_members: true
-        members:
-            - __NONE__
-        

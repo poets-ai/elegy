@@ -14,6 +14,7 @@ from types import ModuleType
 class Structure:
     obj: tp.Any
     name_path: str
+    module_path: str
     members: tp.List[str]
 
 
@@ -28,6 +29,7 @@ def get(module, name_path):
         else Structure(
             obj=module,
             name_path=f"{name_path}.{name}",
+            module_path=f"{module.__module__}.{name}",
             members=module.__all__ if hasattr(module, "__all__") else [],
         )
         for module, name in ((getattr(module, name), name) for name in all_members)
@@ -60,17 +62,14 @@ with open("mkdocs.yml", "w") as f:
 
 template = """
 # {{name_path}}
-
-::: {{name_path}}
+::: {{module_path}}
     selection:
         inherited_members: true
-        members:
         {%- if members %}
+        members:
         {%- for member in members %}
             - {{member}}
         {%- endfor %}
-        {% else %}
-            - __NONE__
         {% endif %}
 """
 
@@ -82,7 +81,9 @@ for structure in jax.tree_leaves(docs_info):
         structure.name_path.replace("elegy.", "").replace(".", "/") + ".md"
     )
     markdown = jinja2.Template(template).render(
-        name_path=structure.name_path, members=structure.members
+        name_path=structure.name_path,
+        module_path=structure.module_path,
+        members=structure.members,
     )
 
     filepath.parent.mkdir(parents=True, exist_ok=True)

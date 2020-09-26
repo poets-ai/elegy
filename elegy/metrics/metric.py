@@ -70,6 +70,8 @@ class Metric(Module):
     ```
     """
 
+    __all__ = ["__init__", "call"]
+
     def __init__(self, on: tp.Optional[types.IndexLike] = None, **kwargs):
         """
         Base Metric constructor.
