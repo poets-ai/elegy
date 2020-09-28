@@ -13,7 +13,7 @@ def mean_squared_logarithmic_error(
     """
     Computes the mean squared logarithmic error between labels and predictions.
 
-     ```python
+    ```python
     loss = mean(square(log(y_true + 1) - log(y_pred + 1)), axis=-1)
     ```
 
