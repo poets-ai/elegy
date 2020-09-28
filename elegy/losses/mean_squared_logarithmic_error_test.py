@@ -4,7 +4,7 @@ from elegy.testing_utils import transform_and_run
 from elegy import utils
 import jax.numpy as jnp
 import jax
-
+import tensorflow.keras as tfk
 
 # import debugpy
 
@@ -57,6 +57,17 @@ def test_function():
     first_log = jnp.log(jnp.maximum(y_true, utils.EPSILON) + 1.0)
     second_log = jnp.log(jnp.maximum(y_pred, utils.EPSILON) + 1.0)
     assert jnp.array_equal(loss, jnp.mean(jnp.square(first_log - second_log), axis=-1))
+
+@transform_and_run
+def test_compatibility():
+    # Input:  true (y_true) and predicted (y_pred) tensors
+    y_true = jnp.array([[0.0, 1.0], [0.0, 0.0]])
+    y_pred = jnp.array([[0.6, 0.4], [0.4, 0.6]])
+
+    # Standard MSLE, considering prediction tensor as probabilities
+    msle_elegy = elegy.losses.MeanSquaredLogarithmicError()
+    msle_tfk = tfk.losses.MeanSquaredLogarithmicError()
+    assert jnp.isclose(msle_elegy(y_true, y_pred), msle_tfk(y_true, y_pred), rtol=0.0001)
 
 
 if __name__ == "__main__":
