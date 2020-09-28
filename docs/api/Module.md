@@ -1,7 +1,6 @@
 
 # elegy.Module
-
-::: elegy.Module
+::: elegy.module.Module
     selection:
         inherited_members: true
         members:

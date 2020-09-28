@@ -41,34 +41,34 @@ class Embedding(Module):
         Constructs an Embed module.
 
         Args:
-        vocab_size: The number of unique tokens to embed. If not provided, an
-            existing vocabulary matrix from which ``vocab_size`` can be inferred
-            must be provided as ``existing_vocab``.
-        embed_dim: Number of dimensions to assign to each embedding. If an
-            existing vocabulary matrix initializes the module, this should not be
-            provided as it will be inferred.
-        embedding_matrix: A matrix-like object equivalent in size to
-            ``[vocab_size, embed_dim]``. If given, it is used as the initial value
-            for the embedding matrix and neither ``vocab_size`` or ``embed_dim``
-            need be given. If they are given, their values are checked to be
-            consistent with the dimensions of ``embedding_matrix``.
-        w_init: An initializer for the embeddings matrix. As a default,
-            embeddings are initialized via a truncated normal distribution.
-        lookup_style: One of the enum values of :class:`EmbedLookupStyle`
-            determining how to access the value of the embbeddings given an ID.
-            Regardless the input should be a dense array of integer values
-            representing ids. This setting changes how internally this module maps
-            those ides to embeddings. The result is the same, but the speed and
-            memory tradeoffs are different. It default to using numpy-style array
-            indexing. This value is only the default for the module, and at any
-            given invocation can be overriden in :meth:`__call__`.
-        name: Optional name for this module.
+            vocab_size: The number of unique tokens to embed. If not provided, an
+                existing vocabulary matrix from which ``vocab_size`` can be inferred
+                must be provided as ``existing_vocab``.
+            embed_dim: Number of dimensions to assign to each embedding. If an
+                existing vocabulary matrix initializes the module, this should not be
+                provided as it will be inferred.
+            embedding_matrix: A matrix-like object equivalent in size to
+                ``[vocab_size, embed_dim]``. If given, it is used as the initial value
+                for the embedding matrix and neither ``vocab_size`` or ``embed_dim``
+                need be given. If they are given, their values are checked to be
+                consistent with the dimensions of ``embedding_matrix``.
+            w_init: An initializer for the embeddings matrix. As a default,
+                embeddings are initialized via a truncated normal distribution.
+            lookup_style: One of the enum values of :class:`EmbedLookupStyle`
+                determining how to access the value of the embbeddings given an ID.
+                Regardless the input should be a dense array of integer values
+                representing ids. This setting changes how internally this module maps
+                those ides to embeddings. The result is the same, but the speed and
+                memory tradeoffs are different. It default to using numpy-style array
+                indexing. This value is only the default for the module, and at any
+                given invocation can be overriden in :meth:`__call__`.
+            name: Optional name for this module.
 
         Raises:
-        ValueError: If none of ``embed_dim``, ``embedding_matrix`` and
-            ``vocab_size`` are supplied, or if ``embedding_matrix`` is supplied
-            and ``embed_dim`` or ``vocab_size`` is not consistent with the
-            supplied matrix.
+            ValueError: If none of ``embed_dim``, ``embedding_matrix`` and
+                ``vocab_size`` are supplied, or if ``embedding_matrix`` is supplied
+                and ``embed_dim`` or ``vocab_size`` is not consistent with the
+                supplied matrix.
         """
         super().__init__(name=name)
         if embedding_matrix is None and not (vocab_size and embed_dim):

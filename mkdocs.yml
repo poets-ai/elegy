@@ -78,6 +78,8 @@ nav:
       MeanAbsoluteError: api/metrics/MeanAbsoluteError.md
       MeanSquaredError: api/metrics/MeanSquaredError.md
       Metric: api/metrics/Metric.md
+      Precision: api/metrics/Precision.md
+      Recall: api/metrics/Recall.md
       Reduce: api/metrics/Reduce.md
       SparseCategoricalAccuracy: api/metrics/SparseCategoricalAccuracy.md
       Sum: api/metrics/Sum.md
@@ -87,6 +89,8 @@ nav:
       categorical_accuracy: api/metrics/categorical_accuracy.md
       mean_absolute_error: api/metrics/mean_absolute_error.md
       mean_squared_error: api/metrics/mean_squared_error.md
+      precision: api/metrics/precision.md
+      recall: api/metrics/recall.md
       reduce: api/metrics/reduce.md
       sparse_categorical_accuracy: api/metrics/sparse_categorical_accuracy.md
     model:

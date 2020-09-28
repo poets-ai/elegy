@@ -57,7 +57,7 @@ class Constant(Initializer):
         Constructs a Constant initializer.
 
         Args:
-        constant: Constant to initialize with.
+            constant: Constant to initialize with.
         """
         self.constant = constant
 
@@ -73,8 +73,8 @@ class RandomNormal(Initializer):
         Constructs a RandomNormal initializer.
 
         Args:
-        stddev: The standard deviation of the normal distribution to sample from.
-        mean: The mean of the normal distribution to sample from.
+            stddev: The standard deviation of the normal distribution to sample from.
+            mean: The mean of the normal distribution to sample from.
         """
         self.stddev = stddev
         self.mean = mean
@@ -93,9 +93,9 @@ class TruncatedNormal(Initializer):
         Constructs a RandomNormal initializer.
 
         Args:
-        stddev: The standard deviation parameter of the truncated
-            normal distribution.
-        mean: The mean of the truncated normal distribution.
+            stddev: The standard deviation parameter of the truncated
+                normal distribution.
+            mean: The mean of the truncated normal distribution.
         """
         self.stddev = stddev
         self.mean = mean
@@ -117,8 +117,8 @@ class RandomUniform(Initializer):
         Constructs a RandomUniform initializer.
 
         Args:
-        minval: The lower limit of the uniform distribution.
-        maxval: The upper limit of the uniform distribution.
+            minval: The lower limit of the uniform distribution.
+            maxval: The upper limit of the uniform distribution.
         """
         self.minval = minval
         self.maxval = maxval
@@ -249,11 +249,10 @@ class Orthogonal(Initializer):
             scale: Scale factor.
             axis (int): Which axis corresponds to the "output dimension" of the
                 tensor.
-        Returns:
-            An orthogonally initialized parameter.
 
-            If the shape is not square, the matrices will have orthonormal rows or
-            columns depending on which side is smaller.
+
+        If the shape is not square, the matrices will have orthonormal rows or
+        columns depending on which side is smaller.
         """
         self.scale = scale
         self.axis = axis

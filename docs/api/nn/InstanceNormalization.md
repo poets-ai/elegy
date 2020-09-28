@@ -1,7 +1,6 @@
 
 # elegy.nn.InstanceNormalization
-
-::: elegy.nn.InstanceNormalization
+::: elegy.nn.layer_normalization.InstanceNormalization
     selection:
         inherited_members: true
         members:
