@@ -58,6 +58,7 @@ def test_function():
     second_log = jnp.log(jnp.maximum(y_pred, utils.EPSILON) + 1.0)
     assert jnp.array_equal(loss, jnp.mean(jnp.square(first_log - second_log), axis=-1))
 
+
 @transform_and_run
 def test_compatibility():
     # Input:  true (y_true) and predicted (y_pred) tensors
@@ -69,23 +70,31 @@ def test_compatibility():
     msle_tfk = tfk.losses.MeanSquaredLogarithmicError()
     assert jnp.isclose(
         msle_elegy(y_true, y_pred, sample_weight=jnp.array([1, 0])),
-        msle_tfk(y_true, y_pred, sample_weight=jnp.array([1, 0])), rtol=0.0001
+        msle_tfk(y_true, y_pred, sample_weight=jnp.array([1, 0])),
+        rtol=0.0001,
     )
 
     # MSLE with reduction method: SUM
-    msle_elegy = elegy.losses.MeanSquaredLogarithmicError(reduction=elegy.losses.Reduction.SUM)
-    msle_tfk = tfk.losses.MeanSquaredLogarithmicError(reduction=tfk.losses.Reduction.SUM)
-    assert jnp.isclose(msle_elegy(y_true, y_pred), msle_tfk(y_true, y_pred), rtol=0.0001)
+    msle_elegy = elegy.losses.MeanSquaredLogarithmicError(
+        reduction=elegy.losses.Reduction.SUM
+    )
+    msle_tfk = tfk.losses.MeanSquaredLogarithmicError(
+        reduction=tfk.losses.Reduction.SUM
+    )
+    assert jnp.isclose(
+        msle_elegy(y_true, y_pred), msle_tfk(y_true, y_pred), rtol=0.0001
+    )
 
     # MSLE with reduction method: NONE
-    msle_elegy = elegy.losses.MeanSquaredLogarithmicError(reduction=elegy.losses.Reduction.NONE)
-    msle_tfk = tfk.losses.MeanSquaredLogarithmicError(reduction=tfk.losses.Reduction.NONE)
+    msle_elegy = elegy.losses.MeanSquaredLogarithmicError(
+        reduction=elegy.losses.Reduction.NONE
+    )
+    msle_tfk = tfk.losses.MeanSquaredLogarithmicError(
+        reduction=tfk.losses.Reduction.NONE
+    )
     assert jnp.all(
         jnp.isclose(msle_elegy(y_true, y_pred), msle_tfk(y_true, y_pred), rtol=0.0001)
     )
-    
-
-
 
 
 if __name__ == "__main__":
