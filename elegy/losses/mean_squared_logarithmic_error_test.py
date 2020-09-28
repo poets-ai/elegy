@@ -64,10 +64,28 @@ def test_compatibility():
     y_true = jnp.array([[0.0, 1.0], [0.0, 0.0]])
     y_pred = jnp.array([[0.6, 0.4], [0.4, 0.6]])
 
-    # Standard MSLE, considering prediction tensor as probabilities
+    # MSLE using sample_weight
     msle_elegy = elegy.losses.MeanSquaredLogarithmicError()
     msle_tfk = tfk.losses.MeanSquaredLogarithmicError()
+    assert jnp.isclose(
+        msle_elegy(y_true, y_pred, sample_weight=jnp.array([1, 0])),
+        msle_tfk(y_true, y_pred, sample_weight=jnp.array([1, 0])), rtol=0.0001
+    )
+
+    # MSLE with reduction method: SUM
+    msle_elegy = elegy.losses.MeanSquaredLogarithmicError(reduction=elegy.losses.Reduction.SUM)
+    msle_tfk = tfk.losses.MeanSquaredLogarithmicError(reduction=tfk.losses.Reduction.SUM)
     assert jnp.isclose(msle_elegy(y_true, y_pred), msle_tfk(y_true, y_pred), rtol=0.0001)
+
+    # MSLE with reduction method: NONE
+    msle_elegy = elegy.losses.MeanSquaredLogarithmicError(reduction=elegy.losses.Reduction.NONE)
+    msle_tfk = tfk.losses.MeanSquaredLogarithmicError(reduction=tfk.losses.Reduction.NONE)
+    assert jnp.all(
+        jnp.isclose(msle_elegy(y_true, y_pred), msle_tfk(y_true, y_pred), rtol=0.0001)
+    )
+    
+
+
 
 
 if __name__ == "__main__":
