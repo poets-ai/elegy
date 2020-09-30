@@ -60,12 +60,14 @@ nav:
       MeanAbsoluteError: api/losses/MeanAbsoluteError.md
       MeanAbsolutePercentageError: api/losses/MeanAbsolutePercentageError.md
       MeanSquaredError: api/losses/MeanSquaredError.md
+      MeanSquaredLogarithmicError: api/losses/MeanSquaredLogarithmicError.md
       Reduction: api/losses/Reduction.md
       SparseCategoricalCrossentropy: api/losses/SparseCategoricalCrossentropy.md
       binary_crossentropy: api/losses/binary_crossentropy.md
       mean_absolute_error: api/losses/mean_absolute_error.md
       mean_percentage_absolute_error: api/losses/mean_percentage_absolute_error.md
       mean_squared_error: api/losses/mean_squared_error.md
+      mean_squared_logarithmic_error: api/losses/mean_squared_logarithmic_error.md
       sparse_categorical_crossentropy: api/losses/sparse_categorical_crossentropy.md
     metrics:
       Accuracy: api/metrics/Accuracy.md
