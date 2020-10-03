@@ -265,7 +265,7 @@ class ModelBase(Module):
 
         parameters = self.optimizer(parameters, grads)
 
-        if not module.is_initializing():
+        if not module.can_update():
             self.module.set_parameters(parameters)
 
         return logs

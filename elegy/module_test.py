@@ -694,3 +694,51 @@ class TestOthers(TestCase):
 
         m.jit(x)
         assert total_called == 4
+
+    def test_module_system_docs(self):
+        class Linear(elegy.Module):
+            def __init__(self, n_out):
+                super().__init__()
+                self.n_out = n_out
+
+            def call(self, x):
+                w = self.add_parameter(
+                    "w",
+                    [x.shape[-1], self.n_out],
+                    initializer=elegy.initializers.RandomUniform(),
+                )
+                b = self.add_parameter("b", [self.n_out], initializer=jnp.zeros)
+
+                return jnp.dot(x, w) + b
+
+        class MLP(elegy.Module):
+            def call(self, x):
+                x = Linear(64)(x)
+                x = jax.nn.relu(x)
+                x = Linear(32)(x)
+                x = jax.nn.relu(x)
+                x = Linear(1)(x)
+                return x
+
+        def loss_fn(x, y):
+            y_pred = mlp(x)
+            return jnp.mean(jnp.square(y - y_pred))
+
+        def update(x, y):
+            parameters = mlp.get_parameters(trainable=True)
+            loss, gradients = elegy.value_and_grad(loss_fn, modules=mlp)(x, y)
+            new_parameters = jax.tree_multimap(
+                lambda p, g: p - 0.01 * g, parameters, gradients
+            )
+            mlp.set_parameters(new_parameters)
+
+            return loss
+
+        x = np.random.uniform(size=(15, 3))
+        y = np.random.uniform(size=(15, 1))
+        mlp = MLP()
+
+        update_jit = elegy.jit(update, modules=mlp)
+
+        for step in range(1):
+            loss = update_jit(x, y)

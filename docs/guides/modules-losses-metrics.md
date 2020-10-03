@@ -281,7 +281,7 @@ Metrics behave exactly like losses except for one thing:
 !!! Quote
     Metrics can hold state. 
 
-As in Keras, Elegy metrics are cumulative so they update their internal state on every step. From a user's perspective this means that you can use the `elegy.get_state` and `self.update_parameter` hooks when implementing your own metrics.
+As in Keras, Elegy metrics are cumulative so they update their internal state on every step. From a user's perspective this means that you should use the `self.add_parameter` and `self.update_parameter` hooks when implementing your own metrics.
 
 Here is an example of a simple cumulative implementation of `Accuracy` which uses state hooks:
 
@@ -289,8 +289,8 @@ Here is an example of a simple cumulative implementation of `Accuracy` which use
 class Accuracy(elegy.Metric):
     def call(self, y_true, y_pred):
 
-        total = elegy.get_state("total", initializer=0)
-        count = elegy.get_state("count", initializer=0)
+        total = self.add_parameter("total", initializer=0, trainable=False)
+        count = self.add_parameter("count", initializer=0, trainable=False)
 
         total += jnp.sum(y_true == y_pred)
         count += jnp.prod(y_true.shape)

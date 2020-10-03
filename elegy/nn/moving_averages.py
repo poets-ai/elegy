@@ -66,8 +66,12 @@ class ExponentialMovingAverage(module.Module):
 
     def initialize(self, value):
         """If uninitialized sets the average to ``zeros_like`` the given value."""
-        hooks.get_state("hidden", value.shape, value.dtype, initializer=jnp.zeros)
-        hooks.get_state("average", value.shape, value.dtype, initializer=jnp.zeros)
+        self.add_parameter(
+            "hidden", value.shape, value.dtype, initializer=jnp.zeros, trainable=False
+        )
+        self.add_parameter(
+            "average", value.shape, value.dtype, initializer=jnp.zeros, trainable=False
+        )
 
     def call(self, value, update_stats=True):
         """Updates the EMA and returns the new value.

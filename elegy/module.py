@@ -36,7 +36,7 @@ class DynamicContext(tp.NamedTuple):
 class StaticContext(tp.NamedTuple):
     training: bool
     initializing: bool
-    accept_updates: bool
+    can_update: bool
     losses: tp.Optional[FrozenDict[str, tp.Any]]
     metrics: tp.Optional[FrozenDict[str, tp.Any]]
     summaries: tp.Optional[
@@ -53,7 +53,7 @@ class LocalContext(utils.Protocol):
     rng: RNG
     training: bool
     initializing: bool
-    accept_updates: bool
+    can_update: bool
     losses: tp.Optional[tp.Dict[str, tp.Any]]
     metrics: tp.Optional[tp.Dict[str, tp.Any]]
     summaries: tp.Optional[tp.List[tp.Tuple[tp.Optional["Module"], str, np.ndarray]]]
@@ -78,7 +78,7 @@ class _LocalContext(threading.local):
     rng: RNG
     training: bool
     initializing: bool
-    accept_updates: bool
+    can_update: bool
     losses: tp.Optional[tp.Dict[str, tp.Any]]
     metrics: tp.Optional[tp.Dict[str, tp.Any]]
     summaries: tp.Optional[tp.List[tp.Tuple[tp.Optional["Module"], str, np.ndarray]]]
@@ -95,7 +95,7 @@ class _LocalContext(threading.local):
         return StaticContext(
             training=self.training,
             initializing=self.initializing,
-            accept_updates=self.accept_updates,
+            can_update=self.can_update,
             losses=FrozenDict(self.losses) if self.losses is not None else None,
             metrics=FrozenDict(self.metrics) if self.metrics is not None else None,
             summaries=tuple(self.summaries) if self.summaries is not None else None,
@@ -115,7 +115,7 @@ class _LocalContext(threading.local):
         # static
         self.training = static.training
         self.initializing = static.initializing
-        self.accept_updates = static.accept_updates
+        self.can_update = static.can_update
         self.losses = static.losses.unfreeze() if static.losses is not None else None
         self.metrics = static.metrics.unfreeze() if static.metrics is not None else None
         self.summaries = (
@@ -134,7 +134,7 @@ LOCAL: LocalContext = _LocalContext(
     rng=RNG(42),
     training=True,
     initializing=False,
-    accept_updates=True,
+    can_update=True,
     losses=None,
     metrics=None,
     summaries=None,
@@ -306,7 +306,7 @@ class Module(metaclass=ModuleMeta):
         with call_context(self):
 
             if should_initialize:
-                with init_context(accept_updates=True):
+                with init_context(can_update=True):
                     outputs = self.call(*args, **kwargs)
 
                 self.initialized = True
@@ -340,7 +340,7 @@ class Module(metaclass=ModuleMeta):
             x: sample inputs.
         """
 
-        with init_context(accept_updates=False):
+        with init_context(can_update=False):
             self(*args, **kwargs)
 
         self.initialized = True
@@ -409,7 +409,7 @@ class Module(metaclass=ModuleMeta):
         """
 
         if hasattr(self, name):
-            if not accepting_updates():
+            if not can_update():
                 return
 
             setattr(self, name, value)
@@ -665,6 +665,7 @@ def get_module() -> tp.Optional[Module]:
 
 
 def get_rng() -> RNG:
+    """"""
     return LOCAL.rng
 
 
@@ -673,6 +674,9 @@ def set_rng(rng: RNG) -> None:
 
 
 def next_rng_key() -> jnp.ndarray:
+    """
+    Returns a key usable with `jax.random.*` functions.
+    """
     return LOCAL.rng()
 
 
@@ -680,8 +684,8 @@ def is_initializing() -> bool:
     return LOCAL.initializing
 
 
-def accepting_updates() -> bool:
-    return LOCAL.accept_updates
+def can_update() -> bool:
+    return LOCAL.can_update
 
 
 def set_training(training: bool) -> None:
@@ -853,23 +857,23 @@ def _instantiation_context(module: Module):
         LOCAL.inside_call = prev_inside_call
 
 
-def init_context(accept_updates: bool = True) -> tp.ContextManager[None]:
-    return _init_context(accept_updates=accept_updates)
+def init_context(can_update: bool = True) -> tp.ContextManager[None]:
+    return _init_context(can_update=can_update)
 
 
 @contextmanager
-def _init_context(accept_updates: bool = True) -> tp.Iterator[None]:
+def _init_context(can_update: bool = True) -> tp.Iterator[None]:
     prev_initializing = LOCAL.initializing
-    prev_accept_updates = LOCAL.accept_updates
+    prev_accept_updates = LOCAL.can_update
 
     LOCAL.initializing = True
-    LOCAL.accept_updates = accept_updates
+    LOCAL.can_update = can_update
 
     try:
         yield
     finally:
         LOCAL.initializing = prev_initializing
-        LOCAL.accept_updates = prev_accept_updates
+        LOCAL.can_update = prev_accept_updates
 
 
 def get_dynamic_context() -> "DynamicContext":
