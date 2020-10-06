@@ -923,7 +923,7 @@ def jit(
         dynamics: DynamicContext,
         parameters_tuple: tp.Tuple[tp.Dict, ...],
         *args,
-    ) -> tp.Tuple[tp.Any, StaticContext, DynamicContext, tp.Tuple]:
+    ) -> tp.Tuple[tp.Any, DynamicContext, tp.Tuple]:
         assert isinstance(modules, list)
 
         # states_tuple is not set because its static, therefore no need to propagate down
@@ -941,7 +941,6 @@ def jit(
 
         return (
             outputs,
-            get_static_context(),
             get_dynamic_context(),
             parameters_tuple,
         )
@@ -960,7 +959,7 @@ def jit(
         parameters_tuple = tuple(module.get_parameters() for module in modules)
         # static_argnums
 
-        outputs, statics, dynamics, parameters_tuple = jit_fn(
+        outputs, dynamics, parameters_tuple = jit_fn(
             states_tuple,
             statics,
             dynamics,
@@ -968,6 +967,7 @@ def jit(
             *args,
         )
 
+        statics = get_static_context()
         # set global state
         set_context(statics, dynamics)
 

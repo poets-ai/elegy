@@ -249,8 +249,6 @@ class ModelBase(Module):
     ) -> tp.Dict[str, tp.Any]:
         assert self.optimizer is not None
 
-        print("train_fn")
-
         loss, logs, grads = self.test_fn(
             x=x,
             y=y,
@@ -265,7 +263,7 @@ class ModelBase(Module):
 
         parameters = self.optimizer(parameters, grads)
 
-        if not module.can_update():
+        if module.can_update():
             self.module.set_parameters(parameters)
 
         return logs

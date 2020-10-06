@@ -1,17 +1,17 @@
-from elegy.frozen_dict import FrozenDict
-from enum import Enum
 import functools
 import inspect
 import re
 import sys
-import threading
 import typing as tp
-from deepmerge import always_merger
+from enum import Enum
 from functools import total_ordering
 
 import jax.numpy as jnp
 import numpy as np
 import toolz
+from deepmerge import always_merger
+
+from elegy.frozen_dict import FrozenDict
 
 if sys.version_info >= (3, 8):
     from typing import Protocol, runtime_checkable
