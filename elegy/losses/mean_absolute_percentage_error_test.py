@@ -88,7 +88,7 @@ class MeanAbsolutePercentageErrorTest(TestCase):
         y_true = jax.random.randint(rng, shape=(2, 3), minval=0, maxval=2)
         y_pred = jax.random.uniform(rng, shape=(2, 3))
         y_true = y_true.astype(y_pred.dtype)
-        loss = elegy.losses.mean_percentage_absolute_error(y_true, y_pred)
+        loss = elegy.losses.mean_absolute_percentage_error(y_true, y_pred)
         assert loss.shape == (2,)
         assert jnp.array_equal(
             loss,
