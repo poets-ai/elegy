@@ -5,7 +5,7 @@ from elegy import utils
 from elegy.losses.loss import Loss, Reduction
 
 
-def mean_percentage_absolute_error(
+def mean_absolute_percentage_error(
     y_true: jnp.ndarray, y_pred: jnp.ndarray
 ) -> jnp.ndarray:
     """
@@ -147,4 +147,4 @@ class MeanAbsolutePercentageError(Loss):
         Raises:
             ValueError: If the shape of `sample_weight` is invalid.
         """
-        return mean_percentage_absolute_error(y_true, y_pred)
+        return mean_absolute_percentage_error(y_true, y_pred)
