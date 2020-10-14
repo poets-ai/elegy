@@ -1,7 +1,6 @@
 
 # elegy.nn.Sequential
-
-::: elegy.nn.Sequential
+::: elegy.nn.sequential_module.Sequential
     selection:
         inherited_members: true
         members:

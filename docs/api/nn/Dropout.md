@@ -1,7 +1,6 @@
 
 # elegy.nn.Dropout
-
-::: elegy.nn.Dropout
+::: elegy.nn.dropout.Dropout
     selection:
         inherited_members: true
         members:

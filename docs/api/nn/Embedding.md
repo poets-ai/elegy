@@ -1,7 +1,6 @@
 
 # elegy.nn.Embedding
-
-::: elegy.nn.Embedding
+::: elegy.nn.embedding.Embedding
     selection:
         inherited_members: true
         members:

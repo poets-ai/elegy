@@ -1,6 +1,6 @@
 
-# elegy.metrics.Accuracy
-::: elegy.metrics.accuracy.Accuracy
+# elegy.metrics.Recall
+::: elegy.metrics.recall.Recall
     selection:
         inherited_members: true
         members:

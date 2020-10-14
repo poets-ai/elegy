@@ -1,7 +1,6 @@
 
 # elegy.nn.Reshape
-
-::: elegy.nn.Reshape
+::: elegy.nn.flatten.Reshape
     selection:
         inherited_members: true
         members:

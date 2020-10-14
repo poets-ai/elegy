@@ -1,7 +1,6 @@
 
 # elegy.callbacks.TensorBoard
-
-::: elegy.callbacks.TensorBoard
+::: elegy.callbacks.tensorboard.TensorBoard
     selection:
         inherited_members: true
         members:

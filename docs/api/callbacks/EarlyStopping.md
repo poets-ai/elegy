@@ -1,7 +1,6 @@
 
 # elegy.callbacks.EarlyStopping
-
-::: elegy.callbacks.EarlyStopping
+::: elegy.callbacks.early_stopping.EarlyStopping
     selection:
         inherited_members: true
         members:

@@ -1,7 +1,6 @@
 
 # elegy.callbacks.History
-
-::: elegy.callbacks.History
+::: elegy.callbacks.history.History
     selection:
         inherited_members: true
         members:
