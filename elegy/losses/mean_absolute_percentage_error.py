@@ -22,7 +22,7 @@ def mean_absolute_percentage_error(
     y_true = jax.random.randint(rng, shape=(2, 3), minval=0, maxval=2)
     y_pred = jax.random.uniform(rng, shape=(2, 3))
 
-    loss = elegy.losses.mean_percentage_absolute_error(y_true, y_pred)
+    loss = elegy.losses.mean_absolute_percentage_error(y_true, y_pred)
 
     assert loss.shape == (2,)
 

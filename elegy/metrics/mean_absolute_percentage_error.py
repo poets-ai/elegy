@@ -9,7 +9,7 @@ from elegy.metrics.mean import Mean
 
 class MeanAbsolutePercentageError(Mean):
     """
-    Computes the cumulative mean squared error between `y_true` and `y_pred`.
+    Computes the cumulative mean absoluted percetage error between `y_true` and `y_pred`.
 
     Usage:
     ```python

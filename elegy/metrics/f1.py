@@ -32,7 +32,7 @@ def f1(
 
 class F1(Metric):
     """
-    The metric calculare the armonic mean between precision and recall. This value is ultimately returned as
+    The metric calculates the armonic mean between precision and recall. This value is ultimately returned as
     `f1`.
 
     If `sample_weight` is `None`, weights default to 1. Use `sample_weight` of 0 to mask values.
@@ -49,12 +49,12 @@ class F1(Metric):
         result = f1(
             y_true=jnp.array([0, 1, 1, 1]), y_pred=jnp.array([1, 0, 1, 1])
         )
-        assert result == 0.6666667 # 2 / 3
+        assert result == 0.6666667 # 2 * (0.44445 / 1.33334)
 
         result = f1(
             y_true=jnp.array([1, 1, 1, 1]), y_pred=jnp.array([1, 1, 0, 0])
         )
-        assert result == 0.8 # 4 / 5
+        assert result == 666667 # 2 * (0.5 / 1.5)
     ```
 
     Usage with elegy API:
@@ -77,7 +77,7 @@ class F1(Metric):
         **kwargs
     ):
         """
-        Creates a `Precision` instance.
+        Creates a `F1` instance.
 
         Arguments:
             on: A string or integer, or iterable of string or integers, that
@@ -113,7 +113,7 @@ class F1(Metric):
         sample_weight: tp.Optional[jnp.ndarray] = None,
     ) -> jnp.ndarray:
         """
-        Accumulates metric statistics. `y_true` and `y_pred` should have the same shape.
+        Accumulates f1 values (armonic mean between precision and recall).
 
         Arguments:
             y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
@@ -124,7 +124,7 @@ class F1(Metric):
                 `Tensor` whose rank is either 0, or the same rank as `y_true`, and must
                 be broadcastable to `y_true`.
         Returns:
-            Array with the cumulative precision.
+            Array with the cumulative f1.
         """
 
         return f1(
