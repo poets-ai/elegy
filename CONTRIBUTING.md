@@ -5,7 +5,19 @@ This is a short guide on how to start contributing to Elegy along with some best
 We use `poetry` so the easiest way to setup a development environment is run
 
 ```bash
+poetry config virtualenvs.in-project true --local
 poetry install
+```
+
+In order for Jax to recognize your GPU, you will probably have to install it again using the command below.
+
+```bash
+PYTHON_VERSION=cp38  
+CUDA_VERSION=cuda101  # alternatives: cuda100, cuda101, cuda102, cuda110, check your cuda version
+PLATFORM=manylinux2010_x86_64  # alternatives: manylinux2010_x86_64
+BASE_URL='https://storage.googleapis.com/jax-releases'
+pip install --upgrade $BASE_URL/$CUDA_VERSION/jaxlib-0.1.55-$PYTHON_VERSION-none-$PLATFORM.whl
+pip install --upgrade jax  
 ```
 
 ## Creating Losses and Metrics
