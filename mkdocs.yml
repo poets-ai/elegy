@@ -56,6 +56,7 @@ nav:
     losses:
       BinaryCrossentropy: api/losses/BinaryCrossentropy.md
       CategoricalCrossentropy: api/losses/CategoricalCrossentropy.md
+      CosineSimilarity: api/losses/CosineSimilarity.md
       Loss: api/losses/Loss.md
       MeanAbsoluteError: api/losses/MeanAbsoluteError.md
       MeanAbsolutePercentageError: api/losses/MeanAbsolutePercentageError.md
@@ -64,6 +65,7 @@ nav:
       Reduction: api/losses/Reduction.md
       SparseCategoricalCrossentropy: api/losses/SparseCategoricalCrossentropy.md
       binary_crossentropy: api/losses/binary_crossentropy.md
+      cosine_similarity: api/losses/cosine_similarity.md
       mean_absolute_error: api/losses/mean_absolute_error.md
       mean_percentage_absolute_error: api/losses/mean_percentage_absolute_error.md
       mean_squared_error: api/losses/mean_squared_error.md
