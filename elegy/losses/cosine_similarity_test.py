@@ -17,28 +17,30 @@ import tensorflow.keras as tfk
 @transform_and_run
 def test_basic():
 
-    y_true = jnp.array([[0., 1.], [1., 1.]])
-    y_pred = jnp.array([[1., 0.], [1., 1.]])
+    y_true = jnp.array([[0.0, 1.0], [1.0, 1.0]])
+    y_pred = jnp.array([[1.0, 0.0], [1.0, 1.0]])
 
     # Using 'auto'/'sum_over_batch_size' reduction type.
     cosine_loss = elegy.losses.CosineSimilarity(axis=1)
     assert cosine_loss(y_true, y_pred) == -0.49999997
 
     # Calling with 'sample_weight'.
-    assert cosine_loss(y_true, y_pred, sample_weight=jnp.array([0.8, 0.2])) == -0.099999994
+    assert (
+        cosine_loss(y_true, y_pred, sample_weight=jnp.array([0.8, 0.2])) == -0.099999994
+    )
 
     # Using 'sum' reduction type.
-    cosine_loss = elegy.losses.CosineSimilarity(axis=1,
-        reduction=elegy.losses.Reduction.SUM
+    cosine_loss = elegy.losses.CosineSimilarity(
+        axis=1, reduction=elegy.losses.Reduction.SUM
     )
     assert cosine_loss(y_true, y_pred) == -0.99999994
 
     # Using 'none' reduction type.
-    cosine_loss = elegy.losses.CosineSimilarity(axis=1,
-        reduction=elegy.losses.Reduction.NONE
+    cosine_loss = elegy.losses.CosineSimilarity(
+        axis=1, reduction=elegy.losses.Reduction.NONE
     )
 
-    assert jnp.equal(cosine_loss(y_true, y_pred), jnp.array([-0., -0.99999994])).all()
+    assert jnp.equal(cosine_loss(y_true, y_pred), jnp.array([-0.0, -0.99999994])).all()
 
 
 @transform_and_run
@@ -48,7 +50,7 @@ def test_function():
 
     y_true = jax.random.randint(rng, shape=(2, 3), minval=0, maxval=2)
     y_pred = jax.random.uniform(rng, shape=(2, 3))
-    
+
     def _l2_normalize(x, axis=None, epsilon=utils.EPSILON):
         square_sum = jnp.sum(jnp.square(x), axis=axis, keepdims=True)
         x_inv_norm = rsqrt(jnp.maximum(square_sum, epsilon))
@@ -79,25 +81,27 @@ def test_compatibility():
     )
 
     # cosine_loss with reduction method: SUM
-    cosine_loss = elegy.losses.CosineSimilarity(axis=1,
-        reduction=elegy.losses.Reduction.SUM
+    cosine_loss = elegy.losses.CosineSimilarity(
+        axis=1, reduction=elegy.losses.Reduction.SUM
     )
-    cosine_loss_tfk = tfk.losses.CosineSimilarity(axis=1,
-        reduction=tfk.losses.Reduction.SUM
+    cosine_loss_tfk = tfk.losses.CosineSimilarity(
+        axis=1, reduction=tfk.losses.Reduction.SUM
     )
     assert jnp.isclose(
         cosine_loss(y_true, y_pred), cosine_loss_tfk(y_true, y_pred), rtol=0.0001
     )
 
     # cosine_loss with reduction method: NONE
-    cosine_loss = elegy.losses.CosineSimilarity(axis=1,
-        reduction=elegy.losses.Reduction.NONE
+    cosine_loss = elegy.losses.CosineSimilarity(
+        axis=1, reduction=elegy.losses.Reduction.NONE
     )
-    cosine_loss_tfk = tfk.losses.CosineSimilarity(axis=1,
-        reduction=tfk.losses.Reduction.NONE
+    cosine_loss_tfk = tfk.losses.CosineSimilarity(
+        axis=1, reduction=tfk.losses.Reduction.NONE
     )
     assert jnp.all(
-        jnp.isclose(cosine_loss(y_true, y_pred), cosine_loss_tfk(y_true, y_pred), rtol=0.0001)
+        jnp.isclose(
+            cosine_loss(y_true, y_pred), cosine_loss_tfk(y_true, y_pred), rtol=0.0001
+        )
     )
 
 

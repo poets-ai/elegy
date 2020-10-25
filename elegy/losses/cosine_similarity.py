@@ -7,6 +7,7 @@ from jax.lax import rsqrt
 from elegy import utils
 from elegy.losses.loss import Loss, Reduction
 
+
 def cosine_similarity(
     y_true: jnp.ndarray, y_pred: jnp.ndarray, axis: int
 ) -> jnp.ndarray:
@@ -24,7 +25,7 @@ def cosine_similarity(
 
     y_true = jax.random.randint(rng, shape=(2, 3), minval=0, maxval=2)
     y_pred = jax.random.uniform(rng, shape=(2, 3))
-    
+
     def _l2_normalize(x, axis=None, epsilon=utils.EPSILON):
         square_sum = jnp.sum(jnp.square(x), axis=axis, keepdims=True)
         x_inv_norm = rsqrt(jnp.maximum(square_sum, epsilon))
@@ -51,8 +52,7 @@ def cosine_similarity(
     """
 
     def _l2_normalize(x, axis=None, epsilon=utils.EPSILON):
-        """Normalizes along dimension `axis` using an L2 norm.
-        """
+        """Normalizes along dimension `axis` using an L2 norm."""
         square_sum = jnp.sum(jnp.square(x), axis=axis, keepdims=True)
         x_inv_norm = rsqrt(jnp.maximum(square_sum, epsilon))
         return jnp.multiply(x, x_inv_norm)
