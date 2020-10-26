@@ -65,7 +65,7 @@ nav:
       SparseCategoricalCrossentropy: api/losses/SparseCategoricalCrossentropy.md
       binary_crossentropy: api/losses/binary_crossentropy.md
       mean_absolute_error: api/losses/mean_absolute_error.md
-      mean_absolute_percentage_error: api/losses/mean_absolute_percentage_error.md
+      mean_percentage_absolute_error: api/losses/mean_percentage_absolute_error.md
       mean_squared_error: api/losses/mean_squared_error.md
       mean_squared_logarithmic_error: api/losses/mean_squared_logarithmic_error.md
       sparse_categorical_crossentropy: api/losses/sparse_categorical_crossentropy.md
