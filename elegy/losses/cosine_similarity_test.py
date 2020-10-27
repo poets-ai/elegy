@@ -53,8 +53,12 @@ def test_function():
     loss = elegy.losses.cosine_similarity(y_true, y_pred, axis=1)
     assert loss.shape == (2,)
 
-    y_true = y_true / jnp.maximum(jnp.linalg.norm(y_true, axis=1, keepdims=True), jnp.sqrt(utils.EPSILON))
-    y_pred = y_pred / jnp.maximum(jnp.linalg.norm(y_pred, axis=1, keepdims=True), jnp.sqrt(utils.EPSILON))
+    y_true = y_true / jnp.maximum(
+        jnp.linalg.norm(y_true, axis=1, keepdims=True), jnp.sqrt(utils.EPSILON)
+    )
+    y_pred = y_pred / jnp.maximum(
+        jnp.linalg.norm(y_pred, axis=1, keepdims=True), jnp.sqrt(utils.EPSILON)
+    )
     assert jnp.array_equal(loss, -jnp.sum(y_true * y_pred, axis=1))
 
 

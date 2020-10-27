@@ -43,8 +43,12 @@ def cosine_similarity(
          shape [batch_size, d0, .. dN-1]; otherwise, it is scalar.
          (Note dN-1 because all loss functions reduce by 1 dimension, usually axis=-1.)
     """
-    y_true = y_true / jnp.maximum(jnp.linalg.norm(y_true, axis=axis, keepdims=True), jnp.sqrt(utils.EPSILON))
-    y_pred = y_pred / jnp.maximum(jnp.linalg.norm(y_pred, axis=axis, keepdims=True), jnp.sqrt(utils.EPSILON))
+    y_true = y_true / jnp.maximum(
+        jnp.linalg.norm(y_true, axis=axis, keepdims=True), jnp.sqrt(utils.EPSILON)
+    )
+    y_pred = y_pred / jnp.maximum(
+        jnp.linalg.norm(y_pred, axis=axis, keepdims=True), jnp.sqrt(utils.EPSILON)
+    )
     return -jnp.sum(y_true * y_pred, axis=axis)
 
 
