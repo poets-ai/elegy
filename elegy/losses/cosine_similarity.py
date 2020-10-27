@@ -2,7 +2,6 @@ from elegy import types
 import typing as tp
 
 import jax.numpy as jnp
-from jax.lax import rsqrt
 
 from elegy import utils
 from elegy.losses.loss import Loss, Reduction
@@ -26,17 +25,11 @@ def cosine_similarity(
     y_true = jax.random.randint(rng, shape=(2, 3), minval=0, maxval=2)
     y_pred = jax.random.uniform(rng, shape=(2, 3))
 
-    def _l2_normalize(x, axis=None, epsilon=utils.EPSILON):
-        square_sum = jnp.sum(jnp.square(x), axis=axis, keepdims=True)
-        x_inv_norm = rsqrt(jnp.maximum(square_sum, epsilon))
-        return jnp.multiply(x, x_inv_norm)
-
     loss = elegy.losses.cosine_similarity(y_true, y_pred, axis=1)
-
     assert loss.shape == (2,)
 
-    y_true = _l2_normalize(y_true, axis=1)
-    y_pred = _l2_normalize(y_pred, axis=1)
+    y_true = y_true / jnp.maximum(jnp.linalg.norm(y_true, axis=1, keepdims=True), jnp.sqrt(utils.EPSILON))
+    y_pred = y_pred / jnp.maximum(jnp.linalg.norm(y_pred, axis=1, keepdims=True), jnp.sqrt(utils.EPSILON))
     assert jnp.array_equal(loss, -jnp.sum(y_true * y_pred, axis=1))
     ```
 
@@ -50,15 +43,8 @@ def cosine_similarity(
          shape [batch_size, d0, .. dN-1]; otherwise, it is scalar.
          (Note dN-1 because all loss functions reduce by 1 dimension, usually axis=-1.)
     """
-
-    def _l2_normalize(x, axis=None, epsilon=utils.EPSILON):
-        """Normalizes along dimension `axis` using an L2 norm."""
-        square_sum = jnp.sum(jnp.square(x), axis=axis, keepdims=True)
-        x_inv_norm = rsqrt(jnp.maximum(square_sum, epsilon))
-        return jnp.multiply(x, x_inv_norm)
-
-    y_true = _l2_normalize(y_true, axis=axis)
-    y_pred = _l2_normalize(y_pred, axis=axis)
+    y_true = y_true / jnp.maximum(jnp.linalg.norm(y_true, axis=axis, keepdims=True), jnp.sqrt(utils.EPSILON))
+    y_pred = y_pred / jnp.maximum(jnp.linalg.norm(y_pred, axis=axis, keepdims=True), jnp.sqrt(utils.EPSILON))
     return -jnp.sum(y_true * y_pred, axis=axis)
 
 

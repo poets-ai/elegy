@@ -4,7 +4,6 @@ from elegy.testing_utils import transform_and_run
 from elegy import utils
 import jax.numpy as jnp
 import jax
-from jax.lax import rsqrt
 import tensorflow.keras as tfk
 
 # import debugpy
@@ -51,29 +50,27 @@ def test_function():
     y_true = jax.random.randint(rng, shape=(2, 3), minval=0, maxval=2)
     y_pred = jax.random.uniform(rng, shape=(2, 3))
 
-    def _l2_normalize(x, axis=None, epsilon=utils.EPSILON):
-        square_sum = jnp.sum(jnp.square(x), axis=axis, keepdims=True)
-        x_inv_norm = rsqrt(jnp.maximum(square_sum, epsilon))
-        return jnp.multiply(x, x_inv_norm)
-
     loss = elegy.losses.cosine_similarity(y_true, y_pred, axis=1)
-
     assert loss.shape == (2,)
 
-    y_true = _l2_normalize(y_true, axis=1)
-    y_pred = _l2_normalize(y_pred, axis=1)
+    y_true = y_true / jnp.maximum(jnp.linalg.norm(y_true, axis=1, keepdims=True), jnp.sqrt(utils.EPSILON))
+    y_pred = y_pred / jnp.maximum(jnp.linalg.norm(y_pred, axis=1, keepdims=True), jnp.sqrt(utils.EPSILON))
     assert jnp.array_equal(loss, -jnp.sum(y_true * y_pred, axis=1))
 
 
 @transform_and_run
 def test_compatibility():
     # Input:  true (y_true) and predicted (y_pred) tensors
-    y_true = jnp.array([[0.0, 1.0], [0.0, 0.0]])
-    y_pred = jnp.array([[0.6, 0.4], [0.4, 0.6]])
+    rng = jax.random.PRNGKey(121)
+
+    y_true = jax.random.randint(rng, shape=(2, 3), minval=0, maxval=2)
+    y_true = y_true.astype(dtype=jnp.float32)
+    y_pred = jax.random.uniform(rng, shape=(2, 3))
 
     # cosine_loss using sample_weight
     cosine_loss = elegy.losses.CosineSimilarity(axis=1)
     cosine_loss_tfk = tfk.losses.CosineSimilarity(axis=1)
+
     assert jnp.isclose(
         cosine_loss(y_true, y_pred, sample_weight=jnp.array([1, 0])),
         cosine_loss_tfk(y_true, y_pred, sample_weight=jnp.array([1, 0])),
