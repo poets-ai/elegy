@@ -1,5 +1,5 @@
 import jax.numpy as jnp
-from elegy.testing_utils import transform_and_run
+
 from unittest import TestCase
 import jax
 
@@ -7,7 +7,7 @@ import elegy
 
 
 class SequentialTest(TestCase):
-    # @transform_and_run
+    #
     def test_connects(self):
         elegy.nn.Sequential(
             lambda: [

@@ -4,7 +4,7 @@ from enum import Enum
 import jax.numpy as jnp
 import numpy as np
 
-from elegy import initializers, module, types, utils, hooks
+from elegy import initializers, module, types, utils, module
 from elegy.metrics.metric import Metric
 
 
@@ -112,11 +112,12 @@ class ReduceConfusionMatrix(Metric):
             Array with the cummulative reduce metric.
         """
 
-        cm_metric = hooks.get_state(
+        cm_metric = self.add_parameter(
             "cm_metric",
             shape=[],
             dtype=jnp.int32,
             initializer=initializers.Constant(0),
+            trainable=False,
         )
 
         cm_metric = reduce(
@@ -128,6 +129,6 @@ class ReduceConfusionMatrix(Metric):
             dtype=self.dtype,
         )
 
-        hooks.set_state("cm_metric", cm_metric)
+        self.update_parameter("cm_metric", cm_metric)
 
         return cm_metric

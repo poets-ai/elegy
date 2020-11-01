@@ -1,4 +1,3 @@
-from elegy.testing_utils import transform_and_run
 from elegy import utils
 
 import jax.numpy as jnp

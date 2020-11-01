@@ -5,11 +5,9 @@ import tensorflow.keras as tfk
 import numpy as np
 
 import elegy
-from elegy.testing_utils import transform_and_run
 
 
 class RecallTest(TestCase):
-    @transform_and_run
     def test_basic(self):
 
         y_true = (np.random.uniform(0, 1, size=(5, 6, 7)) > 0.5).astype(np.float32)
@@ -41,7 +39,6 @@ class RecallTest(TestCase):
             ),
         )
 
-    @transform_and_run
     def test_cummulative(self):
         tm = tfk.metrics.Recall(thresholds=0.3)
         em = elegy.metrics.Recall(threshold=0.3)
