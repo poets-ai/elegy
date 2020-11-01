@@ -13,7 +13,6 @@ homepage = "https://poets-ai.github.io/elegy"
 
 [tool.poetry.dependencies]
 python = "^3.6.1"
-jaxlib = "^0.1.51"
 numpy = "^1.0.0"
 pytest = "^5.4.3"
 deepdish = "^0.3.6"
@@ -42,6 +41,8 @@ matplotlib = "^3.3.0"
 tensorflow-cpu = "^2.2.0"
 dataget = "^0.4.14"
 debugpy = "^1.0.0-beta.12"
+jax = "^0.2.5"
+jaxlib = "^0.1.56"
 
 [build-system]
 requires = ["poetry>=0.12"]

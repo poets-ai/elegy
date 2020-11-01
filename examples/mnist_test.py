@@ -8,7 +8,6 @@ import dataget
 
 import jax
 import jax.numpy as jnp
-from jax.numpy.lax_numpy import mod
 import matplotlib.pyplot as plt
 import numpy as np
 from tensorboardX.writer import SummaryWriter
