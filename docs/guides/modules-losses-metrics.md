@@ -18,21 +18,22 @@ model.compile(
     ...
 )
 ```
-This very restrictive, in particular it doesn't allow the following:
+This is very restrictive, in particular it doesn't allow the following:
 
 1. Losses and metrics that combine multiple outputs with multiple labels.
-2. A single loss/metrics based on multiple outputs (a especial case of the previous).
+2. A single loss/metric based on multiple outputs (a especial case of the previous).
 3. Losses and metrics that depend on other variables such as inputs, parameters, states, etc.
 
 Most of these are usually solvable by tricks such as:
+
 * [Concatenating the outputs / labels](https://stackoverflow.com/a/57030727/2118130)
 * Passing the inputs and other kind of information as labels.
 * Using the functional API which is more flexible (but it only runs on graph mode making it very painful to debug).
  
-It is clear that these solution are hacky, sometimes they are non-obvious, and depending on the problem they can be insufficient.
+It is clear that these solution are hacky. Sometimes they are non-obvious, and depending on the problem they can be insufficient.
 
 ## Dependency Injection
-Elegy solves the previous problems by introducing a _dependency injection_ mechanism that allows the user to express complex functions by simply declaring the variables it wants to use **by their name**. The following parameters are available for the different callables you pass to Elegy:
+Elegy solves the previous problems by introducing a _dependency injection_ mechanism that allows the user to express complex functions by simply declaring the variables to use **by their name**. The following parameters are available for the different callables you pass to Elegy:
 
 
  | parameter       | Description                                                    | Module | Metric | Loss |
@@ -177,13 +178,13 @@ Elegy will use this information to show you each loss separate in the logs / Ten
 Each individual loss will still be subject to the `sample_weight` and `reduction` behavior as specified to `SomeComplexFunction`.
 
 ### Multiple Outputs + Labels
-The `Model`'s constructor `loss` argument can accept a single `Loss`, a `list` or `dict` of losses, and even nested structures of the previous, yet in Elegy the form of `loss` is not strictly related to structure of input labels and outputs of the model. This is very different to Keras where each loss has to be matched with exactly one (label, output) pair. Elegy's method of dealing with multiple outputs and labels is super simple:
+The `Model`'s constructor `loss` argument can accept a single `Loss`, a `list` or `dict` of losses, and even nested structures of the previous. However, in Elegy the form of `loss` is not strictly related to structure of input labels and outputs of the model. This is very different to Keras where each loss has to be matched with exactly one (label, output) pair. Elegy's method of dealing with multiple outputs and labels is super simple:
 
 !!! Quote
     - `y_true` will contain the **entire** structure passed to `y`.
     - `y_pred` will contain the **entire** structure output by the `Module`.
 
-This means there are no restrictions on how you structure the loss function. According to this rule Keras and Elegy behave the same when there is only one output and one label because there is no structure. Both framework will allow you to define something like: 
+This means there are no restrictions on how you structure the loss function. According to this rule Keras and Elegy behave the same when there is only one output and one label because there is no structure. Both frameworks will allow you to define something like: 
 
 ```python
 model = Model(
@@ -208,7 +209,7 @@ model = Model(
 This example assumes the `y_true` and `y_pred` are dictionaries but they can also be tuples or nested structures. This strategy gives you maximal flexibility but come with the additional cost of having to implement your own loss function. 
 
 ### Keras-like behavior
-While having this flexibility available is good, there is a common scenario that Keras covers really well: what if you really just need one loss per (label, output) pair? In other words, how can we achieve equivalent behaviour of the following Keras code?
+While having this flexibility is good, there is a common scenario that Keras covers really well: what if you really just need one loss per (label, output) pair? In other words, how can we achieve equivalent behaviour of the following Keras code?
 
 ```python
 class MyModel(keras.Model):

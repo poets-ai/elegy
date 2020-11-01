@@ -1,12 +1,11 @@
-from elegy import types
-from elegy import utils
 import typing as tp
 
 import jax.numpy as jnp
 import numpy as np
 
-from elegy.metrics.mean import Mean
+from elegy import types, utils
 from elegy.metrics.accuracy import accuracy
+from elegy.metrics.mean import Mean
 
 
 def binary_accuracy(
@@ -51,9 +50,9 @@ class BinaryAccuracy(Mean):
     If `sample_weight` is `None`, weights default to 1.
     Use `sample_weight` of 0 to mask values.
     Args:
-        name: (Optional) string name of the metric instance.
-        dtype: (Optional) data type of the metric result.
-        threshold: (Optional) Float representing the threshold for deciding
+        name (str): (Optional) string name of the metric instance.
+        dtype (np.dtype): (Optional) data type of the metric result.
+        threshold (float): (Optional) Float representing the threshold for deciding
             whether prediction values are 1 or 0.
     Standalone usage:
     ```python

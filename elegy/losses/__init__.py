@@ -1,5 +1,6 @@
 from .binary_crossentropy import BinaryCrossentropy, binary_crossentropy
 from .categorical_crossentropy import CategoricalCrossentropy
+from .cosine_similarity import CosineSimilarity, cosine_similarity
 from .loss import Loss, Reduction
 from .mean_absolute_error import MeanAbsoluteError, mean_absolute_error
 from .mean_absolute_percentage_error import (
@@ -7,6 +8,10 @@ from .mean_absolute_percentage_error import (
     mean_percentage_absolute_error,
 )
 from .mean_squared_error import MeanSquaredError, mean_squared_error
+from .mean_squared_logarithmic_error import (
+    MeanSquaredLogarithmicError,
+    mean_squared_logarithmic_error,
+)
 from .sparse_categorical_crossentropy import (
     SparseCategoricalCrossentropy,
     sparse_categorical_crossentropy,
@@ -16,6 +21,8 @@ __all__ = [
     "BinaryCrossentropy",
     "binary_crossentropy",
     "CategoricalCrossentropy",
+    "CosineSimilarity",
+    "cosine_similarity",
     "Loss",
     "Reduction",
     "MeanAbsoluteError",
@@ -24,6 +31,8 @@ __all__ = [
     "mean_percentage_absolute_error",
     "MeanSquaredError",
     "mean_squared_error",
+    "MeanSquaredLogarithmicError"
+    "mean_squared_logarithmic_error"
     "SparseCategoricalCrossentropy",
     "sparse_categorical_crossentropy",
 ]
