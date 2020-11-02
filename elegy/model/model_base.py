@@ -19,7 +19,7 @@ from elegy.utils import Mode
 class ModelBase(Module):
     def __init__(
         self,
-        module: tp.Optional[Module] = None,
+        module: Module,
         loss: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
         metrics: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
         optimizer: tp.Optional[optax.GradientTransformation] = None,
@@ -32,22 +32,16 @@ class ModelBase(Module):
         self.loss = Losses(loss) if loss is not None else None
         self.metrics = Metrics(metrics)
         self.optimizer = Optimizer(optimizer) if optimizer is not None else None
-        self._predict_step_jit = elegy_jit(self.predict_fn, modules=self)
-        self._test_step_jit = elegy_jit(self.test_fn, modules=self)
-        self._train_step_jit = elegy_jit(self.train_fn, modules=self)
+        self.predict_fn_jit = elegy_jit(self.predict_fn, modules=self)
+        self.test_fn_jit = elegy_jit(self.test_fn, modules=self)
+        self.train_fn_jit = elegy_jit(self.train_fn, modules=self)
         self.initial_metrics_state: tp.Optional[tp.Dict[str, tp.Any]] = None
         self.run_eagerly = run_eagerly
 
-        if self.module is not None:
-            utils.wraps(self.module)(self)
-        else:
-            utils.wraps(self.call)(self)
+        utils.wraps(self.module)(self)
 
     def call(self, *args, **kwargs):
-        if self.module is not None:
-            return self.module(*args, **kwargs)
-        else:
-            raise NotImplementedError("Must provide 'module' or implement 'call'.")
+        return self.module(*args, **kwargs)
 
     def reset_metrics(self, hard: bool = False):
         if hard:
@@ -69,7 +63,7 @@ class ModelBase(Module):
 
     def predict_step_jit(self, x: tp.Any = ()):
         with module.training_context(training=False):
-            return self._predict_step_jit(x)
+            return self.predict_fn_jit(x)
 
     def predict_on_batch(
         self, x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]
@@ -191,7 +185,7 @@ class ModelBase(Module):
         class_weight: tp.Optional[np.ndarray] = None,
     ):
         with module.training_context(training=False), module.hooks_context():
-            return self._test_step_jit(x, y, sample_weight, class_weight)
+            return self.test_fn_jit(x, y, sample_weight, class_weight)
 
     def test_on_batch(
         self,
@@ -289,7 +283,7 @@ class ModelBase(Module):
         class_weight: tp.Optional[np.ndarray] = None,
     ):
         with module.training_context(training=True), module.hooks_context():
-            outputs = self._train_step_jit(x, y, sample_weight, class_weight)
+            outputs = self.train_fn_jit(x, y, sample_weight, class_weight)
 
         return outputs
 
