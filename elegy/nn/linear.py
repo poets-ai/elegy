@@ -48,7 +48,7 @@ class Linear(module.Module):
 
         input_size = self.input_size = inputs.shape[-1]
         output_size = self.output_size
-        dtype = inputs.dtype
+        dtype = jnp.float32
 
         w_init = self.w_init
 
@@ -60,6 +60,8 @@ class Linear(module.Module):
             "w", [input_size, output_size], dtype, initializer=w_init
         )
 
+        inputs = jnp.asarray(inputs, self.dtype)
+        w      = jnp.asarray(w,      self.dtype)
         out = jnp.dot(inputs, w)
 
         if self.with_bias:
@@ -67,6 +69,7 @@ class Linear(module.Module):
                 "b", [self.output_size], dtype, initializer=self.b_init
             )
             b = jnp.broadcast_to(b, out.shape)
+            b = jnp.asarray(b, self.dtype)
             out = out + b
 
         return out

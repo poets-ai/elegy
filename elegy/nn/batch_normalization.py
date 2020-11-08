@@ -119,6 +119,8 @@ class BatchNormalization(module.Module):
         Returns:
             The array, normalized across all but the last dimension.
         """
+        inputs = jnp.asarray(inputs, jnp.float32)
+        
         if training is None:
             training = module.is_training()
 
@@ -161,7 +163,7 @@ class BatchNormalization(module.Module):
             self.var_ema(var)
 
         w_shape = [1 if i in axis else inputs.shape[i] for i in range(inputs.ndim)]
-        w_dtype = inputs.dtype
+        w_dtype = jnp.float32
 
         if self.create_scale:
             scale = self.add_parameter("scale", w_shape, w_dtype, self.scale_init)
@@ -174,4 +176,5 @@ class BatchNormalization(module.Module):
             offset = np.zeros([], dtype=w_dtype)
 
         inv = scale * jax.lax.rsqrt(var + self.eps)
-        return (inputs - mean) * inv + offset
+        output = (inputs - mean) * inv + offset
+        return jnp.asarray(output, self.dtype)

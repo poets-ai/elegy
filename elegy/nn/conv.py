@@ -179,11 +179,13 @@ class ConvND(module.Module):
             fan_in_shape = np.prod(w_shape[:-1])
             stddev = 1.0 / np.sqrt(fan_in_shape)
             w_init = initializers.TruncatedNormal(stddev=stddev)
-        w = self.add_parameter("w", w_shape, inputs.dtype, initializer=w_init)
+        w = self.add_parameter("w", w_shape, jnp.float32, initializer=w_init)
 
         if self.mask is not None:
             w *= self.mask
 
+        inputs = jnp.asarray(inputs, dtype=self.dtype)
+        w      = jnp.asarray(w,      dtype=self.dtype)
         out = lax.conv_general_dilated(
             inputs,
             w,
@@ -201,9 +203,10 @@ class ConvND(module.Module):
             else:
                 bias_shape = (self.output_channels,) + (1,) * self.num_spatial_dims
             b = self.add_parameter(
-                "b", bias_shape, inputs.dtype, initializer=self.b_init
+                "b", bias_shape, jnp.float32, initializer=self.b_init
             )
             b = jnp.broadcast_to(b, out.shape)
+            b = jnp.asarray(b, self.dtype)
             out = out + b
 
         return out
