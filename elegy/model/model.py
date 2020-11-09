@@ -512,7 +512,7 @@ class Model(ModelBase):
                 List of callbacks to apply during training.
 
         See the discussion of `Unpacking behavior for iterator-like inputs` for
-         [`Model.fit`][elegy.model.Model.fit].
+        [`Model.fit`][elegy.model.model.Model.fit].
 
         Returns:
             A dictionary for mapping the losses and metrics names to the values obtained.
@@ -611,7 +611,7 @@ class Model(ModelBase):
                 List of callbacks to apply during training.
 
         See the discussion of `Unpacking behavior for iterator-like inputs` for
-        [`Model.fit`][elegy.model.Model.fit].
+        [`Model.fit`][elegy.model.model.Model.fit].
         Note that Model.predict uses the same interpretation rules as
         `Model.fit` and `Model.evaluate`, so inputs must be unambiguous for all
         three methods.

@@ -7,11 +7,10 @@
         members:
             - __init__
             - call
-            - init
-            - apply
-            - reset
+            - add_parameter
             - get_parameters
             - set_parameters
-            - set_states
-            - submodules
+            - reset
+            - init
+            - initialized
         
