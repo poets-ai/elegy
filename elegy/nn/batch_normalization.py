@@ -120,7 +120,7 @@ class BatchNormalization(module.Module):
             The array, normalized across all but the last dimension.
         """
         inputs = jnp.asarray(inputs, jnp.float32)
-        
+
         if training is None:
             training = module.is_training()
 

@@ -185,7 +185,7 @@ class ConvND(module.Module):
             w *= self.mask
 
         inputs = jnp.asarray(inputs, dtype=self.dtype)
-        w      = jnp.asarray(w,      dtype=self.dtype)
+        w = jnp.asarray(w, dtype=self.dtype)
         out = lax.conv_general_dilated(
             inputs,
             w,

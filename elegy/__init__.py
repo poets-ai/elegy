@@ -1,7 +1,17 @@
 __version__ = "0.2.2"
 
 
-from . import callbacks, initializers, losses, metrics, model, module, nets,nn, regularizers
+from . import (
+    callbacks,
+    initializers,
+    losses,
+    metrics,
+    model,
+    module,
+    nets,
+    nn,
+    regularizers,
+)
 from .losses import Loss
 from .metrics import Metric
 from .model import Model

@@ -61,7 +61,7 @@ class Linear(module.Module):
         )
 
         inputs = jnp.asarray(inputs, self.dtype)
-        w      = jnp.asarray(w,      self.dtype)
+        w = jnp.asarray(w, self.dtype)
         out = jnp.dot(inputs, w)
 
         if self.with_bias:
