@@ -2,7 +2,7 @@
 This is a short guide on how to start contributing to Elegy along with some best practices for the project.
 
 ## Setup
-We use `poetry` so the easiest way to setup a development environment is run
+We use `poetry >= 1.1.4`, the easiest way to setup a development environment is run:
 
 ```bash
 poetry config virtualenvs.in-project true --local

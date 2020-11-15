@@ -23,7 +23,7 @@ import numpy as np
 from haiku._src import utils as hk_utils
 from jax import lax
 
-from elegy import initializers, module, types, hooks
+from elegy import initializers, module, types
 
 
 def to_dimension_numbers(
@@ -69,6 +69,7 @@ class ConvND(module.Module):
         b_init: tp.Optional[types.Initializer] = None,
         data_format: str = "channels_last",
         mask: tp.Optional[np.ndarray] = None,
+        groups: int = 1,
         **kwargs,
     ):
         """
@@ -100,6 +101,11 @@ class ConvND(module.Module):
                 ``channels_first``, ``channels_last``, ``N...C`` or ``NC...``. By
                 default, ``channels_last``.
             mask: tp.Optional mask of the weights.
+            groups: A positive integer specifying the number of groups in which the
+                input is split along the channel axis. Each group is convolved separately
+                with filters / groups filters. The output is the concatenation of all the
+                groups results along the channel axis. Input channels and filters must both
+                be divisible by groups.
             kwargs: Additional keyword arguments passed to Module.
         """
         super().__init__(**kwargs)
@@ -128,6 +134,7 @@ class ConvND(module.Module):
         self.dimension_numbers = to_dimension_numbers(
             num_spatial_dims, channels_last=(self.channel_index == -1), transpose=False
         )
+        self.groups = groups
 
         if isinstance(padding, str):
             self.padding = padding.upper()
@@ -157,7 +164,7 @@ class ConvND(module.Module):
             )
 
         w_shape = self.kernel_shape + (
-            inputs.shape[self.channel_index],
+            inputs.shape[self.channel_index] // self.groups,
             self.output_channels,
         )
 
@@ -172,7 +179,7 @@ class ConvND(module.Module):
             fan_in_shape = np.prod(w_shape[:-1])
             stddev = 1.0 / np.sqrt(fan_in_shape)
             w_init = initializers.TruncatedNormal(stddev=stddev)
-        w = hooks.get_parameter("w", w_shape, inputs.dtype, initializer=w_init)
+        w = self.add_parameter("w", w_shape, inputs.dtype, initializer=w_init)
 
         if self.mask is not None:
             w *= self.mask
@@ -185,6 +192,7 @@ class ConvND(module.Module):
             lhs_dilation=self.lhs_dilation,
             rhs_dilation=self.kernel_dilation,
             dimension_numbers=self.dimension_numbers,
+            feature_group_count=self.groups,
         )
 
         if self.with_bias:
@@ -192,7 +200,7 @@ class ConvND(module.Module):
                 bias_shape = (self.output_channels,)
             else:
                 bias_shape = (self.output_channels,) + (1,) * self.num_spatial_dims
-            b = hooks.get_parameter(
+            b = self.add_parameter(
                 "b", bias_shape, inputs.dtype, initializer=self.b_init
             )
             b = jnp.broadcast_to(b, out.shape)
@@ -218,6 +226,7 @@ class Conv1D(ConvND):
         b_init: tp.Optional[types.Initializer] = None,
         data_format: str = "NWC",
         mask: tp.Optional[np.ndarray] = None,
+        groups: int = 1,
         **kwargs,
     ):
         """
@@ -245,6 +254,11 @@ class Conv1D(ConvND):
             data_format: The data format of the input. Either ``NWC`` or ``NCW``. By
                 default, ``NWC``.
             mask: tp.Optional mask of the weights.
+            groups: A positive integer specifying the number of groups in which the
+                input is split along the channel axis. Each group is convolved separately
+                with filters / groups filters. The output is the concatenation of all the
+                groups results along the channel axis. Input channels and filters must both
+                be divisible by groups.
             kwargs: Additional keyword arguments passed to Module.
         """
         super().__init__(
@@ -259,6 +273,7 @@ class Conv1D(ConvND):
             b_init=b_init,
             data_format=data_format,
             mask=mask,
+            groups=groups,
             **kwargs,
         )
 
@@ -280,6 +295,7 @@ class Conv2D(ConvND):
         b_init: tp.Optional[types.Initializer] = None,
         data_format: str = "NHWC",
         mask: tp.Optional[np.ndarray] = None,
+        groups: int = 1,
         **kwargs,
     ):
         """
@@ -307,6 +323,11 @@ class Conv2D(ConvND):
             data_format: The data format of the input. Either ``NHWC`` or ``NCHW``. By
                 default, ``NHWC``.
             mask: tp.Optional mask of the weights.
+            groups: A positive integer specifying the number of groups in which the
+                input is split along the channel axis. Each group is convolved separately
+                with filters / groups filters. The output is the concatenation of all the
+                groups results along the channel axis. Input channels and filters must both
+                be divisible by groups.
             kwargs: Additional keyword arguments passed to Module.
         """
         super().__init__(
@@ -321,6 +342,7 @@ class Conv2D(ConvND):
             b_init=b_init,
             data_format=data_format,
             mask=mask,
+            groups=groups,
             **kwargs,
         )
 
@@ -342,6 +364,7 @@ class Conv3D(ConvND):
         b_init: tp.Optional[types.Initializer] = None,
         data_format: str = "NDHWC",
         mask: tp.Optional[np.ndarray] = None,
+        groups: int = 1,
         **kwargs,
     ):
         """
@@ -369,6 +392,11 @@ class Conv3D(ConvND):
             data_format: The data format of the input. Either ``NDHWC`` or ``NCDHW``.
                 By default, ``NDHWC``.
             mask: tp.Optional mask of the weights.
+            groups: A positive integer specifying the number of groups in which the
+                input is split along the channel axis. Each group is convolved separately
+                with filters / groups filters. The output is the concatenation of all the
+                groups results along the channel axis. Input channels and filters must both
+                be divisible by groups.
             kwargs: Additional keyword arguments passed to Module.
         """
         super().__init__(
@@ -383,6 +411,7 @@ class Conv3D(ConvND):
             b_init=b_init,
             data_format=data_format,
             mask=mask,
+            groups=groups,
             **kwargs,
         )
 
@@ -483,7 +512,7 @@ class ConvNDTranspose(module.Module):
             fan_in_shape = self.kernel_shape + (input_channels,)
             stddev = 1.0 / np.sqrt(np.prod(fan_in_shape))
             w_init = initializers.TruncatedNormal(stddev=stddev)
-        w = hooks.get_parameter("w", w_shape, inputs.dtype, initializer=w_init)
+        w = self.add_parameter("w", w_shape, inputs.dtype, initializer=w_init)
 
         if self.mask is not None:
             w = w * self.mask
@@ -501,7 +530,7 @@ class ConvNDTranspose(module.Module):
                 bias_shape = (self.output_channels,)
             else:
                 bias_shape = (self.output_channels,) + (1,) * self.num_spatial_dims
-            b = hooks.get_parameter("b", bias_shape, initializer=self.b_init)
+            b = self.add_parameter("b", bias_shape, initializer=self.b_init)
             b = jnp.broadcast_to(b, out.shape)
             out = out + b
 

@@ -4,7 +4,7 @@ from enum import Enum
 import jax.numpy as jnp
 import numpy as np
 
-from elegy import initializers, module, types, utils, hooks
+from elegy import initializers, module, types, utils
 from elegy.metrics.metric import Metric
 
 
@@ -59,7 +59,7 @@ def reduce(
 
     else:
         if sample_weight is None:
-            num_values = jnp.prod(values.shape).astype(dtype)
+            num_values = jnp.prod(jnp.array(values.shape)).astype(dtype)
         else:
             num_values = jnp.sum(sample_weight)
 
@@ -110,19 +110,24 @@ class Reduce(Metric):
         Returns:
             Array with the cummulative reduce.
         """
-        total = hooks.get_state(
-            "total", shape=[], dtype=self.dtype, initializer=initializers.Constant(0)
+        total = self.add_parameter(
+            "total",
+            shape=[],
+            dtype=self.dtype,
+            initializer=initializers.Constant(0),
+            trainable=False,
         )
 
         if self._reduction in (
             Reduction.SUM_OVER_BATCH_SIZE,
             Reduction.WEIGHTED_MEAN,
         ):
-            count = hooks.get_state(
+            count = self.add_parameter(
                 "count",
                 shape=[],
                 dtype=jnp.int32,
                 initializer=initializers.Constant(0),
+                trainable=False,
             )
         else:
             count = None
@@ -136,9 +141,9 @@ class Reduce(Metric):
             dtype=self.dtype,
         )
 
-        hooks.set_state("total", total)
+        self.update_parameter("total", total)
 
         if count is not None:
-            hooks.set_state("count", count)
+            self.update_parameter("count", count)
 
         return value

@@ -4,11 +4,10 @@ import jax.numpy as jnp
 import tensorflow.keras as tfk
 
 import elegy
-from elegy.testing_utils import transform_and_run
 
 
 class BinaryCrossentropyTest(TestCase):
-    @transform_and_run
+    #
     def test_basic(self):
 
         # Input:  true (y_true) and predicted (y_pred) tensors
@@ -35,7 +34,7 @@ class BinaryCrossentropyTest(TestCase):
         result = bce(y_true, y_pred, sample_weight=jnp.array([1.0, 0.0]))
         assert jnp.isclose(result, 0.916, rtol=0.01)
 
-    @transform_and_run
+    #
     def test_compatibility(self):
 
         # Input:  true (y_true) and predicted (y_pred) tensors

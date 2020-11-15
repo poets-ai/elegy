@@ -8,7 +8,7 @@ import haiku as hk
 import jax.numpy as jnp
 import numpy as np
 
-from elegy import module, hooks
+from elegy import module
 from elegy.module import Module
 
 
@@ -68,10 +68,10 @@ class Dropout(Module):
             x but dropped out and scaled by `1 / (1 - rate)`.
         """
         if training is None:
-            training = hooks.is_training()
+            training = module.is_training()
 
         return hk.dropout(
-            rng=rng if rng is not None else hooks.next_rng_key(),
+            rng=rng if rng is not None else module.next_rng_key(),
             rate=self.rate if training else 0.0,
             x=x,
         )

@@ -11,7 +11,7 @@ import jax.numpy as jnp
 import numpy as np
 from haiku._src import utils as haiku_utils
 
-from elegy import initializers, module, hooks
+from elegy import initializers, module
 from elegy import module
 from elegy.nn.moving_averages import ExponentialMovingAverage
 
@@ -120,7 +120,7 @@ class BatchNormalization(module.Module):
             The array, normalized across all but the last dimension.
         """
         if training is None:
-            training = hooks.is_training()
+            training = module.is_training()
 
         if self.create_scale and scale is not None:
             raise ValueError("Cannot pass `scale` at call time if `create_scale=True`.")
@@ -164,12 +164,12 @@ class BatchNormalization(module.Module):
         w_dtype = inputs.dtype
 
         if self.create_scale:
-            scale = hooks.get_parameter("scale", w_shape, w_dtype, self.scale_init)
+            scale = self.add_parameter("scale", w_shape, w_dtype, self.scale_init)
         elif scale is None:
             scale = np.ones([], dtype=w_dtype)
 
         if self.create_offset:
-            offset = hooks.get_parameter("offset", w_shape, w_dtype, self.offset_init)
+            offset = self.add_parameter("offset", w_shape, w_dtype, self.offset_init)
         elif offset is None:
             offset = np.zeros([], dtype=w_dtype)
 

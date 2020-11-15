@@ -1,5 +1,6 @@
 
 # elegy.callbacks.CSVLogger
+
 ::: elegy.callbacks.csv_logger.CSVLogger
     selection:
         inherited_members: true

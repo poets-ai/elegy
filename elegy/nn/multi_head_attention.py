@@ -4,7 +4,7 @@ import jax
 import numpy as np
 from jax import numpy as jnp
 
-from elegy import initializers, module, hooks
+from elegy import initializers, module
 from elegy.nn.dropout import Dropout
 from elegy.nn.layer_normalization import LayerNormalization
 from elegy.nn.linear import Linear
@@ -153,25 +153,25 @@ class MultiHeadAttention(module.Module):
                 )
 
         # get weights
-        query_kernel = hooks.get_parameter(
+        query_kernel = self.add_parameter(
             "query_kernel",
             [self.num_heads, query.shape[-1], self.head_size],
             jnp.float32,
             initializer=self.kernel_initializer,
         )
-        key_kernel = hooks.get_parameter(
+        key_kernel = self.add_parameter(
             "key_kernel",
             [self.num_heads, key.shape[-1], self.head_size],
             jnp.float32,
             initializer=self.kernel_initializer,
         )
-        value_kernel = hooks.get_parameter(
+        value_kernel = self.add_parameter(
             "value_kernel",
             [self.num_heads, value.shape[-1], self.head_size],
             jnp.float32,
             initializer=self.kernel_initializer,
         )
-        projection_kernel = hooks.get_parameter(
+        projection_kernel = self.add_parameter(
             "projection_kernel",
             [self.num_heads, self.head_size, output_size],
             jnp.float32,
@@ -213,7 +213,7 @@ class MultiHeadAttention(module.Module):
         output = jnp.einsum("...NHI,HIO->...NO", multihead_output, projection_kernel)
 
         if self.use_projection_bias:
-            output += hooks.get_parameter(
+            output += self.add_parameter(
                 "projection_bias",
                 [output_size],
                 jnp.float32,

@@ -41,11 +41,11 @@ jobs:
       - name: Install Poetry
         uses: dschep/install-poetry-action@v1.2
         with:
-          version: 1.0.10
+          version: 1.1.4
 
       - name: Install Dependencies
         run: |
-          poetry export --dev -f requirements.txt > requirements.txt
+          poetry export --without-hashes --dev -f requirements.txt > requirements.txt
           pip install -r requirements.txt
           pip install jax
 

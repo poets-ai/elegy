@@ -48,8 +48,8 @@ class Metric(Module):
     To be implemented by subclasses:
 
     * `call()`: All state variables should be created in this method by
-        calling `haiku.get_state()`, update this state by calling
-        `haiku.set_state(...)`, and return a result based on these states.
+        calling `self.add_parameter(..., trainable=False)`, update this state by calling
+        `self.update_parameter(...)`, and return a result based on these states.
 
     Example subclass implementation:
 
@@ -57,14 +57,14 @@ class Metric(Module):
     class Accuracy(elegy.Metric):
         def call(self, y_true, y_pred):
 
-            total = hk.get_state("total", [], jnp.zeros)
-            count = hk.get_state("count", [], jnp.zeros)
+            total = hk.add_parameter("total", initializer=0, trainable=False)
+            count = hk.add_parameter("count", initializer=0, trainable=False)
 
             total += jnp.sum(y_true == y_pred)
             count += jnp.prod(y_true.shape)
 
-            hk.set_state("total", total)
-            hk.set_state("count", count)
+            hk.update_parameter("total", total)
+            hk.update_parameter("count", count)
 
             return total / count
     ```

@@ -2,13 +2,16 @@ import functools
 import inspect
 import re
 import sys
-import threading
 import typing as tp
-from deepmerge import always_merger
+from enum import Enum
+from functools import total_ordering
 
 import jax.numpy as jnp
 import numpy as np
 import toolz
+from deepmerge import always_merger
+
+from elegy.frozen_dict import FrozenDict
 
 if sys.version_info >= (3, 8):
     from typing import Protocol, runtime_checkable
@@ -17,6 +20,38 @@ else:
 
 
 EPSILON = 1e-7
+
+
+class TrivialPytree:
+    def tree_flatten(self):
+        return tuple(vars(self).values()), None
+
+    @classmethod
+    def tree_unflatten(cls, _aux_data, children):
+        return cls(*children)
+
+
+@total_ordering
+class Mode(Enum):
+    predict = 1
+    test = 2
+    train = 3
+
+    def __lt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value < other.value
+        return NotImplemented
+
+
+class Empty:
+    pass
+
+
+class ModuleOrderError(Exception):
+    pass
+
+
+EMPTY = Empty()
 
 
 def maybe_expand_dims(a: np.ndarray, b: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
@@ -31,8 +66,13 @@ def maybe_expand_dims(a: np.ndarray, b: np.ndarray) -> tp.Tuple[np.ndarray, np.n
     return a, b
 
 
-def wraps(f):
-    return functools.wraps(f, assigned=("__doc__", "__annotations__"), updated=())
+def wraps(f, docs: bool = True):
+    assigments = ("__annotations__",)
+
+    if docs:
+        assigments += ("__doc__",)
+
+    return functools.wraps(f, assigned=assigments, updated=())
 
 
 def inject_dependencies(
@@ -137,3 +177,13 @@ def lower_snake_case(s: str) -> str:
             output_parts[-1] += parts[i]
 
     return "_".join(output_parts)
+
+
+def to_static(structure: tp.Any) -> tp.Any:
+
+    if isinstance(structure, (tp.Dict, FrozenDict)):
+        return tuple((k, to_static(v)) for k, v in structure.items())
+    elif isinstance(structure, (tp.List, tp.Tuple)):
+        return tuple(to_static(v) for v in structure)
+    else:
+        return structure

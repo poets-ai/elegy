@@ -56,10 +56,10 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             )(x)
             return x.reshape(image.shape) * 255
 
-    class MeanSquaredError(elegy.Loss):
+    class MeanSquaredError(elegy.losses.MeanSquaredError):
         # we request `x` instead of `y_true` since we are don't require labels in autoencoders
         def call(self, x, y_pred):
-            return jnp.mean(jnp.square(x - y_pred), axis=-1)
+            return super().call(x, y_pred)
 
     model = elegy.Model(
         module=MLP(n1=256, n2=64),
@@ -99,7 +99,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             plt.subplot(2, 5, 5 + i + 1)
             plt.imshow(y_pred[i], cmap="gray")
 
-        tbwriter.add_figure("AutoEncoder images", figure, 20)
+        # tbwriter.add_figure("AutoEncoder images", figure, 20)
 
     plt.show()
 
