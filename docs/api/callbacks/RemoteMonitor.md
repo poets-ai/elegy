@@ -1,5 +1,6 @@
 
 # elegy.callbacks.RemoteMonitor
+
 ::: elegy.callbacks.remote_monitor.RemoteMonitor
     selection:
         inherited_members: true

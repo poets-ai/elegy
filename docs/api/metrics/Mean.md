@@ -1,5 +1,6 @@
 
 # elegy.metrics.Mean
+
 ::: elegy.metrics.mean.Mean
     selection:
         inherited_members: true

@@ -1,5 +1,6 @@
 
-# elegy.model.load
-::: elegy.model.load
+# elegy.jit
+
+::: elegy.module.jit
     selection:
         inherited_members: true

@@ -1,6 +1,6 @@
 import elegy
 
-from elegy.testing_utils import transform_and_run
+
 from elegy import utils
 import jax.numpy as jnp
 import jax
@@ -13,7 +13,6 @@ import tensorflow.keras as tfk
 # debugpy.wait_for_client()
 
 
-@transform_and_run
 def test_basic():
 
     y_true = jnp.array([[0.0, 1.0], [0.0, 0.0]])
@@ -42,7 +41,6 @@ def test_basic():
     assert jnp.equal(msle(y_true, y_pred), jnp.array([0.24022643, 0.24022643])).all()
 
 
-@transform_and_run
 def test_function():
 
     rng = jax.random.PRNGKey(42)
@@ -59,7 +57,6 @@ def test_function():
     assert jnp.array_equal(loss, jnp.mean(jnp.square(first_log - second_log), axis=-1))
 
 
-@transform_and_run
 def test_compatibility():
     # Input:  true (y_true) and predicted (y_pred) tensors
     y_true = jnp.array([[0.0, 1.0], [0.0, 0.0]])

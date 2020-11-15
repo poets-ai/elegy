@@ -14,12 +14,12 @@ very basic `Linear` and `MLP` modules which will seem very familiar:
 class Linear(elegy.Module):
     def __init__(self, n_in, n_out):
         super().__init__()
-        self.w = elegy.get_parameter(
+        self.w = self.add_parameter(
             "w",
             [x.shape[-1], self.n_out],
             initializer=elegy.initializers.RandomUniform(),
         )
-        self.b = elegy.get_parameter("b", [n_out], initializer=elegy.initializers.RandomUniform())
+        self.b = self.add_parameter("b", [n_out], initializer=elegy.initializers.RandomUniform())
 
     def call(self, x):
         return jnp.dot(x, self.w) + self.b
@@ -45,7 +45,7 @@ or other submodules in the `__init__` method, and use them during the `call` (fo
 Keras users might complain that if we do things this way we loose the ability to do 
 shape inference, but don't worry, we will fix that latter.
 
-Fow now it is important to notice that here we use our first hook: `get_parameter`.
+Fow now it is important to notice that here we use our first hook: `add_parameter`.
 
 ### Elegy Hooks
 Hooks are a way in which we can manage state while preserving functional purity (in the end).
@@ -55,16 +55,14 @@ other areas like web development have proven valuable, React Hooks being a recen
 In Elegy we have the following list of hooks:
 
 
-| Hook            | Description                                                                                                     |
-| --------------- | --------------------------------------------------------------------------------------------------------------- |
-| `get_parameter` | Gives us access to a trainable parameter.                                                                       |
-| `get_state`     | Gives us access to some state. This is used in layers like `BatchNormalization` and in most of the metrics.     |
-| `set_state`     | Lets us update a state. When used in conjunction with `get_state` it lets us express an iterative computation. |
-| `next_rng_key`  | Gives us access to a unique `PRNGKey` we can pass to functions like `jax.random.uniform` and friends.           |
-| `is_training`   | Tells us whether training is currently happening or not.                                                       |
-| `add_loss`      | Lets us declare a loss in some intermediate layer.                                                              |
-| `add_metric`    | Lets us declare a metric in some intermediate layer.                                                            |
-| `add_summary`   | Lets us declare a summary in some intermediate layer.                                                           |
+| Hook                 | Description                                                                                           |
+| -------------------- | ----------------------------------------------------------------------------------------------------- |
+| `self.add_parameter` | Gives us access to trainable and non-trainable parameters.                                            |
+| `elegy.add_loss`     | Lets us declare a loss from some intermediate module.                                                 |
+| `elegy.add_metric`   | Lets us declare a metric in some intermediate module.                                                 |
+| `elegy.add_summary`  | Lets us declare a summary in some intermediate module.                                                |
+| `elegy.training`     | Tells us whether training is currently happening or not.                                              |
+| `elegy.next_rng_key` | Gives us access to a unique `PRNGKey` we can pass to functions like `jax.random.uniform` and friends. |
 
 !!! Note
     If you use existing `Module`s you might not need to worry much about these hooks, but keep them in mind
@@ -89,12 +87,12 @@ class Linear(elegy.Module):
         self.n_out = n_out
 
     def call(self, x):
-        w = elegy.get_parameter(
+        w = self.add_parameter(
             "w",
             [x.shape[-1], self.n_out],
             initializer=elegy.initializers.RandomUniform(),
         )
-        b = elegy.get_parameter("b", [self.n_out], initializer=jnp.zeros)
+        b = self.add_parameter("b", [self.n_out], initializer=jnp.zeros)
 
         return jnp.dot(x, w) + b
 
@@ -108,7 +106,7 @@ class MLP(elegy.Module):
         return x
 ```
 
-What happened here? Lets decompose it into two parts. First we moved the `get_parameter` definitions
+What happened here? Lets decompose it into two parts. First we moved the `add_parameter` definitions
 on the `Linear` module to the `call` method:
 
 ```python hl_lines="7 8 9 10 11"
@@ -118,12 +116,12 @@ class Linear(elegy.Module):
         self.n_out = n_out
 
     def call(self, x):
-        w = elegy.get_parameter(
+        w = self.add_parameter(
             "w",
             [x.shape[-1], self.n_out],
             initializer=elegy.initializers.RandomUniform(),
         )
-        b = elegy.get_parameter("b", [self.n_out], initializer=jnp.zeros)
+        b = self.add_parameter("b", [self.n_out], initializer=jnp.zeros)
 
         return jnp.dot(x, w) + b
 ```
@@ -180,60 +178,6 @@ def call(self, x):
     return x
 ```
 
-### init & apply
-This functional freedom inside Modules comes at a cost outside of them
-which is that you cannot call the top-level module directly. If you try to run this code:
-
-```python
-x = np.random.uniform(size=(15, 3))
-mlp = MLP()
-y = mlp(x)
-```
-
-You will get the following error:
-
-> ValueError: Cannot execute `call` outside of a `elegy.context`
-
-In practice this means that you will have to use the methods `init` and `apply`
-to manage your modules:
-
-```python
-x = np.random.uniform(size=(15, 3))
-mlp = MLP()
-rngs = elegy.PRNGSequence(42)
-mlp.init(rng=next(rngs))(x)
-y_pred, ctx = mlp.apply(rng=next(rngs))(x)
-```
-
-A lot is happening here so lets unpack it. First we used `Module.init(...)` and passed
-it an `rng` key. 
-
-```python hl_lines="4"
-x = np.random.uniform(size=(15, 3))
-mlp = MLP()
-rngs = elegy.PRNGSequence(42)
-mlp.init(rng=next(rngs))(x)
-y_pred, ctx = mlp.apply(rng=next(rngs))(x)
-```
-
-This key is necessary because `Linear` uses `elegy.initializers.RandomUniform`
-which requires a random key to initialize our weights. `init` takes in some parameters and
-returns callable which expect the same arguments as `call` and will initialize our module. 
-Next we use `Module.apply(...)` very similarly but this time we get back some predictions and
-a context:
-
-```python hl_lines="5"
-x = np.random.uniform(size=(15, 3))
-mlp = MLP()
-rngs = elegy.PRNGSequence(42)
-mlp.init(rng=next(rngs))(x)
-y_pred, ctx = mlp.apply(rng=next(rngs))(x)
-```
-
-Right now we won't use this context object but its useful to know that this object will
-collect most of the information given by hooks like `get_parameter`, `get_state`, `add_loss`,
-`add_metric`, etc.
-
 ### Hooks Preserve References
 In our `MLP` class we where able to create the `Linear` modules at their call site, this
 simplified our code a lot but we've seem to lost the reference to these modules. Having 
@@ -244,13 +188,14 @@ and use it separately like when using the decoder of a VAE by itself to generate
 Because of this, Elegy actually assigns all submodules, parameters, and states as properties
 of the module:
 
-```python hl_lines="5 7"
+```python hl_lines="5 8"
 x = np.random.uniform(size=(15, 3))
 mlp = MLP()
-rngs = elegy.PRNGSequence(42)
-mlp.init(rng=next(rngs))(x)
+
+mlp(x)
 linear, linear_1, linear_2 = mlp.linear, mlp.linear_1, mlp.linear_2
-y_pred, ctx = mlp.apply(rng=next(rngs))(x)
+
+y_pred = mlp(x)
 assert linear is mlp.linear and linear_1 is mlp.linear_1 and linear_2 is mlp.linear_2
 ```
 As you see we were able to access all the linear layer references. More over, we verified that
@@ -258,116 +203,103 @@ these reference don't change during execution. Each submodule gets assigned to a
 a unique field name based on its class name and order of creation. You can
 customize this name by using the `name` argument available in the `Module`'s constructor.
 
-### Managing State
-
-A big theme in Jax is that state and computation are separate, this is a requirement
-because in order for combinators like `jax.grad` and `jax.jit` to work you need pure functions,
-and pure functions usually require you to extract state and turn it into an input. To achieve this
-we will use additional feature from `init` and `apply` that where created for this purpose:
-
-```python hl_lines="4 5"
-x = np.random.uniform(size=(15, 3))
-mlp = MLP()
-rngs = elegy.PRNGSequence(42)
-parameters, states = mlp.init(rng=next(rngs))(x)
-y_pred, ctx = mlp.apply(parameters=parameters, states=states, rng=next(rngs))(x)
-```
-
-The first thing is that `init` actually returns the initial `parameters` and `states`,
-these are dictionaries whose structure has a 1-to-1 correspondence with the structure of 
-the network. The second is that `apply` accepts these parameters and states as arguments. 
-This is a step in the right direction since now our state is externalized.
-
 ### Low-level Training Loop
 
-Using the previous plus regular jax we can actually implement a basic training loop
-for our module. We will go ahead and show the solution and explain it afterwards:
+A big theme in Jax is that state and computation are separate, this is a requirement
+because in order for combinators like `jax.grad` and `jax.jit` to work you need pure functions. 
+Elegy as you've seen is object oriented so additional effort ir required to properly convert all 
+the global states and `Module` parameters an inputs to a function so Jax can track them. To achieve 
+Elegy implements its own `jit` and `value_and_grad` function wrappers that handle this for you.
+
+Lets create a low level training loop using the previous definition `MLP` along with these functions:
 
 ```python
-def loss(parameters, rng, x, y):
-    y_pred, ctx = mlp.apply(parameters=parameters, states=states, rng=rng, training=True)(x)
-    return jnp.mean(jnp.square(y - y_pred))
-
-
-@jax.jit
-def update(parameters, rng, x, y):
-    gradients = jax.grad(loss)(parameters, rng, x, y)
-    parameters = jax.tree_multimap(
-        lambda p, g: p - 0.001 * g, parameters, gradients
-    )
-    return parameters
-
-
 x = np.random.uniform(size=(15, 3))
 y = np.random.uniform(size=(15, 1))
 mlp = MLP()
-rngs = elegy.PRNGSequence(42)
-parameters, states = mlp.init(rng=next(rngs))(x)
 
-for step in range(1000):
-    parameters = update(parameters, next(rngs), x, y)
-
-mlp.set_parameters(parameters)
-```
-
-Here we created the functions `loss` and `update`, plus a minimal training loop.
-In order to for us to be able to calculate gradients of the loss with respect
-to the parameters we need for `loss` to take them as an argument along with the 
-inputs `x` and labels `y`:
-
-```python hl_lines="1 8"
-def loss(parameters, rng, x, y):
-    y_pred, ctx = mlp.apply(parameters=parameters, states=states, rng=rng, training=True)(x)
+def loss_fn(x, y):
+    y_pred = mlp(x)
     return jnp.mean(jnp.square(y - y_pred))
 
-
-@jax.jit
-def update(parameters, rng, x, y):
-    gradients = jax.grad(loss)(parameters, rng, x, y)
-    parameters = jax.tree_multimap(
-        lambda p, g: p - 0.001 * g, parameters, gradients
+def update(x, y):
+    loss, gradients = elegy.value_and_grad(loss_fn, modules=mlp)(x, y)
+    parameters = mlp.get_parameters(trainable=True)
+    new_parameters = jax.tree_multimap(
+        lambda p, g: p - 0.01 * g, parameters, gradients
     )
-    return parameters
-```
 
-Note that `grad` by default calculate the gradient of the function
-with respect to the first argument, which in this case is a structure
-with all the parameters. Because we are using `jax.jit` we also require
-that any desired changes propagates as outputs:
+    mlp.set_parameters(new_parameters)
 
-```python hl_lines="7 12"
-def loss(parameters, rng, x, y):
-    y_pred, ctx = mlp.apply(parameters=parameters, states=states, rng=rng, training=True)(x)
-    return jnp.mean(jnp.square(y - y_pred))
+    return loss
 
-
-@jax.jit
-def update(parameters, rng, x, y):
-    gradients = jax.grad(loss)(parameters, rng, x, y)
-    parameters = jax.tree_multimap(
-        lambda p, g: p - 0.001 * g, parameters, gradients
-    )
-    return parameters
-```
-
-The strategy is to iteratively update the parameters of the
-network by feeding them as inputs and reassigning them after
-the output.
-
-```python hl_lines="7 9"
-x = np.random.uniform(size=(15, 3))
-y = np.random.uniform(size=(15, 1))
-mlp = MLP()
-parameters, states = mlp.init(rng=next(rngs))(x)
+update_jit = elegy.jit(update, modules=mlp)
 
 for step in range(1000):
-    parameters = update(parameters, next(rngs), x, y)
-
-mlp.set_parameters(parameters)
+    loss = update_jit(x, y)
+    print(step, loss)
 ```
 
-Note that once we are done training we can actually insert these learned parameters
-back into our module objects by using `set_parameters`.
+Here we created the functions `loss_fn` and `update`, plus a minimal training loop.
+Loss `loss_fn` calculate the Mean Square Error while `update` uses `value_and_grad` to calculate the gradient
+of the loss with respect to the trainable parameters of `mlp`.
+
+```python hl_lines="2"
+def update(x, y):
+    loss, gradients = elegy.value_and_grad(loss_fn, modules=mlp)(x, y)
+    parameters = mlp.get_parameters(trainable=True)
+    new_parameters = jax.tree_multimap(
+        lambda p, g: p - 0.01 * g, parameters, gradients
+    )
+
+    mlp.set_parameters(new_parameters)
+
+    return loss
+```
+
+After that we just use `tree_multimap` to implement Gradient Descent 
+and get our `new_parameters` and then use the `set_parameters` method our 
+`Module` to update its state.
+
+```python hl_lines="4 5 6 8"
+def update(x, y):
+    loss, gradients = elegy.value_and_grad(loss_fn, modules=mlp)(x, y)
+    parameters = mlp.get_parameters(trainable=True)
+    new_parameters = jax.tree_multimap(
+        lambda p, g: p - 0.01 * g, parameters, gradients
+    )
+
+    mlp.set_parameters(new_parameters)
+
+    return loss
+```
+
+Having our update function we can use `elegy.jit` to create
+an optimized version of our computation and create a minimal
+training loop.
+
+```python hl_lines="1"
+update_jit = elegy.jit(update, modules=mlp)
+
+for step in range(1000):
+    loss = update_jit(x, y)
+    print(step, loss)
+```
+
+Notice that even though we are jitting `update` which has the `set_parameters` side effect
+(normally forbidden in Jax), learning is happening because `update_jit` automatically keeps track
+of changes to the parameters of `mlp` and updates them for us. Something similar is done 
+in `elegy.value_and_grad` as you saw previously.
+
+!!! Note
+    Elegy has 2 types states: module state for the parameters of
+    models and global state where Elegy keeps track of certain variables
+    like an RNG for convenience. Elegy's `jit` behaves just like its
+    Jax counterpart except that its aware of the changes in state such that:
+
+    * Jax properly recompiles if something changes.
+    * The jitted function behaves *similar* to its eager version in that it propagates changes in state inwards and outwards (this only applies to Elegy states, not arbitrary side effects).
+
 
 ### High Level Equivalent
 

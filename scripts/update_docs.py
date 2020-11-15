@@ -62,6 +62,7 @@ with open("mkdocs.yml", "w") as f:
 
 template = """
 # {{name_path}}
+
 ::: {{module_path}}
     selection:
         inherited_members: true

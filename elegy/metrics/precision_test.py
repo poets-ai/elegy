@@ -5,11 +5,9 @@ import tensorflow.keras as tfk
 import numpy as np
 
 import elegy
-from elegy.testing_utils import transform_and_run
 
 
 class PrecisionTest(TestCase):
-    @transform_and_run
     def test_compatibility(self):
 
         y_true = (np.random.uniform(0, 1, size=(5, 6, 7)) > 0.5).astype(np.float32)
@@ -52,7 +50,7 @@ class PrecisionTest(TestCase):
             ),
         )
 
-    @transform_and_run
+    #
     def test_cummulative(self):
         tm = tfk.metrics.Precision(thresholds=0.3)
         em = elegy.metrics.Precision(threshold=0.3)

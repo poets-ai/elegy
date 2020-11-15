@@ -31,8 +31,8 @@ __all__ = [
     "mean_percentage_absolute_error",
     "MeanSquaredError",
     "mean_squared_error",
-    "MeanSquaredLogarithmicError"
-    "mean_squared_logarithmic_error"
+    "MeanSquaredLogarithmicError",
+    "mean_squared_logarithmic_error",
     "SparseCategoricalCrossentropy",
     "sparse_categorical_crossentropy",
 ]

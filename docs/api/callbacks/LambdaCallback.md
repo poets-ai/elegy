@@ -1,5 +1,6 @@
 
 # elegy.callbacks.LambdaCallback
+
 ::: elegy.callbacks.lambda_callback.LambdaCallback
     selection:
         inherited_members: true

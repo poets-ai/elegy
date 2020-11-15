@@ -4,8 +4,9 @@ import typing as tp
 import haiku as hk
 import numpy as np
 
-from elegy import utils, hooks
-from elegy.module import Module, LOCAL, Context
+from elegy import utils
+from elegy.module import Module, LOCAL, LocalContext, add_summary, get_module
+from elegy import module
 
 
 def sequential(*layers: tp.Callable[..., tp.Any]) -> tp.Callable[..., tp.Any]:
@@ -40,36 +41,21 @@ def sequential(*layers: tp.Callable[..., tp.Any]) -> tp.Callable[..., tp.Any]:
 
     def call(inputs, *args, **kwargs):
 
-        if LOCAL.contexts:
-            context: Context = LOCAL.contexts[-1]
+        out = inputs
+        for i, layer in enumerate(layers):
+            if i == 0:
+                out = layer(out, *args, **kwargs)
+            else:
+                out = layer(out)
 
-            if not context.module_c:
-                raise ValueError(
-                    "Cannot execute `sequential` outside of a module's `call` or `init`."
+            if not isinstance(layer, Module):
+                name = (
+                    layer.__name__
+                    if hasattr(layer, "__name__")
+                    else layer.__class__.__name__
                 )
-
-            module: Module = context.module_c[-1]
-
-            out = inputs
-            for i, layer in enumerate(layers):
-                if i == 0:
-                    out = layer(out, *args, **kwargs)
-                else:
-                    out = layer(out)
-
-                if not isinstance(layer, Module):
-                    name = (
-                        layer.__name__
-                        if hasattr(layer, "__name__")
-                        else layer.__class__.__name__
-                    )
-                    hooks.add_summary(name, out)
-            return out
-
-        else:
-            raise ValueError(
-                "Cannot execute `sequential` outside of an `elegy.context`"
-            )
+                add_summary(name, out)
+        return out
 
     return call
 
@@ -103,7 +89,6 @@ class Sequential(Module):
     def __init__(
         self, layers: tp.Callable[[], tp.Iterable[tp.Callable[..., tp.Any]]], **kwargs
     ):
-        super().__init__(**kwargs)
         self.layers = tuple(layers())
 
         # set signature of call to the signature of of the first layer
@@ -115,6 +100,7 @@ class Sequential(Module):
             return current_call(*args, **kwargs)
 
         self.call = call
+        super().__init__(**kwargs)
 
     def call(self, *args, **kwargs):
         """Connects all layers. *args and **kwargs are passed to the first layer."""

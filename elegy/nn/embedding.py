@@ -2,7 +2,6 @@
 
 """Modules for performing embedding lookups in Haiku."""
 
-from elegy import hooks
 import enum
 from typing import Optional, Union
 
@@ -90,7 +89,7 @@ class Embedding(Module):
                     f"{embed_dim} was not consistent with its shape "
                     f"{embedding_matrix.shape}."
                 )
-            self.embeddings = hooks.get_parameter(
+            self.embeddings = self.add_parameter(
                 "embeddings",
                 embedding_matrix.shape,
                 initializer=lambda _, __: embedding_matrix,
@@ -100,7 +99,7 @@ class Embedding(Module):
             assert vocab_size is not None
 
             w_init = w_init or initializers.TruncatedNormal()
-            self.embeddings = hooks.get_parameter(
+            self.embeddings = self.add_parameter(
                 "embeddings", [vocab_size, embed_dim], initializer=w_init
             )
 

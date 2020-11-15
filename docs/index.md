@@ -10,9 +10,9 @@
 
 -----------------
 
-_Elegy is a Neural Networks framework based on Jax inspired by Keras and Haiku._  
+_Elegy is a Neural Networks framework based on Jax inspired by Keras._  
 
-Elegy implements the Keras API but makes changes to play better with Jax and gives more flexibility around [losses and metrics](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/), it also ports Haiku's excellent [module system](https://poets-ai.github.io/elegy/guides/module-system/) and makes it easier to use. Elegy is in an early stage, feel free to send us your feedback!
+Elegy implements the Keras API but makes changes to play better with Jax and gives more flexibility around [losses and metrics](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/) and excellent [module system](https://poets-ai.github.io/elegy/guides/module-system/) that makes it super easy to use. Elegy is in an early stage, feel free to send us your feedback!
 
 #### Main Features
 
@@ -108,8 +108,8 @@ class Linear(elegy.Module):
         self.units = units
 
     def call(self, x):
-        w = elegy.get_parameter("w", [x.shape[-1], self.units], initializer=jnp.ones)
-        b = elegy.get_parameter("b", [self.units], initializer=jnp.ones)
+        w = self.add_parameter("w", [x.shape[-1], self.units], initializer=jnp.ones)
+        b = self.add_parameter("b", [self.units], initializer=jnp.ones)
 
         return jnp.dot(x, w) + b
 ```
@@ -150,5 +150,6 @@ version = {0.2.2},
 year = {2020},
 }
 ```
+
 
 Where the current *version* may be retrieved either from the `Release` tag or the file [elegy/\_\_init\_\_.py](https://github.com/poets-ai/elegy/blob/master/elegy/__init__.py) and the *year* corresponds to the project's release year.

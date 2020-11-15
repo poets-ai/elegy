@@ -1,5 +1,6 @@
 
 # elegy.losses.Loss
+
 ::: elegy.losses.loss.Loss
     selection:
         inherited_members: true
