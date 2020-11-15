@@ -43,17 +43,6 @@ class BinaryAccuracy(Mean):
     """
     Calculates how often predictions matches binary labels.
 
-    This metric creates two local variables, `total` and `count` that are used to
-    compute the frequency with which `y_pred` matches `y_true`. This frequency is
-    ultimately returned as `binary accuracy`: an idempotent operation that simply
-    divides `total` by `count`.
-    If `sample_weight` is `None`, weights default to 1.
-    Use `sample_weight` of 0 to mask values.
-    Args:
-        name (str): (Optional) string name of the metric instance.
-        dtype (np.dtype): (Optional) data type of the metric result.
-        threshold (float): (Optional) Float representing the threshold for deciding
-            whether prediction values are 1 or 0.
     Standalone usage:
     ```python
     m = elegy.metrics.BinaryAccuracy()
@@ -84,7 +73,7 @@ class BinaryAccuracy(Mean):
         self, threshold: float = 0.5, on: tp.Optional[types.IndexLike] = None, **kwargs
     ):
         """
-        Creates a `CategoricalAccuracy` instance.
+        Creates a `BinaryAccuracy` instance.
 
         Arguments:
             threshold: Float representing the threshold for deciding whether

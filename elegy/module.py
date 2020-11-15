@@ -220,6 +220,9 @@ class Module(metaclass=ModuleMeta):
     """
     Basic Elegy Module. Its a thin wrapper around `hk.Module` that
     add custom functionalities related to Elegy.
+
+    Attributes:
+        initialized: Whether or not the module is initialized.
     """
 
     name: str
@@ -234,13 +237,12 @@ class Module(metaclass=ModuleMeta):
     __all__ = [
         "__init__",
         "call",
-        "init",
-        "apply",
-        "reset",
+        "add_parameter",
         "get_parameters",
         "set_parameters",
-        "set_states",
-        "submodules",
+        "reset",
+        "init",
+        "initialized",
     ]
 
     def __init__(self, name: tp.Optional[str] = None, dtype: np.dtype = jnp.float32):
@@ -264,7 +266,16 @@ class Module(metaclass=ModuleMeta):
         self._initialized = False
         self._trainable = True
 
+        _init = self.init
+
+        def init(*args, **kwargs):
+            return _init(*args, **kwargs)
+
+        self.init = init
+
+        utils.wraps(self.call)(self.init)
         utils.wraps(self.call)(self)
+
         self.jit = jit(self)
         self.init_jit = jit(self.init, modules=self)
 
@@ -317,9 +328,9 @@ class Module(metaclass=ModuleMeta):
 
             return outputs
 
-    def __init_subclass__(cls, *args, **kwargs):
-        super().__init_subclass__(*args, **kwargs)
-        utils.wraps(cls.call)(cls.init)
+    # def __init_subclass__(cls, *args, **kwargs):
+    #     super().__init_subclass__(*args, **kwargs)
+    #     utils.wraps(cls.call)(cls.init)
 
     @abstractmethod
     def call(self, *args, **kwargs):
@@ -334,10 +345,7 @@ class Module(metaclass=ModuleMeta):
 
     def init(self, *args, **kwargs) -> None:
         """
-        Initializes the module.
-
-        Arguments:
-            x: sample inputs.
+        Initializes the module,
         """
 
         with init_context(can_update=False):
@@ -456,7 +464,7 @@ class Module(metaclass=ModuleMeta):
 
         tree_apply(f, self, values)
 
-    def get_states(self) -> tp.Dict[str, tp.Any]:
+    def _get_module_states(self) -> tp.Dict[str, tp.Any]:
         """
         Recursively collects a dictionary with the static (non-array) states of this module
         and all submodules within it.
@@ -473,7 +481,7 @@ class Module(metaclass=ModuleMeta):
         assert isinstance(params, tp.Dict)
         return params
 
-    def set_states(self, values: tp.Dict[str, tp.Any]) -> None:
+    def _set_module_states(self, values: tp.Dict[str, tp.Any]) -> None:
         """
         Recursively sets the states (non-arrays) of this module
         and all submodules within it given a dictionary with a corresponding
@@ -566,7 +574,7 @@ def add_summary(module_or_name: tp.Union[Module, str], value: np.ndarray) -> Non
     """
     A hook that lets you define a summary in the current module. Its primary
     use is to keep track of certain values as they flow through the network
-    so `Model.summary()` can show a representation of architecture.
+    so [`Model.summary`][elegy.model.model.Model.summary] can show a representation of architecture.
 
     ```python
     def call(self, x):
@@ -576,16 +584,9 @@ def add_summary(module_or_name: tp.Union[Module, str], value: np.ndarray) -> Non
         ...
     ```
 
-    The summaries will be aggregated by [`apply`][elegy.module.Module.apply]
-    if `get_summaries` is set to `True`, else this hook does nothing.
-
-    ```python
-    transformed_state = transform.apply(..., get_summaries=True, ...)
-    ```
-
     Arguments:
-        name: The name of the loss. If a summary with the same
-            `name` already exists a unique identifier will be generated.
+        module_or_name: The name of the summary or alternatively the module that this summary will represent.
+            If a summary with the same name already exists a unique identifier will be generated.
         value: The value for the summary.
     """
 
@@ -615,9 +616,6 @@ def add_loss(name: str, value: np.ndarray) -> None:
     elegy.add_loss("l2_regularization", 0.01 * jnp.mean(w ** 2))
     ```
 
-    The loss will be aggregated by [`Module.apply`][elegy.module.Module.apply]
-    and automatically handled by [`Model`][elegy.model.Model].
-
     Arguments:
         name: The name of the loss. If a `name` is repeated on
             different calls values will be added together.
@@ -643,9 +641,6 @@ def add_metric(name: str, value: np.ndarray) -> None:
     y = jax.nn.relu(x)
     elegy.add_metric("activation_mean", jnp.mean(y))
     ```
-
-    The metrics will be aggregated by [`Module.apply`][elegy.module.Module.apply]
-    and automatically handled by [`Model`][elegy.model.Model].
 
     Arguments:
         name: The name of the loss. If a metric with the same
@@ -952,7 +947,7 @@ def jit(
         assert isinstance(modules, list)
 
         states_tuple = utils.to_static(
-            tuple(FrozenDict(module.get_states()) for module in modules)
+            tuple(FrozenDict(module._get_module_states()) for module in modules)
         )
         statics = get_static_context()
         dynamics = get_dynamic_context()
