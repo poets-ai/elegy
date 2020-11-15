@@ -5,7 +5,7 @@ from elegy import module,nn
 
 
 class ResNetBlock(module.Module):
-    '''ResNet block'''
+    '''ResNet (identity) block'''
     def call(self, x, n_filters, strides=(1, 1)):
         x0 = x
         x  = nn.Conv2D(n_filters, (3,3), with_bias=False, stride=strides, dtype=self.dtype)(x)
@@ -19,6 +19,26 @@ class ResNetBlock(module.Module):
             x0 = nn.Conv2D(n_filters, (1,1), with_bias=False, stride=strides, dtype=self.dtype)(x0)
             x0 = nn.BatchNormalization(decay_rate=0.9, eps=1e-5)(x0)
         return jax.nn.relu(x0 + x)
+
+
+class BottleneckResNetBlock(module.Module):
+    '''ResNet Bottleneck block.'''
+    def call(self, x, n_filters, strides=(1, 1)):
+        x0 = x
+        x  = nn.Conv2D(n_filters, (1,1), with_bias=False, dtype=self.dtype)(x)
+        x  = nn.BatchNormalization(decay_rate=0.9, eps=1e-5)(x)
+        x  = jax.nn.relu(x)
+        x  = nn.Conv2D(n_filters, (3,3), with_bias=False, stride=strides, dtype=self.dtype)(x)
+        x  = nn.BatchNormalization(decay_rate=0.9, eps=1e-5)(x)
+        x  = jax.nn.relu(x)
+        x  = nn.Conv2D(n_filters*4, (1,1), with_bias=False, dtype=self.dtype)(x)
+        x  = nn.BatchNormalization(decay_rate=0.9, eps=1e-5, scale_init=jnp.zeros)(x)
+
+        if x0.shape != x.shape:
+            x0 = nn.Conv2D(n_filters*4, (1,1), with_bias=False, stride=strides, dtype=self.dtype)(x0)
+            x0 = nn.BatchNormalization(decay_rate=0.9, eps=1e-5)(x0)
+        return jax.nn.relu(x0 + x)
+
 
 
 class ResNet(module.Module):
@@ -41,7 +61,6 @@ class ResNet(module.Module):
         x       = jnp.mean(x, axis=(1, 2))
         x       = nn.Linear(1000, dtype=self.dtype)(x)
         x       = jnp.asarray(x, jnp.float32)
-        x       = jax.nn.log_softmax(x)
         return x
 
 
@@ -49,6 +68,22 @@ class ResNet18(ResNet):
     def __init__(self, *args, **kwargs):
         super().__init__(stages=[2,2,2,2], block_type=ResNetBlock, *args, **kwargs)
 
-class ResNet6(ResNet):
+class ResNet34(ResNet):
     def __init__(self, *args, **kwargs):
-        super().__init__(stages=[1,1,1,1], block_type=ResNetBlock, *args, **kwargs)
+        super().__init__(stages=[3,4,6,3], block_type=ResNetBlock, *args, **kwargs)
+
+class ResNet50(ResNet):
+    def __init__(self, *args, **kwargs):
+        super().__init__(stages=[3,4,6,3], block_type=BottleneckResNetBlock, *args, **kwargs)
+
+class ResNet101(ResNet):
+    def __init__(self, *args, **kwargs):
+        super().__init__(stages=[3,4,23,3], block_type=BottleneckResNetBlock, *args, **kwargs)
+
+class ResNet152(ResNet):
+    def __init__(self, *args, **kwargs):
+        super().__init__(stages=[3,8,36,3], block_type=BottleneckResNetBlock, *args, **kwargs)
+
+class ResNet200(ResNet):
+    def __init__(self, *args, **kwargs):
+        super().__init__(stages=[3,24,36,3], block_type=BottleneckResNetBlock, *args, **kwargs)
