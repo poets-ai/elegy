@@ -1,7 +1,6 @@
 from unittest import TestCase
 import elegy
 
-from elegy.testing_utils import transform_and_run
 import tensorflow.keras as tfk
 import numpy as np
 import jax.numpy as jnp
@@ -15,7 +14,7 @@ import jax.numpy as jnp
 
 
 class MeanAbsolutePercentageErrorTest(TestCase):
-    @transform_and_run
+    #
     def test_basic(self):
 
         y_true = np.random.random(size=(5, 6, 7))
@@ -28,7 +27,7 @@ class MeanAbsolutePercentageErrorTest(TestCase):
             ),
         )
 
-    @transform_and_run
+    #
     def test_cummulative(self):
 
         tm = tfk.metrics.MeanAbsolutePercentageError()

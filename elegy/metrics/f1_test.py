@@ -5,11 +5,10 @@ import tensorflow.keras as tfk
 import numpy as np
 
 import elegy
-from elegy.testing_utils import transform_and_run
 
 
 class F1Test(TestCase):
-    @transform_and_run
+    #
     def test_basic(self):
 
         result = elegy.metrics.F1()(
@@ -22,7 +21,7 @@ class F1Test(TestCase):
         )
         assert np.allclose(result, 0.666667)  # 2 * (0.5 / 1.5)
 
-    @transform_and_run
+    #
     def test_cummulative(self):
         em = elegy.metrics.F1(threshold=0.3)
         # 1st run
