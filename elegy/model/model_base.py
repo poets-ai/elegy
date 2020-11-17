@@ -44,7 +44,6 @@ class ModelBase(Module):
         self.test_fn_jit = elegy_jit(self.test_fn, modules=self)
         self.train_fn_jit = elegy_jit(self.train_fn, modules=self)
 
-
     def call(self, *args, **kwargs):
         return self.module(*args, **kwargs)
 
@@ -350,7 +349,7 @@ class ModelBase(Module):
         class_weight: tp.Optional[jnp.ndarray] = None,
     ):
 
-        with module.init_context(), module.training_context(
+        with module.init_context(can_update=False), module.training_context(
             training=True
         ), module.hooks_context():
             assert self.module is not None
