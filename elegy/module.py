@@ -889,6 +889,10 @@ def get_static_context() -> "StaticContext":
 def set_context(static: "StaticContext", dynamic: "DynamicContext"):
     LOCAL.set_from(static, dynamic)
 
+    def _grad_fn(parameters_tuple: tp.Tuple[tp.Dict, ...], *args, **kwargs):
+        assert isinstance(parameters_tuple, tuple)
+        assert isinstance(modules, list)
+
 
 # -------------------------------------------------------------
 # transforms
