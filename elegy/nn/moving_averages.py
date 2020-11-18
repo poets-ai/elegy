@@ -67,10 +67,10 @@ class ExponentialMovingAverage(module.Module):
     def initialize(self, value):
         """If uninitialized sets the average to ``zeros_like`` the given value."""
         self.add_parameter(
-            "hidden", value.shape, value.dtype, initializer=jnp.zeros, trainable=False
+            "hidden", value.shape, jnp.float32, initializer=jnp.zeros, trainable=False
         )
         self.add_parameter(
-            "average", value.shape, value.dtype, initializer=jnp.zeros, trainable=False
+            "average", value.shape, jnp.float32, initializer=jnp.zeros, trainable=False
         )
 
     def call(self, value, update_stats=True):
@@ -104,7 +104,7 @@ class ExponentialMovingAverage(module.Module):
 
         one = jnp.ones([], value.dtype)
         hidden = self.add_parameter(
-            "hidden", value.shape, value.dtype, initializer=jnp.zeros, trainable=False
+            "hidden", value.shape, jnp.float32, initializer=jnp.zeros, trainable=False
         )
         hidden = hidden * decay + value * (one - decay)
 
