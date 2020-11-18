@@ -276,8 +276,15 @@ class Module(metaclass=ModuleMeta):
         utils.wraps(self.call)(self.init)
         utils.wraps(self.call)(self)
 
+        self._jit_functions()
+
+    def _jit_functions(self):
         self.jit = jit(self)
         self.init_jit = jit(self.init, modules=self)
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self._jit_functions()
 
     @property
     def initialized(self) -> bool:
