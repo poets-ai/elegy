@@ -44,7 +44,6 @@ class ModelBase(Module):
         self.test_fn_jit = elegy_jit(self.test_fn, modules=self)
         self.train_fn_jit = elegy_jit(self.train_fn, modules=self)
 
-
     def call(self, *args, **kwargs):
         return self.module(*args, **kwargs)
 
