@@ -705,7 +705,7 @@ class Model(ModelBase):
             the model later.
         - The model parameters + states serialized into HDF5 as `{path}/parameters.h5`.
         - The states of the optimizer serialized with `pickle` as
-            as `{path}/optimizer_state.pkl`, allowing to resume training
+            as `{path}/optimizer_parameters.pkl`, allowing to resume training
             exactly where you left off. We hope to use HDF5 in the future
             but `optax` states is incompatible with `deepdish`.
 
@@ -732,6 +732,24 @@ class Model(ModelBase):
 
         path.mkdir(parents=True, exist_ok=True)
 
+        parameters = self.get_parameters()
+
+        if "optimizer" in parameters:
+            del parameters["optimizer"]
+
+        deepdish.io.save(path / "parameters.h5", parameters)
+
+        # optimizer parameters saved as a pickle because optax uses named tuples
+        # which are converted to regular tuples by deepdish when loading.
+        if include_optimizer and self.optimizer is not None:
+            optimizer_params = self.optimizer.get_parameters()
+            with open(path / "optimizer_parameters.pkl", "wb") as f:
+                pickle.dump(optimizer_params, f)
+        else:
+            optimizer_params = None
+
+        self.reset()
+
         try:
             path = path / "model.pkl"
             with open(path, "wb") as f:
@@ -739,9 +757,12 @@ class Model(ModelBase):
         except BaseException as e:
             print(f"Error occurred saving the model object at {path}\nContinuing....")
 
-        # self.full_state = original_state
+        if optimizer_params is not None:
+            parameters["optimizer"] = optimizer_params
 
-    def load(self, path: tp.Union[str, Path]) -> None:
+        self.set_parameters(parameters)
+
+    def load(self, path: tp.Union[str, Path], include_optimizer: bool = True) -> None:
         """
         Loads all weights + states from a folder structure.
 
@@ -756,11 +777,18 @@ class Model(ModelBase):
         if isinstance(path, str):
             path = Path(path)
 
-        model = load(path)
-        self.set_parameters(model.get_parameters())
+        parameters: tp.Dict = deepdish.io.load(path / "parameters.h5")
+
+        optimizer_params_path = path / "optimizer_parameters.pkl"
+
+        if include_optimizer and optimizer_params_path.exists():
+            with open(optimizer_params_path, "rb") as f:
+                parameters["optimizer"] = pickle.load(f)
+
+        self.set_parameters(parameters)
 
 
-def load(path: tp.Union[str, Path]) -> Model:
+def load(path: tp.Union[str, Path], include_optimizer: bool = True) -> Model:
     """
     Loads a model from disk.
 
@@ -795,5 +823,7 @@ def load(path: tp.Union[str, Path]) -> Model:
             model: Model = pickle.load(f)
         except BaseException as e:
             raise OSError(f"Could not load the model. Got exception: {e}")
+
+    model.load(path, include_optimizer=include_optimizer)
 
     return model
