@@ -35,13 +35,6 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
 
-    class Lambda(elegy.Module):
-        def __init__(self, f):
-            super().__init__()
-            self.f = f
-
-        def call(self, x):
-            return self.f(x)
 
     class MLP(elegy.Module):
         """Standard LeNet-300-100 MLP network."""
