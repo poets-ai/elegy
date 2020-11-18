@@ -349,7 +349,7 @@ class ModelBase(Module):
         class_weight: tp.Optional[jnp.ndarray] = None,
     ):
 
-        with module.init_context(), module.training_context(
+        with module.init_context(can_update=False), module.training_context(
             training=True
         ), module.hooks_context():
             assert self.module is not None
