@@ -1,8 +1,9 @@
-import elegy
-
+from unittest import TestCase
 
 import jax.numpy as jnp
-
+import tensorflow.keras as tfk
+import numpy as np
+import elegy
 
 # import debugpy
 
@@ -10,14 +11,32 @@ import jax.numpy as jnp
 # debugpy.listen(5679)
 # debugpy.wait_for_client()
 
+class MAETest(TestCase):
+    #
+    def test_basic(self):
 
-#
-def test_basic():
+        y_true = jnp.array([1, 1, 1, 1])
+        y_pred = jnp.array([0, 1, 1, 1])
 
-    mae = elegy.metrics.MeanAbsoluteError()
+        assert np.allclose(
+            elegy.metrics.MeanAbsoluteError()(y_true, y_pred),
+            tfk.metrics.MeanAbsoluteError()(y_true, y_pred)
+            )
 
-    result = mae(y_true=jnp.array([1, 1, 1, 1]), y_pred=jnp.array([0, 1, 1, 1]))
-    assert result == 0.25
+        y_true=jnp.array([1, 1, 1, 1])
+        y_pred=jnp.array([1, 0, 0, 0])
 
-    result = mae(y_true=jnp.array([1, 1, 1, 1]), y_pred=jnp.array([1, 0, 0, 0]))
-    assert result == 0.5
+        assert np.allclose(
+            elegy.metrics.MeanAbsoluteError()(y_true, y_pred),
+            tfk.metrics.MeanAbsoluteError()(y_true, y_pred)
+            )
+
+        y_true = (np.random.uniform(0, 1, size=(5, 6, 7)) > 0.5).astype(np.int32)
+        y_pred = np.random.uniform(0, 1, size=(5, 6, 7))
+
+        assert np.allclose(
+            tfk.metrics.MeanAbsoluteError()(y_true, y_pred),
+            elegy.metrics.MeanAbsoluteError()(
+                jnp.asarray(y_true), jnp.asarray(y_pred)
+            ),
+        )
