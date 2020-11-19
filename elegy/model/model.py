@@ -773,6 +773,7 @@ class Model(ModelBase):
 
         Arguments:
             path: path to a saved model's directory.
+            include_optimizer: If True, loads optimizer's state if available.
         """
         if isinstance(path, str):
             path = Path(path)
@@ -810,6 +811,7 @@ def load(path: tp.Union[str, Path], include_optimizer: bool = True) -> Model:
 
     Arguments:
         path: path to a saved model's directory.
+        include_optimizer: If True, loads optimizer's state if available.
 
     Raises:
         OSError: in case the model was not found or could not be
