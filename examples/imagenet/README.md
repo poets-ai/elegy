@@ -1,7 +1,9 @@
 ## Training ResNet on ImageNet
 
 Adapted from the [Flax](https://github.com/google/flax) library.
+
 This example currently runs only on one device.
+
 See `requirements.txt` for required packages, additional to Elegy.
 
 ***
@@ -40,4 +42,5 @@ Pretrained models can be loaded with `elegy.model.load('path/to/model/')`
 
 ***
 [1] He, Kaiming, et al. "Deep residual learning for image recognition." Proceedings of the IEEE conference on computer vision and pattern recognition. 2016.
+
 [2] Russakovsky, Olga, et al. "Imagenet large scale visual recognition challenge." International journal of computer vision 115.3 (2015): 211-252.

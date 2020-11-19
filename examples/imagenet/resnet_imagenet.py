@@ -1,4 +1,5 @@
 import os
+
 if "miniconda3/envs" in os.__file__:
     # specify the cuda location for XLA when working with conda environments
     os.environ["XLA_FLAGS"] = "--xla_gpu_cuda_data_dir=" + os.sep.join(
@@ -10,6 +11,7 @@ from absl import flags, app
 
 
 import jax, jax.numpy as jnp
+
 # importing tensorflow_datasets before performing any jax convolutions gives me a 'DNN Library not found' error later
 # workaround: do a dummy convolution before importing tfds
 _x0 = jnp.zeros((1, 1, 1, 1))
@@ -26,34 +28,58 @@ print("JAX version:", jax.__version__)
 print("Elegy version:", elegy.__version__)
 
 
-
-
 FLAGS = flags.FLAGS
 
-flags.DEFINE_enum('model',      default=None,
-                     enum_values=['ResNet18', 'ResNet34', 'ResNet50', 'ResNet101', 'ResNet152', 'ResNet200'], 
-                     help='Type of ResNet to train')
+flags.DEFINE_enum(
+    "model",
+    default=None,
+    enum_values=[
+        "ResNet18",
+        "ResNet34",
+        "ResNet50",
+        "ResNet101",
+        "ResNet152",
+        "ResNet200",
+    ],
+    help="Type of ResNet to train",
+)
 
-flags.DEFINE_string('output_dir', default=None, help='Directory to save model checkpoints and tensorboard log data')
-flags.DEFINE_integer('epochs', default=90, help='Number of epochs to train')
-flags.DEFINE_integer('batch_size', default=64, help='Input batch size')
-flags.DEFINE_integer('image_size', default=224, help='Image size in pixels')
-flags.DEFINE_string('dataset', default='imagenet2012:*.*.*', help='TFDS dataset name and version')
-flags.DEFINE_enum('dtype', default='float32', enum_values=['float16', 'float32'], help='Mixed precision or normal mode')
-flags.DEFINE_float('base_lr', default=0.1, help='SGD optimizer base learning rate')
-flags.DEFINE_float('momentum', default=0.9, help='SGD optimizer momentum')
-flags.DEFINE_bool('nesterov', default=True, help='SGD optimizer Nesterov mode')
-flags.DEFINE_float('L2_reg', default=1e-4, help='L2 weight regularization')
-flags.DEFINE_bool('cache', default=False, help='Whether to cache the data in RAM')
-flags.DEFINE_float('loss_scale', default=1.0, help='Loss scale for numerical stability when dtype=float16')
+flags.DEFINE_string(
+    "output_dir",
+    default=None,
+    help="Directory to save model checkpoints and tensorboard log data",
+)
+flags.DEFINE_integer("epochs", default=90, help="Number of epochs to train")
+flags.DEFINE_integer("batch_size", default=64, help="Input batch size")
+flags.DEFINE_integer("image_size", default=224, help="Image size in pixels")
+flags.DEFINE_string(
+    "dataset", default="imagenet2012:*.*.*", help="TFDS dataset name and version"
+)
+flags.DEFINE_enum(
+    "dtype",
+    default="float32",
+    enum_values=["float16", "float32"],
+    help="Mixed precision or normal mode",
+)
+flags.DEFINE_float("base_lr", default=0.1, help="SGD optimizer base learning rate")
+flags.DEFINE_float("momentum", default=0.9, help="SGD optimizer momentum")
+flags.DEFINE_bool("nesterov", default=True, help="SGD optimizer Nesterov mode")
+flags.DEFINE_float("L2_reg", default=1e-4, help="L2 weight regularization")
+flags.DEFINE_bool("cache", default=False, help="Whether to cache the data in RAM")
+flags.DEFINE_float(
+    "loss_scale",
+    default=1.0,
+    help="Loss scale for numerical stability when dtype=float16",
+)
 
-flags.mark_flag_as_required('model')
-flags.mark_flag_as_required('output_dir')
-
+flags.mark_flag_as_required("model")
+flags.mark_flag_as_required("output_dir")
 
 
 def main(argv):
-    assert len(argv)==1, 'Please specify arguments via flags. Use --help for instructions'
+    assert (
+        len(argv) == 1
+    ), "Please specify arguments via flags. Use --help for instructions"
 
     assert (
         getattr(elegy.nets.resnet, FLAGS.model, None) is not None
@@ -63,7 +89,6 @@ def main(argv):
         FLAGS.output_dir
     ), "Output directory already exists. Delete manually or specify a new one."
     os.makedirs(FLAGS.output_dir)
-
 
     # dataset
     dataset_builder = tfds.builder(FLAGS.dataset)
@@ -83,8 +108,12 @@ def main(argv):
         train=False,
         cache=FLAGS.cache,
     )
-    N_BATCHES_TRAIN = dataset_builder.info.splits["train"].num_examples // FLAGS.batch_size
-    N_BATCHES_VALID = dataset_builder.info.splits["validation"].num_examples // FLAGS.batch_size
+    N_BATCHES_TRAIN = (
+        dataset_builder.info.splits["train"].num_examples // FLAGS.batch_size
+    )
+    N_BATCHES_VALID = (
+        dataset_builder.info.splits["validation"].num_examples // FLAGS.batch_size
+    )
 
     # generator that converts tfds dataset batches to jax arrays
     def tfds2jax_generator(tf_ds):
@@ -93,9 +122,10 @@ def main(argv):
                 jnp.asarray(batch["label"])
             )
 
-
     # model and optimizer definition
-    def build_optimizer(lr, momentum, steps_per_epoch, n_epochs, nesterov, warmup_epochs=5):
+    def build_optimizer(
+        lr, momentum, steps_per_epoch, n_epochs, nesterov, warmup_epochs=5
+    ):
         cosine_schedule = optax.cosine_decay_schedule(
             1, decay_steps=n_epochs * steps_per_epoch, alpha=1e-10
         )
@@ -110,20 +140,24 @@ def main(argv):
         optimizer = optax.chain(optimizer, optax.scale_by_schedule(schedule))
         return optimizer
 
-
     module = getattr(elegy.nets.resnet, FLAGS.model)(dtype=FLAGS.dtype)
     model = elegy.Model(
         module,
         loss=[
-            elegy.losses.SparseCategoricalCrossentropy(from_logits=True, weight=FLAGS.loss_scale),
+            elegy.losses.SparseCategoricalCrossentropy(
+                from_logits=True, weight=FLAGS.loss_scale
+            ),
             elegy.regularizers.GlobalL2(FLAGS.L2_reg / 2 * FLAGS.loss_scale),
         ],
         metrics=elegy.metrics.SparseCategoricalAccuracy(),
         optimizer=build_optimizer(
-            FLAGS.base_lr / FLAGS.loss_scale, FLAGS.momentum, N_BATCHES_TRAIN, FLAGS.epochs, FLAGS.nesterov
+            FLAGS.base_lr / FLAGS.loss_scale,
+            FLAGS.momentum,
+            N_BATCHES_TRAIN,
+            FLAGS.epochs,
+            FLAGS.nesterov,
         ),
     )
-
 
     # training
     model.fit(
@@ -141,6 +175,5 @@ def main(argv):
     )
 
 
-
-if __name__=='__main__':
+if __name__ == "__main__":
     app.run(main)
