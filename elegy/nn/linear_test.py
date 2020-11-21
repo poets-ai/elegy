@@ -11,8 +11,7 @@ class LinearTest(TestCase):
         x = np.random.uniform(-1, 1, size=(4, 3))
         linear = elegy.nn.Linear(5)
 
-        linear.init(rng=42)(x)
-        y_pred, context = linear.apply(get_summaries=True)(x)
+        linear(x)
+        y_pred = linear(x)
 
         assert y_pred.shape == (4, 5)
-        print(context)

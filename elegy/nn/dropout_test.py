@@ -1,4 +1,3 @@
-from elegy.testing_utils import transform_and_run
 from elegy import utils
 
 import jax.numpy as jnp
@@ -9,7 +8,7 @@ import elegy
 
 class DropoutTest(TestCase):
     def test_dropout_connects(self):
-        elegy.nn.Dropout(0.25).apply(rng=42)(jnp.ones([3, 3]), training=True)
+        elegy.nn.Dropout(0.25)(jnp.ones([3, 3]), training=True)
 
     def test_on_predict(self):
         class TestModule(elegy.Module):

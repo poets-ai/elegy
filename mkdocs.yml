@@ -20,7 +20,7 @@ nav:
     Metric: api/Metric.md
     Model: api/Model.md
     Module: api/Module.md
-    PRNGSequence: api/PRNGSequence.md
+    RNG: api/RNG.md
     add_loss: api/add_loss.md
     add_metric: api/add_metric.md
     add_summary: api/add_summary.md
@@ -35,16 +35,13 @@ nav:
       RemoteMonitor: api/callbacks/RemoteMonitor.md
       TensorBoard: api/callbacks/TensorBoard.md
       TerminateOnNaN: api/callbacks/TerminateOnNaN.md
-    get_parameter: api/get_parameter.md
-    get_state: api/get_state.md
-    hooks:
-      add_loss: api/hooks/add_loss.md
-      add_metric: api/hooks/add_metric.md
-      add_summary: api/hooks/add_summary.md
-      get_parameter: api/hooks/get_parameter.md
-      get_state: api/hooks/get_state.md
-      next_rng_key: api/hooks/next_rng_key.md
-      set_state: api/hooks/set_state.md
+    get_dynamic_context: api/get_dynamic_context.md
+    get_losses: api/get_losses.md
+    get_metrics: api/get_metrics.md
+    get_rng: api/get_rng.md
+    get_static_context: api/get_static_context.md
+    get_summaries: api/get_summaries.md
+    hooks_context: api/hooks_context.md
     initializers:
       Constant: api/initializers/Constant.md
       Orthogonal: api/initializers/Orthogonal.md
@@ -53,9 +50,12 @@ nav:
       TruncatedNormal: api/initializers/TruncatedNormal.md
       UniformScaling: api/initializers/UniformScaling.md
       VarianceScaling: api/initializers/VarianceScaling.md
+    is_training: api/is_training.md
+    jit: api/jit.md
     losses:
       BinaryCrossentropy: api/losses/BinaryCrossentropy.md
       CategoricalCrossentropy: api/losses/CategoricalCrossentropy.md
+      CosineSimilarity: api/losses/CosineSimilarity.md
       Loss: api/losses/Loss.md
       MeanAbsoluteError: api/losses/MeanAbsoluteError.md
       MeanAbsolutePercentageError: api/losses/MeanAbsolutePercentageError.md
@@ -64,6 +64,7 @@ nav:
       Reduction: api/losses/Reduction.md
       SparseCategoricalCrossentropy: api/losses/SparseCategoricalCrossentropy.md
       binary_crossentropy: api/losses/binary_crossentropy.md
+      cosine_similarity: api/losses/cosine_similarity.md
       mean_absolute_error: api/losses/mean_absolute_error.md
       mean_percentage_absolute_error: api/losses/mean_percentage_absolute_error.md
       mean_squared_error: api/losses/mean_squared_error.md
@@ -93,14 +94,17 @@ nav:
       recall: api/metrics/recall.md
       reduce: api/metrics/reduce.md
       sparse_categorical_accuracy: api/metrics/sparse_categorical_accuracy.md
-    model:
-      Model: api/model/Model.md
-      load: api/model/load.md
     module:
       Module: api/module/Module.md
+      add_loss: api/module/add_loss.md
+      add_metric: api/module/add_metric.md
+      add_summary: api/module/add_summary.md
+      next_rng_key: api/module/next_rng_key.md
       to_module: api/module/to_module.md
+    name_context: api/name_context.md
     next_rng_key: api/next_rng_key.md
     nn:
+      AvgPool: api/nn/AvgPool.md
       BatchNormalization: api/nn/BatchNormalization.md
       Conv1D: api/nn/Conv1D.md
       Conv2D: api/nn/Conv2D.md
@@ -113,6 +117,7 @@ nav:
       InstanceNormalization: api/nn/InstanceNormalization.md
       LayerNormalization: api/nn/LayerNormalization.md
       Linear: api/nn/Linear.md
+      MaxPool: api/nn/MaxPool.md
       Reshape: api/nn/Reshape.md
       Sequential: api/nn/Sequential.md
       sequential: api/nn/sequential.md
@@ -120,8 +125,12 @@ nav:
       GlobalL1: api/regularizers/GlobalL1.md
       GlobalL1L2: api/regularizers/GlobalL1L2.md
       GlobalL2: api/regularizers/GlobalL2.md
-    set_state: api/set_state.md
+    set_context: api/set_context.md
+    set_rng: api/set_rng.md
+    set_training: api/set_training.md
     to_module: api/to_module.md
+    training_context: api/training_context.md
+    value_and_grad: api/value_and_grad.md
 extra:
   search:
     language: en

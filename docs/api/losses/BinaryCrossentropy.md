@@ -1,5 +1,6 @@
 
 # elegy.losses.BinaryCrossentropy
+
 ::: elegy.losses.binary_crossentropy.BinaryCrossentropy
     selection:
         inherited_members: true

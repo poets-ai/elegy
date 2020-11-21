@@ -1,23 +1,18 @@
 # Implementation based on tf.keras.engine.training.py
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
-import re
-from elegy import types
+from elegy.model.model_base import ModelBase
+from elegy.utils import Mode
 import functools
-from elegy.module import (
-    ApplyCallable,
-    ApplyContext,
-    Module,
-    PRNGSequence,
-)
-from io import StringIO
 import json
 import logging
 import pickle
+import re
 import typing as tp
 from copy import copy
 from enum import Enum
 from functools import partial
+from io import StringIO
 from pathlib import Path
 
 import cloudpickle
@@ -25,17 +20,20 @@ import deepdish
 import jax
 import jax.numpy as jnp
 import numpy as np
-import toolz
 import optax
-from tabulate import tabulate
+import toolz
 import yaml
+from tabulate import tabulate
 
+from elegy import module as hooks
+from elegy import types
 from elegy.losses import loss_modes
 from elegy.metrics import metric_modes
+from elegy.module import RNG, LocalContext, Module
 
-from . import utils
-from .callbacks import Callback, CallbackList, History
-from .data import (
+from elegy import utils
+from elegy.callbacks import Callback, CallbackList, History
+from elegy.data import (
     DataHandler,
     map_append,
     map_structure,
@@ -43,17 +41,10 @@ from .data import (
     unpack_x_y_sample_weight,
 )
 
-
 __all__ = ["Model", "load"]
 
 
-class Mode(Enum):
-    predict = 1
-    test = 2
-    train = 3
-
-
-class Model:
+class Model(ModelBase):
     """
     `Model` is tasked with performing training, evaluation, and inference for a given
     `elegy.Module` or `haiku.Module`.
@@ -102,19 +93,19 @@ class Model:
     """
 
     # public fields
-    module: Module
-    optimizer_state: tp.Optional[optax.OptState]
-    initial_metrics_state: tp.Optional[tp.Dict]
-    run_eagerly: bool
+    # module: Module
+    # optimizer_state: tp.Optional[optax.OptState]
+    # initial_metrics_state: tp.Optional[tp.Dict]
+    # run_eagerly: bool
 
-    # private fields
-    loss_module: tp.Optional[Module]
-    metrics_module: tp.Optional[Module]
-    _optimizer: optax.GradientTransformation
-    _rngs: PRNGSequence
-    _parameters: tp.Optional[types.Parameters]
-    _states: tp.Optional[types.States]
-    _metrics_states: tp.Optional[tp.Dict]
+    # # private fields
+    # loss_module: tp.Optional[Module]
+    # metrics_module: tp.Optional[Module]
+    # _optimizer: optax.GradientTransformation
+    # _rngs: RNG
+    # _parameters: tp.Optional[types.Parameters]
+    # _states: tp.Optional[types.States]
+    # _metrics_states: tp.Optional[tp.Dict]
 
     __all__ = [
         "evaluate",
@@ -130,7 +121,6 @@ class Model:
         "train_on_batch",
         "full_state",
         "parameters",
-        "seed",
         "states",
     ]
 
@@ -141,12 +131,7 @@ class Model:
         metrics: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
         optimizer: tp.Optional[optax.GradientTransformation] = None,
         run_eagerly: bool = False,
-        parameters: tp.Optional[types.Parameters] = None,
-        states: tp.Optional[types.States] = None,
-        optimizer_state: tp.Optional[optax.OptState] = None,
-        metrics_states: tp.Optional[tp.Dict] = None,
-        initial_metrics_state: tp.Optional[tp.Dict] = None,
-        seed: tp.Union[np.ndarray, int] = 42,
+        **kwargs,
     ):
         """[summary]
 
@@ -177,355 +162,18 @@ class Model:
                 Running eagerly means that your model will be run step by step, like Python code, instead of
                 using Jax's `jit` to. Your model might run slower, but it should become easier for you to debug
                 it by stepping into individual layer calls.
-            parameters: A `haiku.Params` structure with the weights of the model.
-            states: A `haiku.State` structure with non-trainable parameters of the model.
-            optimizer_state:  A `optax.OptState` structure with states of the optimizer.
-            metrics_states: A `haiku.State` structure with the states of the metrics.
-            initial_metrics_state: A `haiku.State` structure with the initial states of the metrics.
-            seed: The initial random states of the model.
         """
-
-        self.module = module
-        self.loss_module = loss_modes.Losses(loss) if loss is not None else None
-        self.metrics_module = metric_modes.Metrics(metrics) if metrics else None
-        self._optimizer = optimizer if optimizer is not None else optax.adam(1e-3)
-        self._rngs = PRNGSequence(seed)
-        self._parameters = parameters
-        self._states = states
-        self._metrics_states = (
-            metrics_states if self.metrics_module is not None else None
+        super().__init__(
+            module=module,
+            loss=loss,
+            metrics=metrics,
+            optimizer=optimizer,
+            run_eagerly=run_eagerly,
+            **kwargs,
         )
-        self.optimizer_state = optimizer_state
-        self.initial_metrics_state = initial_metrics_state
-        self.run_eagerly = run_eagerly
-
-        utils.wraps(self.module)(self)
-
-    @property
-    def parameters(self) -> tp.Optional[types.Parameters]:
-        return self._parameters
-
-    @parameters.setter
-    def parameters(self, values: types.Parameters):
-        self.module.set_parameters(values)
-        self._parameters = values
-
-    @property
-    def states(self) -> tp.Optional[types.States]:
-        return self._states
-
-    @states.setter
-    def states(self, values: types.States):
-        self.module.set_states(values)
-        self._states = values
-
-    @property
-    def metrics_states(self) -> tp.Optional[types.States]:
-        return self._metrics_states
-
-    @metrics_states.setter
-    def metrics_states(self, values: types.States):
-        if self.metrics_module is not None:
-            self.metrics_module.set_states(values)
-            self._metrics_states = values
-        else:
-            raise ValueError("Cannot set metrics_states when metrics_module is None")
-
-    def reset_metrics(self, hard: bool = False):
-
-        if hard:
-            self.metrics_module.reset()
-            self._metrics_states = None
-            self.initial_metrics_state = None
-        elif self.initial_metrics_state is not None:
-            self.metrics_states = self.initial_metrics_state
 
     def __call__(self, *args, **kwargs):
         return self.module(*args, **kwargs)
-
-    def _maybe_initialize(
-        self,
-        mode: Mode,
-        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
-        sample_weight: tp.Optional[jnp.ndarray],
-        class_weight: tp.Optional[jnp.ndarray],
-    ):
-
-        # TODO(cgarciae): consider if maybe_jit can actually work else remove it
-        # maybe_jit = jax.jit if not self.run_eagerly else lambda x: x
-        maybe_jit = lambda x: x
-
-        if self.parameters is None or self.states is None:
-            x_args, x_kwargs = utils.get_input_args(x, training=True)
-
-            self.parameters, self.states = maybe_jit(
-                utils.inject_dependencies(self.module.init(rng=next(self._rngs)))
-            )(*x_args, **x_kwargs)
-
-        if mode == Mode.predict:
-            return
-
-        if self.metrics_module is not None and self.metrics_states is None:
-            context: ApplyContext
-
-            loss, (y_pred, context, logs) = maybe_jit(self._loss)(
-                parameters=self.parameters,
-                states=self.states,
-                rng=next(self._rngs),
-                x=x,
-                y=y,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                training=True,
-            )
-
-            _, self.metrics_states = maybe_jit(
-                self.metrics_module.init(rng=next(self._rngs))
-            )(
-                logs,
-                x=x,
-                y_true=y,
-                y_pred=y_pred,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                training=False,
-                parameters=self.parameters,
-                states=self.states,
-            )
-
-            self.initial_metrics_state = self.metrics_states
-
-        if mode == Mode.test:
-            return
-
-        if self.optimizer_state is None:
-            self.optimizer_state = maybe_jit(self._optimizer.init)(self.parameters)
-
-    def train_on_batch(
-        self,
-        x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        y: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
-        sample_weight: tp.Optional[np.ndarray] = None,
-        class_weight: tp.Optional[np.ndarray] = None,
-    ) -> tp.Dict[str, np.ndarray]:
-        """
-        Runs a single gradient update on a single batch of data.
-
-        Arguments:
-            x: Input data. It could be:
-
-                - A Numpy array (or array-like), or a iterable of arrays
-                    (in case the model has multiple inputs).
-                - A dict mapping input names to the corresponding arrays,
-                    if the model has named inputs.
-            y: Target data. Like the input data `x`, it could be either Numpy
-                array(s) or Jax array(s). It should be consistent with `x`
-                (you cannot have Numpy inputs and array targets, or inversely).
-            sample_weight: Optional array of the same length as x, containing
-                weights to apply to the model's loss for each sample. In the case of
-                temporal data, you can pass a 2D array with shape (samples,
-                sequence_length), to apply a different weight to every timestep of
-                every sample.
-            class_weight: Optional dictionary mapping class indices (integers) to a
-                weight (float) to apply to the model's loss for the samples from this
-                class during training. This can be useful to tell the model to "pay
-                more attention" to samples from an under-represented class.
-
-        Returns:
-            A `logs` dictionary of containing the main `loss` as well as all
-            other losses and metrics.
-
-        Raises:
-            ValueError: In case of invalid user-provided arguments.
-        """
-        self._maybe_initialize(
-            mode=Mode.train,
-            x=x,
-            y=y,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-        )
-
-        assert self.parameters is not None
-        assert self.states is not None
-        assert self.optimizer_state is not None
-
-        (
-            logs,
-            self.parameters,
-            self.states,
-            self.optimizer_state,
-            metrics_states,
-        ) = self._update(
-            x=x,
-            y=y,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            parameters=self.parameters,
-            states=self.states,
-            optimizer_state=self.optimizer_state,
-            metrics_states=self.metrics_states,
-            rng=next(self._rngs),
-        )
-
-        if metrics_states is not None:
-            self.metrics_states = metrics_states
-
-        # logs = jax.tree_map(np.asarray, logs)
-
-        return logs
-
-    def _update(
-        self,
-        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
-        sample_weight: tp.Optional[jnp.ndarray],
-        class_weight: tp.Optional[jnp.ndarray],
-        parameters: tp.Dict,
-        states: tp.Dict,
-        optimizer_state: optax.OptState,
-        metrics_states: tp.Optional[tp.Dict],
-        rng: jnp.ndarray,
-    ) -> tp.Tuple[
-        tp.Dict[str, jnp.ndarray],
-        tp.Dict,
-        tp.Dict,
-        optax.OptState,
-        tp.Optional[tp.Dict],
-    ]:
-        update_fn = self._update_no_jit if self.run_eagerly else self._update_jit
-
-        return update_fn(
-            x=x,
-            y=y,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            parameters=parameters,
-            states=states,
-            optimizer_state=optimizer_state,
-            metrics_states=metrics_states,
-            rng=rng,
-        )
-
-    def _update_no_jit(
-        self,
-        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
-        sample_weight: tp.Optional[jnp.ndarray],
-        class_weight: tp.Optional[jnp.ndarray],
-        parameters: tp.Dict,
-        states: tp.Dict,
-        optimizer_state: optax.OptState,
-        metrics_states: tp.Optional[tp.Dict],
-        rng: jnp.ndarray,
-    ) -> tp.Tuple[
-        tp.Dict[str, jnp.ndarray],
-        tp.Dict,
-        tp.Dict,
-        optax.OptState,
-        tp.Optional[tp.Dict],
-    ]:
-        net_rng, metrics_rng = jax.random.split(rng, num=2)
-
-        (loss, (y_pred, context, logs)), grads = jax.value_and_grad(
-            self._loss, has_aux=True
-        )(
-            parameters,
-            states=states,
-            rng=net_rng,
-            x=x,
-            y=y,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            training=True,
-        )
-
-        states = context.states
-
-        updates, optimizer_state = self._optimizer.update(
-            grads, optimizer_state, parameters
-        )
-        parameters = optax.apply_updates(parameters, updates)
-
-        if self.metrics_module is not None:
-            logs, metrics_context = utils.inject_dependencies(
-                self.metrics_module.apply(states=metrics_states, rng=metrics_rng)
-            )(
-                logs,
-                x=x,
-                y_true=y,
-                y_pred=y_pred,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                training=True,
-                parameters=parameters,
-                states=states,
-            )
-            metrics_states = metrics_context.states
-
-        return logs, parameters, states, optimizer_state, metrics_states
-
-    _update_jit = jax.jit(_update_no_jit, static_argnums=(0,))
-
-    def _loss(
-        self,
-        parameters: tp.Dict,
-        states: tp.Dict,
-        rng: jnp.ndarray,
-        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
-        sample_weight: tp.Optional[jnp.ndarray],
-        class_weight: tp.Optional[jnp.ndarray],
-        training: bool,
-    ):
-        rng, loss_rng = jax.random.split(rng, num=2)
-
-        y_pred, context = self._predict_no_jit(
-            training=training,
-            get_summaries=False,
-            x=x,
-            parameters=parameters,
-            states=states,
-            rng=rng,
-        )
-
-        states = context.states
-
-        logs, loss_context = (
-            self.loss_module.apply(rng=loss_rng)(
-                x=x,
-                y_true=y,
-                y_pred=y_pred,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                training=training,
-                parameters=parameters,
-                states=states,
-            )
-            if self.loss_module is not None
-            else ({}, None)
-        )
-
-        # calculate total loss
-        loss = sum(logs.values()) + sum(context.losses.values())
-
-        # add losses and metrics from hooks
-        if loss_context is not None:
-            logs.update(
-                {
-                    name.replace("losses/", ""): value
-                    for name, value in loss_context.metrics.items()
-                }
-            )
-
-        logs.update(context.losses)
-        logs.update(context.metrics)
-
-        # set total loss
-        logs["loss"] = loss
-
-        return loss, (y_pred, context, logs)
 
     def fit(
         self,
@@ -864,7 +512,7 @@ class Model:
                 List of callbacks to apply during training.
 
         See the discussion of `Unpacking behavior for iterator-like inputs` for
-         [`Model.fit`][elegy.model.Model.fit].
+        [`Model.fit`][elegy.model.model.Model.fit].
 
         Returns:
             A dictionary for mapping the losses and metrics names to the values obtained.
@@ -963,7 +611,7 @@ class Model:
                 List of callbacks to apply during training.
 
         See the discussion of `Unpacking behavior for iterator-like inputs` for
-        [`Model.fit`][elegy.model.Model.fit].
+        [`Model.fit`][elegy.model.model.Model.fit].
         Note that Model.predict uses the same interpretation rules as
         `Model.fit` and `Model.evaluate`, so inputs must be unambiguous for all
         three methods.
@@ -1042,279 +690,9 @@ class Model:
         else:
             raise ValueError("Expected `validation_freq` to be a list or int.")
 
-    def test_on_batch(
-        self,
-        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
-        sample_weight: tp.Optional[jnp.ndarray] = None,
-        class_weight: tp.Optional[jnp.ndarray] = None,
-    ) -> tp.Dict[str, jnp.ndarray]:
-        """
-        Test the model on a single batch of samples.
-
-        Arguments:
-            x: Input data. It could be:
-
-                - A Numpy array (or array-like), or a list
-                    of arrays (in case the model has multiple inputs).
-                - A dict mapping input names to the corresponding arrays, if
-                    the model has named inputs.
-            y: Target data. Like the input data `x`, it could be either Numpy
-                array(s) or Jax array(s).
-            sample_weight: Optional array of the same length as x, containing
-                weights to apply to the model's loss for each sample. In the case of
-                temporal data, you can pass a 2D array with shape (samples,
-                sequence_length), to apply a different weight to every timestep of
-                every sample.
-
-        Returns:
-            A `logs` dictionary of containing the main `loss` as well as all
-            other losses and metrics.
-        Raises:
-            ValueError: In case of invalid user-provided arguments.
-        """
-        self._maybe_initialize(
-            mode=Mode.test,
-            x=x,
-            y=y,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-        )
-
-        assert self.parameters is not None
-        assert self.states is not None
-
-        (logs, metrics_states) = self._test(
-            x=x,
-            y=y,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            parameters=self.parameters,
-            states=self.states,
-            metrics_states=self.metrics_states,
-            rng=next(self._rngs),
-        )
-
-        if metrics_states is not None:
-            self.metrics_states = metrics_states
-
-        # logs = jax.tree_map(np.asarray, logs)
-
-        return logs
-
-    def _test(
-        self,
-        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
-        sample_weight: tp.Optional[jnp.ndarray],
-        class_weight: tp.Optional[jnp.ndarray],
-        parameters: tp.Dict,
-        states: tp.Dict,
-        metrics_states: tp.Optional[tp.Dict],
-        rng: jnp.ndarray,
-    ) -> tp.Tuple[tp.Dict[str, jnp.ndarray], tp.Optional[tp.Dict],]:
-
-        test_fn = self._test_no_jit if self.run_eagerly else self._test_jit
-
-        return test_fn(
-            x=x,
-            y=y,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            parameters=parameters,
-            states=states,
-            metrics_states=metrics_states,
-            rng=rng,
-        )
-
-    def _test_no_jit(
-        self,
-        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None],
-        sample_weight: tp.Optional[jnp.ndarray],
-        class_weight: tp.Optional[jnp.ndarray],
-        parameters: tp.Dict,
-        states: tp.Dict,
-        metrics_states: tp.Optional[tp.Dict],
-        rng: jnp.ndarray,
-    ) -> tp.Tuple[tp.Dict[str, jnp.ndarray], tp.Optional[tp.Dict],]:
-        net_rng, metrics_rng = jax.random.split(rng, num=2)
-
-        loss, (y_pred, context, logs) = self._loss(
-            parameters,
-            states=states,
-            rng=net_rng,
-            x=x,
-            y=y,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            training=False,
-        )
-
-        if self.metrics_module is not None:
-            logs, metrics_context = utils.inject_dependencies(
-                self.metrics_module.apply(
-                    states=metrics_states, rng=metrics_rng, training=False
-                ),
-            )(
-                logs,
-                x=x,
-                y_true=y,
-                y_pred=y_pred,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                training=False,
-                __params=parameters,
-                __state=states,
-            )
-            metrics_states = metrics_context.states
-
-        return logs, metrics_states
-
-    _test_jit = jax.jit(_test_no_jit, static_argnums=(0,))
     # ----------------------------------------------------------------
-    # predict
+    # save
     # ----------------------------------------------------------------
-
-    def predict_on_batch(
-        self, x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]
-    ) -> tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]:
-        """
-        Returns predictions for a single batch of samples.
-
-        Arguments:
-            x: Input data. A Numpy/Jax array (or array-like), or possibly
-                nested python structure of dict, list, tuple that contain
-                arrays as leafs.
-
-        Returns:
-            Jax array(s) of predictions.
-
-        Raises:
-            ValueError: In case of mismatch between given number of inputs and
-                expectations of the model.
-        """
-        self._maybe_initialize(
-            mode=Mode.predict, x=x, y=None, sample_weight=None, class_weight=None
-        )
-
-        assert self.parameters is not None
-        assert self.states is not None
-
-        y_pred, context = self._predict(
-            False,  # training
-            False,  # get_summaries
-            x=x,
-            parameters=self.parameters,
-            states=self.states,
-            rng=next(self._rngs),
-        )
-
-        return y_pred
-
-    def _predict(
-        self,
-        training: bool,
-        get_summaries: bool,
-        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        parameters: tp.Dict,
-        states: tp.Dict,
-        rng: jnp.ndarray,
-    ) -> tp.Tuple[tp.Any, "ApplyContext"]:
-
-        predict_fn = self._predict_no_jit if self.run_eagerly else self._predict_jit
-
-        return predict_fn(
-            training,
-            get_summaries,
-            x=x,
-            parameters=parameters,
-            states=states,
-            rng=rng,
-        )
-
-    def _predict_no_jit(
-        self,
-        training: bool,
-        get_summaries: bool,
-        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-        parameters: tp.Dict,
-        states: tp.Dict,
-        rng: jnp.ndarray,
-    ) -> tp.Tuple[tp.Any, ApplyContext]:
-
-        x_args, x_kwargs = utils.get_input_args(x, training=training)
-
-        return utils.inject_dependencies(
-            self.module.apply(
-                parameters=parameters,
-                states=states,
-                rng=rng,
-                get_summaries=get_summaries,
-                training=training,
-            )
-        )(*x_args, **x_kwargs)
-
-    _predict_jit = jax.jit(_predict_no_jit, static_argnums=(0, 1, 2))
-
-    @property
-    def seed(self) -> np.ndarray:
-        """
-        Current random states of the model.
-        """
-        return self._rngs.key
-
-    @seed.setter
-    def seed(self, seed: tp.Union[np.ndarray, int]):
-        self._rngs = PRNGSequence(seed)
-
-    @property
-    def full_state(self) -> tp.Dict:
-        """"""
-
-        states: tp.Dict = {"seed": self.seed}
-
-        if self.parameters is not None:
-            states["parameters"] = self.parameters
-
-        if self.states is not None:
-            states["states"] = self.states
-
-        if self.metrics_states is not None:
-            states["metrics_states"] = self.metrics_states
-
-        if self.initial_metrics_state is not None:
-            states["initial_metrics_state"] = self.initial_metrics_state
-
-        if self.optimizer_state is not None:
-            states["optimizer_state"] = self.optimizer_state
-
-        return states
-
-    @full_state.setter
-    def full_state(self, states: tp.Dict):
-        self.seed = states["seed"]
-
-        if "parameters" in states:
-            self.parameters = states["parameters"]
-
-        if "states" in states:
-            self.states = states["states"]
-
-        if "metrics_states" in states:
-            self.metrics_states = states["metrics_states"]
-
-        if "initial_metrics_state" in states:
-            self.initial_metrics_state = states["initial_metrics_state"]
-
-        if "optimizer_state" in states:
-            self.optimizer_state = states["optimizer_state"]
-
-    def reset(self):
-        self.module.reset()
-        self.metrics_module.reset()
-        self.initial_metrics_state = None
-        self.optimizer_state = None
 
     def save(self, path: tp.Union[str, Path], include_optimizer: bool = True) -> None:
         """
@@ -1354,24 +732,6 @@ class Model:
 
         path.mkdir(parents=True, exist_ok=True)
 
-        states = self.full_state
-
-        original_state = copy(states)
-
-        states.pop("metrics_states", None)
-        states.pop("initial_metrics_state", None)
-
-        optimizer_state = states.pop("optimizer_state", None)
-
-        deepdish.io.save(path / "parameters.h5", states)
-
-        if include_optimizer and optimizer_state is not None:
-            with open(path / "optimizer_state.pkl", "wb") as f:
-                pickle.dump(optimizer_state, f)
-
-        # getting pickle errors
-        self.reset()
-
         try:
             path = path / "model.pkl"
             with open(path, "wb") as f:
@@ -1379,7 +739,7 @@ class Model:
         except BaseException as e:
             print(f"Error occurred saving the model object at {path}\nContinuing....")
 
-        self.full_state = original_state
+        # self.full_state = original_state
 
     def load(self, path: tp.Union[str, Path]) -> None:
         """
@@ -1396,178 +756,8 @@ class Model:
         if isinstance(path, str):
             path = Path(path)
 
-        states: tp.Dict = deepdish.io.load(path / "parameters.h5")
-
-        optimizer_state_path = path / "optimizer_state.pkl"
-
-        if optimizer_state_path.exists():
-            with open(optimizer_state_path, "rb") as f:
-                states["optimizer_state"] = pickle.load(f)
-
-        self.full_state = states
-
-    def summary(
-        self, x, depth: int = 2, tablefmt: str = "fancy_grid", **tablulate_kwargs
-    ):
-        """
-        Prints a summary of the network.
-
-        Arguments:
-            x: A sample of inputs to the network.
-            depth: The level number of nested level which will be showed.
-                Information about summaries from modules deeper than `depth`
-                will be aggregated together.
-            tablefmt: A string represeting the style of the table generated by
-                `tabulate`. See
-                [python-tabulate](https://github.com/astanin/python-tabulate)
-                for more options.
-            tablulate_kwargs: Additional keyword arguments passed to `tabulate`.
-                See [python-tabulate](https://github.com/astanin/python-tabulate)
-                for more options.
-        """
-        self._maybe_initialize(
-            mode=Mode.predict,
-            x=x,
-            y=None,
-            sample_weight=None,
-            class_weight=None,
-        )
-
-        assert self.parameters is not None
-        assert self.states is not None
-
-        y_pred, context = self._predict(
-            training=False,
-            get_summaries=True,
-            x=x,
-            parameters=self.parameters,
-            states=self.states,
-            rng=next(self._rngs),
-        )
-
-        def format_output(outputs) -> str:
-            file = StringIO()
-            outputs = jax.tree_map(lambda x: f"{x.shape}{{pad}}  {x.dtype}", outputs)
-            yaml.safe_dump(
-                outputs, file, default_flow_style=False, indent=2, explicit_end=False
-            )
-            return file.getvalue().replace("\n...", "")
-
-        def format_size(size):
-            return (
-                f"{size / 1e9 :,.1f} GB"
-                if size > 1e9
-                else f"{size / 1e6 :,.1f} MB"
-                if size > 1e6
-                else f"{size / 1e3 :,.1f} KB"
-                if size > 1e3
-                else f"{size:,} B"
-            )
-
-        table: tp.List = [["Inputs", format_output(x), "0", "0"]]
-
-        for module, base_name, value in context.summaries:
-            base_name_parts = base_name.split("/")[1:]
-            module_depth = len(base_name_parts)
-
-            if module_depth > depth:
-                continue
-
-            include_submodules = module_depth == depth
-
-            params_count = (
-                module.parameters_size(include_submodules) if module is not None else 0
-            )
-            params_size = (
-                module.parameters_bytes(include_submodules) if module is not None else 0
-            )
-            states_count = (
-                module.states_size(include_submodules) if module is not None else 0
-            )
-            states_size = (
-                module.states_bytes(include_submodules) if module is not None else 0
-            )
-            class_name = f"({module.__class__.__name__})" if module is not None else ""
-
-            base_name = "/".join(base_name_parts)
-
-            if not base_name:
-                base_name = "Outputs"
-
-            table.append(
-                [
-                    f"{base_name}{{pad}}  {class_name}",
-                    format_output(value),
-                    f"{params_count:,}{{pad}}    {format_size(params_size)}"
-                    if params_count > 0
-                    else "0",
-                    f"{states_count:,}{{pad}}    {format_size(states_size)}"
-                    if states_count > 0
-                    else "0",
-                ]
-            )
-
-        # add papdding
-        for col in range(4):
-            max_length = max(
-                len(line.split("{pad}")[0])
-                for row in table
-                for line in row[col].split("\n")
-            )
-
-            for row in table:
-                row[col] = "\n".join(
-                    line.format(
-                        pad=" " * (max_length - len(line.rstrip().split("{pad}")[0]))
-                    )
-                    for line in row[col].rstrip().split("\n")
-                )
-
-        print(
-            "\n"
-            + tabulate(
-                table,
-                headers=[
-                    "Layer",
-                    "Outputs Shape",
-                    "Trainable\nParameters",
-                    "Non-trainable\nParameters",
-                ],
-                tablefmt=tablefmt,
-                **tablulate_kwargs,
-            )
-        )
-
-        params_count = self.module.parameters_size()
-        params_size = self.module.parameters_bytes()
-        states_count = self.module.states_size()
-        states_size = self.module.states_bytes()
-        total_count = params_count + states_count
-        total_size = params_size + states_size
-
-        print(
-            tabulate(
-                [
-                    [
-                        f"Total Parameters:",
-                        f"{total_count:,}",
-                        f"{format_size(total_size)}" if total_count > 0 else "",
-                    ],
-                    [
-                        f"Trainable Parameters:",
-                        f"{params_count:,}",
-                        f"{format_size(params_size)}" if params_count > 0 else "",
-                    ],
-                    [
-                        f"Non-trainable Parameters:",
-                        f"{states_count:,}",
-                        f"{format_size(states_size)}" if states_count > 0 else "",
-                    ],
-                ],
-                tablefmt="plain",
-            )
-            + "\n"
-        )
+        model = load(path)
+        self.set_parameters(model.get_parameters())
 
 
 def load(path: tp.Union[str, Path]) -> Model:
@@ -1605,7 +795,5 @@ def load(path: tp.Union[str, Path]) -> Model:
             model: Model = pickle.load(f)
         except BaseException as e:
             raise OSError(f"Could not load the model. Got exception: {e}")
-
-    model.load(path)
 
     return model

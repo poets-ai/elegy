@@ -82,7 +82,7 @@ class Decoder(elegy.Module):
         z = jax.nn.relu(z)
         elegy.add_summary("relu", z)
 
-        logits = elegy.nn.Linear(jnp.prod(self.output_shape))(z)
+        logits = elegy.nn.Linear(jnp.prod(jnp.array(self.output_shape)))(z)
         logits = jnp.reshape(logits, (-1, *self.output_shape))
         elegy.add_summary("relu", z)
 
@@ -201,15 +201,15 @@ def main(
     samples = jax.nn.sigmoid(samples)
 
     # plot and save results
-    with SummaryWriter(os.path.join(logdir, "val")) as tbwriter:
-        figure = plt.figure(figsize=(5, 12))
-        plt.title("Generative Samples")
-        for i in range(5):
-            plt.subplot(2, 5, 2 * i + 1)
-            plt.imshow(samples[i], cmap="gray")
-            plt.subplot(2, 5, 2 * i + 2)
-            plt.imshow(samples[i + 1], cmap="gray")
-        tbwriter.add_figure("VAE Generative Example", figure, epochs)
+    # with SummaryWriter(os.path.join(logdir, "val")) as tbwriter:
+    figure = plt.figure(figsize=(5, 12))
+    plt.title("Generative Samples")
+    for i in range(5):
+        plt.subplot(2, 5, 2 * i + 1)
+        plt.imshow(samples[i], cmap="gray")
+        plt.subplot(2, 5, 2 * i + 2)
+        plt.imshow(samples[i + 1], cmap="gray")
+    # tbwriter.add_figure("VAE Generative Example", figure, epochs)
 
     plt.show()
 

@@ -21,7 +21,7 @@ import jax
 import jax.numpy as jnp
 from haiku._src import data_structures
 
-from elegy import initializers, module, hooks
+from elegy import initializers, module
 
 
 class ExponentialMovingAverage(module.Module):
@@ -66,8 +66,12 @@ class ExponentialMovingAverage(module.Module):
 
     def initialize(self, value):
         """If uninitialized sets the average to ``zeros_like`` the given value."""
-        hooks.get_state("hidden", value.shape, value.dtype, initializer=jnp.zeros)
-        hooks.get_state("average", value.shape, value.dtype, initializer=jnp.zeros)
+        self.add_parameter(
+            "hidden", value.shape, value.dtype, initializer=jnp.zeros, trainable=False
+        )
+        self.add_parameter(
+            "average", value.shape, value.dtype, initializer=jnp.zeros, trainable=False
+        )
 
     def call(self, value, update_stats=True):
         """Updates the EMA and returns the new value.
@@ -85,11 +89,12 @@ class ExponentialMovingAverage(module.Module):
         if not isinstance(value, jnp.ndarray):
             value = jnp.asarray(value)
 
-        counter = hooks.get_state(
+        counter = self.add_parameter(
             "counter",
             (),
             jnp.int32,
             initializer=initializers.Constant(-self._warmup_length),
+            trainable=False,
         )
         counter += 1
 
@@ -98,8 +103,8 @@ class ExponentialMovingAverage(module.Module):
             decay = self._cond(counter <= 0, 0.0, decay, value.dtype)
 
         one = jnp.ones([], value.dtype)
-        hidden = hooks.get_state(
-            "hidden", value.shape, value.dtype, initializer=jnp.zeros
+        hidden = self.add_parameter(
+            "hidden", value.shape, value.dtype, initializer=jnp.zeros, trainable=False
         )
         hidden = hidden * decay + value * (one - decay)
 
@@ -107,10 +112,12 @@ class ExponentialMovingAverage(module.Module):
         if self._zero_debias:
             average /= one - jnp.power(decay, counter)
 
+        self.add_parameter("average", initializer=average, trainable=False)
+
         if update_stats:
-            hooks.set_state("counter", counter)
-            hooks.set_state("hidden", hidden)
-            hooks.set_state("average", average)
+            self.update_parameter("counter", counter)
+            self.update_parameter("hidden", hidden)
+            self.update_parameter("average", average)
 
         return average
 

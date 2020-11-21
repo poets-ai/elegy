@@ -1,6 +1,7 @@
 
 # elegy.Model
-::: elegy.model.Model
+
+::: elegy.model.model.Model
     selection:
         inherited_members: true
         members:
@@ -17,6 +18,5 @@
             - train_on_batch
             - full_state
             - parameters
-            - seed
             - states
         

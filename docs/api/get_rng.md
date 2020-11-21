@@ -1,5 +1,6 @@
 
-# elegy.get_state
-::: elegy.hooks.get_state
+# elegy.get_rng
+
+::: elegy.module.get_rng
     selection:
         inherited_members: true
