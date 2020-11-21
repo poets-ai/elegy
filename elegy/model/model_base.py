@@ -32,13 +32,17 @@ class ModelBase(Module):
         self.loss = Losses(loss) if loss is not None else None
         self.metrics = Metrics(metrics)
         self.optimizer = Optimizer(optimizer) if optimizer is not None else None
-        self.predict_fn_jit = elegy_jit(self.predict_fn, modules=self)
-        self.test_fn_jit = elegy_jit(self.test_fn, modules=self)
-        self.train_fn_jit = elegy_jit(self.train_fn, modules=self)
+        self._jit_functions()
         self.initial_metrics_state: tp.Optional[tp.Dict[str, tp.Any]] = None
         self.run_eagerly = run_eagerly
 
         utils.wraps(self.module)(self)
+
+    def _jit_functions(self):
+        super()._jit_functions()
+        self.predict_fn_jit = elegy_jit(self.predict_fn, modules=self)
+        self.test_fn_jit = elegy_jit(self.test_fn, modules=self)
+        self.train_fn_jit = elegy_jit(self.train_fn, modules=self)
 
     def call(self, *args, **kwargs):
         return self.module(*args, **kwargs)
@@ -345,7 +349,7 @@ class ModelBase(Module):
         class_weight: tp.Optional[jnp.ndarray] = None,
     ):
 
-        with module.init_context(), module.training_context(
+        with module.init_context(can_update=False), module.training_context(
             training=True
         ), module.hooks_context():
             assert self.module is not None
