@@ -45,7 +45,6 @@ jax = "^0.2.5"
 jaxlib = "^0.1.56"
 jupyter = "^1.0.0"
 jupyterlab = "^2.2.9"
-tensorflow-addons = "^0.11.2"
 
 [build-system]
 requires = ["poetry>=0.12"]
