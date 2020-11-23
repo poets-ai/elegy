@@ -331,7 +331,7 @@ class Module(metaclass=ModuleMeta):
             else:
                 outputs = self.call(*args, **kwargs)
 
-            add_summary(self, outputs)
+            add_summary(self, outputs, (args, kwargs))
 
             return outputs
 
@@ -577,7 +577,9 @@ class Module(metaclass=ModuleMeta):
 # -------------------------------------------------------------
 
 
-def add_summary(module_or_name: tp.Union[Module, str], value: np.ndarray) -> None:
+def add_summary(
+    module_or_name: tp.Union[Module, str], value: np.ndarray, input_values=None
+) -> None:
     """
     A hook that lets you define a summary in the current module. Its primary
     use is to keep track of certain values as they flow through the network
@@ -609,7 +611,7 @@ def add_summary(module_or_name: tp.Union[Module, str], value: np.ndarray) -> Non
     else:
         module = module_or_name
 
-    LOCAL.summaries.append((module, name, value))
+    LOCAL.summaries.append((module, name, value, input_values))
 
 
 def add_loss(name: str, value: np.ndarray) -> None:

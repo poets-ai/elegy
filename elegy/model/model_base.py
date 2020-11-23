@@ -436,7 +436,7 @@ class ModelBase(Module):
 
         table: tp.List = [["Inputs", format_output(x), "0", "0"]]
 
-        for module, base_name, value in summaries:
+        for module, base_name, value, _ in summaries:
             base_name_parts = base_name.split("/")[1:]
             module_depth = len(base_name_parts)
 
