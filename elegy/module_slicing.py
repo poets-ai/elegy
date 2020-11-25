@@ -129,8 +129,20 @@ def construct_graph(edges: tp.List[Edge]) -> nx.DiGraph:
 
 def find_path(graph: nx.DiGraph, start_node: int, end_node: int) -> nx.DiGraph:
     """Returns a new graph with only nodes and edges from start_node to end_node"""
-    # TODO: catch exceptions
-    pathnodes = nx.shortest_path(graph, start_node, end_node)
+
+    startname = list(graph[start_node].values())[0]["modulename"]
+    endname = list(graph.reverse()[end_node].values())[0]["modulename"]
+
+    try:
+        pathnodes = nx.shortest_path(graph, start_node, end_node)
+    except nx.NetworkXNoPath:
+        raise RuntimeError(
+            f"No path from {startname} to {endname}. Make sure all operations inbetween are performed by modules."
+        ) from None
+    if len(pathnodes) < 2:
+        raise RuntimeError(
+            f"No operations between the input of {startname} and the output of {endname}."
+        ) from None
     pathgraph = graph.subgraph(pathnodes).copy()
     # pathgraph is unordered, need to mark input and output edges
     pathgraph[pathnodes[0]][pathnodes[1]]["is_input"] = True
@@ -145,12 +157,14 @@ def combine_paths(paths: tp.List[nx.DiGraph]) -> nx.DiGraph:
 class SlicedModule(elegy.Module):
     def __init__(self, tree: nx.DiGraph):
         super().__init__()
-        #adding the all modules as attributes so that they get recognized by .get_parameters()
+        # adding the all modules as attributes so that they get recognized by .get_parameters()
         for edge in tree.edges.values():
-            attrname = edge['modulename'][1:].replace('/', '_')
-            setattr(self, attrname, edge['module'])
-        
-        assert not hasattr(self, '_tree'), 'Modules with the name "_tree" are prohibited'
+            attrname = edge["modulename"][1:].replace("/", "_")
+            setattr(self, attrname, edge["module"])
+
+        assert not hasattr(
+            self, "_tree"
+        ), 'Modules with the name "_tree" are prohibited'
         self._tree = tree
 
     def call(self, x):
@@ -159,9 +173,9 @@ class SlicedModule(elegy.Module):
             for nodes, edge in self._tree.edges.items()
             if edge.get("is_input", False)
         ]
-        #should not happen
-        assert len(set(input_nodes))>0, "could not find any input nodes"
-        assert len(set(input_nodes))<2, "multi-inputs not yet supported"
+        # should not happen
+        assert len(set(input_nodes)) > 0, "could not find any input nodes"
+        assert len(set(input_nodes)) < 2, "multi-inputs not yet supported"
         start_node = input_nodes[0]
 
         x = [
@@ -172,7 +186,7 @@ class SlicedModule(elegy.Module):
         if len(x) == 1:
             x = x[0]
         return x
-    
+
     def visit_edge(self, edge, x, next_node):
         assert edge["inkey"] == 0, "inputs other than 0 not yet implemented"
         x = edge["module"](x)

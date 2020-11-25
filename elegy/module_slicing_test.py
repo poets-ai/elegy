@@ -60,7 +60,6 @@ class ModuleSlicingTest(TestCase):
 
         print(jax.tree_map(jnp.shape, resnet.get_parameters()))
         print(jax.tree_map(jnp.shape, submodel.get_parameters()))
-        
 
     def test_retrain(self):
         x = jnp.ones((32, 100))
@@ -68,25 +67,47 @@ class ModuleSlicingTest(TestCase):
 
         basicmodule = BasicModule0()
         submodule = elegy.module_slicing.slice_module_from_to(
-                basicmodule, "linear0", "linear1", x
-            )
-        submodel = elegy.Model(submodule, loss=elegy.losses.MeanAbsoluteError(), optimizer=optax.adamw(1e-3),)
+            basicmodule, "linear0", "linear0", x
+        )
+        submodel = elegy.Model(
+            submodule,
+            loss=elegy.losses.MeanAbsoluteError(),
+            optimizer=optax.adamw(1e-3),
+        )
         y0 = submodel.predict(x)
         y1 = basicmodule.test_call(x)
 
-        submodel.fit(x,y, epochs=3, verbose=2)
+        submodel.fit(x, y, epochs=3, verbose=2)
 
         y2 = submodel.predict(x)
         y3 = basicmodule.test_call(x)
 
         assert jnp.all(y2 == y3)
-        #output after training should be closer to zero because targets are zero
+        # output after training should be closer to zero because targets are zero
         assert jnp.abs(y2.mean()) < jnp.abs(y0.mean())
 
+    def test_no_path(self):
+        x = jnp.ones((32, 100))
+        basicmodule = BasicModule0()
+        try:
+            submodule = elegy.module_slicing.slice_module_from_to(
+                basicmodule, "linear2", "linear0", x
+            )
+        except RuntimeError as e:
+            assert e.args[0].startswith("No path from /linear2 to /linear0")
+        else:
+            assert False, "No error or wrong error raised"
 
-
-
-
+        try:
+            submodule = elegy.module_slicing.slice_module_from_to(
+                basicmodule, "linear1", "linear0", x
+            )
+        except RuntimeError as e:
+            assert e.args[0].startswith(
+                "No operations between the input of /linear1 and the output of /linear0"
+            )
+        else:
+            assert False, "No error or wrong error raised"
 
 
 class BasicModule0(elegy.Module):
