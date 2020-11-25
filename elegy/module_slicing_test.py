@@ -67,7 +67,7 @@ class ModuleSlicingTest(TestCase):
 
         basicmodule = BasicModule0()
         submodule = elegy.module_slicing.slice_module_from_to(
-            basicmodule, "linear0", "linear0", x
+            basicmodule, "linear0", "linear1", x
         )
         submodel = elegy.Model(
             submodule,

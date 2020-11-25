@@ -164,10 +164,10 @@ class SlicedModule(elegy.Module):
 
         assert not hasattr(
             self, "_tree"
-        ), 'Modules with the name "_tree" are prohibited'
+        ), 'Modules with the name "_tree" are prohibited'  # can this happen?
         self._tree = tree
 
-    def call(self, x):
+    def call(self, x: tp.Any) -> tp.Union[tp.Any, tp.Tuple[tp.Any]]:
         input_nodes = [
             nodes[0]
             for nodes, edge in self._tree.edges.items()
@@ -178,37 +178,32 @@ class SlicedModule(elegy.Module):
         assert len(set(input_nodes)) < 2, "multi-inputs not yet supported"
         start_node = input_nodes[0]
 
-        x = [
-            self.visit_edge(next_edge, x, next_node)
-            for next_node, next_edge in self._tree[start_node].items()
-        ]
-        x = tuple(x)
-        if len(x) == 1:
-            x = x[0]
-        return x
+        outputs = self.visit_node(start_node, x)
 
-    def visit_edge(self, edge, x, next_node):
+        outputs = tuple(outputs)
+        if len(outputs) == 1:
+            outputs = outputs[0]
+        return outputs
+
+    def visit_edge(self, edge: tp.Dict, x: tp.Any) -> tp.Any:
+        """Performs the operation to get from node A to node B which the parameter "edge" connects"""
         assert edge["inkey"] == 0, "inputs other than 0 not yet implemented"
+
         x = edge["module"](x)
 
         if isinstance(x, (tuple, list)):
             # XXX: what if the whole tuple/list is needed as input later?
             x = x[edge["outkey"]]
 
+        return x
+
+    def visit_node(self, node: int, x: tp.Any) -> tp.List[tp.Any]:
+        """Recursively visits all nodes starting from the parameter "node" and collects outputs."""
         outputs = []
-        if edge.get("is_output", False):
-            outputs.append(x)
+        for nextnode, edge in self._tree[node].items():
+            y = self.visit_edge(edge, x)
+            if edge.get("is_output", False):
+                outputs.append(y)
+            outputs.extend(self.visit_node(nextnode, y))
 
-        if len(self._tree[next_node]):
-            # continue traversing the graph if there are more edges
-            for next_node, next_edge in self._tree[next_node].items():
-                nextx = self.visit_edge(next_edge, x, next_node)
-                if not isinstance(nextx, tp.Tuple):
-                    nextx = (nextx,)
-                outputs.extend(nextx)
-        # else: no more edges
-
-        outputs = tuple(outputs)
-        if len(outputs) == 1:
-            outputs = outputs[0]
         return outputs
