@@ -42,8 +42,7 @@ def slice_module_from_to(
     graph = construct_graph(edges)
     paths = [find_path(graph, start_id, end_id) for end_id in end_ids]
     tree = combine_paths(paths)
-    submodule_call = construct_call(tree)
-    submodule = elegy.to_module(submodule_call)()
+    submodule = SlicedModule(tree)
     return submodule
 
 
@@ -143,10 +142,38 @@ def combine_paths(paths: tp.List[nx.DiGraph]) -> nx.DiGraph:
     return nx.algorithms.compose_all(paths)
 
 
-def construct_call(tree: nx.DiGraph) -> tp.Callable:
-    """Returns a new function that represents the __call__ of the new sliced submodule"""
+class SlicedModule(elegy.Module):
+    def __init__(self, tree: nx.DiGraph):
+        super().__init__()
+        #adding the all modules as attributes so that they get recognized by .get_parameters()
+        for edge in tree.edges.values():
+            attrname = edge['modulename'][1:].replace('/', '_')
+            setattr(self, attrname, edge['module'])
+        
+        assert not hasattr(self, '_tree'), 'Modules with the name "_tree" are prohibited'
+        self._tree = tree
 
-    def visit_edge(edge, x, next_node):
+    def call(self, x):
+        input_nodes = [
+            nodes[0]
+            for nodes, edge in self._tree.edges.items()
+            if edge.get("is_input", False)
+        ]
+        #should not happen
+        assert len(set(input_nodes))>0, "could not find any input nodes"
+        assert len(set(input_nodes))<2, "multi-inputs not yet supported"
+        start_node = input_nodes[0]
+
+        x = [
+            self.visit_edge(next_edge, x, next_node)
+            for next_node, next_edge in self._tree[start_node].items()
+        ]
+        x = tuple(x)
+        if len(x) == 1:
+            x = x[0]
+        return x
+    
+    def visit_edge(self, edge, x, next_node):
         assert edge["inkey"] == 0, "inputs other than 0 not yet implemented"
         x = edge["module"](x)
 
@@ -158,10 +185,10 @@ def construct_call(tree: nx.DiGraph) -> tp.Callable:
         if edge.get("is_output", False):
             outputs.append(x)
 
-        if len(tree[next_node]):
+        if len(self._tree[next_node]):
             # continue traversing the graph if there are more edges
-            for next_node, next_edge in tree[next_node].items():
-                nextx = visit_edge(next_edge, x, next_node)
+            for next_node, next_edge in self._tree[next_node].items():
+                nextx = self.visit_edge(next_edge, x, next_node)
                 if not isinstance(nextx, tp.Tuple):
                     nextx = (nextx,)
                 outputs.extend(nextx)
@@ -171,23 +198,3 @@ def construct_call(tree: nx.DiGraph) -> tp.Callable:
         if len(outputs) == 1:
             outputs = outputs[0]
         return outputs
-
-    def call(x, *args, **kwargs):
-        input_nodes = [
-            nodes[0]
-            for nodes, edge in tree.edges.items()
-            if edge.get("is_input", False)
-        ]
-        assert len(set(input_nodes)), "multi-inputs not yet supported"
-        start_node = input_nodes[0]
-
-        x = [
-            visit_edge(next_edge, x, next_node)
-            for next_node, next_edge in tree[start_node].items()
-        ]
-        x = tuple(x)
-        if len(x) == 1:
-            x = x[0]
-        return x
-
-    return call

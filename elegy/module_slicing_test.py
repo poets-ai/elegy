@@ -2,6 +2,7 @@ import elegy
 import elegy.module_slicing
 from unittest import TestCase
 import jax, jax.numpy as jnp
+import optax
 
 
 class ModuleSlicingTest(TestCase):
@@ -59,7 +60,33 @@ class ModuleSlicingTest(TestCase):
 
         print(jax.tree_map(jnp.shape, resnet.get_parameters()))
         print(jax.tree_map(jnp.shape, submodel.get_parameters()))
-        # assert False
+        
+
+    def test_retrain(self):
+        x = jnp.ones((32, 100))
+        y = jnp.zeros((32, 10))
+
+        basicmodule = BasicModule0()
+        submodule = elegy.module_slicing.slice_module_from_to(
+                basicmodule, "linear0", "linear1", x
+            )
+        submodel = elegy.Model(submodule, loss=elegy.losses.MeanAbsoluteError(), optimizer=optax.adamw(1e-3),)
+        y0 = submodel.predict(x)
+        y1 = basicmodule.test_call(x)
+
+        submodel.fit(x,y, epochs=3, verbose=2)
+
+        y2 = submodel.predict(x)
+        y3 = basicmodule.test_call(x)
+
+        assert jnp.all(y2 == y3)
+        #output after training should be closer to zero because targets are zero
+        assert jnp.abs(y2.mean()) < jnp.abs(y0.mean())
+
+
+
+
+
 
 
 class BasicModule0(elegy.Module):
