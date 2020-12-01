@@ -4,7 +4,7 @@ from enum import Enum
 import jax.numpy as jnp
 import numpy as np
 
-from elegy import initializers, module, types, utils, module
+from elegy import initializers, module, types, utils
 from elegy.metrics.metric import Metric
 
 
