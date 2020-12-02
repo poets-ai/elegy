@@ -21,7 +21,6 @@ def slice_module_from_to(
       - all operations between start_module and end_module must be performed by modules
         i.e. jax.nn.relu() or x+1 is not allowed but can be converted by wrapping with elegy.to_module()
       - all modules between start_module and end_module must have a single input and a single output
-      - resulting module is currently not trainable
     """
     assert not isinstance(
         start_module, (tp.Tuple, tp.List)

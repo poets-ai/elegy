@@ -42,7 +42,7 @@ class ResNetBlock(module.Module):
 class BottleneckResNetBlock(ResNetBlock):
     """ResNet Bottleneck block."""
 
-    def call(self, x, n_filters, strides=(1, 1)):
+    def call(self, x):
         x0 = x
         x = nn.Conv2D(self.n_filters, (1, 1), with_bias=False, dtype=self.dtype)(x)
         x = nn.BatchNormalization(decay_rate=0.9, eps=1e-5)(x)
