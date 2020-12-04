@@ -57,11 +57,11 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             x = ConvBlock()(x, 64, [3, 3], stride=2)
             x = ConvBlock()(x, 128, [3, 3], stride=2)
 
-            # 1x1 Conv
-            x = elegy.nn.Linear(10)(x)
-
             # GlobalAveragePooling2D
             x = jnp.mean(x, axis=[1, 2])
+
+            # 1x1 Conv
+            x = elegy.nn.Linear(10)(x)
 
             return x
 

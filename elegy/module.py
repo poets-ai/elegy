@@ -218,8 +218,9 @@ class ModuleMeta(ABCMeta):
 
 class Module(metaclass=ModuleMeta):
     """
-    Basic Elegy Module. Its a thin wrapper around `hk.Module` that
-    add custom functionalities related to Elegy.
+    Basic Elegy Module.
+
+    For more information check out the [Module System guide](https://poets-ai.github.io/elegy/guides/module-system/).
 
     Attributes:
         initialized: Whether or not the module is initialized.
