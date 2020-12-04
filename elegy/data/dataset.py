@@ -28,13 +28,15 @@ class DataLoader:
     #TODO: prefetch
     #TODO: timeout
 
-    def __init__(self, dataset, batch_size, n_workers=0, shuffle=False):
+    def __init__(self, dataset, batch_size, n_workers=0, shuffle=False, worker_type='thread'):
         assert batch_size>0 and type(batch_size)==int, 'batch_size must be a positive integer'
+        assert worker_type in ['thread', 'process', 'spawn', 'fork', 'forkserver']
 
         self.dataset    = dataset
         self.batch_size = batch_size
         self.n_workers  = n_workers
         self.shuffle    = shuffle
+        self.worker_type = worker_type
     
     def __iter__(self):
         indices = np.arange(len(self.dataset))
@@ -46,7 +48,7 @@ class DataLoader:
         if self.n_workers==0:
             return mainthread_data_iterator(self.dataset, batched_indices)
         else:
-            return multiprocess_data_iterator(self.dataset, batched_indices, self.n_workers)
+            return multiprocess_data_iterator(self.dataset, batched_indices, self.n_workers, worker_type=self.worker_type)
     
     def __len__(self):
         return int(np.ceil(len(self.dataset) / self.batch_size))
@@ -73,10 +75,13 @@ def mainthread_data_iterator(ds, batched_indices):
         yield default_batch_fn(samples)
 
 
-def multiprocess_data_iterator(ds, batched_indices, n_workers, prefetch=1, timeout=1):
-    #TODO: worker_type = thread/spawn/fork/forkserver
-    #NOTE: #multiprocessing.get_context('spawn').Pool()
-    with multiprocessing.pool.ThreadPool(processes=n_workers) as pool:
+def multiprocess_data_iterator(ds, batched_indices, n_workers, prefetch=1, timeout=10, worker_type='thread'):
+    if worker_type=='thread':
+        pool_class = multiprocessing.pool.ThreadPool
+    else:
+        worker_type = None if worker_type=='process' else worker_type #None means default
+        pool_class = multiprocessing.get_context(worker_type).Pool
+    with pool_class(processes=n_workers) as pool:
         async_results = []
         for batch_of_indices in batched_indices[:prefetch]:
            async_results.append(pool.map_async(ds.__getitem__, batch_of_indices))

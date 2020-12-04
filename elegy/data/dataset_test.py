@@ -116,7 +116,11 @@ class DataLoaderTestCase(TestCase):
         assert len(batches1[0]) == 3
         assert batches1[0][0].shape==(4,100,200,3) and batches1[1][1].shape==(4,100,200,3) and batches1[2][2].shape==(3,100,200,3)
 
-
+    def test_worker_type(self):
+        ds = DS0()
+        for worker_type in ['thread', 'process', 'spawn', 'fork', 'forkserver']:
+            loader = elegy.data.DataLoader(ds, batch_size=4, n_workers=4, worker_type=worker_type)
+            batches = list(loader)
 
 
 class DS0(elegy.data.Dataset):
