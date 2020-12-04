@@ -578,18 +578,19 @@ class Module(metaclass=ModuleMeta):
 
 
 def add_summary(
-    module_or_name: tp.Union[Module, str], value: np.ndarray, input_values=None
+    module_or_name: tp.Union[Module, str], value: np.ndarray, input_values:tp.Optional[tp.Tuple[tp.Tuple, tp.Dict]]=None
 ) -> None:
     """
     A hook that lets you define a summary in the current module. Its primary
     use is to keep track of certain values as they flow through the network
-    so [`Model.summary`][elegy.model.model.Model.summary] can show a representation of architecture.
+    so [`Model.summary`][elegy.model.model.Model.summary] can show a representation of architecture
+    and to get the graph structure to slice modules.
 
     ```python
     def call(self, x):
         ...
         y = jax.nn.relu(x)
-        elegy.add_summary("relu", y)
+        elegy.add_summary("relu", y, ((x,), {}))
         ...
     ```
 
@@ -597,6 +598,7 @@ def add_summary(
         module_or_name: The name of the summary or alternatively the module that this summary will represent.
             If a summary with the same name already exists a unique identifier will be generated.
         value: The value for the summary.
+        input_values: The input arguments for the module, required for slicing.
     """
 
     if LOCAL.summaries is None:
