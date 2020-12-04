@@ -89,7 +89,7 @@ class ModuleSlicingTest(TestCase):
     def test_no_path(self):
         x = jnp.ones((32, 100))
         basicmodule = BasicModule0()
-        for start_module in ['linear2', 'linear1']:
+        for start_module in ["linear2", "linear1"]:
             try:
                 submodule = elegy.module_slicing.slice_module_from_to(
                     basicmodule, start_module, "linear0", x
@@ -98,7 +98,7 @@ class ModuleSlicingTest(TestCase):
                 assert e.args[0].startswith(f"No path from /{start_module} to /linear0")
             else:
                 assert False, "No error or wrong error raised"
-    
+
     def test_multi_input_modules(self):
         x = jnp.ones((32, 100))
 
@@ -106,71 +106,69 @@ class ModuleSlicingTest(TestCase):
         model = elegy.Model(module)
         model.summary(x)
 
-        submodule = elegy.module_slicing.slice_module_from_to(module, None, '/multi_input_module', x)
-        submodel  = elegy.Model(submodule)
+        submodule = elegy.module_slicing.slice_module_from_to(
+            module, None, "/multi_input_module", x
+        )
+        submodel = elegy.Model(submodule)
         submodel.summary(x)
         print(submodule.get_parameters())
 
         y = submodel.predict(x)
         print(y.shape)
-        assert(y.shape==(32,25))
-        assert(jnp.allclose(y, module.test_call(x) ))
+        assert y.shape == (32, 25)
+        assert jnp.allclose(y, module.test_call(x))
 
-    
     def test_computationally_equivalent_paths(self):
         import networkx as nx
-        G = nx.DiGraph()
-        G.add_edge(0,1, inkey=0)
-        G.add_edge(1,2, inkey=0)
-        G.add_edge(0,2, inkey=0)  #0->2 is equivalent to the path 0->1->2
-        G.add_edge(2,3, inkey=0)
-        G.add_edge(3,4, inkey=0)
 
-        g0 = G.edge_subgraph([(0,1), (1,2), (2,3)]).copy()
-        g1 = G.edge_subgraph([(0,2), (2,3)]).copy()
+        G = nx.DiGraph()
+        G.add_edge(0, 1, inkey=0)
+        G.add_edge(1, 2, inkey=0)
+        G.add_edge(0, 2, inkey=0)  # 0->2 is equivalent to the path 0->1->2
+        G.add_edge(2, 3, inkey=0)
+        G.add_edge(3, 4, inkey=0)
+
+        g0 = G.edge_subgraph([(0, 1), (1, 2), (2, 3)]).copy()
+        g1 = G.edge_subgraph([(0, 2), (2, 3)]).copy()
 
         apce = elegy.module_slicing.are_paths_computationally_equivalent
         fcep = elegy.module_slicing.filter_computationally_equivalent_paths
 
-        assert apce(g0,g1)
-        assert apce(g1,g0)
-        filtered_paths = fcep([g0,g1])
+        assert apce(g0, g1)
+        assert apce(g1, g0)
+        filtered_paths = fcep([g0, g1])
         assert len(filtered_paths) == 1
         assert filtered_paths[0] == g1
 
         G = nx.DiGraph()
-        G.add_edge(0,1, inkey=0)
-        G.add_edge(1,2, inkey=0)
-        G.add_edge(0,2, inkey=1)  #not equivalent, multi-input module
-        G.add_edge(2,3, inkey=0)
-        G.add_edge(3,4, inkey=0)
+        G.add_edge(0, 1, inkey=0)
+        G.add_edge(1, 2, inkey=0)
+        G.add_edge(0, 2, inkey=1)  # not equivalent, multi-input module
+        G.add_edge(2, 3, inkey=0)
+        G.add_edge(3, 4, inkey=0)
 
-        g0 = G.edge_subgraph([(0,1), (1,2), (2,3)]).copy()
-        g1 = G.edge_subgraph([(0,2), (2,3)]).copy()
-        g2 = G.edge_subgraph([(0,2), (2,3), (3,4)]).copy()
+        g0 = G.edge_subgraph([(0, 1), (1, 2), (2, 3)]).copy()
+        g1 = G.edge_subgraph([(0, 2), (2, 3)]).copy()
+        g2 = G.edge_subgraph([(0, 2), (2, 3), (3, 4)]).copy()
 
         apce = elegy.module_slicing.are_paths_computationally_equivalent
-        assert not apce(g0,g1)
-        assert not apce(g1,g0)
-        assert not apce(g1,g2)
-        filtered_paths = fcep([g0,g1,g2])
+        assert not apce(g0, g1)
+        assert not apce(g1, g0)
+        assert not apce(g1, g2)
+        filtered_paths = fcep([g0, g1, g2])
         assert len(filtered_paths) == 3
         assert g0 in filtered_paths and g1 in filtered_paths and g2 in filtered_paths
 
-
-    
     def test_split_merge_args_kwargs(self):
-        args_kwargs = elegy.module_slicing.merge_args_kwargs(0,101,-2,a=65,b=77)
-        assert len(args_kwargs)==5
-        for x in [(0,0), (1,101), (2,-2), ('a',65), ('b',77)]:
+        args_kwargs = elegy.module_slicing.merge_args_kwargs(0, 101, -2, a=65, b=77)
+        assert len(args_kwargs) == 5
+        for x in [(0, 0), (1, 101), (2, -2), ("a", 65), ("b", 77)]:
             assert x in args_kwargs
-        
-        args,kwargs = elegy.module_slicing.split_merged_args_kwargs(args_kwargs)
-        assert args==(0,101,-2)
-        assert len(kwargs)==2
-        assert kwargs['a']==65 and kwargs['b']==77
-    
 
+        args, kwargs = elegy.module_slicing.split_merged_args_kwargs(args_kwargs)
+        assert args == (0, 101, -2)
+        assert len(kwargs) == 2
+        assert kwargs["a"] == 65 and kwargs["b"] == 77
 
 
 class BasicModule0(elegy.Module):
@@ -185,17 +183,19 @@ class BasicModule0(elegy.Module):
         x = self.linear1(x)
         return x
 
+
 class MultiInputModule(elegy.Module):
     def call(self, x0, x1):
-        return x0[...,:25]+x1[...,:25]
+        return x0[..., :25] + x1[..., :25]
+
 
 class ContainsMultiInputModule(elegy.Module):
     def call(self, x):
-        x0 = elegy.nn.Linear(25, name='linear0')(x)
-        x = MultiInputModule(name='multi_input_module')(x,x0)
+        x0 = elegy.nn.Linear(25, name="linear0")(x)
+        x = MultiInputModule(name="multi_input_module")(x, x0)
         x = elegy.nn.Linear(10)(x)
         return x
-    
+
     def test_call(self, x):
         x0 = self.linear0(x)
         x = self.multi_input_module(x, x0)

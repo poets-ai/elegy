@@ -578,7 +578,9 @@ class Module(metaclass=ModuleMeta):
 
 
 def add_summary(
-    module_or_name: tp.Union[Module, str], value: np.ndarray, input_values:tp.Optional[tp.Tuple[tp.Tuple, tp.Dict]]=None
+    module_or_name: tp.Union[Module, str],
+    value: np.ndarray,
+    input_values: tp.Optional[tp.Tuple[tp.Tuple, tp.Dict]] = None,
 ) -> None:
     """
     A hook that lets you define a summary in the current module. Its primary

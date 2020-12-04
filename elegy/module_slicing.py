@@ -40,7 +40,7 @@ def slice_module_from_to(
 
     graph = construct_graph(edges)
     dag_paths = [find_dag_path(graph, start_id, end_id) for end_id in end_ids]
-    tree = combine_paths(dag_paths) #not really a tree
+    tree = combine_paths(dag_paths)  # not really a tree
     submodule = SlicedModule(tree)
     return submodule
 
@@ -99,17 +99,20 @@ def merge_args_kwargs(*args, **kwargs) -> tp.List[tp.Tuple[tp.Any, tp.Any]]:
     e.g. merge_args_kwargs(0, 77, a=-2) returns [(0,0), (1,77), ('a',-2)]"""
     return list(enumerate(args)) + list(kwargs.items())
 
-def split_merged_args_kwargs(args_kwargs: tp.List[tp.Tuple[tp.Any, tp.Any]]) -> tp.Tuple[tp.Tuple, tp.Dict]:
-    '''Reverse operation of merge_args_kwargs().
-    e.g. split_merged_args_kwargs([(0,0), (1,77), ('a':-2)]) -> (0,77), {'a':-2}'''
-    args,kwargs = list(), dict()
-    for key,value in args_kwargs:
+
+def split_merged_args_kwargs(
+    args_kwargs: tp.List[tp.Tuple[tp.Any, tp.Any]]
+) -> tp.Tuple[tp.Tuple, tp.Dict]:
+    """Reverse operation of merge_args_kwargs().
+    e.g. split_merged_args_kwargs([(0,0), (1,77), ('a':-2)]) -> (0,77), {'a':-2}"""
+    args, kwargs = list(), dict()
+    for key, value in args_kwargs:
         if isinstance(key, int):
             args.append(value)
         else:
-            kwargs[key]=value
+            kwargs[key] = value
     return tuple(args), kwargs
-    
+
 
 def construct_graph(edges: tp.List[Edge]) -> nx.DiGraph:
     """Constructs a directed graph with IDs of input/output arrays representing the nodes
@@ -137,66 +140,67 @@ def construct_graph(edges: tp.List[Edge]) -> nx.DiGraph:
     return G
 
 
-
 def are_paths_computationally_equivalent(path0: nx.DiGraph, path1: nx.DiGraph) -> bool:
-    '''Checks two paths for computaional equivalence i.e. whether or not they differ only in depth of modules.
-       E.g if node B is computed by a module composed of several submodules with subnodes B0 and B1 
-       then paths A->B->C and A->B0->B1->B->C are computationally equivalent.
-       On the other hand, this does not apply to branches A->B->C vs A->D->C.
-       Importantly, the edge["inkey"] attributes must be the same:
-       A->C != A->B->C if C if computed by a dual-input module (e.g. C = A+B)'''
-    #traverse both paths and check if nodes path0 are in path1 or vice versa
-    #get nodes from both paths, make sure they are ordered
-    #skip the first one assuming both have the same source node
+    """Checks two paths for computaional equivalence i.e. whether or not they differ only in depth of modules.
+    E.g if node B is computed by a module composed of several submodules with subnodes B0 and B1
+    then paths A->B->C and A->B0->B1->B->C are computationally equivalent.
+    On the other hand, this does not apply to branches A->B->C vs A->D->C.
+    Importantly, the edge["inkey"] attributes must be the same:
+    A->C != A->B->C if C if computed by a dual-input module (e.g. C = A+B)"""
+    # traverse both paths and check if nodes path0 are in path1 or vice versa
+    # get nodes from both paths, make sure they are ordered
+    # skip the first one assuming both have the same source node
     nodes0 = list(nx.dfs_postorder_nodes(path0))[::-1][1:]
     nodes1 = list(nx.dfs_postorder_nodes(path1))[::-1][1:]
     while len(nodes0) and len(nodes1):
-        #currently traversed nodes from both paths
+        # currently traversed nodes from both paths
         n0, n1 = nodes0[0], nodes1[0]
 
         if n0 in nodes1:
-            #current node of path0 is in path1, still need to check 'inkey'
-            inkey0 = path0.get_edge_data(*list(path0.in_edges(n0))[0])['inkey']
-            inkey1 = path1.get_edge_data(*list(path1.in_edges(n0))[0])['inkey']
+            # current node of path0 is in path1, still need to check 'inkey'
+            inkey0 = path0.get_edge_data(*list(path0.in_edges(n0))[0])["inkey"]
+            inkey1 = path1.get_edge_data(*list(path1.in_edges(n0))[0])["inkey"]
             if inkey0 == inkey1:
-                #all ok, continue traversing paths
-                nodes1 = nodes1[nodes1.index(n0)+1:]
+                # all ok, continue traversing paths
+                nodes1 = nodes1[nodes1.index(n0) + 1 :]
                 nodes0 = nodes0[1:]
                 continue
             else:
-                #inkey is not the same, must be a multi-input module -> reject
+                # inkey is not the same, must be a multi-input module -> reject
                 return False
         elif n1 in nodes0:
-            #current node of path1 is in path0, still need to check 'inkey'
-            inkey0 = path0.get_edge_data(*list(path0.in_edges(n1))[0])['inkey']
-            inkey1 = path1.get_edge_data(*list(path1.in_edges(n1))[0])['inkey']
+            # current node of path1 is in path0, still need to check 'inkey'
+            inkey0 = path0.get_edge_data(*list(path0.in_edges(n1))[0])["inkey"]
+            inkey1 = path1.get_edge_data(*list(path1.in_edges(n1))[0])["inkey"]
             if inkey0 == inkey1:
-                #all ok, continue traversing paths
-                nodes0 = nodes0[nodes0.index(n1)+1:]
+                # all ok, continue traversing paths
+                nodes0 = nodes0[nodes0.index(n1) + 1 :]
                 nodes1 = nodes1[1:]
                 continue
             else:
-                #inkey is not the same, must be a multi-input module -> reject
+                # inkey is not the same, must be a multi-input module -> reject
                 return False
         else:
-            #neither path contains the current node of the other path -> reject
+            # neither path contains the current node of the other path -> reject
             return False
-    if len(nodes0)>0 or len(nodes1)>0:
-        #should not happen because our paths have the same first and last nodes
+    if len(nodes0) > 0 or len(nodes1) > 0:
+        # should not happen because our paths have the same first and last nodes
         return False
-    #traversed both paths until the end
+    # traversed both paths until the end
     return True
 
 
-def filter_computationally_equivalent_paths(paths: tp.List[nx.DiGraph]) -> tp.List[nx.DiGraph]:
-    '''Removes paths with deep modules if there are paths with equivalent, shallow modules.
-       E.g: remove A->B0->B1->B->C in favor of A->B->C'''
-    filtered = set() #contains indices of paths to be removed
-    for i,j in itertools.combinations(range(len(paths)), 2):
+def filter_computationally_equivalent_paths(
+    paths: tp.List[nx.DiGraph],
+) -> tp.List[nx.DiGraph]:
+    """Removes paths with deep modules if there are paths with equivalent, shallow modules.
+    E.g: remove A->B0->B1->B->C in favor of A->B->C"""
+    filtered = set()  # contains indices of paths to be removed
+    for i, j in itertools.combinations(range(len(paths)), 2):
         if i in filtered or j in filtered:
             continue
         if are_paths_computationally_equivalent(paths[i], paths[j]):
-            #keep the shorter path
+            # keep the shorter path
             if len(paths[i]) > len(paths[j]):
                 filtered.add(i)
             else:
@@ -211,22 +215,26 @@ def find_dag_path(graph: nx.DiGraph, start_node: int, end_node: int) -> nx.DiGra
     endname = list(graph.reverse()[end_node].values())[0]["modulename"]
 
     try:
-        edge_paths  = list(nx.all_simple_edge_paths(graph, start_node, end_node)) #list of lists of tuples
-        if len(edge_paths)==0:
+        edge_paths = list(
+            nx.all_simple_edge_paths(graph, start_node, end_node)
+        )  # list of lists of tuples
+        if len(edge_paths) == 0:
             raise nx.NetworkXNoPath
     except nx.NetworkXNoPath:
         raise RuntimeError(
             f"No path from {startname} to {endname}. Make sure all operations inbetween are performed by modules."
         ) from None
-    
-    graph_paths = [nx.edge_subgraph(graph, path) for path in edge_paths] #list of nx.DiGraphs
+
+    graph_paths = [
+        nx.edge_subgraph(graph, path) for path in edge_paths
+    ]  # list of nx.DiGraphs
     graph_paths = filter_computationally_equivalent_paths(graph_paths)
     dag_graph = nx.algorithms.compose_all(graph_paths)
-    #dag_graph is unordered, need to mark input and output edges
-    for _,_, edgedata in dag_graph.out_edges(start_node, data=True):
-        edgedata['is_input'] = True
-    for _,_, edgedata in dag_graph.in_edges(end_node, data=True):
-        edgedata['is_output'] = True
+    # dag_graph is unordered, need to mark input and output edges
+    for _, _, edgedata in dag_graph.out_edges(start_node, data=True):
+        edgedata["is_input"] = True
+    for _, _, edgedata in dag_graph.in_edges(end_node, data=True):
+        edgedata["is_output"] = True
     return dag_graph
 
 
@@ -266,25 +274,27 @@ class SlicedModule(elegy.Module):
             outputs = outputs[0]
         return outputs
 
-    def visit_edge(self, edge: tp.Dict, x: tp.Any, deferred_call_args: tp.Dict) -> tp.Any:
+    def visit_edge(
+        self, edge: tp.Dict, x: tp.Any, deferred_call_args: tp.Dict
+    ) -> tp.Any:
         """Performs the operation to get from node A to node B which the parameter "edge" connects"""
-        n_inputs = len(jax.tree_leaves(edge['input_ids']))
-        if n_inputs==1:
-            #a single-input module, simply call it with the input
+        n_inputs = len(jax.tree_leaves(edge["input_ids"]))
+        if n_inputs == 1:
+            # a single-input module, simply call it with the input
             x = edge["module"](x)
         else:
-            #multi-input module
-            #check if all the inputs are ready
-            call_args = deferred_call_args.get(edge['modulename'], dict())
-            call_args[edge['inkey']] = x
+            # multi-input module
+            # check if all the inputs are ready
+            call_args = deferred_call_args.get(edge["modulename"], dict())
+            call_args[edge["inkey"]] = x
             if len(call_args) == n_inputs:
-                #all inputs are ready, call module
+                # all inputs are ready, call module
                 args, kwargs = split_merged_args_kwargs(call_args.items())
-                x = edge['module'](*args, **kwargs)
-                del deferred_call_args[edge['modulename']]
+                x = edge["module"](*args, **kwargs)
+                del deferred_call_args[edge["modulename"]]
             else:
-                #still missing some inputs, continue traversing the graph
-                deferred_call_args[edge['modulename']] = call_args
+                # still missing some inputs, continue traversing the graph
+                deferred_call_args[edge["modulename"]] = call_args
                 return DeferredCall
 
         if isinstance(x, (tuple, list)):
@@ -293,13 +303,15 @@ class SlicedModule(elegy.Module):
 
         return x
 
-    def visit_node(self, node: int, x: tp.Any, deferred_call_args: tp.Dict) -> tp.List[tp.Any]:
+    def visit_node(
+        self, node: int, x: tp.Any, deferred_call_args: tp.Dict
+    ) -> tp.List[tp.Any]:
         """Recursively visits all nodes starting from the parameter "node" and collects outputs."""
         outputs = []
         for nextnode, edge in self._tree[node].items():
             y = self.visit_edge(edge, x, deferred_call_args)
-            if y==DeferredCall:
-                #visited edge module is missing some inputs, will come back here later
+            if y == DeferredCall:
+                # visited edge module is missing some inputs, will come back here later
                 continue
             if edge.get("is_output", False):
                 outputs.append(y)
@@ -309,7 +321,6 @@ class SlicedModule(elegy.Module):
 
 
 class DeferredCall:
-    '''Dummy class that indicates that a call has to be deferred'''
+    """Dummy class that indicates that a call has to be deferred"""
+
     ...
-
-
