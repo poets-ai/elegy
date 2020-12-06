@@ -5,13 +5,19 @@ from elegy import module, nn
 import typing as tp
 
 
-__all__ = ['ResNet18', 'ResNet34', 'ResNet50', 'ResNet101', 'ResNet152', 'ResNet200']
+__all__ = ["ResNet18", "ResNet34", "ResNet50", "ResNet101", "ResNet152", "ResNet200"]
 
 
 class ResNetBlock(module.Module):
     """ResNet (identity) block"""
 
-    def __init__(self, n_filters: int, strides: tp.Optional[tp.Tuple[int]]=(1, 1), *args, **kwargs):
+    def __init__(
+        self,
+        n_filters: int,
+        strides: tp.Optional[tp.Tuple[int]] = (1, 1),
+        *args,
+        **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.n_filters = n_filters
         self.strides = strides
@@ -78,7 +84,14 @@ class BottleneckResNetBlock(ResNetBlock):
 class ResNet(module.Module):
     """ResNet V1"""
 
-    def __init__(self, stages: tp.List[int], block_type:tp.Union[ResNetBlock, BottleneckResNetBlock], lowres:tp.Optional[bool]=False, *args, **kwargs):
+    def __init__(
+        self,
+        stages: tp.List[int],
+        block_type: tp.Union[ResNetBlock, BottleneckResNetBlock],
+        lowres: tp.Optional[bool] = False,
+        *args,
+        **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.stages = stages
         self.block_type = block_type
@@ -86,20 +99,20 @@ class ResNet(module.Module):
 
     def call(self, x: jnp.ndarray):
         x = nn.Conv2D(
-            64, 
-            (7, 7) if not self.lowres else (3,3), 
-            stride=(2, 2) if not self.lowres else (1,1), 
-            padding="SAME", 
-            with_bias=False, 
-            dtype=self.dtype
+            64,
+            (7, 7) if not self.lowres else (3, 3),
+            stride=(2, 2) if not self.lowres else (1, 1),
+            padding="SAME",
+            with_bias=False,
+            dtype=self.dtype,
         )(x)
         x = nn.BatchNormalization(decay_rate=0.9, eps=1e-5)(x)
         x = module.to_module(jax.nn.relu)()(x)
 
         if not self.lowres:
-            x = nn.MaxPool(window_shape=(1, 3, 3, 1), strides=(1, 2, 2, 1), padding="SAME")(
-                x
-            )
+            x = nn.MaxPool(
+                window_shape=(1, 3, 3, 1), strides=(1, 2, 2, 1), padding="SAME"
+            )(x)
         for i, block_size in enumerate(self.stages):
             for j in range(block_size):
                 strides = (2, 2) if i > 0 and j == 0 else (1, 1)
@@ -128,17 +141,20 @@ class ResNet50(ResNet):
             stages=[3, 4, 6, 3], block_type=BottleneckResNetBlock, *args, **kwargs
         )
 
+
 class ResNet101(ResNet):
     def __init__(self, *args, **kwargs):
         super().__init__(
             stages=[3, 4, 23, 3], block_type=BottleneckResNetBlock, *args, **kwargs
         )
 
+
 class ResNet152(ResNet):
     def __init__(self, *args, **kwargs):
         super().__init__(
             stages=[3, 8, 36, 3], block_type=BottleneckResNetBlock, *args, **kwargs
         )
+
 
 class ResNet200(ResNet):
     def __init__(self, *args, **kwargs):
@@ -147,9 +163,7 @@ class ResNet200(ResNet):
         )
 
 
-
-
-_resnet__init___docstring = '''
+_resnet__init___docstring = """
 Instantiates the {} architecture from [Deep Residual Learning for Image Recognition](https://arxiv.org/abs/1512.03385)
 
 Arguments:
@@ -158,11 +172,11 @@ Arguments:
             This version is better suited for datasets like CIFAR10. (Default: False)
     dtype: Optional dtype of the convolutions and linear operations, 
            either jnp.float32 (default) or jnp.float16 for mixed precision.
-'''
+"""
 
-ResNet18.__init__.__doc__ = _resnet__init___docstring.format('ResNet18')
-ResNet34.__init__.__doc__ = _resnet__init___docstring.format('ResNet34')
-ResNet50.__init__.__doc__ = _resnet__init___docstring.format('ResNet50')
-ResNet101.__init__.__doc__ = _resnet__init___docstring.format('ResNet101')
-ResNet152.__init__.__doc__ = _resnet__init___docstring.format('ResNet152')
-ResNet200.__init__.__doc__ = _resnet__init___docstring.format('ResNet200')
+ResNet18.__init__.__doc__ = _resnet__init___docstring.format("ResNet18")
+ResNet34.__init__.__doc__ = _resnet__init___docstring.format("ResNet34")
+ResNet50.__init__.__doc__ = _resnet__init___docstring.format("ResNet50")
+ResNet101.__init__.__doc__ = _resnet__init___docstring.format("ResNet101")
+ResNet152.__init__.__doc__ = _resnet__init___docstring.format("ResNet152")
+ResNet200.__init__.__doc__ = _resnet__init___docstring.format("ResNet200")
