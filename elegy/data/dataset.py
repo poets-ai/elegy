@@ -93,13 +93,13 @@ def default_batch_fn(
     assert len(list_of_samples) > 0
     first_sample = list_of_samples[0]
     if hasattr(first_sample, "__array__"):
-        return jnp.stack(list_of_samples)
+        return jnp.asarray(list_of_samples)
     elif isinstance(first_sample, (tp.Tuple, tp.List)):
         sample_len = len(first_sample)
         batched_lists = [
             [sample[i] for sample in list_of_samples] for i in range(sample_len)
         ]
-        batched_stacks = [jnp.stack(batch) for batch in batched_lists]
+        batched_stacks = [jnp.asarray(batch) for batch in batched_lists]
         return tuple(batched_stacks)
     else:
         return tuple(list_of_samples)
