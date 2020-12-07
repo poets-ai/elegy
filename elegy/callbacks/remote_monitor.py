@@ -76,6 +76,5 @@ class RemoteMonitor(Callback):
                 )
         except requests.exceptions.RequestException:
             logging.warning(
-                "Warning: could not reach RemoteMonitor "
-                "root server at " + str(self.root)
+                "Warning: could not reach RemoteMonitor root server at %s", self.root
             )
