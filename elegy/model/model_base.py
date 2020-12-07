@@ -647,7 +647,7 @@ class LossMetrics(Metric):
 class Metrics(Metric):
     def __init__(self, metrics, **kwargs):
         super().__init__(**kwargs)
-        self.metrics = metrics if metrics is not None else tuple()
+        self.metrics = metrics if metrics is not None else ()
 
     def call(self, logs, **kwargs):
 
