@@ -52,7 +52,7 @@ class ArrayDataAdapter(DataAdapter):
 
         inputs = pack_x_y_sample_weight(x, y, sample_weights)
 
-        num_samples = set(int(i.shape[0]) for i in flatten(inputs))
+        num_samples = {int(i.shape[0]) for i in flatten(inputs)}
 
         if len(num_samples) > 1:
             msg = "Data cardinality is ambiguous:\n"

@@ -145,13 +145,13 @@ class DataHandler(object):
 def _type_name(x):
     """Generates a description of the type of an object."""
     if isinstance(x, dict):
-        key_types = set(_type_name(key) for key in x.keys())
-        val_types = set(_type_name(key) for key in x.values())
+        key_types = {_type_name(key) for key in x.keys()}
+        val_types = {_type_name(key) for key in x.values()}
         return "({} containing {} keys and {} values)".format(
             type(x), key_types, val_types
         )
     if isinstance(x, (list, tuple)):
-        types = set(_type_name(val) for val in x)
+        types = {_type_name(val) for val in x}
         return "({} containing values of types {})".format(type(x), types)
     return str(type(x))
 
