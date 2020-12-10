@@ -24,6 +24,8 @@ __all__ = [
     "CategoricalCrossentropy",
     "CosineSimilarity",
     "cosine_similarity",
+    "Huber",
+    "huber",
     "Loss",
     "Reduction",
     "MeanAbsoluteError",

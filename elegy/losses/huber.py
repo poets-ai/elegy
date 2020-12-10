@@ -6,14 +6,15 @@ import jax.numpy as jnp
 from elegy.losses.loss import Loss, Reduction
 
 
-def huber(
-    y_true: jnp.ndarray, y_pred: jnp.ndarray, delta: float
-) -> jnp.ndarray:
+def huber(y_true: jnp.ndarray, y_pred: jnp.ndarray, delta: float) -> jnp.ndarray:
     """
-    Computes the cosine similarity between labels and predictions.
+    Computes the Huber loss between labels and predictions.
 
     ```python
-    loss = -sum(l2_norm(y_true) * l2_norm(y_pred))
+    For each value x in error = y_true - y_pred:
+    loss = 0.5 * x^2                  if |x| <= d
+    loss = 0.5 * d^2 + d * (|x| - d)  if |x| > d
+    where d is delta. See: https://en.wikipedia.org/wiki/Huber_loss
     ```
 
     Usage:
@@ -24,21 +25,33 @@ def huber(
     y_true = jax.random.randint(rng, shape=(2, 3), minval=0, maxval=2)
     y_pred = jax.random.uniform(rng, shape=(2, 3))
 
-    loss = elegy.losses.cosine_similarity(y_true, y_pred, axis=1)
+    loss = elegy.losses.huber(y_true, y_pred, delta=1.0)
     assert loss.shape == (2,)
 
-    y_true = y_true / jnp.maximum(jnp.linalg.norm(y_true, axis=1, keepdims=True), jnp.sqrt(utils.EPSILON))
-    y_pred = y_pred / jnp.maximum(jnp.linalg.norm(y_pred, axis=1, keepdims=True), jnp.sqrt(utils.EPSILON))
-    assert jnp.array_equal(loss, -jnp.sum(y_true * y_pred, axis=1))
+    y_pred = y_pred.astype(float)
+    y_true = y_true.astype(float)
+    delta = 1.0
+    error = jnp.subtract(y_pred, y_true)
+    abs_error = jnp.abs(error)
+    quadratic = jnp.minimum(abs_error, delta)
+    linear = jnp.subtract(abs_error, quadratic)
+    assert jnp.array_equal(loss, jnp.mean(
+      jnp.add(
+          jnp.multiply(
+              0.5,
+              jnp.multiply(quadratic, quadratic)
+              ),
+              jnp.multiply(delta, linear)), axis=-1
+    ))
     ```
 
     Arguments:
         y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
         y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
-        axis: The dimension along which the cosinemsimilarity is computed.
+        delta: A float, the point where the Huber loss function changes from a quadratic to linear.
 
     Returns:
-          cosine similarity Values. If reduction is NONE, this has
+          huber loss Values. If reduction is NONE, this has
          shape [batch_size, d0, .. dN-1]; otherwise, it is scalar.
          (Note dN-1 because all loss functions reduce by 1 dimension, usually axis=-1.)
     """
@@ -50,52 +63,59 @@ def huber(
     quadratic = jnp.minimum(abs_error, delta)
     linear = jnp.subtract(abs_error, quadratic)
     return jnp.mean(
-      jnp.add(
-          jnp.multiply(
-              0.5,
-              jnp.multiply(quadratic, quadratic)
-              ),
-              jnp.multiply(delta, linear)), axis=-1
-  )
+        jnp.add(
+            jnp.multiply(0.5, jnp.multiply(quadratic, quadratic)),
+            jnp.multiply(delta, linear),
+        ),
+        axis=-1,
+    )
+
 
 class Huber(Loss):
     """
-    Computes the mean squared logarithmic errors between labels and predictions.
+    Computes the huber errors between labels and predictions.
 
-    `loss = -sum(l2_norm(y_true) * l2_norm(y_pred))`
+    ```python
+    For each value x in error = y_true - y_pred:
+    loss = 0.5 * x^2                  if |x| <= d
+    loss = 0.5 * d^2 + d * (|x| - d)  if |x| > d
+    where d is delta. See: https://en.wikipedia.org/wiki/Huber_loss
+    ```
 
     Usage:
 
     ```python
-    y_true = jnp.array([[0., 1.], [1., 1.]])
-    y_pred = jnp.array([[1., 0.], [1., 1.]])
+    y_true = jnp.array([[0, 1], [0, 0]])
+    y_pred = jnp.array([[0.6, 0.4], [0.4, 0.6]])
 
     # Using 'auto'/'sum_over_batch_size' reduction type.
-    cosine_loss = elegy.losses.CosineSimilarity(axis=1)
-    assert cosine_loss(y_true, y_pred) == -0.49999997
+    huber_loss = elegy.losses.Huber()
+    assert huber_loss(y_true, y_pred) == 0.155
 
     # Calling with 'sample_weight'.
-    assert cosine_loss(y_true, y_pred, sample_weight=jnp.array([0.8, 0.2])) == -0.099999994
+    assert (
+        huber_loss(y_true, y_pred, sample_weight=jnp.array([0.8, 0.2])) == 0.08500001
+    )
 
     # Using 'sum' reduction type.
-    cosine_loss = elegy.losses.CosineSimilarity(axis=1,
+    huber_loss = elegy.losses.Huber(
         reduction=elegy.losses.Reduction.SUM
     )
-    assert cosine_loss(y_true, y_pred) == -0.99999994
+    assert huber_loss(y_true, y_pred) == 0.31
 
     # Using 'none' reduction type.
-    cosine_loss = elegy.losses.CosineSimilarity(axis=1,
+    huber_loss = elegy.losses.Huber(
         reduction=elegy.losses.Reduction.NONE
     )
 
-    assert jnp.equal(cosine_loss(y_true, y_pred), jnp.array([-0., -0.99999994])).all()
+    assert jnp.equal(huber_loss(y_true, y_pred), jnp.array([0.18, 0.13000001])).all()
     ```
     Usage with the Elegy API:
 
     ```python
     model = elegy.Model(
         module_fn,
-        loss=elegy.losses.CosineSimilarity(axis=1),
+        loss=elegy.losses.Huber(delta=1.0),
         metrics=elegy.metrics.Mean(),
     )
     ```
@@ -103,7 +123,7 @@ class Huber(Loss):
 
     def __init__(
         self,
-        delta: int = 1.0,
+        delta: float = 1.0,
         reduction: tp.Optional[Reduction] = None,
         weight: tp.Optional[float] = None,
         on: tp.Optional[types.IndexLike] = None,
@@ -113,8 +133,7 @@ class Huber(Loss):
         Initializes `Mean` class.
 
         Arguments:
-            axis: (Optional) Defaults to -1. The dimension along which the cosine
-                   similarity is computed.
+            delta: (Optional) Defaults to 1.0. A float, the point where the Huber loss function changes from a quadratic to linear.
             reduction: (Optional) Type of `elegy.losses.Reduction` to apply to
                 loss. Default value is `SUM_OVER_BATCH_SIZE`. For almost all cases
                 this defaults to `SUM_OVER_BATCH_SIZE`.
@@ -139,7 +158,7 @@ class Huber(Loss):
         ] = None,  # not used, __call__ handles it, left for documentation purposes.
     ) -> jnp.ndarray:
         """
-        Invokes the `CosineSimilarity` instance.
+        Invokes the `Huber` instance.
 
         Arguments:
             y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`, except
