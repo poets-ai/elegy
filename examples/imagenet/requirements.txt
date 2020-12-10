@@ -1,3 +1,3 @@
 #additional requirements
 tensorflow-datasets==4.0.1
-tensorflow-gpu==2.2.0  #tensorflow-cpu also ok, but with gpu faster
+tensorflow-gpu==2.3.1  #tensorflow-cpu also ok, but with gpu faster
