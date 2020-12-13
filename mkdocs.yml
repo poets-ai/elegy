@@ -102,6 +102,14 @@ nav:
       next_rng_key: api/module/next_rng_key.md
       to_module: api/module/to_module.md
     name_context: api/name_context.md
+    nets:
+      resnet:
+        ResNet101: api/nets/resnet/ResNet101.md
+        ResNet152: api/nets/resnet/ResNet152.md
+        ResNet18: api/nets/resnet/ResNet18.md
+        ResNet200: api/nets/resnet/ResNet200.md
+        ResNet34: api/nets/resnet/ResNet34.md
+        ResNet50: api/nets/resnet/ResNet50.md
     next_rng_key: api/next_rng_key.md
     nn:
       AvgPool: api/nn/AvgPool.md

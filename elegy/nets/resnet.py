@@ -84,6 +84,8 @@ class BottleneckResNetBlock(ResNetBlock):
 class ResNet(module.Module):
     """ResNet V1"""
 
+    __all__ = ["__init__", "call"]
+
     def __init__(
         self,
         stages: tp.List[int],
@@ -126,40 +128,110 @@ class ResNet(module.Module):
 
 
 class ResNet18(ResNet):
-    def __init__(self, *args, **kwargs):
-        super().__init__(stages=[2, 2, 2, 2], block_type=ResNetBlock, *args, **kwargs)
+    def __init__(
+        self,
+        lowres: tp.Optional[bool] = False,
+        dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
+        *args,
+        **kwargs
+    ):
+        super().__init__(
+            stages=[2, 2, 2, 2],
+            block_type=ResNetBlock,
+            lowres=lowres,
+            dtype=dtype,
+            *args,
+            **kwargs
+        )
 
 
 class ResNet34(ResNet):
-    def __init__(self, *args, **kwargs):
-        super().__init__(stages=[3, 4, 6, 3], block_type=ResNetBlock, *args, **kwargs)
+    def __init__(
+        self,
+        lowres: tp.Optional[bool] = False,
+        dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
+        *args,
+        **kwargs
+    ):
+        super().__init__(
+            stages=[3, 4, 6, 3],
+            block_type=ResNetBlock,
+            lowres=lowres,
+            dtype=dtype,
+            *args,
+            **kwargs
+        )
 
 
 class ResNet50(ResNet):
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        lowres: tp.Optional[bool] = False,
+        dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
+        *args,
+        **kwargs
+    ):
         super().__init__(
-            stages=[3, 4, 6, 3], block_type=BottleneckResNetBlock, *args, **kwargs
+            stages=[3, 4, 6, 3],
+            block_type=BottleneckResNetBlock,
+            lowres=lowres,
+            dtype=dtype,
+            *args,
+            **kwargs
         )
 
 
 class ResNet101(ResNet):
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        lowres: tp.Optional[bool] = False,
+        dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
+        *args,
+        **kwargs
+    ):
         super().__init__(
-            stages=[3, 4, 23, 3], block_type=BottleneckResNetBlock, *args, **kwargs
+            stages=[3, 4, 23, 3],
+            block_type=BottleneckResNetBlock,
+            lowres=lowres,
+            dtype=dtype,
+            *args,
+            **kwargs
         )
 
 
 class ResNet152(ResNet):
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        lowres: tp.Optional[bool] = False,
+        dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
+        *args,
+        **kwargs
+    ):
         super().__init__(
-            stages=[3, 8, 36, 3], block_type=BottleneckResNetBlock, *args, **kwargs
+            stages=[3, 8, 36, 3],
+            block_type=BottleneckResNetBlock,
+            lowres=lowres,
+            dtype=dtype,
+            *args,
+            **kwargs
         )
 
 
 class ResNet200(ResNet):
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        lowres: tp.Optional[bool] = False,
+        dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
+        *args,
+        **kwargs
+    ):
         super().__init__(
-            stages=[3, 24, 36, 3], block_type=BottleneckResNetBlock, *args, **kwargs
+            stages=[3, 24, 36, 3],
+            block_type=BottleneckResNetBlock,
+            lowres=lowres,
+            dtype=dtype,
+            *args,
+            **kwargs
         )
 
 
