@@ -76,4 +76,5 @@ __all__ = [
     "get_dynamic_context",
     "set_context",
     "value_and_grad",
+    "data",
 ]

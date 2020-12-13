@@ -6,8 +6,32 @@ from .data_adapter import DataAdapter
 from .utils import is_none_or_empty
 
 
+__all__ = ["Dataset", "DataLoader"]
+
+
+_example_usage_docstring = """
+
+Example Usage:
+```
+class MyDataset(elegy.data.Dataset):
+def __len__(self):
+    return 128
+
+def __getitem__(self, i):
+    #dummy data
+    return np.random.random([224, 224, 3]),  np.random.randint(10)
+
+ds     = MyDataset()
+loader = elegy.data.DataLoader(ds, batch_size=8, n_workers=8, worker_type='thread', shuffle=True)
+model.fit(loader, epochs=10)
+```
+"""
+
+
 class Dataset:
-    """Abstract base class for datasets. Subclasses should implement the __getitem__ and __len__ methods."""
+    """Abstract base class for datasets. Subclasses should implement the `__getitem__` and `__len__` methods."""  # +_example_usage_docstring
+
+    __all__ = ["__getitem__", "__len__"]
 
     def __getitem__(self, i: int) -> tp.Any:
         """Abstract method. In a subclass this should return the `i`-th data sample"""
@@ -19,7 +43,7 @@ class Dataset:
 
 
 class DataLoader:
-    """Loads samples from a dataset and combines them into batches. Can be directly passed to Model.fit()"""
+    """Loads samples from a dataset and combines them into batches. Can be directly passed to `Model.fit()`"""  # +_example_usage_docstring
 
     # TODO: __getitem__  incl slicing e.g. [:5]
     # TODO: custom batch_fn parameter
@@ -38,7 +62,7 @@ class DataLoader:
         """
         Arguments:
             dataset: The dataset from which to load samples.
-                     A subclass of elegy.data.Dataset or an iterable which implements __getitem__ and __len__.
+                     A subclass of elegy.data.Dataset or an iterable which implements `__getitem__` and `__len__`.
             batch_size: A positive integer specifying how many samples a batch should have.
             n_workers: The number of parallel worker threads or processes which load data from the dataset.
                        A value of 0 (default) means to load data from the main thread.
@@ -84,6 +108,10 @@ class DataLoader:
     def __len__(self) -> int:
         """Returns the number of batches per epoch"""
         return int(np.ceil(len(self.dataset) / self.batch_size))
+
+
+Dataset.__doc__ += _example_usage_docstring
+DataLoader.__doc__ += _example_usage_docstring
 
 
 def default_batch_fn(

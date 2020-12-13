@@ -35,6 +35,9 @@ nav:
       RemoteMonitor: api/callbacks/RemoteMonitor.md
       TensorBoard: api/callbacks/TensorBoard.md
       TerminateOnNaN: api/callbacks/TerminateOnNaN.md
+    data:
+      DataLoader: api/data/DataLoader.md
+      Dataset: api/data/Dataset.md
     get_dynamic_context: api/get_dynamic_context.md
     get_losses: api/get_losses.md
     get_metrics: api/get_metrics.md
