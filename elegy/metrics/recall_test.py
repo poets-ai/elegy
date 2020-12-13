@@ -39,6 +39,14 @@ class RecallTest(TestCase):
             ),
         )
 
+        float_sample_weight = np.random.uniform(0, 1, size=(6, 7))[np.newaxis]
+        assert np.allclose(
+            tfk.metrics.Recall(thresholds=0.3)(y_true, y_pred, sample_weight=float_sample_weight),
+            elegy.metrics.Recall(threshold=0.3)(y_true, y_pred, sample_weight=float_sample_weight)
+        )
+
+
+
     def test_cummulative(self):
         tm = tfk.metrics.Recall(thresholds=0.3)
         em = elegy.metrics.Recall(threshold=0.3)
