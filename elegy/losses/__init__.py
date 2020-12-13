@@ -28,7 +28,7 @@ __all__ = [
     "MeanAbsoluteError",
     "mean_absolute_error",
     "MeanAbsolutePercentageError",
-    "mean_percentage_absolute_error",
+    "mean_absolute_percentage_error",
     "MeanSquaredError",
     "mean_squared_error",
     "MeanSquaredLogarithmicError",

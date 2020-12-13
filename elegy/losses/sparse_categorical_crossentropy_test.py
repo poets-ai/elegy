@@ -32,3 +32,18 @@ def test_basic():
     )
     result = scce(y_true, y_pred)  # [0.0513, 2.303]
     assert jnp.all(jnp.isclose(result, [0.0513, 2.303], rtol=0.01))
+
+
+def test_scce_out_of_bounds():
+    ypred = jnp.zeros([4, 10])
+    ytrue0 = jnp.array([0, 0, -1, 0])
+    ytrue1 = jnp.array([0, 0, 10, 0])
+
+    scce = elegy.losses.SparseCategoricalCrossentropy()
+
+    assert jnp.isnan(scce(ytrue0, ypred)).any()
+    assert jnp.isnan(scce(ytrue1, ypred)).any()
+
+    scce = elegy.losses.SparseCategoricalCrossentropy(check_bounds=False)
+    assert not jnp.isnan(scce(ytrue0, ypred)).any()
+    assert not jnp.isnan(scce(ytrue1, ypred)).any()
