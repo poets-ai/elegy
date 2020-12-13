@@ -10,13 +10,17 @@ from elegy.losses.categorical_crossentropy import categorical_crossentropy
 
 
 def sparse_categorical_crossentropy(
-    y_true: jnp.ndarray, y_pred: jnp.ndarray, from_logits: bool = False
+    y_true: jnp.ndarray,
+    y_pred: jnp.ndarray,
+    from_logits: bool = False,
+    check_bounds: bool = True,
 ) -> jnp.ndarray:
+
+    n_classes = y_pred.shape[-1]
 
     if from_logits:
         y_pred = jax.nn.log_softmax(y_pred)
-        return -jnp.take_along_axis(y_pred, y_true[..., None], axis=-1)[..., 0]
-
+        loss = -jnp.take_along_axis(y_pred, y_true[..., None], axis=-1)[..., 0]
     else:
         # select output value
         y_pred = jnp.take_along_axis(y_pred, y_true[..., None], axis=-1)[..., 0]
@@ -24,7 +28,14 @@ def sparse_categorical_crossentropy(
         # calculate log
         y_pred = jnp.maximum(y_pred, utils.EPSILON)
         y_pred = jnp.log(y_pred)
-        return -y_pred
+        loss = -y_pred
+
+    if check_bounds:
+        # set NaN where y_true is negative or larger/equal to the number of y_pred channels
+        loss = jnp.where(y_true < 0, jnp.nan, loss)
+        loss = jnp.where(y_true >= n_classes, jnp.nan, loss)
+
+    return loss
 
 
 class SparseCategoricalCrossentropy(Loss):
@@ -75,8 +86,8 @@ class SparseCategoricalCrossentropy(Loss):
     ```python
     model = elegy.Model(
         module_fn,
-        loss=lelegy.losses.SparseCategoricalCrossentropy(),
-        metrics=lelegy.metrics.Accuracy(),
+        loss=elegy.losses.SparseCategoricalCrossentropy(),
+        metrics=elegy.metrics.Accuracy(),
         optimizer=optax.adam(1e-3),
     )
 
@@ -89,6 +100,7 @@ class SparseCategoricalCrossentropy(Loss):
         reduction: tp.Optional[Reduction] = None,
         weight: tp.Optional[float] = None,
         on: tp.Optional[types.IndexLike] = None,
+        check_bounds: tp.Optional[bool] = True,
         **kwargs
     ):
         """
@@ -109,10 +121,15 @@ class SparseCategoricalCrossentropy(Loss):
                 the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`
                 then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
                 check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).
+            check_bounds: If `True` (default), checks `y_true` for negative values and values
+                larger or equal than the number of channels in `y_pred`. Sets loss to NaN
+                if this is the case. If `False`, the check is disabled and the loss may contain
+                incorrect values.
         """
         super().__init__(reduction=reduction, weight=weight, on=on, **kwargs)
 
         self._from_logits = from_logits
+        self._check_bounds = check_bounds
 
     def call(
         self, y_true, y_pred, sample_weight: tp.Optional[jnp.ndarray] = None
@@ -138,5 +155,8 @@ class SparseCategoricalCrossentropy(Loss):
         """
 
         return sparse_categorical_crossentropy(
-            y_true, y_pred, from_logits=self._from_logits
+            y_true,
+            y_pred,
+            from_logits=self._from_logits,
+            check_bounds=self._check_bounds,
         )
