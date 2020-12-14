@@ -68,7 +68,7 @@ nav:
       binary_crossentropy: api/losses/binary_crossentropy.md
       cosine_similarity: api/losses/cosine_similarity.md
       mean_absolute_error: api/losses/mean_absolute_error.md
-      mean_percentage_absolute_error: api/losses/mean_percentage_absolute_error.md
+      mean_absolute_percentage_error: api/losses/mean_absolute_percentage_error.md
       mean_squared_error: api/losses/mean_squared_error.md
       mean_squared_logarithmic_error: api/losses/mean_squared_logarithmic_error.md
       sparse_categorical_crossentropy: api/losses/sparse_categorical_crossentropy.md
@@ -77,6 +77,7 @@ nav:
       BinaryAccuracy: api/metrics/BinaryAccuracy.md
       BinaryCrossentropy: api/metrics/BinaryCrossentropy.md
       CategoricalAccuracy: api/metrics/CategoricalAccuracy.md
+      F1: api/metrics/F1.md
       Mean: api/metrics/Mean.md
       MeanAbsoluteError: api/metrics/MeanAbsoluteError.md
       MeanSquaredError: api/metrics/MeanSquaredError.md
@@ -90,6 +91,7 @@ nav:
       binary_accuracy: api/metrics/binary_accuracy.md
       binary_crossentropy: api/metrics/binary_crossentropy.md
       categorical_accuracy: api/metrics/categorical_accuracy.md
+      f1: api/metrics/f1.md
       mean_absolute_error: api/metrics/mean_absolute_error.md
       mean_squared_error: api/metrics/mean_squared_error.md
       precision: api/metrics/precision.md
