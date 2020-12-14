@@ -35,6 +35,9 @@ nav:
       RemoteMonitor: api/callbacks/RemoteMonitor.md
       TensorBoard: api/callbacks/TensorBoard.md
       TerminateOnNaN: api/callbacks/TerminateOnNaN.md
+    data:
+      DataLoader: api/data/DataLoader.md
+      Dataset: api/data/Dataset.md
     get_dynamic_context: api/get_dynamic_context.md
     get_losses: api/get_losses.md
     get_metrics: api/get_metrics.md
@@ -56,6 +59,8 @@ nav:
       BinaryCrossentropy: api/losses/BinaryCrossentropy.md
       CategoricalCrossentropy: api/losses/CategoricalCrossentropy.md
       CosineSimilarity: api/losses/CosineSimilarity.md
+      Huber: api/losses/Huber.md
+      huber: api/losses/huber.md
       Loss: api/losses/Loss.md
       MeanAbsoluteError: api/losses/MeanAbsoluteError.md
       MeanAbsolutePercentageError: api/losses/MeanAbsolutePercentageError.md
