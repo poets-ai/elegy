@@ -106,6 +106,7 @@ nav:
     name_context: api/name_context.md
     nets:
       resnet:
+        ResNet: api/nets/resnet/ResNet.md
         ResNet101: api/nets/resnet/ResNet101.md
         ResNet152: api/nets/resnet/ResNet152.md
         ResNet18: api/nets/resnet/ResNet18.md

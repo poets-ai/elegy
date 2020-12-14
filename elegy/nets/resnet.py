@@ -5,7 +5,15 @@ from elegy import module, nn
 import typing as tp
 
 
-__all__ = ["ResNet18", "ResNet34", "ResNet50", "ResNet101", "ResNet152", "ResNet200"]
+__all__ = [
+    "ResNet",
+    "ResNet18",
+    "ResNet34",
+    "ResNet50",
+    "ResNet101",
+    "ResNet152",
+    "ResNet200",
+]
 
 
 class ResNetBlock(module.Module):
@@ -82,7 +90,9 @@ class BottleneckResNetBlock(ResNetBlock):
 
 
 class ResNet(module.Module):
-    """ResNet V1"""
+    """A generic ResNet V1 architecture that can be customized for non-standard configurations
+    Original Paper: [Deep Residual Learning for Image Recognition](https://arxiv.org/abs/1512.03385)
+    """
 
     __all__ = ["__init__", "call"]
 
@@ -94,6 +104,18 @@ class ResNet(module.Module):
         *args,
         **kwargs
     ):
+        """
+        Arguments:
+            stages: A list of integers representing the number of blocks in each stage.
+                    e.g: [3, 4, 6, 3] for a ResNet50
+            block_type: Which ResNet block type to use.
+            lowres: Optional, whether to use the low resolution version
+                    as described in subsection 4.2 of the orignal paper.
+                    This version is better suited for datasets like CIFAR10. (Default: False)
+            dtype: Optional dtype of the convolutions and linear operations,
+                    either jnp.float32 (default) or jnp.float16 for mixed precision.
+        """
+
         super().__init__(*args, **kwargs)
         self.stages = stages
         self.block_type = block_type
