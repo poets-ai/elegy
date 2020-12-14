@@ -47,3 +47,18 @@ def test_scce_out_of_bounds():
     scce = elegy.losses.SparseCategoricalCrossentropy(check_bounds=False)
     assert not jnp.isnan(scce(ytrue0, ypred)).any()
     assert not jnp.isnan(scce(ytrue1, ypred)).any()
+
+
+def test_scce_ignore_class():
+    ypred0 = jnp.zeros([4, 10])
+    ypred1 = ypred0 + jnp.array([0, 0, 0, 1])[:, jnp.newaxis]
+
+    ytrue1 = jnp.array([0, 1, 2, 255])
+
+    scce = elegy.losses.SparseCategoricalCrossentropy(
+        check_bounds=True, ignore_index=255
+    )
+    loss0 = scce(ytrue1, ypred0)
+    loss1 = scce(ytrue1, ypred1)
+    assert not jnp.isnan(loss0) and not jnp.isnan(loss1)
+    assert loss0 == loss1

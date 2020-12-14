@@ -14,6 +14,7 @@ def sparse_categorical_crossentropy(
     y_pred: jnp.ndarray,
     from_logits: bool = False,
     check_bounds: bool = True,
+    ignore_index: int = None,
 ) -> jnp.ndarray:
 
     n_classes = y_pred.shape[-1]
@@ -29,6 +30,13 @@ def sparse_categorical_crossentropy(
         y_pred = jnp.maximum(y_pred, utils.EPSILON)
         y_pred = jnp.log(y_pred)
         loss = -y_pred
+
+    if ignore_index is not None:
+        # zero-out the loss where y_true is ignore_index
+        valid_mask = y_true != ignore_index
+        loss = loss * valid_mask
+        # remove the ignore value from y_true to avoid out-of-bounds NaNs
+        y_true = y_true * valid_mask
 
     if check_bounds:
         # set NaN where y_true is negative or larger/equal to the number of y_pred channels
@@ -101,6 +109,7 @@ class SparseCategoricalCrossentropy(Loss):
         weight: tp.Optional[float] = None,
         on: tp.Optional[types.IndexLike] = None,
         check_bounds: tp.Optional[bool] = True,
+        ignore_index: tp.Optional[int] = None,
         **kwargs
     ):
         """
@@ -125,11 +134,14 @@ class SparseCategoricalCrossentropy(Loss):
                 larger or equal than the number of channels in `y_pred`. Sets loss to NaN
                 if this is the case. If `False`, the check is disabled and the loss may contain
                 incorrect values.
+            ignore_index: Optional integer specifying a class in `y_true` to be ignored,
+                i.e. it will not contribute to the loss.
         """
         super().__init__(reduction=reduction, weight=weight, on=on, **kwargs)
 
         self._from_logits = from_logits
         self._check_bounds = check_bounds
+        self._ignore_index = ignore_index
 
     def call(
         self, y_true, y_pred, sample_weight: tp.Optional[jnp.ndarray] = None
@@ -159,4 +171,5 @@ class SparseCategoricalCrossentropy(Loss):
             y_pred,
             from_logits=self._from_logits,
             check_bounds=self._check_bounds,
+            ignore_index=self._ignore_index,
         )
