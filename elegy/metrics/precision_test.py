@@ -50,6 +50,18 @@ class PrecisionTest(TestCase):
             ),
         )
 
+        float_sample_weight = np.random.uniform(0, 1, size=(6, 7))[np.newaxis]
+        assert np.allclose(
+            tfk.metrics.Precision(thresholds=0.3)(
+                y_true, y_pred, sample_weight=float_sample_weight
+            ),
+            elegy.metrics.Precision(threshold=0.3)(
+                y_true,
+                y_pred,
+                sample_weight=float_sample_weight,
+            ),
+        )
+
     #
     def test_cummulative(self):
         tm = tfk.metrics.Precision(thresholds=0.3)

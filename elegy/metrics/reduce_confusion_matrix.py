@@ -39,32 +39,32 @@ def reduce(
             raise e
 
     if reduction == Reduction.TRUE_POSITIVES:
-        if sample_weight is not None:
-            y_true = y_true * sample_weight
-            y_pred = y_pred * sample_weight
         mask = y_pred == 1
-        value = jnp.sum(y_true[mask] == 1)
+        hits = y_true == y_pred
+        if sample_weight is not None:
+            hits = hits * sample_weight
+        value = jnp.sum(hits * mask)
 
     if reduction == Reduction.FALSE_POSITIVES:
-        if sample_weight is not None:
-            y_true = y_true * sample_weight
-            y_pred = y_pred * sample_weight
         mask = y_pred == 1
-        value = jnp.sum(y_true[mask] == 0)
+        misses = y_true != y_pred
+        if sample_weight is not None:
+            misses = misses * sample_weight
+        value = jnp.sum(misses * mask)
 
     if reduction == Reduction.FALSE_NEGATIVES:
-        if sample_weight is not None:
-            y_true = y_true * sample_weight
-            y_pred = y_pred * sample_weight
         mask = y_true == 1
-        value = jnp.sum(y_pred[mask] == 0)
+        misses = y_true != y_pred
+        if sample_weight is not None:
+            misses = misses * sample_weight
+        value = jnp.sum(misses * mask)
 
     if reduction == Reduction.TRUE_NEGATIVES:
-        if sample_weight is not None:
-            y_true = y_true * sample_weight
-            y_pred = y_pred * sample_weight
         mask = y_true == 0
-        value = jnp.sum(y_pred[mask] == 0)
+        hits = y_true == y_pred
+        if sample_weight is not None:
+            hits = hits * sample_weight
+        value = jnp.sum(hits * mask)
 
     cm_metric += value
     return cm_metric
