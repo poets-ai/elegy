@@ -11,6 +11,7 @@ from . import (
     nets,
     nn,
     regularizers,
+    data,
 )
 from .losses import Loss
 from .metrics import Metric
