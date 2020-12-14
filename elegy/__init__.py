@@ -11,6 +11,7 @@ from . import (
     nets,
     nn,
     regularizers,
+    data,
 )
 from .losses import Loss
 from .metrics import Metric
@@ -76,4 +77,5 @@ __all__ = [
     "get_dynamic_context",
     "set_context",
     "value_and_grad",
+    "data",
 ]
