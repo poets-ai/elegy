@@ -7,15 +7,20 @@ from elegy.losses.loss import Loss, Reduction
 
 
 def huber(y_true: jnp.ndarray, y_pred: jnp.ndarray, delta: float) -> jnp.ndarray:
-    """
+    r"""
     Computes the Huber loss between labels and predictions.
-
-    ```python
+    
     For each value x in error = y_true - y_pred:
-    loss = 0.5 * x^2                  if |x| <= d
-    loss = 0.5 * d^2 + d * (|x| - d)  if |x| > d
+
+    $$
+    loss =
+    \begin{cases}
+    \ 0.5 \times x^2,\hskip8em\text{if } |x|\leq d\\
+    0.5 \times d^2 + d \times (|x| - d),\hskip1.7em \text{otherwise} 
+    \end{cases}
+    $$
+    
     where d is delta. See: https://en.wikipedia.org/wiki/Huber_loss
-    ```
 
     Usage:
 
@@ -72,15 +77,20 @@ def huber(y_true: jnp.ndarray, y_pred: jnp.ndarray, delta: float) -> jnp.ndarray
 
 
 class Huber(Loss):
-    """
-    Computes the huber errors between labels and predictions.
-
-    ```python
+    r"""
+    Computes the Huber loss  between labels and predictions.
+    
     For each value x in error = y_true - y_pred:
-    loss = 0.5 * x^2                  if |x| <= d
-    loss = 0.5 * d^2 + d * (|x| - d)  if |x| > d
+
+    $$
+    loss =
+    \begin{cases}
+    \ 0.5 \times x^2,\hskip8em\text{if } |x|\leq d\\
+    0.5 \times d^2 + d \times (|x| - d),\hskip1.7em \text{otherwise} 
+    \end{cases}
+    $$
+    
     where d is delta. See: https://en.wikipedia.org/wiki/Huber_loss
-    ```
 
     Usage:
 
