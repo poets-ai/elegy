@@ -1,6 +1,7 @@
 import typing as tp
 from enum import Enum
 
+import jax
 import jax.numpy as jnp
 import numpy as np
 
@@ -13,6 +14,11 @@ class Reduction(Enum):
     FALSE_POSITIVES = "false_positives"
     FALSE_NEGATIVES = "false_negatives"
     TRUE_NEGATIVES = "true_negatives"
+
+    MULTICLASS_TRUE_POSITIVES = "multiclass_true_positives"
+    MULTICLASS_FALSE_POSITIVES = "multiclass_false_positives"
+    MULTICLASS_FALSE_NEGATIVES = "multiclass_false_negatives"
+
 
 
 def reduce(
@@ -65,6 +71,33 @@ def reduce(
         if sample_weight is not None:
             hits = hits * sample_weight
         value = jnp.sum(hits * mask)
+    
+    if reduction == Reduction.MULTICLASS_TRUE_POSITIVES:
+        hits = (y_true == y_pred).astype(jnp.float32)
+        if sample_weight is not None:
+            hits = hits * sample_weight
+        sdn = jax.lax.ScatterDimensionNumbers((), (0,), (0,))
+        ixs = jnp.ravel(y_true)[:,np.newaxis]
+        value = jnp.zeros(cm_metric.shape, dtype=jnp.float32)
+        value = jax.lax.scatter_add(value, ixs, jnp.ravel(hits), sdn)
+    
+    if reduction == Reduction.MULTICLASS_FALSE_POSITIVES:
+        misses = (y_true != y_pred).astype(jnp.float32)
+        if sample_weight is not None:
+            misses = misses * sample_weight
+        sdn = jax.lax.ScatterDimensionNumbers((), (0,), (0,))
+        ixs = jnp.ravel(y_pred)[:,np.newaxis]
+        value = jnp.zeros(cm_metric.shape, dtype=jnp.float32)
+        value = jax.lax.scatter_add(value, ixs, jnp.ravel(misses), sdn)
+    
+    if reduction == Reduction.MULTICLASS_FALSE_NEGATIVES:
+        misses = (y_true != y_pred).astype(jnp.float32)
+        if sample_weight is not None:
+            misses = misses * sample_weight
+        sdn = jax.lax.ScatterDimensionNumbers((), (0,), (0,))
+        ixs = jnp.ravel(y_true)[:,np.newaxis]
+        value = jnp.zeros(cm_metric.shape, dtype=jnp.float32)
+        value = jax.lax.scatter_add(value, ixs, jnp.ravel(misses), sdn)
 
     cm_metric += value
     return cm_metric
@@ -74,23 +107,30 @@ class ReduceConfusionMatrix(Metric):
     """Encapsulates confusion matrix metrics that perform a reduce operation on the values."""
 
     def __init__(
-        self, reduction: Reduction, on: tp.Optional[types.IndexLike] = None, **kwargs
+        self, reduction: Reduction, on: tp.Optional[types.IndexLike] = None, n_classes:tp.Optional[int] = None, **kwargs
     ):
         super().__init__(on=on, **kwargs)
 
         self._reduction = reduction
+        self._n_classes = n_classes
 
         if self._reduction not in (
             Reduction.TRUE_POSITIVES,
             Reduction.FALSE_POSITIVES,
             Reduction.FALSE_NEGATIVES,
             Reduction.TRUE_NEGATIVES,
+            Reduction.MULTICLASS_TRUE_POSITIVES,
+            Reduction.MULTICLASS_FALSE_POSITIVES,
+            Reduction.MULTICLASS_FALSE_NEGATIVES,
         ):
             raise NotImplementedError(
                 "reduction {reduction} not implemented".format(
                     reduction=self._reduction
                 )
             )
+        
+        if 'multiclass' in self._reduction.value  and self._n_classes is None:
+            raise ValueError(f"Argument `n_classes` required for reduction {self._reduction}")
 
     def call(
         self,
@@ -114,7 +154,7 @@ class ReduceConfusionMatrix(Metric):
 
         cm_metric = self.add_parameter(
             "cm_metric",
-            shape=[],
+            shape=[] if self._n_classes is None else [self._n_classes],
             dtype=jnp.int32,
             initializer=initializers.Constant(0),
             trainable=False,
