@@ -53,12 +53,17 @@ class MeanIoUTest(unittest.TestCase):
         #only considering classes 0 and 4
         miou = elegy.metrics.MeanIoU(classes = [0,4])
 
-        ytrue = jnp.array([0,0,1,1,2,4,4,4])
+        ytrue        = jnp.array([0,0,1,1,2,4,4,4])
         ypred_sparse = jnp.array([0,1,1,1,0,4,4,0])
         ypred = jax.nn.one_hot(ypred_sparse, num_classes=5)
 
         iou0 = miou(ytrue, ypred)
         assert jnp.allclose(iou0, (1/4 + 2/3)/2 )
+
+        #test ignore_index
+        miou = elegy.metrics.MeanIoU(classes = [0,4], ignore_index=2)
+        iou1 = miou(ytrue, ypred)
+        assert jnp.allclose(iou1, (1/3 + 2/3)/2 )
 
         
 

@@ -12,9 +12,10 @@ from elegy.losses.categorical_crossentropy import categorical_crossentropy
 def sparse_categorical_crossentropy(
     y_true: jnp.ndarray,
     y_pred: jnp.ndarray,
-    from_logits: bool = False,
-    check_bounds: bool = True,
-    ignore_index: int = None,
+    from_logits: tp.Optional[bool] = False,
+    check_bounds: tp.Optional[bool] = True,
+    ignore_index: tp.Optional[int] = None,
+    class_weight: tp.Optional[tp.Dict[int,float]] = None,
 ) -> jnp.ndarray:
 
     n_classes = y_pred.shape[-1]
@@ -32,11 +33,18 @@ def sparse_categorical_crossentropy(
         loss = -y_pred
 
     if ignore_index is not None:
-        # zero-out the loss where y_true is ignore_index
-        valid_mask = y_true != ignore_index
-        loss = loss * valid_mask
-        # remove the ignore value from y_true to avoid out-of-bounds NaNs
-        y_true = y_true * valid_mask
+        if class_weight is None:
+            class_weight = dict()
+        class_weight[ignore_index] = 0.0
+
+    if class_weight is not None:
+        #using jax.lax.scan instead of broadcasting to save memory with many classes
+        scan_op = lambda carry, c_w: (jnp.where(y_true==c_w[0], c_w[1], carry ), 0)
+        class_weight = jnp.array( list(class_weight.items()) )
+        loss_weight, _ = jax.lax.scan(scan_op, init=jnp.ones(loss.shape), xs=class_weight )
+        loss = loss * loss_weight
+        # remove ignored (weight==0) classes from y_true to avoid out-of-bounds NaNs
+        y_true = jnp.where(loss_weight==0, 0, y_true)
 
     if check_bounds:
         # set NaN where y_true is negative or larger/equal to the number of y_pred channels
@@ -144,7 +152,7 @@ class SparseCategoricalCrossentropy(Loss):
         self._ignore_index = ignore_index
 
     def call(
-        self, y_true, y_pred, sample_weight: tp.Optional[jnp.ndarray] = None
+        self, y_true, y_pred, sample_weight: tp.Optional[jnp.ndarray] = None, class_weight: tp.Optional[tp.Dict[int, float]] = None,
     ) -> jnp.ndarray:
         """
         Invokes the `SparseCategoricalCrossentropy` instance.
@@ -161,6 +169,7 @@ class SparseCategoricalCrossentropy(Loss):
                 broadcasted to this shape), then each loss element of `y_pred` is scaled
                 by the corresponding value of `sample_weight`. (Note on`dN-1`: all loss
                 functions reduce by 1 dimension, usually axis=-1.)
+            class_weight: TODO
 
         Returns:
             Loss values per sample.
@@ -172,4 +181,5 @@ class SparseCategoricalCrossentropy(Loss):
             from_logits=self._from_logits,
             check_bounds=self._check_bounds,
             ignore_index=self._ignore_index,
+            class_weight=class_weight,
         )

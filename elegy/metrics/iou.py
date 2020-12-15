@@ -28,10 +28,11 @@ def iou(
 
 
 class MeanIoU(Metric):
-    def __init__(self, on: tp.Optional[types.IndexLike] = None, classes:tp.Optional[jnp.ndarray] = None, **kwargs):
+    def __init__(self, on: tp.Optional[types.IndexLike] = None, classes:tp.Optional[jnp.ndarray] = None, ignore_index: int = None, **kwargs):
         super().__init__(on=on, **kwargs)
         self._initialized = False
         self._classes = classes
+        self._ignore_index = ignore_index
     
     def call(
         self,
@@ -49,9 +50,14 @@ class MeanIoU(Metric):
                 self._classes = jnp.arange(n)
             self._initialized = True
         
+        if self._ignore_index is not None:
+            valid_mask = (y_true != self._ignore_index)
+            sample_weight = sample_weight * valid_mask if sample_weight is not None else valid_mask
+
         y_pred_sparse = jnp.argmax(y_pred,axis=-1)
         per_class_iou = iou(y_true, y_pred_sparse, sample_weight, self.TP, self.FP, self.FN)
         selected_iou = per_class_iou[self._classes]
+        selected_iou = jnp.where(jnp.isfinite(selected_iou), selected_iou, 0)
         miou = jnp.mean(selected_iou)
         return miou
 
