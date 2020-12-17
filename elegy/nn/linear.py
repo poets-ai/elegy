@@ -1,11 +1,150 @@
-from elegy.initializers import TruncatedNormal
-from elegy.types import Initializer
-from elegy import module
 import typing as tp
-import jax.numpy as jnp
-import haiku as hk
 
+import haiku as hk
+import jax.numpy as jnp
 import numpy as np
+from elegy import module
+from elegy.initializers import TruncatedNormal, VarianceScaling, Zeros
+from elegy.types import Initializer
+from jax import lax
+
+PRNGKey = tp.Any
+Shape = tp.Tuple[int]
+Dtype = tp.Any  # this could be a real type?
+Array = tp.Any
+
+default_kernel_init = VarianceScaling()
+
+
+def _normalize_axes(axes, ndim):
+    # A tuple by convention. len(axes_tuple) then also gives the rank efficiently.
+    return tuple([ax if ax >= 0 else ndim + ax for ax in axes])
+
+
+class LinearGeneral(module.Module):
+    """A linear transformation with flexible axes."""
+
+    features: tp.Union[int, tp.Iterable[int]]
+    axis: tp.Union[int, tp.Iterable[int]]
+    batch_dims: tp.Iterable[int]
+    use_bias: bool
+    dtype: Dtype
+    kernel_init: tp.Callable
+    bias_init: tp.Callable
+    precision: tp.Any
+
+    def __init__(
+        self,
+        features: tp.Union[int, tp.Iterable[int]],
+        axis: tp.Union[int, tp.Iterable[int]] = -1,
+        batch_dims: tp.Iterable[int] = (),
+        use_bias: bool = True,
+        dtype: Dtype = jnp.float32,
+        kernel_init: tp.Callable = default_kernel_init,
+        bias_init: tp.Callable = Zeros,
+        precision: tp.Any = None,
+    ):
+        """Creates a LinearGeneral object.
+
+        Arguments:
+            features: int or tuple with number of output features.
+            axis: int or tuple with axes to apply the transformation on. For instance,
+                (-2, -1) will apply the transformation to the last two axes.
+            batch_dims: tuple with batch axes.
+            use_bias: whether to add a bias to the output (default: True).
+            dtype: the dtype of the computation (default: float32).
+            kernel_init: initializer function for the weight matrix.
+            bias_init: initializer function for the bias.
+            precision: numerical precision of the computation see `jax.lax.Precision`
+                for details.
+        """
+        self.features = features
+        self.axis = axis
+        self.batch_dims = batch_dims
+        self.use_bias = use_bias
+        self.dtype = dtype
+        self.kernel_init = kernel_init
+        self.bias_init = bias_init
+        self.precision = precision
+
+    def __call__(self, inputs: Array) -> Array:
+        """Applies a linear transformation to the inputs along multiple dimensions.
+
+        Args:
+          inputs: The nd-array to be transformed.
+
+        Returns:
+          The transformed input.
+        """
+        inputs = jnp.asarray(inputs, self.dtype)
+
+        ndim = inputs.ndim
+        n_batch_dims = len(self.batch_dims)
+        axis = _normalize_axes(self.axis, ndim)
+        batch_dims = _normalize_axes(self.batch_dims, ndim)
+        n_axis, n_features = len(axis), len(self.features)
+
+        def kernel_init_wrap(rng, shape, dtype=jnp.float32):
+            size_batch_dims = np.prod(shape[:n_batch_dims], dtype=np.int32)
+            flat_shape = (
+                np.prod(shape[n_batch_dims : n_axis + n_batch_dims]),
+                np.prod(shape[-n_features:]),
+            )
+            kernel = jnp.concatenate(
+                [
+                    self.kernel_init(rng, flat_shape, dtype)
+                    for _ in range(size_batch_dims)
+                ],
+                axis=0,
+            )
+            return jnp.reshape(kernel, shape)
+
+        batch_shape = tuple([inputs.shape[ax] for ax in batch_dims])
+        kernel_shape = tuple([inputs.shape[ax] for ax in axis]) + self.features
+        kernel = self.add_parameter(
+            name="kernel",
+            shape=batch_shape + kernel_shape,
+            initializer=kernel_init_wrap,
+            trainable=True,
+        )
+        kernel = jnp.asarray(kernel, self.dtype)
+
+        batch_ind = tuple(range(n_batch_dims))
+        contract_ind = tuple(range(n_batch_dims, n_axis + n_batch_dims))
+        out = lax.dot_general(
+            inputs,
+            kernel,
+            ((axis, contract_ind), (batch_dims, batch_ind)),
+            precision=self.precision,
+        )
+        if self.use_bias:
+
+            def bias_init_wrap(rng, shape, dtype=jnp.float32):
+                size_batch_dims = np.prod(shape[:n_batch_dims], dtype=np.int32)
+                flat_shape = (np.prod(shape[-n_features:]),)
+                bias = jnp.concatenate(
+                    [
+                        self.bias_init(rng, flat_shape, dtype)
+                        for _ in range(size_batch_dims)
+                    ],
+                    axis=0,
+                )
+                return jnp.reshape(bias, shape)
+
+            bias = self.add_parameter(
+                name="bias",
+                shape=batch_shape + self.features,
+                initializer=bias_init_wrap,
+                trainable=True,
+            )
+
+            # Reshape bias for broadcast.
+            expand_dims = sorted(set(range(inputs.ndim)) - set(axis) - set(batch_dims))
+            for ax in expand_dims:
+                bias = jnp.expand_dims(bias, ax)
+            bias = jnp.asarray(bias, self.dtype)
+            out = out + bias
+        return out
 
 
 class Linear(module.Module):

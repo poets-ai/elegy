@@ -65,6 +65,26 @@ class Constant(Initializer):
         return jnp.broadcast_to(self.constant, shape).astype(dtype)
 
 
+class Zeros(Constant):
+    """Initializes with zeros."""
+
+    def __init__(self):
+        """
+        Constructs a Zeros initializer.
+        """
+        self.constant = 0
+
+
+class Ones(Constant):
+    """Initializes with ones."""
+
+    def __init__(self):
+        """
+        Constructs a Ones initializer.
+        """
+        self.constant = 1
+
+
 class RandomNormal(Initializer):
     """Initializes by sampling from a normal distribution."""
 
