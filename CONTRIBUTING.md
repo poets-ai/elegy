@@ -65,9 +65,16 @@ To build and visualize the documentation locally run
 mkdocs serve
 ```
 
-# Creating a PR
+## Creating a PR
 Before sending a pull request make sure all test run and code is formatted with `black`:
 
 ```bash
 black .
 ```
+
+## Changelog
+`CHANGELOG.md` is automatically generated using [github-changelog-generator](https://github.com/github-changelog-generator/github-changelog-generator), to update the changelog just run:
+```bash
+docker run -it --rm -v (pwd):/usr/local/src/your-app ferrarimarco/github-changelog-generator -u poets-ai -p elegy -t <TOKEN>
+```
+where `<TOKEN>` token can be obtained from Github at [Personal access tokens](https://github.com/settings/tokens), you only have to give permission for the `repo` section.

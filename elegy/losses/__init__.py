@@ -1,6 +1,7 @@
 from .binary_crossentropy import BinaryCrossentropy, binary_crossentropy
 from .categorical_crossentropy import CategoricalCrossentropy
 from .cosine_similarity import CosineSimilarity, cosine_similarity
+from .huber import Huber, huber
 from .loss import Loss, Reduction
 from .mean_absolute_error import MeanAbsoluteError, mean_absolute_error
 from .mean_absolute_percentage_error import (
@@ -23,6 +24,8 @@ __all__ = [
     "CategoricalCrossentropy",
     "CosineSimilarity",
     "cosine_similarity",
+    "Huber",
+    "huber",
     "Loss",
     "Reduction",
     "MeanAbsoluteError",

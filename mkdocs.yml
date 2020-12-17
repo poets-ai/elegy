@@ -35,6 +35,9 @@ nav:
       RemoteMonitor: api/callbacks/RemoteMonitor.md
       TensorBoard: api/callbacks/TensorBoard.md
       TerminateOnNaN: api/callbacks/TerminateOnNaN.md
+    data:
+      DataLoader: api/data/DataLoader.md
+      Dataset: api/data/Dataset.md
     get_dynamic_context: api/get_dynamic_context.md
     get_losses: api/get_losses.md
     get_metrics: api/get_metrics.md
@@ -56,6 +59,7 @@ nav:
       BinaryCrossentropy: api/losses/BinaryCrossentropy.md
       CategoricalCrossentropy: api/losses/CategoricalCrossentropy.md
       CosineSimilarity: api/losses/CosineSimilarity.md
+      Huber: api/losses/Huber.md
       Loss: api/losses/Loss.md
       MeanAbsoluteError: api/losses/MeanAbsoluteError.md
       MeanAbsolutePercentageError: api/losses/MeanAbsolutePercentageError.md
@@ -65,6 +69,7 @@ nav:
       SparseCategoricalCrossentropy: api/losses/SparseCategoricalCrossentropy.md
       binary_crossentropy: api/losses/binary_crossentropy.md
       cosine_similarity: api/losses/cosine_similarity.md
+      huber: api/losses/huber.md
       mean_absolute_error: api/losses/mean_absolute_error.md
       mean_absolute_percentage_error: api/losses/mean_absolute_percentage_error.md
       mean_squared_error: api/losses/mean_squared_error.md
@@ -104,6 +109,15 @@ nav:
       next_rng_key: api/module/next_rng_key.md
       to_module: api/module/to_module.md
     name_context: api/name_context.md
+    nets:
+      resnet:
+        ResNet: api/nets/resnet/ResNet.md
+        ResNet101: api/nets/resnet/ResNet101.md
+        ResNet152: api/nets/resnet/ResNet152.md
+        ResNet18: api/nets/resnet/ResNet18.md
+        ResNet200: api/nets/resnet/ResNet200.md
+        ResNet34: api/nets/resnet/ResNet34.md
+        ResNet50: api/nets/resnet/ResNet50.md
     next_rng_key: api/next_rng_key.md
     nn:
       AvgPool: api/nn/AvgPool.md

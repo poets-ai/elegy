@@ -137,6 +137,7 @@ tabulate==0.8.7
 tensorboard-plugin-wit==1.7.0; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.2.0"
 tensorboard==2.2.2; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.2.0"
 tensorboardx==2.1
+tensorflow-addons==0.11.2
 tensorflow-cpu==2.2.0
 tensorflow-estimator==2.2.0
 termcolor==1.1.0
@@ -149,6 +150,7 @@ tornado==6.0.4; python_version >= "3.6"
 tqdm==4.48.2; python_full_version >= "3.6.1" and python_full_version < "4.0.0" and (python_version >= "3.5" and python_full_version < "3.0.0" or python_version >= "3.5" and python_full_version >= "3.2.0")
 traitlets==4.3.3; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" and python_version >= "3.6"
 typed-ast==1.4.1; python_version >= "3.6"
+typeguard==2.10.0; python_full_version >= "3.5.3"
 typer==0.3.2; python_version >= "3.6"
 typing-extensions==3.7.4.3; python_version >= "3.6" or python_version < "3.8"
 urllib3==1.24.3; python_full_version >= "3.6.1" and python_version < "4" and python_full_version < "4.0.0" and python_version >= "3.6" and (python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" and python_version < "4")

@@ -8,8 +8,14 @@ import logging
 from .array_adapter import ArrayDataAdapter
 from .generator_adapter import GeneratorDataAdapter
 from .list_adapter import ListsOfScalarsDataAdapter
+from .dataset import DataLoaderAdapter
 
-ALL_ADAPTER_CLS = [ArrayDataAdapter, GeneratorDataAdapter, ListsOfScalarsDataAdapter]
+ALL_ADAPTER_CLS = [
+    ArrayDataAdapter,
+    GeneratorDataAdapter,
+    ListsOfScalarsDataAdapter,
+    DataLoaderAdapter,
+]
 
 
 class DataHandler(object):
