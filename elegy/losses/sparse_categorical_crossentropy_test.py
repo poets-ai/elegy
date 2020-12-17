@@ -67,10 +67,10 @@ def test_scce_ignore_class():
 def test_class_weight():
     y_true = jnp.array([1, 2])
     y_pred = jnp.array([[0.05, 0.95, 0], [0.1, 0.8, 0.1]])
-    #reduce the weight of class 1, all others stay at 1
-    class_weight = { 1 : 0.3} 
+    # reduce the weight of class 1, all others stay at 1
+    class_weight = {1: 0.3}
 
     # Using 'auto'/'sum_over_batch_size' reduction type.
     scce = elegy.losses.SparseCategoricalCrossentropy()
-    result = scce(y_true, y_pred, class_weight=class_weight)  #1.1589
+    result = scce(y_true, y_pred, class_weight=class_weight)  # 1.1589
     assert jnp.isclose(result, 1.1589, rtol=0.001)

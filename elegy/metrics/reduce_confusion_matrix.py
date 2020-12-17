@@ -20,7 +20,6 @@ class Reduction(Enum):
     MULTICLASS_FALSE_NEGATIVES = "multiclass_false_negatives"
 
 
-
 def reduce(
     cm_metric: jnp.ndarray,
     y_true: jnp.ndarray,
@@ -71,31 +70,31 @@ def reduce(
         if sample_weight is not None:
             hits = hits * sample_weight
         value = jnp.sum(hits * mask)
-    
+
     if reduction == Reduction.MULTICLASS_TRUE_POSITIVES:
         hits = (y_true == y_pred).astype(jnp.float32)
         if sample_weight is not None:
             hits = hits * sample_weight
         sdn = jax.lax.ScatterDimensionNumbers((), (0,), (0,))
-        ixs = jnp.ravel(y_true)[:,np.newaxis]
+        ixs = jnp.ravel(y_true)[:, np.newaxis]
         value = jnp.zeros(cm_metric.shape, dtype=jnp.float32)
         value = jax.lax.scatter_add(value, ixs, jnp.ravel(hits), sdn)
-    
+
     if reduction == Reduction.MULTICLASS_FALSE_POSITIVES:
         misses = (y_true != y_pred).astype(jnp.float32)
         if sample_weight is not None:
             misses = misses * sample_weight
         sdn = jax.lax.ScatterDimensionNumbers((), (0,), (0,))
-        ixs = jnp.ravel(y_pred)[:,np.newaxis]
+        ixs = jnp.ravel(y_pred)[:, np.newaxis]
         value = jnp.zeros(cm_metric.shape, dtype=jnp.float32)
         value = jax.lax.scatter_add(value, ixs, jnp.ravel(misses), sdn)
-    
+
     if reduction == Reduction.MULTICLASS_FALSE_NEGATIVES:
         misses = (y_true != y_pred).astype(jnp.float32)
         if sample_weight is not None:
             misses = misses * sample_weight
         sdn = jax.lax.ScatterDimensionNumbers((), (0,), (0,))
-        ixs = jnp.ravel(y_true)[:,np.newaxis]
+        ixs = jnp.ravel(y_true)[:, np.newaxis]
         value = jnp.zeros(cm_metric.shape, dtype=jnp.float32)
         value = jax.lax.scatter_add(value, ixs, jnp.ravel(misses), sdn)
 
@@ -107,7 +106,11 @@ class ReduceConfusionMatrix(Metric):
     """Encapsulates confusion matrix metrics that perform a reduce operation on the values."""
 
     def __init__(
-        self, reduction: Reduction, on: tp.Optional[types.IndexLike] = None, n_classes:tp.Optional[int] = None, **kwargs
+        self,
+        reduction: Reduction,
+        on: tp.Optional[types.IndexLike] = None,
+        n_classes: tp.Optional[int] = None,
+        **kwargs,
     ):
         super().__init__(on=on, **kwargs)
 
@@ -128,9 +131,11 @@ class ReduceConfusionMatrix(Metric):
                     reduction=self._reduction
                 )
             )
-        
-        if 'multiclass' in self._reduction.value  and self._n_classes is None:
-            raise ValueError(f"Argument `n_classes` required for reduction {self._reduction}")
+
+        if "multiclass" in self._reduction.value and self._n_classes is None:
+            raise ValueError(
+                f"Argument `n_classes` required for reduction {self._reduction}"
+            )
 
     def call(
         self,
