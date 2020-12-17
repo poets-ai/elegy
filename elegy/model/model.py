@@ -237,8 +237,8 @@ class Model(ModelBase):
                 The model is not trained for a number of iterations
                 given by `epochs`, but merely until the epoch
                 of index `epochs` is reached.
-            verbose: 0, 1, or 2. Verbosity mode.
-                0 = silent, 1 = progress bar, 2 = one line per epoch.
+            verbose: 0, 1, 2 or 3. Verbosity mode.
+                0 = silent, 1 = progress bar, 2 = one line per epoch 3 = table.
                 Note that the progress bar is not particularly useful when
                 logged to a file, so verbose=2 is recommended when not running
                 interactively (eg, in a production environment).
