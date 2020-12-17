@@ -60,7 +60,6 @@ nav:
       CategoricalCrossentropy: api/losses/CategoricalCrossentropy.md
       CosineSimilarity: api/losses/CosineSimilarity.md
       Huber: api/losses/Huber.md
-      huber: api/losses/huber.md
       Loss: api/losses/Loss.md
       MeanAbsoluteError: api/losses/MeanAbsoluteError.md
       MeanAbsolutePercentageError: api/losses/MeanAbsolutePercentageError.md
@@ -70,6 +69,7 @@ nav:
       SparseCategoricalCrossentropy: api/losses/SparseCategoricalCrossentropy.md
       binary_crossentropy: api/losses/binary_crossentropy.md
       cosine_similarity: api/losses/cosine_similarity.md
+      huber: api/losses/huber.md
       mean_absolute_error: api/losses/mean_absolute_error.md
       mean_absolute_percentage_error: api/losses/mean_absolute_percentage_error.md
       mean_squared_error: api/losses/mean_squared_error.md
