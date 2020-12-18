@@ -370,17 +370,26 @@ class Module(metaclass=ModuleMeta):
             tp.Callable[[tp.Sequence[int], tp.Any], tp.Any], tp.Any
         ] = jnp.zeros,
         trainable: bool = True,
+        regularizer: tp.Optional[tp.Callable[[tp.Any], jnp.ndarray]] = None,
+        constraint: tp.Optional[tp.Callable[[tp.Any], tp.Any]] = None,
     ) -> np.ndarray:
         """
         A hook that lets you add a parameter to the current module. The parameter will only be created once
-        during `init` and will reused afterwards.
+        during `init` and will reused afterwards. If you are sure the parameter has already been created you can just
+        pass `name` to get access to the value.
 
         Arguments:
             name: The name of the parameter. It must be unique and no other field/property/method
                 of the instance can have that name.
             shape: The shape of the parameter.
             dtype: The type of the parameter.
-            initializer: A callable that takes in a shape and dtype and returns the initial value.
+            initializer: A callable that takes in a shape and dtype and returns the initial value,
+                if a non-callable is given then it will be used as the initial value.
+            trainable: Boolean, whether the variable should be trainable (e.g. kernels, biases)
+                or non trainable (e.g. BatchNorm mean and variance).
+            regularizer: Regularizer instance (callable).
+            constraint: Constraint instance (callable).
+
 
         Returns:
             The value of the parameter.
@@ -410,6 +419,19 @@ class Module(metaclass=ModuleMeta):
             )
 
         value = getattr(self, name)
+
+        if constraint is not None:
+            value = constraint(value)
+
+        if regularizer is not None:
+            loss = regularizer(value)
+
+            if hasattr(regularizer, "__class__"):
+                loss_name = utils.lower_snake_case(regularizer.__class__.__name__)
+            else:
+                loss_name = f"{name}_regularization"
+
+            add_loss(loss_name, loss)
 
         return value
 
