@@ -64,7 +64,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
             elegy.regularizers.L2(l=1e-4),
         ],
         metrics=elegy.metrics.SparseCategoricalAccuracy(),
-        optimizer=optax.adamw(1e-3),
+        optimizer=optax.adam(1e-3),
         run_eagerly=eager,
     )
 

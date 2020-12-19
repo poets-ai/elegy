@@ -349,10 +349,6 @@ class Module(metaclass=ModuleMeta):
 
             return outputs
 
-    # def __init_subclass__(cls, *args, **kwargs):
-    #     super().__init_subclass__(*args, **kwargs)
-    #     utils.wraps(cls.call)(cls.init)
-
     @abstractmethod
     def call(self, *args, **kwargs):
         ...
