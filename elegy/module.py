@@ -228,6 +228,7 @@ class Module(metaclass=ModuleMeta):
 
     name: str
     dtype: np.dtype
+    activity_regularizer: tp.Optional[tp.Callable[[tp.Any], jnp.ndarray]]
     _initialized: bool
     _params: tp.Dict[str, bool]
     _states_initial: tp.List[str]
@@ -246,7 +247,12 @@ class Module(metaclass=ModuleMeta):
         "initialized",
     ]
 
-    def __init__(self, name: tp.Optional[str] = None, dtype: np.dtype = jnp.float32):
+    def __init__(
+        self,
+        name: tp.Optional[str] = None,
+        dtype: np.dtype = jnp.float32,
+        activity_regularizer: tp.Optional[tp.Callable[[tp.Any], jnp.ndarray]] = None,
+    ):
         """
         Initializes the current module with the given name.
 
@@ -260,6 +266,7 @@ class Module(metaclass=ModuleMeta):
         """
         self.name = name if name else utils.lower_snake_case(self.__class__.__name__)
         self.dtype = dtype
+        self.activity_regularizer = activity_regularizer
         self._params = {}
         self._states = []
         self._submodules = []
@@ -333,6 +340,12 @@ class Module(metaclass=ModuleMeta):
                 outputs = self.call(*args, **kwargs)
 
             add_summary(self, outputs)
+
+            if self.activity_regularizer is not None:
+                add_loss(
+                    name=utils.get_name(self.activity_regularizer),
+                    value=self.activity_regularizer(outputs),
+                )
 
             return outputs
 
@@ -424,14 +437,10 @@ class Module(metaclass=ModuleMeta):
             value = constraint(value)
 
         if regularizer is not None:
-            loss = regularizer(value)
-
-            if hasattr(regularizer, "__class__"):
-                loss_name = utils.lower_snake_case(regularizer.__class__.__name__)
-            else:
-                loss_name = f"{name}_regularization"
-
-            add_loss(loss_name, loss)
+            add_loss(
+                name=utils.get_name(regularizer),
+                value=regularizer(value),
+            )
 
         return value
 
@@ -1207,9 +1216,7 @@ def get_unique_name(
 def to_module(f):
     class ToModule(Module):
         def __init__(self, name: tp.Optional[str] = None):
-            super().__init__(
-                name=utils.lower_snake_case(f.__name__) if name is None else name
-            )
+            super().__init__(name=utils.get_name(f) if name is None else name)
             self.call = f
 
         def call(self, *args, **kwargs):

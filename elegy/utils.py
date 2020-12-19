@@ -179,6 +179,15 @@ def lower_snake_case(s: str) -> str:
     return "_".join(output_parts)
 
 
+def get_name(obj) -> str:
+    if hasattr(obj, "name"):
+        return obj.name
+    elif hasattr(obj, "__class__"):
+        return lower_snake_case(obj.__class__.__name__)
+    else:
+        return lower_snake_case(obj.__name__)
+
+
 def to_static(structure: tp.Any) -> tp.Any:
 
     if isinstance(structure, (tp.Dict, FrozenDict)):

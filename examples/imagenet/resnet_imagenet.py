@@ -147,7 +147,7 @@ def main(argv):
             elegy.losses.SparseCategoricalCrossentropy(
                 from_logits=True, weight=FLAGS.loss_scale
             ),
-            elegy.regularizers.GlobalL2(FLAGS.L2_reg / 2 * FLAGS.loss_scale),
+            elegy.regularizers.L2(FLAGS.L2_reg / 2 * FLAGS.loss_scale),
         ],
         metrics=elegy.metrics.SparseCategoricalAccuracy(),
         optimizer=build_optimizer(

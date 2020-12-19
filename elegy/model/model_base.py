@@ -584,7 +584,7 @@ class Losses(Module):
         if isinstance(losses, tp.Callable):
             name = (
                 losses.name
-                if isinstance(losses, Loss)
+                if hasattr(losses, "name")
                 else utils.lower_snake_case(losses.__name__)
             )
             context += (name,)

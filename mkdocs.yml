@@ -138,9 +138,9 @@ nav:
       Sequential: api/nn/Sequential.md
       sequential: api/nn/sequential.md
     regularizers:
-      GlobalL1: api/regularizers/GlobalL1.md
-      GlobalL1L2: api/regularizers/GlobalL1L2.md
-      GlobalL2: api/regularizers/GlobalL2.md
+      L1: api/regularizers/L1.md
+      L1L2: api/regularizers/L1L2.md
+      L2: api/regularizers/L2.md
     set_context: api/set_context.md
     set_rng: api/set_rng.md
     set_training: api/set_training.md

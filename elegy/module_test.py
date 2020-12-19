@@ -742,3 +742,57 @@ class TestOthers(TestCase):
 
         for step in range(1):
             loss = update_jit(x, y)
+
+
+class GeneralModuleTest(TestCase):
+    def test_add_parameters_regularizer(self):
+        class L1(elegy.Regularizer):
+            def __call__(self, w):
+                return jnp.mean(jnp.abs(w))
+
+        class MyModule(elegy.Module):
+            def call(self):
+
+                w = self.add_parameter(
+                    "w",
+                    initializer=jnp.array([1.0, 2.0, 3.0]),
+                    trainable=True,
+                    regularizer=L1(),
+                )
+
+                return w
+
+        with elegy.hooks_context():
+
+            m = MyModule()
+
+            w = m()
+
+            losses = elegy.get_losses()
+
+            assert losses["l1_loss"] == 2.0
+
+    def test_add_parameters_constraint(self):
+        class MaxNormalization(elegy.Constraint):
+            def __call__(self, w):
+                return w / jnp.max(w)
+
+        class MyModule(elegy.Module):
+            def call(self):
+
+                w = self.add_parameter(
+                    "w",
+                    initializer=jnp.array([1.0, 2.0, 3.0]),
+                    trainable=True,
+                    constraint=MaxNormalization(),
+                )
+
+                return w
+
+        with elegy.hooks_context():
+
+            m = MyModule()
+
+            w = m()
+
+            assert np.allclose(w, [1 / 3, 2 / 3, 3 / 3])

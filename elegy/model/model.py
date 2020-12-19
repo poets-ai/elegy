@@ -27,8 +27,6 @@ from tabulate import tabulate
 
 from elegy import module as hooks
 from elegy import types
-from elegy.losses import loss_modes
-from elegy.metrics import metric_modes
 from elegy.module import RNG, LocalContext, Module
 
 from elegy import utils
@@ -68,7 +66,7 @@ class Model(ModelBase):
         module=MLP(),
         loss=[
             elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-            elegy.regularizers.GlobalL2(l=1e-5),
+            elegy.regularizers.L2(l=1e-5),
         ],
         metrics=elegy.metrics.SparseCategoricalAccuracy(),
         optimizer=optax.rmsprop(1e-3),

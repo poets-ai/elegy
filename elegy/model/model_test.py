@@ -36,7 +36,7 @@ class ModelTest(unittest.TestCase):
             module=MLP(n1=3, n2=1),
             loss=[
                 elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-                elegy.regularizers.GlobalL2(l=1e-4),
+                elegy.regularizers.L2(l=1e-4),
             ],
             metrics=elegy.metrics.SparseCategoricalAccuracy(),
             optimizer=optax.adamw(1e-3),

@@ -1,9 +1,12 @@
 import typing as tp
-from elegy.utils import Protocol
+from abc import ABC, abstractmethod
+
+import jax
 import jax.numpy as jnp
+from elegy import utils
 
 
-class Regularizer(Protocol):
+class Regularizer(ABC):
     """Regularizer base class.
 
     Regularizers allow you to apply penalties on layer parameters or layer
@@ -122,6 +125,12 @@ class Regularizer(Protocol):
     regularizers to be registered as serializable.
     """
 
-    def __call__(self, x: tp.Any) -> jnp.ndarray:
-        """Compute a regularization penalty from an input tensor."""
+    def __init__(self, name: tp.Optional[str] = None):
+        self.name = name if name is not None else utils.get_name(self)
+
+    def __call__(self, parameters: tp.Dict) -> jnp.ndarray:
+        return sum((self.call(p) for p in jax.tree_leaves(parameters)), jnp.array(0.0))
+
+    @abstractmethod
+    def call(self, *args, **kwargs) -> tp.Any:
         ...

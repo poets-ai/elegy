@@ -5,10 +5,10 @@ import jax
 import jax.numpy as jnp
 
 from elegy import utils
-from elegy.losses.loss import Loss, Reduction
+from elegy.regularizers.regularizer import Regularizer
 
 
-class GlobalL1L2(Loss):
+class L1L2(Regularizer):
     r"""
     A regularizer that applies both L1 and L2 regularization penalties.
 
@@ -30,7 +30,7 @@ class GlobalL1L2(Loss):
         module_fn,
         loss=[
             elegy.losses.SparseCategoricalCrossentropy(),
-            elegy.regularizers.GlobalL1L2(l1=1e-5, l2=1e-4),
+            elegy.regularizers.L1L2(l1=1e-5, l2=1e-4),
         ],
         metrics=lambda: elegy.metrics.SparseCategoricalAccuracy(),
     )
@@ -42,19 +42,13 @@ class GlobalL1L2(Loss):
     """
 
     def __init__(
-        self,
-        l1=0.0,
-        l2=0.0,
-        reduction: tp.Optional[Reduction] = None,
-        weight: tp.Optional[float] = None,
-        **kwargs
+        self, l1=0.0, l2=0.0, **kwargs
     ):  # pylint: disable=redefined-outer-name
-        super().__init__(reduction=reduction, weight=weight, **kwargs)
-
+        super().__init__(**kwargs)
         self.l1 = l1
         self.l2 = l2
 
-    def call(self, parameters: hk.Params) -> jnp.ndarray:
+    def call(self, parameters: jnp.ndarray) -> jnp.ndarray:
         """
         Computes the L1 and L2 regularization penalty simultaneously.
 
@@ -68,13 +62,9 @@ class GlobalL1L2(Loss):
             return regularization
 
         if self.l1:
-            regularization += self.l1 * sum(
-                jnp.sum(jnp.abs(p)) for p in jax.tree_leaves(parameters)
-            )
+            regularization += self.l1 * jnp.sum(jnp.abs(parameters))
 
         if self.l2:
-            regularization += self.l2 * sum(
-                jnp.sum(jnp.square(p)) for p in jax.tree_leaves(parameters)
-            )
+            regularization += self.l2 * jnp.sum(jnp.square(parameters))
 
         return regularization

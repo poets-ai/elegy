@@ -1,9 +1,6 @@
 from .binary_crossentropy import BinaryCrossentropy, binary_crossentropy
 from .categorical_crossentropy import CategoricalCrossentropy
 from .cosine_similarity import CosineSimilarity, cosine_similarity
-from .global_l1 import GlobalL1
-from .global_l1l2 import GlobalL1L2
-from .global_l2 import GlobalL2
 from .huber import Huber, huber
 from .loss import Loss, Reduction
 from .mean_absolute_error import MeanAbsoluteError, mean_absolute_error
@@ -41,7 +38,4 @@ __all__ = [
     "mean_squared_logarithmic_error",
     "SparseCategoricalCrossentropy",
     "sparse_categorical_crossentropy",
-    "GlobalL1L2",
-    "GlobalL1",
-    "GlobalL2",
 ]
