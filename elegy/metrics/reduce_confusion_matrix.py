@@ -75,28 +75,22 @@ def reduce(
         hits = (y_true == y_pred).astype(jnp.float32)
         if sample_weight is not None:
             hits = hits * sample_weight
-        sdn = jax.lax.ScatterDimensionNumbers((), (0,), (0,))
-        ixs = jnp.ravel(y_true)[:, np.newaxis]
-        value = jnp.zeros(cm_metric.shape, dtype=jnp.float32)
-        value = jax.lax.scatter_add(value, ixs, jnp.ravel(hits), sdn)
+        scan_op = lambda carry, x: (None, (hits*(y_true==x)).sum())
+        _, value = jax.lax.scan(scan_op, None, jnp.arange(cm_metric.shape[0]))
 
     if reduction == Reduction.MULTICLASS_FALSE_POSITIVES:
         misses = (y_true != y_pred).astype(jnp.float32)
         if sample_weight is not None:
             misses = misses * sample_weight
-        sdn = jax.lax.ScatterDimensionNumbers((), (0,), (0,))
-        ixs = jnp.ravel(y_pred)[:, np.newaxis]
-        value = jnp.zeros(cm_metric.shape, dtype=jnp.float32)
-        value = jax.lax.scatter_add(value, ixs, jnp.ravel(misses), sdn)
+        scan_op = lambda carry, x: (None, (misses*(y_pred==x)).sum())
+        _, value = jax.lax.scan(scan_op, None, jnp.arange(cm_metric.shape[0]))
 
     if reduction == Reduction.MULTICLASS_FALSE_NEGATIVES:
         misses = (y_true != y_pred).astype(jnp.float32)
         if sample_weight is not None:
             misses = misses * sample_weight
-        sdn = jax.lax.ScatterDimensionNumbers((), (0,), (0,))
-        ixs = jnp.ravel(y_true)[:, np.newaxis]
-        value = jnp.zeros(cm_metric.shape, dtype=jnp.float32)
-        value = jax.lax.scatter_add(value, ixs, jnp.ravel(misses), sdn)
+        scan_op = lambda carry, x: (None, (misses*(y_true==x)).sum())
+        _, value = jax.lax.scan(scan_op, None, jnp.arange(cm_metric.shape[0]))
 
     cm_metric += value
     return cm_metric
