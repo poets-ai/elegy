@@ -5,6 +5,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import optax
+import cloudpickle
 
 
 class MLP(elegy.Module):
@@ -63,3 +64,24 @@ class ModelTest(unittest.TestCase):
         predict_acc = (model.predict(X).argmax(-1) == y).mean()
 
         assert eval_acc == predict_acc
+
+    def test_cloudpickle(self):
+        model = elegy.Model(
+            module=MLP(n1=3, n2=1),
+            loss=[
+                elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
+                elegy.regularizers.GlobalL2(l=1e-4),
+            ],
+            metrics=elegy.metrics.SparseCategoricalAccuracy(),
+            optimizer=optax.adamw(1e-3),
+            run_eagerly=True,
+        )
+
+        X = np.random.uniform(size=(5, 7, 7))
+        y0 = model.predict(X)
+
+        model_pkl = cloudpickle.dumps(model)
+        newmodel = cloudpickle.loads(model_pkl)
+
+        y1 = newmodel.predict(X)
+        assert np.all(y0 == y1)
