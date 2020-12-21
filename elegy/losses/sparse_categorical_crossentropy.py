@@ -17,9 +17,6 @@ def sparse_categorical_crossentropy(
 ) -> jnp.ndarray:
 
     n_classes = y_pred.shape[-1]
-    # fix for a bug in jax<0.2.7 where take_along_axis returns wrong values
-    if y_true.dtype in [jnp.int8, jnp.uint8, jnp.int16, jnp.uint16]:
-        y_true = y_true.astype(jnp.int32)
 
     if from_logits:
         y_pred = jax.nn.log_softmax(y_pred)
