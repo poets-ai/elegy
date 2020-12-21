@@ -12,6 +12,7 @@ from . import (
     nn,
     regularizers,
     data,
+    optax,
 )
 from .losses import Loss
 from .metrics import Metric

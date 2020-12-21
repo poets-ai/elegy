@@ -14,6 +14,7 @@ from elegy.metrics.metric import Metric
 from elegy.module import Module, get_summaries, hooks_context
 from elegy.module import jit as elegy_jit
 from elegy.utils import Mode
+import elegy.optax
 
 
 class ModelBase(Module):
@@ -257,8 +258,10 @@ class ModelBase(Module):
 
         assert grads is not None
 
+        lr = self.optimizer.get_effective_learning_rate()
+        if lr is not None:
+            logs["lr"] = lr
         parameters = self.module.get_parameters(trainable=True)
-
         parameters = self.optimizer(parameters, grads)
 
         if module.can_update():
@@ -558,10 +561,31 @@ class Optimizer(Module):
         )
 
         parameters = optax.apply_updates(parameters, updates)
-
         self.update_parameter("optimizer_state", optimizer_state)
 
         return parameters
+
+    def get_effective_learning_rate(self) -> tp.Union[float, None]:
+        """Returns the learning rate scaled by schedule(s) that will be used for the next training step"""
+        if not hasattr(self.optax_optimizer, "lr"):
+            return None
+
+        lr = self.optax_optimizer.lr
+        step_fns = getattr(self.optax_optimizer, "step_fns", [])
+        if hasattr(self, "optimizer_state"):
+            schedule_states = elegy.optax.find_schedule_states(self.optimizer_state)
+            step_counts = [state.count for state in schedule_states]
+        else:
+            # optimizer_state has not been created yet
+            step_counts = [0 for _ in step_fns]
+        if len(step_fns) != len(step_counts):
+            raise ValueError(
+                "Mismatched number of schedules and schedule states. This might be due to mixed use of optax and elegy.optax"
+            )
+
+        for fn, count in zip(step_fns, step_counts):
+            lr = lr * fn(count)
+        return lr
 
 
 class Losses(Module):
