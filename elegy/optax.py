@@ -15,12 +15,18 @@ GradientTransformation = namedtuple(
 for funcname in dir(optax):
     func = getattr(optax, funcname)
     if "learning_rate" in getattr(func, "__annotations__", dict()):
-        newfunc = lambda lr, *args, **kwargs: GradientTransformation(
-            *optax.sgd(lr, *args, **kwargs), lr=lr, step_fns=[]
-        )
-        newfunc = functools.wraps(func)(newfunc)
-        globals()[funcname] = newfunc
-        del newfunc
+
+        def wrap_func(func):
+            @functools.wraps(func)
+            def newfunc(*args, **kwargs):
+                lr = kwargs.get("learning_rate", args[0])
+                return GradientTransformation(
+                    *func(*args, **kwargs), lr=lr, step_fns=[]
+                )
+
+            return newfunc
+
+        globals()[funcname] = wrap_func(func)
 
 # replace optax.scale_by_schedule to return the extended GradientTransformation
 @functools.wraps(optax.scale_by_schedule)

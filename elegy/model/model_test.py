@@ -128,7 +128,7 @@ class LearningRatesMonitorTest(unittest.TestCase):
             module=MLP(n1=3, n2=1),
             loss=elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
             metrics=elegy.metrics.SparseCategoricalAccuracy(),
-            optimizer=elegy.optax.adamw(1e-3),
+            optimizer=elegy.optax.adamw(1e-3, b1=0.95),
             run_eagerly=True,
         )
 
