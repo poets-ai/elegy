@@ -1,7 +1,9 @@
 import elegy
 
 
-import jax.numpy as jnp
+import jax, jax.numpy as jnp
+import numpy as np
+import tensorflow.keras as keras
 
 
 #
@@ -47,3 +49,13 @@ def test_scce_out_of_bounds():
     scce = elegy.losses.SparseCategoricalCrossentropy(check_bounds=False)
     assert not jnp.isnan(scce(ytrue0, ypred)).any()
     assert not jnp.isnan(scce(ytrue1, ypred)).any()
+
+
+def test_scce_uint8_ytrue():
+    ypred = np.random.random([2, 256, 256, 10])
+    ytrue = np.random.randint(0, 10, size=(2, 256, 256)).astype(np.uint8)
+
+    loss0 = elegy.losses.sparse_categorical_crossentropy(ytrue, ypred, from_logits=True)
+    loss1 = keras.losses.sparse_categorical_crossentropy(ytrue, ypred, from_logits=True)
+
+    assert np.allclose(loss0, loss1)
