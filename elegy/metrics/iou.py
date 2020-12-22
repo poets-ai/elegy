@@ -1,4 +1,5 @@
 import jax, jax.numpy as jnp
+import numpy as np
 import typing as tp
 from elegy import types
 
@@ -56,7 +57,8 @@ class MeanIoU(Metric):
                 Reduction.MULTICLASS_FALSE_NEGATIVES, n_classes=n, name='FN',
             )
             if self._classes is None:
-                self._classes = jnp.arange(n)
+                self._classes = np.arange(n)
+            self._classes = np.asarray(self._classes)
             self._initialized = True
 
         if self._ignore_index is not None:
