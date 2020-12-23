@@ -6,6 +6,7 @@ from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass
 from io import StringIO
+import copy
 
 import haiku as hk
 import jax
@@ -440,7 +441,12 @@ class Module(metaclass=ModuleMeta):
         Recursively collects a dictionary with the parameters of this module
         and all submodules within it.
 
-        Returns:
+        Arguments:
+            trainable: If True returns only trainable weights.
+                       If False returns only non-trainable parameters.
+                       If None (Default) returns all parameters.
+
+        Returns: A nested dictionary of parametername:parameters pairs
         """
 
         params = module_tree_map(
@@ -458,12 +464,49 @@ class Module(metaclass=ModuleMeta):
         assert isinstance(params, tp.Dict)
         return params
 
-    def set_parameters(self, values: types.Parameters) -> None:
+    def set_parameters(self, values: types.Parameters, check_shapes: tp.Optional[bool] = True, ignore_on_mismatch: tp.Optional[tp.Union[bool, "silent"]] = False) -> None:
         """
         Recursively sets the parameters of this module
         and all submodules within it given a dictionary with a corresponding
         structure.
+
+        Arguments:
+            values: A nested dictionary as returned by get_parameters()
+            check_shapes: If True (Default) will check if the new parameters have the same shape as the old ones
+            ignore_on_mismatch: If True will set only parameters that have a matching shape, ignoring mismatches. 
+                                If "silent" will not even print a warning.
+                                If False (Default) will raise a ValueError on mismatch.
+                                Not used if check_shapes is False.
         """
+
+        def check_shapes_f(module: Module, values: tp.Dict[str, tp.Any]):
+            for key, value in list(values.items()):
+                if key in module._params:
+                    if not hasattr(module, key):
+                        #key in _params but not in module
+                        #this can happen after a .reset()
+                        #ignore
+                        continue
+                    prevshape = np.shape(getattr(module, key))
+                    newshape = np.shape(value)
+                    if prevshape != newshape:
+                        errormsg = f'Shape mismatch on parameter {key} in module {module.name}: {prevshape} (old) vs {newshape} (new).'
+                        if ignore_on_mismatch:
+                            if not ignore_on_mismatch == "silent":
+                                print(errormsg+' Ignoring')
+                            #ignore by removing from new parameters
+                            del values[key]
+                        else:
+                            raise ValueError(errormsg)
+                elif key not in module._submodules and not ignore_on_mismatch == 'silent':
+                    print(f'Parameter {key} not found in Module {module.name}')
+        
+        #first perform the check to avoid setting some parameters then encountering invalid ones
+        if check_shapes:
+            #shape check modifies values, make a copy to keep the original ones untouched
+            values = copy.deepcopy(values)
+            tree_apply(check_shapes_f, self, values)
+
 
         def f(module: Module, values: tp.Dict[str, tp.Any]):
             for key, value in values.items():
