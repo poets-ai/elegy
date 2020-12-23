@@ -549,12 +549,19 @@ class ModelBase(Module):
 class Optimizer(Module):
     def __init__(
         self,
-        optimizer: optax.GradientTransformation,
+        *optimizer: tp.Tuple[optax.GradientTransformation, ...],
         lr_schedule: tp.Optional[tp.Callable[[int, tp.Optional[int]], float]] = None,
         steps_per_epoch: tp.Optional[int] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
+
+        if len(optimizer) == 0:
+            raise ValueError("Must pass atleast 1 optimizer, got 0")
+        elif len(optimizer) == 1:
+            optimizer = optimizer[0]
+        else:
+            optimizer = optax.chain(*optimizer)
 
         if lr_schedule is not None:
             base_schedule = lr_schedule

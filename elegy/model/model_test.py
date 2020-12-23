@@ -104,3 +104,17 @@ class ModelTest(unittest.TestCase):
 
         params = optimizer(params, grads)
         assert jnp.allclose(optimizer.get_effective_learning_rate(), 1)
+
+    def test_optimizer_chain(self):
+
+        optimizer = elegy.Optimizer(
+            optax.sgd(0.1),
+            optax.clip(0.5),
+        )
+
+        params = np.zeros(shape=(3, 4))
+        grads = np.ones(shape=(3, 4)) * 100_000
+
+        params = optimizer(params, grads)
+
+        assert np.all(-0.5 <= params) and np.all(params <= 0.5)
