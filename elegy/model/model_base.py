@@ -22,7 +22,7 @@ class ModelBase(Module):
         module: Module,
         loss: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
         metrics: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
-        optimizer: tp.Optional[optax.GradientTransformation] = None,
+        optimizer: tp.Union["Optimizer", optax.GradientTransformation, None] = None,
         run_eagerly: bool = False,
         **kwargs,
     ):
@@ -31,7 +31,13 @@ class ModelBase(Module):
         self.module = module
         self.loss = Losses(loss) if loss is not None else None
         self.metrics = Metrics(metrics)
-        self.optimizer = Optimizer(optimizer) if optimizer is not None else None
+        self.optimizer = (
+            optimizer
+            if isinstance(optimizer, Optimizer)
+            else Optimizer(optimizer)
+            if optimizer is not None
+            else None
+        )
         self._jit_functions()
         self.initial_metrics_state: tp.Optional[tp.Dict[str, tp.Any]] = None
         self.run_eagerly = run_eagerly
@@ -541,9 +547,33 @@ class ModelBase(Module):
 
 
 class Optimizer(Module):
-    def __init__(self, optimizer: optax.GradientTransformation, **kwargs):
+    def __init__(
+        self,
+        optimizer: optax.GradientTransformation,
+        lr_schedule: tp.Optional[tp.Callable[[int, tp.Optional[int]], float]] = None,
+        steps_per_epoch: tp.Optional[int] = None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
+
+        if lr_schedule is not None:
+            base_schedule = lr_schedule
+
+            def lr_schedule(step: int) -> float:
+                if steps_per_epoch is not None:
+                    epoch = step // steps_per_epoch
+                else:
+                    epoch = None
+
+                return base_schedule(step, epoch)
+
+            optimizer = optax.chain(
+                optimizer,
+                optax.scale_by_schedule(lr_schedule),
+            )
+
         self.optax_optimizer = optimizer
+        self.lr_schedule = lr_schedule
 
     def call(self, parameters, grads):
 
@@ -562,6 +592,13 @@ class Optimizer(Module):
         self.update_parameter("optimizer_state", optimizer_state)
 
         return parameters
+
+    def get_effective_learning_rate(self) -> tp.Optional[float]:
+        """Returns the learning rate scaled by schedule(s) that will be used for the next training step"""
+
+        if self.initialized and self.lr_schedule is not None:
+            step = self.optimizer_state[-1].count
+            return self.lr_schedule(step)
 
 
 class Losses(Module):

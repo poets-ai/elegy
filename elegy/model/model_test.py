@@ -63,3 +63,44 @@ class ModelTest(unittest.TestCase):
         predict_acc = (model.predict(X).argmax(-1) == y).mean()
 
         assert eval_acc == predict_acc
+
+    def test_optimizer(self):
+        optax_op = optax.adam(1e-3)
+        lr_schedule = lambda step, epoch: step / 3
+
+        optimizer = elegy.Optimizer(optax_op, lr_schedule=lr_schedule)
+
+        params = np.random.uniform((3, 4))
+        grads = np.random.uniform((3, 4))
+
+        params = optimizer(params, grads)
+        assert jnp.allclose(optimizer.get_effective_learning_rate(), 1 / 3)
+
+        params = optimizer(params, grads)
+        assert jnp.allclose(optimizer.get_effective_learning_rate(), 2 / 3)
+
+        params = optimizer(params, grads)
+        assert jnp.allclose(optimizer.get_effective_learning_rate(), 3 / 3)
+
+    def test_optimizer_epoch(self):
+        optax_op = optax.adam(1e-3)
+        lr_schedule = lambda step, epoch: epoch
+
+        optimizer = elegy.Optimizer(
+            optax_op, lr_schedule=lr_schedule, steps_per_epoch=2
+        )
+
+        params = np.random.uniform((3, 4))
+        grads = np.random.uniform((3, 4))
+
+        params = optimizer.init(params, grads)
+        assert jnp.allclose(optimizer.get_effective_learning_rate(), 0)
+
+        params = optimizer(params, grads)
+        assert jnp.allclose(optimizer.get_effective_learning_rate(), 0)
+
+        params = optimizer(params, grads)
+        assert jnp.allclose(optimizer.get_effective_learning_rate(), 1)
+
+        params = optimizer(params, grads)
+        assert jnp.allclose(optimizer.get_effective_learning_rate(), 1)
