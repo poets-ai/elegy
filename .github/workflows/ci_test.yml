@@ -24,7 +24,7 @@ jobs:
       - name: Ensure contributor used ("black ./") before commit
         run: black --check .
   test:
-    if: ${{ !contains(github.event.issue.labels.name, 'WIP') }}
+    if: ${{ !contains(github.event.issue.*.name, 'WIP') }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
