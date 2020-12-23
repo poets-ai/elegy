@@ -1,12 +1,10 @@
 import networkx as nx
 import elegy
-from elegy import Module
+from elegy.module import Module
 import jax
 import itertools
 import typing as tp
 import numpy as np
-
-__all__ = ["slice_module_from_to"]
 
 
 def slice_module_from_to(
@@ -15,13 +13,6 @@ def slice_module_from_to(
     end_module: tp.Union[Module, str, None, tp.List[tp.Union[Module, str, None]]],
     sample_input: np.ndarray,
 ) -> Module:
-    """Creates a new submodule starting from the input of `start_module` to the outputs of `end_module`.
-    Current limitations:
-      - only one `start_module` is supported
-      - all operations between `start_module` and `end_module` must be performed by modules
-        i.e. `jax.nn.relu()` or `x+1` is not allowed but can be converted by wrapping with `elegy.to_module()`
-      - all modules between `start_module` and `end_module` must have a single output
-    """
     assert not isinstance(
         start_module, (tp.Tuple, tp.List)
     ), "Multiple inputs not yet supported"

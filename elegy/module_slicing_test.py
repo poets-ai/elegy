@@ -10,9 +10,7 @@ class ModuleSlicingTest(TestCase):
         x = jnp.zeros((32, 100))
         basicmodule = BasicModule0()
         basicmodule(x)  # trigger creation of weights and submodules
-        submodule = elegy.module_slicing.slice_module_from_to(
-            basicmodule, basicmodule.linear0, basicmodule.linear1, x
-        )
+        submodule = basicmodule.slice(basicmodule.linear0, basicmodule.linear1, x)
         submodel = elegy.Model(submodule)
         submodel.summary(x)
         assert submodel.predict(x).shape == (32, 10)
@@ -24,9 +22,7 @@ class ModuleSlicingTest(TestCase):
         for start, end in START_END_COMBOS:
             print(start, end)
             basicmodule = BasicModule0()
-            submodule = elegy.module_slicing.slice_module_from_to(
-                basicmodule, start, end, x
-            )
+            submodule = basicmodule.slice(start, end, x)
             submodel = elegy.Model(submodule)
             submodel.summary(x)
             assert submodel.predict(x).shape == (32, 10)
@@ -35,8 +31,7 @@ class ModuleSlicingTest(TestCase):
     def test_resnet_multi_out(self):
         x = jnp.zeros((2, 224, 224, 3))
         resnet = elegy.nets.resnet.ResNet18()
-        submodule = elegy.module_slicing.slice_module_from_to(
-            resnet,
+        submodule = resnet.slice(
             start_module=None,
             end_module=[
                 "/res_net_block_1",
@@ -66,9 +61,7 @@ class ModuleSlicingTest(TestCase):
         y = jnp.zeros((32, 10))
 
         basicmodule = BasicModule0()
-        submodule = elegy.module_slicing.slice_module_from_to(
-            basicmodule, "linear0", "linear1", x
-        )
+        submodule = basicmodule.slice("linear0", "linear1", x)
         submodel = elegy.Model(
             submodule,
             loss=elegy.losses.MeanAbsoluteError(),
@@ -91,9 +84,7 @@ class ModuleSlicingTest(TestCase):
         basicmodule = BasicModule0()
         for start_module in ["linear2", "linear1"]:
             try:
-                submodule = elegy.module_slicing.slice_module_from_to(
-                    basicmodule, start_module, "linear0", x
-                )
+                submodule = basicmodule.slice(start_module, "linear0", x)
             except RuntimeError as e:
                 assert e.args[0].startswith(f"No path from /{start_module} to /linear0")
             else:
@@ -106,9 +97,7 @@ class ModuleSlicingTest(TestCase):
         model = elegy.Model(module)
         model.summary(x)
 
-        submodule = elegy.module_slicing.slice_module_from_to(
-            module, None, "/multi_input_module", x
-        )
+        submodule = module.slice(None, "/multi_input_module", x)
         submodel = elegy.Model(submodule)
         submodel.summary(x)
         print(submodule.get_parameters())

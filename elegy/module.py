@@ -17,6 +17,9 @@ from elegy import types, utils
 from elegy.random import RNG
 from elegy.utils import EMPTY, Empty, Mode, ModuleOrderError
 
+# imported later because of a circular dependency
+# from elegy.module_slicing import slice_module_from_to
+
 __all__ = [
     "Module",
     "to_module",
@@ -244,6 +247,7 @@ class Module(metaclass=ModuleMeta):
         "reset",
         "init",
         "initialized",
+        "slice",
     ]
 
     def __init__(self, name: tp.Optional[str] = None, dtype: np.dtype = jnp.float32):
@@ -571,6 +575,53 @@ class Module(metaclass=ModuleMeta):
                     [getattr(self, key) for key in self._states if hasattr(self, key)]
                 )
             )
+
+    def slice(
+        self,
+        start_module: tp.Union["Module", str, None],
+        end_module: tp.Union[
+            "Module", str, None, tp.List[tp.Union["Module", str, None]]
+        ],
+        sample_input: np.ndarray,
+    ) -> "Module":
+        """
+        Creates a new submodule starting from the input of `start_module` to the outputs of `end_module`.
+
+        Current limitations:
+
+        - all operations between `start_module` and `end_module` must be performed by modules
+            i.e. `jax.nn.relu()` or `x+1` is not allowed but can be converted by wrapping with `elegy.to_module()`
+        - only one `start_module` is supported
+        - all modules between `start_module` and `end_module` must have a single output
+
+
+        Example usage:
+        ```
+        x = jnp.zeros((2, 224, 224, 3))
+        resnet = elegy.nets.resnet.ResNet18()
+        submodule = resnet.slice(
+                        start_module=None,
+                        end_module=["/res_net_block_1", "/res_net_block_3", "/res_net_block_5", "/res_net_block_7" ],
+                        sample_input=x,
+        )
+        outputs = elegy.Model(submodule).predict(x)
+        assert outputs[0].shape == (2, 56, 56, 64)
+        assert outputs[1].shape == (2, 28, 28, 128)
+        assert outputs[2].shape == (2, 14, 14, 256)
+        assert outputs[3].shape == (2, 7, 7, 512)
+        ```
+
+        Arguments:
+            start_module: Child module or name of a child module which will be the input module of the resulting module.
+                          If `None`, the first module is used.
+            end_module: Child module, name of child module, `None` or a list thereof which will be the output module(s) of the resulting module.
+                         If `None`, the last module is used.
+            sample_input: An array representing a sample input to the parent module.
+        """
+        # importing here because of a circular dependency
+        from elegy.module_slicing import slice_module_from_to
+
+        return slice_module_from_to(self, start_module, end_module, sample_input)
 
 
 # -------------------------------------------------------------
