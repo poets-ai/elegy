@@ -1,8 +1,10 @@
 # adapted from the flax library https://github.com/google/flax
 
 import jax, jax.numpy as jnp
-from elegy import module, nn
+from elegy import module, nn, random
 import typing as tp
+import pickle
+import numpy as np
 
 
 __all__ = [
@@ -101,6 +103,7 @@ class ResNet(module.Module):
         stages: tp.List[int],
         block_type: tp.Union[ResNetBlock, BottleneckResNetBlock],
         lowres: tp.Optional[bool] = False,
+        weights: tp.Optional[str] = None,
         *args,
         **kwargs
     ):
@@ -112,6 +115,7 @@ class ResNet(module.Module):
             lowres: Optional, whether to use the low resolution version
                     as described in subsection 4.2 of the orignal paper.
                     This version is better suited for datasets like CIFAR10. (Default: False)
+            weights: TODO
             dtype: Optional dtype of the convolutions and linear operations,
                     either jnp.float32 (default) or jnp.float16 for mixed precision.
         """
@@ -120,6 +124,21 @@ class ResNet(module.Module):
         self.stages = stages
         self.block_type = block_type
         self.lowres = lowres
+
+        if weights is not None:
+            if weights.endswith(".pkl"):
+                parameters = pickle.load(open(weights, "rb"))
+            elif weights == "imagenet":
+                # TODO:
+                raise NotImplementedError
+
+            x = np.empty([0, 224, 224, 3], dtype=self.dtype)
+            # quick but dirty module initialization
+            with module.rng_context(random.RNG(0)):
+                jax.eval_shape(self.init, x)
+            self.set_parameters(
+                parameters, check_missing=True, check_shapes=True, ignore_on_error=False
+            )
 
     def call(self, x: jnp.ndarray):
         x = nn.Conv2D(

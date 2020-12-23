@@ -464,7 +464,13 @@ class Module(metaclass=ModuleMeta):
         assert isinstance(params, tp.Dict)
         return params
 
-    def set_parameters(self, values: types.Parameters, check_shapes: tp.Optional[bool] = True, ignore_on_mismatch: tp.Optional[tp.Union[bool, "silent"]] = False) -> None:
+    def set_parameters(
+        self,
+        values: types.Parameters,
+        check_missing: tp.Optional[bool] = False,
+        check_shapes: tp.Optional[bool] = True,
+        ignore_on_error: tp.Optional[tp.Union[bool, "silent"]] = False,
+    ) -> None:
         """
         Recursively sets the parameters of this module
         and all submodules within it given a dictionary with a corresponding
@@ -472,41 +478,53 @@ class Module(metaclass=ModuleMeta):
 
         Arguments:
             values: A nested dictionary as returned by get_parameters()
+            check_missing: If True will check if the new set of parameters is complete. Default: False
             check_shapes: If True (Default) will check if the new parameters have the same shape as the old ones
-            ignore_on_mismatch: If True will set only parameters that have a matching shape, ignoring mismatches. 
-                                If "silent" will not even print a warning.
-                                If False (Default) will raise a ValueError on mismatch.
-                                Not used if check_shapes is False.
+            ignore_on_error: If True will set only parameters that have a matching shape, ignoring mismatches and missing parameters.
+                             If "silent" will not even print a warning.
+                             If False (Default) will raise a ValueError on shape mismatch or missing parameter.
         """
 
         def check_shapes_f(module: Module, values: tp.Dict[str, tp.Any]):
             for key, value in list(values.items()):
                 if key in module._params:
                     if not hasattr(module, key):
-                        #key in _params but not in module
-                        #this can happen after a .reset()
-                        #ignore
+                        # key in _params but not in module
+                        # this can happen after a .reset()
+                        # ignore
                         continue
                     prevshape = np.shape(getattr(module, key))
                     newshape = np.shape(value)
                     if prevshape != newshape:
-                        errormsg = f'Shape mismatch on parameter {key} in module {module.name}: {prevshape} (old) vs {newshape} (new).'
-                        if ignore_on_mismatch:
-                            if not ignore_on_mismatch == "silent":
-                                print(errormsg+' Ignoring')
-                            #ignore by removing from new parameters
+                        errormsg = f"Shape mismatch on parameter {key} in module {module.name}: {prevshape} (old) vs {newshape} (new)."
+                        if ignore_on_error:
+                            if not ignore_on_error == "silent":
+                                print(errormsg + " Ignoring")
+                            # ignore by removing from new parameters
                             del values[key]
                         else:
                             raise ValueError(errormsg)
-                elif key not in module._submodules and not ignore_on_mismatch == 'silent':
-                    print(f'Parameter {key} not found in Module {module.name}')
-        
-        #first perform the check to avoid setting some parameters then encountering invalid ones
+                elif key not in module._submodules and not ignore_on_error == "silent":
+                    print(f"Parameter {key} not found in module {module.name}")
+
+            if check_missing:
+                missing = [
+                    param
+                    for param in list(module._params.keys()) + module._submodules
+                    if param not in values
+                ]
+                if len(missing):
+                    errormsg = f"Miissing parameters in module {module.name}: {missing}"
+                    if ignore_on_error == True:
+                        print(errormsg)
+                    else:
+                        raise ValueError(errormsg)
+
+        # first perform the check to avoid setting some parameters then encountering invalid ones
         if check_shapes:
-            #shape check modifies values, make a copy to keep the original ones untouched
+            # shape check modifies values, make a copy to keep the original ones untouched
             values = copy.deepcopy(values)
             tree_apply(check_shapes_f, self, values)
-
 
         def f(module: Module, values: tp.Dict[str, tp.Any]):
             for key, value in values.items():
