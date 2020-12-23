@@ -20,6 +20,14 @@ pip install --upgrade $BASE_URL/$CUDA_VERSION/jaxlib-0.1.55-$PYTHON_VERSION-none
 pip install --upgrade jax  
 ```
 
+#### Gitpod
+An alternative way to contribute is using [gitpod](https://gitpod.io/) which creates a vscode-based cloud development enviroment.
+To get started just login at gitpod, grant the appropriate permissions to github, and open the following link:
+
+https://gitpod.io/#https://github.com/poets-ai/elegy
+
+We have built a `python 3.8` enviroment and all development dependencies will install when the enviroment starts.
+
 ## Creating Losses and Metrics
 For this you can follow these guidelines:
 
