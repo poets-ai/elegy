@@ -552,13 +552,26 @@ class ModelBase(Module):
 
 
 class Optimizer(Module):
+    r"""A Module that wraps around `optax` optimizers."""
+
     def __init__(
         self,
-        *optimizer: tp.Tuple[optax.GradientTransformation, ...],
-        lr_schedule: tp.Optional[tp.Callable[[int, tp.Optional[int]], float]] = None,
+        *optimizer: optax.GradientTransformation,
+        lr_schedule: tp.Optional[
+            tp.Callable[[int, tp.Optional[jnp.ndarray]], jnp.ndarray]
+        ] = None,
         steps_per_epoch: tp.Optional[int] = None,
         **kwargs,
     ):
+        r"""
+        Arguments:
+            optimizer: An optax `GradientTransformation` object, if more than one is passed via `*args` then they are
+                grouped using `optax.chain`.
+            lr_schedule: A optional callable of the form `def lr_schedule(step: int, epoch: Optional[int]) -> float` that
+                returns the learning rate schedule at each time step. If `steps_per_epoch` is given then epoch is calculated,
+                else epoch is None.
+            steps_per_epoch: The number of steps to in an epoch, needed to caculate `epoch` from `step`.
+        """
         super().__init__(**kwargs)
 
         if len(optimizer) == 0:

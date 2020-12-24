@@ -126,7 +126,7 @@ class ModelTest(unittest.TestCase):
             metrics=elegy.metrics.SparseCategoricalAccuracy(),
             optimizer=elegy.Optimizer(
                 optax.adamw(1.0, b1=0.95),
-                lr_schedule=lambda step, epoch: 1e-3,
+                lr_schedule=lambda step, epoch: jnp.array(1e-3),
             ),
             run_eagerly=True,
         )
