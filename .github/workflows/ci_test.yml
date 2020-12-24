@@ -3,12 +3,19 @@ name: GitHub CI
 on:
   push:
     # Sequence of patterns matched against refs/heads
-    branches:    
+    branches:
       # Push events on master branch
       - master
   pull_request:
 jobs:
+  wip:
+    if: ${{ !contains(github.event.pull_request.title, 'WIP') }}
+    name: Check for WIP
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
   black-test:
+    if: ${{ !contains(github.event.pull_request.title, 'WIP') }}
     name: Black Python code format
     runs-on: ubuntu-latest
     steps:
