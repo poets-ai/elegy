@@ -263,6 +263,11 @@ class ModelBase(Module):
 
         assert grads is not None
 
+        lr = self.optimizer.get_effective_learning_rate()
+
+        if lr is not None:
+            logs["lr"] = lr
+
         parameters = self.module.get_parameters(trainable=True)
 
         parameters = self.optimizer(parameters, grads)

@@ -118,3 +118,32 @@ class ModelTest(unittest.TestCase):
         params = optimizer(params, grads)
 
         assert np.all(-0.5 <= params) and np.all(params <= 0.5)
+
+    def test_lr_logging(self):
+        model = elegy.Model(
+            module=MLP(n1=3, n2=1),
+            loss=elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
+            metrics=elegy.metrics.SparseCategoricalAccuracy(),
+            optimizer=elegy.Optimizer(
+                optax.adamw(1.0, b1=0.95),
+                lr_schedule=lambda step, epoch: 1e-3,
+            ),
+            run_eagerly=True,
+        )
+
+        X = np.random.uniform(size=(5, 7, 7))
+        y = np.random.randint(10, size=(5,))
+
+        history = model.fit(
+            x=X,
+            y=y,
+            epochs=1,
+            steps_per_epoch=1,
+            batch_size=5,
+            validation_data=(X, y),
+            shuffle=True,
+            verbose=0,
+        )
+
+        assert "lr" in history.history
+        assert np.allclose(history.history["lr"], 1e-3)
