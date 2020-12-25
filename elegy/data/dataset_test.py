@@ -149,6 +149,15 @@ class DataLoaderTestCase(TestCase):
             )
             batches = list(loader)
 
+    def test_prefetch(self):
+        ds = DS0()
+
+        loader = elegy.data.DataLoader(
+            ds, batch_size=2, n_workers=4, shuffle=False, prefetch=3
+        )
+        batches = list(loader)
+        assert len(loader) == len(batches)
+
 
 class DS0(elegy.data.Dataset):
     def __len__(self):
