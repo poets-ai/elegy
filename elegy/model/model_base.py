@@ -52,7 +52,9 @@ class ModelBase(Module):
             self.metrics.reset()
             self.initial_metrics_state = None
         elif self.initial_metrics_state is not None:
-            self.metrics.set_parameters(self.initial_metrics_state)
+            self.metrics.set_parameters(
+                self.initial_metrics_state, check_missing=False, check_shapes=False
+            )
 
     def predict_fn(self, x: tp.Any = ()):
 
@@ -262,7 +264,9 @@ class ModelBase(Module):
         parameters = self.optimizer(parameters, grads)
 
         if module.can_update():
-            self.module.set_parameters(parameters)
+            self.module.set_parameters(
+                parameters, check_missing=False, check_shapes=False
+            )
 
         return logs
 

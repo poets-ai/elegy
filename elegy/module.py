@@ -521,7 +521,7 @@ class Module(metaclass=ModuleMeta):
                         raise ValueError(errormsg)
 
         # first perform the check to avoid setting some parameters then encountering invalid ones
-        if check_shapes:
+        if check_shapes or check_missing:
             # shape check modifies values, make a copy to keep the original ones untouched
             values = copy.deepcopy(values)
             tree_apply(check_shapes_f, self, values)
@@ -1001,7 +1001,7 @@ def jit(
 
         # set params to modules
         for module, parameters in zip(modules, parameters_tuple):
-            module.set_parameters(parameters)
+            module.set_parameters(parameters, check_missing=False, check_shapes=False)
 
         outputs = f(*args)
 
@@ -1041,7 +1041,7 @@ def jit(
 
         # set params to modules
         for module, parameters in zip(modules, parameters_tuple):
-            module.set_parameters(parameters)
+            module.set_parameters(parameters, check_missing=False, check_shapes=False)
 
         return outputs
 
@@ -1082,7 +1082,7 @@ def value_and_grad(
 
         # set traced parameters
         for module, parameters in zip(modules, parameters_tuple):
-            module.set_parameters(parameters)
+            module.set_parameters(parameters, check_missing=False, check_shapes=False)
 
         outputs = f(*args, **kwargs)
 
@@ -1117,7 +1117,7 @@ def value_and_grad(
 
         # set original untraced parameters
         for module, parameters in zip(modules, parameters_tuple):
-            module.set_parameters(parameters)
+            module.set_parameters(parameters, check_missing=False, check_shapes=False)
 
         if not is_list:
             grads = grads[0]
