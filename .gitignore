@@ -140,6 +140,7 @@ cython_debug/
 
 # custom
 /.vscode
+/.theia
 /test.*
 /summaries
 /runs
