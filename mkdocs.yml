@@ -20,6 +20,7 @@ nav:
     Metric: api/Metric.md
     Model: api/Model.md
     Module: api/Module.md
+    Optimizer: api/Optimizer.md
     RNG: api/RNG.md
     add_loss: api/add_loss.md
     add_metric: api/add_metric.md
@@ -101,6 +102,10 @@ nav:
       recall: api/metrics/recall.md
       reduce: api/metrics/reduce.md
       sparse_categorical_accuracy: api/metrics/sparse_categorical_accuracy.md
+    model:
+      Model: api/model/Model.md
+      Optimizer: api/model/Optimizer.md
+      load: api/model/load.md
     module:
       Module: api/module/Module.md
       add_loss: api/module/add_loss.md
