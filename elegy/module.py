@@ -287,6 +287,12 @@ class Module(metaclass=ModuleMeta):
         self.__dict__ = d
         self._jit_functions()
 
+    def __getstate__(self):
+        d = dict(self.__dict__)
+        del d["jit"]
+        del d["init_jit"]
+        return d
+
     @property
     def initialized(self) -> bool:
         return self._initialized

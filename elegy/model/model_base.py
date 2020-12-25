@@ -22,7 +22,7 @@ class ModelBase(Module):
         module: Module,
         loss: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
         metrics: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
-        optimizer: tp.Optional[optax.GradientTransformation] = None,
+        optimizer: tp.Union["Optimizer", optax.GradientTransformation, None] = None,
         run_eagerly: bool = False,
         **kwargs,
     ):
@@ -31,7 +31,13 @@ class ModelBase(Module):
         self.module = module
         self.loss = Losses(loss) if loss is not None else None
         self.metrics = Metrics(metrics)
-        self.optimizer = Optimizer(optimizer) if optimizer is not None else None
+        self.optimizer = (
+            optimizer
+            if isinstance(optimizer, Optimizer)
+            else Optimizer(optimizer)
+            if optimizer is not None
+            else None
+        )
         self._jit_functions()
         self.initial_metrics_state: tp.Optional[tp.Dict[str, tp.Any]] = None
         self.run_eagerly = run_eagerly
@@ -43,6 +49,13 @@ class ModelBase(Module):
         self.predict_fn_jit = elegy_jit(self.predict_fn, modules=self)
         self.test_fn_jit = elegy_jit(self.test_fn, modules=self)
         self.train_fn_jit = elegy_jit(self.train_fn, modules=self)
+
+    def __getstate__(self):
+        d = super().__getstate__()
+        del d["predict_fn_jit"]
+        del d["test_fn_jit"]
+        del d["train_fn_jit"]
+        return d
 
     def call(self, *args, **kwargs):
         return self.module(*args, **kwargs)
@@ -256,6 +269,11 @@ class ModelBase(Module):
         )
 
         assert grads is not None
+
+        lr = self.optimizer.get_effective_learning_rate()
+
+        if lr is not None:
+            logs["lr"] = lr
 
         parameters = self.module.get_parameters(trainable=True)
 
@@ -541,9 +559,53 @@ class ModelBase(Module):
 
 
 class Optimizer(Module):
-    def __init__(self, optimizer: optax.GradientTransformation, **kwargs):
+    r"""A Module that wraps around `optax` optimizers."""
+
+    def __init__(
+        self,
+        *optimizer: optax.GradientTransformation,
+        lr_schedule: tp.Optional[
+            tp.Callable[[int, tp.Optional[jnp.ndarray]], jnp.ndarray]
+        ] = None,
+        steps_per_epoch: tp.Optional[int] = None,
+        **kwargs,
+    ):
+        r"""
+        Arguments:
+            optimizer: An optax `GradientTransformation` object, if more than one is passed via `*args` then they are
+                grouped using `optax.chain`.
+            lr_schedule: A optional callable of the form `def lr_schedule(step: int, epoch: Optional[int]) -> float` that
+                returns the learning rate schedule at each time step. If `steps_per_epoch` is given then epoch is calculated,
+                else epoch is None.
+            steps_per_epoch: The number of steps to in an epoch, needed to caculate `epoch` from `step`.
+        """
         super().__init__(**kwargs)
+
+        if len(optimizer) == 0:
+            raise ValueError("Must pass atleast 1 optimizer, got 0")
+        elif len(optimizer) == 1:
+            optimizer = optimizer[0]
+        else:
+            optimizer = optax.chain(*optimizer)
+
+        if lr_schedule is not None:
+            base_schedule = lr_schedule
+
+            def lr_schedule(step: int) -> float:
+                if steps_per_epoch is not None:
+                    epoch = step // steps_per_epoch
+                else:
+                    epoch = None
+
+                return base_schedule(step, epoch)
+
+            optimizer = optax.chain(
+                optimizer,
+                optax.scale_by_schedule(lr_schedule),
+            )
+
         self.optax_optimizer = optimizer
+        self.lr_schedule = lr_schedule
 
     def call(self, parameters, grads):
 
@@ -562,6 +624,13 @@ class Optimizer(Module):
         self.update_parameter("optimizer_state", optimizer_state)
 
         return parameters
+
+    def get_effective_learning_rate(self) -> tp.Optional[float]:
+        """Returns the learning rate scaled by schedule(s) that will be used for the next training step"""
+
+        if self.initialized and self.lr_schedule is not None:
+            step = self.optimizer_state[-1].count
+            return self.lr_schedule(step)
 
 
 class Losses(Module):
