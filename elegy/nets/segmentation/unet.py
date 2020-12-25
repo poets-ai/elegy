@@ -1,5 +1,5 @@
 import elegy
-from elegy import module
+from elegy.module import Module, to_module
 import jax, jax.numpy as jnp
 import typing as tp
 
@@ -8,7 +8,7 @@ import typing as tp
 # TODO: mkdocs
 
 
-class ConvBlock(module.Module):
+class ConvBlock(Module):
     def __init__(
         self, channels: int, batchnorm: tp.Optional[bool] = True, *args, **kwargs
     ):
@@ -38,37 +38,35 @@ class ConvBlock(module.Module):
         return x
 
 
-class DownBlock(module.Module):
-    def __init__(self, batchnorm: tp.Optional[bool] = True, *args, **kwargs):
+class DownBlock(Module):
+    def __init__(self, channels:int, batchnorm: tp.Optional[bool] = True, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.channels = channels
         self.batchnorm = batchnorm
 
     def call(self, x):
         x = elegy.nn.MaxPool(
             window_shape=(1, 2, 2, 1), strides=(1, 2, 2, 1), padding="SAME"
         )(x)
-        x = ConvBlock(
-            channels=x.shape[-1] * 2, batchnorm=self.batchnorm, dtype=self.dtype
-        )(x)
+        x = ConvBlock(self.channels, batchnorm=self.batchnorm, dtype=self.dtype )(x)
         return x
 
 
-class UpBlock(module.Module):
-    def __init__(self, batchnorm: tp.Optional[bool] = True, *args, **kwargs):
+class UpBlock(Module):
+    def __init__(self, channels:int, batchnorm: tp.Optional[bool] = True, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.channels = channels
         self.batchnorm = batchnorm
 
     def call(self, x: jnp.ndarray, skipx: jnp.ndarray):
         x = jax.image.resize(x, skipx.shape, method="bilinear")
-        x = elegy.nn.Conv2D(skipx.shape[-1], (1, 1), dtype=self.dtype)(x)
+        x = elegy.nn.Conv2D(self.channels, (1, 1), dtype=self.dtype)(x)
         x = jnp.concatenate([x, skipx], axis=-1)
-        x = ConvBlock(
-            channels=skipx.shape[-1], batchnorm=self.batchnorm, dtype=self.dtype
-        )(x)
+        x = ConvBlock(self.channels, batchnorm=self.batchnorm, dtype=self.dtype)(x)
         return x
 
 
-class UNet(module.Module):
+class UNet(Module):
     """U-Net architecture for image segmentation.
     Original Paper: [U-Net: Convolutional Networks for Biomedical Image Segmentation](https://arxiv.org/abs/1505.04597)
     """
@@ -76,39 +74,45 @@ class UNet(module.Module):
     def __init__(
         self,
         output_channels: int,
+        encoder: tp.Union[Module, tp.List[int]] = [64, 128, 256, 512, 1024],
+        decoder: tp.List[int] = [512, 256, 128, 64],
         batchnorm: tp.Optional[bool] = True,
-        alpha: tp.Optional[float] = 1.0,
         dtype: tp.Optional[tp.Union["float32", "float16"]] = "float32",
         *args,
         **kwargs
     ):
         """Arguments:
         output_channels: Number of output classes.
+        encoder: TODO
+        decoder: TODO
         batchnorm: Whether or not to use batch normalization after convolutions (Default: True)
-        alpha: Width multiplicator to control the number of channels in the inner layers.
-               With the default value of 1.0, the first inner layer will use 64 channels.
         dtype: Optional dtype of the convolutions and linear operations,
                 either jnp.float32 (default) or jnp.float16 for mixed precision.
         """
         super().__init__(*args, **kwargs)
         self.output_channels = output_channels
         self.batchnorm = batchnorm
-        self.alpha = alpha
+        
+        if isinstance(encoder, tp.List):
+            assert len(encoder) == len(decoder)+1
+        self.encoder, self.decoder = encoder, decoder
 
     def call(self, x: jnp.ndarray):
-        x = x0 = ConvBlock(
-            channels=int(64 * self.alpha), batchnorm=self.batchnorm, dtype=self.dtype
-        )(x)
-        x = x1 = DownBlock(dtype=self.dtype)(x)
-        x = x2 = DownBlock(dtype=self.dtype)(x)
-        x = x3 = DownBlock(dtype=self.dtype)(x)
-        x = DownBlock(dtype=self.dtype)(x)
-        x = UpBlock(dtype=self.dtype)(x, x3)
-        x = UpBlock(dtype=self.dtype)(x, x2)
-        x = UpBlock(dtype=self.dtype)(x, x1)
-        x = UpBlock(dtype=self.dtype)(x, x0)
+        if isinstance(self.encoder, tp.List):
+            skip_x = [ConvBlock(self.encoder[0], batchnorm=self.batchnorm, dtype=self.dtype)(x)]
+            for channels in self.encoder[1:]:
+                skip_x += [DownBlock(channels, self.batchnorm, dtype=self.dtype)(skip_x[-1])]
+        else:
+            skip_x = self.encoder(x)
+            assert isinstance(skip_x, (tp.List, tp.Tuple) )
+            assert len(skip_x) == len(self.decoder)+1
+        
+        x = skip_x[-1]
+        for channels, skip in zip(self.decoder, reversed(skip_x[:-1])):
+            x = UpBlock(channels, self.batchnorm, dtype=self.dtype)(x, skip)
+        
         x = elegy.nn.Conv2D(self.output_channels, (1, 1), dtype=self.dtype)(x)
         if x.dtype == jnp.float16:
             to_float32 = lambda x: jnp.asarray(x, jnp.float32)
-            x = module.to_module(to_float32)(name="to_float32")(x)
+            x = to_module(to_float32)(name="to_float32")(x)
         return x
