@@ -50,6 +50,13 @@ class ModelBase(Module):
         self.test_fn_jit = elegy_jit(self.test_fn, modules=self)
         self.train_fn_jit = elegy_jit(self.train_fn, modules=self)
 
+    def __getstate__(self):
+        d = super().__getstate__()
+        del d["predict_fn_jit"]
+        del d["test_fn_jit"]
+        del d["train_fn_jit"]
+        return d
+
     def call(self, *args, **kwargs):
         return self.module(*args, **kwargs)
 
