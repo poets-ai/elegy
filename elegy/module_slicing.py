@@ -6,6 +6,11 @@ import itertools
 import typing as tp
 import numpy as np
 
+import sys
+from . import module
+
+module.module_slicing = sys.modules[__name__]
+
 
 def slice_module_from_to(
     module: Module,

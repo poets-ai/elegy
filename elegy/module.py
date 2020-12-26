@@ -17,8 +17,10 @@ from elegy import types, utils
 from elegy.random import RNG
 from elegy.utils import EMPTY, Empty, Mode, ModuleOrderError
 
-# imported later because of a circular dependency
-# from elegy.module_slicing import slice_module_from_to
+# placeholder for module module_slicing.py
+# injected from inside the module because of a circular dependency
+module_slicing = None
+
 
 __all__ = [
     "Module",
@@ -624,10 +626,9 @@ class Module(metaclass=ModuleMeta):
                          If `None`, the last module is used.
             sample_input: An array representing a sample input to the parent module.
         """
-        # importing here because of a circular dependency
-        from elegy.module_slicing import slice_module_from_to
-
-        return slice_module_from_to(self, start_module, end_module, sample_input)
+        return module_slicing.slice_module_from_to(
+            self, start_module, end_module, sample_input
+        )
 
 
 # -------------------------------------------------------------
@@ -658,7 +659,7 @@ def add_summary(
         module_or_name: The name of the summary or alternatively the module that this summary will represent.
             If a summary with the same name already exists a unique identifier will be generated.
         value: The value for the summary.
-        input_values: The input arguments for the module, required for slicing.
+        input_values: Input arguments (args, kwargs) as used to call the module (required for slicing).
     """
 
     if LOCAL.summaries is None:
