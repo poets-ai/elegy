@@ -20,11 +20,11 @@ __all__ = [
 
 PRETRAINED_URLS = {
     "ResNet18": {
-        "url": "https://www.dropbox.com/s/ofwh7947y6t84zp/ResNet18_ImageNet.pkl?dl=1",
+        "url": "https://github.com/poets-ai/elegy-assets/releases/download/resnet18_rev0/ResNet18_ImageNet.pkl",
         "sha256": "4397cd02b56a29825243341204710daa1de9f3d6ad776558e61b34690896aaaa",
     },
     "ResNet50": {
-        "url": "https://www.dropbox.com/s/fmr7tm6rmah682s/ResNet50_ImageNet.pkl?dl=1",
+        "url": "https://github.com/poets-ai/elegy-assets/releases/download/resnet50_rev0/ResNet50_ImageNet.pkl",
         "sha256": "aadeb068ee6b5e114bc1902159e592c5170a27a661fb3a3d7c463607b25f1381",
     },
 }
