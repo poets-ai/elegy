@@ -1,10 +1,10 @@
 import elegy
 from elegy.module import Module, to_module
 import jax, jax.numpy as jnp
+import numpy as np
 import typing as tp
 
 
-# TODO: backbone
 # TODO: mkdocs
 
 
@@ -39,7 +39,9 @@ class ConvBlock(Module):
 
 
 class DownBlock(Module):
-    def __init__(self, channels:int, batchnorm: tp.Optional[bool] = True, *args, **kwargs):
+    def __init__(
+        self, channels: int, batchnorm: tp.Optional[bool] = True, *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.channels = channels
         self.batchnorm = batchnorm
@@ -48,12 +50,14 @@ class DownBlock(Module):
         x = elegy.nn.MaxPool(
             window_shape=(1, 2, 2, 1), strides=(1, 2, 2, 1), padding="SAME"
         )(x)
-        x = ConvBlock(self.channels, batchnorm=self.batchnorm, dtype=self.dtype )(x)
+        x = ConvBlock(self.channels, batchnorm=self.batchnorm, dtype=self.dtype)(x)
         return x
 
 
 class UpBlock(Module):
-    def __init__(self, channels:int, batchnorm: tp.Optional[bool] = True, *args, **kwargs):
+    def __init__(
+        self, channels: int, batchnorm: tp.Optional[bool] = True, *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.channels = channels
         self.batchnorm = batchnorm
@@ -89,30 +93,100 @@ class UNet(Module):
         dtype: Optional dtype of the convolutions and linear operations,
                 either jnp.float32 (default) or jnp.float16 for mixed precision.
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, dtype=dtype, **kwargs)
         self.output_channels = output_channels
         self.batchnorm = batchnorm
-        
+
         if isinstance(encoder, tp.List):
-            assert len(encoder) == len(decoder)+1
+            assert len(encoder) == len(decoder) + 1
         self.encoder, self.decoder = encoder, decoder
 
     def call(self, x: jnp.ndarray):
         if isinstance(self.encoder, tp.List):
-            skip_x = [ConvBlock(self.encoder[0], batchnorm=self.batchnorm, dtype=self.dtype)(x)]
+            skip_x = [
+                ConvBlock(self.encoder[0], batchnorm=self.batchnorm, dtype=self.dtype)(
+                    x
+                )
+            ]
             for channels in self.encoder[1:]:
-                skip_x += [DownBlock(channels, self.batchnorm, dtype=self.dtype)(skip_x[-1])]
+                skip_x += [
+                    DownBlock(channels, self.batchnorm, dtype=self.dtype)(skip_x[-1])
+                ]
         else:
             skip_x = self.encoder(x)
-            assert isinstance(skip_x, (tp.List, tp.Tuple) )
-            assert len(skip_x) == len(self.decoder)+1
-        
+            assert isinstance(skip_x, (tp.List, tp.Tuple))
+            assert len(skip_x) == len(self.decoder) + 1
+
         x = skip_x[-1]
         for channels, skip in zip(self.decoder, reversed(skip_x[:-1])):
             x = UpBlock(channels, self.batchnorm, dtype=self.dtype)(x, skip)
-        
+
         x = elegy.nn.Conv2D(self.output_channels, (1, 1), dtype=self.dtype)(x)
         if x.dtype == jnp.float16:
             to_float32 = lambda x: jnp.asarray(x, jnp.float32)
             x = to_module(to_float32)(name="to_float32")(x)
         return x
+
+
+class UNet_R18(UNet):
+    """U-Net with a ResNet18 backbone"""
+
+    def __init__(
+        self,
+        output_channels: int,
+        *args,
+        backbone_weights="imagenet",
+        dtype: tp.Optional[tp.Union["float32", "float16"]] = "float32",
+        **kwargs
+    ):
+        r18 = elegy.nets.resnet.ResNet18(weights=backbone_weights, dtype=dtype)
+        r18encoder = r18.slice(
+            start_module=None,
+            end_module=[
+                "/input",
+                "/relu",
+                "/res_net_block_1",
+                "/res_net_block_3",
+                "/res_net_block_5",
+                "/res_net_block_7",
+            ],
+            sample_input=np.zeros([1, 128, 128, 3]),  # does sample_input size matter?
+        )
+        super().__init__(
+            output_channels,
+            encoder=r18encoder,
+            decoder=[256, 128, 64, 32, 16],
+            dtype=dtype,
+        )
+
+
+class UNet_R50(UNet):
+    """U-Net with a ResNet50 backbone"""
+
+    def __init__(
+        self,
+        output_channels: int,
+        *args,
+        backbone_weights="imagenet",
+        dtype: tp.Optional[tp.Union["float32", "float16"]] = "float32",
+        **kwargs
+    ):
+        r50 = elegy.nets.resnet.ResNet50(weights=backbone_weights, dtype=dtype)
+        r50encoder = r50.slice(
+            start_module=None,
+            end_module=[
+                "/input",
+                "/relu",
+                "/bottleneck_res_net_block_2",
+                "/bottleneck_res_net_block_6",
+                "/bottleneck_res_net_block_12",
+                "/bottleneck_res_net_block_15",
+            ],
+            sample_input=np.zeros([1, 128, 128, 3]),  # does sample_input size matter?
+        )
+        super().__init__(
+            output_channels,
+            encoder=r50encoder,
+            decoder=[512, 256, 128, 64, 32],
+            dtype=dtype,
+        )
