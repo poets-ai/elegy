@@ -29,10 +29,17 @@ def slice_module_from_to(
         summaries = elegy.get_summaries()
 
     edges = [Edge(summ) for summ in summaries]
+    if start_module in ["/input", "input"]:
+        start_module = None
     start_id = get_input_id(edges, start_module)
     if not isinstance(end_module, (tp.Tuple, tp.List)):
         end_module = [end_module]
-    end_ids = [get_output_id(edges, m) for m in end_module]
+    end_ids = [
+        get_output_id(edges, m)
+        if m not in ["/input", "input"]
+        else get_input_id(edges, None)
+        for m in end_module
+    ]
 
     graph = construct_graph(edges)
     dag_paths = [find_dag_path(graph, start_id, end_id) for end_id in end_ids]
@@ -133,6 +140,22 @@ def construct_graph(edges: tp.List[Edge]) -> nx.DiGraph:
                     depth=depth,
                     **e.__dict__,
                 )
+
+    # adding dummy edges from inputs to inputs
+    e = edges[-1]  # edge representing the full module
+    merged_args_kwargs = merge_args_kwargs(*e.input_ids[0], **e.input_ids[1])
+    for key, node_id in merged_args_kwargs:
+        G.add_edge(
+            node_id,
+            node_id,
+            inkey=key,
+            outkey=key,
+            depth=0,
+            module=lambda x: x,
+            modulename="Inputs",
+            input_ids=[node_id],
+            output_ids=[node_id],
+        )
     return G
 
 
@@ -215,7 +238,11 @@ def find_dag_path(graph: nx.DiGraph, start_node: int, end_node: int) -> nx.DiGra
             nx.all_simple_edge_paths(graph, start_node, end_node)
         )  # list of lists of tuples
         if len(edge_paths) == 0:
-            raise nx.NetworkXNoPath
+            if start_node == end_node and (start_node, end_node) in graph.edges:
+                # input -> input
+                edge_paths = [[(start_node, end_node)]]
+            else:
+                raise nx.NetworkXNoPath
     except nx.NetworkXNoPath:
         raise RuntimeError(
             f"No path from {startname} to {endname}. Make sure all operations inbetween are performed by modules."
@@ -311,7 +338,9 @@ class SlicedModule(elegy.Module):
                 continue
             if edge.get("is_output", False):
                 outputs.append(y)
-            outputs.extend(self.visit_node(nextnode, y, deferred_call_args))
+            if node != nextnode:
+                outputs.extend(self.visit_node(nextnode, y, deferred_call_args))
+            # else: input -> input
 
         return outputs
 

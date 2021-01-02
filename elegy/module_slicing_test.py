@@ -28,6 +28,17 @@ class ModuleSlicingTest(TestCase):
             assert submodel.predict(x).shape == (32, 10)
             assert jnp.all(submodel.predict(x) == basicmodule.test_call(x))
 
+    def test_slice_return_input(self):
+        x = jnp.zeros((32, 100))
+        basicmodule = BasicModule0()
+        submodule = basicmodule.slice("input", ["/linear1", "input"], x)
+        submodel = elegy.Model(submodule)
+        submodel.summary(x)
+        ypred = submodel.predict(x)
+        assert jnp.all(ypred[1] == x)
+        assert ypred[0].shape == (32, 10)
+        assert jnp.all(ypred[0] == basicmodule.test_call(x))
+
     def test_resnet_multi_out(self):
         x = jnp.zeros((2, 224, 224, 3))
         resnet = elegy.nets.resnet.ResNet18()

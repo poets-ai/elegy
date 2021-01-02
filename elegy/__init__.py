@@ -41,6 +41,7 @@ from .module import (
     training_context,
     value_and_grad,
 )
+from . import module_slicing
 
 __all__ = [
     "Loss",
