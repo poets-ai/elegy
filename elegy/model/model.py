@@ -1,18 +1,10 @@
 # Implementation based on tf.keras.engine.training.py
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
-from elegy.model.model_base import ModelBase
-from elegy.utils import Mode
-import functools
-import json
-import logging
+from elegy.model.model_base import ModelBase, Optimizer
 import pickle
-import re
 import typing as tp
 from copy import copy
-from enum import Enum
-from functools import partial
-from io import StringIO
 from pathlib import Path
 
 import cloudpickle
@@ -21,17 +13,10 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import optax
-import toolz
-import yaml
 from tabulate import tabulate
 
-from elegy import module as hooks
-from elegy import types
-from elegy.losses import loss_modes
-from elegy.metrics import metric_modes
-from elegy.module import RNG, LocalContext, Module
+from elegy.module import Module
 
-from elegy import utils
 from elegy.callbacks import Callback, CallbackList, History
 from elegy.data import (
     DataHandler,
@@ -80,32 +65,32 @@ class Model(ModelBase):
     Checkout [Getting Started](https://poets-ai.github.io/elegy/getting-started) for
     additional details.
 
-    Attributes:
-        parameters: A `haiku.Params` structure with the weights of the model.
-        states: A `haiku.State` structure with non-trainable parameters of the model.
-        optimizer_state:  A `optax.OptState` structure with states of the optimizer.
-        metrics_states: A `haiku.State` structure with the states of the metrics.
-        initial_metrics_state: A `haiku.State` structure with the initial states of the metrics.
-        run_eagerly: Settable attribute indicating whether the model should run eagerly.
-            Running eagerly means that your model will be run step by step, like Python code, instead of
-            using Jax's `jit` to optimize the computation. Your model might run slower, but it should become easier for you to debug
-            it by stepping into individual layer calls.
+    Model supports defining + monitoring custom learning rate schedules by passing an instance of `elegy.Optimizer` instead of
+    an `optax` object:
+
+    ```python
+    model = elegy.Model(
+        module=MLP(n1=3, n2=1),
+        loss=elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
+        metrics=elegy.metrics.SparseCategoricalAccuracy(),
+        optimizer=elegy.Optimizer(
+            optax.adam(1.0), # <---- important to set this to 1.0
+            lr_schedule=lambda step, epoch: 1 / (epoch * 100 + step),
+            steps_per_epoch=1000,
+        ),
+        run_eagerly=True,
+    )
+
+    history = model.fit(
+        ...
+    )
+
+    assert "lr" in history.history
+    ```
+    Notice how we set the learning rate parameter of the `adam` optimizer to `1.0`, this is necessary if you want the logged `lr`
+    be closer to the "actual" learning rate because we implement this feature by chaining an additional `optax.scale_by_schedule`
+    at the end.
     """
-
-    # public fields
-    # module: Module
-    # optimizer_state: tp.Optional[optax.OptState]
-    # initial_metrics_state: tp.Optional[tp.Dict]
-    # run_eagerly: bool
-
-    # # private fields
-    # loss_module: tp.Optional[Module]
-    # metrics_module: tp.Optional[Module]
-    # _optimizer: optax.GradientTransformation
-    # _rngs: RNG
-    # _parameters: tp.Optional[types.Parameters]
-    # _states: tp.Optional[types.States]
-    # _metrics_states: tp.Optional[tp.Dict]
 
     __all__ = [
         "evaluate",
@@ -129,7 +114,7 @@ class Model(ModelBase):
         module: Module,
         loss: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
         metrics: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
-        optimizer: tp.Optional[optax.GradientTransformation] = None,
+        optimizer: tp.Union[Optimizer, optax.GradientTransformation, None] = None,
         run_eagerly: bool = False,
         **kwargs,
     ):
@@ -237,8 +222,8 @@ class Model(ModelBase):
                 The model is not trained for a number of iterations
                 given by `epochs`, but merely until the epoch
                 of index `epochs` is reached.
-            verbose: 0, 1, or 2. Verbosity mode.
-                0 = silent, 1 = progress bar, 2 = one line per epoch.
+            verbose: 0, 1, 2 or 3. Verbosity mode.
+                0 = silent, 1 = progress bar, 2 = one line per epoch 3 = table.
                 Note that the progress bar is not particularly useful when
                 logged to a file, so verbose=2 is recommended when not running
                 interactively (eg, in a production environment).

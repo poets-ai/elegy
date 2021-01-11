@@ -20,6 +20,14 @@ pip install --upgrade $BASE_URL/$CUDA_VERSION/jaxlib-0.1.55-$PYTHON_VERSION-none
 pip install --upgrade jax  
 ```
 
+#### Gitpod
+An alternative way to contribute is using [gitpod](https://gitpod.io/) which creates a vscode-based cloud development enviroment.
+To get started just login at gitpod, grant the appropriate permissions to github, and open the following link:
+
+https://gitpod.io/#https://github.com/poets-ai/elegy
+
+We have built a `python 3.8` enviroment and all development dependencies will install when the enviroment starts.
+
 ## Creating Losses and Metrics
 For this you can follow these guidelines:
 
@@ -65,9 +73,16 @@ To build and visualize the documentation locally run
 mkdocs serve
 ```
 
-# Creating a PR
+## Creating a PR
 Before sending a pull request make sure all test run and code is formatted with `black`:
 
 ```bash
 black .
 ```
+
+## Changelog
+`CHANGELOG.md` is automatically generated using [github-changelog-generator](https://github.com/github-changelog-generator/github-changelog-generator), to update the changelog just run:
+```bash
+docker run -it --rm -v (pwd):/usr/local/src/your-app ferrarimarco/github-changelog-generator -u poets-ai -p elegy -t <TOKEN>
+```
+where `<TOKEN>` token can be obtained from Github at [Personal access tokens](https://github.com/settings/tokens), you only have to give permission for the `repo` section.
