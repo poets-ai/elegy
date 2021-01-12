@@ -17,7 +17,7 @@ from . import (
 from .losses import Loss
 from .metrics import Metric
 from .model import Model, Optimizer
-from .model.model_base import StepState
+from .model.model_base import States
 from .utils import Mode
 
 # from .module import (

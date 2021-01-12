@@ -9,11 +9,11 @@ def test_init():
     N = 0
 
     class Model(elegy.model.model_base.ModelBase):
-        def init(self, mode: elegy.Mode) -> elegy.StepState:
+        def init(self, mode: elegy.Mode) -> elegy.States:
             nonlocal N
             N = N + 1
 
-            step_states = elegy.StepState(parameters=1, states=2)
+            step_states = elegy.States(net_params=1, net_states=2)
 
             if mode == "pred":
                 return step_states
@@ -27,28 +27,28 @@ def test_init():
 
             return step_states
 
-        def pred_step(self) -> tp.Tuple[tp.Any, elegy.StepState]:
+        def pred_step(self) -> tp.Tuple[tp.Any, elegy.States]:
             ...
 
-        def test_step(self) -> elegy.StepState:
+        def test_step(self) -> elegy.States:
             ...
 
-        def train_step(self) -> elegy.StepState:
+        def train_step(self) -> elegy.States:
             ...
 
     model = Model()
 
     assert N == 0
-    assert model.parameters != 1
-    assert model.states != 2
-    assert model.metrics_states != 3
-    assert model.optimizer_states != 4
+    assert model.states.net_params != 1
+    assert model.states.net_states != 2
+    assert model.states.metrics_states != 3
+    assert model.states.optimizer_states != 4
 
     model.maybe_initialize(mode=elegy.Mode.pred)
 
     assert N == 1
-    assert model.parameters == 1
-    assert model.states == 2
+    assert model.states.net_params == 1
+    assert model.states.net_states == 2
 
     model.maybe_initialize(mode=elegy.Mode.pred)
 
@@ -57,7 +57,7 @@ def test_init():
     model.maybe_initialize(mode=elegy.Mode.test)
 
     assert N == 2
-    assert model.metrics_states == 3
+    assert model.states.metrics_states == 3
 
     model.maybe_initialize(mode=elegy.Mode.test)
 
@@ -66,7 +66,7 @@ def test_init():
     model.maybe_initialize(mode=elegy.Mode.train)
 
     assert N == 3
-    assert model.optimizer_states == 4
+    assert model.states.optimizer_states == 4
 
     model.maybe_initialize(mode=elegy.Mode.train)
 
@@ -75,16 +75,16 @@ def test_init():
 
 def test_pred_step():
     class Model(elegy.model.model_base.ModelBase):
-        def init(self, mode: elegy.Mode) -> elegy.StepState:
-            return elegy.StepState()
+        def init(self, mode: elegy.Mode) -> elegy.States:
+            return elegy.States()
 
-        def pred_step(self, x) -> tp.Tuple[tp.Any, elegy.StepState]:
-            return 1, self.step_states
+        def pred_step(self, x) -> tp.Tuple[tp.Any, elegy.States]:
+            return 1, elegy.States()
 
-        def test_step(self) -> elegy.StepState:
+        def test_step(self) -> elegy.States:
             ...
 
-        def train_step(self) -> elegy.StepState:
+        def train_step(self) -> elegy.States:
             ...
 
     model = Model()

@@ -19,26 +19,26 @@ from enum import Enum
 from elegy import hooks
 
 
-class StepState(tp.NamedTuple):
-    parameters: tp.Any = None
-    states: tp.Any = None
-    metrics_states: tp.Any = None
-    optimizer_states: tp.Any = None
+class States(tp.NamedTuple):
+    net_params: tp.Any = utils.UNINITIALIZED
+    net_states: tp.Any = utils.UNINITIALIZED
+    metrics_states: tp.Any = utils.UNINITIALIZED
+    optimizer_states: tp.Any = utils.UNINITIALIZED
 
     def update(
         self,
-        parameters: tp.Any = utils.UNINITIALIZED,
-        states: tp.Any = utils.UNINITIALIZED,
+        net_params: tp.Any = utils.UNINITIALIZED,
+        net_states: tp.Any = utils.UNINITIALIZED,
         metrics_states: tp.Any = utils.UNINITIALIZED,
         optimizer_states: tp.Any = utils.UNINITIALIZED,
-    ) -> "StepState":
+    ) -> "States":
 
         updates = {}
 
-        if not isinstance(parameters, utils.Uninitialized):
-            updates["parameters"] = parameters
-        if not isinstance(states, utils.Uninitialized):
-            updates["states"] = states
+        if not isinstance(net_params, utils.Uninitialized):
+            updates["net_params"] = net_params
+        if not isinstance(net_states, utils.Uninitialized):
+            updates["net_states"] = net_states
         if not isinstance(metrics_states, utils.Uninitialized):
             updates["metrics_states"] = metrics_states
         if not isinstance(optimizer_states, utils.Uninitialized):
@@ -47,28 +47,30 @@ class StepState(tp.NamedTuple):
         kwargs = {field: getattr(self, field) for field in self._fields}
         kwargs.update(**updates)
 
-        return StepState(**kwargs)
+        return States(**kwargs)
+
+    def merge(self, other: "States") -> "States":
+        return other.update(*other)
 
 
 class ModelBase(ABC):
-    parameters: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED
-    states: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED
-    metrics_states: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED
-    optimizer_states: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED
+    states: States
     run_eagerly: bool = False
 
     def __init__(
         self,
-        parameters: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED,
-        states: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED,
+        net_params: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED,
+        net_states: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED,
         metrics_states: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED,
         optimizer_states: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED,
         run_eagerly: bool = False,
     ):
-        self.parameters = parameters
-        self.states = states
-        self.metrics_states = metrics_states
-        self.optimizer_states = optimizer_states
+        self.states = States(
+            net_params=net_params,
+            net_states=net_states,
+            metrics_states=metrics_states,
+            optimizer_states=optimizer_states,
+        )
         self.run_eagerly = run_eagerly
 
         self._jit_functions()
@@ -86,73 +88,57 @@ class ModelBase(ABC):
         y: tp.Any = None,
         sample_weight: tp.Optional[jnp.ndarray] = None,
         class_weight: tp.Optional[jnp.ndarray] = None,
-    ) -> StepState:
+    ) -> States:
         ...
 
     @abstractmethod
     def pred_step(
         self,
-        parameters: tp.Any = None,
+        net_params: tp.Any = None,
         x: tp.Any = (),
-        states: tp.Any = None,
-    ) -> tp.Tuple[tp.Any, StepState]:
+        net_states: tp.Any = None,
+    ) -> tp.Tuple[tp.Any, States]:
         ...
 
     @abstractmethod
     def test_step(
         self,
-        parameters: tp.Any = None,
+        net_params: tp.Any = None,
         x: tp.Any = (),
         y: tp.Any = None,
-        states: tp.Any = None,
+        net_states: tp.Any = None,
         metrics_states: tp.Any = None,
         sample_weight: tp.Optional[jnp.ndarray] = None,
         class_weight: tp.Optional[jnp.ndarray] = None,
-    ) -> StepState:
+    ) -> States:
         ...
 
     @abstractmethod
     def train_step(
         self,
-        parameters: tp.Any = None,
+        net_params: tp.Any = None,
         x: tp.Any = (),
         y: tp.Any = None,
-        states: tp.Any = None,
+        net_states: tp.Any = None,
         metrics_states: tp.Any = None,
         optimizer_states: tp.Any = None,
         sample_weight: tp.Optional[jnp.ndarray] = None,
         class_weight: tp.Optional[jnp.ndarray] = None,
-    ) -> StepState:
+    ) -> States:
         ...
 
-    @property
-    def step_states(self) -> StepState:
-        return StepState(
-            parameters=self.parameters,
-            states=self.states,
-            metrics_states=self.metrics_states,
-            optimizer_states=self.optimizer_states,
-        )
-
-    @step_states.setter
-    def step_states(self, step_state: StepState):
-        self.parameters = step_state.parameters
-        self.states = step_state.states
-        self.metrics_states = step_state.metrics_states
-        self.optimizer_states = step_state.optimizer_states
-
     def get_loss_and_grad(
-        self, parameters, *args
-    ) -> tp.Tuple[np.ndarray, tp.Any, StepState]:
-        def loss_fn(parameters, *args):
-            metrics_states = self.test_step(parameters, *args)
+        self, net_params, *args
+    ) -> tp.Tuple[np.ndarray, tp.Any, States]:
+        def loss_fn(net_params, *args):
+            metrics_states = self.test_step(net_params, *args)
             return hooks.get_total_loss(), metrics_states
 
         (loss, metrics_states), grads = hooks.value_and_grad(loss_fn, has_aux=True)(
-            parameters, *args
+            net_params, *args
         )
 
-        assert isinstance(metrics_states, StepState)
+        assert isinstance(metrics_states, States)
 
         return loss, grads, metrics_states
 
@@ -165,44 +151,40 @@ class ModelBase(ABC):
         class_weight: tp.Optional[jnp.ndarray] = None,
     ):
 
-        get_state = lambda: utils.inject_dependencies(self.init)(
-            mode=mode,
-            x=x,
-            y=y,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-        )
-
-        if mode == Mode.pred and isinstance(self.parameters, utils.Uninitialized):
-            step_state: StepState = get_state()
-            self.parameters = step_state.parameters
-            self.states = step_state.states
-
-        elif mode == Mode.test and isinstance(self.metrics_states, utils.Uninitialized):
-            step_state: StepState = get_state()
-            self.parameters = step_state.parameters
-            self.states = step_state.states
-            self.metrics_states = step_state.metrics_states
-
-        elif mode == Mode.train and isinstance(
-            self.optimizer_states, utils.Uninitialized
+        if (
+            (
+                mode == Mode.pred
+                and isinstance(self.states.net_params, utils.Uninitialized)
+                and isinstance(self.states.net_states, utils.Uninitialized)
+            )
+            or (
+                mode == Mode.test
+                and isinstance(self.states.metrics_states, utils.Uninitialized)
+            )
+            or (
+                mode == Mode.train
+                and isinstance(self.states.optimizer_states, utils.Uninitialized)
+            )
         ):
-            step_state: StepState = get_state()
-            self.parameters = step_state.parameters
-            self.states = step_state.states
-            self.metrics_states = step_state.metrics_states
-            self.optimizer_states = step_state.optimizer_states
+            state_updates: States = utils.inject_dependencies(self.init)(
+                mode=mode,
+                x=x,
+                y=y,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+            )
+            self.states = self.states.merge(state_updates)
 
     def pred_step_internal(
         self,
-        parameters: tp.Any = None,
+        net_params: tp.Any = None,
         x: tp.Any = (),
-        states: tp.Any = None,
-    ) -> tp.Tuple[tp.Any, StepState]:
+        net_states: tp.Any = None,
+    ) -> tp.Tuple[tp.Any, States]:
         return utils.inject_dependencies(self.pred_step)(
-            parameters=parameters,
+            net_params=net_params,
             x=x,
-            states=states,
+            net_states=net_states,
         )
 
     def predict_on_batch(
@@ -230,9 +212,13 @@ class ModelBase(ABC):
         )
 
         with hooks.hooks_context():
-            y_pred, step_state = method(self.parameters, x, self.states)
+            y_pred, state_updates = method(
+                self.states.net_params,
+                x,
+                self.states.net_states,
+            )
 
-        self.step_states = step_state
+        self.states = self.states.merge(state_updates)
 
         return y_pred
 
