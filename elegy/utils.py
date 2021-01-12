@@ -6,7 +6,9 @@ import typing as tp
 from enum import Enum
 from functools import total_ordering
 
+import jax
 import jax.numpy as jnp
+import jax.tree_util
 import numpy as np
 import toolz
 from deepmerge import always_merger
@@ -48,8 +50,14 @@ class ModuleOrderError(Exception):
 EMPTY = Empty()
 
 
+@jax.tree_util.register_pytree_node_class
 class Uninitialized:
-    pass
+    def tree_flatten(self):
+        return ((), None)
+
+    @classmethod
+    def tree_unflatten(cls, aux_data, children):
+        return cls()
 
 
 UNINITIALIZED = Uninitialized()

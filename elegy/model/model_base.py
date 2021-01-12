@@ -19,8 +19,7 @@ from enum import Enum
 from elegy import hooks
 
 
-@dataclass
-class StepState:
+class StepState(tp.NamedTuple):
     parameters: tp.Any = None
     states: tp.Any = None
     metrics_states: tp.Any = None
@@ -32,24 +31,47 @@ class StepState:
         states: tp.Any = utils.UNINITIALIZED,
         metrics_states: tp.Any = utils.UNINITIALIZED,
         optimizer_states: tp.Any = utils.UNINITIALIZED,
-    ):
+    ) -> "StepState":
+
+        updates = {}
 
         if not isinstance(parameters, utils.Uninitialized):
-            self.parameters = parameters
+            updates["parameters"] = parameters
         if not isinstance(states, utils.Uninitialized):
-            self.states = states
+            updates["states"] = states
         if not isinstance(metrics_states, utils.Uninitialized):
-            self.metrics_states = metrics_states
+            updates["metrics_states"] = metrics_states
         if not isinstance(optimizer_states, utils.Uninitialized):
-            self.optimizer_states = optimizer_states
+            updates["optimizer_states"] = optimizer_states
+
+        kwargs = {field: getattr(self, field) for field in self._fields}
+        kwargs.update(**updates)
+
+        return StepState(**kwargs)
 
 
-class ModelBase:
+class ModelBase(ABC):
     parameters: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED
     states: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED
     metrics_states: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED
     optimizer_states: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED
     run_eagerly: bool = False
+
+    def __init__(
+        self,
+        parameters: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED,
+        states: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED,
+        metrics_states: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED,
+        optimizer_states: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED,
+        run_eagerly: bool = False,
+    ):
+        self.parameters = parameters
+        self.states = states
+        self.metrics_states = metrics_states
+        self.optimizer_states = optimizer_states
+        self.run_eagerly = run_eagerly
+
+        self._jit_functions()
 
     def _jit_functions(self):
         self.pred_step_internal_jit = hooks.jit(self.pred_step_internal)
@@ -73,7 +95,7 @@ class ModelBase:
         parameters: tp.Any = None,
         x: tp.Any = (),
         states: tp.Any = None,
-    ) -> StepState:
+    ) -> tp.Tuple[tp.Any, StepState]:
         ...
 
     @abstractmethod
@@ -102,6 +124,22 @@ class ModelBase:
         class_weight: tp.Optional[jnp.ndarray] = None,
     ) -> StepState:
         ...
+
+    @property
+    def step_states(self) -> StepState:
+        return StepState(
+            parameters=self.parameters,
+            states=self.states,
+            metrics_states=self.metrics_states,
+            optimizer_states=self.optimizer_states,
+        )
+
+    @step_states.setter
+    def step_states(self, step_state: StepState):
+        self.parameters = step_state.parameters
+        self.states = step_state.states
+        self.metrics_states = step_state.metrics_states
+        self.optimizer_states = step_state.optimizer_states
 
     def get_loss_and_grad(
         self, parameters, *args
@@ -160,7 +198,7 @@ class ModelBase:
         parameters: tp.Any = None,
         x: tp.Any = (),
         states: tp.Any = None,
-    ) -> StepState:
+    ) -> tp.Tuple[tp.Any, StepState]:
         return utils.inject_dependencies(self.pred_step)(
             parameters=parameters,
             x=x,
@@ -192,7 +230,11 @@ class ModelBase:
         )
 
         with hooks.hooks_context():
-            return method(self.parameters, x, self.states)
+            y_pred, step_state = method(self.parameters, x, self.states)
+
+        self.step_states = step_state
+
+        return y_pred
 
 
 class Optimizer:
