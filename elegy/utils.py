@@ -5,6 +5,7 @@ import sys
 import typing as tp
 from enum import Enum
 from functools import total_ordering
+import urllib, hashlib, shutil, os
 
 import jax.numpy as jnp
 import numpy as np
@@ -187,3 +188,23 @@ def to_static(structure: tp.Any) -> tp.Any:
         return tuple(to_static(v) for v in structure)
     else:
         return structure
+
+
+def download_file(url, cache="~/.elegy/downloads", sha256=None):
+    if cache.startswith("~/"):
+        cache = os.path.join(os.path.expanduser("~"), cache[2:])
+    cachefilename = os.path.basename(url)
+    cachefilename = cachefilename[: cachefilename.find("?")]
+    cachefilename = os.path.join(cache, cachefilename)
+
+    if not os.path.exists(cachefilename):
+        print(f"Downloading {url}")
+        filename, _ = urllib.request.urlretrieve(url)
+        if sha256 is not None:
+            filehash = hashlib.sha256(open(filename, "rb").read()).hexdigest()
+            if sha256 != filehash:
+                raise RuntimeError("Downloaded file has an incorrect hash")
+        os.makedirs(os.path.dirname(cachefilename), exist_ok=True)
+        shutil.move(filename, cachefilename)
+
+    return cachefilename
