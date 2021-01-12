@@ -33,7 +33,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
     print("X_train:", X_train.shape, X_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
 
-    class MLP(elegy.Module):
+    class MLP:
         """Standard LeNet-300-100 MLP network."""
 
         def __init__(self, n1: int = 300, n2: int = 100, **kwargs):

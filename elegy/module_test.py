@@ -1,18 +1,14 @@
-from elegy.module import hooks_context
-import inspect
 from unittest import TestCase
 import jax
 
 import jax.numpy as jnp
-import pytest
 
 import elegy
-from elegy import utils
 import numpy as np
 
 
 class ModuleTest(TestCase):
-    class Linear(elegy.Module):
+    class Linear:
         def __init__(self, units):
             super().__init__()
             self.units = units
@@ -34,7 +30,7 @@ class ModuleTest(TestCase):
 
             return y
 
-    class MyModule(elegy.Module):
+    class MyModule:
         def __init__(self):
             super().__init__()
             self.linear = ModuleTest.Linear(6)
@@ -137,7 +133,7 @@ class ModuleTest(TestCase):
 
 
 class ModuleDynamicTest(TestCase):
-    class Linear(elegy.Module):
+    class Linear:
         w: jnp.ndarray
         b: jnp.ndarray
 
@@ -164,7 +160,7 @@ class ModuleDynamicTest(TestCase):
 
             return y
 
-    class MyModule(elegy.Module):
+    class MyModule:
         linear: "ModuleDynamicTest.Linear"
         linear_1: "ModuleDynamicTest.Linear"
 
@@ -365,7 +361,7 @@ class TestTransforms(TestCase):
 
         total_called = 0
 
-        class SomeModule(elegy.Module):
+        class SomeModule:
             n: jnp.ndarray
 
             def call(self, x):
@@ -414,7 +410,7 @@ class TestTransforms(TestCase):
         with elegy.training_context(True):
             total_called = 0
 
-            class SomeModule(elegy.Module):
+            class SomeModule:
                 n: jnp.ndarray
 
                 def call(self, x):
@@ -495,7 +491,7 @@ class TestTransforms(TestCase):
         with elegy.training_context(True):
             total_called = 0
 
-            class SomeModule(elegy.Module):
+            class SomeModule:
                 n: jnp.ndarray
 
                 def call(self, x):
@@ -575,7 +571,7 @@ class TestTransforms(TestCase):
 
 class TestOthers(TestCase):
     def test_trainable(self):
-        class SomeModule(elegy.Module):
+        class SomeModule:
             linear: elegy.nn.Linear
 
             def call(self, x):
@@ -615,7 +611,7 @@ class TestOthers(TestCase):
     def test_trainable_jit(self):
         total_called = 0
 
-        class SomeModule(elegy.Module):
+        class SomeModule:
             linear: elegy.nn.Linear
 
             def call(self, x):
@@ -657,7 +653,7 @@ class TestOthers(TestCase):
     def test_trainable_jit_method(self):
         total_called = 0
 
-        class SomeModule(elegy.Module):
+        class SomeModule:
             linear: elegy.nn.Linear
 
             def call(self, x):
@@ -696,7 +692,7 @@ class TestOthers(TestCase):
         assert total_called == 4
 
     def test_module_system_docs(self):
-        class Linear(elegy.Module):
+        class Linear:
             def __init__(self, n_out):
                 super().__init__()
                 self.n_out = n_out
@@ -711,7 +707,7 @@ class TestOthers(TestCase):
 
                 return jnp.dot(x, w) + b
 
-        class MLP(elegy.Module):
+        class MLP:
             def call(self, x):
                 x = Linear(64)(x)
                 x = jax.nn.relu(x)

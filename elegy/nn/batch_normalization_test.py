@@ -11,7 +11,7 @@ class BatchNormalizationTest(TestCase):
         elegy.nn.BatchNormalization()(jnp.ones([3, 3]), training=True)
 
     def test_on_predict(self):
-        class TestModule(elegy.Module):
+        class TestModule:
             def call(self, x, training):
                 return elegy.nn.BatchNormalization()(x, training)
 

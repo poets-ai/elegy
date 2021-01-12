@@ -24,7 +24,7 @@ from haiku._src import data_structures
 from elegy import initializers, module
 
 
-class ExponentialMovingAverage(module.Module):
+class ExponentialMovingAverage:
     """Maintains an exponential moving average.
 
     This uses the Adam debiasing procedure.
@@ -122,7 +122,7 @@ class ExponentialMovingAverage(module.Module):
         return average
 
 
-class EMAParamsTree(module.Module):
+class EMAParamsTree:
     """Maintains an exponential moving average for all parameters in a tree.
 
     While ExponentialMovingAverage is meant to be applied to single parameters

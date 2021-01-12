@@ -40,7 +40,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
 
-    class CNN(elegy.Module):
+    class CNN:
         def call(self, image: jnp.ndarray, training: bool):
             @elegy.to_module
             def ConvBlock(x, units, kernel, stride=1):

@@ -1,7 +1,7 @@
 # adapted from the flax library https://github.com/google/flax
 
 import jax, jax.numpy as jnp
-from elegy import module, nn
+from elegy import nn
 import typing as tp
 
 
@@ -16,7 +16,7 @@ __all__ = [
 ]
 
 
-class ResNetBlock(module.Module):
+class ResNetBlock:
     """ResNet (identity) block"""
 
     def __init__(
@@ -89,7 +89,7 @@ class BottleneckResNetBlock(ResNetBlock):
         return jax.nn.relu(x0 + x)
 
 
-class ResNet(module.Module):
+class ResNet:
     """A generic ResNet V1 architecture that can be customized for non-standard configurations
     Original Paper: [Deep Residual Learning for Image Recognition](https://arxiv.org/abs/1512.03385)
     """

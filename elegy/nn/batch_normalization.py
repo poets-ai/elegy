@@ -16,7 +16,7 @@ from elegy import module
 from elegy.nn.moving_averages import ExponentialMovingAverage
 
 
-class BatchNormalization(module.Module):
+class BatchNormalization:
     """Normalizes inputs to maintain a mean of ~0 and stddev of ~1.
 
     See: https://arxiv.org/abs/1502.03167.

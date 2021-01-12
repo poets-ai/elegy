@@ -57,7 +57,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
     print("X_test:", test_dataset.x.shape, test_dataset.x.dtype)
     print("y_test:", test_dataset.y.shape, test_dataset.y.dtype)
 
-    class MLP(elegy.Module):
+    class MLP:
         """Standard LeNet-300-100 MLP network."""
 
         def __init__(self, n1: int = 300, n2: int = 100, **kwargs):

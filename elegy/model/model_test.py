@@ -8,7 +8,7 @@ import optax
 import cloudpickle
 
 
-class MLP(elegy.Module):
+class MLP:
     """Standard LeNet-300-100 MLP network."""
 
     def __init__(self, n1: int = 3, n2: int = 4, **kwargs):

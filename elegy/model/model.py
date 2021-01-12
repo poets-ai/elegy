@@ -15,7 +15,7 @@ import numpy as np
 import optax
 from tabulate import tabulate
 
-from elegy.module import Module
+# from elegy.module import Module
 
 from elegy.callbacks import Callback, CallbackList, History
 from elegy.data import (
@@ -36,7 +36,7 @@ class Model(ModelBase):
 
     To create a `Model` you first have to define its architecture in a `Module`:
     ```python
-    class MLP(elegy.Module):
+    class MLP:
         def call(self, image: jnp.ndarray) -> jnp.ndarray:
             mlp = hk.Sequential([
                 hk.Flatten(),
@@ -111,7 +111,7 @@ class Model(ModelBase):
 
     def __init__(
         self,
-        module: Module,
+        module: "Module",
         loss: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
         metrics: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
         optimizer: tp.Union[Optimizer, optax.GradientTransformation, None] = None,

@@ -87,7 +87,7 @@ class DataLoaderTestCase(TestCase):
         loader_train = elegy.data.DataLoader(ds, batch_size=4, n_workers=4)
         loader_valid = elegy.data.DataLoader(ds, batch_size=4, n_workers=4)
 
-        class Module(elegy.Module):
+        class Module:
             def call(self, x):
                 x = jnp.mean(x, axis=[1, 2])
                 x = elegy.nn.Linear(20)(x)

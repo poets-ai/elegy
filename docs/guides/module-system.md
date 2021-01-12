@@ -11,7 +11,7 @@ track of the parameters and states each module might require. Here we will creat
 very basic `Linear` and `MLP` modules which will seem very familiar:
 
 ```python
-class Linear(elegy.Module):
+class Linear:
     def __init__(self, n_in, n_out):
         super().__init__()
         self.w = self.add_parameter(
@@ -24,7 +24,7 @@ class Linear(elegy.Module):
     def call(self, x):
         return jnp.dot(x, self.w) + self.b
 
-class MLP(elegy.Module):
+class MLP:
     def __init__(self, n_in):
         self.linear1 = Linear(n_in, 64)
         self.linear2 = Linear(64, 32)
@@ -81,7 +81,7 @@ will be able to move a lot of the code defined on the `__init__` method to
 the `call` method:
 
 ```python
-class Linear(elegy.Module):
+class Linear:
     def __init__(self, n_out):
         super().__init__()
         self.n_out = n_out
@@ -96,7 +96,7 @@ class Linear(elegy.Module):
 
         return jnp.dot(x, w) + b
 
-class MLP(elegy.Module):
+class MLP:
     def call(self, x):
         x = Linear(64)(x)
         x = jax.nn.relu(x)
@@ -110,7 +110,7 @@ What happened here? Lets decompose it into two parts. First we moved the `add_pa
 on the `Linear` module to the `call` method:
 
 ```python hl_lines="7 8 9 10 11"
-class Linear(elegy.Module):
+class Linear:
     def __init__(self, n_out):
         super().__init__()
         self.n_out = n_out
@@ -131,7 +131,7 @@ to the inputs when defining our parameter's shape. Second, we also moved the ins
 of the `Linear` modules in `MLP` from `__init__` to `call`:
 
 ```python hl_lines="3 5 7"
-class MLP(elegy.Module):
+class MLP:
     def call(self, x):
         x = Linear(64)(x)
         x = jax.nn.relu(x)

@@ -8,7 +8,7 @@ import haiku as hk
 import numpy as np
 
 
-class Linear(module.Module):
+class Linear:
     """Linear module."""
 
     w: np.ndarray

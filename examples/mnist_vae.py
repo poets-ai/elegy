@@ -40,7 +40,7 @@ class KLDivergence(elegy.Loss):
         return 0.5 * jnp.mean(-jnp.log(std ** 2) - 1.0 + std ** 2 + mean ** 2, axis=-1)
 
 
-class Encoder(elegy.Module):
+class Encoder:
     """Encoder model."""
 
     def __init__(self, hidden_size: int = 512, latent_size: int = 128):
@@ -65,7 +65,7 @@ class Encoder(elegy.Module):
         return z
 
 
-class Decoder(elegy.Module):
+class Decoder:
     """Decoder model."""
 
     def __init__(
@@ -89,7 +89,7 @@ class Decoder(elegy.Module):
         return logits
 
 
-class VariationalAutoEncoder(elegy.Module):
+class VariationalAutoEncoder:
     """Main VAE model class, uses Encoder & Decoder under the hood."""
 
     encoder: Encoder

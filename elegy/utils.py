@@ -22,6 +22,12 @@ else:
 EPSILON = 1e-7
 
 
+class Mode(str, Enum):
+    pred = "pred"
+    test = "test"
+    train = "train"
+
+
 class TrivialPytree:
     def tree_flatten(self):
         return tuple(vars(self).values()), None
@@ -29,18 +35,6 @@ class TrivialPytree:
     @classmethod
     def tree_unflatten(cls, _aux_data, children):
         return cls(*children)
-
-
-@total_ordering
-class Mode(Enum):
-    predict = 1
-    test = 2
-    train = 3
-
-    def __lt__(self, other):
-        if self.__class__ is other.__class__:
-            return self.value < other.value
-        return NotImplemented
 
 
 class Empty:
@@ -52,6 +46,13 @@ class ModuleOrderError(Exception):
 
 
 EMPTY = Empty()
+
+
+class Uninitialized:
+    pass
+
+
+UNINITIALIZED = Uninitialized()
 
 
 def maybe_expand_dims(a: np.ndarray, b: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:

@@ -51,7 +51,7 @@ def to_dimension_numbers(
     )
 
 
-class ConvND(module.Module):
+class ConvND:
     """General N-dimensional convolutional."""
 
     def __init__(
@@ -419,7 +419,7 @@ class Conv3D(ConvND):
         )
 
 
-class ConvNDTranspose(module.Module):
+class ConvNDTranspose:
     """General n-dimensional transposed convolution (aka. deconvolution)."""
 
     def __init__(

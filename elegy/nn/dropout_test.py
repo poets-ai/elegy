@@ -11,7 +11,7 @@ class DropoutTest(TestCase):
         elegy.nn.Dropout(0.25)(jnp.ones([3, 3]), training=True)
 
     def test_on_predict(self):
-        class TestModule(elegy.Module):
+        class TestModule:
             def call(self, x, training):
                 return elegy.nn.Dropout(0.5)(x, training)
 

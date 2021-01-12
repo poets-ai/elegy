@@ -1,4 +1,3 @@
-from elegy.module import Module
 from elegy import types
 import typing as tp
 
@@ -7,7 +6,7 @@ from abc import abstractmethod
 from elegy import utils
 
 
-class Metric(Module):
+class Metric:
     """
     Encapsulates metric logic and state.
 
@@ -23,7 +22,7 @@ class Metric(Module):
     Usage with the Model API:
 
     ```python
-    class MLP(elegy.Module):
+    class MLP:
         def call(self, image: jnp.ndarray) -> jnp.ndarray:
             mlp = hk.Sequential([
                 hk.Flatten(),

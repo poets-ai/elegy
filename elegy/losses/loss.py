@@ -2,20 +2,15 @@
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/losses.py#L44-L201
 
 from abc import abstractmethod
-from elegy import module
-import functools
 import numpy as np
 
 from numpy.lib.arraysetops import isin
 from elegy import types
 from enum import Enum
-import re
 import typing as tp
 
 
 import jax.numpy as jnp
-
-from elegy import utils
 
 
 class Reduction(Enum):
@@ -51,7 +46,7 @@ class Reduction(Enum):
             raise ValueError("Invalid Reduction Key %s." % key)
 
 
-class Loss(module.Module):
+class Loss:
     """
     Loss base class.
 
