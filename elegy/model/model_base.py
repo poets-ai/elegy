@@ -18,6 +18,8 @@ from elegy.utils import Mode
 from enum import Enum
 from elegy import hooks
 
+Logs = tp.Dict[str, np.ndarray]
+
 
 class States(tp.NamedTuple):
     net_params: tp.Any = utils.UNINITIALIZED
@@ -55,6 +57,7 @@ class States(tp.NamedTuple):
 
 class ModelBase(ABC):
     states: States
+    initial_states: States
     run_eagerly: bool = False
 
     def __init__(
@@ -71,14 +74,15 @@ class ModelBase(ABC):
             metrics_states=metrics_states,
             optimizer_states=optimizer_states,
         )
+        self.initial_states = States()
         self.run_eagerly = run_eagerly
 
         self._jit_functions()
 
     def _jit_functions(self):
         self.pred_step_internal_jit = hooks.jit(self.pred_step_internal)
-        self.test_step_jit = hooks.jit(self.test_step)
-        self.train_step_jit = hooks.jit(self.train_step)
+        self.test_step_internal_jit = hooks.jit(self.test_step_internal)
+        self.train_step_internal_jit = hooks.jit(self.train_step_internal)
 
     @abstractmethod
     def init(
@@ -86,8 +90,8 @@ class ModelBase(ABC):
         mode: Mode,
         x: tp.Any = (),
         y: tp.Any = None,
-        sample_weight: tp.Optional[jnp.ndarray] = None,
-        class_weight: tp.Optional[jnp.ndarray] = None,
+        sample_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[np.ndarray] = None,
     ) -> States:
         ...
 
@@ -108,9 +112,9 @@ class ModelBase(ABC):
         y: tp.Any = None,
         net_states: tp.Any = None,
         metrics_states: tp.Any = None,
-        sample_weight: tp.Optional[jnp.ndarray] = None,
-        class_weight: tp.Optional[jnp.ndarray] = None,
-    ) -> States:
+        sample_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[np.ndarray] = None,
+    ) -> tp.Tuple[Logs, States]:
         ...
 
     @abstractmethod
@@ -122,33 +126,38 @@ class ModelBase(ABC):
         net_states: tp.Any = None,
         metrics_states: tp.Any = None,
         optimizer_states: tp.Any = None,
-        sample_weight: tp.Optional[jnp.ndarray] = None,
-        class_weight: tp.Optional[jnp.ndarray] = None,
-    ) -> States:
+        sample_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[np.ndarray] = None,
+    ) -> tp.Tuple[Logs, States]:
         ...
 
-    def get_loss_and_grad(
-        self, net_params, *args
-    ) -> tp.Tuple[np.ndarray, tp.Any, States]:
-        def loss_fn(net_params, *args):
-            metrics_states = self.test_step(net_params, *args)
-            return hooks.get_total_loss(), metrics_states
-
-        (loss, metrics_states), grads = hooks.value_and_grad(loss_fn, has_aux=True)(
-            net_params, *args
+    def reset_metrics(self):
+        self.states = self.states.update(
+            metrics_states=self.initial_states.metrics_states
         )
 
-        assert isinstance(metrics_states, States)
+    # def get_loss_and_grad(
+    #     self, net_params, *args
+    # ) -> tp.Tuple[np.ndarray, tp.Any, Logs, States]:
+    #     def loss_fn(net_params, *args):
+    #         logs, metrics_states = self.test_step(net_params, *args)
+    #         return hooks.get_total_loss(), logs, metrics_states
 
-        return loss, grads, metrics_states
+    #     (loss, logs, metrics_states), grads = hooks.value_and_grad(
+    #         loss_fn, has_aux=True
+    #     )(net_params, *args)
+
+    #     assert isinstance(metrics_states, States)
+
+    #     return loss, grads, logs, metrics_states
 
     def maybe_initialize(
         self,
         mode: Mode,
-        x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple] = (),
-        y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
-        sample_weight: tp.Optional[jnp.ndarray] = None,
-        class_weight: tp.Optional[jnp.ndarray] = None,
+        x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple] = (),
+        y: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
+        sample_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[np.ndarray] = None,
     ):
 
         if (
@@ -174,12 +183,13 @@ class ModelBase(ABC):
                 class_weight=class_weight,
             )
             self.states = self.states.merge(state_updates)
+            self.initial_states = self.initial_states.merge(state_updates)
 
     def pred_step_internal(
         self,
-        net_params: tp.Any = None,
-        x: tp.Any = (),
-        net_states: tp.Any = None,
+        net_params: tp.Any,
+        x: tp.Any,
+        net_states: tp.Any,
     ) -> tp.Tuple[tp.Any, States]:
         return utils.inject_dependencies(self.pred_step)(
             net_params=net_params,
@@ -188,8 +198,8 @@ class ModelBase(ABC):
         )
 
     def predict_on_batch(
-        self, x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]
-    ) -> tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]:
+        self, x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]
+    ) -> tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]:
         """
         Returns predictions for a single batch of samples.
 
@@ -222,6 +232,174 @@ class ModelBase(ABC):
 
         return y_pred
 
+    def test_step_internal(
+        self,
+        net_params: tp.Any,
+        x: tp.Any,
+        y: tp.Any,
+        net_states: tp.Any,
+        metrics_states: tp.Any,
+        sample_weight: tp.Optional[np.ndarray],
+        class_weight: tp.Optional[np.ndarray],
+    ) -> tp.Tuple[Logs, States]:
+        return utils.inject_dependencies(self.test_step)(
+            net_params=net_params,
+            x=x,
+            y=y,
+            net_states=net_states,
+            metrics_states=metrics_states,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+        )
+
+    def test_on_batch(
+        self,
+        x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        y: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
+        sample_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[np.ndarray] = None,
+    ) -> Logs:
+        """
+        Test the model on a single batch of samples.
+
+        Arguments:
+            x: Input data. It could be:
+
+                - A Numpy array (or array-like), or a list
+                    of arrays (in case the model has multiple inputs).
+                - A dict mapping input names to the corresponding arrays, if
+                    the model has named inputs.
+            y: Target data. Like the input data `x`, it could be either Numpy
+                array(s) or Jax array(s).
+            sample_weight: Optional array of the same length as x, containing
+                weights to apply to the model's loss for each sample. In the case of
+                temporal data, you can pass a 2D array with shape (samples,
+                sequence_length), to apply a different weight to every timestep of
+                every sample.
+
+        Returns:
+            A `logs` dictionary of containing the main `loss` as well as all
+            other losses and metrics.
+        Raises:
+            ValueError: In case of invalid user-provided arguments.
+        """
+        self.maybe_initialize(
+            mode=Mode.test,
+            x=x,
+            y=y,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+        )
+
+        method = (
+            self.test_step_internal if self.run_eagerly else self.test_step_internal_jit
+        )
+
+        with hooks.hooks_context():
+
+            logs, state_updates = method(
+                self.states.net_params,
+                x,
+                y,
+                self.states.net_states,
+                self.states.metrics_states,
+                sample_weight,
+                class_weight,
+            )
+
+        self.states = self.states.merge(state_updates)
+
+        return logs
+
+    def train_step_internal(
+        self,
+        net_params: tp.Any,
+        x: tp.Any,
+        y: tp.Any,
+        net_states: tp.Any,
+        metrics_states: tp.Any,
+        optimizer_states: tp.Any,
+        sample_weight: tp.Optional[np.ndarray],
+        class_weight: tp.Optional[np.ndarray],
+    ) -> tp.Tuple[Logs, States]:
+        return utils.inject_dependencies(self.train_step)(
+            net_params=net_params,
+            x=x,
+            y=y,
+            net_states=net_states,
+            metrics_states=metrics_states,
+            optimizer_states=optimizer_states,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+        )
+
+    def train_on_batch(
+        self,
+        x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        y: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
+        sample_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[np.ndarray] = None,
+    ) -> tp.Dict[str, np.ndarray]:
+        """
+        Runs a single gradient update on a single batch of data.
+
+        Arguments:
+            x: Input data. It could be:
+
+                - A Numpy array (or array-like), or a iterable of arrays
+                    (in case the model has multiple inputs).
+                - A dict mapping input names to the corresponding arrays,
+                    if the model has named inputs.
+            y: Target data. Like the input data `x`, it could be either Numpy
+                array(s) or Jax array(s). It should be consistent with `x`
+                (you cannot have Numpy inputs and array targets, or inversely).
+            sample_weight: Optional array of the same length as x, containing
+                weights to apply to the model's loss for each sample. In the case of
+                temporal data, you can pass a 2D array with shape (samples,
+                sequence_length), to apply a different weight to every timestep of
+                every sample.
+            class_weight: Optional dictionary mapping class indices (integers) to a
+                weight (float) to apply to the model's loss for the samples from this
+                class during training. This can be useful to tell the model to "pay
+                more attention" to samples from an under-represented class.
+
+        Returns:
+            A `logs` dictionary of containing the main `loss` as well as all
+            other losses and metrics.
+
+        Raises:
+            ValueError: In case of invalid user-provided arguments.
+        """
+        self.maybe_initialize(
+            mode=Mode.train,
+            x=x,
+            y=y,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+        )
+
+        method = (
+            self.train_step_internal
+            if self.run_eagerly
+            else self.train_step_internal_jit
+        )
+
+        with hooks.hooks_context():
+            logs, state_updates = method(
+                self.states.net_params,
+                x,
+                y,
+                self.states.net_states,
+                self.states.metrics_states,
+                self.states.optimizer_states,
+                sample_weight,
+                class_weight,
+            )
+
+        self.states = self.states.merge(state_updates)
+
+        return logs
+
 
 class Optimizer:
     r"""A Module that wraps around `optax` optimizers."""
@@ -230,7 +408,7 @@ class Optimizer:
         self,
         *optimizer: optax.GradientTransformation,
         lr_schedule: tp.Optional[
-            tp.Callable[[int, tp.Optional[jnp.ndarray]], jnp.ndarray]
+            tp.Callable[[int, tp.Optional[np.ndarray]], np.ndarray]
         ] = None,
         steps_per_epoch: tp.Optional[int] = None,
         **kwargs,
@@ -365,8 +543,8 @@ class Optimizer:
 #             return self.predict_fn_jit(x)
 
 #     def predict_on_batch(
-#         self, x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]
-#     ) -> tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]:
+#         self, x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]
+#     ) -> tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]:
 #         """
 #         Returns predictions for a single batch of samples.
 
@@ -488,11 +666,11 @@ class Optimizer:
 
 #     def test_on_batch(
 #         self,
-#         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
-#         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
-#         sample_weight: tp.Optional[jnp.ndarray] = None,
-#         class_weight: tp.Optional[jnp.ndarray] = None,
-#     ) -> tp.Dict[str, jnp.ndarray]:
+#         x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+#         y: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
+#         sample_weight: tp.Optional[np.ndarray] = None,
+#         class_weight: tp.Optional[np.ndarray] = None,
+#     ) -> tp.Dict[str, np.ndarray]:
 #         """
 #         Test the model on a single batch of samples.
 
@@ -643,10 +821,10 @@ class Optimizer:
 #     def maybe_initialize(
 #         self,
 #         mode: Mode,
-#         x: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple] = (),
-#         y: tp.Union[jnp.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
-#         sample_weight: tp.Optional[jnp.ndarray] = None,
-#         class_weight: tp.Optional[jnp.ndarray] = None,
+#         x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple] = (),
+#         y: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
+#         sample_weight: tp.Optional[np.ndarray] = None,
+#         class_weight: tp.Optional[np.ndarray] = None,
 #     ):
 
 #         with module.init_context(can_update=False), module.training_context(

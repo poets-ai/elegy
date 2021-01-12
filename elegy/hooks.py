@@ -164,6 +164,7 @@ def value_and_grad(
             metrics=metrics,
         )
 
+    kwargs["has_aux"] = True
     transform_fn: tp.Callable[
         ..., tp.Tuple[np.ndarray, TransformtOutput]
     ] = jax.value_and_grad(_transform_fn, **kwargs)
