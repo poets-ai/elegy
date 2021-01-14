@@ -193,11 +193,11 @@ def lower_snake_case(s: str) -> str:
 
 
 def get_name(obj) -> str:
-    if hasattr(obj, "name"):
+    if hasattr(obj, "name") and obj.name:
         return obj.name
-    elif hasattr(obj, "__name__"):
+    elif hasattr(obj, "__name__") and obj.__name__:
         return obj.__name__
-    elif hasattr(obj, "__class__"):
+    elif hasattr(obj, "__class__") and obj.__class__.__name__:
         return lower_snake_case(obj.__class__.__name__)
     else:
         raise ValueError(f"Could not get name for: {obj}")

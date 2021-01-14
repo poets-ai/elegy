@@ -68,24 +68,24 @@ class ModelBasicTest(unittest.TestCase):
         )
 
         assert len(metrics.metrics) == 3
-        assert "a/b" in metrics.metrics
-        assert "a/b_1" in metrics.metrics
-        assert "a/c" in metrics.metrics
+        assert "a/b/mlp" in metrics.metrics
+        assert "a/b/mlp_1" in metrics.metrics
+        assert "a/c/mlp" in metrics.metrics
 
         assert len(preds) == 3
-        assert "a/b" in preds
-        assert "a/b_1" in preds
-        assert "a/c" in preds
+        assert "a/b/mlp" in preds
+        assert "a/b/mlp_1" in preds
+        assert "a/c/mlp" in preds
 
         assert len(params) == 3
-        assert "a/b" in params
-        assert "a/b_1" in params
-        assert "a/c" in params
+        assert "a/b/mlp" in params
+        assert "a/b/mlp_1" in params
+        assert "a/c/mlp" in params
 
         assert len(states) == 3
-        assert "a/b" in states
-        assert "a/b_1" in states
-        assert "a/c" in states
+        assert "a/b/mlp" in states
+        assert "a/b/mlp_1" in states
+        assert "a/c/mlp" in states
 
 
 class ModelTest(unittest.TestCase):

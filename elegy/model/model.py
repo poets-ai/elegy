@@ -182,7 +182,7 @@ class Metrics(GeneralizedModule):
             return f"{path}/{name}" if path else name
 
         self.metrics = {
-            utils.get_unique_name(names, get_name(path, module)): generalize(module)
+            utils.get_unique_name(names, get_name(module, path)): generalize(module)
             for path, module in utils.flatten_names(modules)
         }
 
@@ -204,7 +204,9 @@ class Metrics(GeneralizedModule):
             names = set()
             for inner_name, inner_value in utils.flatten_names(y_pred):
                 inner_name = f"{name}/{inner_name}" if inner_name else name
-                # TODO: finish
+                inner_name = utils.get_unique_name(names, inner_name)
+
+                preds_out[inner_name] = inner_value
 
         return OutputStates(preds_out, params_out, states_out)
 
