@@ -86,11 +86,15 @@ def wraps(f, docs: bool = True):
 
 def inject_dependencies(
     f: tp.Callable,
+    signature_f: tp.Optional[tp.Callable] = None,
     rename: tp.Optional[tp.Dict[str, str]] = None,
 ):
-    f_params = get_function_args(f)
+    if signature_f is None:
+        signature_f = f
 
-    @functools.wraps(f)
+    f_params = get_function_args(signature_f)
+
+    @functools.wraps(signature_f)
     def wrapper(*args, **kwargs):
         n_args = len(args)
         arg_names = [arg.name for arg in f_params[:n_args]]
@@ -188,6 +192,17 @@ def lower_snake_case(s: str) -> str:
     return "_".join(output_parts)
 
 
+def get_name(obj) -> str:
+    if hasattr(obj, "name"):
+        return obj.name
+    elif hasattr(obj, "__name__"):
+        return obj.__name__
+    elif hasattr(obj, "__class__"):
+        return lower_snake_case(obj.__class__.__name__)
+    else:
+        raise ValueError(f"Could not get name for: {obj}")
+
+
 def to_static(structure: tp.Any) -> tp.Any:
 
     if isinstance(structure, (tp.Dict, FrozenDict)):
@@ -196,3 +211,54 @@ def to_static(structure: tp.Any) -> tp.Any:
         return tuple(to_static(v) for v in structure)
     else:
         return structure
+
+
+@jax.tree_util.register_pytree_node_class
+class RNGSeq(TrivialPytree):
+    key: jnp.ndarray
+
+    def __init__(self, key: tp.Union[int, jnp.ndarray]):
+        self.key = (
+            jax.random.PRNGKey(key) if isinstance(key, int) or key.shape == () else key
+        )
+
+    def next(self) -> np.ndarray:
+        self.key = jax.random.split(self.key, 1)[0]
+        return self.key
+
+    def __repr__(self) -> str:
+        return f"RNGSeq(key={self.key})"
+
+
+def _flatten_names(
+    path: tp.Tuple[str, ...], inputs: tp.Any
+) -> tp.Iterable[tp.Tuple[tp.Tuple[str, ...], tp.Any]]:
+
+    if isinstance(inputs, (tp.Tuple, tp.List)):
+        for value in inputs:
+            yield from _flatten_names(path, value)
+    elif isinstance(inputs, tp.Dict):
+        for name, value in inputs.items():
+            yield from _flatten_names(path + (name,), value)
+    else:
+        yield (path, inputs)
+
+
+def flatten_names(inputs: tp.Any) -> tp.List[tp.Tuple[str, tp.Any]]:
+    return [("/".join(path), value) for path, value in _flatten_names((), inputs)]
+
+
+def get_unique_name(
+    names: tp.Set[str],
+    name: str,
+):
+
+    if name in names:
+        i = 1
+        while f"{name}_{i}" in names:
+            i += 1
+
+        name = f"{name}_{i}"
+
+    names.add(name)
+    return name

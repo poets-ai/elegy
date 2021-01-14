@@ -8,7 +8,7 @@ import typing as tp
 import jax.numpy as jnp
 import numpy as np
 
-from elegy.types import ArrayHolder, ArrayLike
+from elegy.types import ArrayHolder
 
 from .data_adapter import DataAdapter
 from .utils import flatten, map_structure, pack_x_y_sample_weight

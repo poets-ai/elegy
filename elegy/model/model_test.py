@@ -6,28 +6,86 @@ import jax.numpy as jnp
 import numpy as np
 import optax
 import cloudpickle
+from flax import linen as nn
 
 
-class MLP:
+class MLP(nn.Module):
     """Standard LeNet-300-100 MLP network."""
 
-    def __init__(self, n1: int = 3, n2: int = 4, **kwargs):
-        super().__init__(**kwargs)
-        self.n1 = n1
-        self.n2 = n2
+    n1: int = 3
+    n2: int = 4
 
-    def call(self, image: jnp.ndarray, training: bool):
+    @classmethod
+    def new(cls, n1: int = 3, n2: int = 4):
+        return cls(n1=n1, n2=n2)
+
+    @nn.compact
+    def __call__(self, image: jnp.ndarray, training: bool):
         x = image.astype(jnp.float32) / 255.0
 
-        x = elegy.nn.Flatten()(x)
-        x = elegy.nn.Linear(self.n1)(x)
+        x = jnp.reshape(x, [x.shape[0], -1])
+        x = nn.Dense(self.n1)(x)
+        x = nn.BatchNorm()(x)
         x = jax.nn.relu(x)
 
-        x = elegy.nn.Linear(self.n2)(x)
+        x = nn.Dense(self.n2)(x)
         x = jax.nn.relu(x)
-        x = elegy.nn.Linear(10)(x)
+        x = nn.Dense(10)(x)
 
         return x
+
+
+class ModelBasicTest(unittest.TestCase):
+    def test_predict(self):
+
+        model = elegy.Model(
+            module=MLP.new(n1=3, n2=1),
+            # loss=[
+            #     elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
+            #     elegy.regularizers.GlobalL2(l=1e-4),
+            # ],
+            # metrics=elegy.metrics.SparseCategoricalAccuracy(),
+            optimizer=optax.adamw(1e-3),
+            run_eagerly=True,
+        )
+
+        X = np.random.uniform(size=(5, 7, 7))
+        y = np.random.randint(10, size=(5,))
+
+        y_pred = model.predict(x=X)
+
+        assert y_pred.shape == (5, 10)
+
+    def test_metrics(self):
+        metrics = elegy.model.model.Metrics(dict(a=dict(b=[MLP(), MLP()], c=MLP())))
+
+        rng = elegy.RNGSeq(42)
+        x = np.random.uniform(size=(5, 7, 7))
+        preds, params, states = metrics.init(rng, args=(x,), kwargs=dict(training=True))
+
+        preds, params, states = metrics.apply(
+            params, states, rng, args=(x,), kwargs=dict(training=True)
+        )
+
+        assert len(metrics.metrics) == 3
+        assert "a/b" in metrics.metrics
+        assert "a/b_1" in metrics.metrics
+        assert "a/c" in metrics.metrics
+
+        assert len(preds) == 3
+        assert "a/b" in preds
+        assert "a/b_1" in preds
+        assert "a/c" in preds
+
+        assert len(params) == 3
+        assert "a/b" in params
+        assert "a/b_1" in params
+        assert "a/c" in params
+
+        assert len(states) == 3
+        assert "a/b" in states
+        assert "a/b_1" in states
+        assert "a/c" in states
 
 
 class ModelTest(unittest.TestCase):

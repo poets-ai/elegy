@@ -105,40 +105,47 @@ class TransformtOutput(tp.NamedTuple):
     metrics: tp.Dict[str, np.ndarray]
 
 
-def jit(
-    f,
-    **kwargs,
-):
-    def _transform_fn(
-        *args,
-    ) -> TransformtOutput:
+def hooks_aware(jax_f):
+    @functools.wraps(jax_f)
+    def _jax_transform(
+        f,
+        **kwargs,
+    ):
+        def _transform_fn(
+            *args,
+        ) -> TransformtOutput:
 
-        output = f(*args)
-        losses = get_losses()
-        metrics = get_metrics()
+            output = f(*args)
+            losses = get_losses()
+            metrics = get_metrics()
 
-        assert isinstance(losses, tp.Dict)
-        assert isinstance(metrics, tp.Dict)
+            assert isinstance(losses, tp.Dict)
+            assert isinstance(metrics, tp.Dict)
 
-        return TransformtOutput(
-            output=output,
-            losses=losses,
-            metrics=metrics,
-        )
+            return TransformtOutput(
+                output=output,
+                losses=losses,
+                metrics=metrics,
+            )
 
-    transform_fn = jax.jit(_transform_fn, **kwargs)
+        transform_fn = jax.jit(_transform_fn, **kwargs)
 
-    @functools.wraps(f)
-    def wrapper(*args):
+        @functools.wraps(f)
+        def wrapper(*args):
 
-        output, losses, metrics = transform_fn(*args)
+            output, losses, metrics = transform_fn(*args)
 
-        LOCAL.losses = losses
-        LOCAL.metrics = metrics
+            LOCAL.losses = losses
+            LOCAL.metrics = metrics
 
-        return output
+            return output
 
-    return wrapper
+        return wrapper
+
+    return _jax_transform
+
+
+jit = hooks_aware(jax.jit)
 
 
 def value_and_grad(

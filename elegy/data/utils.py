@@ -17,7 +17,7 @@ from elegy import utils
 
 
 class Multimap(utils.Protocol):
-    def __call__(self, *args: types.ArrayLike) -> types.T:
+    def __call__(self, *args: types.np.ndarray) -> types.T:
         ...
 
 
@@ -44,7 +44,7 @@ def map_structure(
         return None
 
 
-def flatten(inputs: types.ArrayHolder) -> tp.Iterable[types.ArrayLike]:
+def flatten(inputs: types.ArrayHolder) -> tp.Iterable[types.np.ndarray]:
 
     if isinstance(inputs, (jnp.ndarray, np.ndarray)):
         yield inputs
@@ -131,7 +131,7 @@ def assert_not_namedtuple(x):
         )
 
 
-def train_validation_split(arrays, validation_split, shuffle=True):
+def train_validation_split(arrays, validation_split, shuffle=True) -> tp.Tuple:
     """
     Split arrays into random train and validation subsets.
     Arguments:
