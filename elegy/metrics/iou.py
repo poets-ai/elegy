@@ -48,13 +48,19 @@ class MeanIoU(Metric):
         if not self._initialized:
             n = y_pred.shape[-1]
             self.TP = ReduceConfusionMatrix(
-                Reduction.MULTICLASS_TRUE_POSITIVES, n_classes=n, name='TP',
+                Reduction.MULTICLASS_TRUE_POSITIVES,
+                n_classes=n,
+                name="TP",
             )
             self.FP = ReduceConfusionMatrix(
-                Reduction.MULTICLASS_FALSE_POSITIVES, n_classes=n, name='FP',
+                Reduction.MULTICLASS_FALSE_POSITIVES,
+                n_classes=n,
+                name="FP",
             )
             self.FN = ReduceConfusionMatrix(
-                Reduction.MULTICLASS_FALSE_NEGATIVES, n_classes=n, name='FN',
+                Reduction.MULTICLASS_FALSE_NEGATIVES,
+                n_classes=n,
+                name="FN",
             )
             if self._classes is None:
                 self._classes = np.arange(n)

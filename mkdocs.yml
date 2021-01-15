@@ -123,6 +123,10 @@ nav:
         ResNet200: api/nets/resnet/ResNet200.md
         ResNet34: api/nets/resnet/ResNet34.md
         ResNet50: api/nets/resnet/ResNet50.md
+      unet:
+        UNet: api/nets/unet/UNet.md
+        UNet_R18: api/nets/unet/UNet_R18.md
+        UNet_R50: api/nets/unet/UNet_R50.md
     next_rng_key: api/next_rng_key.md
     nn:
       AvgPool: api/nn/AvgPool.md

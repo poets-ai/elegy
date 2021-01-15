@@ -2,4 +2,4 @@ from . import resnet
 from . import segmentation
 from .segmentation import unet
 
-__all__ = ["resnet"]
+__all__ = ["resnet", "unet"]

@@ -75,21 +75,21 @@ def reduce(
         hits = (y_true == y_pred).astype(jnp.float32)
         if sample_weight is not None:
             hits = hits * sample_weight
-        scan_op = lambda carry, x: (None, (hits*(y_true==x)).sum())
+        scan_op = lambda carry, x: (None, (hits * (y_true == x)).sum())
         _, value = jax.lax.scan(scan_op, None, jnp.arange(cm_metric.shape[0]))
 
     if reduction == Reduction.MULTICLASS_FALSE_POSITIVES:
         misses = (y_true != y_pred).astype(jnp.float32)
         if sample_weight is not None:
             misses = misses * sample_weight
-        scan_op = lambda carry, x: (None, (misses*(y_pred==x)).sum())
+        scan_op = lambda carry, x: (None, (misses * (y_pred == x)).sum())
         _, value = jax.lax.scan(scan_op, None, jnp.arange(cm_metric.shape[0]))
 
     if reduction == Reduction.MULTICLASS_FALSE_NEGATIVES:
         misses = (y_true != y_pred).astype(jnp.float32)
         if sample_weight is not None:
             misses = misses * sample_weight
-        scan_op = lambda carry, x: (None, (misses*(y_true==x)).sum())
+        scan_op = lambda carry, x: (None, (misses * (y_true == x)).sum())
         _, value = jax.lax.scan(scan_op, None, jnp.arange(cm_metric.shape[0]))
 
     cm_metric += value
