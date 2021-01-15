@@ -47,7 +47,7 @@ class Model(elegy.ModelBase):
         # flatten + scale
         x = jnp.reshape(x, (x.shape[0], -1)) / 255
 
-        def loss_fn(net_params, x: jnp.ndarray, y_true):
+        def loss_fn(net_params, x, y_true):
             # model
             w, b = net_params
             logits = jnp.dot(x, w) + b
