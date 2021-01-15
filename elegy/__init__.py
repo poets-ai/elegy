@@ -16,8 +16,8 @@ from . import (
 )
 from .losses import Loss
 from .metrics import Metric
-from .model import Model, Optimizer
-from .model import States, Logs, Prediction, Evaluation
+from .model import Evaluation, Logs, Metrics, Model, Optimizer, Prediction, States
+from .model.model_base import ModelBase
 from .utils import Mode, RNGSeq
 
 # from .module import (

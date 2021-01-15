@@ -42,7 +42,7 @@ class States(tp.NamedTuple):
     net_states: tp.Any = utils.UNINITIALIZED
     metrics_states: tp.Any = utils.UNINITIALIZED
     optimizer_states: tp.Any = utils.UNINITIALIZED
-    rng: tp.Union[RNG, utils.Uninitialized] = utils.UNINITIALIZED
+    rng: tp.Union[RNG, tp.Any] = utils.UNINITIALIZED
 
     def update(
         self,
@@ -65,6 +65,40 @@ class States(tp.NamedTuple):
             updates["optimizer_states"] = optimizer_states
         if not isinstance(rng, utils.Uninitialized):
             updates["rng"] = rng
+
+        kwargs = {field: getattr(self, field) for field in self._fields}
+        kwargs.update(**updates)
+
+        return States(**kwargs)
+
+    def merge_new(self, other: "States") -> "States":
+
+        updates = {}
+
+        if isinstance(self.net_params, utils.Uninitialized) and not isinstance(
+            other.net_params, utils.Uninitialized
+        ):
+            updates["net_params"] = other.net_params
+
+        if isinstance(self.net_states, utils.Uninitialized) and not isinstance(
+            other.net_states, utils.Uninitialized
+        ):
+            updates["net_states"] = other.net_states
+
+        if isinstance(self.metrics_states, utils.Uninitialized) and not isinstance(
+            other.metrics_states, utils.Uninitialized
+        ):
+            updates["metrics_states"] = other.metrics_states
+
+        if isinstance(self.optimizer_states, utils.Uninitialized) and not isinstance(
+            other.optimizer_states, utils.Uninitialized
+        ):
+            updates["optimizer_states"] = other.optimizer_states
+
+        if isinstance(self.rng, utils.Uninitialized) and not isinstance(
+            other.rng, utils.Uninitialized
+        ):
+            updates["rng"] = other.rng
 
         kwargs = {field: getattr(self, field) for field in self._fields}
         kwargs.update(**updates)

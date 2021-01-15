@@ -222,7 +222,7 @@ class RNGSeq(TrivialPytree):
             jax.random.PRNGKey(key) if isinstance(key, int) or key.shape == () else key
         )
 
-    def next(self) -> np.ndarray:
+    def next(self) -> jnp.ndarray:
         self.key = jax.random.split(self.key, 1)[0]
         return self.key
 

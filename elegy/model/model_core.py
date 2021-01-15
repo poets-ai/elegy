@@ -33,10 +33,9 @@ class ModelCore(ABC):
         net_states: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED,
         metrics_states: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED,
         optimizer_states: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED,
-        rng: tp.Union[int, RNG] = 42,
+        rng: tp.Union[utils.Uninitialized, tp.Any] = utils.UNINITIALIZED,
         run_eagerly: bool = False,
     ):
-        rng = utils.RNGSeq(rng) if isinstance(rng, int) else rng
         self.states = States(
             net_params=net_params,
             net_states=net_states,
@@ -51,6 +50,7 @@ class ModelCore(ABC):
         self._jit_functions()
 
     def _jit_functions(self):
+        self.init_internal_jit = hooks.jit(self.init_internal, static_argnums=[0])
         self.pred_step_internal_jit = hooks.jit(self.pred_step_internal)
         self.test_step_internal_jit = hooks.jit(self.test_step_internal)
         self.train_step_internal_jit = hooks.jit(self.train_step_internal)
@@ -63,7 +63,6 @@ class ModelCore(ABC):
         y: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        rng: RNG,
     ) -> States:
         ...
 
@@ -73,7 +72,7 @@ class ModelCore(ABC):
         net_params: tp.Any,
         x: tp.Any,
         net_states: tp.Any,
-        rng: RNG,
+        rng: tp.Any,
     ) -> Prediction:
         ...
 
@@ -87,7 +86,7 @@ class ModelCore(ABC):
         metrics_states: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        rng: RNG,
+        rng: tp.Any,
     ) -> Evaluation:
         ...
 
@@ -102,7 +101,7 @@ class ModelCore(ABC):
         optimizer_states: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        rng: RNG,
+        rng: tp.Any,
     ) -> Evaluation:
         ...
 
@@ -129,6 +128,22 @@ class ModelCore(ABC):
 
     #     return loss, grads, logs, metrics_states
 
+    def init_internal(
+        self,
+        mode: Mode,
+        x: tp.Any,
+        y: tp.Any,
+        sample_weight: tp.Optional[np.ndarray],
+        class_weight: tp.Optional[np.ndarray],
+    ) -> States:
+        return utils.inject_dependencies(self.init)(
+            mode=mode,
+            x=x,
+            y=y,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+        )
+
     def maybe_initialize(
         self,
         mode: Mode,
@@ -153,28 +168,30 @@ class ModelCore(ABC):
                 and isinstance(self.states.optimizer_states, utils.Uninitialized)
             )
         ):
-            state_updates: States = utils.inject_dependencies(self.init)(
-                mode=mode,
-                x=x,
-                y=y,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                rng=self.states.rng,
+            method = self.init_internal if self.run_eagerly else self.init_internal_jit
+            # TODO: create init_internal & init_internal_jit
+            state_updates: States = method(
+                mode,
+                x,
+                y,
+                sample_weight,
+                class_weight,
             )
-            self.states = self.states.merge(state_updates)
-            self.initial_states = self.initial_states.merge(state_updates)
+            self.states = self.states.merge_new(state_updates)
+            self.initial_states = self.initial_states.merge_new(state_updates)
 
     def pred_step_internal(
         self,
         net_params: tp.Any,
         x: tp.Any,
         net_states: tp.Any,
+        rng: tp.Any,
     ) -> tp.Tuple[tp.Any, States]:
         return utils.inject_dependencies(self.pred_step)(
             net_params=net_params,
             x=x,
             net_states=net_states,
-            rng=self.states.rng,
+            rng=rng,
         )
 
     def predict_on_batch(
@@ -206,6 +223,7 @@ class ModelCore(ABC):
                 self.states.net_params,
                 x,
                 self.states.net_states,
+                self.states.rng,
             )
 
         self.states = self.states.merge(state_updates)
@@ -221,6 +239,7 @@ class ModelCore(ABC):
         metrics_states: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
+        rng: tp.Any,
     ) -> Evaluation:
         return utils.inject_dependencies(self.test_step)(
             net_params=net_params,
@@ -230,6 +249,7 @@ class ModelCore(ABC):
             metrics_states=metrics_states,
             sample_weight=sample_weight,
             class_weight=class_weight,
+            rng=rng,
         )
 
     def test_on_batch(
@@ -284,6 +304,7 @@ class ModelCore(ABC):
                 self.states.metrics_states,
                 sample_weight,
                 class_weight,
+                self.states.rng,
             )
 
         self.states = self.states.merge(state_updates)
@@ -300,6 +321,7 @@ class ModelCore(ABC):
         optimizer_states: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
+        rng: tp.Any,
     ) -> Evaluation:
         return utils.inject_dependencies(self.train_step)(
             net_params=net_params,
@@ -373,6 +395,7 @@ class ModelCore(ABC):
                 self.states.optimizer_states,
                 sample_weight,
                 class_weight,
+                self.states.rng,
             )
 
         self.states = self.states.merge(state_updates)

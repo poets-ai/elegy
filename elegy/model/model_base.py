@@ -109,6 +109,18 @@ class ModelBase(ModelCore):
         "states",
     ]
 
+    def init(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def pred_step(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def test_step(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def train_step(self, *args, **kwargs):
+        raise NotImplementedError()
+
     def fit(
         self,
         x: tp.Union[

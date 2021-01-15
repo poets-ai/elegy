@@ -12,23 +12,24 @@ from elegy.model.model_core import Prediction, States
 from elegy.types import OutputStates, RNG, Evaluation, Prediction
 from elegy.utils import Mode, RNGSeq
 
-Losses = tp.Union[tp.Callable, tp.List, tp.Dict, None]
-Metrics = tp.Union[tp.Callable, tp.List, tp.Dict, None]
+LossModules = tp.Union[tp.Callable, tp.List, tp.Dict, None]
+MetricsModules = tp.Union[tp.Callable, tp.List, tp.Dict, None]
 
 
 class Model(ModelBase):
     module: GeneralizedModule
-    loss: Losses = None
-    metrics: Metrics = None
+    loss: LossModules = None
+    metrics: MetricsModules = None
     optimizer: tp.Union["Optimizer", optax.GradientTransformation, None] = None
+    seed: int = 42
 
     def __init__(
         self,
         module: tp.Any,
-        loss: Losses = None,
-        metrics: Metrics = None,
+        loss: LossModules = None,
+        metrics: MetricsModules = None,
         optimizer: tp.Union["Optimizer", optax.GradientTransformation, None] = None,
-        run_eagerly: bool = False,
+        seed: int = 42,
         **kwargs,
     ):
         """[summary]
@@ -65,15 +66,13 @@ class Model(ModelBase):
             raise ValueError(
                 f"rng must be one of the following types: int, RNGSeq. Got {kwargs['rng']}"
             )
-        super().__init__(
-            run_eagerly=run_eagerly,
-            **kwargs,
-        )
+        super().__init__(**kwargs)
 
         self.module = generalize(module)
         self.loss = loss
         self.metrics = metrics
         self.optimizer = optimizer
+        self.seed = seed
 
     def __call__(self, *args, **kwargs):
         assert isinstance(self.states.rng, RNGSeq)
@@ -93,9 +92,8 @@ class Model(ModelBase):
         y: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        rng: RNG,
     ) -> States:
-        assert isinstance(rng, RNGSeq)
+        rng = RNGSeq(self.seed)
 
         training = mode == Mode.train
 
@@ -128,9 +126,10 @@ class Model(ModelBase):
             x_kwargs,
         )
 
-        states = States(net_states=net_states, net_params=net_params, rng=rng)
-
-        return Prediction(pred=y_pred, states=states)
+        return Prediction(
+            pred=y_pred,
+            states=States(net_states=net_states, net_params=net_params, rng=rng),
+        )
 
     def test_step(
         self,
@@ -187,7 +186,7 @@ class Metrics(GeneralizedModule):
         }
 
     @classmethod
-    def new(cls, metrics: tp.Any) -> Metrics:
+    def new(cls, metrics: tp.Any) -> "Metrics":
         return cls(metrics)
 
     def init(
