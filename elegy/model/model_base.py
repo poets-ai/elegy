@@ -109,9 +109,6 @@ class ModelBase(ModelCore):
         "states",
     ]
 
-    def init(self, *args, **kwargs):
-        raise MissingMethod()
-
     def pred_step(self, *args, **kwargs):
         raise MissingMethod()
 
