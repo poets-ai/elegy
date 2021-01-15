@@ -1,7 +1,9 @@
 import elegy
 
 
-import jax.numpy as jnp
+import jax, jax.numpy as jnp
+import numpy as np
+import tensorflow.keras as keras
 
 
 #
@@ -74,3 +76,11 @@ def test_class_weight():
     scce = elegy.losses.SparseCategoricalCrossentropy()
     result = scce(y_true, y_pred, class_weight=class_weight)  # 1.1589
     assert jnp.isclose(result, 1.1589, rtol=0.001)
+def test_scce_uint8_ytrue():
+    ypred = np.random.random([2, 256, 256, 10])
+    ytrue = np.random.randint(0, 10, size=(2, 256, 256)).astype(np.uint8)
+
+    loss0 = elegy.losses.sparse_categorical_crossentropy(ytrue, ypred, from_logits=True)
+    loss1 = keras.losses.sparse_categorical_crossentropy(ytrue, ypred, from_logits=True)
+
+    assert np.allclose(loss0, loss1)
