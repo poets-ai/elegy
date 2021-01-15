@@ -370,15 +370,19 @@ class ModelBase(ModelCore):
                 val_x, val_y, val_sample_weight = unpack_x_y_sample_weight(
                     validation_data
                 )
-                val_logs = self.evaluate(
-                    x=val_x,
-                    y=val_y,
-                    sample_weight=val_sample_weight,
-                    batch_size=validation_batch_size or batch_size,
-                    steps=validation_steps,
-                    callbacks=callbacks,
-                    # return_dict=True,
-                )
+                try:
+                    val_logs = self.evaluate(
+                        x=val_x,
+                        y=val_y,
+                        sample_weight=val_sample_weight,
+                        batch_size=validation_batch_size or batch_size,
+                        steps=validation_steps,
+                        callbacks=callbacks,
+                        # return_dict=True,
+                    )
+                except NotImplementedError as e:
+                    val_logs = {}
+
                 val_logs = {"val_" + name: val for name, val in val_logs.items()}
                 epoch_logs.update(val_logs)
 

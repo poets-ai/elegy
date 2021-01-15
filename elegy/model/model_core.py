@@ -139,7 +139,7 @@ class ModelCore(ABC):
         return utils.inject_dependencies(self.init)(
             mode=mode,
             x=x,
-            y=y,
+            y_true=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
         )
@@ -244,7 +244,7 @@ class ModelCore(ABC):
         return utils.inject_dependencies(self.test_step)(
             net_params=net_params,
             x=x,
-            y=y,
+            y_true=y,
             net_states=net_states,
             metrics_states=metrics_states,
             sample_weight=sample_weight,
@@ -326,7 +326,7 @@ class ModelCore(ABC):
         return utils.inject_dependencies(self.train_step)(
             net_params=net_params,
             x=x,
-            y=y,
+            y_true=y,
             net_states=net_states,
             metrics_states=metrics_states,
             optimizer_states=optimizer_states,
