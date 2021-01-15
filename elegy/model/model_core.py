@@ -60,7 +60,7 @@ class ModelCore(ABC):
         self,
         mode: Mode,
         x: tp.Any,
-        y: tp.Any,
+        y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
     ) -> States:
@@ -81,7 +81,7 @@ class ModelCore(ABC):
         self,
         net_params: tp.Any,
         x: tp.Any,
-        y: tp.Any,
+        y_true: tp.Any,
         net_states: tp.Any,
         metrics_states: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
@@ -95,7 +95,7 @@ class ModelCore(ABC):
         self,
         net_params: tp.Any,
         x: tp.Any,
-        y: tp.Any,
+        y_true: tp.Any,
         net_states: tp.Any,
         metrics_states: tp.Any,
         optimizer_states: tp.Any,
@@ -132,14 +132,14 @@ class ModelCore(ABC):
         self,
         mode: Mode,
         x: tp.Any,
-        y: tp.Any,
+        y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
     ) -> States:
         return utils.inject_dependencies(self.init)(
             mode=mode,
             x=x,
-            y_true=y,
+            y_true=y_true,
             sample_weight=sample_weight,
             class_weight=class_weight,
         )
@@ -148,7 +148,7 @@ class ModelCore(ABC):
         self,
         mode: Mode,
         x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple] = (),
-        y: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
+        y_true: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
         sample_weight: tp.Optional[np.ndarray] = None,
         class_weight: tp.Optional[np.ndarray] = None,
     ):
@@ -173,7 +173,7 @@ class ModelCore(ABC):
             state_updates: States = method(
                 mode,
                 x,
-                y,
+                y_true,
                 sample_weight,
                 class_weight,
             )
@@ -286,7 +286,7 @@ class ModelCore(ABC):
         self.maybe_initialize(
             mode=Mode.test,
             x=x,
-            y=y,
+            y_true=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
         )
@@ -374,7 +374,7 @@ class ModelCore(ABC):
         self.maybe_initialize(
             mode=Mode.train,
             x=x,
-            y=y,
+            y_true=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
         )

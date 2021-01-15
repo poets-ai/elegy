@@ -110,16 +110,16 @@ class ModelBase(ModelCore):
     ]
 
     def init(self, *args, **kwargs):
-        raise NotImplementedError()
+        raise MissingMethod()
 
     def pred_step(self, *args, **kwargs):
-        raise NotImplementedError()
+        raise MissingMethod()
 
     def test_step(self, *args, **kwargs):
-        raise NotImplementedError()
+        raise MissingMethod()
 
     def train_step(self, *args, **kwargs):
-        raise NotImplementedError()
+        raise MissingMethod()
 
     def fit(
         self,
@@ -380,11 +380,11 @@ class ModelBase(ModelCore):
                         callbacks=callbacks,
                         # return_dict=True,
                     )
-                except NotImplementedError as e:
-                    val_logs = {}
 
-                val_logs = {"val_" + name: val for name, val in val_logs.items()}
-                epoch_logs.update(val_logs)
+                    val_logs = {"val_" + name: val for name, val in val_logs.items()}
+                    epoch_logs.update(val_logs)
+                except MissingMethod as e:
+                    pass
 
             callbacks.on_epoch_end(epoch, epoch_logs)
             # print(
@@ -681,3 +681,7 @@ def load(path: tp.Union[str, Path]) -> ModelBase:
     model.load(path)
 
     return model
+
+
+class MissingMethod(Exception):
+    pass
