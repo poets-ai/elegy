@@ -333,7 +333,7 @@ class SlicedModule(elegy.Module):
         outputs = []
         for nextnode, edge in self._tree[node].items():
             y = self.visit_edge(edge, x, deferred_call_args)
-            if y == DeferredCall:
+            if y is DeferredCall:
                 # visited edge module is missing some inputs, will come back here later
                 continue
             if edge.get("is_output", False):
