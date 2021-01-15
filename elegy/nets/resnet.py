@@ -1,8 +1,10 @@
 # adapted from the flax library https://github.com/google/flax
 
 import jax, jax.numpy as jnp
-from elegy import module, nn
+from elegy import module, nn, random, utils
 import typing as tp
+import pickle
+import numpy as np
 
 
 __all__ = [
@@ -16,6 +18,18 @@ __all__ = [
 ]
 
 
+PRETRAINED_URLS = {
+    "ResNet18": {
+        "url": "https://github.com/poets-ai/elegy-assets/releases/download/resnet18_rev0/ResNet18_ImageNet.pkl",
+        "sha256": "4397cd02b56a29825243341204710daa1de9f3d6ad776558e61b34690896aaaa",
+    },
+    "ResNet50": {
+        "url": "https://github.com/poets-ai/elegy-assets/releases/download/resnet50_rev0/ResNet50_ImageNet.pkl",
+        "sha256": "aadeb068ee6b5e114bc1902159e592c5170a27a661fb3a3d7c463607b25f1381",
+    },
+}
+
+
 class ResNetBlock(module.Module):
     """ResNet (identity) block"""
 
@@ -24,7 +38,7 @@ class ResNetBlock(module.Module):
         n_filters: int,
         strides: tp.Optional[tp.Tuple[int]] = (1, 1),
         *args,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self.n_filters = n_filters
@@ -101,8 +115,10 @@ class ResNet(module.Module):
         stages: tp.List[int],
         block_type: tp.Union[ResNetBlock, BottleneckResNetBlock],
         lowres: tp.Optional[bool] = False,
+        weights: tp.Optional[tp.Union[str, None]] = None,
+        dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
         *args,
-        **kwargs
+        **kwargs,
     ):
         """
         Arguments:
@@ -112,6 +128,7 @@ class ResNet(module.Module):
             lowres: Optional, whether to use the low resolution version
                     as described in subsection 4.2 of the orignal paper.
                     This version is better suited for datasets like CIFAR10. (Default: False)
+            weights: One of None (random initialization) or a path to a weights file
             dtype: Optional dtype of the convolutions and linear operations,
                     either jnp.float32 (default) or jnp.float16 for mixed precision.
         """
@@ -120,6 +137,27 @@ class ResNet(module.Module):
         self.stages = stages
         self.block_type = block_type
         self.lowres = lowres
+
+        if weights is not None:
+            if weights.endswith(".pkl"):
+                parameters = pickle.load(open(weights, "rb"))
+            elif weights == "imagenet":
+                clsname = self.__class__.__name__
+                urldict = PRETRAINED_URLS.get(clsname, None)
+                if urldict is None:
+                    raise ValueError(f"No pretrained weights for {clsname} available")
+                fname = utils.download_file(urldict["url"], sha256=urldict["sha256"])
+                parameters = pickle.load(open(fname, "rb"))
+            else:
+                raise ValueError("Unknown weights value: ", weights)
+
+            x = np.empty([0, 224, 224, 3], dtype=self.dtype)
+            # quick but dirty module initialization
+            with module.rng_context(random.RNG(0)):
+                jax.eval_shape(self.init, x)
+            self.set_parameters(
+                parameters, check_missing=True, check_shapes=True, ignore_on_error=False
+            )
 
     def call(self, x: jnp.ndarray):
         x = nn.Conv2D(
@@ -153,17 +191,19 @@ class ResNet18(ResNet):
     def __init__(
         self,
         lowres: tp.Optional[bool] = False,
+        weights: tp.Optional[tp.Union[str, None]] = None,
         dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
         *args,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             stages=[2, 2, 2, 2],
             block_type=ResNetBlock,
             lowres=lowres,
+            weights=weights,
             dtype=dtype,
             *args,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -171,17 +211,19 @@ class ResNet34(ResNet):
     def __init__(
         self,
         lowres: tp.Optional[bool] = False,
+        weights: tp.Optional[tp.Union[str, None]] = None,
         dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
         *args,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             stages=[3, 4, 6, 3],
             block_type=ResNetBlock,
             lowres=lowres,
+            weights=weights,
             dtype=dtype,
             *args,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -189,17 +231,19 @@ class ResNet50(ResNet):
     def __init__(
         self,
         lowres: tp.Optional[bool] = False,
+        weights: tp.Optional[tp.Union[str, None]] = None,
         dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
         *args,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             stages=[3, 4, 6, 3],
             block_type=BottleneckResNetBlock,
             lowres=lowres,
+            weights=weights,
             dtype=dtype,
             *args,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -207,17 +251,19 @@ class ResNet101(ResNet):
     def __init__(
         self,
         lowres: tp.Optional[bool] = False,
+        weights: tp.Optional[tp.Union[str, None]] = None,
         dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
         *args,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             stages=[3, 4, 23, 3],
             block_type=BottleneckResNetBlock,
             lowres=lowres,
+            weights=weights,
             dtype=dtype,
             *args,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -225,17 +271,19 @@ class ResNet152(ResNet):
     def __init__(
         self,
         lowres: tp.Optional[bool] = False,
+        weights: tp.Optional[tp.Union[str, None]] = None,
         dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
         *args,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             stages=[3, 8, 36, 3],
             block_type=BottleneckResNetBlock,
             lowres=lowres,
+            weights=weights,
             dtype=dtype,
             *args,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -243,17 +291,19 @@ class ResNet200(ResNet):
     def __init__(
         self,
         lowres: tp.Optional[bool] = False,
+        weights: tp.Optional[tp.Union[str, None]] = None,
         dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
         *args,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             stages=[3, 24, 36, 3],
             block_type=BottleneckResNetBlock,
             lowres=lowres,
+            weights=weights,
             dtype=dtype,
             *args,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -264,6 +314,8 @@ Arguments:
     lowres: Optional, whether to use the low resolution version
             as described in subsection 4.2 of the orignal paper.
             This version is better suited for datasets like CIFAR10. (Default: False)
+    weights: One of None (random initialization), 'imagenet' (automatic download of
+              weights pretrained on ImageNet) or a path to a weights file
     dtype: Optional dtype of the convolutions and linear operations, 
            either jnp.float32 (default) or jnp.float16 for mixed precision.
 """
