@@ -17,6 +17,8 @@ class Model(elegy.ModelBase):
         super().__init__(**kwargs)
         self.optimizer = optax.adam(1e-3)
 
+    # request parameters by name via depending injection.
+    # possible: mode, x, y_true, sample_weight, class_weight
     def init(self, x):
         d = np.prod(x.shape[1:])
 
@@ -43,6 +45,8 @@ class Model(elegy.ModelBase):
             rng=rng,
         )
 
+    # request parameters by name via depending injection.
+    # possible: net_params, x, y_true, net_states, metrics_states, optimizer_states, sample_weight, class_weight, rng
     def train_step(self, x, y_true, net_params, metrics_states, optimizer_states):
         # flatten + scale
         x = jnp.reshape(x, (x.shape[0], -1)) / 255

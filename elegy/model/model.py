@@ -1,5 +1,7 @@
 import typing as tp
 
+import jax
+import jax.numpy as jnp
 import numpy as np
 import optax
 from elegy import utils
@@ -9,8 +11,9 @@ from elegy.model.generalized_module.generalized_module import (
 )
 from elegy.model.model_base import ModelBase
 from elegy.model.model_core import Prediction, States
-from elegy.types import OutputStates, RNG, Evaluation, Prediction
+from elegy.types import RNG, Evaluation, OutputStates, Prediction
 from elegy.utils import Mode, RNGSeq
+from flax import linen
 
 LossModules = tp.Union[tp.Callable, tp.List, tp.Dict, None]
 MetricsModules = tp.Union[tp.Callable, tp.List, tp.Dict, None]
@@ -89,7 +92,7 @@ class Model(ModelBase):
         self,
         mode: Mode,
         x: tp.Any,
-        y: tp.Any,
+        y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
     ) -> States:
@@ -135,7 +138,7 @@ class Model(ModelBase):
         self,
         net_params: tp.Any,
         x: tp.Any,
-        y: tp.Any,
+        y_true: tp.Any,
         net_states: tp.Any,
         metrics_states: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
@@ -159,7 +162,7 @@ class Model(ModelBase):
         self,
         net_params: tp.Any,
         x: tp.Any,
-        y: tp.Any,
+        y_true: tp.Any,
         net_states: tp.Any,
         metrics_states: tp.Any,
         optimizer_states: tp.Any,
@@ -230,6 +233,29 @@ class Metrics(GeneralizedModule):
             )
 
         return OutputStates(preds_out, params_out, states_out)
+
+
+class LossMetrics(linen.Module):
+    @linen.compact
+    def __call__(self, values):
+
+        initialized = self.has_variable("metrics", "count")
+
+        vcount = self.variable(
+            "metrics", "count", lambda: jnp.array(0, dtype=jnp.int32)
+        )
+        vtotal = self.variable(
+            "metrics", "total", lambda: jax.tree_map(jnp.zeros_like, values)
+        )
+
+        total = jax.tree_multimap(lambda a, b: a + b, vtotal.value, values)
+        count = vcount.value + 1
+
+        if initialized:
+            vtotal.value = total
+            vcount.value = count
+
+        return jax.tree_map(lambda total: total / count, total)
 
 
 class Optimizer:

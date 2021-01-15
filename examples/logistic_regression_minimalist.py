@@ -14,7 +14,7 @@ from utils import plot_history
 
 class Model(elegy.ModelBase):
     # request parameters by name via depending injection.
-    # possible: mode, x, y, sample_weight, class_weight
+    # possible: mode, x, y_true, sample_weight, class_weight
     def init(self, x):
         d = np.prod(x.shape[1:])
 

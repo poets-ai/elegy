@@ -32,7 +32,11 @@ class LinenModule(GeneralizedModule):
         )
         assert isinstance(variables, FrozenDict)
 
-        net_states, net_params = variables.pop("params")
+        net_states, net_params = (
+            variables.pop("params")
+            if "params" in variables
+            else (variables, FrozenDict())
+        )
 
         return OutputStates(y_pred, net_params, net_states)
 
@@ -62,7 +66,11 @@ class LinenModule(GeneralizedModule):
             **kwargs,
         )
 
-        net_states, net_params = variables.pop("params")
+        net_states, net_params = (
+            variables.pop("params")
+            if "params" in variables
+            else (variables, FrozenDict())
+        )
 
         return OutputStates(y_pred, net_params, net_states)
 

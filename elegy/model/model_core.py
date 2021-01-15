@@ -169,7 +169,7 @@ class ModelCore(ABC):
             )
         ):
             method = self.init_internal if self.run_eagerly else self.init_internal_jit
-            # TODO: create init_internal & init_internal_jit
+
             state_updates: States = method(
                 mode,
                 x,
@@ -177,6 +177,7 @@ class ModelCore(ABC):
                 sample_weight,
                 class_weight,
             )
+
             self.states = self.states.merge_new(state_updates)
             self.initial_states = self.initial_states.merge_new(state_updates)
 
@@ -234,7 +235,7 @@ class ModelCore(ABC):
         self,
         net_params: tp.Any,
         x: tp.Any,
-        y: tp.Any,
+        y_true: tp.Any,
         net_states: tp.Any,
         metrics_states: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
@@ -244,7 +245,7 @@ class ModelCore(ABC):
         return utils.inject_dependencies(self.test_step)(
             net_params=net_params,
             x=x,
-            y_true=y,
+            y_true=y_true,
             net_states=net_states,
             metrics_states=metrics_states,
             sample_weight=sample_weight,
@@ -315,7 +316,7 @@ class ModelCore(ABC):
         self,
         net_params: tp.Any,
         x: tp.Any,
-        y: tp.Any,
+        y_true: tp.Any,
         net_states: tp.Any,
         metrics_states: tp.Any,
         optimizer_states: tp.Any,
@@ -326,7 +327,7 @@ class ModelCore(ABC):
         return utils.inject_dependencies(self.train_step)(
             net_params=net_params,
             x=x,
-            y_true=y,
+            y_true=y_true,
             net_states=net_states,
             metrics_states=metrics_states,
             optimizer_states=optimizer_states,
