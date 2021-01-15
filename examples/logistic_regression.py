@@ -23,17 +23,17 @@ class Model(elegy.ModelBase):
         # friendly RNG interface: rng.next() == jax.random.split(...)
         rng = elegy.RNGSeq(42)
 
-        # pred
+        # params
         w = jax.random.uniform(rng.next(), shape=[d, 10], minval=-1, maxval=1)
         b = jax.random.uniform(rng.next(), shape=[1], minval=-1, maxval=1)
         net_params = (w, b)
 
-        # test
+        # metrics
         total_samples = jnp.array(0, dtype=jnp.float32)
         total_tp = jnp.array(0, dtype=jnp.float32)
         total_loss = jnp.array(0, dtype=jnp.float32)
 
-        # train
+        # optimizer
         optimizer_states = self.optimizer.init(net_params)
 
         return elegy.States(
@@ -44,6 +44,7 @@ class Model(elegy.ModelBase):
         )
 
     def train_step(self, x, y_true, net_params, metrics_states, optimizer_states):
+        # flatten + scale
         x = jnp.reshape(x, (x.shape[0], -1)) / 255
 
         def loss_fn(net_params, x: jnp.ndarray, y_true):
@@ -51,7 +52,7 @@ class Model(elegy.ModelBase):
             w, b = net_params
             logits = jnp.dot(x, w) + b
 
-            # binary crossentropy loss
+            # crossentropy loss
             labels = jax.nn.one_hot(y_true, 10)
             sample_loss = -jnp.sum(labels * jax.nn.log_softmax(logits), axis=-1)
             loss = jnp.mean(sample_loss)
@@ -68,7 +69,7 @@ class Model(elegy.ModelBase):
         )
         net_params = optax.apply_updates(net_params, grads)
 
-        # metrics
+        # cumulative metrics
         sample_acc = (jnp.argmax(logits, axis=-1) == y_true).astype(jnp.int32)
 
         total_samples, total_tp, total_loss = metrics_states

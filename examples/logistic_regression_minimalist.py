@@ -19,7 +19,7 @@ class Model(elegy.ModelBase):
         # friendly RNG interface: rng.next() == jax.random.split(...)
         rng = elegy.RNGSeq(42)
 
-        # pred
+        # params
         w = jax.random.uniform(rng.next(), shape=[d, 10], minval=-1, maxval=1)
         b = jax.random.uniform(rng.next(), shape=[1], minval=-1, maxval=1)
 
@@ -37,7 +37,7 @@ class Model(elegy.ModelBase):
             w, b = net_params
             logits = jnp.dot(x, w) + b
 
-            # binary crossentropy loss
+            # crossentropy loss
             labels = jax.nn.one_hot(y_true, 10)
             loss = jnp.mean(-jnp.sum(labels * jax.nn.log_softmax(logits), axis=-1))
 
