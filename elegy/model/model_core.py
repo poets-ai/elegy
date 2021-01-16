@@ -16,7 +16,7 @@ import yaml
 from elegy import hooks, module, utils
 from elegy.losses.loss import Loss
 from elegy.metrics.metric import Metric
-from elegy.types import Evaluation, Logs, Prediction, RNG, States
+from elegy.types import Evaluation, Logs, Prediction, RNG, States, Training
 from elegy.utils import Mode
 from tabulate import tabulate
 
@@ -87,6 +87,7 @@ class ModelCore(ABC):
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         rng: tp.Any,
+        training: bool = False,
     ) -> Evaluation:
         ...
 
@@ -102,7 +103,7 @@ class ModelCore(ABC):
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         rng: tp.Any,
-    ) -> Evaluation:
+    ) -> Training:
         ...
 
     def reset(self):
@@ -297,7 +298,7 @@ class ModelCore(ABC):
         )
 
         with hooks.hooks_context():
-            logs, state_updates = method(
+            loss, logs, state_updates = method(
                 self.states.net_params,
                 x,
                 y,

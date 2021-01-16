@@ -5,16 +5,16 @@ import numpy as np
 
 def test_predict():
     class Model(elegy.model.model_base.ModelBase):
-        def init(self, mode: elegy.Mode) -> elegy.States:
+        def init(self, mode: elegy.Mode):
             return elegy.States(net_states=0)
 
         def pred_step(self, x, net_states):
             return x + 1.0, elegy.States(net_states=net_states + 1)
 
-        def test_step(self) -> elegy.States:
+        def test_step(self):
             ...
 
-        def train_step(self) -> elegy.States:
+        def train_step(self):
             ...
 
     model = Model()
@@ -37,6 +37,7 @@ def test_evaluate():
 
         def test_step(self, x, metrics_states):
             return elegy.Evaluation(
+                loss=0.1,
                 logs=dict(loss=jnp.sum(x)),
                 states=elegy.States(metrics_states=metrics_states + 1),
             )
@@ -69,7 +70,7 @@ def test_fit():
             ...
 
         def train_step(self, x, optimizer_states):
-            return elegy.Evaluation(
+            return elegy.Training(
                 logs=dict(loss=jnp.sum(x)),
                 states=elegy.States(optimizer_states=optimizer_states + 1),
             )

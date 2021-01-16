@@ -61,19 +61,25 @@ class ModelBasicTest(unittest.TestCase):
 
         rng = elegy.RNGSeq(42)
         x = np.random.uniform(size=(5, 7, 7))
-        preds, states = metrics.init(rng)(x, training=True)
 
-        preds, states = metrics.apply(states, rng)(x, training=True)
+        with elegy.hooks.hooks_context():
+            elegy.add_metric("d", 10)
+            logs, states = metrics.init(rng)(x, training=True)
+
+        with elegy.hooks.hooks_context():
+            elegy.add_metric("d", 10)
+            logs, states = metrics.apply(states, rng)(x, training=True)
 
         assert len(metrics.metrics) == 3
         assert "a/b/mlp" in metrics.metrics
         assert "a/b/mlp_1" in metrics.metrics
         assert "a/c/mlp" in metrics.metrics
 
-        assert len(preds) == 3
-        assert "a/b/mlp" in preds
-        assert "a/b/mlp_1" in preds
-        assert "a/c/mlp" in preds
+        assert len(logs) == 4
+        assert "a/b/mlp" in logs
+        assert "a/b/mlp_1" in logs
+        assert "a/c/mlp" in logs
+        assert "d" in logs
 
         assert len(states) == 3
         assert "a/b/mlp" in states
@@ -88,22 +94,28 @@ class ModelBasicTest(unittest.TestCase):
 
         rng = elegy.RNGSeq(42)
         hooks_losses = dict(x=0.3, y=4.5)
-        logs, logs, states = losses.init(rng)()
 
-        loss, logs, states = losses.apply(states)()
+        with elegy.hooks_context():
+            elegy.add_loss("d", 1.0)
+            logs, logs, states = losses.init(rng)()
 
-        assert loss == 9
+        with elegy.hooks_context():
+            elegy.add_loss("d", 1.0)
+            loss, logs, states = losses.apply(states)()
+
+        assert loss == 10
 
         assert len(losses.losses) == 3
         assert "a/b/loss_fn" in losses.losses
         assert "a/b/loss_fn_1" in losses.losses
         assert "a/c/loss_fn" in losses.losses
 
-        assert len(logs) == 4
+        assert len(logs) == 5
         assert "loss" in logs
         assert "a/b/loss_fn" in logs
         assert "a/b/loss_fn_1" in logs
         assert "a/c/loss_fn" in logs
+        assert "d_loss" in logs
 
 
 class ModelTest(unittest.TestCase):

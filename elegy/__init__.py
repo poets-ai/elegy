@@ -16,7 +16,17 @@ from . import (
 )
 from .losses import Loss
 from .metrics import Metric
-from .model import Evaluation, Logs, Metrics, Model, Optimizer, Prediction, States
+from .model import (
+    Evaluation,
+    Logs,
+    Metrics,
+    Model,
+    Optimizer,
+    Prediction,
+    States,
+    Training,
+)
+from elegy.hooks import hooks_context, add_loss, add_metric
 from .model.model_base import ModelBase
 from .utils import Mode, RNGSeq
 

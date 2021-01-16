@@ -22,8 +22,8 @@ MetricsModules = tp.Union[tp.Callable, tp.List, tp.Dict, None]
 
 class Model(ModelBase):
     module: GeneralizedModule
-    loss: LossModules = None
-    metrics: MetricsModules = None
+    loss: "Losses"
+    metrics: "Metrics"
     optimizer: tp.Union["Optimizer", optax.GradientTransformation, None] = None
     seed: int = 42
 
@@ -72,9 +72,15 @@ class Model(ModelBase):
             )
         super().__init__(**kwargs)
 
+        if loss is None:
+            loss = {}
+
+        if metrics is None:
+            metrics = {}
+
         self.module = generalize(module)
-        self.loss = loss
-        self.metrics = metrics
+        self.loss = Losses(loss)
+        self.metrics = Metrics(metrics)
         self.optimizer = optimizer
         self.seed = seed
 
@@ -108,6 +114,30 @@ class Model(ModelBase):
 
         if mode == Mode.pred:
             return states
+
+        metrics_logs, metrics_states = self.metrics.init(rng)(
+            x=x,
+            y_true=y_true,
+            y_pred=y_pred,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            training=training,
+            parameters=net_params,
+            states=net_states,
+        )
+
+        loss, loss_logs, loss_logs_states = self.loss.init(rng)(
+            x=x,
+            y_true=y_true,
+            y_pred=y_pred,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            training=training,
+            parameters=net_params,
+            states=net_states,
+        )
+
+        states = states.update(metrics_states=(metrics_states, loss_logs_states))
 
         return states
 
@@ -145,6 +175,7 @@ class Model(ModelBase):
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         rng: RNG,
+        training: bool = False,
     ) -> Evaluation:
         assert isinstance(rng, RNGSeq)
 
@@ -155,9 +186,33 @@ class Model(ModelBase):
             rng=rng,
         )
 
-        logs = {}
+        metric_logs = self.metrics
 
-        return Evaluation(logs, states)
+        metrics_logs, metrics_states = self.metrics.init(rng)(
+            x=x,
+            y_true=y_true,
+            y_pred=y_pred,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            training=False,
+            parameters=net_params,
+            states=net_states,
+        )
+
+        loss, loss_logs, loss_logs_states = self.loss.init(rng)(
+            x=x,
+            y_true=y_true,
+            y_pred=y_pred,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            training=False,
+            parameters=net_params,
+            states=net_states,
+        )
+
+        states = states.update(metrics_states=(metrics_states, loss_logs_states))
+
+        return Evaluation(loss, logs, states)
 
     def train_step(
         self,

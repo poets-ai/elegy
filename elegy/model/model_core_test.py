@@ -9,7 +9,7 @@ def test_init():
     N = 0
 
     class Model(elegy.model.model_core.ModelCore):
-        def init(self, mode: elegy.Mode) -> elegy.States:
+        def init(self, mode: elegy.Mode):
             nonlocal N
             N = N + 1
 
@@ -27,13 +27,13 @@ def test_init():
 
             return step_states
 
-        def pred_step(self) -> tp.Tuple[tp.Any, elegy.States]:
+        def pred_step(self):
             ...
 
-        def test_step(self) -> elegy.States:
+        def test_step(self):
             ...
 
-        def train_step(self) -> elegy.States:
+        def train_step(self):
             ...
 
     model = Model()
@@ -75,7 +75,7 @@ def test_init():
 
 def test_pred_step():
     class Model(elegy.model.model_core.ModelCore):
-        def init(self, mode: elegy.Mode) -> elegy.States:
+        def init(self, mode: elegy.Mode):
             return elegy.States(net_states=0)
 
         def pred_step(self, x, net_states):
@@ -84,10 +84,10 @@ def test_pred_step():
                 states=elegy.States(net_states=net_states + 1),
             )
 
-        def test_step(self) -> elegy.States:
+        def test_step(self):
             ...
 
-        def train_step(self) -> elegy.States:
+        def train_step(self):
             ...
 
     model = Model()
@@ -115,6 +115,7 @@ def test_test_step():
 
         def test_step(self, metrics_states):
             return elegy.Evaluation(
+                loss=0.1,
                 logs=dict(loss=1.0),
                 states=elegy.States(metrics_states=metrics_states + 1),
             )
@@ -149,7 +150,7 @@ def test_train_step():
             return dict(loss=1.0), elegy.States()
 
         def train_step(self, optimizer_states):
-            return elegy.Evaluation(
+            return elegy.Training(
                 logs=dict(loss=2.0),
                 states=elegy.States(optimizer_states=optimizer_states + 1),
             )

@@ -2,6 +2,7 @@ from copy import copy
 import typing as tp
 
 import numpy as np
+import jax.numpy as jnp
 
 from elegy import utils
 
@@ -125,6 +126,12 @@ class Prediction(tp.NamedTuple):
 
 
 class Evaluation(tp.NamedTuple):
+    loss: Scalar
+    logs: Logs
+    states: States
+
+
+class Training(tp.NamedTuple):
     logs: Logs
     states: States
 

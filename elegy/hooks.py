@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from elegy.types import Logs
+from elegy.types import Logs, Scalar
 import functools
 import threading
 import typing as tp
@@ -31,7 +31,7 @@ LOCAL: HooksContext = _HooksContext(losses=None, metrics=None)
 # ----------------------------------------------------------------
 
 
-def add_loss(name: str, value: np.ndarray) -> None:
+def add_loss(name: str, value: Scalar) -> None:
     """
     A hook that lets you define a loss within a [`module`][elegy.module.Module].
 
@@ -59,7 +59,7 @@ def add_loss(name: str, value: np.ndarray) -> None:
         LOCAL.losses[name] = value
 
 
-def add_metric(name: str, value: np.ndarray) -> None:
+def add_metric(name: str, value: Scalar) -> None:
     """
     A hook that lets you define a metric within a [`module`][elegy.module.Module].
 
