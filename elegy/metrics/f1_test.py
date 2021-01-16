@@ -47,7 +47,7 @@ class F1Test(TestCase):
         )
 
     #
-    def test_cummulative(self):
+    def test_cumulative(self):
         em = elegy.metrics.F1(threshold=0.3)
         tm = tfa.metrics.F1Score(2, average="micro", threshold=0.3)
 

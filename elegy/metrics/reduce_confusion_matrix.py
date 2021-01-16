@@ -109,7 +109,7 @@ class ReduceConfusionMatrix(Metric):
             sample_weight: Optional weighting of each example. Defaults to 1.
 
         Returns:
-            Array with the cummulative reduce metric.
+            Array with the cumulative reduce metric.
         """
 
         cm_metric = self.add_parameter(

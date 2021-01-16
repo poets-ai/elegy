@@ -82,7 +82,7 @@ And you are done! For more information check out:
 
 ## Why Jax & Elegy?
 
-Given all the well-stablished Deep Learning framework like TensorFlow + Keras or Pytorch + Pytorch-Lightning/Skorch, it is fair to ask why we need something like Jax + Elegy? Here are some of the reasons why this framework exists.
+Given all the well-established Deep Learning framework like TensorFlow + Keras or Pytorch + Pytorch-Lightning/Skorch, it is fair to ask why we need something like Jax + Elegy? Here are some of the reasons why this framework exists.
 
 #### Why Jax?
 
@@ -127,7 +127,7 @@ class Linear(elegy.Module):
 For more information checkout the **Reference API** section in the [Documentation](https://poets-ai.github.io/elegy).
 
 ## Contributing
-Deep Learning is evolving at an incredible pace, there is so much to do and so few hands. If you wish to contibute anything from a loss or metric to a new awesome feature for Elegy just open an issue or send a PR! For more information check out our [Contributing Guide](https://poets-ai.github.io/elegy/guides/contributing).
+Deep Learning is evolving at an incredible pace, there is so much to do and so few hands. If you wish to contribute anything from a loss or metric to a new awesome feature for Elegy just open an issue or send a PR! For more information check out our [Contributing Guide](https://poets-ai.github.io/elegy/guides/contributing).
 
 ## About Us
 We are some friends passionate about ML.

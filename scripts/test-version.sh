@@ -1,6 +1,6 @@
 #!/bin/bash
 # run-test - A script to run tests elegy in a container
-# can recive an optional declaring python version
+# can receive an optional declaring python version
 set -e
 
 kPYTHON_VERSIONS='^[3]\.[0-9]{1,2}$'

@@ -108,7 +108,7 @@ class Reduce(Metric):
             sample_weight: Optional weighting of each example. Defaults to 1.
 
         Returns:
-            Array with the cummulative reduce.
+            Array with the cumulative reduce.
         """
         total = self.add_parameter(
             "total",
