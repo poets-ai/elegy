@@ -48,6 +48,12 @@ class LinenModule(GeneralizedModule):
         args: tp.Tuple,
         kwargs: tp.Dict[str, tp.Any],
     ) -> OutputStates:
+        if params is None:
+            params = FrozenDict()
+
+        if states is None:
+            states = FrozenDict()
+
         def apply_fn(*args, **kwargs):
             variables = dict(params=params, **states)
             return self.module.apply(

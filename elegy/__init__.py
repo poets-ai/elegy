@@ -9,7 +9,7 @@ from . import (
     losses,
     metrics,
     model,
-    module,
+    # module,
     nets,
     nn,
     regularizers,

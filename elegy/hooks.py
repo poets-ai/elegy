@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from elegy.types import Logs
 import functools
 import threading
 import typing as tp
@@ -12,17 +13,17 @@ from elegy.utils import Protocol
 
 
 class HooksContext(Protocol):
-    losses: tp.Optional[tp.Dict[str, np.ndarray]]
-    metrics: tp.Optional[tp.Dict[str, np.ndarray]]
+    losses: tp.Optional[Logs]
+    metrics: tp.Optional[Logs]
 
 
 @dataclass
 class _HooksContext(threading.local):
-    losses: tp.Optional[tp.Dict[str, np.ndarray]]
-    metrics: tp.Optional[tp.Dict[str, np.ndarray]]
+    losses: tp.Optional[Logs]
+    metrics: tp.Optional[Logs]
 
 
-LOCAL: HooksContext = _HooksContext(losses={}, metrics={})
+LOCAL: HooksContext = _HooksContext(losses=None, metrics=None)
 
 
 # ----------------------------------------------------------------
@@ -80,11 +81,11 @@ def add_metric(name: str, value: np.ndarray) -> None:
     LOCAL.metrics[name] = value
 
 
-def get_losses() -> tp.Optional[tp.Dict[str, np.ndarray]]:
+def get_losses() -> tp.Optional[Logs]:
     return LOCAL.losses
 
 
-def get_metrics() -> tp.Optional[tp.Dict[str, np.ndarray]]:
+def get_metrics() -> tp.Optional[Logs]:
     return LOCAL.metrics
 
 

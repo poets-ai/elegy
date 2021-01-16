@@ -11,9 +11,10 @@ from elegy.model.generalized_module.generalized_module import (
 )
 from elegy.model.model_base import ModelBase
 from elegy.model.model_core import Prediction, States
-from elegy.types import RNG, Evaluation, OutputStates, Prediction
+from elegy.types import Logs, RNG, Evaluation, OutputStates, Prediction, Scalar
 from elegy.utils import Mode, RNGSeq
 from flax import linen
+from elegy import hooks
 
 LossModules = tp.Union[tp.Callable, tp.List, tp.Dict, None]
 MetricsModules = tp.Union[tp.Callable, tp.List, tp.Dict, None]
@@ -173,7 +174,7 @@ class Model(ModelBase):
         ...
 
 
-class Metrics(GeneralizedModule):
+class Metrics:
     metrics: tp.Dict[str, GeneralizedModule]
 
     def __init__(self, modules: tp.Any):
@@ -188,67 +189,146 @@ class Metrics(GeneralizedModule):
             for path, module in utils.flatten_names(modules)
         }
 
-    @classmethod
-    def new(cls, metrics: tp.Any) -> "Metrics":
-        return cls(metrics)
+    def calculate_metrics(
+        self, callback: tp.Callable[[str, GeneralizedModule], OutputStates]
+    ) -> tp.Tuple[Logs, tp.Any]:
 
-    def init(
-        self, rng: utils.RNGSeq, args: tp.Tuple, kwargs: tp.Dict[str, tp.Any]
-    ) -> OutputStates:
+        states = {}
+        logs = hooks.get_metrics()
 
-        preds_out = {}
-        params_out = {}
-        states_out = {}
+        if logs is None:
+            logs = {}
 
         for name, module in self.metrics.items():
-            y_pred, params_out[name], states_out[name] = module.init(rng, args, kwargs)
+            y_pred, _, states[name] = callback(name, module)
 
             names = set()
             for inner_name, inner_value in utils.flatten_names(y_pred):
                 inner_name = f"{name}/{inner_name}" if inner_name else name
                 inner_name = utils.get_unique_name(names, inner_name)
 
-                preds_out[inner_name] = inner_value
+                logs[inner_name] = inner_value
 
-        return OutputStates(preds_out, params_out, states_out)
+        return logs, states
+
+    def init(self, rng: utils.RNGSeq) -> tp.Callable[..., tp.Tuple[Logs, tp.Any]]:
+        return lambda *args, **kwargs: self.calculate_metrics(
+            lambda name, module: module.init(rng, args, kwargs)
+        )
 
     def apply(
-        self,
-        params: tp.Any,
-        states: tp.Any,
-        rng: utils.RNGSeq,
-        args: tp.Tuple,
-        kwargs: tp.Dict[str, tp.Any],
-    ) -> OutputStates:
-        assert isinstance(params, dict)
-        assert isinstance(states, dict)
+        self, states: tp.Any, rng: utils.RNGSeq
+    ) -> tp.Callable[..., tp.Tuple[Logs, tp.Any]]:
+        assert states is not None
 
-        preds_out = {}
-        params_out = {}
-        states_out = {}
+        return lambda *args, **kwargs: self.calculate_metrics(
+            lambda name, module: module.apply(None, states[name], rng, args, kwargs)
+        )
 
-        for name, module in self.metrics.items():
-            preds_out[name], params_out[name], states_out[name] = module.apply(
-                params[name], states[name], rng, args, kwargs
-            )
 
-        return OutputStates(preds_out, params_out, states_out)
+class Losses:
+    losses: tp.Dict[str, tp.Callable]
+    loss_metrics: "LossMetrics"
+
+    def __init__(self, losses: tp.Any):
+        names: tp.Set[str] = set()
+
+        def get_name(loss_fn, path):
+            name = utils.get_name(loss_fn)
+            return f"{path}/{name}" if path else name
+
+        self.losses = {
+            utils.get_unique_name(names, get_name(loss_fn, path)): loss_fn
+            for path, loss_fn in utils.flatten_names(losses)
+        }
+        self.loss_metrics = LossMetrics()
+
+    def calculate_losses(self, *args, **kwargs) -> Logs:
+        logs: Logs = {}
+
+        for name, loss_fn in self.losses.items():
+            losses = utils.inject_dependencies(loss_fn)(*args, **kwargs)
+
+            names = set()
+            for inner_name, loss in utils.flatten_names(losses):
+                inner_name = f"{name}/{inner_name}" if inner_name else name
+                inner_name = utils.get_unique_name(names, inner_name)
+
+                logs[inner_name] = loss
+
+        return logs
+
+    def init(
+        self, rng: utils.RNGSeq
+    ) -> tp.Callable[..., tp.Tuple[Scalar, Logs, tp.Any]]:
+        def _lambda(*args, **kwargs):
+            module_logs = self.calculate_losses(*args, **kwargs)
+            hooks_logs = hooks.get_losses()
+
+            if hooks_logs is None:
+                hooks_logs = {}
+
+            loss = sum(hooks_logs.values(), 0.0) + sum(module_logs.values(), 0.0)
+            loss_logs = dict(loss=loss)
+
+            logs = utils.merge_with_unique_names(loss_logs, hooks_logs, module_logs)
+
+            names = set()
+            logs = {
+                utils.get_unique_name(names, f"{name}_loss")
+                if "loss" not in name
+                else utils.get_unique_name(names, name): value
+                for name, value in logs.items()
+            }
+
+            logs, states = self.loss_metrics.init_with_output(rng.next(), logs)
+
+            return loss, logs, states
+
+        return _lambda
+
+    def apply(self, states: tp.Any) -> tp.Callable[..., tp.Tuple[Scalar, Logs, tp.Any]]:
+        def _lambda(*args, **kwargs):
+            module_logs = self.calculate_losses(*args, **kwargs)
+            hooks_logs = hooks.get_losses()
+
+            if hooks_logs is None:
+                hooks_logs = {}
+
+            loss = sum(hooks_logs.values(), 0.0) + sum(module_logs.values(), 0.0)
+            loss_logs = dict(loss=loss)
+
+            logs = utils.merge_with_unique_names(loss_logs, hooks_logs, module_logs)
+
+            names = set()
+            logs = {
+                utils.get_unique_name(names, f"{name}_loss")
+                if "loss" not in name
+                else utils.get_unique_name(names, name): value
+                for name, value in logs.items()
+            }
+
+            logs, states_ = self.loss_metrics.apply(states, logs, mutable=True)
+
+            return loss, logs, states_
+
+        return _lambda
 
 
 class LossMetrics(linen.Module):
     @linen.compact
-    def __call__(self, values):
+    def __call__(self, logs):
 
-        initialized = self.has_variable("metrics", "count")
+        initialized = self.has_variable("batch_stats", "count")
 
         vcount = self.variable(
-            "metrics", "count", lambda: jnp.array(0, dtype=jnp.int32)
+            "batch_stats", "count", lambda: jnp.array(0, dtype=jnp.int32)
         )
         vtotal = self.variable(
-            "metrics", "total", lambda: jax.tree_map(jnp.zeros_like, values)
+            "batch_stats", "total", lambda: jax.tree_map(jnp.zeros_like, logs)
         )
 
-        total = jax.tree_multimap(lambda a, b: a + b, vtotal.value, values)
+        total = jax.tree_multimap(lambda a, b: a + b, vtotal.value, logs)
         count = vcount.value + 1
 
         if initialized:

@@ -29,6 +29,7 @@ PRNGKey = np.ndarray
 Parameters = tp.Dict[str, tp.Any]
 Logs = tp.Dict[str, tp.Union[np.ndarray, float]]
 RNG = tp.Union[utils.RNGSeq, np.ndarray]
+Scalar = tp.Union[np.ndarray, float]
 
 
 class OutputStates(tp.NamedTuple):

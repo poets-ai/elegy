@@ -61,11 +61,9 @@ class ModelBasicTest(unittest.TestCase):
 
         rng = elegy.RNGSeq(42)
         x = np.random.uniform(size=(5, 7, 7))
-        preds, params, states = metrics.init(rng, args=(x,), kwargs=dict(training=True))
+        preds, states = metrics.init(rng)(x, training=True)
 
-        preds, params, states = metrics.apply(
-            params, states, rng, args=(x,), kwargs=dict(training=True)
-        )
+        preds, states = metrics.apply(states, rng)(x, training=True)
 
         assert len(metrics.metrics) == 3
         assert "a/b/mlp" in metrics.metrics
@@ -77,15 +75,35 @@ class ModelBasicTest(unittest.TestCase):
         assert "a/b/mlp_1" in preds
         assert "a/c/mlp" in preds
 
-        assert len(params) == 3
-        assert "a/b/mlp" in params
-        assert "a/b/mlp_1" in params
-        assert "a/c/mlp" in params
-
         assert len(states) == 3
         assert "a/b/mlp" in states
         assert "a/b/mlp_1" in states
         assert "a/c/mlp" in states
+
+    def test_losses(self):
+        def loss_fn():
+            return 3.0
+
+        losses = elegy.model.model.Losses(dict(a=dict(b=[loss_fn, loss_fn], c=loss_fn)))
+
+        rng = elegy.RNGSeq(42)
+        hooks_losses = dict(x=0.3, y=4.5)
+        logs, logs, states = losses.init(rng)()
+
+        loss, logs, states = losses.apply(states)()
+
+        assert loss == 9
+
+        assert len(losses.losses) == 3
+        assert "a/b/loss_fn" in losses.losses
+        assert "a/b/loss_fn_1" in losses.losses
+        assert "a/c/loss_fn" in losses.losses
+
+        assert len(logs) == 4
+        assert "loss" in logs
+        assert "a/b/loss_fn" in logs
+        assert "a/b/loss_fn_1" in logs
+        assert "a/c/loss_fn" in logs
 
 
 class ModelTest(unittest.TestCase):

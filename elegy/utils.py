@@ -262,3 +262,29 @@ def get_unique_name(
 
     names.add(name)
     return name
+
+
+def merge_with_unique_names(
+    a: tp.Dict[str, tp.Any],
+    *rest: tp.Dict[str, tp.Any],
+) -> tp.Dict[str, tp.Any]:
+
+    a = a.copy()
+
+    for b in rest:
+        a = _merge_with_unique_names(a, b)
+
+    return a
+
+
+def _merge_with_unique_names(
+    a: tp.Dict[str, tp.Any],
+    b: tp.Dict[str, tp.Any],
+) -> tp.Dict[str, tp.Any]:
+    names = set()
+    output = dict(a)
+
+    for name, value in b.items():
+        output[get_unique_name(names, name)] = value
+
+    return output
