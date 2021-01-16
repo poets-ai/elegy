@@ -13,9 +13,7 @@ class LinenModule(GeneralizedModule):
     def __init__(self, module: nn.Module):
         self.module = module
 
-    def init(
-        self, rng: utils.RNGSeq, args: tp.Tuple, kwargs: tp.Dict[str, tp.Any]
-    ) -> tp.Callable[..., OutputStates]:
+    def init(self, rng: utils.RNGSeq) -> tp.Callable[..., OutputStates]:
         def _lambda(*args, **kwargs):
             def init_fn(*args, **kwargs):
                 return self.module.init_with_output(rng.next(), *args, **kwargs)
