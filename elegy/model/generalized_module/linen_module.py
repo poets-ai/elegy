@@ -13,72 +13,72 @@ class LinenModule(GeneralizedModule):
     def __init__(self, module: nn.Module):
         self.module = module
 
-    @classmethod
-    def new(cls, module: nn.Module) -> GeneralizedModule:
-        return cls(module)
-
     def init(
         self, rng: utils.RNGSeq, args: tp.Tuple, kwargs: tp.Dict[str, tp.Any]
-    ) -> OutputStates:
-        def init_fn(*args, **kwargs):
-            return self.module.init_with_output(rng.next(), *args, **kwargs)
+    ) -> tp.Callable[..., OutputStates]:
+        def _lambda(*args, **kwargs):
+            def init_fn(*args, **kwargs):
+                return self.module.init_with_output(rng.next(), *args, **kwargs)
 
-        y_pred, variables = utils.inject_dependencies(
-            init_fn,
-            signature_f=self.module.__call__,
-        )(
-            *args,
-            **kwargs,
-        )
-        assert isinstance(variables, FrozenDict)
+            y_pred, variables = utils.inject_dependencies(
+                init_fn,
+                signature_f=self.module.__call__,
+            )(
+                *args,
+                **kwargs,
+            )
+            assert isinstance(variables, FrozenDict)
 
-        net_states, net_params = (
-            variables.pop("params")
-            if "params" in variables
-            else (variables, FrozenDict())
-        )
+            net_states, net_params = (
+                variables.pop("params")
+                if "params" in variables
+                else (variables, FrozenDict())
+            )
 
-        return OutputStates(y_pred, net_params, net_states)
+            return OutputStates(y_pred, net_params, net_states)
+
+        return _lambda
 
     def apply(
         self,
         params: tp.Any,
         states: tp.Any,
         rng: utils.RNGSeq,
-        args: tp.Tuple,
-        kwargs: tp.Dict[str, tp.Any],
-    ) -> OutputStates:
+    ) -> tp.Callable[..., OutputStates]:
         if params is None:
             params = FrozenDict()
 
         if states is None:
             states = FrozenDict()
 
-        def apply_fn(*args, **kwargs):
-            variables = dict(params=params, **states)
-            return self.module.apply(
-                variables,
+        def _lambda(*args, **kwargs):
+            def apply_fn(*args, **kwargs):
+                variables = dict(params=params, **states)
+                return self.module.apply(
+                    variables,
+                    *args,
+                    rngs={"params": rng.next()},
+                    mutable=True,
+                    **kwargs,
+                )
+
+            y_pred, variables = utils.inject_dependencies(
+                apply_fn,
+                signature_f=self.module.__call__,
+            )(
                 *args,
-                rngs={"params": rng.next()},
-                mutable=True,
                 **kwargs,
             )
 
-        y_pred, variables = utils.inject_dependencies(
-            apply_fn,
-            signature_f=self.module.__call__,
-        )(
-            *args,
-            **kwargs,
-        )
+            net_states, net_params = (
+                variables.pop("params")
+                if "params" in variables
+                else (variables, FrozenDict())
+            )
 
-        net_states, net_params = (
-            variables.pop("params")
-            if "params" in variables
-            else (variables, FrozenDict())
-        )
+            return OutputStates(y_pred, net_params, net_states)
 
-        return OutputStates(y_pred, net_params, net_states)
+        return _lambda
 
 
 register_module(nn.Module, LinenModule)

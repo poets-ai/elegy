@@ -13,15 +13,12 @@ class ModuleExists(Exception):
 
 
 class GeneralizedModule(ABC):
-    @classmethod
     @abstractmethod
-    def new(cls, module: tp.Any) -> "GeneralizedModule":
+    def __init__(cls, module: tp.Any) -> "GeneralizedModule":
         ...
 
     @abstractmethod
-    def init(
-        self, rng: utils.RNGSeq, args: tp.Tuple, kwargs: tp.Dict[str, tp.Any]
-    ) -> OutputStates:
+    def init(self, rng: utils.RNGSeq) -> tp.Callable[..., OutputStates]:
         ...
 
     @abstractmethod
@@ -30,9 +27,7 @@ class GeneralizedModule(ABC):
         params: tp.Any,
         states: tp.Any,
         rng: utils.RNGSeq,
-        args: tp.Tuple,
-        kwargs: tp.Dict[str, tp.Any],
-    ) -> OutputStates:
+    ) -> tp.Callable[..., OutputStates]:
         ...
 
 
@@ -60,4 +55,4 @@ def generalize(module: tp.Any) -> GeneralizedModule:
     if generalized_module_type is None:
         raise ValueError(f"No GeneralizedModule found for {module}.")
 
-    return generalized_module_type.new(module)
+    return generalized_module_type(module)

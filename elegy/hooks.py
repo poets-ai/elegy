@@ -54,7 +54,7 @@ def add_loss(name: str, value: Scalar) -> None:
         name += "_loss"
 
     if name in LOCAL.losses:
-        LOCAL.losses[name] += value
+        LOCAL.losses[name] = LOCAL.losses[name] + value
     else:
         LOCAL.losses[name] = value
 

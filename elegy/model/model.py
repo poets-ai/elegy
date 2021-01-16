@@ -91,9 +91,7 @@ class Model(ModelBase):
             self.states.net_params,
             self.states.net_states,
             self.states.rng,
-            args,
-            kwargs,
-        )
+        )(*args, **kwargs)
 
     def init(
         self,
@@ -108,7 +106,7 @@ class Model(ModelBase):
         training = mode == Mode.train
 
         x_args, x_kwargs = utils.get_input_args(x, training=training)
-        y_pred, net_params, net_states = self.module.init(rng, x_args, x_kwargs)
+        y_pred, net_params, net_states = self.module.init(rng)(*x_args, **x_kwargs)
 
         states = States(net_states=net_states, net_params=net_params, rng=rng)
 
@@ -152,12 +150,8 @@ class Model(ModelBase):
 
         x_args, x_kwargs = utils.get_input_args(x, training=False)
 
-        y_pred, net_params, net_states = self.module.apply(
-            net_params,
-            net_states,
-            rng,
-            x_args,
-            x_kwargs,
+        y_pred, net_params, net_states = self.module.apply(net_params, net_states, rng)(
+            *x_args, **x_kwargs
         )
 
         return Prediction(
@@ -268,7 +262,7 @@ class Metrics:
 
     def init(self, rng: utils.RNGSeq) -> tp.Callable[..., tp.Tuple[Logs, tp.Any]]:
         return lambda *args, **kwargs: self.calculate_metrics(
-            lambda name, module: module.init(rng, args, kwargs)
+            lambda name, module: module.init(rng)(*args, **kwargs)
         )
 
     def apply(
@@ -277,7 +271,7 @@ class Metrics:
         assert states is not None
 
         return lambda *args, **kwargs: self.calculate_metrics(
-            lambda name, module: module.apply(None, states[name], rng, args, kwargs)
+            lambda name, module: module.apply(None, states[name], rng)(*args, **kwargs)
         )
 
 
