@@ -14,7 +14,7 @@ class ModuleExists(Exception):
 
 class GeneralizedModule(ABC):
     @abstractmethod
-    def __init__(cls, module: tp.Any) -> "GeneralizedModule":
+    def __init__(self, module: tp.Any):
         ...
 
     @abstractmethod
@@ -31,14 +31,20 @@ class GeneralizedModule(ABC):
         ...
 
 
-def register_module(module_type, generalized_module_type: tp.Type[GeneralizedModule]):
+def register_module_for(
+    module_type,
+) -> tp.Callable[[tp.Type[GeneralizedModule]], tp.Any]:
+    def wrapper(generalized_module_type: tp.Type[GeneralizedModule]) -> tp.Any:
+        if module_type in REGISTRY:
+            raise ModuleExists(
+                f"Type {module_type} already registered with {REGISTRY[module_type]}"
+            )
 
-    if module_type in REGISTRY:
-        raise ModuleExists(
-            f"Type {module_type} already registered with {REGISTRY[module_type]}"
-        )
+        REGISTRY[module_type] = generalized_module_type
 
-    REGISTRY[module_type] = generalized_module_type
+        return generalized_module_type
+
+    return wrapper
 
 
 def generalize(module: tp.Any) -> GeneralizedModule:

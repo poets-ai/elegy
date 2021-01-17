@@ -6,9 +6,10 @@ from elegy.types import OutputStates
 from flax import linen
 from flax.core import FrozenDict, freeze, unfreeze
 
-from .generalized_module import GeneralizedModule, register_module
+from .generalized_module import GeneralizedModule, register_module_for
 
 
+@register_module_for(nn.Module)
 class LinenModule(GeneralizedModule):
     def __init__(self, module: nn.Module):
         self.module = module
@@ -77,6 +78,3 @@ class LinenModule(GeneralizedModule):
             return OutputStates(y_pred, net_params, net_states)
 
         return _lambda
-
-
-register_module(nn.Module, LinenModule)

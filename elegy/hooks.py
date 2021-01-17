@@ -102,8 +102,8 @@ def get_total_loss() -> np.ndarray:
 
 class TransformtOutput(tp.NamedTuple):
     output: tp.Any
-    losses: tp.Dict[str, np.ndarray]
-    metrics: tp.Dict[str, np.ndarray]
+    losses: tp.Optional[Logs]
+    metrics: tp.Optional[Logs]
 
 
 def hooks_aware(jax_f):
@@ -119,9 +119,6 @@ def hooks_aware(jax_f):
             output = f(*args)
             losses = get_losses()
             metrics = get_metrics()
-
-            assert isinstance(losses, tp.Dict)
-            assert isinstance(metrics, tp.Dict)
 
             return TransformtOutput(
                 output=output,
@@ -160,9 +157,6 @@ def value_and_grad(
         output = f(*args)
         losses = get_losses()
         metrics = get_metrics()
-
-        assert isinstance(losses, tp.Dict)
-        assert isinstance(metrics, tp.Dict)
 
         loss = output[0] if isinstance(output, tuple) else output
 

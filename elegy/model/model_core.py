@@ -73,6 +73,7 @@ class ModelCore(ABC):
         x: tp.Any,
         net_states: tp.Any,
         rng: tp.Any,
+        training: bool,
     ) -> Prediction:
         ...
 
@@ -87,7 +88,7 @@ class ModelCore(ABC):
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         rng: tp.Any,
-        training: bool = False,
+        training: bool,
     ) -> Evaluation:
         ...
 
@@ -103,6 +104,7 @@ class ModelCore(ABC):
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         rng: tp.Any,
+        training: bool,
     ) -> Training:
         ...
 
@@ -194,6 +196,7 @@ class ModelCore(ABC):
             x=x,
             net_states=net_states,
             rng=rng,
+            training=False,
         )
 
     def predict_on_batch(
@@ -252,6 +255,7 @@ class ModelCore(ABC):
             sample_weight=sample_weight,
             class_weight=class_weight,
             rng=rng,
+            training=False,
         )
 
     def test_on_batch(
@@ -334,6 +338,7 @@ class ModelCore(ABC):
             optimizer_states=optimizer_states,
             sample_weight=sample_weight,
             class_weight=class_weight,
+            training=True,
         )
 
     def train_on_batch(
