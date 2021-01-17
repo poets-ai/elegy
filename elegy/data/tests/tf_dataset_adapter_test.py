@@ -28,8 +28,7 @@ class ArrayDataAdapterTest(TestCase):
                 batch_x, x[i * batch_size : (i + 1) * batch_size]
             )
 
-        data_adapter.get_size() == x.shape[0]
-        data_adapter.partial_batch_size == 0
+        assert data_adapter.get_size() * batch_size == x.shape[0]
 
     def test_only_x_repeat(self):
         batch_size = 10
@@ -43,7 +42,9 @@ class ArrayDataAdapterTest(TestCase):
         dataset_length = x.shape[0]
         num_steps = math.ceil(dataset_length / batch_size) * epochs
 
-        data_adapter = TFDatasetAdapter(dataset, steps=num_steps)
+        data_adapter = TFDatasetAdapter(
+            dataset, steps=math.ceil(dataset_length / batch_size)
+        )
 
         iterator_fn = data_adapter.get_dataset()
         for i, batch in zip(range(num_steps), iterator_fn()):
@@ -59,8 +60,7 @@ class ArrayDataAdapterTest(TestCase):
                 ],
             )
 
-        data_adapter.get_size() == x.shape[0]
-        data_adapter.partial_batch_size == 0
+        assert data_adapter.get_size() * batch_size == x.shape[0]
         assert i == num_steps - 1
 
     def test_error(self):

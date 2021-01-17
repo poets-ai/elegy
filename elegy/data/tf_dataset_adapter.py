@@ -36,7 +36,16 @@ class TFDatasetAdapter(DataAdapter):
         return parse_tf_data_gen
 
     def get_size(self):
-        return  # Inferred in `DataHandler`.
+        size = cardinality.cardinality(self._dataset)
+        if size == cardinality.INFINITE and self._user_steps is None:
+            raise ValueError(
+                "When passing an infinitely repeating tf.data.Dataset, you "
+                "must specify how many steps to draw."
+            )
+        elif size == cardinality.INFINITE:
+            return self._user_steps
+        elif size >= 0:
+            return size.numpy().item()
 
     def batch_size(self):
         return None
