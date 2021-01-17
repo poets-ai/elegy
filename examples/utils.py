@@ -2,12 +2,13 @@ import matplotlib.pyplot as plt
 
 
 def plot_history(history):
-    keys = list(history.history.keys())
-    n_plots = len([key for key in keys if not key.startswith("val_")])
+    keys = [key for key in history.history.keys() if not key.startswith("val_")]
+    n_plots = len(keys)
+
     figure = plt.figure(figsize=(14, 24))
 
     # for i, key in enumerate(list(history.history.keys())[:n_plots]):
-    for i, key in enumerate(history.history.keys()):
+    for i, key in enumerate(keys):
         if key == "size":
             continue
 

@@ -338,6 +338,7 @@ class ModelCore(ABC):
             optimizer_states=optimizer_states,
             sample_weight=sample_weight,
             class_weight=class_weight,
+            rng=rng,
             training=True,
         )
 
@@ -409,6 +410,24 @@ class ModelCore(ABC):
 
         return logs
 
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self._jit_functions()
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+
+        # remove states
+        del d["states"]
+        del d["initial_states"]
+
+        # remove jitted functions
+        del d["pred_step_internal_jit"]
+        del d["test_step_internal_jit"]
+        del d["train_step_internal_jit"]
+
+        return d
+
     def save(
         self,
         path: tp.Union[str, Path],
@@ -451,12 +470,6 @@ class ModelCore(ABC):
         with open(path / "initial_states.pkl", "wb") as f:
             cloudpickle.dump(self.initial_states, f)
 
-        states = self.states
-        initial_states = self.initial_states
-
-        del self.states
-        del self.initial_states
-
         path = path / "model.pkl"
 
         with open(path, "wb") as f:
@@ -466,9 +479,6 @@ class ModelCore(ABC):
                 print(
                     f"Error occurred saving the model object at {path}\nContinuing...."
                 )
-
-        self.states = states
-        self.initial_states = initial_states
 
     def load(
         self,

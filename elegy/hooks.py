@@ -82,11 +82,11 @@ def add_metric(name: str, value: Scalar) -> None:
 
 
 def get_losses() -> tp.Optional[Logs]:
-    return LOCAL.losses
+    return LOCAL.losses.copy() if LOCAL.losses is not None else None
 
 
 def get_metrics() -> tp.Optional[Logs]:
-    return LOCAL.metrics
+    return LOCAL.metrics.copy() if LOCAL.metrics is not None else None
 
 
 def get_total_loss() -> np.ndarray:
@@ -168,18 +168,18 @@ def value_and_grad(
 
     kwargs["has_aux"] = True
     transform_fn: tp.Callable[
-        ..., tp.Tuple[np.ndarray, TransformtOutput]
+        ..., tp.Tuple[tp.Tuple[np.ndarray, TransformtOutput], tp.Any]
     ] = jax.value_and_grad(_transform_fn, **kwargs)
 
     @functools.wraps(f)
     def wrapper(*args):
 
-        _, (output, losses, metrics) = transform_fn(*args)
+        (loss, (output, losses, metrics)), grads = transform_fn(*args)
 
         LOCAL.losses = losses
         LOCAL.metrics = metrics
 
-        return output
+        return output, grads
 
     return wrapper
 

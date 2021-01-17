@@ -1,6 +1,7 @@
 import typing as tp
 
 import jax
+from jax._src.random import t
 import jax.numpy as jnp
 import numpy as np
 import optax
@@ -159,6 +160,8 @@ class Model(ModelBase):
         else:
             optimizer_states = None
 
+        states = states.update(optimizer_states=optimizer_states)
+
         return states
 
     def pred_step(
@@ -311,7 +314,10 @@ class Metrics:
             return f"{path}/{name}" if path else name
 
         self.metrics = {
-            utils.get_unique_name(names, get_name(module, path)): generalize(module)
+            utils.get_unique_name(names, get_name(module, path)): generalize(
+                module,
+                callable_default=AvgMetric,
+            )
             for path, module in utils.flatten_names(modules)
         }
 
@@ -350,6 +356,45 @@ class Metrics:
         return lambda *args, **kwargs: self.calculate_metrics(
             lambda name, module: module.apply(None, states[name], rng)(*args, **kwargs)
         )
+
+
+class AvgMetric(GeneralizedModule):
+    def __init__(self, f: tp.Callable):
+        self.f = f
+
+    def init(self, rng: utils.RNGSeq) -> tp.Callable[..., OutputStates]:
+        def _lambda(*args, **kwargs) -> OutputStates:
+            preds = utils.inject_dependencies(self.f)(*args, **kwargs)
+            n = 0
+            total = jax.tree_map(lambda x: jnp.zeros_like(x), preds)
+            return OutputStates(
+                preds=preds,
+                params=None,
+                states=(n, total),
+            )
+
+        return _lambda
+
+    def apply(
+        self,
+        params: tp.Any,
+        states: tp.Any,
+        rng: utils.RNGSeq,
+    ) -> tp.Callable[..., OutputStates]:
+        def _lambda(*args, **kwargs) -> OutputStates:
+            n, total = states
+            preds = utils.inject_dependencies(self.f)(*args, **kwargs)
+
+            n += 1
+            total = jax.tree_multimap(lambda a, b: a + b, preds, total)
+            preds = jax.tree_map(lambda total: total / n, total)
+            return OutputStates(
+                preds=preds,
+                params=None,
+                states=(n, total),
+            )
+
+        return _lambda
 
 
 class Losses:

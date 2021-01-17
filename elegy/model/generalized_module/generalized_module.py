@@ -71,7 +71,10 @@ def register_module_for(
     return wrapper
 
 
-def generalize(module: tp.Any) -> GeneralizedModule:
+def generalize(
+    module: tp.Any,
+    callable_default: tp.Type[GeneralizedModule] = CallableModule,
+) -> GeneralizedModule:
 
     if isinstance(module, GeneralizedModule):
         return module
@@ -84,7 +87,7 @@ def generalize(module: tp.Any) -> GeneralizedModule:
 
     if generalized_module_type is None:
         if isinstance(module, tp.Callable):
-            return CallableModule(module)
+            return callable_default(module)
         else:
             raise ValueError(f"No GeneralizedModule found for {module}.")
 

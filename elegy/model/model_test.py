@@ -64,20 +64,20 @@ class ModelBasicTest(unittest.TestCase):
             return jnp.mean(jnp.abs(y_true - y_pred))
 
         model = elegy.Model(
-            module=MLP.new(n1=3, n2=1),
-            loss=mse,
-            metrics=mae,
+            module=nn.Dense(1),
+            loss=dict(a=mse),
+            metrics=dict(b=mae),
             optimizer=optax.adamw(1e-3),
             run_eagerly=True,
         )
 
-        X = np.random.uniform(size=(5, 7, 7))
-        y = np.random.uniform(size=(5, 10))
+        X = np.random.uniform(size=(5, 10))
+        y = np.random.uniform(size=(5, 1))
 
         logs = model.evaluate(x=X, y=y)
 
-        assert "mse_loss" in logs
-        assert "mae" in logs
+        assert "a/mse_loss" in logs
+        assert "b/mae" in logs
         assert "loss" in logs
 
     def test_metrics(self):
