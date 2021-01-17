@@ -125,6 +125,10 @@ def get_function_args(f) -> tp.List[inspect.Parameter]:
 
 def get_input_args(
     x: tp.Union[np.ndarray, jnp.ndarray, tp.Dict[str, tp.Any], tp.Tuple],
+    *,
+    net_params,
+    net_states,
+    rng,
     training: bool,
 ) -> tp.Tuple[tp.Tuple, tp.Dict[str, tp.Any]]:
 
@@ -138,7 +142,12 @@ def get_input_args(
         args = (x,)
         kwargs = {}
 
-    apply_kwargs = dict(training=training)
+    apply_kwargs = dict(
+        training=training,
+        net_params=net_params,
+        net_states=net_states,
+        rng=rng,
+    )
     apply_kwargs.update(kwargs)
 
     return args, apply_kwargs

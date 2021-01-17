@@ -36,11 +36,20 @@ class CallableModule(GeneralizedModule):
         self.f = f
 
     def init(self, rng: utils.RNGSeq) -> tp.Callable[..., OutputStates]:
-        return lambda *args, **kwargs: OutputStates(
-            preds=utils.inject_dependencies(self.f)(*args, **kwargs),
-            params=None,
-            states=None,
-        )
+        def lambda_(*args, **kwargs) -> OutputStates:
+
+            output = utils.inject_dependencies(self.f)(*args, **kwargs)
+
+            if isinstance(output, OutputStates):
+                return output
+            else:
+                return OutputStates(
+                    preds=output,
+                    params=None,
+                    states=None,
+                )
+
+        return lambda_
 
     def apply(
         self,
@@ -48,11 +57,20 @@ class CallableModule(GeneralizedModule):
         states: tp.Any,
         rng: utils.RNGSeq,
     ) -> tp.Callable[..., OutputStates]:
-        return lambda *args, **kwargs: OutputStates(
-            preds=utils.inject_dependencies(self.f)(*args, **kwargs),
-            params=None,
-            states=None,
-        )
+        def lambda_(*args, **kwargs) -> OutputStates:
+
+            output = utils.inject_dependencies(self.f)(*args, **kwargs)
+
+            if isinstance(output, OutputStates):
+                return output
+            else:
+                return OutputStates(
+                    preds=output,
+                    params=None,
+                    states=None,
+                )
+
+        return lambda_
 
 
 def register_module_for(

@@ -12,7 +12,7 @@ import typer
 from utils import plot_history
 
 
-class Model(elegy.ModelBase):
+class Model(elegy.Model):
     # request parameters by name via depending injection.
     # possible: mode, x, y_true, sample_weight, class_weight
     def init(self, x):

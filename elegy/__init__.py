@@ -1,32 +1,24 @@
 __version__ = "0.3.0"
 
 
+from elegy.hooks import add_loss, add_metric, hooks_context
+from elegy.types import Evaluation, OutputStates, Prediction, States, Training
+
+from . import losses  # module,
 from . import (
     callbacks,
     data,
     hooks,
     initializers,
-    losses,
     metrics,
     model,
-    # module,
     nets,
     nn,
     regularizers,
 )
 from .losses import Loss
 from .metrics import Metric
-from .model import (
-    Evaluation,
-    Logs,
-    Metrics,
-    Model,
-    Optimizer,
-    Prediction,
-    States,
-    Training,
-)
-from elegy.hooks import hooks_context, add_loss, add_metric
+from .model import Logs, Metrics, Model, Optimizer
 from .model.model_base import ModelBase
 from .utils import Mode, RNGSeq
 

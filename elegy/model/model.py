@@ -120,7 +120,13 @@ class Model(ModelBase):
 
         rng = RNGSeq(self.seed)
 
-        x_args, x_kwargs = utils.get_input_args(x, training=True)
+        x_args, x_kwargs = utils.get_input_args(
+            x,
+            net_params=None,
+            net_states=None,
+            rng=rng,
+            training=True,
+        )
         y_pred, net_params, net_states = self.module.init(rng)(*x_args, **x_kwargs)
 
         states = States(net_states=net_states, net_params=net_params, rng=rng)
@@ -132,10 +138,12 @@ class Model(ModelBase):
             x=x,
             y_true=y_true,
             y_pred=y_pred,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
             net_params=net_params,
             net_states=net_states,
+            metrics_states=None,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            rng=rng,
             training=True,
         )
 
@@ -143,10 +151,12 @@ class Model(ModelBase):
             x=x,
             y_true=y_true,
             y_pred=y_pred,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
             net_params=net_params,
             net_states=net_states,
+            metrics_states=None,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            rng=rng,
             training=True,
         )
 
@@ -175,7 +185,13 @@ class Model(ModelBase):
         assert isinstance(rng, RNGSeq)
         assert self.module is not None
 
-        x_args, x_kwargs = utils.get_input_args(x, training=training)
+        x_args, x_kwargs = utils.get_input_args(
+            x,
+            net_params=net_params,
+            net_states=net_states,
+            rng=rng,
+            training=training,
+        )
 
         y_pred, net_params, net_states = self.module.apply(net_params, net_states, rng)(
             *x_args, **x_kwargs
@@ -200,6 +216,7 @@ class Model(ModelBase):
     ) -> Evaluation:
         assert isinstance(rng, RNGSeq)
 
+        # TODO: add DI
         y_pred, states = self.pred_step(
             net_params=net_params,
             x=x,
@@ -216,22 +233,26 @@ class Model(ModelBase):
             x=x,
             y_true=y_true,
             y_pred=y_pred,
+            net_params=net_params,
+            net_states=net_states,
+            metrics_states=metrics_states,
             sample_weight=sample_weight,
             class_weight=class_weight,
+            rng=rng,
             training=False,
-            parameters=net_params,
-            states=net_states,
         )
 
         loss, loss_logs, loss_states = self.loss.apply(loss_states)(
             x=x,
             y_true=y_true,
             y_pred=y_pred,
+            net_params=net_params,
+            net_states=net_states,
+            metrics_states=metrics_states,
             sample_weight=sample_weight,
             class_weight=class_weight,
+            rng=rng,
             training=False,
-            parameters=net_params,
-            states=net_states,
         )
 
         logs = utils.merge_with_unique_names(metrics_logs, loss_logs)
@@ -264,14 +285,15 @@ class Model(ModelBase):
             class_weight,
             rng,
         ):
+            # TODO: add DI
             loss, logs, states = self.test_step(
                 net_params=net_params,
                 x=x,
                 y_true=y_true,
-                net_states=net_states,
-                metrics_states=metrics_states,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
+                net_states=net_states,
+                metrics_states=metrics_states,
                 rng=rng,
                 training=True,
             )
@@ -344,18 +366,31 @@ class Metrics:
         return logs, states
 
     def init(self, rng: utils.RNGSeq) -> tp.Callable[..., tp.Tuple[Logs, tp.Any]]:
-        return lambda *args, **kwargs: self.calculate_metrics(
-            lambda name, module: module.init(rng)(*args, **kwargs)
-        )
+        def lambda_(*args, **kwargs):
+            def callback(name, module):
+                kwargs_ = kwargs.copy()
+                kwargs_["metrics_states"] = None
+                return module.init(rng)(*args, **kwargs_)
+
+            return self.calculate_metrics(callback)
+
+        return lambda_
 
     def apply(
         self, states: tp.Any, rng: utils.RNGSeq
     ) -> tp.Callable[..., tp.Tuple[Logs, tp.Any]]:
         assert states is not None
 
-        return lambda *args, **kwargs: self.calculate_metrics(
-            lambda name, module: module.apply(None, states[name], rng)(*args, **kwargs)
-        )
+        def lambda_(*args, **kwargs):
+            def callback(name, module):
+                kwargs_ = kwargs.copy()
+                kwargs_["metrics_states"] = states[name]
+
+                return module.apply(None, states[name], rng)(*args, **kwargs_)
+
+            return self.calculate_metrics(callback)
+
+        return lambda_
 
 
 class AvgMetric(GeneralizedModule):
@@ -364,7 +399,12 @@ class AvgMetric(GeneralizedModule):
 
     def init(self, rng: utils.RNGSeq) -> tp.Callable[..., OutputStates]:
         def _lambda(*args, **kwargs) -> OutputStates:
+
             preds = utils.inject_dependencies(self.f)(*args, **kwargs)
+
+            if isinstance(preds, OutputStates):
+                return preds
+
             n = 0
             total = jax.tree_map(lambda x: jnp.zeros_like(x), preds)
             return OutputStates(
@@ -382,9 +422,13 @@ class AvgMetric(GeneralizedModule):
         rng: utils.RNGSeq,
     ) -> tp.Callable[..., OutputStates]:
         def _lambda(*args, **kwargs) -> OutputStates:
-            n, total = states
+
             preds = utils.inject_dependencies(self.f)(*args, **kwargs)
 
+            if isinstance(preds, OutputStates):
+                return preds
+
+            n, total = states
             n += 1
             total = jax.tree_multimap(lambda a, b: a + b, preds, total)
             preds = jax.tree_map(lambda total: total / n, total)
@@ -558,23 +602,23 @@ class Optimizer:
         self.optax_optimizer = optimizer
         self.lr_schedule = lr_schedule
 
-    def call(self, parameters, grads):
+    def call(self, net_params, grads):
 
         optimizer_state = self.add_parameter(
             "optimizer_state",
-            initializer=lambda *args: self.optax_optimizer.init(parameters),
+            initializer=lambda *args: self.optax_optimizer.init(net_params),
             trainable=False,
         )
 
         updates, optimizer_state = self.optax_optimizer.update(
-            grads, optimizer_state, parameters
+            grads, optimizer_state, net_params
         )
 
-        parameters = optax.apply_updates(parameters, updates)
+        net_params = optax.apply_updates(net_params, updates)
 
         self.update_parameter("optimizer_state", optimizer_state)
 
-        return parameters
+        return net_params
 
     def get_effective_learning_rate(self) -> tp.Optional[float]:
         """Returns the learning rate scaled by schedule(s) that will be used for the next training step"""
