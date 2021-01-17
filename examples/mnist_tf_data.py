@@ -80,6 +80,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
     batch_size = 64
     train_size = 60000
     test_size = 10000
+    # Create tf datasets
     train_dataset = (
         tf.data.Dataset.from_tensor_slices((X_train, y_train))
         .shuffle(train_size)
