@@ -10,12 +10,20 @@ from .generator_adapter import GeneratorDataAdapter
 from .list_adapter import ListsOfScalarsDataAdapter
 from .dataset import DataLoaderAdapter
 
+try:
+    from .tf_dataset_adapter import TFDatasetAdapter
+except ImportError:
+    TFDatasetAdapter = None
+
 ALL_ADAPTER_CLS = [
     ArrayDataAdapter,
     GeneratorDataAdapter,
     ListsOfScalarsDataAdapter,
     DataLoaderAdapter,
 ]
+
+if TFDatasetAdapter is not None:
+    ALL_ADAPTER_CLS.append(TFDatasetAdapter)
 
 
 class DataHandler(object):
@@ -73,6 +81,8 @@ class DataHandler(object):
         try:
             yield
             # context.async_wait()
+        # from tensorflow.python.framework import errors
+        # except (StopIteration, errors.OutOfRangeError):
         except (StopIteration):
             if (
                 self._adapter.get_size() is None
@@ -125,6 +135,24 @@ class DataHandler(object):
         adapter_steps = self._adapter.get_size()
         if adapter_steps is not None:
             return adapter_steps
+
+        # if (
+        #     ds_context.get_strategy().extended._in_multi_worker_mode()
+        #     and (  # pylint: disable=protected-access
+        #         dataset.options().experimental_distribute.auto_shard_policy
+        #         != distribute_options.AutoShardPolicy.OFF
+        #     )
+        # ):
+        #     # If the dataset would be auto-sharded, we should not infer a local
+        #     # steps_per_epoch due to the possible inbalanced sharding between workers.
+        #     raise ValueError(
+        #         "When dataset is sharded across workers, please "
+        #         "specify a reasonable `steps_per_epoch` such that all "
+        #         "workers will train the same number of steps and each "
+        #         "step can get data from dataset without EOF. This is "
+        #         "required for allreduce to succeed. We will handle the "
+        #         "last partial batch in the future."
+        #     )
 
         raise ValueError(
             "When passing a generator, you " "must specify how many steps to draw."
