@@ -6,7 +6,7 @@ from tensorflow.python.data.experimental.ops import cardinality
 from tensorflow.python.data.ops import dataset_ops
 
 from .data_adapter import DataAdapter
-from .utils import is_none_or_empty, map_structure
+from .utils import is_none_or_empty, map_structure, flatten
 
 
 class TFDatasetAdapter(DataAdapter):
@@ -26,6 +26,12 @@ class TFDatasetAdapter(DataAdapter):
         self._user_steps = steps
 
         self._validate_args(y, sample_weights, steps)
+
+        # Since we have to know the dtype of the dataset when we build the
+        # dataset, we have to look at a batch to infer the structure.
+        peek = next(iter(x))
+
+        self._first_batch_size = int(list(flatten(peek))[0].shape[0])
 
     def get_dataset(self):
         def parse_tf_data_gen():
@@ -47,14 +53,20 @@ class TFDatasetAdapter(DataAdapter):
         elif size >= 0:
             return size.numpy().item()
 
+    @property
     def batch_size(self):
-        return None
+        return self.representative_batch_size
+
+    @property
+    def representative_batch_size(self):
+        return self._first_batch_size
+
+    @property
+    def partial_batch_size(self):
+        return
 
     def has_partial_batch(self):
         return False
-
-    def partial_batch_size(self):
-        return None
 
     def should_recreate_iterator(self):
         # If user doesn't supply `steps`, or if they supply `steps` that
@@ -81,6 +93,6 @@ class TFDatasetAdapter(DataAdapter):
         size = cardinality.cardinality(self._dataset).numpy()
         if size == cardinality.INFINITE and steps is None:
             raise ValueError(
-                "When providing an infinite dataset, you must specify "
+                "When providing an infinitely repeating tf.data.Dataset, you must specify "
                 "the number of steps to run."
             )

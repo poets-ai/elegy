@@ -29,6 +29,7 @@ class ArrayDataAdapterTest(TestCase):
             )
 
         assert data_adapter.get_size() * batch_size == x.shape[0]
+        assert data_adapter.batch_size == batch_size
 
     def test_only_x_repeat(self):
         batch_size = 10
@@ -61,6 +62,7 @@ class ArrayDataAdapterTest(TestCase):
             )
 
         assert data_adapter.get_size() * batch_size == x.shape[0]
+        assert data_adapter.batch_size == batch_size
         assert i == num_steps - 1
 
     def test_error(self):
