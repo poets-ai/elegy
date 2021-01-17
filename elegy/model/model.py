@@ -1,24 +1,24 @@
-from elegy.model.generalized_optimizer.generalized_optimizer import (
-    GeneralizedOptimizer,
-    generalize_optimizer,
-)
 import typing as tp
 
 import jax
 import jax.numpy as jnp
 import numpy as np
 import optax
-from elegy import utils
+from elegy import hooks, utils
 from elegy.model.generalized_module.generalized_module import (
     GeneralizedModule,
     generalize,
 )
+from elegy.model.generalized_optimizer.generalized_optimizer import (
+    GeneralizedOptimizer,
+    generalize_optimizer,
+)
 from elegy.model.model_base import ModelBase
 from elegy.model.model_core import Prediction, States
 from elegy.types import (
-    Logs,
     RNG,
     Evaluation,
+    Logs,
     OutputStates,
     Prediction,
     Scalar,
@@ -26,10 +26,6 @@ from elegy.types import (
 )
 from elegy.utils import Mode, RNGSeq
 from flax import linen
-from elegy import hooks
-
-LossModules = tp.Union[tp.Callable, tp.List, tp.Dict, None]
-MetricsModules = tp.Union[tp.Callable, tp.List, tp.Dict, None]
 
 
 class Model(ModelBase):
@@ -42,8 +38,8 @@ class Model(ModelBase):
     def __init__(
         self,
         module: tp.Any = None,
-        loss: LossModules = None,
-        metrics: MetricsModules = None,
+        loss: tp.Any = None,
+        metrics: tp.Any = None,
         optimizer: tp.Any = None,
         seed: int = 42,
         **kwargs,
@@ -211,7 +207,9 @@ class Model(ModelBase):
 
         metrics_states, loss_states = metrics_states
 
-        metrics_logs, metrics_states = self.metrics.apply(rng, metrics_states)(
+        metrics_logs, metrics_states = self.metrics.apply(
+            states=metrics_states, rng=rng
+        )(
             x=x,
             y_true=y_true,
             y_pred=y_pred,

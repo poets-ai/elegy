@@ -31,6 +31,30 @@ class GeneralizedModule(ABC):
         ...
 
 
+class CallableModule(GeneralizedModule):
+    def __init__(self, f: tp.Callable):
+        self.f = f
+
+    def init(self, rng: utils.RNGSeq) -> tp.Callable[..., OutputStates]:
+        return lambda *args, **kwargs: OutputStates(
+            preds=utils.inject_dependencies(self.f)(*args, **kwargs),
+            params=None,
+            states=None,
+        )
+
+    def apply(
+        self,
+        params: tp.Any,
+        states: tp.Any,
+        rng: utils.RNGSeq,
+    ) -> tp.Callable[..., OutputStates]:
+        return lambda *args, **kwargs: OutputStates(
+            preds=utils.inject_dependencies(self.f)(*args, **kwargs),
+            params=None,
+            states=None,
+        )
+
+
 def register_module_for(
     module_type,
 ) -> tp.Callable[[tp.Type[GeneralizedModule]], tp.Any]:
@@ -59,6 +83,9 @@ def generalize(module: tp.Any) -> GeneralizedModule:
             generalized_module_type = REGISTRY[module_type]
 
     if generalized_module_type is None:
-        raise ValueError(f"No GeneralizedModule found for {module}.")
+        if isinstance(module, tp.Callable):
+            return CallableModule(module)
+        else:
+            raise ValueError(f"No GeneralizedModule found for {module}.")
 
     return generalized_module_type(module)

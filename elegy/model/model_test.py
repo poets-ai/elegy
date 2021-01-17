@@ -39,7 +39,7 @@ class ModelBasicTest(unittest.TestCase):
     def test_predict(self):
 
         model = elegy.Model(
-            module=MLP.new(n1=3, n2=1),
+            module=nn.Dense(1),
             # loss=[
             #     elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
             #     elegy.regularizers.GlobalL2(l=1e-4),
@@ -49,12 +49,36 @@ class ModelBasicTest(unittest.TestCase):
             run_eagerly=True,
         )
 
-        X = np.random.uniform(size=(5, 7, 7))
-        y = np.random.randint(10, size=(5,))
+        X = np.random.uniform(size=(5, 10))
+        y = np.random.randint(10, size=(5, 1))
 
         y_pred = model.predict(x=X)
 
         assert y_pred.shape == (5, 10)
+
+    def test_evaluate(self):
+        def mse(y_true, y_pred):
+            return jnp.mean((y_true - y_pred) ** 2)
+
+        def mae(y_true, y_pred):
+            return jnp.mean(jnp.abs(y_true - y_pred))
+
+        model = elegy.Model(
+            module=MLP.new(n1=3, n2=1),
+            loss=mse,
+            metrics=mae,
+            optimizer=optax.adamw(1e-3),
+            run_eagerly=True,
+        )
+
+        X = np.random.uniform(size=(5, 7, 7))
+        y = np.random.uniform(size=(5, 10))
+
+        logs = model.evaluate(x=X, y=y)
+
+        assert "mse_loss" in logs
+        assert "mae" in logs
+        assert "loss" in logs
 
     def test_metrics(self):
         metrics = elegy.model.model.Metrics(dict(a=dict(b=[MLP(), MLP()], c=MLP())))
