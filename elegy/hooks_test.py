@@ -28,10 +28,10 @@ def test_summaries():
     assert elegy.get_summaries() is None
 
     with elegy.hooks_context():
-        elegy.add_summary(("a", 0, "b"), "c", None, 2.0)
+        elegy.add_summary(("a", 0, "b"), None, 2.0)
         summaries = elegy.get_summaries()
 
-    assert summaries[("a", 0, "b", "c")] == (None, 2.0)
+    assert summaries[0] == (("a", 0, "b"), None, 2.0)
 
 
 def test_jit():
@@ -41,7 +41,7 @@ def test_jit():
         x = 2.0 * x
         elegy.add_loss("x", x)
         elegy.add_metric("x", x + 1)
-        elegy.add_summary(("a", 0, "b"), "c", jax.nn.relu, x + 2)
+        elegy.add_summary(("a", 0, "b"), jax.nn.relu, x + 2)
         return x
 
     f_ = elegy.jit(f)
@@ -54,7 +54,7 @@ def test_jit():
 
     assert losses["x_loss"] == 6
     assert metrics["x"] == 7
-    assert summaries[("a", 0, "b", "c")] == (jax.nn.relu, 8)
+    assert summaries[0] == (("a", 0, "b"), jax.nn.relu, 8)
 
 
 def test_value_and_grad():
@@ -64,7 +64,7 @@ def test_value_and_grad():
         x = 2.0 * x
         elegy.add_loss("x", x)
         elegy.add_metric("x", x + 1)
-        elegy.add_summary(("a", 0, "b"), "c", jax.nn.relu, x + 2)
+        elegy.add_summary(("a", 0, "b"), jax.nn.relu, x + 2)
         return x
 
     f_ = elegy.value_and_grad(f)
@@ -78,4 +78,4 @@ def test_value_and_grad():
     assert grads == 2.0
     assert losses["x_loss"] == 6
     assert metrics["x"] == 7
-    assert summaries[("a", 0, "b", "c")] == (jax.nn.relu, 8)
+    assert summaries[0] == (("a", 0, "b"), jax.nn.relu, 8)

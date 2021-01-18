@@ -232,3 +232,11 @@ def _merge_with_unique_names(
         output[get_unique_name(names, name)] = value
 
     return output
+
+
+def _normalize_tree(tree):
+    """
+    col <- key <- col <- key  ==> col <- key
+    """
+
+    

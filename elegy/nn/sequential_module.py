@@ -5,7 +5,7 @@ import haiku as hk
 import numpy as np
 
 from elegy import utils
-from elegy.module import Module, LOCAL, LocalContext, add_summary, get_module
+from elegy.module import Module, LOCAL, LocalContext, add_summary
 from elegy import module
 
 

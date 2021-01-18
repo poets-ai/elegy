@@ -86,9 +86,8 @@ def add_metric(name: str, value: Scalar) -> None:
 
 def add_summary(
     path: Path,
-    name: str,
     module: tp.Any,
-    value: Scalar,
+    value: tp.Any,
 ) -> None:
     """
     A hook that lets you define a summary in the current module. Its primary
@@ -112,12 +111,7 @@ def add_summary(
     if LOCAL.summaries is None:
         return
 
-    names = {"/".join(map(str, path)) for path in LOCAL.summaries.keys()}
-    name = utils.get_unique_name(names, name)
-
-    path += (name,)
-
-    LOCAL.summaries[path] = (module, value)
+    LOCAL.summaries.append((path, module, value))
 
 
 def get_losses() -> tp.Optional[Logs]:
@@ -160,7 +154,7 @@ def hooks_aware(jax_f):
             summaries = get_summaries()
 
             summary_values = (
-                [value for module, value in summaries.values()]
+                [value for path, module, value in summaries]
                 if summaries is not None
                 else None
             )
@@ -179,22 +173,76 @@ def hooks_aware(jax_f):
 
             output, losses, metrics, summary_values = transform_fn(*args)
 
-            summaries = {}
-
-            if summary_values is not None:
-                for key, value in zip(LOCAL.summaries.keys(), summary_values):
-                    module = LOCAL.summaries[key][0]
-                    summaries[key] = (module, value)
-
             LOCAL.losses = losses
             LOCAL.metrics = metrics
-            LOCAL.summaries = summaries
+
+            if summary_values is not None and LOCAL.summaries is not None:
+                LOCAL.summaries = [
+                    (path, module, value)
+                    for (path, module, _), value in zip(LOCAL.summaries, summary_values)
+                ]
+            else:
+                assert summary_values is None and LOCAL.summaries is None
 
             return output
 
         return wrapper
 
     return _jax_transform
+
+
+def value_and_grad(
+    f,
+    **kwargs,
+) -> tp.Callable[..., tp.Tuple[tp.Any, tp.Any]]:
+    def _transform_fn(
+        *args,
+    ) -> tp.Tuple[np.ndarray, TransformtOutput]:
+
+        output = f(*args)
+
+        losses = get_losses()
+        metrics = get_metrics()
+        summaries = get_summaries()
+        summary_values = (
+            [value for path, module, value in summaries]
+            if summaries is not None
+            else None
+        )
+
+        loss = output[0] if isinstance(output, tuple) else output
+
+        return loss, TransformtOutput(
+            output=output,
+            losses=losses,
+            metrics=metrics,
+            summary_values=summary_values,
+        )
+
+    kwargs["has_aux"] = True
+    transform_fn: tp.Callable[
+        ..., tp.Tuple[tp.Tuple[np.ndarray, TransformtOutput], tp.Any]
+    ] = jax.value_and_grad(_transform_fn, **kwargs)
+
+    @functools.wraps(f)
+    def wrapper(*args):
+
+        (loss, (output, losses, metrics, summary_values)), grads = transform_fn(*args)
+
+        LOCAL.losses = losses
+        LOCAL.metrics = metrics
+
+        if summary_values is not None and LOCAL.summaries is not None:
+            LOCAL.summaries = [
+                (path, module, value)
+                for (path, module, _), value in zip(LOCAL.summaries, summary_values)
+            ]
+        else:
+            assert summary_values is None and LOCAL.summaries is None
+
+        return output, grads
+
+    return wrapper
 
 
 jit = hooks_aware(jax.jit)
@@ -219,72 +267,17 @@ jit = hooks_aware(jax.jit)
 # pmap = hooks_aware(jax.pmap)
 # soft_pmap = hooks_aware(jax.soft_pmap)
 
-
-def value_and_grad(
-    f,
-    **kwargs,
-) -> tp.Callable[..., tp.Tuple[tp.Any, tp.Any]]:
-    def _transform_fn(
-        *args,
-    ) -> tp.Tuple[np.ndarray, TransformtOutput]:
-
-        output = f(*args)
-
-        losses = get_losses()
-        metrics = get_metrics()
-        summaries = get_summaries()
-        summary_values = (
-            [value for module, value in summaries.values()]
-            if summaries is not None
-            else None
-        )
-
-        loss = output[0] if isinstance(output, tuple) else output
-
-        return loss, TransformtOutput(
-            output=output,
-            losses=losses,
-            metrics=metrics,
-            summary_values=summary_values,
-        )
-
-    kwargs["has_aux"] = True
-    transform_fn: tp.Callable[
-        ..., tp.Tuple[tp.Tuple[np.ndarray, TransformtOutput], tp.Any]
-    ] = jax.value_and_grad(_transform_fn, **kwargs)
-
-    @functools.wraps(f)
-    def wrapper(*args):
-
-        (loss, (output, losses, metrics, summary_values)), grads = transform_fn(*args)
-
-        summaries = {}
-
-        if summary_values is not None:
-            for key, value in zip(LOCAL.summaries.keys(), summary_values):
-                module = LOCAL.summaries[key][0]
-                summaries[key] = (module, value)
-
-        LOCAL.losses = losses
-        LOCAL.metrics = metrics
-        LOCAL.summaries = summaries
-
-        return output, grads
-
-    return wrapper
-
-
 # ----------------------------------------------------------------
 # contexts
 # ----------------------------------------------------------------
 
 
-def hooks_context() -> tp.ContextManager[None]:
-    return _hooks_context()
+def hooks_context(summaries: bool = False) -> tp.ContextManager[None]:
+    return _hooks_context(summaries=summaries)
 
 
 @contextmanager
-def _hooks_context() -> tp.Iterator[None]:
+def _hooks_context(summaries: bool = False) -> tp.Iterator[None]:
 
     prev_losses = LOCAL.losses
     prev_metrics = LOCAL.metrics
@@ -292,7 +285,7 @@ def _hooks_context() -> tp.Iterator[None]:
 
     LOCAL.losses = {}
     LOCAL.metrics = {}
-    LOCAL.summaries = {}
+    LOCAL.summaries = [] if summaries else None
 
     try:
         yield

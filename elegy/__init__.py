@@ -32,6 +32,8 @@ from .model import Logs, Metrics, Model, Optimizer
 from .model.model_base import ModelBase
 from .types import Mode, RNGSeq, Uninitialized
 
+from .module import Module
+
 # from .module import (
 #     RNG,
 #     LocalContext,

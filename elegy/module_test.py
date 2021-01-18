@@ -8,7 +8,7 @@ import numpy as np
 
 
 class ModuleTest(TestCase):
-    class Linear:
+    class Linear(elegy.Module):
         def __init__(self, units):
             super().__init__()
             self.units = units
@@ -16,7 +16,6 @@ class ModuleTest(TestCase):
         def call(self, x):
             w = self.add_parameter("w", [x.shape[-1], self.units], initializer=jnp.ones)
             b = self.add_parameter("b", [self.units], initializer=jnp.ones)
-
             n = self.add_parameter(
                 "n", [], dtype=jnp.int32, initializer=jnp.zeros, trainable=False
             )
