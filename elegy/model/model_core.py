@@ -17,6 +17,7 @@ from elegy import hooks, module, utils
 from elegy.losses.loss import Loss
 from elegy.metrics.metric import Metric
 from elegy.types import (
+    Backprop,
     Evaluation,
     Logs,
     Prediction,
@@ -101,6 +102,22 @@ class ModelCore(ABC):
         training: bool,
         states: States,
     ) -> Evaluation:
+        ...
+
+    @abstractmethod
+    def grad_step(
+        self,
+        net_params: tp.Any,
+        x: tp.Any,
+        y_true: tp.Any,
+        net_states: tp.Any,
+        metrics_states: tp.Any,
+        sample_weight: tp.Optional[np.ndarray],
+        class_weight: tp.Optional[np.ndarray],
+        rng: tp.Any,
+        training: bool,
+        states: States,
+    ) -> Backprop:
         ...
 
     @abstractmethod
@@ -311,6 +328,28 @@ class ModelCore(ABC):
         self.states = self.states.merge(state_updates)
 
         return logs
+
+    def grad_step_internal(
+        self,
+        states: States,
+        x: tp.Any,
+        y_true: tp.Any,
+        sample_weight: tp.Optional[np.ndarray],
+        class_weight: tp.Optional[np.ndarray],
+        training: bool,
+    ) -> Backprop:
+        return utils.inject_dependencies(self.grad_step)(
+            net_params=states.net_params,
+            x=x,
+            y_true=y_true,
+            net_states=states.net_states,
+            metrics_states=states.metrics_states,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            rng=states.rng,
+            training=training,
+            states=states,
+        )
 
     def train_step_internal(
         self,

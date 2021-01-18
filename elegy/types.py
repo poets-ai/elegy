@@ -99,6 +99,7 @@ PadFnOrFns = tp.Union[PadFn, tp.Sequence[PadFn]]
 PRNGKey = np.ndarray
 Parameters = tp.Dict[str, tp.Any]
 Logs = tp.Dict[str, tp.Union[np.ndarray, float]]
+Grads = tp.Any
 RNG = tp.Union[RNGSeq, np.ndarray]
 Scalar = tp.Union[np.ndarray, float]
 
@@ -199,6 +200,13 @@ class Evaluation(tp.NamedTuple):
     loss: Scalar
     logs: Logs
     states: States
+
+
+class Backprop(tp.NamedTuple):
+    loss: Scalar
+    logs: Logs
+    states: States
+    grads: Grads
 
 
 class Training(tp.NamedTuple):

@@ -2,7 +2,7 @@ import typing as tp
 from abc import ABC, abstractmethod
 
 from elegy import utils
-from elegy.types import OutputStates, RNGSeq
+from elegy.types import OutputStates, RNGSeq, UNINITIALIZED
 import typing as tp
 
 REGISTRY: tp.Dict[tp.Type, tp.Type["GeneralizedModule"]] = {}
@@ -45,8 +45,8 @@ class CallableModule(GeneralizedModule):
             else:
                 return OutputStates(
                     preds=output,
-                    params=None,
-                    states=None,
+                    params=UNINITIALIZED,
+                    states=UNINITIALIZED,
                 )
 
         return lambda_
@@ -66,8 +66,8 @@ class CallableModule(GeneralizedModule):
             else:
                 return OutputStates(
                     preds=output,
-                    params=None,
-                    states=None,
+                    params=UNINITIALIZED,
+                    states=UNINITIALIZED,
                 )
 
         return lambda_

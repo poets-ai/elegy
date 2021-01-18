@@ -20,7 +20,8 @@ from .losses import Loss
 from .metrics import Metric
 from .model import Logs, Metrics, Model, Optimizer
 from .model.model_base import ModelBase
-from .types import Mode, RNGSeq
+from .types import Mode, RNGSeq, Uninitialized
+
 
 # from .module import (
 #     RNG,

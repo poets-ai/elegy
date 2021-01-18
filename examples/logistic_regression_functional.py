@@ -48,7 +48,7 @@ def main(
     def logistic_regression(x: jnp.ndarray, net_params, rng) -> elegy.OutputStates:
         x = x.reshape((x.shape[0], -1)) / 255
 
-        if net_params is None:
+        if isinstance(net_params, elegy.Uninitialized):
             w = jax.random.uniform(rng.next(), shape=[x.shape[-1], 10])
             b = jax.random.uniform(rng.next(), shape=[10])
         else:

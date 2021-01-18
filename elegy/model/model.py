@@ -16,6 +16,7 @@ from elegy.model.generalized_optimizer.generalized_optimizer import (
 from elegy.model.model_base import ModelBase
 from elegy.model.model_core import Prediction, States
 from elegy.types import (
+    Backprop,
     MissingOptimizer,
     RNG,
     Evaluation,
@@ -25,6 +26,7 @@ from elegy.types import (
     Prediction,
     Scalar,
     Training,
+    UNINITIALIZED,
 )
 from elegy.types import Mode, RNGSeq, Uninitialized
 from flax import linen
@@ -143,7 +145,7 @@ class Model(ModelBase):
             y_pred=y_pred,
             net_params=net_params,
             net_states=net_states,
-            metrics_states=None,
+            metrics_states=UNINITIALIZED,
             sample_weight=sample_weight,
             class_weight=class_weight,
             rng=states.rng,
@@ -156,7 +158,7 @@ class Model(ModelBase):
             y_pred=y_pred,
             net_params=net_params,
             net_states=net_states,
-            metrics_states=None,
+            metrics_states=UNINITIALIZED,
             sample_weight=sample_weight,
             class_weight=class_weight,
             rng=states.rng,
@@ -269,6 +271,46 @@ class Model(ModelBase):
 
         return Evaluation(loss, logs, states)
 
+    def grad_step(
+        self,
+        x: tp.Any,
+        y_true: tp.Any,
+        sample_weight: tp.Optional[np.ndarray],
+        class_weight: tp.Optional[np.ndarray],
+        training: bool,
+        states: States,
+    ) -> Backprop:
+        def loss_fn(
+            net_params: tp.Any,
+            states: States,
+            x: tp.Any,
+            y_true: tp.Any,
+            sample_weight: tp.Optional[np.ndarray],
+            class_weight: tp.Optional[np.ndarray],
+        ):
+            states = states.update(net_params=net_params)
+            loss, logs, states = self.test_step_internal(
+                states=states,
+                x=x,
+                y_true=y_true,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+                training=training,
+            )
+
+            return loss, (logs, states)
+
+        (loss, (logs, states)), grads = hooks.value_and_grad(loss_fn, has_aux=True)(
+            states.net_params,
+            states,
+            x,
+            y_true,
+            sample_weight,
+            class_weight,
+        )
+
+        return Backprop(loss, logs, states, grads)
+
     def train_step(
         self,
         # net_params: tp.Any,
@@ -296,35 +338,13 @@ class Model(ModelBase):
                 "but `optimizer_states` was not initialized on `init`. Please initialize optimizer."
             )
 
-        def loss_fn(
-            net_params: tp.Any,
-            states: States,
-            x: tp.Any,
-            y_true: tp.Any,
-            sample_weight: tp.Optional[np.ndarray],
-            class_weight: tp.Optional[np.ndarray],
-        ):
-            states = states.update(net_params=net_params)
-            # TODO: add DI
-            loss, logs, states = self.test_step_internal(
-                states=states,
-                x=x,
-                y_true=y_true,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                training=training,
-            )
-
-            return loss, (logs, states)
-
-        logs: Logs
-        (loss, (logs, states)), grads = hooks.value_and_grad(loss_fn, has_aux=True)(
-            states.net_params,
-            states,
-            x,
-            y_true,
-            sample_weight,
-            class_weight,
+        loss, logs, states, grads = self.grad_step_internal(
+            states=states,
+            x=x,
+            y_true=y_true,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            training=training,
         )
 
         assert isinstance(states.rng, RNGSeq)
@@ -422,7 +442,7 @@ class AvgMetric(GeneralizedModule):
             total = jax.tree_map(lambda x: jnp.zeros_like(x), preds)
             return OutputStates(
                 preds=preds,
-                params=None,
+                params=UNINITIALIZED,
                 states=(n, total),
             )
 
@@ -447,7 +467,7 @@ class AvgMetric(GeneralizedModule):
             preds = jax.tree_map(lambda total: total / n, total)
             return OutputStates(
                 preds=preds,
-                params=None,
+                params=UNINITIALIZED,
                 states=(n, total),
             )
 
