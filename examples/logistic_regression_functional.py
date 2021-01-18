@@ -45,21 +45,6 @@ def main(
     def accuracy(y_true, y_pred):
         return jnp.mean(jnp.argmax(y_pred, axis=-1) == y_true)
 
-    def accuracy(y_true, y_pred, metrics_states):
-        tps = jnp.argmax(y_pred, axis=-1) == y_true
-
-        if metrics_states is None:
-            count = 0
-            total = 0.0
-            acc = jnp.mean(tps)
-        else:
-            count, total = metrics_states
-            count += np.prod(tps.shape)
-            total += jnp.sum(tps)
-            acc = total / count
-
-        return elegy.OutputStates(acc, None, (count, total))
-
     def logistic_regression(x: jnp.ndarray, net_params, rng) -> elegy.OutputStates:
         x = x.reshape((x.shape[0], -1)) / 255
 

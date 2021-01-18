@@ -16,54 +16,46 @@ class Model(elegy.Model):
     # request parameters by name via depending injection.
     # possible: mode, x, y_true, sample_weight, class_weight
     def init(self, x):
-        d = np.prod(x.shape[1:])
-
         # friendly RNG interface: rng.next() == jax.random.split(...)
         rng = elegy.RNGSeq(42)
 
         # params
-        w = jax.random.uniform(rng.next(), shape=[d, 10], minval=-1, maxval=1)
+        w = jax.random.uniform(
+            rng.next(), shape=[np.prod(x.shape[1:]), 10], minval=-1, maxval=1
+        )
         b = jax.random.uniform(rng.next(), shape=[1], minval=-1, maxval=1)
+        net_params = (w, b)
+
+        # optimizer
+        optimizer_states = self.optimizer.init(rng, net_params)
 
         return elegy.States(
             net_params=(w, b),
+            optimizer_states=optimizer_states,
             rng=rng,
         )
 
     # request parameters by name via depending injection.
-    # possible: net_params, x, y_true, net_states, metrics_states, optimizer_states, sample_weight, class_weight, rng
-    def train_step(self, x, y_true, net_params):
-        def loss_fn(net_params, x, y_true):
-            # flatten + scale
-            x = jnp.reshape(x, (x.shape[0], -1)) / 255
+    # possible: net_params, x, y_true, net_states, metrics_states, sample_weight, class_weight, rng, states
+    def test_step(self, x, y_true, net_params, states: elegy.States):
+        # flatten + scale
+        x = jnp.reshape(x, (x.shape[0], -1)) / 255
 
-            # model
-            w, b = net_params
-            logits = jnp.dot(x, w) + b
+        # model
+        w, b = net_params
+        logits = jnp.dot(x, w) + b
 
-            # crossentropy loss
-            labels = jax.nn.one_hot(y_true, 10)
-            loss = jnp.mean(-jnp.sum(labels * jax.nn.log_softmax(logits), axis=-1))
+        # crossentropy loss
+        labels = jax.nn.one_hot(y_true, 10)
+        loss = jnp.mean(-jnp.sum(labels * jax.nn.log_softmax(logits), axis=-1))
 
-            # metrics
-            logs = dict(
-                acc=jnp.mean(jnp.argmax(logits, axis=-1) == y_true),
-                loss=loss,
-            )
-
-            return loss, logs
-
-        # train
-        grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
-
-        (loss, logs), grads = grad_fn(net_params, x, y_true)
-
-        # sgd
-        net_params = jax.tree_multimap(lambda p, g: p - 3e-4 * g, net_params, grads)
-
-        return logs, elegy.States(
-            net_params=net_params,
+        # metrics
+        logs = dict(
+            acc=jnp.mean(jnp.argmax(logits, axis=-1) == y_true),
+            loss=loss,
         )
+
+        return loss, logs, states.update(net_params=net_params)
 
 
 def main(
@@ -87,7 +79,7 @@ def main(
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
 
-    model = Model()
+    model = Model(optimizer=optax.adam(1e-3))
 
     history = model.fit(
         x=X_train,
