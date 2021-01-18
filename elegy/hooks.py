@@ -1,5 +1,6 @@
 from contextlib import contextmanager
-from elegy.types import Logs, Scalar
+from elegy.types import Logs, Path, Scalar, Summaries
+from elegy import utils
 import functools
 import threading
 import typing as tp
@@ -15,15 +16,17 @@ from elegy.types import Protocol
 class HooksContext(Protocol):
     losses: tp.Optional[Logs]
     metrics: tp.Optional[Logs]
+    summaries: tp.Optional[Summaries]
 
 
 @dataclass
 class _HooksContext(threading.local):
     losses: tp.Optional[Logs]
     metrics: tp.Optional[Logs]
+    summaries: tp.Optional[Summaries]
 
 
-LOCAL: HooksContext = _HooksContext(losses=None, metrics=None)
+LOCAL: HooksContext = _HooksContext(losses=None, metrics=None, summaries=None)
 
 
 # ----------------------------------------------------------------
@@ -77,8 +80,44 @@ def add_metric(name: str, value: Scalar) -> None:
         return
 
     # name = f"{base_name()}/{name}"
-    name = get_unique_name(set(LOCAL.metrics), name)
+    name = utils.get_unique_name(set(LOCAL.metrics), name)
     LOCAL.metrics[name] = value
+
+
+def add_summary(
+    path: Path,
+    name: str,
+    module: tp.Any,
+    value: Scalar,
+) -> None:
+    """
+    A hook that lets you define a summary in the current module. Its primary
+    use is to keep track of certain values as they flow through the network
+    so [`Model.summary`][elegy.model.model.Model.summary] can show a representation of architecture.
+
+    ```python
+    def call(self, x):
+        ...
+        y = jax.nn.relu(x)
+        elegy.add_summary("relu", y)
+        ...
+    ```
+
+    Arguments:
+        module_or_name: The name of the summary or alternatively the module that this summary will represent.
+            If a summary with the same name already exists a unique identifier will be generated.
+        value: The value for the summary.
+    """
+
+    if LOCAL.summaries is None:
+        return
+
+    names = {"/".join(map(str, path)) for path in LOCAL.summaries.keys()}
+    name = utils.get_unique_name(names, name)
+
+    path += (name,)
+
+    LOCAL.summaries[path] = (module, value)
 
 
 def get_losses() -> tp.Optional[Logs]:
@@ -89,10 +128,8 @@ def get_metrics() -> tp.Optional[Logs]:
     return LOCAL.metrics.copy() if LOCAL.metrics is not None else None
 
 
-def get_total_loss() -> np.ndarray:
-    losses = get_losses()
-    loss = sum(losses.values(), np.ndarray(0.0))
-    return loss
+def get_summaries() -> tp.Optional[Summaries]:
+    return LOCAL.summaries.copy() if LOCAL.summaries is not None else None
 
 
 # -------------------------------------------------------------
@@ -104,6 +141,7 @@ class TransformtOutput(tp.NamedTuple):
     output: tp.Any
     losses: tp.Optional[Logs]
     metrics: tp.Optional[Logs]
+    summary_values: tp.Optional[tp.List[tp.Any]]
 
 
 def hooks_aware(jax_f):
@@ -119,11 +157,19 @@ def hooks_aware(jax_f):
             output = f(*args)
             losses = get_losses()
             metrics = get_metrics()
+            summaries = get_summaries()
+
+            summary_values = (
+                [value for module, value in summaries.values()]
+                if summaries is not None
+                else None
+            )
 
             return TransformtOutput(
                 output=output,
                 losses=losses,
                 metrics=metrics,
+                summary_values=summary_values,
             )
 
         transform_fn = jax.jit(_transform_fn, **kwargs)
@@ -131,10 +177,18 @@ def hooks_aware(jax_f):
         @functools.wraps(f)
         def wrapper(*args):
 
-            output, losses, metrics = transform_fn(*args)
+            output, losses, metrics, summary_values = transform_fn(*args)
+
+            summaries = {}
+
+            if summary_values is not None:
+                for key, value in zip(LOCAL.summaries.keys(), summary_values):
+                    module = LOCAL.summaries[key][0]
+                    summaries[key] = (module, value)
 
             LOCAL.losses = losses
             LOCAL.metrics = metrics
+            LOCAL.summaries = summaries
 
             return output
 
@@ -144,6 +198,26 @@ def hooks_aware(jax_f):
 
 
 jit = hooks_aware(jax.jit)
+
+# NOTE: it is unclear if these can be implemented since they dont support `hax_aux`
+# jacrev = hooks_aware(jax.jacrev)
+# hessian = hooks_aware(jax.hessian)
+# mask = hooks_aware(jax.mask)
+# jvp = hooks_aware(jax.jvp)
+# linearize = hooks_aware(jax.linearize)
+# vjp = hooks_aware(jax.vjp)
+# linear_transpose = hooks_aware(jax.linear_transpose)
+# make_jaxpr = hooks_aware(jax.make_jaxpr)
+# defjvp_all = hooks_aware(jax.defjvp_all)
+# defjvp = hooks_aware(jax.defjvp)
+# defvjp_all = hooks_aware(jax.defvjp_all)
+# defvjp = hooks_aware(jax.defvjp)
+
+
+# NOTE: these can work but require special handling of the axis dimension
+# vmap = hooks_aware(jax.vmap)
+# pmap = hooks_aware(jax.pmap)
+# soft_pmap = hooks_aware(jax.soft_pmap)
 
 
 def value_and_grad(
@@ -155,8 +229,15 @@ def value_and_grad(
     ) -> tp.Tuple[np.ndarray, TransformtOutput]:
 
         output = f(*args)
+
         losses = get_losses()
         metrics = get_metrics()
+        summaries = get_summaries()
+        summary_values = (
+            [value for module, value in summaries.values()]
+            if summaries is not None
+            else None
+        )
 
         loss = output[0] if isinstance(output, tuple) else output
 
@@ -164,6 +245,7 @@ def value_and_grad(
             output=output,
             losses=losses,
             metrics=metrics,
+            summary_values=summary_values,
         )
 
     kwargs["has_aux"] = True
@@ -174,10 +256,18 @@ def value_and_grad(
     @functools.wraps(f)
     def wrapper(*args):
 
-        (loss, (output, losses, metrics)), grads = transform_fn(*args)
+        (loss, (output, losses, metrics, summary_values)), grads = transform_fn(*args)
+
+        summaries = {}
+
+        if summary_values is not None:
+            for key, value in zip(LOCAL.summaries.keys(), summary_values):
+                module = LOCAL.summaries[key][0]
+                summaries[key] = (module, value)
 
         LOCAL.losses = losses
         LOCAL.metrics = metrics
+        LOCAL.summaries = summaries
 
         return output, grads
 
@@ -198,32 +288,15 @@ def _hooks_context() -> tp.Iterator[None]:
 
     prev_losses = LOCAL.losses
     prev_metrics = LOCAL.metrics
+    prev_summaries = LOCAL.summaries
 
     LOCAL.losses = {}
     LOCAL.metrics = {}
+    LOCAL.summaries = {}
 
     try:
         yield
     finally:
         LOCAL.losses = prev_losses
         LOCAL.metrics = prev_metrics
-
-
-# ----------------------------------------------------------------
-# utils
-# ----------------------------------------------------------------
-
-
-def get_unique_name(
-    names: tp.Set[str],
-    name: str,
-):
-
-    if name not in names:
-        return name
-
-    i = 1
-    while f"{name}_{i}" in names:
-        i += 1
-
-    return f"{name}_{i}"
+        LOCAL.summaries = prev_summaries

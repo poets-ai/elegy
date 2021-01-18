@@ -99,9 +99,17 @@ PadFnOrFns = tp.Union[PadFn, tp.Sequence[PadFn]]
 PRNGKey = np.ndarray
 Parameters = tp.Dict[str, tp.Any]
 Logs = tp.Dict[str, tp.Union[np.ndarray, float]]
+Index = tp.Union[int, str]
+Path = tp.Tuple[Index, ...]
 Grads = tp.Any
 RNG = tp.Union[RNGSeq, np.ndarray]
 Scalar = tp.Union[np.ndarray, float]
+SummaryModule = tp.Any
+SummaryValue = tp.Any
+Summaries = tp.Dict[
+    Path,
+    tp.Tuple[tp.Optional[SummaryModule], SummaryValue],
+]
 
 
 class OutputStates(tp.NamedTuple):
