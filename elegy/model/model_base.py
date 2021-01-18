@@ -1,6 +1,7 @@
 # Implementation based on tf.keras.engine.training.py
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
+from elegy.types import MissingMethod, MissingModule
 import pickle
 import typing as tp
 from copy import copy
@@ -380,7 +381,7 @@ class ModelBase(ModelCore):
 
                     val_logs = {"val_" + name: val for name, val in val_logs.items()}
                     epoch_logs.update(val_logs)
-                except MissingMethod as e:
+                except (MissingMethod, MissingModule) as e:
                     pass
 
             callbacks.on_epoch_end(epoch, epoch_logs)
@@ -678,7 +679,3 @@ def load(path: tp.Union[str, Path]) -> ModelBase:
     model.load(path)
 
     return model
-
-
-class MissingMethod(Exception):
-    pass

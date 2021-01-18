@@ -2,7 +2,7 @@ import typing as tp
 from abc import ABC, abstractmethod
 
 from elegy import utils
-from elegy.types import OutputStates
+from elegy.types import OutputStates, RNGSeq
 import typing as tp
 
 REGISTRY: tp.Dict[tp.Type, tp.Type["GeneralizedOptimizer"]] = {}
@@ -22,7 +22,7 @@ class GeneralizedOptimizer(ABC):
         ...
 
     @abstractmethod
-    def init(self, rng: utils.RNGSeq, net_params: NetParams) -> OptimizerStates:
+    def init(self, rng: RNGSeq, net_params: NetParams) -> OptimizerStates:
         ...
 
     @abstractmethod
@@ -31,7 +31,7 @@ class GeneralizedOptimizer(ABC):
         net_params: NetParams,
         grads: Grads,
         optimizer_states: OptimizerStates,
-        rng: utils.RNGSeq,
+        rng: RNGSeq,
     ) -> tp.Tuple[NetParams, OptimizerStates]:
         ...
 

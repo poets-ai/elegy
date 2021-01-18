@@ -9,7 +9,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-from elegy.utils import Protocol
+from elegy.types import Protocol
 
 
 class HooksContext(Protocol):

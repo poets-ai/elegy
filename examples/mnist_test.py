@@ -1,4 +1,4 @@
-from elegy.utils import Mode
+from elegy.types import Mode
 from elegy.model.model_base import ModelBase
 import os
 from datetime import datetime

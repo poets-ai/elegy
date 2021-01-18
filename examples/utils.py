@@ -16,8 +16,6 @@ def plot_history(history):
 
         plt.subplot(n_plots, 1, i + 1)
         plt.plot(metric, label=f"Training {key}")
-        plt.legend(loc="lower right")
-        plt.ylabel(key)
 
         try:
             val_metric = history.history[f"val_{key}"]
@@ -26,6 +24,8 @@ def plot_history(history):
         except KeyError:
             title = f"Training {key}"
 
+        plt.legend(loc="lower right")
+        plt.ylabel(key)
         plt.title(title)
 
     plt.show()

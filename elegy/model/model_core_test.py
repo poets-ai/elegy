@@ -91,12 +91,12 @@ def test_pred_step():
             ...
 
     model = Model()
-    assert isinstance(model.states.net_states, elegy.utils.Uninitialized)
+    assert isinstance(model.states.net_states, elegy.types.Uninitialized)
 
     preds = model.predict_on_batch(x=(np.array(1.0)))
     assert preds == 1
     assert model.states.net_states == 1
-    assert isinstance(model.states.net_params, elegy.utils.Uninitialized)
+    assert isinstance(model.states.net_params, elegy.types.Uninitialized)
 
     model.run_eagerly = False
 
@@ -124,12 +124,12 @@ def test_test_step():
             ...
 
     model = Model()
-    assert isinstance(model.states.metrics_states, elegy.utils.Uninitialized)
+    assert isinstance(model.states.metrics_states, elegy.types.Uninitialized)
 
     logs = model.test_on_batch(x=(np.array(1.0)), y=(1.0,))
     assert logs["loss"] == 1
     assert model.states.metrics_states == 1
-    assert isinstance(model.states.net_params, elegy.utils.Uninitialized)
+    assert isinstance(model.states.net_params, elegy.types.Uninitialized)
 
     model.run_eagerly = False
 
@@ -156,12 +156,12 @@ def test_train_step():
             )
 
     model = Model()
-    assert isinstance(model.states.optimizer_states, elegy.utils.Uninitialized)
+    assert isinstance(model.states.optimizer_states, elegy.types.Uninitialized)
 
     logs = model.train_on_batch(x=(np.array(1.0)), y=(1.0,))
     assert logs["loss"] == 2
     assert model.states.optimizer_states == 1
-    assert isinstance(model.states.net_params, elegy.utils.Uninitialized)
+    assert isinstance(model.states.net_params, elegy.types.Uninitialized)
 
     model.run_eagerly = False
 

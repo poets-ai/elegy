@@ -16,7 +16,7 @@ from elegy.types import ArrayHolder
 from elegy import utils
 
 
-class Multimap(utils.Protocol):
+class Multimap(types.Protocol):
     def __call__(self, *args: types.np.ndarray) -> types.T:
         ...
 

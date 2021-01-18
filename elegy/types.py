@@ -1,10 +1,80 @@
-from copy import copy
+import sys
 import typing as tp
+from copy import copy
+from enum import Enum
+from functools import total_ordering
 
-import numpy as np
+import jax
 import jax.numpy as jnp
+import jax.tree_util
+import numpy as np
 
-from elegy import utils
+from elegy.frozen_dict import FrozenDict
+
+
+if sys.version_info >= (3, 8):
+    from typing import Protocol, runtime_checkable
+else:
+    from typing_extensions import Protocol, runtime_checkable
+
+EPSILON = 1e-7
+
+
+class Mode(str, Enum):
+    pred = "pred"
+    test = "test"
+    train = "train"
+
+
+class TrivialPytree:
+    def tree_flatten(self):
+        return tuple(vars(self).values()), None
+
+    @classmethod
+    def tree_unflatten(cls, _aux_data, children):
+        return cls(*children)
+
+
+class Empty:
+    pass
+
+
+class ModuleOrderError(Exception):
+    pass
+
+
+EMPTY = Empty()
+
+
+@jax.tree_util.register_pytree_node_class
+class Uninitialized:
+    def tree_flatten(self):
+        return ((), None)
+
+    @classmethod
+    def tree_unflatten(cls, aux_data, children):
+        return cls()
+
+
+UNINITIALIZED = Uninitialized()
+
+
+@jax.tree_util.register_pytree_node_class
+class RNGSeq(TrivialPytree):
+    key: jnp.ndarray
+
+    def __init__(self, key: tp.Union[int, jnp.ndarray]):
+        self.key = (
+            jax.random.PRNGKey(key) if isinstance(key, int) or key.shape == () else key
+        )
+
+    def next(self) -> jnp.ndarray:
+        self.key = jax.random.split(self.key, 1)[0]
+        return self.key
+
+    def __repr__(self) -> str:
+        return f"RNGSeq(key={self.key})"
+
 
 T = tp.TypeVar("T")
 Container = tp.Union[
@@ -29,7 +99,7 @@ PadFnOrFns = tp.Union[PadFn, tp.Sequence[PadFn]]
 PRNGKey = np.ndarray
 Parameters = tp.Dict[str, tp.Any]
 Logs = tp.Dict[str, tp.Union[np.ndarray, float]]
-RNG = tp.Union[utils.RNGSeq, np.ndarray]
+RNG = tp.Union[RNGSeq, np.ndarray]
 Scalar = tp.Union[np.ndarray, float]
 
 
@@ -40,32 +110,32 @@ class OutputStates(tp.NamedTuple):
 
 
 class States(tp.NamedTuple):
-    net_params: tp.Any = utils.UNINITIALIZED
-    net_states: tp.Any = utils.UNINITIALIZED
-    metrics_states: tp.Any = utils.UNINITIALIZED
-    optimizer_states: tp.Any = utils.UNINITIALIZED
-    rng: tp.Union[RNG, tp.Any] = utils.UNINITIALIZED
+    net_params: tp.Any = UNINITIALIZED
+    net_states: tp.Any = UNINITIALIZED
+    metrics_states: tp.Any = UNINITIALIZED
+    optimizer_states: tp.Any = UNINITIALIZED
+    rng: tp.Union[RNG, tp.Any] = UNINITIALIZED
 
     def update(
         self,
-        net_params: tp.Any = utils.UNINITIALIZED,
-        net_states: tp.Any = utils.UNINITIALIZED,
-        metrics_states: tp.Any = utils.UNINITIALIZED,
-        optimizer_states: tp.Any = utils.UNINITIALIZED,
-        rng: tp.Union[RNG, utils.Uninitialized] = utils.UNINITIALIZED,
+        net_params: tp.Any = UNINITIALIZED,
+        net_states: tp.Any = UNINITIALIZED,
+        metrics_states: tp.Any = UNINITIALIZED,
+        optimizer_states: tp.Any = UNINITIALIZED,
+        rng: tp.Union[RNG, Uninitialized] = UNINITIALIZED,
     ) -> "States":
 
         updates = {}
 
-        if not isinstance(net_params, utils.Uninitialized):
+        if not isinstance(net_params, Uninitialized):
             updates["net_params"] = net_params
-        if not isinstance(net_states, utils.Uninitialized):
+        if not isinstance(net_states, Uninitialized):
             updates["net_states"] = net_states
-        if not isinstance(metrics_states, utils.Uninitialized):
+        if not isinstance(metrics_states, Uninitialized):
             updates["metrics_states"] = metrics_states
-        if not isinstance(optimizer_states, utils.Uninitialized):
+        if not isinstance(optimizer_states, Uninitialized):
             updates["optimizer_states"] = optimizer_states
-        if not isinstance(rng, utils.Uninitialized):
+        if not isinstance(rng, Uninitialized):
             updates["rng"] = rng
 
         kwargs = {field: getattr(self, field) for field in self._fields}
@@ -77,28 +147,28 @@ class States(tp.NamedTuple):
 
         updates = {}
 
-        if isinstance(self.net_params, utils.Uninitialized) and not isinstance(
-            other.net_params, utils.Uninitialized
+        if isinstance(self.net_params, Uninitialized) and not isinstance(
+            other.net_params, Uninitialized
         ):
             updates["net_params"] = other.net_params
 
-        if isinstance(self.net_states, utils.Uninitialized) and not isinstance(
-            other.net_states, utils.Uninitialized
+        if isinstance(self.net_states, Uninitialized) and not isinstance(
+            other.net_states, Uninitialized
         ):
             updates["net_states"] = other.net_states
 
-        if isinstance(self.metrics_states, utils.Uninitialized) and not isinstance(
-            other.metrics_states, utils.Uninitialized
+        if isinstance(self.metrics_states, Uninitialized) and not isinstance(
+            other.metrics_states, Uninitialized
         ):
             updates["metrics_states"] = other.metrics_states
 
-        if isinstance(self.optimizer_states, utils.Uninitialized) and not isinstance(
-            other.optimizer_states, utils.Uninitialized
+        if isinstance(self.optimizer_states, Uninitialized) and not isinstance(
+            other.optimizer_states, Uninitialized
         ):
             updates["optimizer_states"] = other.optimizer_states
 
-        if isinstance(self.rng, utils.Uninitialized) and not isinstance(
-            other.rng, utils.Uninitialized
+        if isinstance(self.rng, Uninitialized) and not isinstance(
+            other.rng, Uninitialized
         ):
             updates["rng"] = other.rng
 
@@ -136,6 +206,18 @@ class Training(tp.NamedTuple):
     states: States
 
 
-class Initializer(utils.Protocol):
+class Initializer(Protocol):
     def __call__(self, shape: Shape, dtype: DType) -> np.ndarray:
         ...
+
+
+class MissingModule(Exception):
+    pass
+
+
+class MissingOptimizer(Exception):
+    pass
+
+
+class MissingMethod(Exception):
+    pass

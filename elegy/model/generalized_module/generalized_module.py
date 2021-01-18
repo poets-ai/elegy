@@ -2,7 +2,7 @@ import typing as tp
 from abc import ABC, abstractmethod
 
 from elegy import utils
-from elegy.types import OutputStates
+from elegy.types import OutputStates, RNGSeq
 import typing as tp
 
 REGISTRY: tp.Dict[tp.Type, tp.Type["GeneralizedModule"]] = {}
@@ -18,7 +18,7 @@ class GeneralizedModule(ABC):
         ...
 
     @abstractmethod
-    def init(self, rng: utils.RNGSeq) -> tp.Callable[..., OutputStates]:
+    def init(self, rng: RNGSeq) -> tp.Callable[..., OutputStates]:
         ...
 
     @abstractmethod
@@ -26,7 +26,7 @@ class GeneralizedModule(ABC):
         self,
         params: tp.Any,
         states: tp.Any,
-        rng: utils.RNGSeq,
+        rng: RNGSeq,
     ) -> tp.Callable[..., OutputStates]:
         ...
 
@@ -35,7 +35,7 @@ class CallableModule(GeneralizedModule):
     def __init__(self, f: tp.Callable):
         self.f = f
 
-    def init(self, rng: utils.RNGSeq) -> tp.Callable[..., OutputStates]:
+    def init(self, rng: RNGSeq) -> tp.Callable[..., OutputStates]:
         def lambda_(*args, **kwargs) -> OutputStates:
 
             output = utils.inject_dependencies(self.f)(*args, **kwargs)
@@ -55,7 +55,7 @@ class CallableModule(GeneralizedModule):
         self,
         params: tp.Any,
         states: tp.Any,
-        rng: utils.RNGSeq,
+        rng: RNGSeq,
     ) -> tp.Callable[..., OutputStates]:
         def lambda_(*args, **kwargs) -> OutputStates:
 

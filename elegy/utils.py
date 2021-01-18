@@ -1,9 +1,9 @@
+from elegy.types import States
 import functools
 import inspect
 import re
 import sys
 import typing as tp
-from enum import Enum
 from functools import total_ordering
 
 import jax
@@ -14,53 +14,6 @@ import toolz
 from deepmerge import always_merger
 
 from elegy.frozen_dict import FrozenDict
-
-if sys.version_info >= (3, 8):
-    from typing import Protocol, runtime_checkable
-else:
-    from typing_extensions import Protocol, runtime_checkable
-
-
-EPSILON = 1e-7
-
-
-class Mode(str, Enum):
-    pred = "pred"
-    test = "test"
-    train = "train"
-
-
-class TrivialPytree:
-    def tree_flatten(self):
-        return tuple(vars(self).values()), None
-
-    @classmethod
-    def tree_unflatten(cls, _aux_data, children):
-        return cls(*children)
-
-
-class Empty:
-    pass
-
-
-class ModuleOrderError(Exception):
-    pass
-
-
-EMPTY = Empty()
-
-
-@jax.tree_util.register_pytree_node_class
-class Uninitialized:
-    def tree_flatten(self):
-        return ((), None)
-
-    @classmethod
-    def tree_unflatten(cls, aux_data, children):
-        return cls()
-
-
-UNINITIALIZED = Uninitialized()
 
 
 def maybe_expand_dims(a: np.ndarray, b: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
@@ -126,9 +79,7 @@ def get_function_args(f) -> tp.List[inspect.Parameter]:
 def get_input_args(
     x: tp.Union[np.ndarray, jnp.ndarray, tp.Dict[str, tp.Any], tp.Tuple],
     *,
-    net_params,
-    net_states,
-    rng,
+    states: States,
     training: bool,
 ) -> tp.Tuple[tp.Tuple, tp.Dict[str, tp.Any]]:
 
@@ -144,9 +95,10 @@ def get_input_args(
 
     apply_kwargs = dict(
         training=training,
-        net_params=net_params,
-        net_states=net_states,
-        rng=rng,
+        net_params=states.net_params,
+        net_states=states.net_states,
+        rng=states.rng,
+        states=states,
     )
     apply_kwargs.update(kwargs)
 
@@ -220,23 +172,6 @@ def to_static(structure: tp.Any) -> tp.Any:
         return tuple(to_static(v) for v in structure)
     else:
         return structure
-
-
-@jax.tree_util.register_pytree_node_class
-class RNGSeq(TrivialPytree):
-    key: jnp.ndarray
-
-    def __init__(self, key: tp.Union[int, jnp.ndarray]):
-        self.key = (
-            jax.random.PRNGKey(key) if isinstance(key, int) or key.shape == () else key
-        )
-
-    def next(self) -> jnp.ndarray:
-        self.key = jax.random.split(self.key, 1)[0]
-        return self.key
-
-    def __repr__(self) -> str:
-        return f"RNGSeq(key={self.key})"
 
 
 def _flatten_names(

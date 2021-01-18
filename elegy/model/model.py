@@ -1,7 +1,6 @@
 import typing as tp
 
 import jax
-from jax._src.random import t
 import jax.numpy as jnp
 import numpy as np
 import optax
@@ -17,16 +16,19 @@ from elegy.model.generalized_optimizer.generalized_optimizer import (
 from elegy.model.model_base import ModelBase
 from elegy.model.model_core import Prediction, States
 from elegy.types import (
+    MissingOptimizer,
     RNG,
     Evaluation,
     Logs,
+    MissingModule,
     OutputStates,
     Prediction,
     Scalar,
     Training,
 )
-from elegy.utils import Mode, RNGSeq
+from elegy.types import Mode, RNGSeq, Uninitialized
 from flax import linen
+from jax._src.random import t
 
 
 class Model(ModelBase):
@@ -114,27 +116,28 @@ class Model(ModelBase):
         class_weight: tp.Optional[np.ndarray],
     ) -> States:
         if self.module is None:
-            raise Exception(
-                "Trying to initialie Model with no module. If you are implementing Model please override 'init'."
+            raise MissingModule(
+                "Trying run default `init` on a Model with no `module`, try overriding `init`."
             )
 
-        rng = RNGSeq(self.seed)
+        states = States(rng=RNGSeq(self.seed))
 
         x_args, x_kwargs = utils.get_input_args(
             x,
-            net_params=None,
-            net_states=None,
-            rng=rng,
+            states=states,
             training=True,
         )
-        y_pred, net_params, net_states = self.module.init(rng)(*x_args, **x_kwargs)
+        y_pred, net_params, net_states = self.module.init(states.rng)(
+            *x_args, **x_kwargs
+        )
 
-        states = States(net_states=net_states, net_params=net_params, rng=rng)
+        states = states.update(net_states=net_states, net_params=net_params)
 
         if mode == Mode.pred:
             return states
 
-        metrics_logs, metrics_states = self.metrics.init(rng)(
+        assert isinstance(states.rng, RNGSeq)
+        metrics_logs, metrics_states = self.metrics.init(states.rng)(
             x=x,
             y_true=y_true,
             y_pred=y_pred,
@@ -143,11 +146,11 @@ class Model(ModelBase):
             metrics_states=None,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            rng=rng,
+            rng=states.rng,
             training=True,
         )
 
-        loss, loss_logs, loss_logs_states = self.loss.init(rng)(
+        loss, loss_logs, loss_logs_states = self.loss.init(states.rng)(
             x=x,
             y_true=y_true,
             y_pred=y_pred,
@@ -156,17 +159,18 @@ class Model(ModelBase):
             metrics_states=None,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            rng=rng,
+            rng=states.rng,
             training=True,
         )
 
         states = states.update(metrics_states=(metrics_states, loss_logs_states))
+        assert isinstance(states.rng, RNGSeq)
 
         if mode == Mode.test:
             return states
 
         if self.optimizer is not None:
-            optimizer_states = self.optimizer.init(rng, net_params)
+            optimizer_states = self.optimizer.init(states.rng, net_params)
         else:
             optimizer_states = None
 
@@ -176,83 +180,87 @@ class Model(ModelBase):
 
     def pred_step(
         self,
-        net_params: tp.Any,
+        # net_params: tp.Any,
         x: tp.Any,
-        net_states: tp.Any,
-        rng: RNG,
+        # net_states: tp.Any,
+        # rng: RNG,
         training: bool,
+        states: States,
     ) -> Prediction:
-        assert isinstance(rng, RNGSeq)
-        assert self.module is not None
+        assert isinstance(states.rng, RNGSeq)
+
+        if self.module is None:
+            raise MissingModule(
+                "Trying run default `pred_step` on a Model with no `module`, try overriding `pred_step`."
+            )
 
         x_args, x_kwargs = utils.get_input_args(
             x,
-            net_params=net_params,
-            net_states=net_states,
-            rng=rng,
+            states=states,
             training=training,
         )
 
-        y_pred, net_params, net_states = self.module.apply(net_params, net_states, rng)(
-            *x_args, **x_kwargs
-        )
+        y_pred, net_params, net_states = self.module.apply(
+            states.net_params, states.net_states, states.rng
+        )(*x_args, **x_kwargs)
 
         return Prediction(
             pred=y_pred,
-            states=States(net_states=net_states, net_params=net_params, rng=rng),
+            states=states.update(net_states=net_states, net_params=net_params),
         )
 
     def test_step(
         self,
-        net_params: tp.Any,
+        # net_params: tp.Any,
         x: tp.Any,
         y_true: tp.Any,
-        net_states: tp.Any,
-        metrics_states: tp.Any,
+        # net_states: tp.Any,
+        # metrics_states: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        rng: RNG,
+        # rng: RNG,
         training: bool,
+        states: States,
     ) -> Evaluation:
-        assert isinstance(rng, RNGSeq)
 
         # TODO: add DI
-        y_pred, states = self.pred_step(
-            net_params=net_params,
+        y_pred, states = self.pred_step_internal(
+            states=states,
             x=x,
-            net_states=net_states,
-            rng=rng,
             training=training,
         )
+        assert isinstance(states.rng, RNGSeq)
 
-        metrics_states, loss_states = metrics_states
+        metrics_states, loss_states = states.metrics_states
 
         metrics_logs, metrics_states = self.metrics.apply(
-            states=metrics_states, rng=rng
+            states=metrics_states, rng=states.rng
         )(
             x=x,
             y_true=y_true,
             y_pred=y_pred,
-            net_params=net_params,
-            net_states=net_states,
-            metrics_states=metrics_states,
+            net_params=states.net_params,
+            net_states=states.net_states,
+            metrics_states=states.metrics_states,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            rng=rng,
+            rng=states.rng,
             training=False,
+            states=states,
         )
 
-        loss, loss_logs, loss_states = self.loss.apply(loss_states)(
+        loss, loss_logs, loss_states = self.loss.apply(states=loss_states)(
             x=x,
             y_true=y_true,
             y_pred=y_pred,
-            net_params=net_params,
-            net_states=net_states,
-            metrics_states=metrics_states,
+            net_params=states.net_params,
+            net_states=states.net_states,
+            metrics_states=states.metrics_states,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            rng=rng,
+            rng=states.rng,
             training=False,
+            states=states,
         )
 
         logs = utils.merge_with_unique_names(metrics_logs, loss_logs)
@@ -262,63 +270,67 @@ class Model(ModelBase):
 
     def train_step(
         self,
-        net_params: tp.Any,
+        # net_params: tp.Any,
         x: tp.Any,
         y_true: tp.Any,
-        net_states: tp.Any,
-        metrics_states: tp.Any,
-        optimizer_states: tp.Any,
+        # net_states: tp.Any,
+        # metrics_states: tp.Any,
+        # optimizer_states: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        rng: RNG,
+        # rng: RNG,
         training: bool,
+        states: States,
     ) -> Training:
-        assert isinstance(rng, RNGSeq)
+
+        if self.optimizer is None:
+            raise MissingOptimizer(
+                "Trying to run `train_step` without an optimizer, "
+                "please provide an optimizer to the Model(...) constructor or "
+                "override `train_step`."
+            )
+        elif isinstance(self.states.optimizer_states, Uninitialized):
+            raise ValueError(
+                f"Trying to run default `train_step` with an optimizer "
+                "but `optimizer_states` was not initialized on `init`. Please initialize optimizer."
+            )
 
         def loss_fn(
-            net_params,
-            x,
-            y_true,
-            net_states,
-            metrics_states,
-            sample_weight,
-            class_weight,
-            rng,
+            net_params: tp.Any,
+            states: States,
+            x: tp.Any,
+            y_true: tp.Any,
+            sample_weight: tp.Optional[np.ndarray],
+            class_weight: tp.Optional[np.ndarray],
         ):
+            states = states.update(net_params=net_params)
             # TODO: add DI
-            loss, logs, states = self.test_step(
-                net_params=net_params,
+            loss, logs, states = self.test_step_internal(
+                states=states,
                 x=x,
                 y_true=y_true,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
-                net_states=net_states,
-                metrics_states=metrics_states,
-                rng=rng,
-                training=True,
+                training=training,
             )
 
             return loss, (logs, states)
 
-        states: States
-        loss: Scalar
         logs: Logs
-
         (loss, (logs, states)), grads = hooks.value_and_grad(loss_fn, has_aux=True)(
-            net_params,
+            states.net_params,
+            states,
             x,
             y_true,
-            net_states,
-            metrics_states,
             sample_weight,
             class_weight,
-            rng,
         )
 
-        if self.optimizer is not None:
-            net_params, optimizer_states = self.optimizer.apply(
-                net_params, grads, optimizer_states, rng
-            )
+        assert isinstance(states.rng, RNGSeq)
+
+        net_params, optimizer_states = self.optimizer.apply(
+            states.net_params, grads, states.optimizer_states, states.rng
+        )
 
         states = states.update(net_params=net_params, optimizer_states=optimizer_states)
 
@@ -365,7 +377,7 @@ class Metrics:
 
         return logs, states
 
-    def init(self, rng: utils.RNGSeq) -> tp.Callable[..., tp.Tuple[Logs, tp.Any]]:
+    def init(self, rng: RNGSeq) -> tp.Callable[..., tp.Tuple[Logs, tp.Any]]:
         def lambda_(*args, **kwargs):
             def callback(name, module):
                 kwargs_ = kwargs.copy()
@@ -377,7 +389,7 @@ class Metrics:
         return lambda_
 
     def apply(
-        self, states: tp.Any, rng: utils.RNGSeq
+        self, states: tp.Any, rng: RNGSeq
     ) -> tp.Callable[..., tp.Tuple[Logs, tp.Any]]:
         assert states is not None
 
@@ -397,7 +409,7 @@ class AvgMetric(GeneralizedModule):
     def __init__(self, f: tp.Callable):
         self.f = f
 
-    def init(self, rng: utils.RNGSeq) -> tp.Callable[..., OutputStates]:
+    def init(self, rng: RNGSeq) -> tp.Callable[..., OutputStates]:
         def _lambda(*args, **kwargs) -> OutputStates:
 
             preds = utils.inject_dependencies(self.f)(*args, **kwargs)
@@ -419,7 +431,7 @@ class AvgMetric(GeneralizedModule):
         self,
         params: tp.Any,
         states: tp.Any,
-        rng: utils.RNGSeq,
+        rng: RNGSeq,
     ) -> tp.Callable[..., OutputStates]:
         def _lambda(*args, **kwargs) -> OutputStates:
 
@@ -474,7 +486,7 @@ class Losses:
         return logs
 
     def init(
-        self, rng: utils.RNGSeq
+        self, rng: RNGSeq
     ) -> tp.Callable[..., tp.Tuple[Scalar, Logs, tp.Any]]:
         def _lambda(*args, **kwargs):
             module_logs = self.calculate_losses(*args, **kwargs)

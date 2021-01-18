@@ -1,3 +1,4 @@
+from elegy.types import RNGSeq
 from elegy import utils
 from .generalized_optimizer import (
     GeneralizedOptimizer,
@@ -15,7 +16,7 @@ class OptaxOptimizer(GeneralizedOptimizer):
     def __init__(self, optimizer: optax.GradientTransformation):
         self.optimizer = optimizer
 
-    def init(self, rng: utils.RNGSeq, net_params: NetParams) -> OptimizerStates:
+    def init(self, rng: RNGSeq, net_params: NetParams) -> OptimizerStates:
         return self.optimizer.init(net_params)
 
     def apply(
@@ -23,7 +24,7 @@ class OptaxOptimizer(GeneralizedOptimizer):
         net_params: NetParams,
         grads: Grads,
         optimizer_states: OptimizerStates,
-        rng: utils.RNGSeq,
+        rng: RNGSeq,
     ) -> tp.Tuple[NetParams, OptimizerStates]:
         updates, optimizer_states = self.optimizer.update(
             grads, optimizer_states, net_params

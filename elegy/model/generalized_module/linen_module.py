@@ -2,7 +2,7 @@ import typing as tp
 
 import flax.linen as nn
 from elegy import utils
-from elegy.types import OutputStates
+from elegy.types import OutputStates, RNGSeq
 from flax import linen
 from flax.core import FrozenDict, freeze, unfreeze
 
@@ -14,7 +14,7 @@ class LinenModule(GeneralizedModule):
     def __init__(self, module: nn.Module):
         self.module = module
 
-    def init(self, rng: utils.RNGSeq) -> tp.Callable[..., OutputStates]:
+    def init(self, rng: RNGSeq) -> tp.Callable[..., OutputStates]:
         def _lambda(*args, **kwargs):
             def init_fn(*args, **kwargs):
                 return self.module.init_with_output(rng.next(), *args, **kwargs)
@@ -42,7 +42,7 @@ class LinenModule(GeneralizedModule):
         self,
         params: tp.Any,
         states: tp.Any,
-        rng: utils.RNGSeq,
+        rng: RNGSeq,
     ) -> tp.Callable[..., OutputStates]:
         if params is None:
             params = FrozenDict()

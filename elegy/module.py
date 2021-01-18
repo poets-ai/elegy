@@ -15,7 +15,7 @@
 
 # from elegy import types, utils
 # from elegy.random import RNG
-# from elegy.utils import EMPTY, Empty, ModuleOrderError
+# from elegy.types import EMPTY, Empty, ModuleOrderError
 # from elegy.model import Mode
 
 # __all__ = [
