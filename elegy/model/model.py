@@ -187,7 +187,6 @@ class Model(ModelBase):
         training: bool,
         states: States,
     ) -> Prediction:
-        assert isinstance(states.rng, RNGSeq)
 
         if self.module is None:
             raise MissingModule(
@@ -199,6 +198,8 @@ class Model(ModelBase):
             states=states,
             training=training,
         )
+
+        assert isinstance(states.rng, RNGSeq)
 
         y_pred, net_params, net_states = self.module.apply(
             states.net_params, states.net_states, states.rng
@@ -485,9 +486,7 @@ class Losses:
 
         return logs
 
-    def init(
-        self, rng: RNGSeq
-    ) -> tp.Callable[..., tp.Tuple[Scalar, Logs, tp.Any]]:
+    def init(self, rng: RNGSeq) -> tp.Callable[..., tp.Tuple[Scalar, Logs, tp.Any]]:
         def _lambda(*args, **kwargs):
             module_logs = self.calculate_losses(*args, **kwargs)
             hooks_logs = hooks.get_losses()

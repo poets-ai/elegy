@@ -11,8 +11,12 @@ import typer
 
 from utils import plot_history
 
-# TODO: use elegy.Model
+
 class Model(elegy.Model):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.optim = optax.adam(1e-3)
+
     # request parameters by name via depending injection.
     # possible: mode, x, y_true, sample_weight, class_weight
     def init(self, x):
@@ -24,15 +28,26 @@ class Model(elegy.Model):
         # params
         w = jax.random.uniform(rng.next(), shape=[d, 10], minval=-1, maxval=1)
         b = jax.random.uniform(rng.next(), shape=[1], minval=-1, maxval=1)
+        net_params = (w, b)
+
+        # metrics
+        total_samples = jnp.array(0, dtype=jnp.float32)
+        total_tp = jnp.array(0, dtype=jnp.float32)
+        total_loss = jnp.array(0, dtype=jnp.float32)
+
+        # optimizer
+        optimizer_states = self.optim.init(net_params)
 
         return elegy.States(
-            net_params=(w, b),
+            net_params=net_params,
+            metrics_states=(total_samples, total_tp, total_loss),
+            optimizer_states=optimizer_states,
             rng=rng,
         )
 
     # request parameters by name via depending injection.
     # possible: net_params, x, y_true, net_states, metrics_states, optimizer_states, sample_weight, class_weight, rng
-    def train_step(self, x, y_true, net_params):
+    def train_step(self, x, y_true, net_params, optimizer_states):
         def loss_fn(net_params, x, y_true):
             # flatten + scale
             x = jnp.reshape(x, (x.shape[0], -1)) / 255
@@ -43,7 +58,8 @@ class Model(elegy.Model):
 
             # crossentropy loss
             labels = jax.nn.one_hot(y_true, 10)
-            loss = jnp.mean(-jnp.sum(labels * jax.nn.log_softmax(logits), axis=-1))
+            sample_loss = -jnp.sum(labels * jax.nn.log_softmax(logits), axis=-1)
+            loss = jnp.mean(sample_loss)
 
             # metrics
             logs = dict(
@@ -54,21 +70,22 @@ class Model(elegy.Model):
             return loss, logs
 
         # train
-        grad_fn = jax.value_and_grad(loss_fn, has_aux=True)
+        (loss, logs), grads = jax.value_and_grad(loss_fn, has_aux=True)(
+            net_params,  # gradients target
+            x,
+            y_true,
+        )
 
-        (loss, logs), grads = grad_fn(net_params, x, y_true)
-
-        # sgd
-        net_params = jax.tree_multimap(lambda p, g: p - 3e-4 * g, net_params, grads)
+        grads, optimizer_states = self.optim.update(grads, optimizer_states, net_params)
+        net_params = optax.apply_updates(net_params, grads)
 
         return logs, elegy.States(
             net_params=net_params,
+            optimizer_states=optimizer_states,
         )
 
 
-def main(
-    debug: bool = False, eager: bool = False, logdir: str = "runs", epochs: int = 100
-):
+def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
 
     if debug:
         import debugpy
@@ -92,7 +109,7 @@ def main(
     history = model.fit(
         x=X_train,
         y=y_train,
-        epochs=epochs,
+        epochs=100,
         steps_per_epoch=200,
         batch_size=64,
         validation_data=(X_test, y_test),
