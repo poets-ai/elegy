@@ -34,11 +34,16 @@ from jax._src.random import t
 
 
 class Model(ModelBase):
-    module: tp.Optional[GeneralizedModule]
-    loss: "Losses"
-    metrics: "Metrics"
-    optimizer: tp.Optional[GeneralizedOptimizer]
+    module: tp.Any = None
+    loss: tp.Any = None
+    metrics: tp.Any = None
+    optimizer: tp.Any = None
     seed: int = 42
+
+    module_internal: tp.Optional[GeneralizedModule]
+    loss_internal: "Losses"
+    metrics_internal: "Metrics"
+    optimizer_internal: tp.Optional[GeneralizedOptimizer]
 
     def __init__(
         self,
@@ -85,16 +90,21 @@ class Model(ModelBase):
             )
         super().__init__(**kwargs)
 
+        self.module = module
+        self.loss = loss
+        self.metrics = metrics
+        self.optimizer = optimizer
+
         if loss is None:
             loss = {}
 
         if metrics is None:
             metrics = {}
 
-        self.module = generalize(module) if module is not None else None
-        self.loss = Losses(loss)
-        self.metrics = Metrics(metrics)
-        self.optimizer = (
+        self.module_internal = generalize(module) if module is not None else None
+        self.loss_internal = Losses(loss)
+        self.metrics_internal = Metrics(metrics)
+        self.optimizer_internal = (
             generalize_optimizer(optimizer) if optimizer is not None else None
         )
         self.seed = seed
@@ -123,13 +133,14 @@ class Model(ModelBase):
             )
 
         states = States(rng=RNGSeq(self.seed))
+        assert isinstance(states.rng, RNGSeq)
 
         x_args, x_kwargs = utils.get_input_args(
             x,
             states=states,
             training=True,
         )
-        y_pred, net_params, net_states = self.module.init(states.rng)(
+        y_pred, net_params, net_states = self.module_internal.init(states.rng)(
             *x_args, **x_kwargs
         )
 
@@ -139,7 +150,7 @@ class Model(ModelBase):
             return states
 
         assert isinstance(states.rng, RNGSeq)
-        metrics_logs, metrics_states = self.metrics.init(states.rng)(
+        metrics_logs, metrics_states = self.metrics_internal.init(states.rng)(
             x=x,
             y_true=y_true,
             y_pred=y_pred,
@@ -152,7 +163,7 @@ class Model(ModelBase):
             training=True,
         )
 
-        loss, loss_logs, loss_logs_states = self.loss.init(states.rng)(
+        loss, loss_logs, loss_logs_states = self.loss_internal.init(states.rng)(
             x=x,
             y_true=y_true,
             y_pred=y_pred,
@@ -172,7 +183,7 @@ class Model(ModelBase):
             return states
 
         if self.optimizer is not None:
-            optimizer_states = self.optimizer.init(states.rng, net_params)
+            optimizer_states = self.optimizer_internal.init(states.rng, net_params)
         else:
             optimizer_states = None
 
@@ -203,7 +214,7 @@ class Model(ModelBase):
 
         assert isinstance(states.rng, RNGSeq)
 
-        y_pred, net_params, net_states = self.module.apply(
+        y_pred, net_params, net_states = self.module_internal.apply(
             states.net_params, states.net_states, states.rng
         )(*x_args, **x_kwargs)
 
@@ -236,7 +247,7 @@ class Model(ModelBase):
 
         metrics_states, loss_states = states.metrics_states
 
-        metrics_logs, metrics_states = self.metrics.apply(
+        metrics_logs, metrics_states = self.metrics_internal.apply(
             states=metrics_states, rng=states.rng
         )(
             x=x,
@@ -252,7 +263,7 @@ class Model(ModelBase):
             states=states,
         )
 
-        loss, loss_logs, loss_states = self.loss.apply(states=loss_states)(
+        loss, loss_logs, loss_states = self.loss_internal.apply(states=loss_states)(
             x=x,
             y_true=y_true,
             y_pred=y_pred,
@@ -349,7 +360,7 @@ class Model(ModelBase):
 
         assert isinstance(states.rng, RNGSeq)
 
-        net_params, optimizer_states = self.optimizer.apply(
+        net_params, optimizer_states = self.optimizer_internal.apply(
             states.net_params, grads, states.optimizer_states, states.rng
         )
 

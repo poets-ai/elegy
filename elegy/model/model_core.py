@@ -104,7 +104,6 @@ class ModelCore(ABC):
     ) -> Evaluation:
         ...
 
-    @abstractmethod
     def grad_step(
         self,
         net_params: tp.Any,
@@ -118,7 +117,7 @@ class ModelCore(ABC):
         training: bool,
         states: States,
     ) -> Backprop:
-        ...
+        raise NotImplementedError()
 
     @abstractmethod
     def train_step(
