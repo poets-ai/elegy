@@ -452,7 +452,7 @@ class Module(metaclass=ModuleMeta):
                        If False returns only non-trainable parameters.
                        If None (Default) returns all parameters.
 
-        Returns: A nested dictionary of parametername:parameters pairs
+        Returns: A nested dictionary of parameter_name:parameters pairs
         """
 
         params = module_tree_map(
@@ -520,7 +520,7 @@ class Module(metaclass=ModuleMeta):
                     if param not in values
                 ]
                 if len(missing):
-                    errormsg = f"Miissing parameters in module {module.name}: {missing}"
+                    errormsg = f"Missing parameters in module {module.name}: {missing}"
                     if ignore_on_error == True:
                         print(errormsg)
                     else:

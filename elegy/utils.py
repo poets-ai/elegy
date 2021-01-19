@@ -68,12 +68,12 @@ def maybe_expand_dims(a: np.ndarray, b: np.ndarray) -> tp.Tuple[np.ndarray, np.n
 
 
 def wraps(f, docs: bool = True):
-    assigments = ("__annotations__",)
+    assignments = ("__annotations__",)
 
     if docs:
-        assigments += ("__doc__",)
+        assignments += ("__doc__",)
 
-    return functools.wraps(f, assigned=assigments, updated=())
+    return functools.wraps(f, assigned=assignments, updated=())
 
 
 def inject_dependencies(

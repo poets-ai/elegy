@@ -23,7 +23,7 @@ def GlobalL2(
         module_fn,
         loss=[
             elegy.losses.SparseCategoricalCrossentropy(),
-            elegy.losses.GlobaL2Regularization(l=1e-4),
+            elegy.losses.GlobalL2Regularization(l=1e-4),
         ],
         metrics=lambda: elegy.metrics.SparseCategoricalAccuracy(),
     )

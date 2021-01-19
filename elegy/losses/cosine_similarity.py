@@ -36,7 +36,7 @@ def cosine_similarity(
     Arguments:
         y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.
         y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
-        axis: The dimension along which the cosinemsimilarity is computed.
+        axis: The dimension along which the cosine similarity is computed.
 
     Returns:
           cosine similarity Values. If reduction is NONE, this has

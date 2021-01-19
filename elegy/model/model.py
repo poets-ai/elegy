@@ -701,7 +701,7 @@ class Model(ModelBase):
 
         This allows you to save the entirety of the states of a model
         in a directory structure which can be fully restored via
-        `Model.load` if the model is already instiated or `elegy.model.load`
+        `Model.load` if the model is already instantiated or `elegy.model.load`
         to load the model instance from its pickled version.
 
         ```python
@@ -715,7 +715,7 @@ class Model(ModelBase):
         ```
         Arguments:
             path: path where model structure will be saved.
-            include_optimizer: If True, save optimizer's states together.
+            include_optimizer: If True, save optimizer states together.
         """
         if isinstance(path, str):
             path = Path(path)

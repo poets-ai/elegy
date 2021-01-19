@@ -63,7 +63,7 @@ class PrecisionTest(TestCase):
         )
 
     #
-    def test_cummulative(self):
+    def test_cumulative(self):
         tm = tfk.metrics.Precision(thresholds=0.3)
         em = elegy.metrics.Precision(threshold=0.3)
 

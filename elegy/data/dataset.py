@@ -234,10 +234,10 @@ class MultiProcessIterator:
 
     def shutdown(self):
         self.worker_pool.close()
-        for aresult in self.async_results_queue:
+        for a_result in self.async_results_queue:
             # wait for remaining tasks to finish
             # process workers will hang otherwise
-            aresult.wait(timeout=self.timeout)
+            a_result.wait(timeout=self.timeout)
         self.worker_pool.terminate()
         self.worker_pool.join()
 
