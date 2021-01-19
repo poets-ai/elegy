@@ -7,6 +7,192 @@ import elegy
 import numpy as np
 
 
+class NewModuleTest(TestCase):
+    def test_basic(self):
+        class M(elegy.Module):
+            def call(self, x):
+                n = self.add_state("n", lambda: 1)
+                return n + x
+
+        m = M()
+
+        y, params = m.init(2.0)
+
+        assert params == {"states": {"n": 1}}
+        assert y == 3
+
+    def test_basic_call(self):
+        class M(elegy.Module):
+            def call(self, x):
+                n = self.add_state("n", lambda: 1)
+                return n + x
+
+        m = M()
+
+        y = m(2.0)
+        params = m.get_parameters()
+
+        assert y == 3
+        assert params == {"states": {"n": 1}}
+
+        # update params
+        m.set_parameters({"states": {"n": 20}})
+        y = m(2.0)
+        params = m.get_parameters()
+
+        assert y == 22
+        assert params == {"states": {"n": 20}}
+
+    def test_basic_apply(self):
+        class M(elegy.Module):
+            def call(self, x):
+                n = self.add_state("n", lambda: 1)
+                return n + x
+
+        m = M()
+
+        y, params = m.init(2.0)
+
+        assert y == 3
+        assert params == {"states": {"n": 1}}
+
+        y, params = m.apply({"states": {"n": 5}}, 2.0)  # run with new params
+        current_params = m.get_parameters()  # internal params are not modify by apply.
+
+        assert y == 7
+        assert params == {"states": {"n": 5}}
+        assert current_params == {"states": {"n": 1}}
+
+    def test_basic_compose(self):
+        class A(elegy.Module):
+            def call(self, x):
+                b = self.add_state("b", lambda: 10)
+                return b + x
+
+        class M(elegy.Module):
+            def call(self, x):
+                n = self.add_state("n", lambda: 1)
+                x = A()(x)
+                return n + x
+
+        m = M()
+
+        y, params = m.init(2.0)
+
+        assert y == 13
+        assert params == {"states": {"n": 1, "a": {"b": 10}}}
+
+    def test_basic_list_submodules(self):
+        class A(elegy.Module):
+            def call(self, x):
+                b = self.add_state("b", lambda: 10)
+                return b + x
+
+        class M(elegy.Module):
+            def __init__(self):
+                super().__init__()
+                self.ais = [A(), A()]
+
+            def call(self, x):
+                n = self.add_state("n", lambda: 1)
+                x = self.ais[1](x)
+                return n + x
+
+        m = M()
+
+        with elegy.hooks_context(summaries=True):
+            y, params = m.init(2.0)
+            summaries = elegy.get_summaries()
+
+        assert summaries == [
+            (
+                ("ais", 1),
+                m.ais[1],
+                12,
+            ),
+            (
+                (),
+                m,
+                13,
+            ),
+        ]
+        assert params == {
+            "states": {
+                "n": 1,
+                "ais": [
+                    {},
+                    {"b": 10},
+                ],
+            },
+        }
+        assert y == 13
+
+    def test_basic_dynamic_submodules(self):
+        class A(elegy.Module):
+            def call(self, x):
+                b = self.add_state("b", lambda: 10)
+                return b + x
+
+        class M(elegy.Module):
+            a: A
+            a_1: A
+
+            def call(self, x):
+                ais = [A(), A()]
+                n = self.add_state("n", lambda: 1)
+                x = ais[1](x)
+                return n + x
+
+        m = M()
+
+        with elegy.hooks_context(summaries=True):
+            y, params = m.init(2.0)
+            summaries = elegy.get_summaries()
+
+        assert summaries == [
+            (
+                ("a_1",),
+                m.a_1,
+                12,
+            ),
+            (
+                (),
+                m,
+                13,
+            ),
+        ]
+        assert params == {
+            "states": {
+                "n": 1,
+                "a": {},
+                "a_1": {
+                    "b": 10,
+                },
+            },
+        }
+        assert y == 13
+
+    def test_basic_update(self):
+        class M(elegy.Module):
+            def call(self, x):
+                n = self.add_state("n", lambda: 1)
+                self.update_parameter("n", n + 1)
+                return n + x
+
+        m = M()
+
+        y, params = m.init(2.0)
+
+        assert y == 3
+        assert params == {"states": {"n": 1}}
+
+        y = m.apply(None, 2.0)
+        assert y == 3
+
+        y = m.apply(None, 2.0)
+        assert y == 4
+
+
 class ModuleTest(TestCase):
     class Linear(elegy.Module):
         def __init__(self, units):

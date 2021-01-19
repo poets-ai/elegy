@@ -126,6 +126,10 @@ def get_summaries() -> tp.Optional[Summaries]:
     return LOCAL.summaries.copy() if LOCAL.summaries is not None else None
 
 
+def summaries_active() -> bool:
+    return LOCAL.summaries is not None
+
+
 # -------------------------------------------------------------
 # transforms
 # -------------------------------------------------------------

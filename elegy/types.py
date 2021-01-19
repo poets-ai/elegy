@@ -43,6 +43,14 @@ class ModuleOrderError(Exception):
     pass
 
 
+class NoContext(Exception):
+    pass
+
+
+class SubmoduleNotRegistered(Exception):
+    pass
+
+
 EMPTY = Empty()
 
 

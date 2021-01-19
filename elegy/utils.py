@@ -1,4 +1,4 @@
-from elegy.types import States
+from elegy.types import Index, Path, States
 import functools
 import inspect
 import re
@@ -174,12 +174,26 @@ def to_static(structure: tp.Any) -> tp.Any:
         return structure
 
 
-def _flatten_names(
-    path: tp.Tuple[str, ...], inputs: tp.Any
-) -> tp.Iterable[tp.Tuple[tp.Tuple[str, ...], tp.Any]]:
+def _leaf_paths(path: Path, inputs: tp.Any) -> tp.Iterable[tp.Tuple[Path, tp.Any]]:
 
     if isinstance(inputs, (tp.Tuple, tp.List)):
-        for value in inputs:
+        for i, value in enumerate(inputs):
+            yield from _leaf_paths(path + (i,), value)
+    elif isinstance(inputs, tp.Dict):
+        for name, value in inputs.items():
+            yield from _leaf_paths(path + (name,), value)
+    else:
+        yield (path, inputs)
+
+
+def leaf_paths(inputs: tp.Any) -> tp.List[tp.Tuple[Path, tp.Any]]:
+    return list(_leaf_paths((), inputs))
+
+
+def _flatten_names(path: Path, inputs: tp.Any) -> tp.Iterable[tp.Tuple[Path, tp.Any]]:
+
+    if isinstance(inputs, (tp.Tuple, tp.List)):
+        for i, value in enumerate(inputs):
             yield from _flatten_names(path, value)
     elif isinstance(inputs, tp.Dict):
         for name, value in inputs.items():
@@ -189,7 +203,9 @@ def _flatten_names(
 
 
 def flatten_names(inputs: tp.Any) -> tp.List[tp.Tuple[str, tp.Any]]:
-    return [("/".join(path), value) for path, value in _flatten_names((), inputs)]
+    return [
+        ("/".join(map(str, path)), value) for path, value in _flatten_names((), inputs)
+    ]
 
 
 def get_unique_name(
@@ -234,9 +250,9 @@ def _merge_with_unique_names(
     return output
 
 
-def _normalize_tree(tree):
-    """
-    col <- key <- col <- key  ==> col <- key
-    """
+def parameters_count(params: tp.Any):
+    return sum(x.size for x in jax.tree_leaves(params))
 
-    
+
+def parameters_bytes(params: tp.Any):
+    return sum(x.size * x.dtype.itemsize for x in jax.tree_leaves(params))

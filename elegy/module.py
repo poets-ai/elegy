@@ -12,11 +12,13 @@ import numpy as np
 from elegy import hooks, utils
 from elegy.frozen_dict import FrozenDict
 from elegy.types import (
+    NoContext,
     ModuleOrderError,
     ParameterCollection,
     Parameters,
     Path,
     Protocol,
+    SubmoduleNotRegistered,
 )
 
 __all__ = [
@@ -67,7 +69,6 @@ def construct_module(cls, *args, **kwargs) -> "Module":
     if (
         not hasattr(module, "name")
         or not hasattr(module, "_params")
-        or not hasattr(module, "_states")
         or not hasattr(module, "_submodules")
     ):
         raise ValueError(
@@ -78,6 +79,10 @@ def construct_module(cls, *args, **kwargs) -> "Module":
     for key, value in vars(module).items():
         if not key.startswith("_") and leaf_isinstance(value, Module):
             module._submodules.append(key)
+
+            for path, submodule in utils.leaf_paths(value):
+                if isinstance(submodule, Module):
+                    submodule._path_in_parent[module] = (key,) + path
 
     return module
 
@@ -119,6 +124,7 @@ class ModuleMeta(ABCMeta):
                 setattr(parent, name, module)
                 parent._submodules.append(name)
                 parent._dynamic_submodules.append(name)
+                module._path_in_parent[parent] = (name,)
 
             LOCAL.module_index += 1
 
@@ -141,6 +147,7 @@ class Module(metaclass=ModuleMeta):
     _states_initial: tp.List[str]
     _submodules: tp.List[str]
     _dynamic_submodules: tp.List[str]
+    _path_in_parent: tp.Dict["Module", Path]
 
     __all__ = [
         "__init__",
@@ -167,19 +174,9 @@ class Module(metaclass=ModuleMeta):
         self.name = name if name else utils.lower_snake_case(self.__class__.__name__)
         self.dtype = dtype
         self._params = {}
-        self._states = []
         self._submodules = []
         self._dynamic_submodules = []
-
-        _init = self.init
-
-        def init(*args, **kwargs):
-            return _init(*args, **kwargs)
-
-        self.init = init
-
-        utils.wraps(self.call)(self.init)
-        utils.wraps(self.call)(self)
+        self._path_in_parent = {}
 
         # self._jit_functions()
 
@@ -207,9 +204,9 @@ class Module(metaclass=ModuleMeta):
 
             outputs = self.call(*args, **kwargs)
 
-            path = get_module_path(self)
-
-            if path is not None:
+            if hooks.summaries_active():
+                path = get_module_path(self)
+                assert path is not None
                 hooks.add_summary(path, self, outputs)
 
             return outputs
@@ -222,28 +219,45 @@ class Module(metaclass=ModuleMeta):
     def call(self, *args, **kwargs):
         ...
 
-    def init(self, *args, **kwargs) -> None:
+    def init(self, *args, **kwargs) -> tp.Tuple[tp.Any, ParameterCollection]:
         """
         Initializes the module,
         """
 
         with init_context():
-            self(*args, **kwargs)
+            y = self(*args, **kwargs)
 
-    def add_state(
-        self,
-        name: str,
-        initializer: tp.Callable[[], tp.Any],
-        regularizer: tp.Optional[tp.Callable[[tp.Any], jnp.ndarray]] = None,
-        constraint: tp.Optional[tp.Callable[[tp.Any], tp.Any]] = None,
-    ) -> np.ndarray:
-        return self.add_parameter(
-            name,
-            initializer,
-            collection="states",
-            regularizer=regularizer,
-            constraint=constraint,
-        )
+        return y, self.get_parameters()
+
+    @tp.overload
+    def apply(self, parameters: None, *args, **kwargs) -> tp.Any:
+        ...
+
+    @tp.overload
+    def apply(
+        self, parameters: ParameterCollection, *args, **kwargs
+    ) -> tp.Tuple[tp.Any, ParameterCollection]:
+        ...
+
+    def apply(
+        self, __parameters: tp.Optional[ParameterCollection], *args, **kwargs
+    ) -> tp.Union[tp.Any, tp.Tuple[tp.Any, ParameterCollection]]:
+        if __parameters is not None:
+            old_parameters = self.get_parameters()
+            self.set_parameters(__parameters)
+        else:
+            old_parameters = None
+
+        with apply_context():
+            y = self(*args, **kwargs)
+
+        if old_parameters is not None:
+            new_parameters = self.get_parameters()
+            self.set_parameters(old_parameters)
+
+            return y, new_parameters
+        else:
+            return y
 
     def add_parameter(
         self,
@@ -254,14 +268,13 @@ class Module(metaclass=ModuleMeta):
         constraint: tp.Optional[tp.Callable[[tp.Any], tp.Any]] = None,
     ) -> np.ndarray:
         """
-        A hook that lets you add a parameter to the current module. The parameter will only be created once
-        during `init` and will reused afterwards.
+        Adds a parameter to the current module. The parameter will only be initialized once and
+        will reused afterwards.
 
         Arguments:
-            collection: name of the parameter collection.
             name: The name of the parameter. It must be unique and no other field/property/method
                 of the instance can have that name.
-            initializer: A callable that takes in a shape and dtype and returns the initial value.
+            initializer: A callable that takes not arguments returns the initial value.
             regularizer: Regularizer instance (callable).
             constraint: Constraint instance (callable).
 
@@ -270,8 +283,6 @@ class Module(metaclass=ModuleMeta):
         """
 
         if not hasattr(self, name):
-            if not is_initializing():
-                raise ValueError(f"Trying to initialize '{name}' outside of `init`.")
 
             self._params[name] = collection
 
@@ -298,36 +309,102 @@ class Module(metaclass=ModuleMeta):
 
         return value
 
+    def add_state(
+        self,
+        name: str,
+        initializer: tp.Callable[[], tp.Any],
+        regularizer: tp.Optional[tp.Callable[[tp.Any], jnp.ndarray]] = None,
+        constraint: tp.Optional[tp.Callable[[tp.Any], tp.Any]] = None,
+    ) -> np.ndarray:
+        """
+        Adds a parameter to the 'states' collection on the current module. The parameter will only be initialized once and
+        will reused afterwards. This is a shortcut for:
+
+        ```python
+        self.add_parameter(..., collection="states", ...)
+        ```
+
+        Arguments:
+            name: The name of the parameter. It must be unique and no other field/property/method
+                of the instance can have that name.
+            initializer: A callable that takes not arguments returns the initial value.
+            regularizer: Regularizer instance (callable).
+            constraint: Constraint instance (callable).
+
+        Returns:
+            The value of the parameter.
+        """
+        return self.add_parameter(
+            name,
+            initializer,
+            collection="states",
+            regularizer=regularizer,
+            constraint=constraint,
+        )
+
     def update_parameter(self, name: str, value: tp.Any) -> None:
         """
-        A hook that lets you update a state of the current module, if the state does not
-        exist it will be created.
+        Update a parameter of the current module.
+
+        !!! Note
+            Parameters are not updated when `Module.init` is called.
 
         Arguments:
             name: The name of the state. It must be unique and no other field/property/method
                 of the instance can have that name.
             value: The updated value of the state.
+
+        Raises:
+            `ValueError` if parameter is not present in current module.
         """
 
-        if hasattr(self, name):
-            setattr(self, name, value)
-        else:
+        if not hasattr(self, name):
             raise ValueError(f"Parameter {name} not found in {self}.")
+
+        if is_initializing():
+            return
+
+        setattr(self, name, value)
+
+    def add_or_update_parameter(
+        self,
+        name: str,
+        value: tp.Callable[[], tp.Any],
+        collection: str = "states",
+    ):
+        """
+        Add a parameter to the current module or update it if it already exists.
+
+        !!! Note
+            Parameters are not updated when `Module.init` is called.
+
+        Arguments:
+            name: The name of the state. It must be unique and no other field/property/method
+                of the instance can have that name.
+            value: The updated value of the state.
+            collection: Name of the parameter collection.
+
+        Raises:
+            `ValueError` if parameter is not present in current module.
+        """
+        if not hasattr(self, name):
+            self.add_parameter(name, lambda: value, collection=collection)
+        else:
+            self.update_parameter(name, value)
 
     def get_parameters(
         self,
     ) -> ParameterCollection:
         """
         Recursively collects a dictionary with the parameters of this module
-        and all submodules within it.
-
-        Returns:
+        grouped by collection.
         """
 
+        # find all existing collections
         collections = set()
-
         tree_exec(lambda module: collections.update(module._params.values()), self)
 
+        # create a dict of collections to the parameters of those collections
         params = {
             collection: module_tree_map(
                 lambda module: {
@@ -344,9 +421,7 @@ class Module(metaclass=ModuleMeta):
 
     def set_parameters(self, parameter_collection: ParameterCollection) -> None:
         """
-        Recursively sets the parameters of this module
-        and all submodules within it given a dictionary with a corresponding
-        structure.
+        Recursively sets all the parameters of this module.
         """
 
         def f(module: Module, values: tp.Dict[str, tp.Any]):
@@ -364,15 +439,8 @@ class Module(metaclass=ModuleMeta):
         """
 
         def clear_module(module: Module):
-
             for name in module._params:
                 delattr(module, name)
-
-            for name in module._states:
-                delattr(module, name)
-
-            # module._params = set()
-            # module._states = set()
 
         tree_exec(clear_module, self)
 
@@ -382,38 +450,6 @@ class Module(metaclass=ModuleMeta):
         A dictionary with all submodules contained in this Module.
         """
         return {name: getattr(self, name) for name in self._submodules}
-
-    def parameters_count(
-        self, collection: tp.Optional[str] = None, include_submodules: bool = True
-    ):
-        if include_submodules:
-            params = sum(
-                x.size for x in jax.tree_leaves(self.get_parameters(collection))
-            )
-        else:
-            params = [
-                getattr(self, key)
-                for key, param_collection in self._params.items()
-                if (collection is None or collection == param_collection)
-                and hasattr(self, key)
-            ]
-
-    def parameters_bytes(
-        self, collection: tp.Optional[str] = None, include_submodules: bool = True
-    ):
-        if include_submodules:
-            params = sum(
-                x.size for x in jax.tree_leaves(self.get_parameters(collection))
-            )
-        else:
-            params = [
-                getattr(self, key)
-                for key, param_collection in self._params.items()
-                if (collection is None or collection == param_collection)
-                and hasattr(self, key)
-            ]
-
-        return sum(x.size * x.dtype.itemsize for x in jax.tree_leaves(params))
 
 
 # -------------------------------------------------------------
@@ -453,12 +489,35 @@ def _call_context(module: Module):
     LOCAL.inside_call = True
     LOCAL.module_index = 0
 
-    if prev_module is None:
-        LOCAL.module_path[module] = ()
-    else:
-        LOCAL.module_path[module] = LOCAL.module_path[prev_module] + (module.name,)
-
     try:
+        if prev_module is not None and prev_module not in module._path_in_parent:
+            raise SubmoduleNotRegistered(
+                f"Submodule {utils.get_name(module)} not registered in {utils.get_name(prev_module)}, "
+                f"this is probably due to some of the following reasons:\n"
+                f"- The submodule is being captured by closure and not registered to any field.\n"
+                f"- The submodule was set to a field of the parent but "
+                f"its contained inside a more complex type which elegy cannot "
+                f"inspect, elegy only looks structures of (possibly nested) list, tuple, or dict.\n"
+                f"- The submodule was set to a field of the parent by mutating such field after __init__\n\n"
+                f"- If non of the previous is true consider this a bug."
+                f"Submodule: {module}\n"
+                f"Module: {prev_module}\n"
+            )
+
+        if hooks.summaries_active():
+            if LOCAL.module_path is None:
+                raise NoContext(
+                    f"Summaries are active but no context for the module is being used, "
+                    f"if this happens consider using `Module.init` or `Module.apply` instead "
+                    f"of calling the module directly. Got: {module}"
+                )
+            elif prev_module is None:
+                LOCAL.module_path[module] = ()
+            else:
+
+                LOCAL.module_path[module] = (
+                    LOCAL.module_path[prev_module] + module._path_in_parent[prev_module]
+                )
         yield
     finally:
         LOCAL.parent = prev_module
@@ -495,6 +554,25 @@ def _init_context() -> tp.Iterator[None]:
     prev_module_path = LOCAL.module_path
 
     LOCAL.initializing = True
+    LOCAL.module_path = {}
+
+    try:
+        yield
+    finally:
+        LOCAL.initializing = prev_initializing
+        LOCAL.module_path = prev_module_path
+
+
+def apply_context() -> tp.ContextManager[None]:
+    return _apply_context()
+
+
+@contextmanager
+def _apply_context() -> tp.Iterator[None]:
+    prev_initializing = LOCAL.initializing
+    prev_module_path = LOCAL.module_path
+
+    LOCAL.initializing = False
     LOCAL.module_path = {}
 
     try:

@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from io import StringIO
-from pathlib import Path
+import pathlib
 
 import cloudpickle
 import jax
@@ -456,7 +456,7 @@ class ModelCore(ABC):
 
     def save(
         self,
-        path: tp.Union[str, Path],
+        path: tp.Union[str, pathlib.Path],
     ) -> None:
         """
         Saves the model to disk.
@@ -486,7 +486,7 @@ class ModelCore(ABC):
             path: path where model structure will be saved.
         """
         if isinstance(path, str):
-            path = Path(path)
+            path = pathlib.Path(path)
 
         path.mkdir(parents=True, exist_ok=True)
 
@@ -508,7 +508,7 @@ class ModelCore(ABC):
 
     def load(
         self,
-        path: tp.Union[str, Path],
+        path: tp.Union[str, pathlib.Path],
     ) -> None:
         """
         Loads all weights + states from a folder structure.
@@ -522,7 +522,7 @@ class ModelCore(ABC):
             path: path to a saved model's directory.
         """
         if isinstance(path, str):
-            path = Path(path)
+            path = pathlib.Path(path)
 
         self.states = cloudpickle.loads((path / "states.pkl").read_bytes())
         self.initial_states = cloudpickle.loads(
