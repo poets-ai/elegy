@@ -49,7 +49,7 @@ class RecallTest(TestCase):
             ),
         )
 
-    def test_cummulative(self):
+    def test_cumulative(self):
         tm = tfk.metrics.Recall(thresholds=0.3)
         em = elegy.metrics.Recall(threshold=0.3)
 

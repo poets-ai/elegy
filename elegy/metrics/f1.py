@@ -32,7 +32,7 @@ def f1(
 
 class F1(Metric):
     """
-    The metric calculates the armonic mean between precision and recall. This value is ultimately returned as
+    The metric calculates the Harmonic mean between precision and recall. This value is ultimately returned as
     `f1`.
 
     If `sample_weight` is `None`, weights default to 1. Use `sample_weight` of 0 to mask values.

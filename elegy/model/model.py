@@ -222,10 +222,12 @@ class Model(ModelBase):
                 The model is not trained for a number of iterations
                 given by `epochs`, but merely until the epoch
                 of index `epochs` is reached.
-            verbose: 0, 1, 2 or 3. Verbosity mode.
-                0 = silent, 1 = progress bar, 2 = one line per epoch 3 = table.
-                Note that the progress bar is not particularly useful when
-                logged to a file, so verbose=2 is recommended when not running
+            verbose: 0, 1, 2, 3 or 4. Verbosity mode.
+                0 = silent, 1 = progress bar, 2 = one line per epoch,
+                3 = table with updates per step, 4 = table with updates per epoch.
+                Note: verbosity options 1 and 3 may slow down training
+                Note: the progress bar is not particularly useful when
+                logged to a file, so verbose=2 or verbose=4 is recommended when not running
                 interactively (eg, in a production environment).
             callbacks: List of [elegy.callbacks.callback.Callback][] instances.
                 List of callbacks to apply during training.
@@ -475,8 +477,9 @@ class Model(ModelBase):
                 it could be either Numpy or Jax array(s).
                 It should be consistent with `x`. If `x` is a generator,
                 `y` should not be specified (since targets will be obtained from `x`).
-            verbose: 0, 1, or 2. Verbosity mode.
-                0 = silent, 1 = progress bar, 2 = one line per epoch.
+            verbose: 0, 1, 2, 3 or 4. Verbosity mode.
+                0 = silent, 1 = progress bar, 2 = one line per epoch
+                3 = table with updates per step, 4 = table with updates per epoch.
             batch_size: Integer or `None`.
                 Number of samples per gradient update.
                 If unspecified, `batch_size` will default to 32.
@@ -588,7 +591,9 @@ class Model(ModelBase):
                 If unspecified, `batch_size` will default to 32.
                 Do not specify the `batch_size` if your data is in the
                 form of generators (since they generate batches).
-            verbose: Verbosity mode, 0 or 1.
+            verbose: Verbosity mode, 0, 1, 2, 3 or 4.
+                0 = silent, 1 = progress bar, 2 = one line per epoch
+                3 = table with updates per step, 4 = table with updates per epoch.
             steps: Total number of steps (batches of samples)
                 before declaring the prediction round finished.
                 Ignored with the default value of `None`.
@@ -696,7 +701,7 @@ class Model(ModelBase):
 
         This allows you to save the entirety of the states of a model
         in a directory structure which can be fully restored via
-        `Model.load` if the model is already instiated or `elegy.model.load`
+        `Model.load` if the model is already instantiated or `elegy.model.load`
         to load the model instance from its pickled version.
 
         ```python
@@ -710,7 +715,7 @@ class Model(ModelBase):
         ```
         Arguments:
             path: path where model structure will be saved.
-            include_optimizer: If True, save optimizer's states together.
+            include_optimizer: If True, save optimizer states together.
         """
         if isinstance(path, str):
             path = Path(path)

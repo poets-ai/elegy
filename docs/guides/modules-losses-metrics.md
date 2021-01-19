@@ -107,7 +107,7 @@ model.fit(
     ...
 )
 ```
-Here only `n` and `o` are requested by name and you get as input its values `b` and `c`, the variable `m` with the content of `a` is safely ignored. If you want to request all the avaiable inputs you can use `**kwargs`.
+Here only `n` and `o` are requested by name, and you get as input its values `b` and `c`, the variable `m` with the content of `a` is safely ignored. If you want to request all the available inputs you can use `**kwargs`.
 
 ## Losses
 Losses can request all the available parameters that Elegy provides for dependency injection. A typical loss will request the `y_true` and `y_pred` values (as its common / enforced in Keras). The Mean Squared Error loss for example is easily defined in these terms:
