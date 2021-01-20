@@ -299,6 +299,7 @@ class Module(metaclass=ModuleMeta):
             name: The name of the parameter. It must be unique and no other field/property/method
                 of the instance can have that name.
             initializer: A callable that takes not arguments returns the initial value.
+            collection: Name of the parameter collection.
             regularizer: Regularizer instance (callable).
             constraint: Constraint instance (callable).
 
@@ -374,7 +375,7 @@ class Module(metaclass=ModuleMeta):
             Parameters are not updated when `Module.init` is called.
 
         Arguments:
-            name: The name of the state. It must be unique and no other field/property/method
+            name: The name of the parameter to be updated. It must be unique and no other field/property/method
                 of the instance can have that name.
             value: The updated value of the state.
 
