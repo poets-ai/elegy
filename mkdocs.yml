@@ -111,7 +111,7 @@ nav:
       add_loss: api/module/add_loss.md
       add_metric: api/module/add_metric.md
       add_summary: api/module/add_summary.md
-      next_rng_key: api/module/next_rng_key.md
+      next_key: api/module/next_key.md
       to_module: api/module/to_module.md
     name_context: api/name_context.md
     nets:
@@ -123,7 +123,7 @@ nav:
         ResNet200: api/nets/resnet/ResNet200.md
         ResNet34: api/nets/resnet/ResNet34.md
         ResNet50: api/nets/resnet/ResNet50.md
-    next_rng_key: api/next_rng_key.md
+    next_key: api/next_key.md
     nn:
       AvgPool: api/nn/AvgPool.md
       BatchNormalization: api/nn/BatchNormalization.md

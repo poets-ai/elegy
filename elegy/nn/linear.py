@@ -1,14 +1,15 @@
+import typing as tp
+
+import haiku as hk
+import jax.numpy as jnp
+import numpy as np
+from elegy import module
+from elegy import hooks
 from elegy.initializers import TruncatedNormal
 from elegy.types import Initializer
-from elegy import module
-import typing as tp
-import jax.numpy as jnp
-import haiku as hk
-
-import numpy as np
 
 
-class Linear:
+class Linear(module.Module):
     """Linear module."""
 
     w: np.ndarray
@@ -56,18 +57,14 @@ class Linear:
             stddev = 1.0 / np.sqrt(self.input_size)
             w_init = TruncatedNormal(stddev=stddev)
 
-        w = self.add_parameter(
-            "w", [input_size, output_size], dtype, initializer=w_init
-        )
+        w = self.add_parameter("w", lambda: w_init([input_size, output_size], dtype))
 
-        inputs = jnp.asarray(inputs, self.dtype)
+        inputs = jnp.asarray(inputs, dtype=self.dtype)
         w = jnp.asarray(w, self.dtype)
         out = jnp.dot(inputs, w)
 
         if self.with_bias:
-            b = self.add_parameter(
-                "b", [self.output_size], dtype, initializer=self.b_init
-            )
+            b = self.add_parameter("b", lambda: self.b_init([self.output_size], dtype))
             b = jnp.broadcast_to(b, out.shape)
             b = jnp.asarray(b, self.dtype)
             out = out + b

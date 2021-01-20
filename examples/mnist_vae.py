@@ -60,7 +60,7 @@ class Encoder:
 
         elegy.add_loss("kl_divergence", KLDivergence(weight=2e-1)(mean, stddev))
 
-        z = mean + stddev * jax.random.normal(elegy.next_rng_key(), mean.shape)
+        z = mean + stddev * jax.random.normal(elegy.next_key(), mean.shape)
 
         return z
 
@@ -113,7 +113,7 @@ class VariationalAutoEncoder:
         logits = Decoder(self.hidden_size, self.output_shape)(z)
 
         p = jax.nn.sigmoid(logits)
-        image = jax.random.bernoulli(elegy.next_rng_key(), p)
+        image = jax.random.bernoulli(elegy.next_key(), p)
 
         return dict(image=image, logits=logits, det_image=p)
 

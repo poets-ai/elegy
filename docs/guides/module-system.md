@@ -62,7 +62,7 @@ In Elegy we have the following list of hooks:
 | `elegy.add_metric`   | Lets us declare a metric in some intermediate module.                                                 |
 | `elegy.add_summary`  | Lets us declare a summary in some intermediate module.                                                |
 | `elegy.training`     | Tells us whether training is currently happening or not.                                              |
-| `elegy.next_rng_key` | Gives us access to a unique `PRNGKey` we can pass to functions like `jax.random.uniform` and friends. |
+| `elegy.next_key` | Gives us access to a unique `PRNGKey` we can pass to functions like `jax.random.uniform` and friends. |
 
 !!! Note
     If you use existing `Module`s you might not need to worry much about these hooks, but keep them in mind

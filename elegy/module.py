@@ -27,7 +27,7 @@ __all__ = [
     "add_loss",
     "add_metric",
     "add_summary",
-    "next_rng_key",
+    "next_key",
 ]
 
 T = tp.TypeVar("T")
@@ -194,6 +194,12 @@ class Module(metaclass=ModuleMeta):
         self._path_in_parent = {}
 
         self._jit_functions()
+
+    def call_jit(self, *args) -> tp.Any:
+        collections = self.get_parameters()
+        y, collections = self.apply_jit(collections, *args)
+        self.set_parameters(collections)
+        return y
 
     def _jit_functions(self):
         def get_init_jit():

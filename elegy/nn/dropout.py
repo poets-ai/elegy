@@ -9,6 +9,7 @@ import jax.numpy as jnp
 import numpy as np
 
 from elegy import module
+from elegy import hooks
 from elegy.module import Module
 
 
@@ -71,7 +72,7 @@ class Dropout(Module):
             training = module.is_training()
 
         return hk.dropout(
-            rng=rng if rng is not None else module.next_rng_key(),
+            rng=rng if rng is not None else hooks.next_key(),
             rate=self.rate if training else 0.0,
             x=x,
         )

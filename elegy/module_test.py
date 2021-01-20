@@ -577,7 +577,7 @@ class TestTransforms(TestCase):
 
         total_called = 0
 
-        class SomeModule:
+        class SomeModule(elegy.Module):
             n: jnp.ndarray
 
             def call(self, x):
@@ -585,7 +585,7 @@ class TestTransforms(TestCase):
 
                 total_called += 1
 
-                n = self.add_parameter("n", initializer=jnp.array(0))
+                n = self.add_parameter("n", lambda: jnp.array(0))
                 self.update_parameter("n", n + 1)
 
                 if elegy.is_training():
@@ -604,311 +604,142 @@ class TestTransforms(TestCase):
 
             return m.get_parameters(), outputs
 
-        assert total_called == 0
-
-        m.init(1)
-        assert total_called == 1
-
-        params = m.get_parameters()
-        params, outputs = f(params, 1)
-        m.set_parameters(params)
-
-        assert total_called == 2
-
-        params = m.get_parameters()
-        print(params)
-        params, outputs = f(params, 1)
-        m.set_parameters(params)
-
-        assert total_called == 2
-
-    def test_jit(self):
-        with elegy.training_context(True):
-            total_called = 0
-
-            class SomeModule:
-                n: jnp.ndarray
-
-                def call(self, x):
-                    nonlocal total_called
-
-                    total_called += 1
-
-                    n = self.add_parameter("n", initializer=jnp.array(0))
-                    self.update_parameter("n", n + 1)
-
-                    if elegy.is_training():
-                        return x + 1
-                    else:
-                        return x - 1
-
-            m = SomeModule()
-
+        with elegy.hooks_context(training=True):
             assert total_called == 0
 
-            m.init(0)
+            m.init(1)
             assert total_called == 1
 
-            m_jit = elegy.jit(m)
+            params = m.get_parameters()
+            params, outputs = f(params, 1)
+            m.set_parameters(params)
+
+            assert total_called == 2
+
+            params = m.get_parameters()
+            print(params)
+            params, outputs = f(params, 1)
+            m.set_parameters(params)
+
+            assert total_called == 2
+
+    def test_jit(self):
+        total_called = 0
+
+        class SomeModule(elegy.Module):
+            n: jnp.ndarray
+
+            def call(self, x):
+                nonlocal total_called
+
+                total_called += 1
+
+                n = self.add_parameter("n", lambda: jnp.array(0))
+                self.update_parameter("n", n + 1)
+
+                if elegy.is_training():
+                    return x + 1
+                else:
+                    return x - 1
+
+        m = SomeModule()
+        assert total_called == 0
+
+        with elegy.hooks_context(training=True):
+            m.init(0)
+            # triggers call because its the first time
+            assert total_called == 1
 
             assert m.n == 0
 
-            y = m_jit(0)
+            y = m.call_jit(0)
 
             assert y == 1
             assert m.n == 1
             assert total_called == 2
 
-            y = m_jit(0)
+            y = m.call_jit(0)
             assert m.n == 2
             assert total_called == 2
 
-            elegy.set_training(False)
-            y = m_jit(0)
+        with elegy.hooks_context(training=False):
+            y = m.call_jit(0)
             assert y == -1
+            # triggers call because training changed and is static
             assert total_called == 3
             assert m.n == 3
 
-            with elegy.training_context(training=True):
-                y = m_jit(0)
-                assert y == 1
-                assert total_called == 3
-                assert m.n == 4
-
-            with elegy.training_context(training=True), elegy.hooks_context():
-                y = m_jit(0)
-                assert y == 1
-                assert total_called == 4
-                assert m.n == 5
-
-            with elegy.training_context(training=True), elegy.hooks_context():
-                y = m_jit(0)
-                assert y == 1
-                assert total_called == 4
-                assert m.n == 6
-
-            with elegy.training_context(training=True), elegy.hooks_context(
-                summaries=True
-            ):
-                y = m_jit(0)
-                assert y == 1
-                assert total_called == 5
-                assert m.n == 7
-
-            with elegy.training_context(training=False), elegy.hooks_context(
-                summaries=True
-            ):
-                y = m_jit(0)
-                assert y == -1
-                assert total_called == 6
-                assert m.n == 8
-
-    def test_jit_auto_init(self):
-        with elegy.training_context(True):
-            total_called = 0
-
-            class SomeModule:
-                n: jnp.ndarray
-
-                def call(self, x):
-                    nonlocal total_called
-
-                    total_called += 1
-
-                    n = self.add_parameter("n", initializer=jnp.array(0))
-                    self.update_parameter("n", n + 1)
-
-                    if elegy.is_training():
-                        return x + 1
-                    else:
-                        return x - 1
-
-            m = SomeModule()
-
-            assert total_called == 0
-
-            m.jit(0)
-            assert total_called == 1
-
-            m_jit = elegy.jit(m)
-
-            assert m.n == 1
-
-            y = m_jit(0)
-
+        with elegy.hooks_context(training=True):
+            y = m.call_jit(0)
             assert y == 1
-            assert m.n == 2
-            assert total_called == 2
-
-            y = m_jit(0)
-            assert m.n == 3
-            assert total_called == 2
-
-            elegy.set_training(False)
-            y = m_jit(0)
-            assert y == -1
+            # does not trigger call function for training = True exists
             assert total_called == 3
             assert m.n == 4
 
-            with elegy.training_context(training=True):
-                y = m_jit(0)
-                assert y == 1
-                assert total_called == 3
-                assert m.n == 5
+        with elegy.hooks_context(training=True):
+            y = m.call_jit(0)
+            assert y == 1
+            # does not trigger call function for training = True exists
+            assert total_called == 3
+            assert m.n == 5
 
-            with elegy.training_context(training=True), elegy.hooks_context():
-                y = m_jit(0)
-                assert y == 1
-                assert total_called == 4
-                assert m.n == 6
+        with elegy.hooks_context(training=True, summaries=True):
+            y = m.call_jit(0)
+            assert y == 1
+            # triggers call because summaries are now present
+            assert total_called == 4
+            assert m.n == 6
 
-            with elegy.training_context(training=True), elegy.hooks_context():
-                y = m_jit(0)
-                assert y == 1
-                assert total_called == 4
-                assert m.n == 7
+        with elegy.hooks_context(training=False, summaries=True):
+            y = m.call_jit(0)
+            assert y == -1
+            # triggers call because configuration training=False, summaries=True is new
+            assert total_called == 5
+            assert m.n == 7
 
-            with elegy.training_context(training=True), elegy.hooks_context(
-                summaries=True
-            ):
-                y = m_jit(0)
-                assert y == 1
-                assert total_called == 5
-                assert m.n == 8
+    def test_jit_auto_init(self):
+        total_called = 0
 
-            with elegy.training_context(training=False), elegy.hooks_context(
-                summaries=True
-            ):
-                y = m_jit(0)
-                assert y == -1
-                assert total_called == 6
-                assert m.n == 9
+        class SomeModule(elegy.Module):
+            n: jnp.ndarray
+
+            def call(self, x):
+                nonlocal total_called
+
+                total_called += 1
+
+                n = self.add_parameter("n", lambda: jnp.array(0))
+                self.update_parameter("n", n + 1)
+
+                if elegy.is_training():
+                    return x + 1
+                else:
+                    return x - 1
+
+        m = SomeModule()
+
+        assert total_called == 0
+
+        with elegy.hooks_context(training=True):
+            m.call_jit(0)
+            assert total_called == 1
+
+            assert m.n == 1
+
+            y = m.call_jit(0)
+
+            assert y == 1
+            assert m.n == 2
+            assert total_called == 2
+
+            y = m.call_jit(0)
+            assert m.n == 3
+            assert total_called == 2
 
 
 class TestOthers(TestCase):
-    def test_trainable(self):
-        class SomeModule:
-            linear: elegy.nn.Linear
-
-            def call(self, x):
-                return elegy.nn.Linear(10)(x)
-
-        x = np.random.uniform(-1, 1, size=(4, 5))
-        m = SomeModule()
-        m.init(x)
-
-        params = m.get_parameters(trainable=True)
-        assert "linear" in params
-        assert "w" in params["linear"]
-        assert "b" in params["linear"]
-
-        m.linear.trainable = False
-
-        params = m.get_parameters(trainable=True)
-        assert "w" not in params["linear"]
-        assert "b" not in params["linear"]
-
-        params = m.get_parameters(trainable=False)
-        assert "w" in params["linear"]
-        assert "b" in params["linear"]
-
-        m.trainable = True
-
-        params = m.get_parameters(trainable=True)
-        assert "w" in params["linear"]
-        assert "b" in params["linear"]
-
-        m.trainable = False
-
-        params = m.get_parameters(trainable=True)
-        assert "w" not in params["linear"]
-        assert "b" not in params["linear"]
-
-    def test_trainable_jit(self):
-        total_called = 0
-
-        class SomeModule:
-            linear: elegy.nn.Linear
-
-            def call(self, x):
-                nonlocal total_called
-                total_called += 1
-                return elegy.nn.Linear(10)(x)
-
-        x = np.random.uniform(-1, 1, size=(4, 5))
-        m = SomeModule()
-        m_jit = elegy.jit(m)
-
-        m.init(x)
-        assert total_called == 1
-
-        m_jit(x)
-        assert total_called == 2
-
-        m_jit(x)
-        assert total_called == 2
-
-        m.linear.trainable = False
-        m_jit(x)
-        assert total_called == 3
-
-        m_jit(x)
-        assert total_called == 3
-
-        m.trainable = True
-        m_jit(x)
-        assert total_called == 3
-
-        m.trainable = False
-        m_jit(x)
-        assert total_called == 4
-
-        m_jit(x)
-        assert total_called == 4
-
-    def test_trainable_jit_method(self):
-        total_called = 0
-
-        class SomeModule:
-            linear: elegy.nn.Linear
-
-            def call(self, x):
-                nonlocal total_called
-                total_called += 1
-                return elegy.nn.Linear(10)(x)
-
-        x = np.random.uniform(-1, 1, size=(4, 5))
-        m = SomeModule()
-
-        m.init_jit(x)
-        assert total_called == 1
-
-        m.jit(x)
-        assert total_called == 2
-
-        m.jit(x)
-        assert total_called == 2
-
-        m.linear.trainable = False
-        m.jit(x)
-        assert total_called == 3
-
-        m.jit(x)
-        assert total_called == 3
-
-        m.trainable = True
-        m.jit(x)
-        assert total_called == 3
-
-        m.trainable = False
-        m.jit(x)
-        assert total_called == 4
-
-        m.jit(x)
-        assert total_called == 4
-
     def test_module_system_docs(self):
-        class Linear:
+        class Linear(elegy.Module):
             def __init__(self, n_out):
                 super().__init__()
                 self.n_out = n_out
@@ -916,14 +747,16 @@ class TestOthers(TestCase):
             def call(self, x):
                 w = self.add_parameter(
                     "w",
-                    [x.shape[-1], self.n_out],
-                    initializer=elegy.initializers.RandomUniform(),
+                    lambda: elegy.initializers.RandomUniform()(
+                        shape=[x.shape[-1], self.n_out],
+                        dtype=jnp.float32,
+                    ),
                 )
-                b = self.add_parameter("b", [self.n_out], initializer=jnp.zeros)
+                b = self.add_parameter("b", lambda: jnp.zeros(shape=[self.n_out]))
 
                 return jnp.dot(x, w) + b
 
-        class MLP:
+        class MLP(elegy.Module):
             def call(self, x):
                 x = Linear(64)(x)
                 x = jax.nn.relu(x)
@@ -932,25 +765,30 @@ class TestOthers(TestCase):
                 x = Linear(1)(x)
                 return x
 
-        def loss_fn(x, y):
-            y_pred = mlp(x)
+        def loss_fn(parameters, x, y):
+            y_pred, _ = mlp.apply(dict(parameters=parameters), x)
             return jnp.mean(jnp.square(y - y_pred))
 
-        def update(x, y):
-            parameters = mlp.get_parameters(trainable=True)
-            loss, gradients = elegy.value_and_grad(loss_fn, modules=mlp)(x, y)
-            new_parameters = jax.tree_multimap(
+        def update(parameters, x, y):
+            loss, gradients = jax.value_and_grad(loss_fn)(parameters, x, y)
+            parameters = jax.tree_multimap(
                 lambda p, g: p - 0.01 * g, parameters, gradients
             )
-            mlp.set_parameters(new_parameters)
 
-            return loss
+            return loss, parameters
 
         x = np.random.uniform(size=(15, 3))
         y = np.random.uniform(size=(15, 1))
         mlp = MLP()
 
-        update_jit = elegy.jit(update, modules=mlp)
+        with elegy.hooks_context(rng=elegy.RNGSeq(42)):
+            y_pred, collections = mlp.init(x)
+
+        parameters = collections["parameters"]
+
+        update_jit = jax.jit(update)
 
         for step in range(1):
-            loss = update_jit(x, y)
+            loss, parameters = update_jit(parameters, x, y)
+
+        mlp.set_parameters(dict(parameters=parameters))
