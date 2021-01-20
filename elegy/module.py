@@ -133,6 +133,18 @@ class ModuleMeta(ABCMeta):
             return construct_module(cls, *args, **kwargs)
 
 
+class InitJit(Protocol):
+    def __call__(self, *args) -> tp.Tuple[tp.Any, ParameterCollection]:
+        ...
+
+
+class ApplyJit(Protocol):
+    def __call__(
+        self, parameters: ParameterCollection, *args
+    ) -> tp.Tuple[tp.Any, ParameterCollection]:
+        ...
+
+
 class Module(metaclass=ModuleMeta):
     """
     Basic Elegy Module.
@@ -148,6 +160,9 @@ class Module(metaclass=ModuleMeta):
     _submodules: tp.List[str]
     _dynamic_submodules: tp.List[str]
     _path_in_parent: tp.Dict["Module", Path]
+
+    init_jit: InitJit
+    apply_jit: ApplyJit
 
     __all__ = [
         "__init__",
@@ -178,21 +193,30 @@ class Module(metaclass=ModuleMeta):
         self._dynamic_submodules = []
         self._path_in_parent = {}
 
-        # self._jit_functions()
+        self._jit_functions()
 
-    # def _jit_functions(self):
-    #     self.jit = jit(self)
-    #     self.init_jit = jit(self.init, modules=self)
+    def _jit_functions(self):
+        def init_jit(*args) -> tp.Tuple[tp.Any, ParameterCollection]:
+            return self.init(*args)
 
-    # def __setstate__(self, d):
-    #     self.__dict__ = d
-    #     self._jit_functions()
+        def apply_jit(parameters, *args) -> tp.Tuple[tp.Any, ParameterCollection]:
+            if parameters is None:
+                raise ValueError("parameters cannot be None with `apply_jit`.")
 
-    # def __getstate__(self):
-    #     d = dict(self.__dict__)
-    #     del d["jit"]
-    #     del d["init_jit"]
-    #     return d
+            return self.apply(parameters, *args)
+
+        self.apply_jit = hooks.jit(apply_jit)
+        self.init_jit = hooks.jit(init_jit)
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self._jit_functions()
+
+    def __getstate__(self):
+        d = dict(self.__dict__)
+        del d["apply_jit"]
+        del d["init_jit"]
+        return d
 
     def __call__(self, *args, **kwargs) -> tp.Any:
         """

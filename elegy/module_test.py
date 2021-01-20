@@ -1,10 +1,11 @@
 from unittest import TestCase
-import jax
 
+import jax
 import jax.numpy as jnp
+import numpy as np
+import pytest
 
 import elegy
-import numpy as np
 
 
 class NewModuleTest(TestCase):
@@ -191,6 +192,15 @@ class NewModuleTest(TestCase):
 
         y = m.apply(None, 2.0)
         assert y == 4
+
+        # jit has to use functional API
+        params = m.get_parameters()
+        y, params = m.apply_jit(params, 2.0)
+        assert y == 5
+
+        # error is raised if no parameters are given
+        with pytest.raises(ValueError):
+            y, params = m.apply_jit(None, 2.0)
 
 
 class ModuleTest(TestCase):
