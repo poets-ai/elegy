@@ -174,7 +174,7 @@ class Module(metaclass=ModuleMeta):
         "init",
     ]
 
-    def __init__(self, name: tp.Optional[str] = None, dtype: np.dtype = tp.Any):
+    def __init__(self, name: tp.Optional[str] = None, dtype: tp.Any = jnp.float32):
         """
         Initializes the current module with the given name.
 
@@ -480,7 +480,10 @@ class Module(metaclass=ModuleMeta):
 # -------------------------------------------------------------
 
 
-def get_module_path(module: Module) -> tp.Optional[Path]:
+def get_module_path(module: tp.Optional[Module] = None) -> tp.Optional[Path]:
+    if module is None:
+        module = LOCAL.parent
+
     return (
         LOCAL.module_path[module]
         if module is not None and LOCAL.module_path is not None

@@ -5,9 +5,7 @@ import haiku as hk
 import numpy as np
 
 from elegy import utils
-from elegy.module import Module, LOCAL, LocalContext, add_summary
-from elegy import module
-from elegy import hooks
+from elegy import hooks, module
 
 
 def sequential(*layers: tp.Callable[..., tp.Any]) -> tp.Callable[..., tp.Any]:
@@ -49,19 +47,20 @@ def sequential(*layers: tp.Callable[..., tp.Any]) -> tp.Callable[..., tp.Any]:
             else:
                 out = layer(out)
 
-            if not isinstance(layer, Module):
-                name = (
-                    layer.__name__
-                    if hasattr(layer, "__name__")
-                    else layer.__class__.__name__
-                )
-                add_summary(name, out)
+            if not isinstance(layer, module.Module):
+                if hooks.summaries_active():
+                    name = utils.get_name(layer)
+
+                    path = module.get_module_path()
+                    path = path if path is not None else ()
+
+                    hooks.add_summary(path + (name,), layer, out)
         return out
 
     return call
 
 
-class Sequential(Module):
+class Sequential(module.Module):
     """
     Creates a Module from a zero argument lambda that produces a list of Modules or function to be executed sequentially. The lambda is necessary so that all sub-modules are instantiated inside the context of the Sequential module.
 
@@ -88,6 +87,9 @@ class Sequential(Module):
         # set signature of call to the signature of of the first layer
         # by creating a wrapper function.
         current_call = self.call
+
+        if len(self.layers) == 0:
+            raise ValueError(f"Most pass atleast 1 layer, got {self.layers}")
 
         @utils.wraps(self.layers[0])
         def call(*args, **kwargs):
