@@ -7,9 +7,13 @@ from elegy.hooks import (
     add_summary,
     get_losses,
     get_metrics,
+    get_rng,
     get_summaries,
+    get_training,
     hooks_context,
+    is_training,
     jit,
+    next_key,
     value_and_grad,
 )
 from elegy.types import Evaluation, OutputStates, Prediction, States, Training
@@ -30,9 +34,8 @@ from .losses import Loss
 from .metrics import Metric
 from .model import Logs, Metrics, Model, Optimizer
 from .model.model_base import ModelBase
-from .types import Mode, RNGSeq, Uninitialized
-
 from .module import Module
+from .types import Mode, RNGSeq, Uninitialized
 
 # from .module import (
 #     RNG,

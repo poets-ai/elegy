@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from elegy.types import Logs, Path, Scalar, Summaries
+from elegy.types import Logs, Path, RNGSeq, Scalar, Summaries
 from elegy import utils
 import functools
 import threading
@@ -17,6 +17,8 @@ class HooksContext(Protocol):
     losses: tp.Optional[Logs]
     metrics: tp.Optional[Logs]
     summaries: tp.Optional[Summaries]
+    rng: tp.Optional[RNGSeq]
+    training: tp.Optional[bool]
 
 
 @dataclass
@@ -24,9 +26,17 @@ class _HooksContext(threading.local):
     losses: tp.Optional[Logs]
     metrics: tp.Optional[Logs]
     summaries: tp.Optional[Summaries]
+    rng: tp.Optional[RNGSeq]
+    training: tp.Optional[bool]
 
 
-LOCAL: HooksContext = _HooksContext(losses=None, metrics=None, summaries=None)
+LOCAL: HooksContext = _HooksContext(
+    losses=None,
+    metrics=None,
+    summaries=None,
+    rng=None,
+    training=None,
+)
 
 
 # ----------------------------------------------------------------
@@ -130,6 +140,78 @@ def summaries_active() -> bool:
     return LOCAL.summaries is not None
 
 
+def get_rng() -> tp.Optional[RNGSeq]:
+    return LOCAL.rng
+
+
+def next_key() -> jnp.ndarray:
+    if LOCAL.rng is None:
+        raise ValueError(
+            f"No rng present in context, please set it in `hooks_context`."
+        )
+
+    return LOCAL.rng.next()
+
+
+def get_training() -> tp.Optional[bool]:
+    return LOCAL.training
+
+
+def is_training() -> bool:
+    if LOCAL.training is None:
+        raise ValueError(
+            f"'training' not present in context, please set it in `hooks_context`."
+        )
+
+    return LOCAL.training
+
+
+# ----------------------------------------------------------------
+# contexts
+# ----------------------------------------------------------------
+
+
+def hooks_context(
+    summaries: bool = False,
+    rng: tp.Optional[RNGSeq] = None,
+    training: tp.Optional[bool] = None,
+) -> tp.ContextManager[None]:
+    return _hooks_context(
+        summaries=summaries,
+        rng=rng,
+        training=training,
+    )
+
+
+@contextmanager
+def _hooks_context(
+    summaries: bool,
+    rng: tp.Optional[RNGSeq],
+    training: tp.Optional[bool],
+) -> tp.Iterator[None]:
+
+    prev_losses = LOCAL.losses
+    prev_metrics = LOCAL.metrics
+    prev_summaries = LOCAL.summaries
+    prev_rng = LOCAL.rng
+    prev_training = LOCAL.training
+
+    LOCAL.losses = {}
+    LOCAL.metrics = {}
+    LOCAL.summaries = [] if summaries else None
+    LOCAL.rng = rng
+    LOCAL.training = training
+
+    try:
+        yield
+    finally:
+        LOCAL.losses = prev_losses
+        LOCAL.metrics = prev_metrics
+        LOCAL.summaries = prev_summaries
+        LOCAL.rng = prev_rng
+        LOCAL.training = prev_training
+
+
 # -------------------------------------------------------------
 # transforms
 # -------------------------------------------------------------
@@ -140,59 +222,120 @@ class TransformtOutput(tp.NamedTuple):
     losses: tp.Optional[Logs]
     metrics: tp.Optional[Logs]
     summary_values: tp.Optional[tp.List[tp.Any]]
+    rng: tp.Optional[RNGSeq]
+    training: tp.Optional[bool]
 
 
-def hooks_aware(jax_f):
-    @functools.wraps(jax_f)
-    def _jax_transform(
-        f,
+class DynamicArgs(tp.NamedTuple):
+    losses: tp.Optional[Logs]
+    metrics: tp.Optional[Logs]
+    summary_values: tp.Optional[tp.List[tp.Any]]
+    rng: tp.Optional[RNGSeq]
+
+
+class StaticArgs(tp.NamedTuple):
+    training: tp.Optional[bool]
+
+
+def _patch_summary_values(
+    summaries: tp.Optional[Summaries],
+    values: tp.Optional[tp.List[tp.Any]],
+) -> tp.Optional[Summaries]:
+    if values is not None and summaries is not None:
+        return [
+            (path, module, value) for (path, module, _), value in zip(summaries, values)
+        ]
+    else:
+        assert values is None and summaries is None
+        return None
+
+
+def _extract_summary_values(
+    summaries: tp.Optional[Summaries],
+) -> tp.Optional[tp.List[tp.Any]]:
+    if summaries is not None:
+        return [value for path, module, value in summaries]
+    else:
+        return None
+
+
+def jit(
+    f,
+    **kwargs,
+):
+    def _transform_fn(
+        *args,
+    ) -> TransformtOutput:
+
+        # extract input context
+        dynamic_args: DynamicArgs
+        static_args: StaticArgs
+
+        static_args, dynamic_args = args[:2]  # get from beginning
+        args = args[2:]
+
+        (LOCAL.losses, LOCAL.metrics, summary_values, LOCAL.rng) = dynamic_args
+        (LOCAL.training,) = static_args
+        LOCAL.summaries = _patch_summary_values(LOCAL.summaries, summary_values)
+
+        # call
+        output = f(*args)
+
+        # add outputs context
+        return TransformtOutput(
+            output=output,
+            losses=get_losses(),
+            metrics=get_metrics(),
+            summary_values=_extract_summary_values(get_summaries()),
+            rng=get_rng(),
+            training=get_training(),
+        )
+
+    # transform kwargs
+    static_argnums = kwargs.pop("static_argnums", [])
+    if isinstance(static_argnums, int):
+        static_argnums = [static_argnums]
+    static_argnums = [0] + [i + 2 for i in static_argnums]
+
+    # make fn
+    transform_fn = jax.jit(
+        _transform_fn,
+        static_argnums=static_argnums,
         **kwargs,
-    ):
-        def _transform_fn(
-            *args,
-        ) -> TransformtOutput:
+    )
 
-            output = f(*args)
-            losses = get_losses()
-            metrics = get_metrics()
-            summaries = get_summaries()
+    @functools.wraps(f)
+    def wrapper(*args):
 
-            summary_values = (
-                [value for path, module, value in summaries]
-                if summaries is not None
-                else None
-            )
+        # add input context
+        dynamic_args = DynamicArgs(
+            losses=get_losses(),
+            metrics=get_metrics(),
+            summary_values=_extract_summary_values(get_summaries()),
+            rng=get_rng(),
+        )
+        static_args = StaticArgs(
+            training=get_training(),
+        )
+        # put them first because of static_args
+        args = (static_args, dynamic_args) + args
 
-            return TransformtOutput(
-                output=output,
-                losses=losses,
-                metrics=metrics,
-                summary_values=summary_values,
-            )
+        # call and patch
+        (
+            output,
+            LOCAL.losses,
+            LOCAL.metrics,
+            summary_values,
+            LOCAL.rng,
+            training,
+        ) = transform_fn(*args)
+        LOCAL.summaries = _patch_summary_values(LOCAL.summaries, summary_values)
+        if training is not None:
+            assert training.dtype == jnp.dtype("bool")
+        LOCAL.training = bool(training)
+        return output
 
-        transform_fn = jax.jit(_transform_fn, **kwargs)
-
-        @functools.wraps(f)
-        def wrapper(*args):
-
-            output, losses, metrics, summary_values = transform_fn(*args)
-
-            LOCAL.losses = losses
-            LOCAL.metrics = metrics
-
-            if summary_values is not None and LOCAL.summaries is not None:
-                LOCAL.summaries = [
-                    (path, module, value)
-                    for (path, module, _), value in zip(LOCAL.summaries, summary_values)
-                ]
-            else:
-                assert summary_values is None and LOCAL.summaries is None
-
-            return output
-
-        return wrapper
-
-    return _jax_transform
+    return wrapper
 
 
 def value_and_grad(
@@ -202,25 +345,29 @@ def value_and_grad(
     def _transform_fn(
         *args,
     ) -> tp.Tuple[np.ndarray, TransformtOutput]:
+        # extract input context
+        dynamic_args: DynamicArgs
+        static_args: StaticArgs
 
+        dynamic_args, static_args = args[-2:]  # get from end
+        args = args[:-2]
+
+        (LOCAL.losses, LOCAL.metrics, summary_values, LOCAL.rng) = dynamic_args
+        (LOCAL.training,) = static_args
+        LOCAL.summaries = _patch_summary_values(LOCAL.summaries, summary_values)
+
+        # call
         output = f(*args)
-
-        losses = get_losses()
-        metrics = get_metrics()
-        summaries = get_summaries()
-        summary_values = (
-            [value for path, module, value in summaries]
-            if summaries is not None
-            else None
-        )
-
         loss = output[0] if isinstance(output, tuple) else output
 
+        # add outputs context
         return loss, TransformtOutput(
             output=output,
-            losses=losses,
-            metrics=metrics,
-            summary_values=summary_values,
+            losses=get_losses(),
+            metrics=get_metrics(),
+            summary_values=_extract_summary_values(get_summaries()),
+            rng=get_rng(),
+            training=get_training(),
         )
 
     kwargs["has_aux"] = True
@@ -230,26 +377,40 @@ def value_and_grad(
 
     @functools.wraps(f)
     def wrapper(*args):
+        # add input context
+        dynamic_args = DynamicArgs(
+            losses=get_losses(),
+            metrics=get_metrics(),
+            summary_values=_extract_summary_values(get_summaries()),
+            rng=get_rng(),
+        )
+        static_args = StaticArgs(
+            training=get_training(),
+        )
+        # put them last because params have to go first
+        args += (dynamic_args, static_args)
 
-        (loss, (output, losses, metrics, summary_values)), grads = transform_fn(*args)
-
-        LOCAL.losses = losses
-        LOCAL.metrics = metrics
-
-        if summary_values is not None and LOCAL.summaries is not None:
-            LOCAL.summaries = [
-                (path, module, value)
-                for (path, module, _), value in zip(LOCAL.summaries, summary_values)
-            ]
-        else:
-            assert summary_values is None and LOCAL.summaries is None
+        # call and patch
+        (
+            (
+                loss,
+                (
+                    output,
+                    LOCAL.losses,
+                    LOCAL.metrics,
+                    summary_values,
+                    LOCAL.rng,
+                    LOCAL.training,
+                ),
+            ),
+            grads,
+        ) = transform_fn(*args)
+        LOCAL.summaries = _patch_summary_values(LOCAL.summaries, summary_values)
 
         return output, grads
 
     return wrapper
 
-
-jit = hooks_aware(jax.jit)
 
 # NOTE: it is unclear if these can be implemented since they dont support `hax_aux`
 # jacrev = hooks_aware(jax.jacrev)
@@ -270,30 +431,3 @@ jit = hooks_aware(jax.jit)
 # vmap = hooks_aware(jax.vmap)
 # pmap = hooks_aware(jax.pmap)
 # soft_pmap = hooks_aware(jax.soft_pmap)
-
-# ----------------------------------------------------------------
-# contexts
-# ----------------------------------------------------------------
-
-
-def hooks_context(summaries: bool = False) -> tp.ContextManager[None]:
-    return _hooks_context(summaries=summaries)
-
-
-@contextmanager
-def _hooks_context(summaries: bool = False) -> tp.Iterator[None]:
-
-    prev_losses = LOCAL.losses
-    prev_metrics = LOCAL.metrics
-    prev_summaries = LOCAL.summaries
-
-    LOCAL.losses = {}
-    LOCAL.metrics = {}
-    LOCAL.summaries = [] if summaries else None
-
-    try:
-        yield
-    finally:
-        LOCAL.losses = prev_losses
-        LOCAL.metrics = prev_metrics
-        LOCAL.summaries = prev_summaries
