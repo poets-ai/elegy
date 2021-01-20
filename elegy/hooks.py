@@ -330,9 +330,11 @@ def jit(
             training,
         ) = transform_fn(*args)
         LOCAL.summaries = _patch_summary_values(LOCAL.summaries, summary_values)
+
         if training is not None:
             assert training.dtype == jnp.dtype("bool")
-        LOCAL.training = bool(training)
+
+        LOCAL.training = bool(training) if training is not None else None
         return output
 
     return wrapper

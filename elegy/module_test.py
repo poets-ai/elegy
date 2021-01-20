@@ -12,20 +12,20 @@ class NewModuleTest(TestCase):
     def test_basic(self):
         class M(elegy.Module):
             def call(self, x):
-                n = self.add_state("n", lambda: 1)
+                n = self.add_parameter("n", lambda: 1)
                 return n + x
 
         m = M()
 
         y, params = m.init(2.0)
 
-        assert params == {"states": {"n": 1}}
+        assert params == {"parameters": {"n": 1}}
         assert y == 3
 
     def test_basic_call(self):
         class M(elegy.Module):
             def call(self, x):
-                n = self.add_state("n", lambda: 1)
+                n = self.add_parameter("n", lambda: 1)
                 return n + x
 
         m = M()
@@ -34,20 +34,20 @@ class NewModuleTest(TestCase):
         params = m.get_parameters()
 
         assert y == 3
-        assert params == {"states": {"n": 1}}
+        assert params == {"parameters": {"n": 1}}
 
         # update params
-        m.set_parameters({"states": {"n": 20}})
+        m.set_parameters({"parameters": {"n": 20}})
         y = m(2.0)
         params = m.get_parameters()
 
         assert y == 22
-        assert params == {"states": {"n": 20}}
+        assert params == {"parameters": {"n": 20}}
 
     def test_basic_apply(self):
         class M(elegy.Module):
             def call(self, x):
-                n = self.add_state("n", lambda: 1)
+                n = self.add_parameter("n", lambda: 1)
                 return n + x
 
         m = M()
@@ -55,24 +55,24 @@ class NewModuleTest(TestCase):
         y, params = m.init(2.0)
 
         assert y == 3
-        assert params == {"states": {"n": 1}}
+        assert params == {"parameters": {"n": 1}}
 
-        y, params = m.apply({"states": {"n": 5}}, 2.0)  # run with new params
+        y, params = m.apply({"parameters": {"n": 5}}, 2.0)  # run with new params
         current_params = m.get_parameters()  # internal params are not modify by apply.
 
         assert y == 7
-        assert params == {"states": {"n": 5}}
-        assert current_params == {"states": {"n": 1}}
+        assert params == {"parameters": {"n": 5}}
+        assert current_params == {"parameters": {"n": 1}}
 
     def test_basic_compose(self):
         class A(elegy.Module):
             def call(self, x):
-                b = self.add_state("b", lambda: 10)
+                b = self.add_parameter("b", lambda: 10)
                 return b + x
 
         class M(elegy.Module):
             def call(self, x):
-                n = self.add_state("n", lambda: 1)
+                n = self.add_parameter("n", lambda: 1)
                 x = A()(x)
                 return n + x
 
@@ -81,12 +81,12 @@ class NewModuleTest(TestCase):
         y, params = m.init(2.0)
 
         assert y == 13
-        assert params == {"states": {"n": 1, "a": {"b": 10}}}
+        assert params == {"parameters": {"n": 1, "a": {"b": 10}}}
 
     def test_basic_list_submodules(self):
         class A(elegy.Module):
             def call(self, x):
-                b = self.add_state("b", lambda: 10)
+                b = self.add_parameter("b", lambda: 10)
                 return b + x
 
         class M(elegy.Module):
@@ -95,7 +95,7 @@ class NewModuleTest(TestCase):
                 self.ais = [A(), A()]
 
             def call(self, x):
-                n = self.add_state("n", lambda: 1)
+                n = self.add_parameter("n", lambda: 1)
                 x = self.ais[1](x)
                 return n + x
 
@@ -118,7 +118,7 @@ class NewModuleTest(TestCase):
             ),
         ]
         assert params == {
-            "states": {
+            "parameters": {
                 "n": 1,
                 "ais": [
                     {},
@@ -131,7 +131,7 @@ class NewModuleTest(TestCase):
     def test_basic_dynamic_submodules(self):
         class A(elegy.Module):
             def call(self, x):
-                b = self.add_state("b", lambda: 10)
+                b = self.add_parameter("b", lambda: 10)
                 return b + x
 
         class M(elegy.Module):
@@ -140,7 +140,7 @@ class NewModuleTest(TestCase):
 
             def call(self, x):
                 ais = [A(), A()]
-                n = self.add_state("n", lambda: 1)
+                n = self.add_parameter("n", lambda: 1)
                 x = ais[1](x)
                 return n + x
 
@@ -163,7 +163,7 @@ class NewModuleTest(TestCase):
             ),
         ]
         assert params == {
-            "states": {
+            "parameters": {
                 "n": 1,
                 "a": {},
                 "a_1": {
@@ -176,7 +176,7 @@ class NewModuleTest(TestCase):
     def test_basic_update(self):
         class M(elegy.Module):
             def call(self, x):
-                n = self.add_state("n", lambda: 1)
+                n = self.add_parameter("n", lambda: 1)
                 self.update_parameter("n", n + 1)
                 return n + x
 
@@ -185,7 +185,7 @@ class NewModuleTest(TestCase):
         y, params = m.init(2.0)
 
         assert y == 3
-        assert params == {"states": {"n": 1}}
+        assert params == {"parameters": {"n": 1}}
 
         y = m.apply(None, 2.0)
         assert y == 3
@@ -210,22 +210,21 @@ class ModuleTest(TestCase):
             self.units = units
 
         def call(self, x):
-            w = self.add_parameter("w", [x.shape[-1], self.units], initializer=jnp.ones)
-            b = self.add_parameter("b", [self.units], initializer=jnp.ones)
-            n = self.add_parameter(
-                "n", [], dtype=jnp.int32, initializer=jnp.zeros, trainable=False
-            )
+            w = self.add_parameter("w", lambda: jnp.ones([x.shape[-1], self.units]))
+            b = self.add_parameter("b", lambda: jnp.ones([self.units]))
+            n = self.add_parameter("n", lambda: jnp.zeros([]), trainable=False)
 
             self.update_parameter("n", n + 1)
 
             y = jnp.dot(x, w) + b
 
-            elegy.add_loss("activation_sum", jnp.sum(y))
-            elegy.add_metric("activation_mean", jnp.mean(y))
+            path = elegy.get_module_path_str(self)
+            elegy.add_loss(f"activation_sum", jnp.sum(y))
+            elegy.add_metric(f"{path}/activation_mean", jnp.mean(y))
 
             return y
 
-    class MyModule:
+    class MyModule(elegy.Module):
         def __init__(self):
             super().__init__()
             self.linear = ModuleTest.Linear(6)
@@ -234,7 +233,9 @@ class ModuleTest(TestCase):
         def call(self, x) -> np.ndarray:
             x = self.linear(x)
             x = self.linear1(x)
-            self.bias = self.add_parameter("bias", [x.shape[-1]], jnp.float32, jnp.ones)
+            self.bias = self.add_parameter(
+                "bias", lambda: jnp.ones([x.shape[-1]], jnp.float32)
+            )
             return x + self.bias * 10
 
     def test_basic(self):
@@ -252,15 +253,18 @@ class ModuleTest(TestCase):
 
         m.init(x)
 
-        parameters = m.get_parameters()
-        state = m.get_parameters(trainable=False)
+        collections = m.get_parameters()
+        parameters, states = (
+            collections["parameters"],
+            collections["states"],
+        )
 
         assert "bias" in parameters
         assert "linear" in parameters
         assert "w" in parameters["linear"]
         assert "b" in parameters["linear"]
-        assert parameters["linear"]["n"] == 0
-        assert parameters["linear1"]["n"] == 0
+        assert states["linear"]["n"] == 0
+        assert states["linear1"]["n"] == 0
         assert "linear1" in parameters
 
         with elegy.hooks_context(summaries=True):
@@ -275,60 +279,66 @@ class ModuleTest(TestCase):
         assert metrics
         assert summaries
 
-        parameters = m.get_parameters()
+        collections = m.get_parameters()
+        parameters, states = (
+            collections["parameters"],
+            collections["states"],
+        )
 
         assert y.shape == (4, 7)
         assert "bias" in parameters
         assert "linear" in parameters
         assert "w" in parameters["linear"]
         assert "b" in parameters["linear"]
-        assert m.linear.get_parameters()["n"] == 1
-        assert parameters["linear"]["n"] == 1
+        assert m.linear.get_parameters()["states"]["n"] == 1
+        assert states["linear"]["n"] == 1
         assert "linear1" in parameters
 
         assert "activation_sum_loss" in losses
-        assert "my_module/linear/activation_mean" in metrics
-        assert "my_module/linear_1/activation_mean" in metrics
+        assert "linear/activation_mean" in metrics
+        assert "linear1/activation_mean" in metrics
 
-        assert summaries[0][:2] == (m.linear, "my_module/linear")
+        assert summaries[0][:2] == (("linear",), m.linear)
         assert summaries[0][2].shape == (4, 6)
-        assert summaries[1][:2] == (m.linear1, "my_module/linear_1")
+        assert summaries[1][:2] == (("linear1",), m.linear1)
         assert summaries[1][2].shape == (4, 7)
-        assert summaries[2][:2] == (m, "my_module")
+        assert summaries[2][:2] == ((), m)
         assert summaries[2][2].shape == (4, 7)
 
-        m.set_parameters(jax.tree_map(lambda x: -x, parameters))
+        m.set_parameters(jax.tree_map(lambda x: -x, collections))
 
-        parameters = m.get_parameters()
+        collections = m.get_parameters()
+        parameters, states = (
+            collections["parameters"],
+            collections["states"],
+        )
 
         assert parameters["bias"][0] == -1
-        assert m.linear.get_parameters()["w"][0, 0] == -1
-        assert m.linear.get_parameters()["b"][0] == -1
-        assert m.linear1.get_parameters()["w"][0, 0] == -1
-        assert m.linear1.get_parameters()["b"][0] == -1
+        assert m.linear.get_parameters()["parameters"]["w"][0, 0] == -1
+        assert m.linear.get_parameters()["parameters"]["b"][0] == -1
+        assert m.linear1.get_parameters()["parameters"]["w"][0, 0] == -1
+        assert m.linear1.get_parameters()["parameters"]["b"][0] == -1
 
-        assert m.parameters_size(include_submodules=False) == 7
-
-        current_parameters = m.get_parameters()
+        current_collection = m.get_parameters()
 
         m.reset()
 
-        parameters = m.get_parameters()
+        collections = m.get_parameters()
 
-        assert jax.tree_leaves(parameters) == []
-        assert m.parameters_size() == 0
+        assert jax.tree_leaves(collections) == []
+        assert elegy.utils.parameters_count(collections) == 0
 
-        m.set_parameters(current_parameters)
+        m.set_parameters(current_collection)
 
-        assert m.get_parameters()["bias"][0] == -1
-        assert m.linear.get_parameters()["w"][0, 0] == -1
-        assert m.linear.get_parameters()["b"][0] == -1
-        assert m.linear1.get_parameters()["w"][0, 0] == -1
-        assert m.linear1.get_parameters()["b"][0] == -1
+        assert m.get_parameters()["parameters"]["bias"][0] == -1
+        assert m.linear.get_parameters()["parameters"]["w"][0, 0] == -1
+        assert m.linear.get_parameters()["parameters"]["b"][0] == -1
+        assert m.linear1.get_parameters()["parameters"]["w"][0, 0] == -1
+        assert m.linear1.get_parameters()["parameters"]["b"][0] == -1
 
 
 class ModuleDynamicTest(TestCase):
-    class Linear:
+    class Linear(elegy.Module):
         w: jnp.ndarray
         b: jnp.ndarray
 
@@ -337,32 +347,28 @@ class ModuleDynamicTest(TestCase):
             self.units = units
 
         def call(self, x):
-            w = self.add_parameter("w", [x.shape[-1], self.units], initializer=jnp.ones)
-            b = self.add_parameter("b", [self.units], initializer=jnp.ones)
-
-            elegy.next_rng_key()
-
-            n = self.add_parameter(
-                "n", [], dtype=jnp.int32, initializer=jnp.zeros, trainable=False
-            )
+            w = self.add_parameter("w", lambda: jnp.ones([x.shape[-1], self.units]))
+            b = self.add_parameter("b", lambda: jnp.ones([self.units]))
+            n = self.add_parameter("n", lambda: jnp.zeros([]), trainable=False)
 
             self.update_parameter("n", n + 1)
 
             y = jnp.dot(x, w) + b
 
-            elegy.add_loss("activation_sum", jnp.sum(y))
-            elegy.add_metric("activation_mean", jnp.mean(y))
+            path = elegy.get_module_path_str(self)
+            elegy.add_loss(f"activation_sum", jnp.sum(y))
+            elegy.add_metric(f"{path}/activation_mean", jnp.mean(y))
 
             return y
 
-    class MyModule:
+    class MyModule(elegy.Module):
         linear: "ModuleDynamicTest.Linear"
         linear_1: "ModuleDynamicTest.Linear"
 
         def call(self, x) -> np.ndarray:
             x = ModuleDynamicTest.Linear(6)(x)
             x = ModuleDynamicTest.Linear(7)(x)
-            self.bias = self.add_parameter("bias", [x.shape[-1]], initializer=jnp.ones)
+            self.bias = self.add_parameter("bias", lambda: jnp.ones([x.shape[-1]]))
             return x + self.bias * 10
 
     def test_basic(self):
@@ -375,23 +381,34 @@ class ModuleDynamicTest(TestCase):
 
     def test_get_parameters(self):
         x = np.random.uniform(-1, 1, size=(4, 5))
-        initial_key = elegy.get_rng().key
         m = ModuleDynamicTest.MyModule()
 
         m.init_jit(x)
 
-        assert not jnp.allclose(initial_key, elegy.get_rng().key)
-        assert "bias" in m.get_parameters()
-        assert "linear" in m.get_parameters()
-        assert "w" in m.get_parameters()["linear"]
-        assert "b" in m.get_parameters()["linear"]
-        assert m.linear.get_parameters()["n"] == 0
-        assert m.get_parameters()["linear"]["n"] == 0
-        assert "linear_1" in m.get_parameters()
+        collections = m.get_parameters()
+        parameters, states = (
+            collections["parameters"],
+            collections["states"],
+        )
+
+        assert "bias" in parameters
+        assert "linear" in parameters
+        assert "w" in parameters["linear"]
+        assert "b" in parameters["linear"]
+        assert m.linear.get_parameters()["states"]["n"] == 0
+        assert states["linear"]["n"] == 0
+        assert "linear_1" in parameters
 
         with elegy.hooks_context(summaries=True):
             # y: jnp.ndarray = m(x)
-            y: jnp.ndarray = m.jit(x)
+            collections = m.get_parameters()
+            y: jnp.ndarray
+            y, collections = m.apply_jit(collections, x)
+            m.set_parameters(collections)
+            parameters, states = (
+                collections["parameters"],
+                collections["states"],
+            )
 
             losses = elegy.get_losses()
             metrics = elegy.get_metrics()
@@ -402,41 +419,45 @@ class ModuleDynamicTest(TestCase):
         assert summaries
 
         assert y.shape == (4, 7)
-        assert "bias" in m.get_parameters()
-        assert "linear" in m.get_parameters()
-        assert "w" in m.get_parameters()["linear"]
-        assert "b" in m.get_parameters()["linear"]
-        assert m.linear.get_parameters()["n"] == 1
-        assert m.get_parameters()["linear"]["n"] == 1
-        assert "linear_1" in m.get_parameters()
+        assert "bias" in parameters
+        assert "linear" in parameters
+        assert "w" in parameters["linear"]
+        assert "b" in parameters["linear"]
+        assert m.linear.get_parameters()["states"]["n"] == 1
+        assert states["linear"]["n"] == 1
+        assert "linear_1" in parameters
 
         assert "activation_sum_loss" in losses
-        assert "my_module/linear/activation_mean" in metrics
-        assert "my_module/linear_1/activation_mean" in metrics
+        assert "linear/activation_mean" in metrics
+        assert "linear_1/activation_mean" in metrics
 
-        assert summaries[0][:2] == (m.linear, "my_module/linear")
+        assert summaries[0][:2] == (("linear",), m.linear)
         assert summaries[0][2].shape == (4, 6)
-        assert summaries[1][:2] == (m.linear_1, "my_module/linear_1")
+        assert summaries[1][:2] == (("linear_1",), m.linear_1)
         assert summaries[1][2].shape == (4, 7)
-        assert summaries[2][:2] == (m, "my_module")
+        assert summaries[2][:2] == ((), m)
         assert summaries[2][2].shape == (4, 7)
 
         m.set_parameters(jax.tree_map(lambda x: -x, m.get_parameters()))
 
-        assert m.get_parameters()["bias"][0] == -1
-        assert m.linear.get_parameters()["w"][0, 0] == -1
-        assert m.linear.get_parameters()["b"][0] == -1
-        assert m.linear_1.get_parameters()["w"][0, 0] == -1
-        assert m.linear_1.get_parameters()["b"][0] == -1
+        collections = m.get_parameters()
+        parameters, states = (
+            collections["parameters"],
+            collections["states"],
+        )
 
-        assert m.parameters_size(include_submodules=False) == 7
+        assert parameters["bias"][0] == -1
+        assert m.linear.get_parameters()["parameters"]["w"][0, 0] == -1
+        assert m.linear.get_parameters()["parameters"]["b"][0] == -1
+        assert m.linear_1.get_parameters()["parameters"]["w"][0, 0] == -1
+        assert m.linear_1.get_parameters()["parameters"]["b"][0] == -1
 
         current_parameters = m.get_parameters()
 
         m.reset()
 
         assert jax.tree_leaves(m.get_parameters()) == []
-        assert m.parameters_size() == 0
+        assert elegy.utils.parameters_count(m.get_parameters()) == 0
 
         m.set_parameters(current_parameters)
 
@@ -486,12 +507,12 @@ class ModuleDynamicTest(TestCase):
         assert "linear_1" in m.get_parameters()
 
         assert "activation_sum_loss" in losses
-        assert "my_module/linear/activation_mean" in metrics
-        assert "my_module/linear_1/activation_mean" in metrics
+        assert "linear/activation_mean" in metrics
+        assert "linear_1/activation_mean" in metrics
 
-        assert summaries[0][:2] == (m.linear, "my_module/linear")
+        assert summaries[0][:2] == (m.linear, "linear")
         assert summaries[0][2].shape == (4, 6)
-        assert summaries[1][:2] == (m.linear_1, "my_module/linear_1")
+        assert summaries[1][:2] == (m.linear_1, "linear_1")
         assert summaries[1][2].shape == (4, 7)
         assert summaries[2][:2] == (m, "my_module")
         assert summaries[2][2].shape == (4, 7)

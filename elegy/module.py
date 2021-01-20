@@ -196,8 +196,18 @@ class Module(metaclass=ModuleMeta):
         self._jit_functions()
 
     def _jit_functions(self):
-        def init_jit(*args) -> tp.Tuple[tp.Any, ParameterCollection]:
-            return self.init(*args)
+        def get_init_jit():
+            def _init_jit(*args) -> tp.Tuple[tp.Any, ParameterCollection]:
+                return self.init(*args)
+
+            jit_obj = hooks.jit(_init_jit)
+
+            def init_jit(*args) -> tp.Tuple[tp.Any, ParameterCollection]:
+                y, collections = jit_obj(*args)
+                self.set_parameters(collections)
+                return y, collections
+
+            return init_jit
 
         def apply_jit(parameters, *args) -> tp.Tuple[tp.Any, ParameterCollection]:
             if parameters is None:
@@ -205,8 +215,8 @@ class Module(metaclass=ModuleMeta):
 
             return self.apply(parameters, *args)
 
+        self.init_jit = get_init_jit()
         self.apply_jit = hooks.jit(apply_jit)
-        self.init_jit = hooks.jit(init_jit)
 
     def __setstate__(self, d):
         self.__dict__ = d
@@ -287,7 +297,8 @@ class Module(metaclass=ModuleMeta):
         self,
         name: str,
         initializer: tp.Callable[[], tp.Any],
-        collection: str = "parameters",
+        collection: tp.Optional[str] = None,
+        trainable: bool = True,
         regularizer: tp.Optional[tp.Callable[[tp.Any], jnp.ndarray]] = None,
         constraint: tp.Optional[tp.Callable[[tp.Any], tp.Any]] = None,
     ) -> np.ndarray:
@@ -299,13 +310,20 @@ class Module(metaclass=ModuleMeta):
             name: The name of the parameter. It must be unique and no other field/property/method
                 of the instance can have that name.
             initializer: A callable that takes not arguments returns the initial value.
-            collection: Name of the parameter collection.
+            collection: Optional name of the parameter collection, if not defined it will be se to
+                `"parameters"` if `trainable=True` else it will be set to `"states"`.
+            trainable: Specify whether this parameter should be added to the default trainable `"parameters"`
+                collection or to the default non-trainable `"states"` collection. If collection is
+                passed this parameter will ignored.
             regularizer: Regularizer instance (callable).
             constraint: Constraint instance (callable).
 
         Returns:
             The value of the parameter.
         """
+
+        if collection is None:
+            collection = "parameters" if trainable else "states"
 
         if not hasattr(self, name):
 
@@ -333,39 +351,6 @@ class Module(metaclass=ModuleMeta):
             )
 
         return value
-
-    def add_state(
-        self,
-        name: str,
-        initializer: tp.Callable[[], tp.Any],
-        regularizer: tp.Optional[tp.Callable[[tp.Any], jnp.ndarray]] = None,
-        constraint: tp.Optional[tp.Callable[[tp.Any], tp.Any]] = None,
-    ) -> np.ndarray:
-        """
-        Adds a parameter to the 'states' collection on the current module. The parameter will only be initialized once and
-        will reused afterwards. This is a shortcut for:
-
-        ```python
-        self.add_parameter(..., collection="states", ...)
-        ```
-
-        Arguments:
-            name: The name of the parameter. It must be unique and no other field/property/method
-                of the instance can have that name.
-            initializer: A callable that takes not arguments returns the initial value.
-            regularizer: Regularizer instance (callable).
-            constraint: Constraint instance (callable).
-
-        Returns:
-            The value of the parameter.
-        """
-        return self.add_parameter(
-            name,
-            initializer,
-            collection="states",
-            regularizer=regularizer,
-            constraint=constraint,
-        )
 
     def update_parameter(self, name: str, value: tp.Any) -> None:
         """
@@ -395,7 +380,8 @@ class Module(metaclass=ModuleMeta):
         self,
         name: str,
         value: tp.Callable[[], tp.Any],
-        collection: str = "states",
+        collection: tp.Optional[str] = None,
+        trainable: bool = True,
     ):
         """
         Add a parameter to the current module or update it if it already exists.
@@ -407,13 +393,19 @@ class Module(metaclass=ModuleMeta):
             name: The name of the state. It must be unique and no other field/property/method
                 of the instance can have that name.
             value: The updated value of the state.
-            collection: Name of the parameter collection.
+            collection: Optional name of the parameter collection, if not defined it will be se to
+                `"parameters"` if `trainable=True` else it will be set to `"states"`.
+            trainable: Specify whether this parameter should be added to the default trainable `"parameters"`
+                collection or to the default non-trainable `"states"` collection. If collection is
+                passed this parameter will ignored.
 
         Raises:
             `ValueError` if parameter is not present in current module.
         """
         if not hasattr(self, name):
-            self.add_parameter(name, lambda: value, collection=collection)
+            self.add_parameter(
+                name, lambda: value, trainable=trainable, collection=collection
+            )
         else:
             self.update_parameter(name, value)
 
@@ -490,6 +482,14 @@ def get_module_path(module: Module) -> tp.Optional[Path]:
     )
 
 
+def get_module_path_str(module: Module) -> tp.Optional[str]:
+    return (
+        "/".join(map(str, LOCAL.module_path[module]))
+        if module is not None and LOCAL.module_path is not None
+        else None
+    )
+
+
 def is_initializing() -> bool:
     return bool(LOCAL.initializing)
 
@@ -509,10 +509,13 @@ def _call_context(module: Module):
     prev_module = LOCAL.parent
     prev_inside_call = LOCAL.inside_call
     prev_module_index = LOCAL.module_index
+    prev_module_path = LOCAL.module_path
 
     LOCAL.parent = module
     LOCAL.inside_call = True
     LOCAL.module_index = 0
+    if LOCAL.module_path is None:
+        LOCAL.module_path = {}
 
     try:
         if prev_module is not None and prev_module not in module._path_in_parent:
@@ -529,25 +532,18 @@ def _call_context(module: Module):
                 f"Module: {prev_module}\n"
             )
 
-        if hooks.summaries_active():
-            if LOCAL.module_path is None:
-                raise NoContext(
-                    f"Summaries are active but no context for the module is being used, "
-                    f"if this happens consider using `Module.init` or `Module.apply` instead "
-                    f"of calling the module directly. Got: {module}"
-                )
-            elif prev_module is None:
-                LOCAL.module_path[module] = ()
-            else:
-
-                LOCAL.module_path[module] = (
-                    LOCAL.module_path[prev_module] + module._path_in_parent[prev_module]
-                )
+        if prev_module is None:
+            LOCAL.module_path[module] = ()
+        else:
+            parent_path = LOCAL.module_path[prev_module]
+            child_path = module._path_in_parent[prev_module]
+            LOCAL.module_path[module] = parent_path + child_path
         yield
     finally:
         LOCAL.parent = prev_module
         LOCAL.inside_call = prev_inside_call
         LOCAL.module_index = prev_module_index
+        LOCAL.module_path = prev_module_path
 
 
 def instantiation_context(module: Module) -> tp.ContextManager[None]:
