@@ -193,8 +193,7 @@ class Module(metaclass=ModuleMeta):
         variables such that those modules are named correctly.
 
         Arguments:
-            name: An optional string name for the class. Must be a valid elsePython
-                identifier. If ``name`` is not provided then the class name for the
+            name: An optional string name for the class. If ``name`` is not provided then the class name for the
                 current instance is converted to ``lower_snake_case`` and used instead.
         """
         self.name = name if name else utils.lower_snake_case(self.__class__.__name__)

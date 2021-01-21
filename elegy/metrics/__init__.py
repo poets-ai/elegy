@@ -13,7 +13,7 @@ from .mean_absolute_percentage_error import (
     mean_absolute_percentage_error,
 )
 from .metric import Metric
-from .reduce import Reduce, reduce
+from .reduce import Reduce, reduce, Reduction
 from .sparse_categorical_accuracy import (
     SparseCategoricalAccuracy,
     sparse_categorical_accuracy,

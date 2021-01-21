@@ -1,16 +1,14 @@
 # Implementation based on Tensorflow Keras:
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/losses.py#L44-L201
 
-from abc import abstractmethod
-import numpy as np
-
-from numpy.lib.arraysetops import isin
-from elegy import types
-from enum import Enum
 import typing as tp
-
+from abc import abstractmethod
+from enum import Enum
 
 import jax.numpy as jnp
+import numpy as np
+from elegy import types, utils
+from numpy.lib.arraysetops import isin
 
 
 class Reduction(Enum):
@@ -75,7 +73,7 @@ class Loss:
         reduction: tp.Optional[Reduction] = None,
         weight: tp.Optional[float] = None,
         on: tp.Optional[types.IndexLike] = None,
-        **kwargs,
+        name: tp.Optional[str] = None,
     ):
         """
         Initializes `Loss` class.
@@ -92,8 +90,10 @@ class Loss:
                 the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`
                 then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information
                 check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).
+            name: Optional name for the instance, if not provided lower snake_case version
+                of the name of the class is used instead.
         """
-        super().__init__(**kwargs)
+        self.name = name if name is not None else utils.get_name(self)
         self.weight = weight if weight is not None else 1.0
         self._reduction = (
             reduction if reduction is not None else Reduction.SUM_OVER_BATCH_SIZE
@@ -115,7 +115,7 @@ class Loss:
                 for index in self._labels_filter:
                     kwargs["y_pred"] = kwargs["y_pred"][index]
 
-        values = super().__call__(*args, **kwargs)
+        values = self.call(*args, **kwargs)
 
         sample_weight: tp.Optional[jnp.ndarray] = kwargs.get("sample_weight", None)
 

@@ -1,12 +1,11 @@
-from elegy import types
 import typing as tp
+from abc import abstractmethod
 
 import jax.numpy as jnp
-from abc import abstractmethod
-from elegy import utils
+from elegy import module, types, utils
 
 
-class Metric:
+class Metric(module.Module):
     """
     Encapsulates metric logic and state.
 
