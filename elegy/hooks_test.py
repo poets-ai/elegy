@@ -10,7 +10,7 @@ class TestHooks(unittest.TestCase):
     def test_losses(self):
         assert elegy.get_losses() is None
 
-        with elegy.hooks_context():
+        with elegy.hooks_context(defaults=True):
             elegy.add_loss("x", 2.0)
             losses = elegy.get_losses()
 
@@ -19,7 +19,7 @@ class TestHooks(unittest.TestCase):
     def test_metrics(self):
         assert elegy.get_metrics() is None
 
-        with elegy.hooks_context():
+        with elegy.hooks_context(defaults=True):
             elegy.add_metric("x", 2.0)
             metrics = elegy.get_metrics()
 
@@ -69,6 +69,17 @@ class TestHooks(unittest.TestCase):
 
         assert training == False
 
+    def test_initializing(self):
+        assert elegy.get_initializing() is None
+
+        with pytest.raises(ValueError):
+            elegy.is_initializing()
+
+        with elegy.hooks_context(initializing=False):
+            initializing = elegy.is_initializing()
+
+        assert initializing == False
+
     def test_jit(self):
         assert elegy.get_losses() is None
         rng = elegy.RNGSeq(42)
@@ -88,7 +99,9 @@ class TestHooks(unittest.TestCase):
 
         f_ = elegy.jit(f)
 
-        with elegy.hooks_context(summaries=True, rng=rng, training=False):
+        with elegy.hooks_context(
+            summaries=True, rng=rng, training=False, defaults=True
+        ):
             x, key, training_f = f_(3.0)
             losses = elegy.get_losses()
             metrics = elegy.get_metrics()
@@ -124,7 +137,9 @@ class TestHooks(unittest.TestCase):
 
         f_ = elegy.value_and_grad(f, has_aux=True)
 
-        with elegy.hooks_context(summaries=True, rng=rng, training=False):
+        with elegy.hooks_context(
+            summaries=True, rng=rng, training=False, defaults=True
+        ):
             (x, key, training_f), grads = f_(3.0)
             losses = elegy.get_losses()
             metrics = elegy.get_metrics()

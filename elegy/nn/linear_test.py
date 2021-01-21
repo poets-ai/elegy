@@ -15,3 +15,12 @@ class LinearTest(TestCase):
             y_pred = linear(x)
 
             assert y_pred.shape == (4, 5)
+
+    def test_on_model(self):
+
+        model = elegy.Model(module=elegy.nn.Linear(2))
+
+        x = np.ones([3, 5])
+
+        y_pred = model.predict(x)
+        logs = model.evaluate(x)

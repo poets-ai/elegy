@@ -19,6 +19,7 @@ class HooksContext(Protocol):
     summaries: tp.Optional[Summaries]
     rng: tp.Optional[RNGSeq]
     training: tp.Optional[bool]
+    initializing: tp.Optional[bool]
 
 
 @dataclass
@@ -28,6 +29,7 @@ class _HooksContext(threading.local):
     summaries: tp.Optional[Summaries]
     rng: tp.Optional[RNGSeq]
     training: tp.Optional[bool]
+    initializing: tp.Optional[bool]
 
 
 LOCAL: HooksContext = _HooksContext(
@@ -36,6 +38,7 @@ LOCAL: HooksContext = _HooksContext(
     summaries=None,
     rng=None,
     training=None,
+    initializing=None,
 )
 
 
@@ -166,28 +169,63 @@ def is_training() -> bool:
     return LOCAL.training
 
 
+def get_initializing() -> tp.Optional[bool]:
+    return LOCAL.initializing
+
+
+def is_initializing() -> bool:
+    if LOCAL.initializing is None:
+        raise ValueError(
+            f"'initializing' not present in context, please set it in `hooks_context`."
+        )
+
+    return LOCAL.initializing
+
+
 # ----------------------------------------------------------------
 # contexts
 # ----------------------------------------------------------------
 
 
 def hooks_context(
-    summaries: bool = False,
+    losses: tp.Union[Logs, bool, None] = None,
+    metrics: tp.Union[Logs, bool, None] = None,
+    summaries: tp.Union[Summaries, bool, None] = None,
     rng: tp.Optional[RNGSeq] = None,
     training: tp.Optional[bool] = None,
+    initializing: tp.Optional[bool] = None,
+    defaults: bool = False,
 ) -> tp.ContextManager[None]:
+
+    if isinstance(losses, bool):
+        losses = {} if losses else None
+
+    if isinstance(metrics, bool):
+        metrics = {} if metrics else None
+
+    if isinstance(summaries, bool):
+        summaries = [] if summaries else None
+
     return _hooks_context(
+        losses=losses,
+        metrics=metrics,
         summaries=summaries,
         rng=rng,
         training=training,
+        initializing=initializing,
+        defaults=defaults,
     )
 
 
 @contextmanager
 def _hooks_context(
-    summaries: bool,
+    losses: tp.Optional[Logs],
+    metrics: tp.Optional[Logs],
+    summaries: tp.Optional[Summaries],
     rng: tp.Optional[RNGSeq],
     training: tp.Optional[bool],
+    initializing: tp.Optional[bool],
+    defaults: bool,
 ) -> tp.Iterator[None]:
 
     prev_losses = LOCAL.losses
@@ -195,12 +233,26 @@ def _hooks_context(
     prev_summaries = LOCAL.summaries
     prev_rng = LOCAL.rng
     prev_training = LOCAL.training
+    prev_initializing = LOCAL.initializing
 
-    LOCAL.losses = {}
-    LOCAL.metrics = {}
-    LOCAL.summaries = [] if summaries else None
-    LOCAL.rng = rng
-    LOCAL.training = training
+    LOCAL.losses = losses if losses is not None else prev_losses if not defaults else {}
+    LOCAL.metrics = (
+        metrics if metrics is not None else prev_metrics if not defaults else {}
+    )
+    LOCAL.summaries = (
+        summaries if summaries is not None else prev_summaries if not defaults else []
+    )
+    LOCAL.rng = rng if rng is not None else prev_rng if not defaults else None
+    LOCAL.training = (
+        training if training is not None else prev_training if not defaults else None
+    )
+    LOCAL.initializing = (
+        initializing
+        if initializing is not None
+        else prev_training
+        if not defaults
+        else None
+    )
 
     try:
         yield
@@ -210,6 +262,7 @@ def _hooks_context(
         LOCAL.summaries = prev_summaries
         LOCAL.rng = prev_rng
         LOCAL.training = prev_training
+        LOCAL.initializing = prev_initializing
 
 
 # -------------------------------------------------------------
@@ -223,7 +276,6 @@ class TransformtOutput(tp.NamedTuple):
     metrics: tp.Optional[Logs]
     summary_values: tp.Optional[tp.List[tp.Any]]
     rng: tp.Optional[RNGSeq]
-    training: tp.Optional[bool]
 
 
 class DynamicArgs(tp.NamedTuple):
@@ -235,6 +287,7 @@ class DynamicArgs(tp.NamedTuple):
 
 class StaticArgs(tp.NamedTuple):
     training: tp.Optional[bool]
+    initializing: tp.Optional[bool]
 
 
 def _patch_summary_values(
@@ -271,11 +324,11 @@ def jit(
         dynamic_args: DynamicArgs
         static_args: StaticArgs
 
+        # static_args is unused because they dont need to be set back
         static_args, dynamic_args = args[:2]  # get from beginning
         args = args[2:]
 
         (LOCAL.losses, LOCAL.metrics, summary_values, LOCAL.rng) = dynamic_args
-        (LOCAL.training,) = static_args
         LOCAL.summaries = _patch_summary_values(LOCAL.summaries, summary_values)
 
         # call
@@ -288,7 +341,6 @@ def jit(
             metrics=get_metrics(),
             summary_values=_extract_summary_values(get_summaries()),
             rng=get_rng(),
-            training=get_training(),
         )
 
     # transform kwargs
@@ -316,6 +368,7 @@ def jit(
         )
         static_args = StaticArgs(
             training=get_training(),
+            initializing=get_initializing(),
         )
         # put them first because of static_args
         args = (static_args, dynamic_args) + args
@@ -327,14 +380,9 @@ def jit(
             LOCAL.metrics,
             summary_values,
             LOCAL.rng,
-            training,
         ) = transform_fn(*args)
         LOCAL.summaries = _patch_summary_values(LOCAL.summaries, summary_values)
 
-        if training is not None:
-            assert training.dtype == jnp.dtype("bool")
-
-        LOCAL.training = bool(training) if training is not None else None
         return output
 
     return wrapper
@@ -351,11 +399,11 @@ def value_and_grad(
         dynamic_args: DynamicArgs
         static_args: StaticArgs
 
+        # static_args is unused because they dont need to be set back
         dynamic_args, static_args = args[-2:]  # get from end
         args = args[:-2]
 
         (LOCAL.losses, LOCAL.metrics, summary_values, LOCAL.rng) = dynamic_args
-        (LOCAL.training,) = static_args
         LOCAL.summaries = _patch_summary_values(LOCAL.summaries, summary_values)
 
         # call
@@ -369,7 +417,6 @@ def value_and_grad(
             metrics=get_metrics(),
             summary_values=_extract_summary_values(get_summaries()),
             rng=get_rng(),
-            training=get_training(),
         )
 
     kwargs["has_aux"] = True
@@ -388,6 +435,7 @@ def value_and_grad(
         )
         static_args = StaticArgs(
             training=get_training(),
+            initializing=get_initializing(),
         )
         # put them last because params have to go first
         args += (dynamic_args, static_args)
@@ -402,7 +450,6 @@ def value_and_grad(
                     LOCAL.metrics,
                     summary_values,
                     LOCAL.rng,
-                    LOCAL.training,
                 ),
             ),
             grads,

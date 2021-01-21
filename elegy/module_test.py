@@ -267,7 +267,7 @@ class ModuleTest(TestCase):
         assert states["linear1"]["n"] == 0
         assert "linear1" in parameters
 
-        with elegy.hooks_context(summaries=True):
+        with elegy.hooks_context(summaries=True, defaults=True):
             y: jnp.ndarray = m(x)
             # y2: jnp.ndarray = m.call_jit(x)
 
@@ -399,7 +399,7 @@ class ModuleDynamicTest(TestCase):
         assert states["linear"]["n"] == 0
         assert "linear_1" in parameters
 
-        with elegy.hooks_context(summaries=True):
+        with elegy.hooks_context(summaries=True, defaults=True):
             # y: jnp.ndarray = m(x)
             collections = m.get_parameters()
             y: jnp.ndarray
@@ -461,86 +461,27 @@ class ModuleDynamicTest(TestCase):
 
         m.set_parameters(current_parameters)
 
-        assert m.get_parameters()["bias"][0] == -1
-        assert m.linear.get_parameters()["w"][0, 0] == -1
-        assert m.linear.get_parameters()["b"][0] == -1
-        assert m.linear_1.get_parameters()["w"][0, 0] == -1
-        assert m.linear_1.get_parameters()["b"][0] == -1
+        assert m.get_parameters()["parameters"]["bias"][0] == -1
+        assert m.linear.get_parameters()["parameters"]["w"][0, 0] == -1
+        assert m.linear.get_parameters()["parameters"]["b"][0] == -1
+        assert m.linear_1.get_parameters()["parameters"]["w"][0, 0] == -1
+        assert m.linear_1.get_parameters()["parameters"]["b"][0] == -1
 
     def test_auto_init(self):
         x = np.random.uniform(-1, 1, size=(4, 5))
-        initial_key = elegy.get_rng().key
         m = ModuleDynamicTest.MyModule()
 
         m(x)
 
         # THESE:
-        assert m.linear.get_parameters()["n"] == 1
-        assert m.get_parameters()["linear"]["n"] == 1
+        assert m.linear.get_parameters()["states"]["n"] == 1
+        assert m.get_parameters()["states"]["linear"]["n"] == 1
 
-        assert not jnp.allclose(initial_key, elegy.get_rng().key)
-        assert "bias" in m.get_parameters()
-        assert "linear" in m.get_parameters()
-        assert "w" in m.get_parameters()["linear"]
-        assert "b" in m.get_parameters()["linear"]
-        assert "linear_1" in m.get_parameters()
-
-        with elegy.hooks_context(summaries=True):
-            # y: jnp.ndarray = m(x)
-            y: jnp.ndarray = m.jit(x)
-
-            losses = elegy.get_losses()
-            metrics = elegy.get_metrics()
-            summaries = elegy.get_summaries()
-
-        assert losses
-        assert metrics
-        assert summaries
-
-        assert y.shape == (4, 7)
-        assert "bias" in m.get_parameters()
-        assert "linear" in m.get_parameters()
-        assert "w" in m.get_parameters()["linear"]
-        assert "b" in m.get_parameters()["linear"]
-        assert m.linear.get_parameters()["n"] == 2
-        assert m.get_parameters()["linear"]["n"] == 2
-        assert "linear_1" in m.get_parameters()
-
-        assert "activation_sum_loss" in losses
-        assert "linear/activation_mean" in metrics
-        assert "linear_1/activation_mean" in metrics
-
-        assert summaries[0][:2] == (m.linear, "linear")
-        assert summaries[0][2].shape == (4, 6)
-        assert summaries[1][:2] == (m.linear_1, "linear_1")
-        assert summaries[1][2].shape == (4, 7)
-        assert summaries[2][:2] == (m, "my_module")
-        assert summaries[2][2].shape == (4, 7)
-
-        m.set_parameters(jax.tree_map(lambda x: -x, m.get_parameters()))
-
-        assert m.get_parameters()["bias"][0] == -1
-        assert m.linear.get_parameters()["w"][0, 0] == -1
-        assert m.linear.get_parameters()["b"][0] == -1
-        assert m.linear_1.get_parameters()["w"][0, 0] == -1
-        assert m.linear_1.get_parameters()["b"][0] == -1
-
-        assert m.parameters_size(include_submodules=False) == 7
-
-        current_parameters = m.get_parameters()
-
-        m.reset()
-
-        assert jax.tree_leaves(m.get_parameters()) == []
-        assert m.parameters_size() == 0
-
-        m.set_parameters(current_parameters)
-
-        assert m.get_parameters()["bias"][0] == -1
-        assert m.linear.get_parameters()["w"][0, 0] == -1
-        assert m.linear.get_parameters()["b"][0] == -1
-        assert m.linear_1.get_parameters()["w"][0, 0] == -1
-        assert m.linear_1.get_parameters()["b"][0] == -1
+        assert "bias" in m.get_parameters()["parameters"]
+        assert "linear" in m.get_parameters()["parameters"]
+        assert "w" in m.get_parameters()["parameters"]["linear"]
+        assert "b" in m.get_parameters()["parameters"]["linear"]
+        assert "linear_1" in m.get_parameters()["parameters"]
 
 
 class TestTransforms(TestCase):

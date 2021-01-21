@@ -82,7 +82,7 @@ def construct_module(cls, *args, **kwargs) -> "Module":
 
             for path, submodule in utils.leaf_paths(value):
                 if isinstance(submodule, Module):
-                    submodule._path_in_parent[module] = (key,) + path
+                    module._child_path[submodule] = (key,) + path
 
     return module
 
@@ -113,10 +113,10 @@ class ModuleMeta(ABCMeta):
                         "of submodules will be created every time and that their order is the same."
                     )
             else:
-                if not LOCAL.initializing:
-                    raise ValueError(
-                        f"Trying to create module of type'{cls.__name__}' outside of `init`."
-                    )
+                # if not LOCAL.initializing:
+                #     raise ValueError(
+                #         f"Trying to create module of type'{cls.__name__}' outside of `init`."
+                #     )
 
                 module = construct_module(cls, *args, **kwargs)
 
@@ -124,7 +124,7 @@ class ModuleMeta(ABCMeta):
                 setattr(parent, name, module)
                 parent._submodules.append(name)
                 parent._dynamic_submodules.append(name)
-                module._path_in_parent[parent] = (name,)
+                parent._child_path[module] = (name,)
 
             LOCAL.module_index += 1
 
@@ -159,7 +159,7 @@ class Module(metaclass=ModuleMeta):
     _states_initial: tp.List[str]
     _submodules: tp.List[str]
     _dynamic_submodules: tp.List[str]
-    _path_in_parent: tp.Dict["Module", Path]
+    _child_path: tp.Dict["Module", Path]
 
     init_jit: InitJit
     apply_jit: ApplyJit
@@ -191,7 +191,7 @@ class Module(metaclass=ModuleMeta):
         self._params = {}
         self._submodules = []
         self._dynamic_submodules = []
-        self._path_in_parent = {}
+        self._child_path = {}
 
         self._jit_functions()
 
@@ -264,7 +264,7 @@ class Module(metaclass=ModuleMeta):
         Initializes the module,
         """
 
-        with init_context():
+        with hooks.hooks_context(initializing=True):
             y = self(*args, **kwargs)
 
         return y, self.get_parameters()
@@ -288,7 +288,7 @@ class Module(metaclass=ModuleMeta):
         else:
             old_parameters = None
 
-        with apply_context():
+        with hooks.hooks_context(initializing=False):
             y = self(*args, **kwargs)
 
         if old_parameters is not None:
@@ -455,6 +455,9 @@ class Module(metaclass=ModuleMeta):
         for parameters in parameter_collection.values():
             tree_apply(f, self, parameters)
 
+    def has_parameter(self, name: str) -> bool:
+        return hasattr(self, name)
+
     def reset(self):
         """
         Recursively deletes the parameters and states of this module
@@ -515,7 +518,7 @@ def call_context(module: Module) -> tp.ContextManager[None]:
 @contextmanager
 def _call_context(module: Module):
 
-    prev_module = LOCAL.parent
+    prev_parent = LOCAL.parent
     prev_inside_call = LOCAL.inside_call
     prev_module_index = LOCAL.module_index
     prev_module_path = LOCAL.module_path
@@ -527,9 +530,9 @@ def _call_context(module: Module):
         LOCAL.module_path = {}
 
     try:
-        if prev_module is not None and prev_module not in module._path_in_parent:
+        if prev_parent is not None and module not in prev_parent._child_path:
             raise SubmoduleNotRegistered(
-                f"Submodule {utils.get_name(module)} not registered in {utils.get_name(prev_module)}, "
+                f"Submodule {utils.get_name(module)} not registered in {utils.get_name(prev_parent)}, "
                 f"this is probably due to some of the following reasons:\n"
                 f"- The submodule is being captured by closure and not registered to any field.\n"
                 f"- The submodule was set to a field of the parent but "
@@ -538,18 +541,18 @@ def _call_context(module: Module):
                 f"- The submodule was set to a field of the parent by mutating such field after __init__\n\n"
                 f"- If non of the previous is true consider this a bug."
                 f"Submodule: {module}\n"
-                f"Module: {prev_module}\n"
+                f"Module: {prev_parent}\n"
             )
 
-        if prev_module is None:
+        if prev_parent is None:
             LOCAL.module_path[module] = ()
         else:
-            parent_path = LOCAL.module_path[prev_module]
-            child_path = module._path_in_parent[prev_module]
+            parent_path = LOCAL.module_path[prev_parent]
+            child_path = prev_parent._child_path[module]
             LOCAL.module_path[module] = parent_path + child_path
         yield
     finally:
-        LOCAL.parent = prev_module
+        LOCAL.parent = prev_parent
         LOCAL.inside_call = prev_inside_call
         LOCAL.module_index = prev_module_index
         LOCAL.module_path = prev_module_path
@@ -572,44 +575,6 @@ def _instantiation_context(module: Module):
     finally:
         LOCAL.parent = prev_module
         LOCAL.inside_call = prev_inside_call
-
-
-def init_context() -> tp.ContextManager[None]:
-    return _init_context()
-
-
-@contextmanager
-def _init_context() -> tp.Iterator[None]:
-    prev_initializing = LOCAL.initializing
-    prev_module_path = LOCAL.module_path
-
-    LOCAL.initializing = True
-    LOCAL.module_path = {}
-
-    try:
-        yield
-    finally:
-        LOCAL.initializing = prev_initializing
-        LOCAL.module_path = prev_module_path
-
-
-def apply_context() -> tp.ContextManager[None]:
-    return _apply_context()
-
-
-@contextmanager
-def _apply_context() -> tp.Iterator[None]:
-    prev_initializing = LOCAL.initializing
-    prev_module_path = LOCAL.module_path
-
-    LOCAL.initializing = False
-    LOCAL.module_path = {}
-
-    try:
-        yield
-    finally:
-        LOCAL.initializing = prev_initializing
-        LOCAL.module_path = prev_module_path
 
 
 # ------------------------------------------------------------------------
