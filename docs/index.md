@@ -37,7 +37,7 @@ Elegy greatly simplifies the training of Deep Learning models compared to pure J
 
 **1.** Define the architecture inside an `elegy.Module`:
 ```python
-class MLP:
+class MLP(elegy.Module):
     def call(self, x: jnp.ndarray) -> jnp.ndarray:
         x = elegy.nn.Linear(300)(x)
         x = jax.nn.relu(x)

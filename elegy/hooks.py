@@ -121,7 +121,7 @@ def add_summary(
         value: The value for the summary.
     """
 
-    if LOCAL.summaries is None:
+    if not summaries_active():
         return
 
     LOCAL.summaries.append((path, module, value))
@@ -131,8 +131,16 @@ def get_losses() -> tp.Optional[Logs]:
     return LOCAL.losses.copy() if LOCAL.losses is not None else None
 
 
+def losses_active() -> bool:
+    return LOCAL.losses is not None
+
+
 def get_metrics() -> tp.Optional[Logs]:
     return LOCAL.metrics.copy() if LOCAL.metrics is not None else None
+
+
+def metrics_active() -> bool:
+    return LOCAL.metrics is not None
 
 
 def get_summaries() -> tp.Optional[Summaries]:
@@ -150,7 +158,7 @@ def get_rng() -> tp.Optional[RNGSeq]:
 def next_key() -> jnp.ndarray:
     if LOCAL.rng is None:
         raise ValueError(
-            f"No rng present in context, please set it in `hooks_context`."
+            f"No rng present in context, please set it in `update_context`."
         )
 
     return LOCAL.rng.next()
@@ -161,12 +169,7 @@ def get_training() -> tp.Optional[bool]:
 
 
 def is_training() -> bool:
-    if LOCAL.training is None:
-        raise ValueError(
-            f"'training' not present in context, please set it in `hooks_context`."
-        )
-
-    return LOCAL.training
+    return bool(LOCAL.training)
 
 
 def get_initializing() -> tp.Optional[bool]:
@@ -174,12 +177,7 @@ def get_initializing() -> tp.Optional[bool]:
 
 
 def is_initializing() -> bool:
-    if LOCAL.initializing is None:
-        raise ValueError(
-            f"'initializing' not present in context, please set it in `hooks_context`."
-        )
-
-    return LOCAL.initializing
+    return bool(LOCAL.initializing)
 
 
 # ----------------------------------------------------------------
@@ -187,45 +185,50 @@ def is_initializing() -> bool:
 # ----------------------------------------------------------------
 
 
-def hooks_context(
+def context(
+    *,
     losses: tp.Union[Logs, bool, None] = None,
     metrics: tp.Union[Logs, bool, None] = None,
     summaries: tp.Union[Summaries, bool, None] = None,
     rng: tp.Optional[RNGSeq] = None,
     training: tp.Optional[bool] = None,
     initializing: tp.Optional[bool] = None,
-    defaults: bool = False,
+    set_defaults: bool = False,
 ) -> tp.ContextManager[None]:
 
-    if isinstance(losses, bool):
+    if losses is None and set_defaults:
+        losses = {}
+    elif isinstance(losses, bool):
         losses = {} if losses else None
 
-    if isinstance(metrics, bool):
+    if metrics is None and set_defaults:
+        metrics = {}
+    elif isinstance(metrics, bool):
         metrics = {} if metrics else None
 
-    if isinstance(summaries, bool):
+    if summaries is None and set_defaults:
+        summaries = []
+    elif isinstance(summaries, bool):
         summaries = [] if summaries else None
 
-    return _hooks_context(
+    return _context(
         losses=losses,
         metrics=metrics,
         summaries=summaries,
         rng=rng,
         training=training,
         initializing=initializing,
-        defaults=defaults,
     )
 
 
 @contextmanager
-def _hooks_context(
+def _context(
     losses: tp.Optional[Logs],
     metrics: tp.Optional[Logs],
     summaries: tp.Optional[Summaries],
     rng: tp.Optional[RNGSeq],
     training: tp.Optional[bool],
     initializing: tp.Optional[bool],
-    defaults: bool,
 ) -> tp.Iterator[None]:
 
     prev_losses = LOCAL.losses
@@ -235,24 +238,82 @@ def _hooks_context(
     prev_training = LOCAL.training
     prev_initializing = LOCAL.initializing
 
-    LOCAL.losses = losses if losses is not None else prev_losses if not defaults else {}
-    LOCAL.metrics = (
-        metrics if metrics is not None else prev_metrics if not defaults else {}
+    LOCAL.losses = losses
+    LOCAL.metrics = metrics
+    LOCAL.summaries = summaries
+    LOCAL.rng = rng
+    LOCAL.training = training
+    LOCAL.initializing = initializing
+
+    try:
+        yield
+    finally:
+        LOCAL.losses = prev_losses
+        LOCAL.metrics = prev_metrics
+        LOCAL.summaries = prev_summaries
+        LOCAL.rng = prev_rng
+        LOCAL.training = prev_training
+        LOCAL.initializing = prev_initializing
+
+
+def update_context(
+    losses: tp.Union[Logs, bool, None] = None,
+    metrics: tp.Union[Logs, bool, None] = None,
+    summaries: tp.Union[Summaries, bool, None] = None,
+    rng: tp.Optional[RNGSeq] = None,
+    training: tp.Optional[bool] = None,
+    initializing: tp.Optional[bool] = None,
+    set_defaults: bool = False,
+) -> tp.ContextManager[None]:
+
+    if LOCAL.losses is None and losses is None and set_defaults:
+        losses = {}
+    elif isinstance(losses, bool):
+        losses = {} if losses else None
+
+    if LOCAL.metrics is None and metrics is None and set_defaults:
+        metrics = {}
+    elif isinstance(metrics, bool):
+        metrics = {} if metrics else None
+
+    if LOCAL.summaries is None and summaries is None and set_defaults:
+        summaries = []
+    elif isinstance(summaries, bool):
+        summaries = [] if summaries else None
+
+    return _update_context(
+        losses=losses,
+        metrics=metrics,
+        summaries=summaries,
+        rng=rng,
+        training=training,
+        initializing=initializing,
     )
-    LOCAL.summaries = (
-        summaries if summaries is not None else prev_summaries if not defaults else []
-    )
-    LOCAL.rng = rng if rng is not None else prev_rng if not defaults else None
-    LOCAL.training = (
-        training if training is not None else prev_training if not defaults else None
-    )
-    LOCAL.initializing = (
-        initializing
-        if initializing is not None
-        else prev_training
-        if not defaults
-        else None
-    )
+
+
+@contextmanager
+def _update_context(
+    losses: tp.Optional[Logs],
+    metrics: tp.Optional[Logs],
+    summaries: tp.Optional[Summaries],
+    rng: tp.Optional[RNGSeq],
+    training: tp.Optional[bool],
+    initializing: tp.Optional[bool],
+) -> tp.Iterator[None]:
+
+    prev_losses = LOCAL.losses
+    prev_metrics = LOCAL.metrics
+    prev_summaries = LOCAL.summaries
+    prev_rng = LOCAL.rng
+    prev_training = LOCAL.training
+    prev_initializing = LOCAL.initializing
+
+    LOCAL.losses = losses if losses is not None else prev_losses
+    LOCAL.metrics = metrics if metrics is not None else prev_metrics
+    LOCAL.summaries = summaries if summaries is not None else prev_summaries
+    LOCAL.rng = rng if rng is not None else prev_rng
+    LOCAL.training = training if training is not None else prev_training
+    LOCAL.initializing = initializing if initializing is not None else prev_training
 
     try:
         yield
@@ -291,16 +352,12 @@ class StaticArgs(tp.NamedTuple):
 
 
 def _patch_summary_values(
-    summaries: tp.Optional[Summaries],
-    values: tp.Optional[tp.List[tp.Any]],
-) -> tp.Optional[Summaries]:
-    if values is not None and summaries is not None:
-        return [
-            (path, module, value) for (path, module, _), value in zip(summaries, values)
-        ]
-    else:
-        assert values is None and summaries is None
-        return None
+    summaries: Summaries,
+    values: tp.List[tp.Any],
+) -> Summaries:
+    return [
+        (path, module, value) for (path, module, _), value in zip(summaries, values)
+    ]
 
 
 def _extract_summary_values(
@@ -310,6 +367,29 @@ def _extract_summary_values(
         return [value for path, module, value in summaries]
     else:
         return None
+
+
+def _update_local_context(
+    losses: tp.Optional[Logs],
+    metrics: tp.Optional[Logs],
+    summary_values: tp.Optional[tp.List[tp.Any]],
+    rng: tp.Optional[RNGSeq],
+):
+    if LOCAL.losses is not None and losses is not None:
+        LOCAL.losses.clear()
+        LOCAL.losses.update(losses)
+
+    if LOCAL.metrics is not None and metrics is not None:
+        LOCAL.metrics.clear()
+        LOCAL.metrics.update(metrics)
+
+    if LOCAL.summaries is not None and summary_values is not None:
+        new_summaries = _patch_summary_values(LOCAL.summaries, summary_values)
+        LOCAL.summaries.clear()
+        LOCAL.summaries.extend(new_summaries)
+
+    if LOCAL.rng is not None and rng is not None:
+        LOCAL.rng.key = rng.key
 
 
 def jit(
@@ -328,8 +408,10 @@ def jit(
         static_args, dynamic_args = args[:2]  # get from beginning
         args = args[2:]
 
-        (LOCAL.losses, LOCAL.metrics, summary_values, LOCAL.rng) = dynamic_args
-        LOCAL.summaries = _patch_summary_values(LOCAL.summaries, summary_values)
+        (losses, metrics, summary_values, rng) = dynamic_args
+
+        # perform updates
+        _update_local_context(losses, metrics, summary_values, rng)
 
         # call
         output = f(*args)
@@ -376,12 +458,14 @@ def jit(
         # call and patch
         (
             output,
-            LOCAL.losses,
-            LOCAL.metrics,
+            losses,
+            metrics,
             summary_values,
-            LOCAL.rng,
+            rng,
         ) = transform_fn(*args)
-        LOCAL.summaries = _patch_summary_values(LOCAL.summaries, summary_values)
+
+        # perform updates
+        _update_local_context(losses, metrics, summary_values, rng)
 
         return output
 
@@ -403,8 +487,8 @@ def value_and_grad(
         dynamic_args, static_args = args[-2:]  # get from end
         args = args[:-2]
 
-        (LOCAL.losses, LOCAL.metrics, summary_values, LOCAL.rng) = dynamic_args
-        LOCAL.summaries = _patch_summary_values(LOCAL.summaries, summary_values)
+        (losses, metrics, summary_values, rng) = dynamic_args
+        _update_local_context(losses, metrics, summary_values, rng)
 
         # call
         output = f(*args)
@@ -446,15 +530,15 @@ def value_and_grad(
                 loss,
                 (
                     output,
-                    LOCAL.losses,
-                    LOCAL.metrics,
+                    losses,
+                    metrics,
                     summary_values,
-                    LOCAL.rng,
+                    rng,
                 ),
             ),
             grads,
         ) = transform_fn(*args)
-        LOCAL.summaries = _patch_summary_values(LOCAL.summaries, summary_values)
+        _update_local_context(losses, metrics, summary_values, rng)
 
         return output, grads
 

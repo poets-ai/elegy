@@ -6,12 +6,14 @@ import elegy
 
 
 class BatchNormalizationTest(TestCase):
-    #
     def test_connects(self):
-        elegy.nn.BatchNormalization()(jnp.ones([3, 3]), training=True)
+        elegy.nn.BatchNormalization()(
+            jnp.ones([3, 3]),
+            training=True,
+        )
 
     def test_on_predict(self):
-        class TestModule:
+        class TestModule(elegy.Module):
             def call(self, x, training):
                 return elegy.nn.BatchNormalization()(x, training)
 

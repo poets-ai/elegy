@@ -10,7 +10,7 @@ class SequentialTest(TestCase):
     #
     def test_connects(self):
 
-        with elegy.hooks_context(rng=elegy.RNGSeq(42)):
+        with elegy.update_context(rng=elegy.RNGSeq(42)):
             y = elegy.nn.Sequential(
                 lambda: [
                     elegy.nn.Flatten(),
@@ -22,7 +22,7 @@ class SequentialTest(TestCase):
 
             assert y.shape == (10, 2)
 
-        with elegy.hooks_context(rng=elegy.RNGSeq(42), training=False):
+        with elegy.update_context(rng=elegy.RNGSeq(42), training=False):
             y = elegy.nn.Sequential(
                 lambda: [
                     elegy.nn.Flatten(),

@@ -38,23 +38,14 @@ class MLP(nn.Module):
 class ModelBasicTest(unittest.TestCase):
     def test_predict(self):
 
-        model = elegy.Model(
-            module=nn.Dense(1),
-            # loss=[
-            #     elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-            #     elegy.regularizers.GlobalL2(l=1e-4),
-            # ],
-            # metrics=elegy.metrics.SparseCategoricalAccuracy(),
-            optimizer=optax.adamw(1e-3),
-            run_eagerly=True,
-        )
+        model = elegy.Model(module=nn.Dense(1))
 
         X = np.random.uniform(size=(5, 10))
         y = np.random.randint(10, size=(5, 1))
 
         y_pred = model.predict(x=X)
 
-        assert y_pred.shape == (5, 10)
+        assert y_pred.shape == (5, 1)
 
     def test_evaluate(self):
         def mse(y_true, y_pred):
@@ -86,11 +77,11 @@ class ModelBasicTest(unittest.TestCase):
         rng = elegy.RNGSeq(42)
         x = np.random.uniform(size=(5, 7, 7))
 
-        with elegy.hooks.hooks_context():
+        with elegy.context(metrics=True):
             elegy.add_metric("d", 10)
             logs, states = metrics.init(rng)(x, training=True)
 
-        with elegy.hooks.hooks_context():
+        with elegy.context(metrics=True):
             elegy.add_metric("d", 10)
             logs, states = metrics.apply(states, rng)(x, training=True)
 
@@ -119,11 +110,11 @@ class ModelBasicTest(unittest.TestCase):
         rng = elegy.RNGSeq(42)
         hooks_losses = dict(x=0.3, y=4.5)
 
-        with elegy.hooks_context():
+        with elegy.context(losses=True):
             elegy.add_loss("d", 1.0)
             logs, logs, states = losses.init(rng)()
 
-        with elegy.hooks_context():
+        with elegy.context(losses=True):
             elegy.add_loss("d", 1.0)
             loss, logs, states = losses.apply(states)()
 

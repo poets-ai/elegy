@@ -22,6 +22,7 @@ from elegy.types import (
     Logs,
     Prediction,
     RNG,
+    RNGSeq,
     States,
     Training,
     UNINITIALIZED,
@@ -60,10 +61,21 @@ class ModelCore(ABC):
         self._jit_functions()
 
     def _jit_functions(self):
-        self.init_internal_jit = hooks.jit(self.init_internal, static_argnums=[0])
-        self.pred_step_internal_jit = hooks.jit(self.pred_step_internal)
-        self.test_step_internal_jit = hooks.jit(self.test_step_internal)
-        self.train_step_internal_jit = hooks.jit(self.train_step_internal)
+        self.init_internal_jit = hooks.jit(
+            self.init_internal,
+            static_argnums=[0],
+        )
+        self.pred_step_internal_jit = hooks.jit(
+            self.pred_step_internal,
+            static_argnums=[2],
+        )
+        self.test_step_internal_jit = hooks.jit(
+            self.test_step_internal,
+            static_argnums=[5],
+        )
+        self.train_step_internal_jit = hooks.jit(
+            self.train_step_internal,
+        )
 
     @abstractmethod
     def init(
@@ -237,7 +249,9 @@ class ModelCore(ABC):
         )
 
         training = False
-        with hooks.hooks_context():
+        rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
+
+        with hooks.context(rng=rng, initializing=False, training=False):
             y_pred, state_updates = method(
                 self.states,
                 x,
@@ -314,7 +328,11 @@ class ModelCore(ABC):
         )
 
         training = False
-        with hooks.hooks_context():
+        rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
+
+        with hooks.context(
+            rng=rng, losses=True, metrics=True, initializing=False, training=False
+        ):
             loss, logs, state_updates = method(
                 self.states,
                 x,
@@ -423,7 +441,11 @@ class ModelCore(ABC):
             else self.train_step_internal_jit
         )
 
-        with hooks.hooks_context():
+        rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
+
+        with hooks.context(
+            rng=rng, losses=True, metrics=True, initializing=False, training=True
+        ):
             logs, state_updates = method(
                 self.states,
                 x,

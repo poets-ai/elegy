@@ -24,7 +24,7 @@ class Linear:
     def call(self, x):
         return jnp.dot(x, self.w) + self.b
 
-class MLP:
+class MLP(elegy.Module):
     def __init__(self, n_in):
         self.linear1 = Linear(n_in, 64)
         self.linear2 = Linear(64, 32)
@@ -96,7 +96,7 @@ class Linear:
 
         return jnp.dot(x, w) + b
 
-class MLP:
+class MLP(elegy.Module):
     def call(self, x):
         x = Linear(64)(x)
         x = jax.nn.relu(x)
@@ -131,7 +131,7 @@ to the inputs when defining our parameter's shape. Second, we also moved the ins
 of the `Linear` modules in `MLP` from `__init__` to `call`:
 
 ```python hl_lines="3 5 7"
-class MLP:
+class MLP(elegy.Module):
     def call(self, x):
         x = Linear(64)(x)
         x = jax.nn.relu(x)

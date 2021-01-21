@@ -18,6 +18,7 @@ from elegy.types import (
     Parameters,
     Path,
     Protocol,
+    RNGSeq,
     SubmoduleNotRegistered,
 )
 
@@ -37,7 +38,6 @@ class LocalContext(Protocol):
     parent: tp.Optional["Module"]
     module_path: tp.Optional[tp.Dict["Module", Path]]
     inside_call: tp.Optional[bool]
-    initializing: tp.Optional[bool]
     module_index: tp.Optional[int]
 
 
@@ -46,7 +46,6 @@ class _LocalContext(threading.local):
     parent: tp.Optional["Module"]
     module_path: tp.Optional[tp.Dict["Module", Path]]
     inside_call: tp.Optional[bool]
-    initializing: tp.Optional[bool]
     module_index: tp.Optional[int]
 
 
@@ -54,7 +53,6 @@ LOCAL: LocalContext = _LocalContext(
     parent=None,
     module_path=None,
     inside_call=None,
-    initializing=None,
     module_index=None,
 )
 
@@ -133,15 +131,28 @@ class ModuleMeta(ABCMeta):
             return construct_module(cls, *args, **kwargs)
 
 
-class InitJit(Protocol):
+class JitCallable(Protocol):
     def __call__(self, *args) -> tp.Tuple[tp.Any, ParameterCollection]:
+        ...
+
+
+class InitJit(Protocol):
+    def __call__(
+        self,
+        rng: tp.Optional[RNGSeq] = None,
+        **hooks_kwargs,
+    ) -> JitCallable:
         ...
 
 
 class ApplyJit(Protocol):
     def __call__(
-        self, parameters: ParameterCollection, *args
-    ) -> tp.Tuple[tp.Any, ParameterCollection]:
+        self,
+        parameters: ParameterCollection,
+        *,
+        rng: tp.Optional[RNGSeq] = None,
+        **hooks_kwargs,
+    ) -> JitCallable:
         ...
 
 
@@ -197,32 +208,63 @@ class Module(metaclass=ModuleMeta):
 
     def call_jit(self, *args) -> tp.Any:
         collections = self.get_parameters()
-        y, collections = self.apply_jit(collections, *args)
+        y, collections = self.apply_jit(parameters=collections)(*args)
         self.set_parameters(collections)
         return y
 
     def _jit_functions(self):
-        def get_init_jit():
-            def _init_jit(*args) -> tp.Tuple[tp.Any, ParameterCollection]:
-                return self.init(*args)
+        # ------------------------------
+        # init
+        # ------------------------------
+        def init_jit_raw(*args):
+            return self.init()(*args)
 
-            jit_obj = hooks.jit(_init_jit)
+        init_jit: JitCallable = hooks.jit(init_jit_raw)
 
-            def init_jit(*args) -> tp.Tuple[tp.Any, ParameterCollection]:
-                y, collections = jit_obj(*args)
-                self.set_parameters(collections)
-                return y, collections
+        def init_jit_wrapper(
+            rng: tp.Optional[RNGSeq] = None,
+            **hooks_kwargs,
+        ) -> JitCallable:
+            def init_jit_callable(
+                *args,
+            ) -> tp.Tuple[tp.Any, ParameterCollection]:
+                with hooks.update_context(rng=rng, **hooks_kwargs):
+                    y, collections = init_jit(*args)
 
-            return init_jit
+                    # set parameters to avoid traced arrays
+                    self.set_parameters(collections)
 
-        def apply_jit(parameters, *args) -> tp.Tuple[tp.Any, ParameterCollection]:
-            if parameters is None:
-                raise ValueError("parameters cannot be None with `apply_jit`.")
+                    return y, collections
 
-            return self.apply(parameters, *args)
+            return init_jit_callable
 
-        self.init_jit = get_init_jit()
-        self.apply_jit = hooks.jit(apply_jit)
+        # ------------------------------
+        # apply
+        # ------------------------------
+        def apply_jit_raw(parameters, *args):
+            return self.apply(parameters)(*args)
+
+        apply_jit = hooks.jit(apply_jit_raw)
+
+        def apply_jit_wrapper(
+            parameters: ParameterCollection,
+            *,
+            rng: tp.Optional[RNGSeq] = None,
+            **hooks_kwargs,
+        ) -> JitCallable:
+            def apply_jit_callable(
+                *args,
+            ) -> tp.Tuple[tp.Any, ParameterCollection]:
+                with hooks.update_context(rng=rng, **hooks_kwargs):
+                    return apply_jit(parameters, *args)
+
+            return apply_jit_callable
+
+        # ------------------------------
+        # assign functions
+        # ------------------------------
+        self.init_jit = init_jit_wrapper
+        self.apply_jit = apply_jit_wrapper
 
     def __setstate__(self, d):
         self.__dict__ = d
@@ -251,53 +293,79 @@ class Module(metaclass=ModuleMeta):
 
             return outputs
 
-    # def __init_subclass__(cls, *args, **kwargs):
-    #     super().__init_subclass__(*args, **kwargs)
-    #     utils.wraps(cls.call)(cls.init)
-
     @abstractmethod
     def call(self, *args, **kwargs):
         ...
 
-    def init(self, *args, **kwargs) -> tp.Tuple[tp.Any, ParameterCollection]:
+    def init(
+        self,
+        *,
+        rng: tp.Optional[RNGSeq] = None,
+        **hooks_kwargs,
+    ) -> tp.Callable[..., tp.Tuple[tp.Any, ParameterCollection]]:
         """
         Initializes the module,
         """
 
-        with hooks.hooks_context(initializing=True):
-            y = self(*args, **kwargs)
+        def init_callable(*args, **kwargs) -> tp.Tuple[tp.Any, ParameterCollection]:
+            self.reset()
 
-        return y, self.get_parameters()
+            with hooks.update_context(
+                rng=rng,
+                initializing=True,
+                **hooks_kwargs,
+            ):
+                y = self(*args, **kwargs)
+
+            return y, self.get_parameters()
+
+        return init_callable
 
     @tp.overload
-    def apply(self, parameters: None, *args, **kwargs) -> tp.Any:
+    def apply(
+        self, *, rng: tp.Optional[RNGSeq] = None, **hooks_kwargs
+    ) -> tp.Callable[..., tp.Any]:
         ...
 
     @tp.overload
     def apply(
-        self, parameters: ParameterCollection, *args, **kwargs
-    ) -> tp.Tuple[tp.Any, ParameterCollection]:
+        self,
+        parameters: ParameterCollection,
+        *,
+        rng: tp.Optional[RNGSeq] = None,
+        **hooks_kwargs,
+    ) -> tp.Callable[..., tp.Tuple[tp.Any, ParameterCollection]]:
         ...
 
     def apply(
-        self, __parameters: tp.Optional[ParameterCollection], *args, **kwargs
-    ) -> tp.Union[tp.Any, tp.Tuple[tp.Any, ParameterCollection]]:
-        if __parameters is not None:
-            old_parameters = self.get_parameters()
-            self.set_parameters(__parameters)
-        else:
-            old_parameters = None
+        self,
+        parameters: tp.Optional[ParameterCollection] = None,
+        rng: tp.Optional[RNGSeq] = None,
+        **hooks_kwargs,
+    ) -> tp.Callable[..., tp.Union[tp.Any, tp.Tuple[tp.Any, ParameterCollection]]]:
+        """
+        Call the module.
+        """
 
-        with hooks.hooks_context(initializing=False):
-            y = self(*args, **kwargs)
+        def apply_callable(*args, **kwargs) -> tp.Tuple[tp.Any, ParameterCollection]:
+            if parameters is not None:
+                old_parameters = self.get_parameters()
+                self.set_parameters(parameters)
+            else:
+                old_parameters = None
 
-        if old_parameters is not None:
-            new_parameters = self.get_parameters()
-            self.set_parameters(old_parameters)
+            with hooks.update_context(initializing=False, rng=rng, **hooks_kwargs):
+                y = self(*args, **kwargs)
 
-            return y, new_parameters
-        else:
-            return y
+            if old_parameters is not None:
+                new_parameters = self.get_parameters()
+                self.set_parameters(old_parameters)
+
+                return y, new_parameters
+            else:
+                return y
+
+        return apply_callable
 
     def add_parameter(
         self,
@@ -307,7 +375,7 @@ class Module(metaclass=ModuleMeta):
         trainable: bool = True,
         regularizer: tp.Optional[tp.Callable[[tp.Any], jnp.ndarray]] = None,
         constraint: tp.Optional[tp.Callable[[tp.Any], tp.Any]] = None,
-    ) -> np.ndarray:
+    ) -> tp.Any:
         """
         Adds a parameter to the current module. The parameter will only be initialized once and
         will reused afterwards.
@@ -377,7 +445,7 @@ class Module(metaclass=ModuleMeta):
         if not hasattr(self, name):
             raise ValueError(f"Parameter {name} not found in {self}.")
 
-        if is_initializing():
+        if hooks.is_initializing():
             return
 
         setattr(self, name, value)
@@ -500,10 +568,6 @@ def get_module_path_str(module: Module) -> tp.Optional[str]:
         if module is not None and LOCAL.module_path is not None
         else None
     )
-
-
-def is_initializing() -> bool:
-    return bool(LOCAL.initializing)
 
 
 # -----------------------------------------------------------------------------
@@ -692,7 +756,3 @@ def to_module(f):
     ToModule.__name__ = f.__name__
 
     return ToModule
-
-
-def as_initial(name):
-    return f"{name}__initial__"

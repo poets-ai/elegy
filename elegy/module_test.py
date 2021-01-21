@@ -17,7 +17,7 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        y, params = m.init(2.0)
+        y, params = m.init()(2.0)
 
         assert params == {"parameters": {"n": 1}}
         assert y == 3
@@ -52,12 +52,12 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        y, params = m.init(2.0)
+        y, params = m.init()(2.0)
 
         assert y == 3
         assert params == {"parameters": {"n": 1}}
 
-        y, params = m.apply({"parameters": {"n": 5}}, 2.0)  # run with new params
+        y, params = m.apply({"parameters": {"n": 5}})(2.0)  # run with new params
         current_params = m.get_parameters()  # internal params are not modify by apply.
 
         assert y == 7
@@ -78,7 +78,7 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        y, params = m.init(2.0)
+        y, params = m.init()(2.0)
 
         assert y == 13
         assert params == {"parameters": {"n": 1, "a": {"b": 10}}}
@@ -101,8 +101,8 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        with elegy.hooks_context(summaries=True):
-            y, params = m.init(2.0)
+        with elegy.update_context(set_defaults=True):
+            y, params = m.init()(2.0)
             summaries = elegy.get_summaries()
 
         assert summaries == [
@@ -146,8 +146,8 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        with elegy.hooks_context(summaries=True):
-            y, params = m.init(2.0)
+        with elegy.update_context(set_defaults=True):
+            y, params = m.init()(2.0)
             summaries = elegy.get_summaries()
 
         assert summaries == [
@@ -182,25 +182,25 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        y, params = m.init(2.0)
+        y, params = m.init()(2.0)
 
         assert y == 3
         assert params == {"parameters": {"n": 1}}
 
-        y = m.apply(None, 2.0)
+        y = m.apply()(2.0)
         assert y == 3
 
-        y = m.apply(None, 2.0)
+        y = m.apply()(2.0)
         assert y == 4
 
         # jit has to use functional API
         params = m.get_parameters()
-        y, params = m.apply_jit(params, 2.0)
+        y, params = m.apply_jit(params)(2.0)
         assert y == 5
 
         # error is raised if no parameters are given
-        with pytest.raises(ValueError):
-            y, params = m.apply_jit(None, 2.0)
+        with pytest.raises(TypeError):
+            y, params = m.apply_jit()(2.0)
 
 
 class ModuleTest(TestCase):
@@ -241,7 +241,7 @@ class ModuleTest(TestCase):
     def test_basic(self):
         x = np.random.uniform(-1, 1, size=(4, 5))
         m = ModuleTest.MyModule()
-        m.init(x)
+        m.init()(x)
         y: jnp.ndarray = m(x)
         assert y.shape == (4, 7)
         print(m.get_parameters())
@@ -251,7 +251,7 @@ class ModuleTest(TestCase):
 
         m = ModuleTest.MyModule()
 
-        m.init(x)
+        m.init()(x)
 
         collections = m.get_parameters()
         parameters, states = (
@@ -267,7 +267,7 @@ class ModuleTest(TestCase):
         assert states["linear1"]["n"] == 0
         assert "linear1" in parameters
 
-        with elegy.hooks_context(summaries=True, defaults=True):
+        with elegy.update_context(set_defaults=True):
             y: jnp.ndarray = m(x)
             # y2: jnp.ndarray = m.call_jit(x)
 
@@ -374,7 +374,7 @@ class ModuleDynamicTest(TestCase):
     def test_basic(self):
         x = np.random.uniform(-1, 1, size=(4, 5))
         m = ModuleDynamicTest.MyModule()
-        m.init(x)
+        m.init()(x)
         y: jnp.ndarray = m(x)
         assert y.shape == (4, 7)
         print(m.get_parameters)
@@ -383,7 +383,7 @@ class ModuleDynamicTest(TestCase):
         x = np.random.uniform(-1, 1, size=(4, 5))
         m = ModuleDynamicTest.MyModule()
 
-        m.init_jit(x)
+        m.init_jit()(x)
 
         collections = m.get_parameters()
         parameters, states = (
@@ -399,11 +399,11 @@ class ModuleDynamicTest(TestCase):
         assert states["linear"]["n"] == 0
         assert "linear_1" in parameters
 
-        with elegy.hooks_context(summaries=True, defaults=True):
+        with elegy.update_context(set_defaults=True):
             # y: jnp.ndarray = m(x)
             collections = m.get_parameters()
             y: jnp.ndarray
-            y, collections = m.apply_jit(collections, x)
+            y, collections = m.apply_jit(collections)(x)
             m.set_parameters(collections)
             parameters, states = (
                 collections["parameters"],
@@ -414,7 +414,7 @@ class ModuleDynamicTest(TestCase):
             metrics = elegy.get_metrics()
             summaries = elegy.get_summaries()
 
-        assert losses
+        assert losses is not None
         assert metrics
         assert summaries
 
@@ -545,10 +545,10 @@ class TestTransforms(TestCase):
 
             return m.get_parameters(), outputs
 
-        with elegy.hooks_context(training=True):
+        with elegy.update_context(training=True):
             assert total_called == 0
 
-            m.init(1)
+            m.init()(1)
             assert total_called == 1
 
             params = m.get_parameters()
@@ -586,55 +586,56 @@ class TestTransforms(TestCase):
         m = SomeModule()
         assert total_called == 0
 
-        with elegy.hooks_context(training=True):
-            m.init(0)
+        with elegy.context(training=True):
+            m.init()(0)
             # triggers call because its the first time
             assert total_called == 1
-
             assert m.n == 0
 
+        with elegy.context(training=True):
             y = m.call_jit(0)
 
             assert y == 1
             assert m.n == 1
             assert total_called == 2
 
+        with elegy.context(training=True):
             y = m.call_jit(0)
             assert m.n == 2
             assert total_called == 2
 
-        with elegy.hooks_context(training=False):
+        with elegy.context(training=False):
             y = m.call_jit(0)
             assert y == -1
             # triggers call because training changed and is static
             assert total_called == 3
             assert m.n == 3
 
-        with elegy.hooks_context(training=True):
+        with elegy.context(training=False):
             y = m.call_jit(0)
-            assert y == 1
+            assert y == -1
             # does not trigger call function for training = True exists
             assert total_called == 3
             assert m.n == 4
 
-        with elegy.hooks_context(training=True):
+        with elegy.update_context(training=True):
             y = m.call_jit(0)
             assert y == 1
             # does not trigger call function for training = True exists
             assert total_called == 3
             assert m.n == 5
 
-        with elegy.hooks_context(training=True, summaries=True):
+        with elegy.context(training=True, summaries=True):
             y = m.call_jit(0)
             assert y == 1
             # triggers call because summaries are now present
             assert total_called == 4
             assert m.n == 6
 
-        with elegy.hooks_context(training=False, summaries=True):
+        with elegy.update_context(training=False, summaries=True):
             y = m.call_jit(0)
             assert y == -1
-            # triggers call because configuration training=False, summaries=True is new
+            # triggers call because configuration training=False,  is new
             assert total_called == 5
             assert m.n == 7
 
@@ -661,7 +662,7 @@ class TestTransforms(TestCase):
 
         assert total_called == 0
 
-        with elegy.hooks_context(training=True):
+        with elegy.update_context(training=True):
             m.call_jit(0)
             assert total_called == 1
 
@@ -707,7 +708,7 @@ class TestOthers(TestCase):
                 return x
 
         def loss_fn(parameters, x, y):
-            y_pred, _ = mlp.apply(dict(parameters=parameters), x)
+            y_pred, _ = mlp.apply(dict(parameters=parameters))(x)
             return jnp.mean(jnp.square(y - y_pred))
 
         def update(parameters, x, y):
@@ -722,8 +723,8 @@ class TestOthers(TestCase):
         y = np.random.uniform(size=(15, 1))
         mlp = MLP()
 
-        with elegy.hooks_context(rng=elegy.RNGSeq(42)):
-            y_pred, collections = mlp.init(x)
+        with elegy.update_context(rng=elegy.RNGSeq(42)):
+            y_pred, collections = mlp.init()(x)
 
         parameters = collections["parameters"]
 

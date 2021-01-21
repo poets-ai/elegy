@@ -37,7 +37,7 @@ class ModelBase(ModelCore):
 
     To create a `Model` you first have to define its architecture in a `Module`:
     ```python
-    class MLP:
+    class MLP(elegy.Module):
         def call(self, image: jnp.ndarray) -> jnp.ndarray:
             mlp = hk.Sequential([
                 hk.Flatten(),
