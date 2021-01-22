@@ -364,7 +364,7 @@ class Model(ModelBase):
             shuffle=shuffle,
             class_weight=class_weight,
         )
-        # Container that configures and calls `tf.keras.Callback`s.
+        # Container that configures and calls `elegy.callbacks.Callback`s.
         if not isinstance(callbacks, CallbackList):
             callbacks = CallbackList(
                 callbacks,

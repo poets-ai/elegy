@@ -10,12 +10,20 @@ from .generator_adapter import GeneratorDataAdapter
 from .list_adapter import ListsOfScalarsDataAdapter
 from .dataset import DataLoaderAdapter
 
+try:
+    from .torch_dataloader_adapter import TorchDataLoaderAdapter
+except ImportError:
+    TorchDataLoaderAdapter = None
+
 ALL_ADAPTER_CLS = [
     ArrayDataAdapter,
     GeneratorDataAdapter,
     ListsOfScalarsDataAdapter,
     DataLoaderAdapter,
 ]
+
+if TorchDataLoaderAdapter is not None:
+    ALL_ADAPTER_CLS.append(TorchDataLoaderAdapter)
 
 
 class DataHandler(object):
@@ -90,7 +98,7 @@ class DataHandler(object):
                     "Make sure that your dataset or generator can generate at "
                     "least `steps_per_epoch * epochs` batches (in this case, "
                     "{} batches). You may need to use the repeat() function "
-                    "when building your dataset.".format(
+                    "if using tf.data.Dataset.".format(
                         total_epochs * self._inferred_steps
                     )
                 )
