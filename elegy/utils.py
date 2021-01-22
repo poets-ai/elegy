@@ -13,8 +13,6 @@ import numpy as np
 import toolz
 from deepmerge import always_merger
 
-from elegy.frozen_dict import FrozenDict
-
 
 def maybe_expand_dims(a: np.ndarray, b: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
     assert np.prod(a.shape) == np.prod(b.shape)
@@ -167,16 +165,6 @@ def get_name(obj) -> str:
         return lower_snake_case(obj.__class__.__name__)
     else:
         raise ValueError(f"Could not get name for: {obj}")
-
-
-def to_static(structure: tp.Any) -> tp.Any:
-
-    if isinstance(structure, (tp.Dict, FrozenDict)):
-        return tuple((k, to_static(v)) for k, v in structure.items())
-    elif isinstance(structure, (tp.List, tp.Tuple)):
-        return tuple(to_static(v) for v in structure)
-    else:
-        return structure
 
 
 def _leaf_paths(path: Path, inputs: tp.Any) -> tp.Iterable[tp.Tuple[Path, tp.Any]]:

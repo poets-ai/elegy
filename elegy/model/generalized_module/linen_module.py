@@ -1,12 +1,17 @@
 import typing as tp
 
-import flax.linen as nn
+
 from elegy import utils
-from elegy.types import OutputStates, RNGSeq
-from flax import linen
-from flax.core import FrozenDict, freeze, unfreeze
+from elegy.types import DependencyUnavailable, OutputStates, RNGSeq
 
 from .generalized_module import GeneralizedModule, register_module_for
+
+try:
+    import flax.linen as nn
+    from flax import linen
+    from flax.core import FrozenDict, freeze, unfreeze
+except ImportError:
+    raise DependencyUnavailable("Flax is not available")
 
 
 @register_module_for(nn.Module)

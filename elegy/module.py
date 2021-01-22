@@ -10,7 +10,6 @@ import jax.numpy as jnp
 import numpy as np
 
 from elegy import hooks, utils
-from elegy.frozen_dict import FrozenDict
 from elegy.types import (
     NoContext,
     ModuleOrderError,

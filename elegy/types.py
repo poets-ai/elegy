@@ -9,8 +9,6 @@ import jax.numpy as jnp
 import jax.tree_util
 import numpy as np
 
-from elegy.frozen_dict import FrozenDict
-
 
 if sys.version_info >= (3, 8):
     from typing import Protocol, runtime_checkable
@@ -247,4 +245,8 @@ class MissingOptimizer(Exception):
 
 
 class MissingMethod(Exception):
+    pass
+
+
+class DependencyUnavailable(Exception):
     pass
