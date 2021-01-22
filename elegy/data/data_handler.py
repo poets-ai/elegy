@@ -14,6 +14,10 @@ try:
     from .tf_dataset_adapter import TFDatasetAdapter
 except ImportError:
     TFDatasetAdapter = None
+try:
+    from .torch_dataloader_adapter import TorchDataLoaderAdapter
+except ImportError:
+    TorchDataLoaderAdapter = None
 
 ALL_ADAPTER_CLS = [
     ArrayDataAdapter,
@@ -24,6 +28,8 @@ ALL_ADAPTER_CLS = [
 
 if TFDatasetAdapter is not None:
     ALL_ADAPTER_CLS.append(TFDatasetAdapter)
+if TorchDataLoaderAdapter is not None:
+    ALL_ADAPTER_CLS.append(TorchDataLoaderAdapter)
 
 
 class DataHandler(object):
@@ -99,7 +105,7 @@ class DataHandler(object):
                     "Make sure that your dataset or generator can generate at "
                     "least `steps_per_epoch * epochs` batches (in this case, "
                     "{} batches). You may need to use the repeat() function "
-                    "when building your dataset.".format(
+                    "if using tf.data.Dataset.".format(
                         total_epochs * self._inferred_steps
                     )
                 )

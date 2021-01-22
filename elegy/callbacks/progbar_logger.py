@@ -331,6 +331,9 @@ class Progbar(object):
         elif self.verbose == 3:
             self.compact_table_progress(current, finalize)
 
+        elif self.verbose == 4 and finalize:
+            self.compact_table_progress(current, finalize)
+
         self._last_update = now
 
     def add(self, n, values=None):
