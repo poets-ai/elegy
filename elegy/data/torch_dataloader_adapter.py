@@ -46,7 +46,7 @@ class TorchDataLoaderAdapter(DataAdapter):
             self.current_step = 0
             for batch in iter(self._dataset):
                 self.current_step += 1
-                batch = map_structure(lambda x: x.numpy(), list_to_tuple(batch))
+                batch = map_structure(lambda x: x.cpu().numpy(), list_to_tuple(batch))
                 yield batch
 
         return parse_dataloader_gen
