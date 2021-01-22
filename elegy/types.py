@@ -250,3 +250,11 @@ class MissingMethod(Exception):
 
 class DependencyUnavailable(Exception):
     pass
+
+
+class ShapeMismatch(Exception):
+    pass
+
+
+class MissingParameter(Exception):
+    pass

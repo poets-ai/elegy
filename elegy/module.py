@@ -4,6 +4,7 @@ import typing as tp
 from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass
+from copy import deepcopy
 
 import jax
 import jax.numpy as jnp
@@ -11,6 +12,7 @@ import numpy as np
 
 from elegy import hooks, utils
 from elegy.types import (
+    MissingParameter,
     NoContext,
     ModuleOrderError,
     ParameterCollection,
@@ -18,6 +20,7 @@ from elegy.types import (
     Path,
     Protocol,
     RNGSeq,
+    ShapeMismatch,
     SubmoduleNotRegistered,
 )
 
@@ -517,9 +520,23 @@ class Module(metaclass=ModuleMeta):
 
         return params
 
-    def set_parameters(self, parameter_collection: ParameterCollection) -> None:
+    def set_parameters(
+        self,
+        parameter_collection: ParameterCollection,
+        check_missing: tp.Optional[bool] = False,
+        check_shapes: tp.Optional[bool] = False,
+        ignore_on_error: tp.Optional[tp.Union[bool, str]] = False,
+    ) -> None:
         """
         Recursively sets all the parameters of this module.
+
+        Arguments:
+            values: A nested dictionary as returned by get_parameters()
+            check_missing: If True will check if the new set of parameters is complete. Default: False
+            check_shapes: If True (Default) will check if the new parameters have the same shape as the old ones
+            ignore_on_error: If True will set only parameters that have a matching shape, ignoring mismatches and missing parameters.
+                             If "silent" will not even print a warning.
+                             If False (Default) will raise a ValueError on shape mismatch or missing parameter.
         """
 
         def check_shapes_f(module: Module, values: tp.Dict[str, tp.Any]):
@@ -559,9 +576,10 @@ class Module(metaclass=ModuleMeta):
 
         # first perform the check to avoid setting some parameters then encountering invalid ones
         if check_shapes or check_missing:
-            # shape check modifies values, make a copy to keep the original ones untouched
-            values = copy.deepcopy(values)
-            tree_apply(check_shapes_f, self, values)
+            parameter_collection = deepcopy(parameter_collection)
+            for values in parameter_collection.values():
+                # shape check modifies values, make a copy to keep the original ones untouched
+                tree_apply(check_shapes_f, self, values)
 
         def f(module: Module, values: tp.Dict[str, tp.Any]):
             for key, value in values.items():

@@ -339,13 +339,13 @@ class ModuleTest(TestCase):
     def test_set_parameters_shape_check(self):
         x = np.random.uniform(-1, 1, size=(4, 5))
         m = ModuleTest.MyModule()
-        m.init(x)
+        m.init()(x)
 
         params0 = m.get_parameters()
         # new random params
         params1 = jax.tree_map(lambda x: np.random.random(x.shape), params0)
         # set a parameter with incorrect shape
-        params1["linear1"]["w"] = np.zeros([10, 10])
+        params1["parameters"]["linear1"]["w"] = np.zeros([10, 10])
 
         # should raise error when trying to set the incorrect params
         with pytest.raises(ValueError):
@@ -363,7 +363,10 @@ class ModuleTest(TestCase):
         # should not raise an error
         m.set_parameters(params1, check_shapes=True, ignore_on_error=True)
         # linear1.w should not change
-        assert np.allclose(m.get_parameters()["linear1"]["w"], params0["linear1"]["w"])
+        assert np.allclose(
+            m.get_parameters()["parameters"]["linear1"]["w"],
+            params0["parameters"]["linear1"]["w"],
+        )
         # but all others
         assert np.all(
             jax.tree_multimap(
@@ -374,7 +377,7 @@ class ModuleTest(TestCase):
         )
 
         # remove a parameter
-        del params1["linear1"]["w"]
+        del params1["parameters"]["linear1"]["w"]
         # should raise with check_missing=True
         with pytest.raises(ValueError):
             m.set_parameters(params1, check_missing=True, ignore_on_error=False)
