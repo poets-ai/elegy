@@ -4,6 +4,7 @@ import multiprocessing.pool
 import typing as tp
 from .data_adapter import DataAdapter
 from .utils import is_none_or_empty
+import os
 
 
 __all__ = ["Dataset", "DataLoader"]
@@ -48,16 +49,16 @@ class DataLoader:
     # TODO: __getitem__  incl slicing e.g. [:5]
     # TODO: custom batch_fn parameter
     # TODO: n_workers='auto'
-    # TODO: prefetch parameter
     # TODO: timeout parameter
 
     def __init__(
         self,
         dataset: Dataset,
         batch_size: int,
-        n_workers: int = 0,
-        shuffle: bool = False,
-        worker_type: str = "thread",
+        n_workers: tp.Optional[int] = 0,
+        shuffle: tp.Optional[bool] = False,
+        worker_type: tp.Optional[str] = "thread",
+        prefetch: tp.Optional[int] = 1,
     ):
         """
         Arguments:
@@ -72,17 +73,26 @@ class DataLoader:
                          'process' uses the default process type as defined in the `multiprocessing` module.
                          'spawn', 'fork' and 'forkserver' can be used to select a specific process type.
                          For more information consult the Python `multiprocessing` documentation.
+            prefetch: Number of batches to prefetch for pipelined execution (Default: 2)
         """
         assert (
             batch_size > 0 and type(batch_size) == int
         ), "batch_size must be a positive integer"
         assert worker_type in ["thread", "process", "spawn", "fork", "forkserver"]
+        assert (
+            prefetch >= 0 and type(prefetch) == int
+        ), "prefetch must be a non-negative integer"
 
         self.dataset = dataset
         self.batch_size = batch_size
         self.n_workers = n_workers
         self.shuffle = shuffle
         self.worker_type = worker_type
+        self.prefetch = prefetch
+
+    def __len__(self) -> int:
+        """Returns the number of batches per epoch"""
+        return int(np.ceil(len(self.dataset) / self.batch_size))
 
     def __iter__(self) -> tp.Generator[tp.Any, None, None]:
         """Returns a generator which generates batches of loaded data samples"""
@@ -98,16 +108,13 @@ class DataLoader:
         if self.n_workers == 0:
             return mainthread_data_iterator(self.dataset, batched_indices)
         else:
-            return multiprocess_data_iterator(
+            return MultiProcessIterator(
                 self.dataset,
                 batched_indices,
                 self.n_workers,
+                prefetch=self.prefetch,
                 worker_type=self.worker_type,
             )
-
-    def __len__(self) -> int:
-        """Returns the number of batches per epoch"""
-        return int(np.ceil(len(self.dataset) / self.batch_size))
 
 
 Dataset.__doc__ += _example_usage_docstring
@@ -142,35 +149,100 @@ def mainthread_data_iterator(
         yield default_batch_fn(samples)
 
 
-def multiprocess_data_iterator(
-    ds: Dataset,
-    batched_indices: tp.List[tp.List[int]],
-    n_workers: int,
-    prefetch: int = 1,
-    timeout: int = 10,
-    worker_type: str = "thread",
-) -> tp.Iterable[tp.Any]:
-    """Generator that starts a pool of workers to load data samples from the dataset in parallel."""
-    if worker_type == "thread":
-        pool_class = multiprocessing.pool.ThreadPool
-    else:
-        worker_type = (
-            None if worker_type == "process" else worker_type
-        )  # None means default
-        pool_class = multiprocessing.get_context(worker_type).Pool
-    with pool_class(processes=n_workers) as pool:
-        async_results = []
+def data_transfer_fn(async_map_result, timeout=10):
+    samples = async_map_result.get(timeout)
+    return default_batch_fn(samples)
+
+
+class WorkerContext:
+    """A namespace to store the Dataset object for each process
+    instead of passing it in each iteration which causes re-pickling"""
+
+    _per_process_data = dict()
+
+    @classmethod
+    def init(cls, ds, worker_type):
+        cls._per_process_data[os.getpid()] = ds
+        if worker_type != "thread":
+            # disable keyboard interrupts in worker process
+            import signal
+
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+    @classmethod
+    def get_sample(cls, i):
+        ds = cls._per_process_data[os.getpid()]
+        return ds[i]
+
+
+class MultiProcessIterator:
+    def __init__(
+        self,
+        ds: Dataset,
+        batched_indices: tp.List[tp.List[int]],
+        n_workers: int,
+        prefetch: int = 2,
+        timeout: int = 10,
+        worker_type: str = "thread",
+    ):
+        self.ds = ds
+        self.batched_indices = batched_indices
+        self.timeout = timeout
+
+        if worker_type == "thread":
+            pool_class = multiprocessing.pool.ThreadPool
+        else:
+            worker_type = (
+                None if worker_type == "process" else worker_type
+            )  # None means default
+            pool_class = multiprocessing.get_context(worker_type).Pool
+        self.worker_pool = pool_class(
+            n_workers, initializer=WorkerContext.init, initargs=(ds, worker_type)
+        )
+        # extra thread to transfer data to the device
+        self.data_transfer_worker = multiprocessing.pool.ThreadPool(processes=1)
+
+        self.async_results_queue = []
         for batch_of_indices in batched_indices[:prefetch]:
-            async_results.append(pool.map_async(ds.__getitem__, batch_of_indices))
+            self.dispatch_tasks(batch_of_indices)
+        self.batched_indices = batched_indices[prefetch:]
 
-        for batch_of_indices in batched_indices[prefetch:]:
-            async_results.append(pool.map_async(ds.__getitem__, batch_of_indices))
-            samples = async_results.pop(0).get(timeout)
-            yield default_batch_fn(samples)
+    def __iter__(self):
+        return self
 
-        for async_result in async_results:
-            samples = async_result.get(timeout)
-            yield default_batch_fn(samples)
+    def __next__(self):
+        if len(self.batched_indices):
+            batch_of_indices = self.batched_indices.pop(0)
+            self.dispatch_tasks(batch_of_indices)
+
+        if len(self.async_results_queue) == 0:
+            raise StopIteration
+        async_x = self.async_results_queue.pop(0)
+
+        try:
+            x = async_x.get(timeout=self.timeout)
+        except KeyboardInterrupt:
+            self.shutdown()
+            raise
+        batch = x
+        return batch
+
+    def dispatch_tasks(self, batch_of_indices):
+        async_x = self.worker_pool.map_async(WorkerContext.get_sample, batch_of_indices)
+        async_x = self.data_transfer_worker.apply_async(data_transfer_fn, (async_x,))
+        self.async_results_queue.append(async_x)
+
+    def shutdown(self):
+        self.worker_pool.close()
+        for a_result in self.async_results_queue:
+            # wait for remaining tasks to finish
+            # process workers will hang otherwise
+            a_result.wait(timeout=self.timeout)
+        self.worker_pool.terminate()
+        self.worker_pool.join()
+
+    def __del__(self):
+        self.shutdown()
 
 
 class DataLoaderAdapter(DataAdapter):

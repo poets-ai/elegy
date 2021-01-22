@@ -56,8 +56,7 @@ class BinaryCrossentropyTest(TestCase):
             ),
         )
 
-    #
-    def test_cummulative(self):
+    def test_cumulative(self):
 
         tm = tfk.metrics.BinaryAccuracy(threshold=0.3)
         em = elegy.metrics.BinaryAccuracy(threshold=0.3)

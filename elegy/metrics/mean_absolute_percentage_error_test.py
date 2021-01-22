@@ -21,7 +21,7 @@ class MeanAbsolutePercentageErrorTest(TestCase):
         )
 
     #
-    def test_cummulative(self):
+    def test_cumulative(self):
 
         tm = tfk.metrics.MeanAbsolutePercentageError()
         em = elegy.metrics.MeanAbsolutePercentageError()

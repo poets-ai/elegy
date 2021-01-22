@@ -32,12 +32,14 @@ flags:
 ***
 ### Pretrained Models
 
-| Model    | Top-1 accuracy | Download |
+| Model    | Top-1 accuracy | Weight Files |
 | ---      | ---            | ---      |
-| ResNet18 | 68.7%          | [model.pkl](https://www.dropbox.com/s/horba2lsjh2dwum/model.pkl?dl=1) |
-| ResNet50 | 76.5%          | [model.pkl](https://www.dropbox.com/s/g2mqsjxriq42q06/model.pkl?dl=1) |
+| ResNet18 | 68.7%          | [model.pkl](https://www.dropbox.com/s/ofwh7947y6t84zp/ResNet18_ImageNet.pkl?dl=1) |
+| ResNet50 | 76.5%          | [model.pkl](https://www.dropbox.com/s/fmr7tm6rmah682s/ResNet50_ImageNet.pkl?dl=1) |
 
-Pretrained models can be loaded with `elegy.model.load('path/to/model/')`
+Pretrained weights can be loaded with: `elegy.nets.ResNet18(weights='path/to/ResNet18_ImageNet.pkl')`
+
+or with automatic download: `elegy.nets.ResNet18(weights='imagenet')`
 
 
 ***

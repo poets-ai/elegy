@@ -522,6 +522,47 @@ class Module(metaclass=ModuleMeta):
         Recursively sets all the parameters of this module.
         """
 
+        def check_shapes_f(module: Module, values: tp.Dict[str, tp.Any]):
+            for key, value in list(values.items()):
+                if key in module._params:
+                    if not hasattr(module, key):
+                        # key in _params but not in module
+                        # this can happen after a .reset()
+                        # ignore
+                        continue
+                    prevshape = np.shape(getattr(module, key))
+                    newshape = np.shape(value)
+                    if prevshape != newshape:
+                        errormsg = f"Shape mismatch on parameter {key} in module {module.name}: {prevshape} (old) vs {newshape} (new)."
+                        if ignore_on_error:
+                            if not ignore_on_error == "silent":
+                                print(errormsg + " Ignoring")
+                            # ignore by removing from new parameters
+                            del values[key]
+                        else:
+                            raise ValueError(errormsg)
+                elif key not in module._submodules and not ignore_on_error == "silent":
+                    print(f"Parameter {key} not found in module {module.name}")
+
+            if check_missing:
+                missing = [
+                    param
+                    for param in list(module._params.keys()) + module._submodules
+                    if param not in values
+                ]
+                if len(missing):
+                    errormsg = f"Missing parameters in module {module.name}: {missing}"
+                    if ignore_on_error == True:
+                        print(errormsg)
+                    else:
+                        raise ValueError(errormsg)
+
+        # first perform the check to avoid setting some parameters then encountering invalid ones
+        if check_shapes or check_missing:
+            # shape check modifies values, make a copy to keep the original ones untouched
+            values = copy.deepcopy(values)
+            tree_apply(check_shapes_f, self, values)
+
         def f(module: Module, values: tp.Dict[str, tp.Any]):
             for key, value in values.items():
                 if key in module._params:

@@ -4,6 +4,7 @@
 
 import math
 import typing as tp
+from operator import itemgetter
 
 import jax.numpy as jnp
 import numpy as np
@@ -103,9 +104,9 @@ class ArrayDataAdapter(DataAdapter):
 
                     # # Drop last batch
                     # if drop_remainder and len(indices) < batch_size:
-                    #     print("Droping!")
+                    #     print("Dropping!")
                     #     continue
-                    inputs_slices = map_structure(lambda x: x[indices], inputs)
+                    inputs_slices = map_structure(itemgetter(indices), inputs)
 
                     yield inputs_slices
 
