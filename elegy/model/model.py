@@ -4,8 +4,7 @@ import typing as tp
 import jax
 import jax.numpy as jnp
 import numpy as np
-import optax
-from elegy import hooks, utils
+from elegy import hooks, utils, module
 from elegy.model.generalized_module.generalized_module import (
     GeneralizedModule,
     generalize,
@@ -30,7 +29,6 @@ from elegy.types import (
     UNINITIALIZED,
 )
 from elegy.types import Mode, RNGSeq, Uninitialized
-from flax import linen
 from jax._src.random import t
 
 
@@ -546,7 +544,7 @@ class Losses:
                 for name, value in logs.items()
             }
 
-            logs, states = self.loss_metrics.init_with_output(rng.next(), logs)
+            logs, states = self.loss_metrics.init(rng=rng)(logs)
 
             return loss, logs, states
 
@@ -573,31 +571,23 @@ class Losses:
                 for name, value in logs.items()
             }
 
-            logs, states_ = self.loss_metrics.apply(states, logs, mutable=True)
+            logs, states_ = self.loss_metrics.apply(states)(logs)
 
             return loss, logs, states_
 
         return _lambda
 
 
-class LossMetrics(linen.Module):
-    @linen.compact
-    def __call__(self, logs):
+class LossMetrics(module.Module):
+    def call(self, logs):
 
-        initialized = self.has_variable("batch_stats", "count")
+        count = self.add_parameter("count", lambda: jnp.array(0, dtype=jnp.int32))
+        total = self.add_parameter("total", lambda: jax.tree_map(jnp.zeros_like, logs))
 
-        vcount = self.variable(
-            "batch_stats", "count", lambda: jnp.array(0, dtype=jnp.int32)
-        )
-        vtotal = self.variable(
-            "batch_stats", "total", lambda: jax.tree_map(jnp.zeros_like, logs)
-        )
+        count = count + 1
+        total = jax.tree_multimap(lambda a, b: a + b, total, logs)
 
-        total = jax.tree_multimap(lambda a, b: a + b, vtotal.value, logs)
-        count = vcount.value + 1
-
-        if initialized:
-            vtotal.value = total
-            vcount.value = count
+        self.update_parameter("count", count)
+        self.update_parameter("total", total)
 
         return jax.tree_map(lambda total: total / count, total)

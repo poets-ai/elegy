@@ -28,7 +28,6 @@ pyyaml = "^5.3.1"
 pytest-cov = "^2.10.0"
 dm-haiku = "^0.0.2"
 optax = "^0.0.1"
-flax = "^0.3.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
@@ -47,6 +46,7 @@ jaxlib = "^0.1.56"
 jupyter = "^1.0.0"
 jupyterlab = "^2.2.9"
 tensorflow-addons = "^0.11.2"
+flax = "^0.3.0"
 
 [build-system]
 requires = ["poetry>=0.12"]
