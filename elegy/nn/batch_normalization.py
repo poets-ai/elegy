@@ -141,7 +141,7 @@ class BatchNormalization(module.Module):
         else:
             axis = [i for i in range(inputs.ndim) if i != channel_index]
 
-        if training or test_local_stats:
+        if training or test_local_stats or not hasattr(self.mean_ema, "average"):
             cross_replica_axis = self.cross_replica_axis
             if self.cross_replica_axis:
                 mean = jnp.mean(inputs, axis, keepdims=True)
@@ -159,7 +159,7 @@ class BatchNormalization(module.Module):
             mean = self.mean_ema.average
             var = self.var_ema.average
 
-        if training:
+        if training or not hasattr(self.mean_ema, "average"):
             self.mean_ema(mean)
             self.var_ema(var)
 

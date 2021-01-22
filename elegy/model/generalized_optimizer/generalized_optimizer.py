@@ -2,14 +2,10 @@ import typing as tp
 from abc import ABC, abstractmethod
 
 from elegy import utils
-from elegy.types import OutputStates, RNGSeq
+from elegy.types import Grads, NetParams, OptimizerStates, OutputStates, RNGSeq
 import typing as tp
 
 REGISTRY: tp.Dict[tp.Type, tp.Type["GeneralizedOptimizer"]] = {}
-
-NetParams = tp.Any
-OptimizerStates = tp.Any
-Grads = tp.Any
 
 
 class ModuleExists(Exception):

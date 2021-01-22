@@ -1,3 +1,4 @@
+from elegy.optimizer import Optimizer
 import typing as tp
 
 import jax
@@ -360,6 +361,13 @@ class Model(ModelBase):
 
         assert isinstance(states.rng, RNGSeq)
 
+        # calculate current lr before update
+        if isinstance(self.optimizer, Optimizer):
+            lr = self.optimizer.current_lr(self.states.optimizer_states)
+
+            if lr is not None:
+                logs["lr"] = lr
+
         net_params, optimizer_states = self.optimizer_internal.apply(
             states.net_params, grads, states.optimizer_states, states.rng
         )
@@ -593,78 +601,3 @@ class LossMetrics(linen.Module):
             vcount.value = count
 
         return jax.tree_map(lambda total: total / count, total)
-
-
-class Optimizer:
-    r"""A Module that wraps around `optax` optimizers."""
-
-    def __init__(
-        self,
-        *optimizer: optax.GradientTransformation,
-        lr_schedule: tp.Optional[
-            tp.Callable[[int, tp.Optional[np.ndarray]], np.ndarray]
-        ] = None,
-        steps_per_epoch: tp.Optional[int] = None,
-        **kwargs,
-    ):
-        r"""
-        Arguments:
-            optimizer: An optax `GradientTransformation` object, if more than one is passed via `*args` then they are
-                grouped using `optax.chain`.
-            lr_schedule: A optional callable of the form `def lr_schedule(step: int, epoch: Optional[int]) -> float` that
-                returns the learning rate schedule at each time step. If `steps_per_epoch` is given then epoch is calculated,
-                else epoch is None.
-            steps_per_epoch: The number of steps to in an epoch, needed to caculate `epoch` from `step`.
-        """
-        super().__init__(**kwargs)
-
-        if len(optimizer) == 0:
-            raise ValueError("Must pass atleast 1 optimizer, got 0")
-        elif len(optimizer) == 1:
-            optimizer = optimizer[0]
-        else:
-            optimizer = optax.chain(*optimizer)
-
-        if lr_schedule is not None:
-            base_schedule = lr_schedule
-
-            def lr_schedule(step: int) -> float:
-                if steps_per_epoch is not None:
-                    epoch = step // steps_per_epoch
-                else:
-                    epoch = None
-
-                return base_schedule(step, epoch)
-
-            optimizer = optax.chain(
-                optimizer,
-                optax.scale_by_schedule(lr_schedule),
-            )
-
-        self.optax_optimizer = optimizer
-        self.lr_schedule = lr_schedule
-
-    def call(self, net_params, grads):
-
-        optimizer_state = self.add_parameter(
-            "optimizer_state",
-            initializer=lambda *args: self.optax_optimizer.init(net_params),
-            trainable=False,
-        )
-
-        updates, optimizer_state = self.optax_optimizer.update(
-            grads, optimizer_state, net_params
-        )
-
-        net_params = optax.apply_updates(net_params, updates)
-
-        self.update_parameter("optimizer_state", optimizer_state)
-
-        return net_params
-
-    def get_effective_learning_rate(self) -> tp.Optional[float]:
-        """Returns the learning rate scaled by schedule(s) that will be used for the next training step"""
-
-        if self.initialized and self.lr_schedule is not None:
-            step = self.optimizer_state[-1].count
-            return self.lr_schedule(step)

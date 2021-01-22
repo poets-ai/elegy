@@ -11,7 +11,7 @@ from elegy.nn.linear import Linear
 from elegy.nn.sequential_module import sequential
 
 
-class MultiHeadAttention:
+class MultiHeadAttention(module.Module):
     r"""
     MultiHead Attention layer.
     Defines the MultiHead Attention operation as described in

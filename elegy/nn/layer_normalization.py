@@ -27,7 +27,7 @@ from haiku._src import utils as hk_utils
 from elegy import initializers, module
 
 
-class LayerNormalization:
+class LayerNormalization(module.Module):
     """LayerNorm module.
 
     See: https://arxiv.org/abs/1607.06450.

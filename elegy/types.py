@@ -112,12 +112,15 @@ Index = tp.Union[int, str]
 Path = tp.Tuple[Index, ...]
 Grads = tp.Any
 RNG = tp.Union[RNGSeq, np.ndarray]
-Scalar = tp.Union[np.ndarray, float]
+Scalar = tp.Union[np.ndarray, float, int]
 SummaryModule = tp.Any
 SummaryValue = tp.Any
 Summaries = tp.List[
     tp.Tuple[Path, tp.Optional[SummaryModule], SummaryValue],
 ]
+NetParams = tp.Any
+OptimizerStates = tp.Any
+Grads = tp.Any
 
 
 class OutputStates(tp.NamedTuple):

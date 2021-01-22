@@ -1,10 +1,7 @@
-from elegy.types import RNGSeq
+from elegy.types import Grads, NetParams, OptimizerStates, RNGSeq
 from elegy import utils
 from .generalized_optimizer import (
     GeneralizedOptimizer,
-    Grads,
-    NetParams,
-    OptimizerStates,
     register_optimizer_for,
 )
 import typing as tp

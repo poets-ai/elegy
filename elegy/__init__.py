@@ -37,7 +37,8 @@ from . import (
 )
 from .losses import Loss
 from .metrics import Metric
-from .model import Logs, Metrics, Model, Optimizer
+from .model import Logs, Metrics, Model
+from .optimizer import Optimizer
 from .model.model_base import ModelBase
 from .module import Module, get_module_path, get_module_path_str
 from .types import Mode, RNGSeq, Uninitialized
