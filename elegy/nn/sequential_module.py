@@ -82,21 +82,15 @@ class Sequential(module.Module):
     def __init__(
         self, layers: tp.Callable[[], tp.Iterable[tp.Callable[..., tp.Any]]], **kwargs
     ):
+        super().__init__(**kwargs)
         self.layers = tuple(layers())
 
-        # set signature of call to the signature of of the first layer
-        # by creating a wrapper function.
-        current_call = self.call
-
-        if len(self.layers) == 0:
-            raise ValueError(f"Most pass atleast 1 layer, got {self.layers}")
-
-        @utils.wraps(self.layers[0])
-        def call(*args, **kwargs):
-            return current_call(*args, **kwargs)
-
-        self.call = call
-        super().__init__(**kwargs)
+        if len(self.layers) > 0:
+            self._signature_f = (
+                self.layers[0]._signature_f
+                if hasattr(self.layers[0], "_signature_f")
+                else self.layers[0]
+            )
 
     def call(self, *args, **kwargs):
         """Connects all layers. `*args` and `**kwargs` are passed to the first layer."""

@@ -21,14 +21,14 @@ class ElegyModuleTest(TestCase):
         gm = generalize(M())
         rng = elegy.RNGSeq(42)
 
-        y_true, params, states = gm.init(rng)(x=3.0)
+        y_true, params, states = gm.init(rng)(x=3.0, y=1)
 
         assert y_true == 6
         assert params["w"] == 2
         assert states["states"]["n"] == 0
 
         params["w"] = 10.0
-        y_true, params, states = gm.apply(params, states, rng)(x=3.0)
+        y_true, params, states = gm.apply(params, states, rng)(x=3.0, y=1)
 
         assert y_true == 30
         assert params["w"] == 10

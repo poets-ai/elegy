@@ -5,13 +5,6 @@ import elegy
 import jax.numpy as jnp
 
 
-# import debugpy
-
-# print("Waiting for debugger...")
-# debugpy.listen(5679)
-# debugpy.wait_for_client()
-
-
 class AccuracyTest(unittest.TestCase):
     #
     def test_basic(self):

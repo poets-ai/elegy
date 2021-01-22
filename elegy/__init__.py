@@ -5,22 +5,22 @@ from elegy.hooks import (
     add_loss,
     add_metric,
     add_summary,
+    context,
+    get_initializing,
     get_losses,
     get_metrics,
     get_rng,
     get_summaries,
     get_training,
-    get_initializing,
-    is_training,
     is_initializing,
-    update_context,
-    context,
     is_training,
     jit,
     next_key,
+    update_context,
     value_and_grad,
 )
 from elegy.types import Evaluation, OutputStates, Prediction, States, Training
+from elegy.utils import inject_dependencies
 
 from . import losses  # module,
 from . import (

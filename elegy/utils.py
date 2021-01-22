@@ -42,8 +42,13 @@ def inject_dependencies(
     signature_f: tp.Optional[tp.Callable] = None,
     rename: tp.Optional[tp.Dict[str, str]] = None,
 ):
-    if signature_f is None:
+    if signature_f is not None:
+        pass
+    elif hasattr(f, "_signature_f") and f._signature_f is not None:
+        signature_f = f._signature_f
+    elif signature_f is None:
         signature_f = f
+    assert signature_f is not None
 
     f_params = get_function_args(signature_f)
 

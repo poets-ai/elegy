@@ -7,25 +7,27 @@ import pytest
 
 class LossTest(TestCase):
     def test_basic(self):
-        class MAE(elegy.Loss):
+        class MAE(elegy.metrics.Mean):
             def call(self, y_true, y_pred):
-                return jnp.abs(y_true - y_pred)
+                return super().call(jnp.abs(y_true - y_pred))
 
         y_true = jnp.array([1.0, 2.0, 3.0])
         y_pred = jnp.array([2.0, 3.0, 4.0])
 
         mae = MAE()
 
-        sample_loss = mae.call(y_true, y_pred)
         loss = mae(y_true, y_pred)
+        assert jnp.allclose(loss, 1)
 
-        assert jnp.alltrue(sample_loss == jnp.array([1.0, 1.0, 1.0]))
-        assert loss == 1
+        y_pred = jnp.array([3.0, 4.0, 5.0])
+
+        loss = mae(y_true, y_pred)
+        assert jnp.allclose(loss, 1.5)
 
     def test_slice(self):
-        class MAE(elegy.Loss):
+        class MAE(elegy.metrics.Mean):
             def call(self, y_true, y_pred):
-                return jnp.abs(y_true - y_pred)
+                return super().call(jnp.abs(y_true - y_pred))
 
         y_true = dict(a=jnp.array([1.0, 2.0, 3.0]))
         y_pred = dict(a=jnp.array([2.0, 3.0, 4.0]))
@@ -41,19 +43,9 @@ class LossTest(TestCase):
             sample_loss = mae.call(y_true=y_true, y_pred=y_pred)
 
         loss = mae(y_true=y_true, y_pred=y_pred)
+        assert jnp.allclose(loss, 1)
 
-        assert loss == 1
+        y_pred = dict(a=jnp.array([3.0, 4.0, 5.0]))
 
-    def test_di(self):
-        class MAE(elegy.Loss):
-            def call(self, a):
-                return jnp.sum(a)
-
-        y_true = dict(a=jnp.array([1.0, 2.0, 3.0]))
-        y_pred = dict(a=jnp.array([2.0, 3.0, 4.0]))
-
-        mae = MAE()
-
-        loss = elegy.inject_dependencies(mae)(a=1, b=2)
-
-        assert loss == 1
+        loss = mae(y_true=y_true, y_pred=y_pred)
+        assert jnp.allclose(loss, 1.5)

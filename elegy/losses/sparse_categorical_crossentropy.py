@@ -4,7 +4,7 @@ import typing as tp
 import jax
 import jax.numpy as jnp
 
-from elegy import utils
+from elegy import utils, types
 from elegy.losses.loss import Loss, Reduction
 from elegy.losses.categorical_crossentropy import categorical_crossentropy
 
@@ -26,7 +26,7 @@ def sparse_categorical_crossentropy(
         y_pred = jnp.take_along_axis(y_pred, y_true[..., None], axis=-1)[..., 0]
 
         # calculate log
-        y_pred = jnp.maximum(y_pred, utils.EPSILON)
+        y_pred = jnp.maximum(y_pred, types.EPSILON)
         y_pred = jnp.log(y_pred)
         loss = -y_pred
 

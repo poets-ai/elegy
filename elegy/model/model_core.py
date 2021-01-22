@@ -77,6 +77,25 @@ class ModelCore(ABC):
             self.train_step_internal,
         )
 
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self._jit_functions()
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+
+        # remove states
+        # del d["states"]
+        # del d["initial_states"]
+
+        # remove jitted functions
+        del d["init_internal_jit"]
+        del d["pred_step_internal_jit"]
+        del d["test_step_internal_jit"]
+        del d["train_step_internal_jit"]
+
+        return d
+
     @abstractmethod
     def init(
         self,
@@ -457,24 +476,6 @@ class ModelCore(ABC):
         self.states = self.states.merge(state_updates)
 
         return logs
-
-    def __setstate__(self, d):
-        self.__dict__ = d
-        self._jit_functions()
-
-    def __getstate__(self):
-        d = self.__dict__.copy()
-
-        # remove states
-        del d["states"]
-        del d["initial_states"]
-
-        # remove jitted functions
-        del d["pred_step_internal_jit"]
-        del d["test_step_internal_jit"]
-        del d["train_step_internal_jit"]
-
-        return d
 
     def save(
         self,

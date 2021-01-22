@@ -28,8 +28,8 @@ class EarlyStoppingTest(TestCase):
             optimizer=optax.rmsprop(0.01),
         )
         history = model.fit(
-            np.ones((5, 20)),
-            np.zeros((5, 10)),
+            x=np.ones((5, 20)),
+            y=np.zeros((5, 10)),
             epochs=10,
             batch_size=1,
             callbacks=[callback],

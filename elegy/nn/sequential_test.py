@@ -33,3 +33,21 @@ class SequentialTest(TestCase):
             )(jnp.ones([10, 3]))
 
             assert y.shape == (10, 2)
+
+    def test_di(self):
+
+        m = elegy.nn.Sequential(
+            lambda: [
+                elegy.nn.Flatten(),
+                elegy.nn.Linear(2),
+            ]
+        )
+
+        with elegy.update_context(rng=elegy.RNGSeq(42), training=False):
+            y = elegy.inject_dependencies(m)(
+                jnp.ones([5, 3]),
+                a=1,
+                b=2,
+            )
+
+        assert y.shape == (5, 2)

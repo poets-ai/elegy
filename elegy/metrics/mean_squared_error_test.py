@@ -1,17 +1,7 @@
 import elegy
-
-
 import jax.numpy as jnp
 
 
-# import debugpy
-
-# print("Waiting for debugger...")
-# debugpy.listen(5679)
-# debugpy.wait_for_client()
-
-
-#
 def test_basic():
 
     mse = elegy.metrics.MeanSquaredError()

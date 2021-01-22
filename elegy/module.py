@@ -202,6 +202,7 @@ class Module(metaclass=ModuleMeta):
         self._submodules = []
         self._dynamic_submodules = []
         self._child_path = {}
+        self._signature_f = self.call
 
         self._jit_functions()
 
@@ -235,6 +236,8 @@ class Module(metaclass=ModuleMeta):
 
                     return y, collections
 
+            init_jit_callable._signature_f = self.call
+
             return init_jit_callable
 
         # ------------------------------
@@ -256,6 +259,8 @@ class Module(metaclass=ModuleMeta):
             ) -> tp.Tuple[tp.Any, ParameterCollection]:
                 with hooks.update_context(rng=rng, **hooks_kwargs):
                     return apply_jit(parameters, *args)
+
+            apply_jit_callable._signature_f = self.call
 
             return apply_jit_callable
 
@@ -318,6 +323,8 @@ class Module(metaclass=ModuleMeta):
 
             return y, self.get_parameters()
 
+        init_callable._signature_f = self.call
+
         return init_callable
 
     @tp.overload
@@ -363,6 +370,8 @@ class Module(metaclass=ModuleMeta):
                 return y, new_parameters
             else:
                 return y
+
+        apply_callable._signature_f = self.call
 
         return apply_callable
 

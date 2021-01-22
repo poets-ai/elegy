@@ -99,6 +99,7 @@ class Loss:
             reduction if reduction is not None else Reduction.SUM_OVER_BATCH_SIZE
         )
         self._labels_filter = (on,) if isinstance(on, (str, int)) else on
+        self._signature_f = self.call
 
     def __call__(
         self,
