@@ -11,6 +11,10 @@ from .list_adapter import ListsOfScalarsDataAdapter
 from .dataset import DataLoaderAdapter
 
 try:
+    from .tf_dataset_adapter import TFDatasetAdapter
+except ImportError:
+    TFDatasetAdapter = None
+try:
     from .torch_dataloader_adapter import TorchDataLoaderAdapter
 except ImportError:
     TorchDataLoaderAdapter = None
@@ -22,6 +26,8 @@ ALL_ADAPTER_CLS = [
     DataLoaderAdapter,
 ]
 
+if TFDatasetAdapter is not None:
+    ALL_ADAPTER_CLS.append(TFDatasetAdapter)
 if TorchDataLoaderAdapter is not None:
     ALL_ADAPTER_CLS.append(TorchDataLoaderAdapter)
 
@@ -81,6 +87,7 @@ class DataHandler(object):
         try:
             yield
             # context.async_wait()
+
         except (StopIteration):
             if (
                 self._adapter.get_size() is None
@@ -137,15 +144,6 @@ class DataHandler(object):
         raise ValueError(
             "When passing a generator, you " "must specify how many steps to draw."
         )
-        # size = cardinality.cardinality(dataset)
-        # if size == cardinality.INFINITE and steps is None:
-        #     raise ValueError(
-        #         "When passing an infinitely repeating dataset, you "
-        #         "must specify how many steps to draw."
-        #     )
-        # if size >= 0:
-        #     return size.numpy().item()
-        # return None
 
     @property
     def _samples(self):
