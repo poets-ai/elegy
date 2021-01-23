@@ -91,7 +91,8 @@ class Model(ModelBase):
             raise ValueError(
                 f"rng must be one of the following types: int, RNGSeq. Got {kwargs['rng']}"
             )
-        super().__init__(**kwargs)
+
+        super().__init__(rng=RNGSeq(seed), **kwargs)
 
         self.module = module
         self.loss = loss

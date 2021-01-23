@@ -231,7 +231,7 @@ class ModelCore(ABC):
                     y_true,
                     sample_weight,
                     class_weight,
-                    states=self.states,
+                    self.states,
                 )
 
             self.states = self.states.merge_new(state_updates)
