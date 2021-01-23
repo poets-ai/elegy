@@ -19,11 +19,11 @@ class ResNetTest(TestCase):
         assert jnp.all(y.shape == (2, 1000))
 
         # test loading weights from file
-        tempdir = tempfile.TemporaryDirectory()
-        pklpath = os.path.join(tempdir.name, "delete_me.pkl")
-        open(pklpath, "wb").write(pickle.dumps(model.module.get_parameters()))
+        with tempfile.TemporaryDirectory() as tempdir:
+            pklpath = os.path.join(tempdir, "delete_me.pkl")
+            open(pklpath, "wb").write(pickle.dumps(model.module.get_parameters()))
 
-        new_r18 = elegy.nets.resnet.ResNet18(weights=pklpath)
-        y2 = elegy.Model(new_r18, run_eagerly=True).predict(x)
+            new_r18 = elegy.nets.resnet.ResNet18(weights=pklpath)
+            y2 = elegy.Model(new_r18, run_eagerly=True).predict(x)
 
         assert np.allclose(y, y2)

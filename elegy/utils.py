@@ -109,40 +109,6 @@ def get_input_args(
     return args, apply_kwargs
 
 
-def split(
-    d: tp.Union[tp.Dict[str, tp.Any], tp.Mapping[str, tp.Any]]
-) -> tp.Iterable[tp.Dict[str, tp.Any]]:
-
-    for k, v in d.items():
-
-        parts = k.split("/")
-        parts.reverse()
-
-        if isinstance(v, (tp.Dict, tp.Mapping)):
-            vs = list(split(v))
-        else:
-            vs = [v]
-
-        for v in vs:
-            output = {}
-
-            for k in parts:
-                if not output:
-                    output[k] = v
-                else:
-                    output = {k: output}
-
-            yield output
-
-
-def split_and_merge(
-    d: tp.Union[tp.Dict[str, tp.Any], tp.Mapping[str, tp.Any]]
-) -> tp.Dict[str, tp.Any]:
-
-    ds = split(d)
-    return toolz.reduce(always_merger.merge, ds, {})
-
-
 def lower_snake_case(s: str) -> str:
     s = re.sub(r"(?<!^)(?=[A-Z])", "_", s).lower()
     parts = s.split("_")
@@ -270,3 +236,30 @@ def download_file(url, cache="~/.elegy/downloads", sha256=None):
         shutil.move(filename, cachefilename)
 
     return cachefilename
+
+
+def merge_params(a: tp.Any, b: tp.Any):
+
+    if isinstance(a, dict) and isinstance(b, dict):
+        return {
+            key: a[key]
+            if key not in b
+            else b[key]
+            if key not in a
+            else merge_params(a[key], b[key])
+            for key in set(a) | set(b)
+        }
+    elif isinstance(a, list) and isinstance(b, list):
+        if len(a) != len(b):
+            raise ValueError(
+                f"Cannot merge two lists of different lengths:\na={a}\nb={b}"
+            )
+        return [merge_params(a, b) for a, b in zip(a, b)]
+    elif isinstance(a, tuple) and isinstance(b, tuple):
+        if len(a) != len(b):
+            raise ValueError(
+                f"Cannot merge two tuples of different lengths:\na={a}\nb={b}"
+            )
+        return tuple(merge_params(a, b) for a, b in zip(a, b))
+    else:
+        raise ValueError(f"Cannot merge structs:\na={a}\nb={b}")

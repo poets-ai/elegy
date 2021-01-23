@@ -574,20 +574,28 @@ class Module(metaclass=ModuleMeta):
                     else:
                         raise ValueError(errormsg)
 
-        # first perform the check to avoid setting some parameters then encountering invalid ones
-        if check_shapes or check_missing:
-            parameter_collection = deepcopy(parameter_collection)
-            for values in parameter_collection.values():
-                # shape check modifies values, make a copy to keep the original ones untouched
-                tree_apply(check_shapes_f, self, values)
-
-        def f(module: Module, values: tp.Dict[str, tp.Any]):
+        def set_f(module: Module, values: tp.Dict[str, tp.Any]):
             for key, value in values.items():
                 if key in module._params:
                     setattr(module, key, value)
 
-        for parameters in parameter_collection.values():
-            tree_apply(f, self, parameters)
+        # first perform the check to avoid setting some parameters then encountering invalid ones
+        if check_shapes or check_missing:
+            parameters = {}
+
+            for params in parameter_collection.values():
+                parameters = utils.merge_params(parameters, params)
+
+            # shape check modifies values, make a copy to keep the original ones untouched
+            tree_apply(check_shapes_f, self, parameters)
+
+            # set values
+            tree_apply(set_f, self, parameters)
+
+        else:
+            # set values
+            for parameters in parameter_collection.values():
+                tree_apply(set_f, self, parameters)
 
     def has_parameter(self, name: str) -> bool:
         return hasattr(self, name)
@@ -600,7 +608,8 @@ class Module(metaclass=ModuleMeta):
 
         def clear_module(module: Module):
             for name in module._params:
-                delattr(module, name)
+                if hasattr(module, name):
+                    delattr(module, name)
 
         tree_exec(clear_module, self)
 
