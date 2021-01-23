@@ -40,7 +40,6 @@ class GeneralizedModule(ABC):
     ) -> tp.Callable[..., OutputStates]:
         ...
 
-    @abstractmethod
     def get_summary_params(
         self,
         path: Path,
@@ -50,7 +49,7 @@ class GeneralizedModule(ABC):
         net_params: NetParams,
         net_states: NetStates,
     ) -> tp.Tuple[tp.Optional[Pytree], tp.Optional[Pytree]]:
-        ...
+        return None, None
 
 
 class CallableModule(GeneralizedModule):
@@ -93,14 +92,6 @@ class CallableModule(GeneralizedModule):
                 )
 
         return lambda_
-
-    def get_summary_params(
-        self,
-        path: Path,
-        net_params: NetParams,
-        net_states: NetStates,
-    ) -> tp.Tuple[Pytree, Pytree]:
-        return (), ()
 
 
 def register_module_for(
