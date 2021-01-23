@@ -38,36 +38,16 @@ from . import (
 from .losses import Loss
 from .metrics import Metric
 from .model import Logs, Metrics, Model
-from .optimizer import Optimizer
 from .model.model_base import ModelBase
 from .module import Module, get_module_path, get_module_path_str
-from .types import Mode, RNGSeq, Uninitialized
+from .optimizer import Optimizer
+from .types import DependencyUnavailable, Mode, RNGSeq, Uninitialized
 
-# from .module import (
-#     RNG,
-#     LocalContext,
-#     Module,
-#     add_loss,
-#     add_metric,
-#     add_summary,
-#     get_dynamic_context,
-#     get_losses,
-#     get_metrics,
-#     get_rng,
-#     get_static_context,
-#     get_summaries,
-#     update_context,
-#     is_training,
-#     jit,
-#     name_context,
-#     next_key,
-#     set_context,
-#     set_rng,
-#     set_training,
-#     to_module,
-#     training_context,
-#     value_and_grad,
-# )
+try:
+    from .model.generalized_module.linen_module import flax_summarize, flax_summary
+except DependencyUnavailable as e:
+    pass
+
 
 __all__ = [
     "Loss",

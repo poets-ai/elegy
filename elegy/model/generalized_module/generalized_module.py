@@ -49,8 +49,6 @@ class GeneralizedModule(ABC):
         include_submodules: bool,
         net_params: NetParams,
         net_states: NetStates,
-        # module: tp.Optional[SummaryModule],
-        # value: SummaryValue,
     ) -> tp.Tuple[tp.Optional[Pytree], tp.Optional[Pytree]]:
         ...
 

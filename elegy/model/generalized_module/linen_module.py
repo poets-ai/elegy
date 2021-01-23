@@ -1,7 +1,7 @@
+import functools
 import typing as tp
 
-
-from elegy import utils
+from elegy import hooks, utils
 from elegy.types import (
     DependencyUnavailable,
     NetParams,
@@ -10,6 +10,7 @@ from elegy.types import (
     Path,
     Pytree,
     RNGSeq,
+    Scalar,
 )
 
 from .generalized_module import GeneralizedModule, register_module_for
@@ -95,7 +96,76 @@ class LinenModule(GeneralizedModule):
     def get_summary_params(
         self,
         path: Path,
+        module: tp.Any,
+        value: tp.Any,
+        include_submodules: bool,
         net_params: NetParams,
         net_states: NetStates,
-    ) -> tp.Tuple[Pytree, Pytree]:
-        return None, None
+    ) -> tp.Tuple[tp.Optional[Pytree], tp.Optional[Pytree]]:
+
+        if net_params is None:
+            params_tree = None
+        else:
+            params_tree = utils.get_path_params(path, net_params)
+            # filter only params
+            if not include_submodules and params_tree is not None:
+                assert isinstance(module, linen.Module)
+                params_tree = {
+                    name: value
+                    for name, value in params_tree.items()
+                    if not name[0].isupper()
+                }
+
+        if net_states is None:
+            states_tree = None
+        else:
+            states_tree = {
+                collection: utils.get_path_params(path, states)
+                for collection, states in net_states.items()
+            }
+            # filter only params
+            if not include_submodules:
+
+                states_tree = {
+                    collection: {
+                        name: value
+                        for name, value in states.items()
+                        if assert_id(isinstance(module, linen.Module))
+                        and not name[0].isupper()
+                    }
+                    for collection, states in states_tree.items()
+                    if states is not None
+                }
+
+        return params_tree, states_tree
+
+
+def flax_summarize(f):
+    @functools.wraps(f)
+    def wrapper(self: linen.Module, *args, **kwargs):
+
+        outputs = f(self, *args, **kwargs)
+
+        if hooks.summaries_active():
+            path = self.scope.path
+            hooks.add_summary(path, self, outputs)
+
+        return outputs
+
+    return wrapper
+
+
+def flax_summary(
+    flax_module: linen.Module,
+    name: str,
+    f: tp.Any,
+    value: Scalar,
+):
+    if hooks.summaries_active():
+        path = flax_module.scope.path + (name,)
+        hooks.add_summary(path, f, value)
+
+
+def assert_id(value):
+    assert value
+    return value
