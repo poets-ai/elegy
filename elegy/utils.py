@@ -12,7 +12,6 @@ import jax.numpy as jnp
 import jax.tree_util
 import numpy as np
 import toolz
-from deepmerge import always_merger
 
 
 def maybe_expand_dims(a: np.ndarray, b: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
@@ -210,12 +209,14 @@ def _merge_with_unique_names(
     return output
 
 
-def parameters_count(params: tp.Any):
-    return sum(x.size for x in jax.tree_leaves(params))
+def parameters_count(params: tp.Any) -> int:
+    leaves = (jnp.asarray(x) for x in jax.tree_leaves(params))
+    return sum(x.size for x in leaves)
 
 
-def parameters_bytes(params: tp.Any):
-    return sum(x.size * x.dtype.itemsize for x in jax.tree_leaves(params))
+def parameters_bytes(params: tp.Any)-> int:
+    leaves = (jnp.asarray(x) for x in jax.tree_leaves(params))
+    return sum(x.size * x.dtype.itemsize for x in leaves)
 
 
 def download_file(url, cache="~/.elegy/downloads", sha256=None):
@@ -263,3 +264,13 @@ def merge_params(a: tp.Any, b: tp.Any):
         return tuple(merge_params(a, b) for a, b in zip(a, b))
     else:
         raise ValueError(f"Cannot merge structs:\na={a}\nb={b}")
+
+
+def get_path_params(path: Path, params: tp.Any) -> tp.Any:
+    for key in path:
+        try:
+            params = params[key]
+        except BaseException as e:
+            return None
+
+    return params

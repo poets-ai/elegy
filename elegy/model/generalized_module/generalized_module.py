@@ -2,7 +2,17 @@ import typing as tp
 from abc import ABC, abstractmethod
 
 from elegy import utils
-from elegy.types import OutputStates, RNGSeq, UNINITIALIZED
+from elegy.types import (
+    NetParams,
+    NetStates,
+    OutputStates,
+    Path,
+    Pytree,
+    RNGSeq,
+    SummaryModule,
+    SummaryValue,
+    UNINITIALIZED,
+)
 import typing as tp
 
 REGISTRY: tp.Dict[tp.Type, tp.Type["GeneralizedModule"]] = {}
@@ -28,6 +38,20 @@ class GeneralizedModule(ABC):
         states: tp.Any,
         rng: RNGSeq,
     ) -> tp.Callable[..., OutputStates]:
+        ...
+
+    @abstractmethod
+    def get_summary_params(
+        self,
+        path: Path,
+        module: tp.Any,
+        value: tp.Any,
+        include_submodules: bool,
+        net_params: NetParams,
+        net_states: NetStates,
+        # module: tp.Optional[SummaryModule],
+        # value: SummaryValue,
+    ) -> tp.Tuple[tp.Optional[Pytree], tp.Optional[Pytree]]:
         ...
 
 
@@ -72,6 +96,14 @@ class CallableModule(GeneralizedModule):
 
         return lambda_
 
+    def get_summary_params(
+        self,
+        path: Path,
+        net_params: NetParams,
+        net_states: NetStates,
+    ) -> tp.Tuple[Pytree, Pytree]:
+        return (), ()
+
 
 def register_module_for(
     module_type,
@@ -110,3 +142,18 @@ def generalize(
             raise ValueError(f"No GeneralizedModule found for {module}.")
 
     return generalized_module_type(module)
+
+
+def is_generalizable(module: tp.Any, accept_callable: bool = False) -> bool:
+
+    if isinstance(module, GeneralizedModule):
+        return True
+
+    for module_type in REGISTRY:
+        if isinstance(module, module_type):
+            return True
+
+    if accept_callable and isinstance(module, tp.Callable):
+        return True
+
+    return False

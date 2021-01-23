@@ -303,6 +303,12 @@ class Module(metaclass=ModuleMeta):
     def call(self, *args, **kwargs):
         ...
 
+    def add_summary(self, name: str, f: tp.Any, value: tp.Any):
+        if hooks.summaries_active():
+            path = get_module_path(self) + (name,)
+            assert path is not None
+            hooks.add_summary(path, f, value)
+
     def init(
         self,
         *,

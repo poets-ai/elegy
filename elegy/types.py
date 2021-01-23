@@ -117,8 +117,10 @@ Summaries = tp.List[
     tp.Tuple[Path, tp.Optional[SummaryModule], SummaryValue],
 ]
 NetParams = tp.Any
+NetStates = tp.Any
 OptimizerStates = tp.Any
 Grads = tp.Any
+Pytree = tp.Any
 
 
 class OutputStates(tp.NamedTuple):

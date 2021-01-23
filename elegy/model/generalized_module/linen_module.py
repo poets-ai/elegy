@@ -2,7 +2,15 @@ import typing as tp
 
 
 from elegy import utils
-from elegy.types import DependencyUnavailable, OutputStates, RNGSeq
+from elegy.types import (
+    DependencyUnavailable,
+    NetParams,
+    NetStates,
+    OutputStates,
+    Path,
+    Pytree,
+    RNGSeq,
+)
 
 from .generalized_module import GeneralizedModule, register_module_for
 
@@ -83,3 +91,11 @@ class LinenModule(GeneralizedModule):
             return OutputStates(y_pred, net_params, net_states)
 
         return _lambda
+
+    def get_summary_params(
+        self,
+        path: Path,
+        net_params: NetParams,
+        net_states: NetStates,
+    ) -> tp.Tuple[Pytree, Pytree]:
+        return None, None
