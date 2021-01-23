@@ -138,61 +138,63 @@ class Model(ModelBase):
         states = States(rng=RNGSeq(self.seed))
         assert isinstance(states.rng, RNGSeq)
 
-        x_args, x_kwargs = utils.get_input_args(
-            x,
-            states=states,
-            training=True,
-        )
-        y_pred, net_params, net_states = self.module_internal.init(states.rng)(
-            *x_args, **x_kwargs
-        )
+        with hooks.update_context(rng=states.rng):
 
-        states = states.update(net_states=net_states, net_params=net_params)
+            x_args, x_kwargs = utils.get_input_args(
+                x,
+                states=states,
+                training=True,
+            )
+            y_pred, net_params, net_states = self.module_internal.init(states.rng)(
+                *x_args, **x_kwargs
+            )
 
-        if mode == Mode.pred:
+            states = states.update(net_states=net_states, net_params=net_params)
+
+            if mode == Mode.pred:
+                return states
+
+            assert isinstance(states.rng, RNGSeq)
+            metrics_logs, metrics_states = self.metrics_internal.init(states.rng)(
+                x=x,
+                y_true=y_true,
+                y_pred=y_pred,
+                net_params=net_params,
+                net_states=net_states,
+                metrics_states=UNINITIALIZED,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+                rng=states.rng,
+                training=True,
+            )
+
+            loss, loss_logs, loss_logs_states = self.loss_internal.init(states.rng)(
+                x=x,
+                y_true=y_true,
+                y_pred=y_pred,
+                net_params=net_params,
+                net_states=net_states,
+                metrics_states=UNINITIALIZED,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+                rng=states.rng,
+                training=True,
+            )
+
+            states = states.update(metrics_states=(metrics_states, loss_logs_states))
+            assert isinstance(states.rng, RNGSeq)
+
+            if mode == Mode.test:
+                return states
+
+            if self.optimizer is not None:
+                optimizer_states = self.optimizer_internal.init(states.rng, net_params)
+            else:
+                optimizer_states = None
+
+            states = states.update(optimizer_states=optimizer_states)
+
             return states
-
-        assert isinstance(states.rng, RNGSeq)
-        metrics_logs, metrics_states = self.metrics_internal.init(states.rng)(
-            x=x,
-            y_true=y_true,
-            y_pred=y_pred,
-            net_params=net_params,
-            net_states=net_states,
-            metrics_states=UNINITIALIZED,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            rng=states.rng,
-            training=True,
-        )
-
-        loss, loss_logs, loss_logs_states = self.loss_internal.init(states.rng)(
-            x=x,
-            y_true=y_true,
-            y_pred=y_pred,
-            net_params=net_params,
-            net_states=net_states,
-            metrics_states=UNINITIALIZED,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            rng=states.rng,
-            training=True,
-        )
-
-        states = states.update(metrics_states=(metrics_states, loss_logs_states))
-        assert isinstance(states.rng, RNGSeq)
-
-        if mode == Mode.test:
-            return states
-
-        if self.optimizer is not None:
-            optimizer_states = self.optimizer_internal.init(states.rng, net_params)
-        else:
-            optimizer_states = None
-
-        states = states.update(optimizer_states=optimizer_states)
-
-        return states
 
     def pred_step(
         self,

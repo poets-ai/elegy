@@ -104,6 +104,7 @@ class ModelCore(ABC):
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
+        states: States,
     ) -> States:
         ...
 
@@ -182,6 +183,7 @@ class ModelCore(ABC):
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
+        states: States,
     ) -> States:
         return utils.inject_dependencies(self.init)(
             mode=mode,
@@ -189,6 +191,7 @@ class ModelCore(ABC):
             y_true=y_true,
             sample_weight=sample_weight,
             class_weight=class_weight,
+            states=states,
         )
 
     def maybe_initialize(
@@ -217,13 +220,19 @@ class ModelCore(ABC):
         ):
             method = self.init_internal if self.run_eagerly else self.init_internal_jit
 
-            state_updates: States = method(
-                mode,
-                x,
-                y_true,
-                sample_weight,
-                class_weight,
-            )
+            rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
+
+            with hooks.context(
+                rng=rng, initializing=True, training=True, set_defaults=True
+            ):
+                state_updates: States = method(
+                    mode,
+                    x,
+                    y_true,
+                    sample_weight,
+                    class_weight,
+                    states=self.states,
+                )
 
             self.states = self.states.merge_new(state_updates)
             self.initial_states = self.initial_states.merge_new(state_updates)
