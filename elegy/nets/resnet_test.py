@@ -26,4 +26,4 @@ class ResNetTest(TestCase):
             new_r18 = elegy.nets.resnet.ResNet18(weights=pklpath)
             y2 = elegy.Model(new_r18, run_eagerly=True).predict(x)
 
-        assert np.allclose(y, y2)
+        assert np.allclose(y, y2, rtol=0.001)
