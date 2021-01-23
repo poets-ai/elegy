@@ -102,7 +102,7 @@ class VariationalAutoEncoder(elegy.Model):
         self.decoder = Decoder(
             hidden_size=self.hidden_size, output_shape=self.output_shape
         )
-        self.optimizer = optax.adam(1e-3)
+        self.loss_metrics = elegy.model.model.LossMetrics()
 
     # request parameters by name via depending injection.
     # possible: mode, x, y_true, sample_weight, class_weight
@@ -110,17 +110,14 @@ class VariationalAutoEncoder(elegy.Model):
         # friendly RNG interface: rng.next() == jax.random.split(...)
         rng = elegy.RNGSeq(42)
 
-        with elegy.update_context(rng=rng):
-            (z, mean, stddev), enc_variables = self.encoder.init_with_output(
-                rng.next(), x
-            )
-            (logits, mean, stddev), dec_variables = self.decoder.init_with_output(
-                rng.next(), x
-            )
+        (z, mean, stddev), enc_variables = self.encoder.init_with_output(rng.next(), x)
+        logits, dec_variables = self.decoder.init_with_output(rng.next(), z)
         enc_states, enc_params = enc_variables.pop("params")
         dec_states, dec_params = dec_variables.pop("params")
         net_params = (enc_params, dec_params)
         nets_states = (enc_states, dec_states)
+
+        _, metrics_states = self.loss_metrics.init()(dict(loss=0.0))
 
         # optimizer
         optimizer_states = self.optimizer.init(net_params)
@@ -129,12 +126,34 @@ class VariationalAutoEncoder(elegy.Model):
             net_params=net_params,
             optimizer_states=optimizer_states,
             net_states=nets_states,
+            metrics_states=metrics_states,
             rng=rng,
         )
 
+    def pred_step(self, x, rng, net_states, net_params, states):
+
+        (enc_states, dec_states) = net_states
+        (enc_params, dec_params) = net_params
+
+        enc_variables = dict(params=enc_params, **enc_states)
+        (z, mean, stddev), enc_variables = self.encoder.apply(
+            enc_variables, x, rngs={"params": rng.next()}, mutable=True
+        )
+
+        dec_variables = dict(params=dec_params, **dec_states)
+        logits, dec_variables = self.decoder.apply(
+            dec_variables, z, rngs={"params": rng.next()}, mutable=True
+        )
+
+        y_pred = jax.nn.sigmoid(logits) > 0.5
+
+        return y_pred, states
+
     # request parameters by name via depending injection.
     # possible: net_params, x, y_true, net_states, metrics_states, sample_weight, class_weight, rng, states
-    def test_step(self, x, net_params, states: elegy.States, net_states, rng):
+    def test_step(
+        self, x, net_params, states: elegy.States, net_states, rng, metrics_states
+    ):
 
         (enc_states, dec_states) = net_states
         (enc_params, dec_params) = net_params
@@ -159,6 +178,8 @@ class VariationalAutoEncoder(elegy.Model):
             loss=loss,
         )
 
+        logs, metrics_states = self.loss_metrics.apply(metrics_states)(logs)
+
         enc_states, enc_params = enc_variables.pop("params")
         dec_states, dec_params = dec_variables.pop("params")
 
@@ -166,7 +187,9 @@ class VariationalAutoEncoder(elegy.Model):
             loss,
             logs,
             states.update(
-                net_params=(enc_params, dec_params), net_states=(enc_states, dec_states)
+                net_params=(enc_params, dec_params),
+                net_states=(enc_states, dec_states),
+                metrics_states=metrics_states,
             ),
         )
 
@@ -193,7 +216,10 @@ def main(
     print("X_train:", X_train.shape, X_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
 
-    model = VariationalAutoEncoder(latent_size=LATENT_SIZE)
+    model = VariationalAutoEncoder(
+        latent_size=LATENT_SIZE,
+        optimizer=optax.adam(1e-3),
+    )
 
     # Fit with datasets in memory
     history = model.fit(
@@ -227,13 +253,17 @@ def main(
             plt.subplot(2, 5, i + 1)
             plt.imshow(x_sample[i], cmap="gray")
             plt.subplot(2, 5, 5 + i + 1)
-            plt.imshow(y_pred["det_image"][i], cmap="gray")
-        tbwriter.add_figure("VAE Example", figure, epochs)
+            plt.imshow(y_pred[i], cmap="gray")
+        # tbwriter.add_figure("VAE Example", figure, epochs)
 
     plt.show()
 
     # sample
-    model_decoder = elegy.Model(vae.decoder)
+    model_decoder = elegy.Model(
+        model.decoder,
+        net_params=model.states.net_params[1],
+        net_states=model.states.net_states[1],
+    )
 
     z_samples = np.random.normal(size=(12, LATENT_SIZE))
     samples = model_decoder.predict(z_samples)
