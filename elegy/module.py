@@ -528,7 +528,7 @@ class Module(metaclass=ModuleMeta):
     def set_parameters(
         self,
         parameter_collection: ParameterCollection,
-        check_missing: tp.Optional[bool] = False,
+        check_missing: tp.Optional[bool] = True,
         check_shapes: tp.Optional[bool] = False,
         ignore_on_error: tp.Optional[tp.Union[bool, str]] = False,
     ) -> None:
