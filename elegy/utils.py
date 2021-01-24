@@ -1,4 +1,4 @@
-from elegy.types import Index, Path, States
+from elegy.types import Index, Path, States, Uninitialized
 import functools
 import inspect
 import re
@@ -274,3 +274,7 @@ def get_path_params(path: Path, params: tp.Any) -> tp.Any:
             return None
 
     return params
+
+
+def none_or_uninitialized(x: tp.Any) -> bool:
+    return x is None or isinstance(x, Uninitialized)

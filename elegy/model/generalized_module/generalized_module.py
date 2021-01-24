@@ -3,12 +3,15 @@ from abc import ABC, abstractmethod
 
 from elegy import utils
 from elegy.types import (
+    ModuleParams,
+    ModuleStates,
     NetParams,
     NetStates,
     OutputStates,
     Path,
     Pytree,
     RNGSeq,
+    States,
     SummaryModule,
     SummaryValue,
     UNINITIALIZED,
@@ -50,6 +53,13 @@ class GeneralizedModule(ABC):
         net_states: NetStates,
     ) -> tp.Tuple[tp.Optional[Pytree], tp.Optional[Pytree]]:
         return None, None
+
+    def update(
+        self,
+        params: tp.Optional[ModuleParams],
+        states: tp.Optional[ModuleStates],
+    ) -> tp.Tuple[tp.Optional[ModuleParams], tp.Optional[ModuleStates]]:
+        return params, states
 
 
 class CallableModule(GeneralizedModule):

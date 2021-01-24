@@ -2,14 +2,18 @@ import typing as tp
 
 from elegy import utils
 from elegy.types import (
+    ModuleParams,
+    ModuleStates,
     NetParams,
     NetStates,
     OutputStates,
     Path,
     Pytree,
     RNGSeq,
+    States,
     SummaryModule,
     SummaryValue,
+    Uninitialized,
 )
 from elegy.module import Module
 from elegy import hooks
@@ -37,6 +41,24 @@ class ElegyModule(GeneralizedModule):
             return OutputStates(y_pred, net_params, net_states)
 
         return _lambda
+
+    def update(
+        self,
+        params: tp.Optional[ModuleParams],
+        states: tp.Optional[ModuleStates],
+    ) -> tp.Tuple[tp.Optional[ModuleParams], tp.Optional[ModuleStates]]:
+
+        collections = states
+
+        if not utils.none_or_uninitialized(params):
+            collections = collections.copy() if collections is not None else {}
+            collections["parameters"] = params
+
+        if not utils.none_or_uninitialized(collections):
+            assert collections is not None
+            self.module.set_parameters(collections)
+
+        return params, states
 
     def apply(
         self,

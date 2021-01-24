@@ -320,7 +320,6 @@ class Module(metaclass=ModuleMeta):
         """
 
         def init_callable(*args, **kwargs) -> tp.Tuple[tp.Any, ParameterCollection]:
-            self.reset()
 
             with hooks.update_context(
                 rng=rng,

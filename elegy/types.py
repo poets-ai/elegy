@@ -118,6 +118,10 @@ Summaries = tp.List[
 ]
 NetParams = tp.Any
 NetStates = tp.Any
+ModuleParams = tp.Any
+ModuleStates = tp.Any
+MetricsStates = tp.Any
+OptimizerStates = tp.Any
 OptimizerStates = tp.Any
 Grads = tp.Any
 Pytree = tp.Any

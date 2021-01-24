@@ -168,6 +168,9 @@ class ModelCore(ABC):
     ) -> Training:
         ...
 
+    def update_modules(self):
+        pass
+
     def reset(self):
         self.states = self.initial_states.copy()
 
@@ -206,36 +209,55 @@ class ModelCore(ABC):
         if (
             (
                 mode == Mode.pred
-                and isinstance(self.states.net_params, Uninitialized)
-                and isinstance(self.states.net_states, Uninitialized)
+                and not isinstance(self.states.net_params, Uninitialized)
+                and not isinstance(self.states.net_states, Uninitialized)
             )
             or (
                 mode == Mode.test
-                and isinstance(self.states.metrics_states, Uninitialized)
+                and not isinstance(self.states.metrics_states, Uninitialized)
             )
             or (
                 mode == Mode.train
-                and isinstance(self.states.optimizer_states, Uninitialized)
+                and not isinstance(self.states.optimizer_states, Uninitialized)
             )
         ):
-            method = self.init_internal if self.run_eagerly else self.init_internal_jit
+            return
 
-            rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
+        method = self.init_internal if self.run_eagerly else self.init_internal_jit
 
-            with hooks.context(
-                rng=rng, initializing=True, training=True, set_defaults=True
-            ):
-                state_updates: States = method(
-                    mode,
-                    x,
-                    y_true,
-                    sample_weight,
-                    class_weight,
-                    self.states,
-                )
+        rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
 
-            self.states = self.states.merge_new(state_updates)
-            self.initial_states = self.initial_states.merge_new(state_updates)
+        with hooks.context(
+            rng=rng, initializing=True, training=True, set_defaults=True
+        ):
+            state_updates: States = method(
+                mode,
+                x,
+                y_true,
+                sample_weight,
+                class_weight,
+                self.states,
+            )
+
+        if mode in (Mode.pred, Mode.test, Mode.train):
+            if isinstance(state_updates.net_params, Uninitialized):
+                state_updates = state_updates.update(net_params=None)
+
+            if isinstance(state_updates.net_states, Uninitialized):
+                state_updates = state_updates.update(net_states=None)
+        if mode in (Mode.test, Mode.train):
+            if isinstance(state_updates.metrics_states, Uninitialized):
+                state_updates = state_updates.update(metrics_states=None)
+
+        if mode == Mode.train:
+            if isinstance(state_updates.optimizer_states, Uninitialized):
+                state_updates = state_updates.update(optimizer_states=None)
+
+        self.states = self.states.merge_new(state_updates)
+        self.initial_states = self.initial_states.merge_new(state_updates)
+
+        # update modules
+        self.update_modules()
 
     def pred_step_internal(
         self,
@@ -455,6 +477,7 @@ class ModelCore(ABC):
         Raises:
             ValueError: In case of invalid user-provided arguments.
         """
+
         self.maybe_initialize(
             mode=Mode.train,
             x=x,

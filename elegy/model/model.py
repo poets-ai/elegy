@@ -197,6 +197,16 @@ class Model(ModelBase):
 
             return states
 
+    def update_modules(self):
+        if self.module_internal is not None:
+            net_params, net_states = self.module_internal.update(
+                params=self.states.net_params,
+                states=self.states.net_states,
+            )
+            self.states = self.states.update(
+                net_params=net_params, net_states=net_states
+            )
+
     def pred_step(
         self,
         # net_params: tp.Any,
