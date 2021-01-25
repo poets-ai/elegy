@@ -1,4 +1,10 @@
-from elegy.types import Index, Path, States, Uninitialized
+from elegy.types import (
+    Parameter,
+    ParameterCollection,
+    Path,
+    States,
+    Uninitialized,
+)
 import functools
 import inspect
 import re
@@ -278,3 +284,48 @@ def get_path_params(path: Path, params: tp.Any) -> tp.Any:
 
 def none_or_uninitialized(x: tp.Any) -> bool:
     return x is None or isinstance(x, Uninitialized)
+
+
+def merge_collections(collections: ParameterCollection) -> tp.Dict[str, tp.Any]:
+    output_parameters = {}
+
+    for collection, values in collections.items():
+        params = jax.tree_map(lambda x: Parameter(x, collection), values)
+        output_parameters = merge_params(params, output_parameters)
+
+    assert isinstance(output_parameters, dict)
+
+    return output_parameters
+
+
+def split_into_collections(parameters: tp.Dict[str, tp.Any]) -> ParameterCollection:
+    all_collections = set()
+
+    def find_collections(parameter: Parameter):
+        all_collections.add(parameter.collection)
+
+    jax.tree_map(find_collections, parameters)
+
+    return {
+        collection: unwrap_filter(
+            lambda p: p.collection == collection,
+            parameters,
+        )
+        for collection in all_collections
+    }
+
+
+def unwrap_filter(
+    f: tp.Callable[[Parameter], bool], parameters: tp.Dict[str, tp.Any]
+) -> tp.Dict[str, tp.Any]:
+    outputs = {}
+
+    for name, parameter in parameters.items():
+
+        if isinstance(parameter, Parameter):
+            if f(parameter):
+                outputs[name] = parameter.value
+        else:
+            outputs[name] = unwrap_filter(f, parameter)
+
+    return outputs

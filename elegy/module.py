@@ -45,7 +45,6 @@ class LocalContext(Protocol):
     module_path: tp.Optional[tp.Dict["Module", Path]]
     inside_call: tp.Optional[bool]
     module_index: tp.Optional[int]
-    scope: tp.Optional[tp.Dict[str, tp.Any]]
 
 
 @dataclass
@@ -54,7 +53,6 @@ class _LocalContext(threading.local):
     module_path: tp.Optional[tp.Dict["Module", Path]]
     inside_call: tp.Optional[bool]
     module_index: tp.Optional[int]
-    scope: tp.Optional[tp.Dict[str, tp.Any]]
 
 
 LOCAL: LocalContext = _LocalContext(
@@ -62,7 +60,6 @@ LOCAL: LocalContext = _LocalContext(
     module_path=None,
     inside_call=None,
     module_index=None,
-    scope=None,
 )
 
 
@@ -125,7 +122,7 @@ class ModuleMeta(ABCMeta):
 
                 module = construct_module(cls, *args, **kwargs)
 
-                name = utils.get_unique_name(set(vars(parent)), module.name)
+                name = utils.get_unique_name(set(parent._submodules), module.name)
 
                 parent._submodules[name] = module
                 parent._submodule_name[module] = name
@@ -143,7 +140,6 @@ class Module(metaclass=ModuleMeta):
     Basic Elegy Module.
 
     For more information check out the [Module System guide](https://poets-ai.github.io/elegy/guides/module-system/).
-
     """
 
     name: str
@@ -152,7 +148,8 @@ class Module(metaclass=ModuleMeta):
     _submodules: tp.Dict[str, "Module"]
     _submodule_name: tp.Dict["Module", str]
     _dynamic_submodules: tp.List["Module"]
-    _default_scope: tp.Dict[str, tp.Any]
+    _default_params: tp.Optional[tp.Dict[str, Parameter]]
+    _params: tp.Optional[tp.Dict[str, Parameter]]
 
     init_jit: InitJit
     apply_jit: ApplyJit
@@ -184,13 +181,14 @@ class Module(metaclass=ModuleMeta):
         self._submodule_name = {}
         self._dynamic_submodules = []
         self._signature_f = self.call
-        self._default_scope = {}
+        self._default_params = None
+        self._params = None
 
         self._jit_functions()
 
     def call_jit(self, *args) -> tp.Any:
-        collections = self.get_parameters()
-        y, collections = self.apply_jit(parameters=collections)(*args)
+        collections = self.get_default_parameters()
+        y, collections = self.apply_jit(collections)(*args)
         self.set_parameters(collections)
         return y
 
@@ -231,7 +229,7 @@ class Module(metaclass=ModuleMeta):
         apply_jit = hooks.jit(apply_jit_raw)
 
         def apply_jit_wrapper(
-            parameters: ParameterCollection,
+            collections: ParameterCollection,
             *,
             rng: tp.Optional[RNGSeq] = None,
             **hooks_kwargs,
@@ -240,7 +238,7 @@ class Module(metaclass=ModuleMeta):
                 *args,
             ) -> tp.Tuple[tp.Any, ParameterCollection]:
                 with hooks.update_context(rng=rng, **hooks_kwargs):
-                    return apply_jit(parameters, *args)
+                    return apply_jit(collections, *args)
 
             apply_jit_callable._signature_f = self.call
 
@@ -305,10 +303,11 @@ class Module(metaclass=ModuleMeta):
                 rng=rng,
                 initializing=True,
                 **hooks_kwargs,
-            ), scope_context(None):
+            ), scope_context(self, None):
                 y = self(*args, **kwargs)
+                collections = self.get_parameters()
 
-            return y, self.get_parameters()
+            return y, collections
 
         init_callable._signature_f = self.call
 
@@ -330,17 +329,34 @@ class Module(metaclass=ModuleMeta):
                 initializing=False,
                 rng=rng,
                 **hooks_kwargs,
-            ), scope_context(parameters):
+            ), scope_context(self, parameters):
                 y = self(*args, **kwargs)
+                collections = self.get_parameters()
 
-                scope = LOCAL.scope
-                assert scope is not None
-
-            return y, scope
+            return y, collections
 
         apply_callable._signature_f = self.call
 
         return apply_callable
+
+    def __getattr__(self, name: str) -> tp.Any:
+
+        if name in self._submodules:
+            return self._submodules[name]
+
+        if name in self._params:
+            return self._params[name].value
+
+        if (
+            hooks.is_initializing()
+            and self._default_params is not None
+            and name in self._default_params
+        ):
+            return self._default_params[name].value
+
+        raise AttributeError(
+            f"'{self.__class__.__name__}' object has no attribute '{name}'"
+        )
 
     def add_parameter(
         self,
@@ -374,28 +390,40 @@ class Module(metaclass=ModuleMeta):
         if collection is None:
             collection = "parameters" if trainable else "states"
 
-        assert LOCAL.scope is not None
+        if self._params is None and hooks.is_initializing():
+            self._params = {}
 
-        if name not in LOCAL.scope:
+        assert self._params is not None
+
+        if name not in self._params:
 
             if not hooks.is_initializing():
                 raise ValueError(f"Cannot add parameter {name} outside `init`")
 
-            if name in self._default_scope:
-                parameter = self._default_scope[name]
-                assert isinstance(parameter, Parameter)
+            if self._default_params is None:
+                self._default_params = {}
+
+            if name in self._default_params:
+                parameter = self._default_params[name]
                 assert collection == parameter.collection
                 initial_value = parameter.value
 
             else:
                 initial_value = initializer()
                 parameter = Parameter(initial_value, collection)
+                self._default_params[name] = parameter
 
-                self._default_scope[name] = parameter
+            self._params[name] = parameter
 
-            LOCAL.scope[name] = parameter
+        parameter = self._params[name]
 
-        value = LOCAL.scope[name].value
+        if parameter.collection != collection:
+            raise ValueError(
+                f"Parameter {name} previously found in collection {parameter.collection} "
+                f"but currently being added for collection {collection}"
+            )
+
+        value = parameter.value
 
         if constraint is not None:
             value = constraint(value)
@@ -424,15 +452,15 @@ class Module(metaclass=ModuleMeta):
             `ValueError` if parameter is not present in current module.
         """
 
-        assert LOCAL.scope is not None
+        assert self._params is not None
 
-        if name not in LOCAL.scope:
+        if name not in self._params:
             raise ValueError(f"Parameter {name} not found in {self}.")
 
         if hooks.is_initializing():
             return
 
-        parameter = LOCAL.scope[name]
+        parameter = self._params[name]
         assert isinstance(parameter, Parameter)
         parameter.value = value
 
@@ -462,134 +490,181 @@ class Module(metaclass=ModuleMeta):
         Raises:
             `ValueError` if parameter is not present in current module.
         """
-        assert LOCAL.scope is not None
+        assert self._params is not None
 
-        if name not in LOCAL.scope:
+        if name not in self._params:
             self.add_parameter(
                 name, lambda: value, trainable=trainable, collection=collection
             )
         else:
             self.update_parameter(name, value)
 
-    def get_parameters(
+    def reset(self, default_params: bool = False):
+
+        self._params = None
+
+        if default_params:
+            self._default_params = None
+
+        for submodule in self._submodules.values():
+            submodule.reset(default_params=default_params)
+
+    def set_default_parameters(
         self,
-    ) -> ParameterCollection:
-        """
-        Recursively collects a dictionary with the parameters of this module
-        grouped by collection.
-        """
-
-        # find all existing collections
-        collections = set()
-        tree_exec(lambda module: collections.update(module._params.values()), self)
-
-        # create a dict of collections to the parameters of those collections
-        params = {
-            collection: module_tree_map(
-                lambda module: {
-                    key: getattr(module, key)
-                    for key, params_collection in module._params.items()
-                    if hasattr(module, key) and collection == params_collection
-                },
-                self,
-            )
-            for collection in collections
-        }
-
-        return params
+        collections: ParameterCollection,
+        check_shapes: bool = False,
+    ):
+        parameters = utils.merge_collections(collections)
+        self._set_parameters(
+            parameters=parameters,
+            check_shapes=check_shapes,
+            set_default_params=True,
+        )
 
     def set_parameters(
         self,
-        parameter_collection: ParameterCollection,
-        check_missing: tp.Optional[bool] = True,
-        check_shapes: tp.Optional[bool] = False,
-        ignore_on_error: tp.Optional[tp.Union[bool, str]] = False,
-    ) -> None:
-        """
-        Recursively sets all the parameters of this module.
+        collections: ParameterCollection,
+        check_shapes: bool = False,
+    ):
+        parameters = utils.merge_collections(collections)
+        self._set_parameters(
+            parameters=parameters,
+            check_shapes=check_shapes,
+            set_default_params=False,
+        )
 
-        Arguments:
-            values: A nested dictionary as returned by get_parameters()
-            check_missing: If True will check if the new set of parameters is complete. Default: False
-            check_shapes: If True (Default) will check if the new parameters have the same shape as the old ones
-            ignore_on_error: If True will set only parameters that have a matching shape, ignoring mismatches and missing parameters.
-                             If "silent" will not even print a warning.
-                             If False (Default) will raise a ValueError on shape mismatch or missing parameter.
-        """
+    def _set_parameters(
+        self,
+        parameters: tp.Dict[str, tp.Any],
+        check_shapes: bool = False,
+        set_default_params: bool = False,
+    ):
+        old_scope = self._params
+        old_default_params = self._default_params
+        try:
+            if check_shapes and self._default_params is not None:
+                scope_names = set(parameters)
+                submodule_names = set(self._submodules)
+                param_names = scope_names - submodule_names
+                default_params_names = set(self._default_params)
 
-        def check_shapes_f(module: Module, values: tp.Dict[str, tp.Any]):
-            for key, value in list(values.items()):
-                if key in module._params:
-                    if not hasattr(module, key):
-                        # key in _params but not in module
-                        # this can happen after a .reset()
-                        # ignore
-                        continue
-                    prevshape = np.shape(getattr(module, key))
-                    newshape = np.shape(value)
-                    if prevshape != newshape:
-                        errormsg = f"Shape mismatch on parameter {key} in module {module.name}: {prevshape} (old) vs {newshape} (new)."
-                        if ignore_on_error:
-                            if not ignore_on_error == "silent":
-                                print(errormsg + " Ignoring")
-                            # ignore by removing from new parameters
-                            del values[key]
-                        else:
-                            raise ValueError(errormsg)
-                elif key not in module._submodules and not ignore_on_error == "silent":
-                    print(f"Parameter {key} not found in module {module.name}")
+                if param_names != default_params_names:
+                    additional = param_names - default_params_names
+                    missing = default_params_names - param_names
+                    raise ValueError(
+                        f"Got additional parameters {additional} or missing parameters {missing} in module {self.name}"
+                    )
 
-            if check_missing:
-                missing = [
-                    param
-                    for param in list(module._params.keys()) + module._submodules
-                    if param not in values
-                ]
-                if len(missing):
-                    errormsg = f"Missing parameters in module {module.name}: {missing}"
-                    if ignore_on_error == True:
-                        print(errormsg)
-                    else:
-                        raise ValueError(errormsg)
+                for name in param_names:
+                    param = parameters[name]
+                    default_param = self._default_params[name]
 
-        def set_f(module: Module, values: tp.Dict[str, tp.Any]):
-            for key, value in values.items():
-                if key in module._params:
-                    setattr(module, key, value)
+                    assert isinstance(param, Parameter)
+                    assert isinstance(default_param, Parameter)
 
-        # first perform the check to avoid setting some parameters then encountering invalid ones
-        if check_shapes or check_missing:
-            parameters = {}
+                    if type(param.value) != type(default_param.value):
+                        raise ValueError(
+                            f"Type mismatch in parameter {name} on module {self.name}.\n"
+                            f"Got: {type(param.value)}\n"
+                            f"Expected: {type(default_param.value)}"
+                        )
 
-            for params in parameter_collection.values():
-                parameters = utils.merge_params(parameters, params)
+                    def _check_shapes(a, b):
+                        if a.shape != b.shape:
+                            param_shapes = jax.tree_map(lambda x: x.shape, param.value)
+                            default_param_shapes = jax.tree_map(
+                                lambda x: x.shape, param.default
+                            )
+                            raise ValueError(
+                                f"Shape mismatch in parameter {name} on module {self.name}.\n"
+                                f"Got: {param_shapes}\n"
+                                f"Expected: {default_param_shapes}"
+                            )
 
-            # shape check modifies values, make a copy to keep the original ones untouched
-            tree_apply(check_shapes_f, self, parameters)
+                    jax.tree_multimap(_check_shapes, param.value, default_param.value)
 
-            # set values
-            tree_apply(set_f, self, parameters)
+            if set_default_params or self._default_params is None:
+                self._default_params = {}
+                for name, value in parameters.items():
+                    if name not in self._submodules:
+                        if not isinstance(value, Parameter):
+                            raise ValueError(
+                                f"Parameter {name} on module {self.name} not an instance of Parameter"
+                            )
+                        self._default_params[name] = value
 
+            # if setting normal params
+            if not set_default_params:
+                self._params = {}
+
+                for name, value in parameters.items():
+                    if name not in self._submodules:
+                        if not isinstance(value, Parameter):
+                            raise ValueError(
+                                f"Parameter {name} on module {self.name} not an instance of Parameter"
+                            )
+                        elif name not in self._default_params:
+                            raise ValueError(
+                                f"Missing parameter {name} on module {self.name}"
+                            )
+                        elif self._default_params[name].collection != value.collection:
+                            raise ValueError(
+                                f"Parameter {name} previously found in collection {self._default_params[name].collection} "
+                                f"but currently being added for collection {value.collection}"
+                            )
+
+                        self._params[name] = value
+
+                if self._default_params is None:
+                    self._default_params = self._params.copy()
+
+            for name, submodule in self._submodules.items():
+                if name not in parameters:
+                    raise ValueError(
+                        f"Missing submodule '{name}' on input parameters for module {self.name}"
+                    )
+
+                submodule._set_parameters(
+                    parameters[name],
+                    check_shapes=check_shapes,
+                    set_default_params=set_default_params,
+                )
+
+        except:
+            self._params = old_scope
+            self._default_params = old_default_params
+            raise
+
+    def get_parameters(self) -> ParameterCollection:
+        parameters = self._get_parameters(default_params=False)
+        return utils.split_into_collections(parameters)
+
+    def get_default_parameters(self) -> ParameterCollection:
+        parameters = self._get_parameters(default_params=True)
+        return utils.split_into_collections(parameters)
+
+    def _get_parameters(self, default_params: bool = False) -> tp.Dict[str, tp.Any]:
+        if (self._params is None and not default_params) or (
+            self._default_params is None and default_params
+        ):
+            return {}
+
+        parameters: tp.Dict[str, tp.Any]
+
+        if default_params:
+            assert self._default_params is not None
+            parameters = self._default_params.copy()
         else:
-            # set values
-            for parameters in parameter_collection.values():
-                tree_apply(set_f, self, parameters)
+            assert self._params is not None
+            parameters = self._params.copy()
+
+        for name, submodule in self._submodules.items():
+            parameters[name] = submodule._get_parameters(default_params=default_params)
+
+        return parameters
 
     def has_parameter(self, name: str) -> bool:
         return hasattr(self, name)
-
-    def reset(self):
-        """
-        Recursively deletes the parameters and states of this module
-        and all submodules within it.
-        """
-
-        def clear_module(module: Module):
-            for name in module._params:
-                if hasattr(module, name):
-                    delattr(module, name)
-
-        tree_exec(clear_module, self)
 
 
 # -------------------------------------------------------------
@@ -616,35 +691,29 @@ def get_module_path_str(module: Module) -> tp.Optional[str]:
     )
 
 
-def collect_parameters() -> ParameterCollection:
-    assert LOCAL.scope is not None
-
-    collections = set(p.collection for p in jax.tree_leaves(LOCAL.scope))
-
-    # TODO: group params by collection
-
-
 # -----------------------------------------------------------------------------
 # context managers
 # -----------------------------------------------------------------------------
 
 
-def scope_context(scope: tp.Optional[tp.Dict[str, tp.Any]]) -> tp.ContextManager[None]:
-    return _scope_context()
+def scope_context(
+    module: Module, collections: tp.Optional[ParameterCollection]
+) -> tp.ContextManager[None]:
+    return _scope_context(module, collections)
 
 
 @contextmanager
-def _scope_context(scope: tp.Optional[tp.Dict[str, tp.Any]]):
-    prev_scope = LOCAL.scope
+def _scope_context(module: Module, collections: tp.Optional[ParameterCollection]):
     prev_module_path = LOCAL.module_path
 
     LOCAL.module_path = {}
-    LOCAL.scope = {}
 
     try:
+        if collections is not None:
+            module.set_parameters(collections)
         yield
     finally:
-        LOCAL.scope = prev_scope
+        module.reset()
         LOCAL.module_path = prev_module_path
 
 
@@ -658,7 +727,6 @@ def _call_context(module: Module):
     prev_parent = LOCAL.parent
     prev_inside_call = LOCAL.inside_call
     prev_module_index = LOCAL.module_index
-    prev_module_path = LOCAL.module_path
 
     LOCAL.parent = module
     LOCAL.inside_call = True
@@ -668,7 +736,10 @@ def _call_context(module: Module):
     # if LOCAL.module_path is None:
     #     LOCAL.module_path = {}
 
-    assert LOCAL.module_path is not None
+    if LOCAL.module_path is None:
+        raise NoContext(
+            f"Trying to call top-level module '{module}' directly, use `apply` instead."
+        )
 
     try:
         if prev_parent is not None and module not in prev_parent._submodule_name:
@@ -696,7 +767,6 @@ def _call_context(module: Module):
         LOCAL.parent = prev_parent
         LOCAL.inside_call = prev_inside_call
         LOCAL.module_index = prev_module_index
-        LOCAL.module_path = prev_module_path
 
 
 def instantiation_context(module: Module) -> tp.ContextManager[None]:
@@ -708,14 +778,18 @@ def _instantiation_context(module: Module):
 
     prev_module = LOCAL.parent
     prev_inside_call = LOCAL.inside_call
+    prev_module_path = LOCAL.module_path
 
     LOCAL.inside_call = False
+    LOCAL.module_path = None
+    LOCAL.parent = module
 
     try:
         yield
     finally:
         LOCAL.parent = prev_module
         LOCAL.inside_call = prev_inside_call
+        LOCAL.module_path = prev_module_path
 
 
 # ------------------------------------------------------------------------
@@ -723,93 +797,7 @@ def _instantiation_context(module: Module):
 # ------------------------------------------------------------------------
 
 
-def module_tree_map(
-    f: tp.Callable[[Module], tp.Dict[str, tp.Any]],
-    module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict],
-) -> tp.Union[tp.List, tp.Tuple, tp.Dict]:
-
-    if isinstance(module, tp.List):
-        return [module_tree_map(f, module) for module in module]
-    elif isinstance(module, tp.Tuple):
-        return tuple(module_tree_map(f, module) for module in module)
-    elif isinstance(module, tp.Dict):
-        return {key: module_tree_map(f, module) for key, module in module.items()}
-    elif isinstance(module, Module):
-
-        node = f(module)
-
-        for submodule in module._submodules:
-            value = module_tree_map(f, getattr(module, submodule))
-            # if value:  # drop if empty
-            node[submodule] = value
-
-        return node
-    else:
-        return ()
-
-
-def tree_apply(
-    f: tp.Callable[[Module, tp.Dict[str, tp.Any]], None],
-    module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict],
-    values: tp.Union[tp.List, tp.Tuple, tp.Dict],
-):
-
-    if isinstance(module, tp.List):
-        assert isinstance(values, tp.List)
-
-        for module, value in zip(module, values):
-            tree_apply(f, module, value)
-
-    elif isinstance(module, tp.Tuple):
-        assert isinstance(values, tp.Tuple)
-
-        for module, value in zip(module, values):
-            tree_apply(f, module, value)
-
-    elif isinstance(module, tp.Dict):
-        assert isinstance(values, tp.Dict)
-
-        for key, value in values.items():
-            tree_apply(f, module[key], value)
-
-    elif isinstance(module, Module):
-        assert isinstance(values, tp.Dict)
-
-        f(module, values)
-
-        for key, value in values.items():
-            if key in module._submodules:
-                tree_apply(f, getattr(module, key), value)
-
-
-def tree_exec(
-    f: tp.Callable[[Module], tp.Any],
-    module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict],
-):
-
-    if isinstance(module, tp.List):
-
-        for module in module:
-            tree_exec(f, module)
-
-    elif isinstance(module, tp.Tuple):
-
-        for module in module:
-            tree_exec(f, module)
-
-    elif isinstance(module, tp.Dict):
-
-        for key, value in module.items():
-            tree_exec(f, module[key])
-
-    elif isinstance(module, Module):
-        f(module)
-
-        for key in module._submodules:
-            tree_exec(f, getattr(module, key))
-
-
-def leaf_isinstance(obj: tp.Any, types) -> tp.Type:
+def leaf_isinstance(obj: tp.Any, types) -> bool:
 
     if isinstance(obj, (tp.List, tp.Tuple)) and obj:
         return any(leaf_isinstance(elem, types) for elem in obj)
@@ -825,10 +813,11 @@ def to_module(f):
             super().__init__(
                 name=utils.lower_snake_case(f.__name__) if name is None else name
             )
-            self.call = f
+            self._signature_f = f
+            self.f = f
 
         def call(self, *args, **kwargs):
-            ...
+            return self.f(*args, **kwargs)
 
     ToModule.__name__ = f.__name__
 

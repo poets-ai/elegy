@@ -9,6 +9,43 @@ import elegy
 
 
 class NewModuleTest(TestCase):
+    def test_set_parameters(self):
+        class M(elegy.Module):
+            def call(self, x):
+                return x
+
+        m = M()
+        collections = {"parameters": {"m": 1, "n": 10}}
+
+        m.set_parameters(collections)
+
+        assert m.m == 1
+        assert m.n == 10
+
+        with pytest.raises(ValueError):
+            collections = {
+                "parameters": {"m": 100},
+                "xyz": {"n": 100},
+            }
+            m.set_parameters(collections)
+
+        assert m.m == 1
+        assert m.n == 10
+
+    def test_get_parameters(self):
+        class M(elegy.Module):
+            def call(self, x):
+                return x
+
+        m = M()
+        collections = {"parameters": {"m": 1, "n": 10}}
+
+        m.set_parameters(collections)
+
+        collections = m.get_parameters()
+
+        assert collections == {"parameters": {"m": 1, "n": 10}}
+
     def test_basic(self):
         class M(elegy.Module):
             def call(self, x):
@@ -30,19 +67,16 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        y = m(2.0)
-        params = m.get_parameters()
+        y, collections = m.init()(2.0)
 
         assert y == 3
-        assert params == {"parameters": {"n": 1}}
+        assert collections == {"parameters": {"n": 1}}
 
         # update params
-        m.set_parameters({"parameters": {"n": 20}})
-        y = m(2.0)
-        params = m.get_parameters()
+        y, collections = m.apply({"parameters": {"n": 20}})(2.0)
 
         assert y == 22
-        assert params == {"parameters": {"n": 20}}
+        assert collections == {"parameters": {"n": 20}}
 
     def test_basic_apply(self):
         class M(elegy.Module):
@@ -52,17 +86,21 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        y, params = m.init()(2.0)
+        y, collections = m.init()(2.0)
 
         assert y == 3
-        assert params == {"parameters": {"n": 1}}
 
-        y, params = m.apply({"parameters": {"n": 5}})(2.0)  # run with new params
-        current_params = m.get_parameters()  # internal params are not modify by apply.
+        assert collections == {"parameters": {"n": 1}}
+
+        # run with new params
+        y, collections = m.apply({"parameters": {"n": 5}})(2.0)
 
         assert y == 7
-        assert params == {"parameters": {"n": 5}}
-        assert current_params == {"parameters": {"n": 1}}
+        assert collections == {"parameters": {"n": 5}}
+
+        # check defaults are not modify by apply.
+        default_params = m.get_default_parameters()
+        assert default_params == {"parameters": {"n": 1}}
 
     def test_basic_compose(self):
         class A(elegy.Module):
@@ -78,10 +116,10 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        y, params = m.init()(2.0)
+        y, collections = m.init()(2.0)
 
         assert y == 13
-        assert params == {"parameters": {"n": 1, "a": {"b": 10}}}
+        assert collections == {"parameters": {"n": 1, "a": {"b": 10}}}
 
     def test_basic_list_submodules(self):
         class A(elegy.Module):
@@ -102,12 +140,12 @@ class NewModuleTest(TestCase):
         m = M()
 
         with elegy.update_context(set_defaults=True):
-            y, params = m.init()(2.0)
+            y, collections = m.init()(2.0)
             summaries = elegy.get_summaries()
 
         assert summaries == [
             (
-                ("ais", 1),
+                ("ais/1",),
                 m.ais[1],
                 12,
             ),
@@ -117,13 +155,11 @@ class NewModuleTest(TestCase):
                 13,
             ),
         ]
-        assert params == {
+        assert collections == {
             "parameters": {
                 "n": 1,
-                "ais": [
-                    {},
-                    {"b": 10},
-                ],
+                "ais/0": {},
+                "ais/1": {"b": 10},
             },
         }
         assert y == 13
@@ -182,25 +218,24 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        y, params = m.init()(2.0)
+        y, collections = m.init()(2.0)
 
         assert y == 3
-        assert params == {"parameters": {"n": 1}}
+        assert collections == {"parameters": {"n": 1}}
 
-        y = m.apply()(2.0)
+        y, collections = m.apply(collections)(2.0)
         assert y == 3
 
-        y = m.apply()(2.0)
+        y, collections = m.apply(collections)(2.0)
         assert y == 4
 
         # jit has to use functional API
-        params = m.get_parameters()
-        y, params = m.apply_jit(params)(2.0)
+        y, collections = m.apply_jit(collections)(2.0)
         assert y == 5
 
         # error is raised if no parameters are given
         with pytest.raises(TypeError):
-            y, params = m.apply_jit()(2.0)
+            y, collections = m.apply_jit()(2.0)
 
 
 class ModuleTest(TestCase):
@@ -242,18 +277,16 @@ class ModuleTest(TestCase):
         x = np.random.uniform(-1, 1, size=(4, 5))
         m = ModuleTest.MyModule()
         m.init()(x)
-        y: jnp.ndarray = m(x)
+        y, collections = m.init()(x)
         assert y.shape == (4, 7)
-        print(m.get_parameters())
 
     def test_get_parameters(self):
         x = np.random.uniform(-1, 1, size=(4, 5))
 
         m = ModuleTest.MyModule()
 
-        m.init()(x)
+        y, collections = m.init()(x)
 
-        collections = m.get_parameters()
         parameters, states = (
             collections["parameters"],
             collections["states"],
@@ -268,7 +301,7 @@ class ModuleTest(TestCase):
         assert "linear1" in parameters
 
         with elegy.update_context(set_defaults=True):
-            y: jnp.ndarray = m(x)
+            y, collections = m.apply(collections)(x)
             # y2: jnp.ndarray = m.call_jit(x)
 
             losses = elegy.get_losses()
@@ -279,7 +312,6 @@ class ModuleTest(TestCase):
         assert metrics
         assert summaries
 
-        collections = m.get_parameters()
         parameters, states = (
             collections["parameters"],
             collections["states"],
@@ -290,7 +322,6 @@ class ModuleTest(TestCase):
         assert "linear" in parameters
         assert "w" in parameters["linear"]
         assert "b" in parameters["linear"]
-        assert m.linear.get_parameters()["states"]["n"] == 1
         assert states["linear"]["n"] == 1
         assert "linear1" in parameters
 

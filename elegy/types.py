@@ -38,18 +38,6 @@ class Empty:
     pass
 
 
-class ModuleOrderError(Exception):
-    pass
-
-
-class NoContext(Exception):
-    pass
-
-
-class SubmoduleNotRegistered(Exception):
-    pass
-
-
 EMPTY = Empty()
 
 
@@ -266,7 +254,7 @@ class InitJit(Protocol):
 class ApplyJit(Protocol):
     def __call__(
         self,
-        parameters: ParameterCollection,
+        collections: ParameterCollection,
         *,
         rng: tp.Optional[RNGSeq] = None,
         **hooks_kwargs,
@@ -295,4 +283,16 @@ class ShapeMismatch(Exception):
 
 
 class MissingParameter(Exception):
+    pass
+
+
+class NoContext(Exception):
+    pass
+
+
+class ModuleOrderError(Exception):
+    pass
+
+
+class SubmoduleNotRegistered(Exception):
     pass
