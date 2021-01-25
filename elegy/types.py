@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import sys
 import typing as tp
 from copy import copy
@@ -214,6 +215,12 @@ class States(tp.NamedTuple):
         )
 
 
+@dataclass
+class Parameter:
+    value: tp.Any
+    collection: str
+
+
 class Prediction(tp.NamedTuple):
     pred: tp.Any
     states: States
@@ -239,6 +246,31 @@ class Training(tp.NamedTuple):
 
 class Initializer(Protocol):
     def __call__(self, shape: Shape, dtype: DType) -> np.ndarray:
+        ...
+
+
+class JitCallable(Protocol):
+    def __call__(self, *args) -> tp.Tuple[tp.Any, ParameterCollection]:
+        ...
+
+
+class InitJit(Protocol):
+    def __call__(
+        self,
+        rng: tp.Optional[RNGSeq] = None,
+        **hooks_kwargs,
+    ) -> JitCallable:
+        ...
+
+
+class ApplyJit(Protocol):
+    def __call__(
+        self,
+        parameters: ParameterCollection,
+        *,
+        rng: tp.Optional[RNGSeq] = None,
+        **hooks_kwargs,
+    ) -> JitCallable:
         ...
 
 

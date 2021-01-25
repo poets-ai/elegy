@@ -12,9 +12,13 @@ import numpy as np
 
 from elegy import hooks, utils
 from elegy.types import (
+    ApplyJit,
+    InitJit,
+    JitCallable,
     MissingParameter,
     NoContext,
     ModuleOrderError,
+    Parameter,
     ParameterCollection,
     Parameters,
     Path,
@@ -41,6 +45,7 @@ class LocalContext(Protocol):
     module_path: tp.Optional[tp.Dict["Module", Path]]
     inside_call: tp.Optional[bool]
     module_index: tp.Optional[int]
+    scope: tp.Optional[tp.Dict[str, tp.Any]]
 
 
 @dataclass
@@ -49,6 +54,7 @@ class _LocalContext(threading.local):
     module_path: tp.Optional[tp.Dict["Module", Path]]
     inside_call: tp.Optional[bool]
     module_index: tp.Optional[int]
+    scope: tp.Optional[tp.Dict[str, tp.Any]]
 
 
 LOCAL: LocalContext = _LocalContext(
@@ -56,33 +62,34 @@ LOCAL: LocalContext = _LocalContext(
     module_path=None,
     inside_call=None,
     module_index=None,
+    scope=None,
 )
 
 
 def construct_module(cls, *args, **kwargs) -> "Module":
+    # call constructor
     module: Module = cls.__new__(cls, *args, **kwargs)
     with instantiation_context(module):
         cls.__init__(module, *args, **kwargs)
 
     assert module is not None
 
-    if (
-        not hasattr(module, "name")
-        or not hasattr(module, "_params")
-        or not hasattr(module, "_submodules")
-    ):
+    if not hasattr(module, "_submodules"):
         raise ValueError(
             "Constructing a Module without calling the super constructor "
             "is not supported."
         )
 
+    # register submodules created in __init__
     for key, value in vars(module).items():
         if not key.startswith("_") and leaf_isinstance(value, Module):
-            module._submodules.append(key)
 
             for path, submodule in utils.leaf_paths(value):
                 if isinstance(submodule, Module):
-                    module._child_path[submodule] = (key,) + path
+                    path = (key,) + path
+                    name = "/".join(map(str, path))
+                    module._submodules[name] = submodule
+                    module._submodule_name[submodule] = name
 
     return module
 
@@ -99,10 +106,8 @@ class ModuleMeta(ABCMeta):
             parent = LOCAL.parent
 
             if len(parent._dynamic_submodules) > index:
-                module = getattr(
-                    parent,
-                    parent._dynamic_submodules[index],
-                )
+                module = parent._dynamic_submodules[index]
+
                 assert isinstance(module, Module)
 
                 # if not isinstance(module, cls):
@@ -121,41 +126,16 @@ class ModuleMeta(ABCMeta):
                 module = construct_module(cls, *args, **kwargs)
 
                 name = utils.get_unique_name(set(vars(parent)), module.name)
-                setattr(parent, name, module)
-                parent._submodules.append(name)
-                parent._dynamic_submodules.append(name)
-                parent._child_path[module] = (name,)
+
+                parent._submodules[name] = module
+                parent._submodule_name[module] = name
+                parent._dynamic_submodules.append(module)
 
             LOCAL.module_index += 1
 
             return module
         else:
             return construct_module(cls, *args, **kwargs)
-
-
-class JitCallable(Protocol):
-    def __call__(self, *args) -> tp.Tuple[tp.Any, ParameterCollection]:
-        ...
-
-
-class InitJit(Protocol):
-    def __call__(
-        self,
-        rng: tp.Optional[RNGSeq] = None,
-        **hooks_kwargs,
-    ) -> JitCallable:
-        ...
-
-
-class ApplyJit(Protocol):
-    def __call__(
-        self,
-        parameters: ParameterCollection,
-        *,
-        rng: tp.Optional[RNGSeq] = None,
-        **hooks_kwargs,
-    ) -> JitCallable:
-        ...
 
 
 class Module(metaclass=ModuleMeta):
@@ -168,11 +148,11 @@ class Module(metaclass=ModuleMeta):
 
     name: str
     dtype: np.dtype
-    _params: tp.Dict[str, str]
     _states_initial: tp.List[str]
-    _submodules: tp.List[str]
-    _dynamic_submodules: tp.List[str]
-    _child_path: tp.Dict["Module", Path]
+    _submodules: tp.Dict[str, "Module"]
+    _submodule_name: tp.Dict["Module", str]
+    _dynamic_submodules: tp.List["Module"]
+    _default_scope: tp.Dict[str, tp.Any]
 
     init_jit: InitJit
     apply_jit: ApplyJit
@@ -200,11 +180,11 @@ class Module(metaclass=ModuleMeta):
         """
         self.name = name if name else utils.lower_snake_case(self.__class__.__name__)
         self.dtype = dtype
-        self._params = {}
-        self._submodules = []
+        self._submodules = {}
+        self._submodule_name = {}
         self._dynamic_submodules = []
-        self._child_path = {}
         self._signature_f = self.call
+        self._default_scope = {}
 
         self._jit_functions()
 
@@ -325,7 +305,7 @@ class Module(metaclass=ModuleMeta):
                 rng=rng,
                 initializing=True,
                 **hooks_kwargs,
-            ):
+            ), scope_context(None):
                 y = self(*args, **kwargs)
 
             return y, self.get_parameters()
@@ -334,25 +314,9 @@ class Module(metaclass=ModuleMeta):
 
         return init_callable
 
-    @tp.overload
-    def apply(
-        self, *, rng: tp.Optional[RNGSeq] = None, **hooks_kwargs
-    ) -> tp.Callable[..., tp.Any]:
-        ...
-
-    @tp.overload
     def apply(
         self,
         parameters: ParameterCollection,
-        *,
-        rng: tp.Optional[RNGSeq] = None,
-        **hooks_kwargs,
-    ) -> tp.Callable[..., tp.Tuple[tp.Any, ParameterCollection]]:
-        ...
-
-    def apply(
-        self,
-        parameters: tp.Optional[ParameterCollection] = None,
         rng: tp.Optional[RNGSeq] = None,
         **hooks_kwargs,
     ) -> tp.Callable[..., tp.Union[tp.Any, tp.Tuple[tp.Any, ParameterCollection]]]:
@@ -361,22 +325,18 @@ class Module(metaclass=ModuleMeta):
         """
 
         def apply_callable(*args, **kwargs) -> tp.Tuple[tp.Any, ParameterCollection]:
-            if parameters is not None:
-                old_parameters = self.get_parameters()
-                self.set_parameters(parameters)
-            else:
-                old_parameters = None
 
-            with hooks.update_context(initializing=False, rng=rng, **hooks_kwargs):
+            with hooks.update_context(
+                initializing=False,
+                rng=rng,
+                **hooks_kwargs,
+            ), scope_context(parameters):
                 y = self(*args, **kwargs)
 
-            if old_parameters is not None:
-                new_parameters = self.get_parameters()
-                self.set_parameters(old_parameters)
+                scope = LOCAL.scope
+                assert scope is not None
 
-                return y, new_parameters
-            else:
-                return y
+            return y, scope
 
         apply_callable._signature_f = self.call
 
@@ -414,21 +374,28 @@ class Module(metaclass=ModuleMeta):
         if collection is None:
             collection = "parameters" if trainable else "states"
 
-        if not hasattr(self, name):
+        assert LOCAL.scope is not None
 
-            self._params[name] = collection
+        if name not in LOCAL.scope:
 
-            initial_value = initializer()
+            if not hooks.is_initializing():
+                raise ValueError(f"Cannot add parameter {name} outside `init`")
 
-            setattr(self, name, initial_value)
+            if name in self._default_scope:
+                parameter = self._default_scope[name]
+                assert isinstance(parameter, Parameter)
+                assert collection == parameter.collection
+                initial_value = parameter.value
 
-        elif name not in self._params:
-            raise ValueError(
-                f"Class already contained a property named '{name}', "
-                "please use a unique name for the parameter."
-            )
+            else:
+                initial_value = initializer()
+                parameter = Parameter(initial_value, collection)
 
-        value = getattr(self, name)
+                self._default_scope[name] = parameter
+
+            LOCAL.scope[name] = parameter
+
+        value = LOCAL.scope[name].value
 
         if constraint is not None:
             value = constraint(value)
@@ -457,13 +424,17 @@ class Module(metaclass=ModuleMeta):
             `ValueError` if parameter is not present in current module.
         """
 
-        if not hasattr(self, name):
+        assert LOCAL.scope is not None
+
+        if name not in LOCAL.scope:
             raise ValueError(f"Parameter {name} not found in {self}.")
 
         if hooks.is_initializing():
             return
 
-        setattr(self, name, value)
+        parameter = LOCAL.scope[name]
+        assert isinstance(parameter, Parameter)
+        parameter.value = value
 
     def add_or_update_parameter(
         self,
@@ -491,7 +462,9 @@ class Module(metaclass=ModuleMeta):
         Raises:
             `ValueError` if parameter is not present in current module.
         """
-        if not hasattr(self, name):
+        assert LOCAL.scope is not None
+
+        if name not in LOCAL.scope:
             self.add_parameter(
                 name, lambda: value, trainable=trainable, collection=collection
             )
@@ -618,13 +591,6 @@ class Module(metaclass=ModuleMeta):
 
         tree_exec(clear_module, self)
 
-    @property
-    def submodules(self) -> tp.Dict[str, tp.Any]:
-        """
-        A dictionary with all submodules contained in this Module.
-        """
-        return {name: getattr(self, name) for name in self._submodules}
-
 
 # -------------------------------------------------------------
 # hooks
@@ -650,9 +616,36 @@ def get_module_path_str(module: Module) -> tp.Optional[str]:
     )
 
 
+def collect_parameters() -> ParameterCollection:
+    assert LOCAL.scope is not None
+
+    collections = set(p.collection for p in jax.tree_leaves(LOCAL.scope))
+
+    # TODO: group params by collection
+
+
 # -----------------------------------------------------------------------------
 # context managers
 # -----------------------------------------------------------------------------
+
+
+def scope_context(scope: tp.Optional[tp.Dict[str, tp.Any]]) -> tp.ContextManager[None]:
+    return _scope_context()
+
+
+@contextmanager
+def _scope_context(scope: tp.Optional[tp.Dict[str, tp.Any]]):
+    prev_scope = LOCAL.scope
+    prev_module_path = LOCAL.module_path
+
+    LOCAL.module_path = {}
+    LOCAL.scope = {}
+
+    try:
+        yield
+    finally:
+        LOCAL.scope = prev_scope
+        LOCAL.module_path = prev_module_path
 
 
 def call_context(module: Module) -> tp.ContextManager[None]:
@@ -670,11 +663,15 @@ def _call_context(module: Module):
     LOCAL.parent = module
     LOCAL.inside_call = True
     LOCAL.module_index = 0
-    if LOCAL.module_path is None:
-        LOCAL.module_path = {}
+
+    # this enables one to call a module outside init or apply
+    # if LOCAL.module_path is None:
+    #     LOCAL.module_path = {}
+
+    assert LOCAL.module_path is not None
 
     try:
-        if prev_parent is not None and module not in prev_parent._child_path:
+        if prev_parent is not None and module not in prev_parent._submodule_name:
             raise SubmoduleNotRegistered(
                 f"Submodule {utils.get_name(module)} not registered in {utils.get_name(prev_parent)}, "
                 f"this is probably due to some of the following reasons:\n"
@@ -692,8 +689,8 @@ def _call_context(module: Module):
             LOCAL.module_path[module] = ()
         else:
             parent_path = LOCAL.module_path[prev_parent]
-            child_path = prev_parent._child_path[module]
-            LOCAL.module_path[module] = parent_path + child_path
+            child_name = prev_parent._submodule_name[module]
+            LOCAL.module_path[module] = parent_path + (child_name,)
         yield
     finally:
         LOCAL.parent = prev_parent
