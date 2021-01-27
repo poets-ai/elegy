@@ -62,19 +62,19 @@ class ModelCore(ABC):
 
     def _jit_functions(self):
         self.init_internal_jit = hooks.jit(
-            self.init_internal,
+            self.call_init,
             static_argnums=[0],
         )
         self.pred_step_internal_jit = hooks.jit(
-            self.pred_step_internal,
+            self.call_pred_step,
             static_argnums=[2],
         )
         self.test_step_internal_jit = hooks.jit(
-            self.test_step_internal,
+            self.call_test_step,
             static_argnums=[5],
         )
         self.train_step_internal_jit = hooks.jit(
-            self.train_step_internal,
+            self.call_train_step,
         )
 
     def __setstate__(self, d):
@@ -96,6 +96,9 @@ class ModelCore(ABC):
 
         return d
 
+    # ----------------------------------------------------------------
+    # Abstract API
+    # ----------------------------------------------------------------
     @abstractmethod
     def init(
         self,
@@ -108,6 +111,24 @@ class ModelCore(ABC):
     ) -> States:
         ...
 
+    def call_init(
+        self,
+        mode: Mode,
+        x: tp.Any,
+        y_true: tp.Any,
+        sample_weight: tp.Optional[np.ndarray],
+        class_weight: tp.Optional[np.ndarray],
+        states: States,
+    ) -> States:
+        return utils.inject_dependencies(self.init)(
+            mode=mode,
+            x=x,
+            y_true=y_true,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            states=states,
+        )
+
     @abstractmethod
     def pred_step(
         self,
@@ -119,6 +140,21 @@ class ModelCore(ABC):
         states: States,
     ) -> Prediction:
         ...
+
+    def call_pred_step(
+        self,
+        states: States,
+        x: tp.Any,
+        training: bool,
+    ) -> tp.Tuple[tp.Any, States]:
+        return utils.inject_dependencies(self.pred_step)(
+            net_params=states.net_params,
+            x=x,
+            net_states=states.net_states,
+            rng=states.rng,
+            training=training,
+            states=states,
+        )
 
     @abstractmethod
     def test_step(
@@ -136,6 +172,28 @@ class ModelCore(ABC):
     ) -> Evaluation:
         ...
 
+    def call_test_step(
+        self,
+        states: States,
+        x: tp.Any,
+        y_true: tp.Any,
+        sample_weight: tp.Optional[np.ndarray],
+        class_weight: tp.Optional[np.ndarray],
+        training: bool,
+    ) -> Evaluation:
+        return utils.inject_dependencies(self.test_step)(
+            net_params=states.net_params,
+            x=x,
+            y_true=y_true,
+            net_states=states.net_states,
+            metrics_states=states.metrics_states,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            rng=states.rng,
+            training=training,
+            states=states,
+        )
+
     def grad_step(
         self,
         net_params: tp.Any,
@@ -150,6 +208,28 @@ class ModelCore(ABC):
         states: States,
     ) -> Backprop:
         raise NotImplementedError()
+
+    def call_grad_step(
+        self,
+        states: States,
+        x: tp.Any,
+        y_true: tp.Any,
+        sample_weight: tp.Optional[np.ndarray],
+        class_weight: tp.Optional[np.ndarray],
+        training: bool,
+    ) -> Backprop:
+        return utils.inject_dependencies(self.grad_step)(
+            net_params=states.net_params,
+            x=x,
+            y_true=y_true,
+            net_states=states.net_states,
+            metrics_states=states.metrics_states,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            rng=states.rng,
+            training=training,
+            states=states,
+        )
 
     @abstractmethod
     def train_step(
@@ -168,111 +248,31 @@ class ModelCore(ABC):
     ) -> Training:
         ...
 
-    def update_modules(self):
-        pass
-
-    def reset(self):
-        self.states = self.initial_states.copy()
-
-    def reset_metrics(self):
-        self.states = self.states.update(
-            metrics_states=self.initial_states.metrics_states
-        )
-
-    def init_internal(
+    def call_train_step(
         self,
-        mode: Mode,
+        states: States,
         x: tp.Any,
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        states: States,
-    ) -> States:
-        return utils.inject_dependencies(self.init)(
-            mode=mode,
-            x=x,
-            y_true=y_true,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            states=states,
-        )
-
-    def maybe_initialize(
-        self,
-        mode: Mode,
-        x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple] = (),
-        y_true: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
-        sample_weight: tp.Optional[np.ndarray] = None,
-        class_weight: tp.Optional[np.ndarray] = None,
-    ):
-
-        if (
-            (
-                mode == Mode.pred
-                and not isinstance(self.states.net_params, Uninitialized)
-                and not isinstance(self.states.net_states, Uninitialized)
-            )
-            or (
-                mode == Mode.test
-                and not isinstance(self.states.metrics_states, Uninitialized)
-            )
-            or (
-                mode == Mode.train
-                and not isinstance(self.states.optimizer_states, Uninitialized)
-            )
-        ):
-            return
-
-        method = self.init_internal if self.run_eagerly else self.init_internal_jit
-
-        rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
-
-        with hooks.context(
-            rng=rng, initializing=True, training=True, set_defaults=True
-        ):
-            state_updates: States = method(
-                mode,
-                x,
-                y_true,
-                sample_weight,
-                class_weight,
-                self.states,
-            )
-
-        if mode in (Mode.pred, Mode.test, Mode.train):
-            if isinstance(state_updates.net_params, Uninitialized):
-                state_updates = state_updates.update(net_params=None)
-
-            if isinstance(state_updates.net_states, Uninitialized):
-                state_updates = state_updates.update(net_states=None)
-        if mode in (Mode.test, Mode.train):
-            if isinstance(state_updates.metrics_states, Uninitialized):
-                state_updates = state_updates.update(metrics_states=None)
-
-        if mode == Mode.train:
-            if isinstance(state_updates.optimizer_states, Uninitialized):
-                state_updates = state_updates.update(optimizer_states=None)
-
-        self.states = self.states.merge_new(state_updates)
-        self.initial_states = self.initial_states.merge_new(state_updates)
-
-        # update modules
-        self.update_modules()
-
-    def pred_step_internal(
-        self,
-        states: States,
-        x: tp.Any,
-        training: bool,
-    ) -> tp.Tuple[tp.Any, States]:
-        return utils.inject_dependencies(self.pred_step)(
+    ) -> Training:
+        return utils.inject_dependencies(self.train_step)(
             net_params=states.net_params,
             x=x,
+            y_true=y_true,
             net_states=states.net_states,
+            metrics_states=states.metrics_states,
+            optimizer_states=states.optimizer_states,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
             rng=states.rng,
-            training=training,
+            training=True,
             states=states,
         )
+
+    # ----------------------------------------------------------------
+    # *_on_batch methods
+    # ----------------------------------------------------------------
 
     def predict_on_batch(
         self, x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]
@@ -295,7 +295,7 @@ class ModelCore(ABC):
         self.maybe_initialize(mode=Mode.pred, x=x)
 
         method = (
-            self.pred_step_internal if self.run_eagerly else self.pred_step_internal_jit
+            self.call_pred_step if self.run_eagerly else self.pred_step_internal_jit
         )
 
         training = False
@@ -311,28 +311,6 @@ class ModelCore(ABC):
         self.states = self.states.merge(state_updates)
 
         return y_pred
-
-    def test_step_internal(
-        self,
-        states: States,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-        training: bool,
-    ) -> Evaluation:
-        return utils.inject_dependencies(self.test_step)(
-            net_params=states.net_params,
-            x=x,
-            y_true=y_true,
-            net_states=states.net_states,
-            metrics_states=states.metrics_states,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            rng=states.rng,
-            training=training,
-            states=states,
-        )
 
     def test_on_batch(
         self,
@@ -374,7 +352,7 @@ class ModelCore(ABC):
         )
 
         method = (
-            self.test_step_internal if self.run_eagerly else self.test_step_internal_jit
+            self.call_test_step if self.run_eagerly else self.test_step_internal_jit
         )
 
         training = False
@@ -395,50 +373,6 @@ class ModelCore(ABC):
         self.states = self.states.merge(state_updates)
 
         return logs
-
-    def grad_step_internal(
-        self,
-        states: States,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-        training: bool,
-    ) -> Backprop:
-        return utils.inject_dependencies(self.grad_step)(
-            net_params=states.net_params,
-            x=x,
-            y_true=y_true,
-            net_states=states.net_states,
-            metrics_states=states.metrics_states,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            rng=states.rng,
-            training=training,
-            states=states,
-        )
-
-    def train_step_internal(
-        self,
-        states: States,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-    ) -> Training:
-        return utils.inject_dependencies(self.train_step)(
-            net_params=states.net_params,
-            x=x,
-            y_true=y_true,
-            net_states=states.net_states,
-            metrics_states=states.metrics_states,
-            optimizer_states=states.optimizer_states,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            rng=states.rng,
-            training=True,
-            states=states,
-        )
 
     def train_on_batch(
         self,
@@ -487,9 +421,7 @@ class ModelCore(ABC):
         )
 
         method = (
-            self.train_step_internal
-            if self.run_eagerly
-            else self.train_step_internal_jit
+            self.call_train_step if self.run_eagerly else self.train_step_internal_jit
         )
 
         rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
@@ -508,6 +440,83 @@ class ModelCore(ABC):
         self.states = self.states.merge(state_updates)
 
         return logs
+
+    # ----------------------------------------------------------------
+    # other methods
+    # ----------------------------------------------------------------
+
+    def update_modules(self):
+        pass
+
+    def reset(self):
+        self.states = self.initial_states.copy()
+
+    def reset_metrics(self):
+        self.states = self.states.update(
+            metrics_states=self.initial_states.metrics_states
+        )
+
+    def maybe_initialize(
+        self,
+        mode: Mode,
+        x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple] = (),
+        y_true: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
+        sample_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[np.ndarray] = None,
+    ):
+
+        if (
+            (
+                mode == Mode.pred
+                and not isinstance(self.states.net_params, Uninitialized)
+                and not isinstance(self.states.net_states, Uninitialized)
+            )
+            or (
+                mode == Mode.test
+                and not isinstance(self.states.metrics_states, Uninitialized)
+            )
+            or (
+                mode == Mode.train
+                and not isinstance(self.states.optimizer_states, Uninitialized)
+            )
+        ):
+            return
+
+        method = self.call_init if self.run_eagerly else self.init_internal_jit
+
+        rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
+
+        with hooks.context(
+            rng=rng, initializing=True, training=True, set_defaults=True
+        ):
+            state_updates: States = method(
+                mode,
+                x,
+                y_true,
+                sample_weight,
+                class_weight,
+                self.states,
+            )
+
+        if mode in (Mode.pred, Mode.test, Mode.train):
+            if isinstance(state_updates.net_params, Uninitialized):
+                state_updates = state_updates.update(net_params=None)
+
+            if isinstance(state_updates.net_states, Uninitialized):
+                state_updates = state_updates.update(net_states=None)
+        if mode in (Mode.test, Mode.train):
+            if isinstance(state_updates.metrics_states, Uninitialized):
+                state_updates = state_updates.update(metrics_states=None)
+
+        if mode == Mode.train:
+            if isinstance(state_updates.optimizer_states, Uninitialized):
+                state_updates = state_updates.update(optimizer_states=None)
+
+        self.states = self.states.merge_new(state_updates)
+        self.initial_states = self.initial_states.merge_new(state_updates)
+
+        # update modules
+        self.update_modules()
 
     def save(
         self,

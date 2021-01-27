@@ -254,7 +254,7 @@ class Model(ModelBase):
     ) -> Evaluation:
 
         # TODO: add DI
-        y_pred, states = self.pred_step_internal(
+        y_pred, states = self.call_pred_step(
             states=states,
             x=x,
             training=training,
@@ -316,7 +316,7 @@ class Model(ModelBase):
             class_weight: tp.Optional[np.ndarray],
         ):
             states = states.update(net_params=net_params)
-            loss, logs, states = self.test_step_internal(
+            loss, logs, states = self.call_test_step(
                 states=states,
                 x=x,
                 y_true=y_true,
@@ -365,7 +365,7 @@ class Model(ModelBase):
                 "but `optimizer_states` was not initialized on `init`. Please initialize optimizer."
             )
 
-        loss, logs, states, grads = self.grad_step_internal(
+        loss, logs, states, grads = self.call_grad_step(
             states=states,
             x=x,
             y_true=y_true,
@@ -412,7 +412,7 @@ class Model(ModelBase):
         self.maybe_initialize(mode=Mode.pred, x=x)
 
         method = (
-            self.pred_step_internal if self.run_eagerly else self.pred_step_internal_jit
+            self.call_pred_step if self.run_eagerly else self.pred_step_internal_jit
         )
 
         training = False
