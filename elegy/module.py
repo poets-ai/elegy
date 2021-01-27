@@ -13,6 +13,7 @@ import numpy as np
 from elegy import hooks, utils
 from elegy.types import (
     ApplyJit,
+    Info,
     InitJit,
     JitCallable,
     MissingParameter,
@@ -20,6 +21,7 @@ from elegy.types import (
     ModuleOrderError,
     Parameter,
     ParameterCollection,
+    ParameterSpec,
     Parameters,
     Path,
     Protocol,
@@ -148,8 +150,10 @@ class Module(metaclass=ModuleMeta):
     _submodules: tp.Dict[str, "Module"]
     _submodule_name: tp.Dict["Module", str]
     _dynamic_submodules: tp.List["Module"]
-    _default_params: tp.Optional[tp.Dict[str, Parameter]]
+    _default_params: tp.Dict[str, Parameter]
     _params: tp.Optional[tp.Dict[str, Parameter]]
+    _spec: tp.Dict[str, ParameterSpec]
+    _initialized: bool = False
 
     init_jit: InitJit
     apply_jit: ApplyJit
@@ -180,16 +184,57 @@ class Module(metaclass=ModuleMeta):
         self._submodules = {}
         self._submodule_name = {}
         self._dynamic_submodules = []
-        self._signature_f = self.call
-        self._default_params = None
+        self._default_params = {}
         self._params = None
+        self._spec = {}
+        self._initialized = False
+
+        self._signature_f = self.call
 
         self._jit_functions()
 
-    def call_jit(self, *args) -> tp.Any:
-        collections = self.get_default_parameters()
+    @property
+    def initialized(self):
+        return self._initialized
+
+    def _mark_initialized_recursive(self):
+        self._initialized = True
+        for submodule in self._submodules.values():
+            submodule._mark_initialized_recursive()
+
+    def _register_parameter(self, name: str, parameter: Parameter):
+        param_info = jax.tree_map(
+            lambda x: Info(shape=x.shape, dtype=x.dtype),
+            parameter.value,
+        )
+        self._spec[name] = ParameterSpec(
+            collection=parameter.collection, info=param_info
+        )
+        self._default_params[name] = parameter
+
+    def defaults_call(self, *args, **kwargs):
+        if not self.initialized:
+            y, collections = self.init()(*args)
+        else:
+            collections = self.get_default_parameters()
+
+        y, collections = self.apply(collections)(*args)
+
+        self.set_default_parameters(collections)
+
+        return y
+
+    def defaults_call_jit(self, *args) -> tp.Any:
+
+        if not self.initialized:
+            y, collections = self.init_jit()(*args)
+        else:
+            collections = self.get_default_parameters()
+
         y, collections = self.apply_jit(collections)(*args)
-        self.set_parameters(collections)
+
+        self.set_default_parameters(collections)
+
         return y
 
     def _jit_functions(self):
@@ -212,7 +257,7 @@ class Module(metaclass=ModuleMeta):
                     y, collections = init_jit(*args)
 
                     # set parameters to avoid traced arrays
-                    self.set_parameters(collections)
+                    self.set_default_parameters(collections)
 
                     return y, collections
 
@@ -266,6 +311,8 @@ class Module(metaclass=ModuleMeta):
         `elegy.add_summary` on the outputs.
         """
 
+        # this marks initialization
+
         with call_context(self):
 
             outputs = self.call(*args, **kwargs)
@@ -305,7 +352,9 @@ class Module(metaclass=ModuleMeta):
                 **hooks_kwargs,
             ), scope_context(self, None):
                 y = self(*args, **kwargs)
-                collections = self.get_parameters()
+                collections = self.get_parameters_internal()
+
+            self._mark_initialized_recursive()
 
             return y, collections
 
@@ -315,7 +364,7 @@ class Module(metaclass=ModuleMeta):
 
     def apply(
         self,
-        parameters: ParameterCollection,
+        collections: ParameterCollection,
         rng: tp.Optional[RNGSeq] = None,
         **hooks_kwargs,
     ) -> tp.Callable[..., tp.Union[tp.Any, tp.Tuple[tp.Any, ParameterCollection]]]:
@@ -329,11 +378,11 @@ class Module(metaclass=ModuleMeta):
                 initializing=False,
                 rng=rng,
                 **hooks_kwargs,
-            ), scope_context(self, parameters):
+            ), scope_context(self, collections):
                 y = self(*args, **kwargs)
-                collections = self.get_parameters()
+                collections_ = self.get_parameters_internal()
 
-            return y, collections
+            return y, collections_
 
         apply_callable._signature_f = self.call
 
@@ -344,14 +393,10 @@ class Module(metaclass=ModuleMeta):
         if name in self._submodules:
             return self._submodules[name]
 
-        if name in self._params:
+        if self._params is not None and name in self._params:
             return self._params[name].value
 
-        if (
-            hooks.is_initializing()
-            and self._default_params is not None
-            and name in self._default_params
-        ):
+        if not has_scope() and self.initialized and name in self._default_params:
             return self._default_params[name].value
 
         raise AttributeError(
@@ -400,9 +445,6 @@ class Module(metaclass=ModuleMeta):
             if not hooks.is_initializing():
                 raise ValueError(f"Cannot add parameter {name} outside `init`")
 
-            if self._default_params is None:
-                self._default_params = {}
-
             if name in self._default_params:
                 parameter = self._default_params[name]
                 assert collection == parameter.collection
@@ -410,8 +452,9 @@ class Module(metaclass=ModuleMeta):
 
             else:
                 initial_value = initializer()
-                parameter = Parameter(initial_value, collection)
-                self._default_params[name] = parameter
+                initial_value = jax.tree_map(jnp.asarray, initial_value)
+                parameter = Parameter(collection, initial_value)
+                self._register_parameter(name, parameter)
 
             self._params[name] = parameter
 
@@ -499,167 +542,157 @@ class Module(metaclass=ModuleMeta):
         else:
             self.update_parameter(name, value)
 
-    def reset(self, default_params: bool = False):
+    def clear_default_parameters(self):
+        self._clear_parameters(default_params=True)
+
+    def _clear_parameters(self, default_params: bool = False):
 
         self._params = None
 
         if default_params:
-            self._default_params = None
+            self._default_params.clear()
 
         for submodule in self._submodules.values():
-            submodule.reset(default_params=default_params)
+            submodule._clear_parameters(default_params=default_params)
 
     def set_default_parameters(
         self,
         collections: ParameterCollection,
-        check_shapes: bool = False,
     ):
-        parameters = utils.merge_collections(collections)
-        self._set_parameters(
-            parameters=parameters,
-            check_shapes=check_shapes,
+        self._set_parameters_internal(
+            collections=collections,
             set_default_params=True,
         )
 
-    def set_parameters(
+    def _set_parameters_internal(
         self,
         collections: ParameterCollection,
-        check_shapes: bool = False,
+        set_default_params: bool = False,
     ):
-        parameters = utils.merge_collections(collections)
-        self._set_parameters(
-            parameters=parameters,
-            check_shapes=check_shapes,
-            set_default_params=False,
+        old_colletions = self.get_default_parameters()
+        collections = jax.tree_map(jnp.asarray, collections)
+
+        try:
+            self._set_parameters(
+                collections=collections,
+                set_default_params=set_default_params,
+            )
+        except:
+            self._set_parameters(
+                collections=old_colletions,
+                set_default_params=set_default_params,
+            )
+            raise
+
+    def _validate_parameters(self, collections: ParameterCollection):
+        # define sets
+        incoming_names = set(
+            name for parameters in collections.values() for name in parameters
         )
+        expected_submodule_names = set(self._submodules)
+        expected_parameter_names = set(self._spec)
+
+        # check missing submodules
+        missing_submodules = expected_submodule_names - incoming_names
+        if missing_submodules:
+            raise ValueError(
+                f"Missing submodule parameters {missing_submodules} for module {self.name}"
+            )
+
+        # check missing parameters
+        missing_parameters = expected_parameter_names - incoming_names
+        if missing_parameters:
+            raise ValueError(
+                f"Missing parameters {missing_parameters} for module {self.name}"
+            )
+
+        # check unkown names
+        unknown_parameters = (
+            incoming_names - expected_submodule_names - expected_parameter_names
+        )
+        if unknown_parameters:
+            raise ValueError(
+                f"Got unknown parameters {unknown_parameters} on module {self.name}"
+            )
+
+        for name, param_spec in self._spec.items():
+            parameter = utils.get_parameter(collections, name)
+
+            if parameter.collection != param_spec.collection:
+                raise ValueError(
+                    f"Parameter {name} on module {self.name} was expected to be on collection {param_spec.collection} "
+                    f"but was found on collection {parameter.collection}"
+                )
+
+            def validate_value(value: jnp.ndarray, info: Info):
+                if value.shape != info.shape:
+                    incoming_shapes = jax.tree_map(lambda x: x.shape, parameter.value)
+                    expected_shape = jax.tree_map(lambda x: x.shape, param_spec.info)
+
+                    raise ValueError(
+                        f"Shape mismatch in parameter {name} on module {self.name}.\n"
+                        f"Got: {incoming_shapes}\n"
+                        f"Expected: {expected_shape}"
+                    )
+
+            jax.tree_multimap(validate_value, parameter.value, param_spec.info)
 
     def _set_parameters(
         self,
-        parameters: tp.Dict[str, tp.Any],
+        collections: ParameterCollection,
         check_shapes: bool = False,
         set_default_params: bool = False,
     ):
-        old_scope = self._params
-        old_default_params = self._default_params
-        try:
-            if check_shapes and self._default_params is not None:
-                scope_names = set(parameters)
-                submodule_names = set(self._submodules)
-                param_names = scope_names - submodule_names
-                default_params_names = set(self._default_params)
+        if not self.initialized:
+            raise ValueError(f"Cannot set parameters for uninitialized module {self}")
+        assert self._spec is not None
 
-                if param_names != default_params_names:
-                    additional = param_names - default_params_names
-                    missing = default_params_names - param_names
-                    raise ValueError(
-                        f"Got additional parameters {additional} or missing parameters {missing} in module {self.name}"
-                    )
+        self._validate_parameters(collections)
 
-                for name in param_names:
-                    param = parameters[name]
-                    default_param = self._default_params[name]
+        # build new parameters
+        new_params = {
+            name: utils.get_parameter(collections, name) for name in self._spec
+        }
 
-                    assert isinstance(param, Parameter)
-                    assert isinstance(default_param, Parameter)
+        # set module parameters
+        if set_default_params:
+            self._default_params = new_params
+        else:
+            self._params = new_params
 
-                    if type(param.value) != type(default_param.value):
-                        raise ValueError(
-                            f"Type mismatch in parameter {name} on module {self.name}.\n"
-                            f"Got: {type(param.value)}\n"
-                            f"Expected: {type(default_param.value)}"
-                        )
-
-                    def _check_shapes(a, b):
-                        if a.shape != b.shape:
-                            param_shapes = jax.tree_map(lambda x: x.shape, param.value)
-                            default_param_shapes = jax.tree_map(
-                                lambda x: x.shape, param.default
-                            )
-                            raise ValueError(
-                                f"Shape mismatch in parameter {name} on module {self.name}.\n"
-                                f"Got: {param_shapes}\n"
-                                f"Expected: {default_param_shapes}"
-                            )
-
-                    jax.tree_multimap(_check_shapes, param.value, default_param.value)
-
-            if set_default_params or self._default_params is None:
-                self._default_params = {}
-                for name, value in parameters.items():
-                    if name not in self._submodules:
-                        if not isinstance(value, Parameter):
-                            raise ValueError(
-                                f"Parameter {name} on module {self.name} not an instance of Parameter"
-                            )
-                        self._default_params[name] = value
-
-            # if setting normal params
-            if not set_default_params:
-                self._params = {}
-
-                for name, value in parameters.items():
-                    if name not in self._submodules:
-                        if not isinstance(value, Parameter):
-                            raise ValueError(
-                                f"Parameter {name} on module {self.name} not an instance of Parameter"
-                            )
-                        elif name not in self._default_params:
-                            raise ValueError(
-                                f"Missing parameter {name} on module {self.name}"
-                            )
-                        elif self._default_params[name].collection != value.collection:
-                            raise ValueError(
-                                f"Parameter {name} previously found in collection {self._default_params[name].collection} "
-                                f"but currently being added for collection {value.collection}"
-                            )
-
-                        self._params[name] = value
-
-                if self._default_params is None:
-                    self._default_params = self._params.copy()
-
-            for name, submodule in self._submodules.items():
-                if name not in parameters:
-                    raise ValueError(
-                        f"Missing submodule '{name}' on input parameters for module {self.name}"
-                    )
-
-                submodule._set_parameters(
-                    parameters[name],
-                    check_shapes=check_shapes,
-                    set_default_params=set_default_params,
-                )
-
-        except:
-            self._params = old_scope
-            self._default_params = old_default_params
-            raise
-
-    def get_parameters(self) -> ParameterCollection:
-        parameters = self._get_parameters(default_params=False)
-        return utils.split_into_collections(parameters)
+        # set submodule parameters
+        for name, submodule in self._submodules.items():
+            submodule._set_parameters(
+                collections=utils.get_submodule_colletions(collections, name),
+                check_shapes=check_shapes,
+                set_default_params=set_default_params,
+            )
 
     def get_default_parameters(self) -> ParameterCollection:
-        parameters = self._get_parameters(default_params=True)
+        parameters = self._get_parameters(defaults=True)
         return utils.split_into_collections(parameters)
 
-    def _get_parameters(self, default_params: bool = False) -> tp.Dict[str, tp.Any]:
-        if (self._params is None and not default_params) or (
-            self._default_params is None and default_params
+    def get_parameters_internal(self, defaults: bool = False) -> ParameterCollection:
+        parameters = self._get_parameters(defaults=defaults)
+        return utils.split_into_collections(parameters)
+
+    def _get_parameters(self, defaults: bool) -> tp.Dict[str, tp.Any]:
+        if (self._params is None and not defaults) or (
+            not self.initialized and defaults
         ):
             return {}
 
         parameters: tp.Dict[str, tp.Any]
 
-        if default_params:
-            assert self._default_params is not None
+        if defaults:
+            assert self.initialized
             parameters = self._default_params.copy()
         else:
             assert self._params is not None
             parameters = self._params.copy()
 
         for name, submodule in self._submodules.items():
-            parameters[name] = submodule._get_parameters(default_params=default_params)
+            parameters[name] = submodule._get_parameters(defaults=defaults)
 
         return parameters
 
@@ -676,19 +709,19 @@ def get_module_path(module: tp.Optional[Module] = None) -> tp.Optional[Path]:
     if module is None:
         module = LOCAL.parent
 
-    return (
-        LOCAL.module_path[module]
-        if module is not None and LOCAL.module_path is not None
-        else None
-    )
+    return LOCAL.module_path[module] if module is not None and has_scope() else None
 
 
 def get_module_path_str(module: Module) -> tp.Optional[str]:
     return (
         "/".join(map(str, LOCAL.module_path[module]))
-        if module is not None and LOCAL.module_path is not None
+        if module is not None and has_scope()
         else None
     )
+
+
+def has_scope() -> bool:
+    return LOCAL.module_path is not None
 
 
 # -----------------------------------------------------------------------------
@@ -710,10 +743,10 @@ def _scope_context(module: Module, collections: tp.Optional[ParameterCollection]
 
     try:
         if collections is not None:
-            module.set_parameters(collections)
+            module._set_parameters_internal(collections)
         yield
     finally:
-        module.reset()
+        module._clear_parameters()
         LOCAL.module_path = prev_module_path
 
 
@@ -732,17 +765,14 @@ def _call_context(module: Module):
     LOCAL.inside_call = True
     LOCAL.module_index = 0
 
-    # this enables one to call a module outside init or apply
-    # if LOCAL.module_path is None:
-    #     LOCAL.module_path = {}
-
-    if LOCAL.module_path is None:
-        raise NoContext(
-            f"Trying to call top-level module '{module}' directly, use `apply` instead."
-        )
-
     try:
-        if prev_parent is not None and module not in prev_parent._submodule_name:
+
+        if not has_scope():
+            raise NoContext(
+                f"Trying to call top-level module '{module}' directly, use `apply` instead."
+            )
+
+        elif prev_parent is not None and module not in prev_parent._submodule_name:
             raise SubmoduleNotRegistered(
                 f"Submodule {utils.get_name(module)} not registered in {utils.get_name(prev_parent)}, "
                 f"this is probably due to some of the following reasons:\n"

@@ -286,16 +286,46 @@ def none_or_uninitialized(x: tp.Any) -> bool:
     return x is None or isinstance(x, Uninitialized)
 
 
-def merge_collections(collections: ParameterCollection) -> tp.Dict[str, tp.Any]:
-    output_parameters = {}
+# def merge_collections(collections: ParameterCollection) -> tp.Dict[str, tp.Any]:
+#     output_parameters = {}
 
-    for collection, values in collections.items():
-        params = jax.tree_map(lambda x: Parameter(x, collection), values)
-        output_parameters = merge_params(params, output_parameters)
+#     for collection, values in collections.items():
+#         params = jax.tree_map(lambda x: Parameter(x, collection), values)
+#         output_parameters = merge_params(params, output_parameters)
 
-    assert isinstance(output_parameters, dict)
+#     assert isinstance(output_parameters, dict)
 
-    return output_parameters
+#     return output_parameters
+
+
+def get_parameter(collections: ParameterCollection, name: str) -> Parameter:
+
+    parameters = [
+        (collection, parameters[name])
+        for collection, parameters in collections.items()
+        if name in parameters
+    ]
+
+    if len(parameters) == 0:
+        raise ValueError(f"No parameters named {name} in collections {collections}")
+    elif len(parameters) >= 2:
+        raise ValueError(
+            f"Multiple parameters named {name} in collections {collections}"
+        )
+
+    [(collection, value)] = parameters
+
+    return Parameter(collection=collection, value=value)
+
+
+def get_submodule_colletions(
+    collections: ParameterCollection, name: str
+) -> ParameterCollection:
+    return {
+        collection: parameters[name]
+        for collection, parameters in collections.items()
+        if name in parameters
+    }
 
 
 def split_into_collections(parameters: tp.Dict[str, tp.Any]) -> ParameterCollection:

@@ -1,3 +1,4 @@
+from elegy.types import NoContext
 from unittest import TestCase
 
 import jax
@@ -12,12 +13,15 @@ class NewModuleTest(TestCase):
     def test_set_parameters(self):
         class M(elegy.Module):
             def call(self, x):
+                self.add_parameter("m", lambda: 1)
+                self.add_parameter("n", lambda: 2)
                 return x
 
         m = M()
-        collections = {"parameters": {"m": 1, "n": 10}}
+        m.init()(2.0)
 
-        m.set_parameters(collections)
+        collections = {"parameters": {"m": 1, "n": 10}}
+        m.set_default_parameters(collections)
 
         assert m.m == 1
         assert m.n == 10
@@ -27,7 +31,7 @@ class NewModuleTest(TestCase):
                 "parameters": {"m": 100},
                 "xyz": {"n": 100},
             }
-            m.set_parameters(collections)
+            m.set_default_parameters(collections)
 
         assert m.m == 1
         assert m.n == 10
@@ -35,14 +39,18 @@ class NewModuleTest(TestCase):
     def test_get_parameters(self):
         class M(elegy.Module):
             def call(self, x):
+                self.add_parameter("m", lambda: 1)
+                self.add_parameter("n", lambda: 2)
                 return x
 
         m = M()
+        m.init()(2.0)
+
         collections = {"parameters": {"m": 1, "n": 10}}
 
-        m.set_parameters(collections)
+        m.set_default_parameters(collections)
 
-        collections = m.get_parameters()
+        collections = m.get_default_parameters()
 
         assert collections == {"parameters": {"m": 1, "n": 10}}
 
@@ -54,10 +62,21 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        y, params = m.init()(2.0)
+        y, collections = m.init()(2.0)
 
-        assert params == {"parameters": {"n": 1}}
+        assert collections == {"parameters": {"n": 1}}
         assert y == 3
+
+    def test_basic_call_error(self):
+        class M(elegy.Module):
+            def call(self, x):
+                n = self.add_parameter("n", lambda: 1)
+                return n + x
+
+        m = M()
+
+        with pytest.raises(NoContext):
+            y = m(2.0)
 
     def test_basic_call(self):
         class M(elegy.Module):
@@ -67,13 +86,16 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        y, collections = m.init()(2.0)
+        y = m.defaults_call(2.0)
+        collections = m.get_default_parameters()
 
         assert y == 3
         assert collections == {"parameters": {"n": 1}}
 
         # update params
-        y, collections = m.apply({"parameters": {"n": 20}})(2.0)
+        m.set_default_parameters({"parameters": {"n": 20}})
+        y = m.defaults_call(2.0)
+        collections = m.get_default_parameters()
 
         assert y == 22
         assert collections == {"parameters": {"n": 20}}
@@ -276,8 +298,7 @@ class ModuleTest(TestCase):
     def test_basic(self):
         x = np.random.uniform(-1, 1, size=(4, 5))
         m = ModuleTest.MyModule()
-        m.init()(x)
-        y, collections = m.init()(x)
+        y = m.defaults_call(x)
         assert y.shape == (4, 7)
 
     def test_get_parameters(self):
@@ -336,43 +357,43 @@ class ModuleTest(TestCase):
         assert summaries[2][:2] == ((), m)
         assert summaries[2][2].shape == (4, 7)
 
-        m.set_parameters(jax.tree_map(lambda x: -x, collections))
+        m.set_default_parameters(jax.tree_map(lambda x: -x, collections))
 
-        collections = m.get_parameters()
+        collections = m.get_default_parameters()
         parameters, states = (
             collections["parameters"],
             collections["states"],
         )
 
         assert parameters["bias"][0] == -1
-        assert m.linear.get_parameters()["parameters"]["w"][0, 0] == -1
-        assert m.linear.get_parameters()["parameters"]["b"][0] == -1
-        assert m.linear1.get_parameters()["parameters"]["w"][0, 0] == -1
-        assert m.linear1.get_parameters()["parameters"]["b"][0] == -1
+        assert m.linear.get_default_parameters()["parameters"]["w"][0, 0] == -1
+        assert m.linear.get_default_parameters()["parameters"]["b"][0] == -1
+        assert m.linear1.get_default_parameters()["parameters"]["w"][0, 0] == -1
+        assert m.linear1.get_default_parameters()["parameters"]["b"][0] == -1
 
-        current_collection = m.get_parameters()
+        current_collection = m.get_default_parameters()
 
-        m.reset()
+        m.clear_default_parameters()
 
-        collections = m.get_parameters()
+        collections = m.get_default_parameters()
 
         assert jax.tree_leaves(collections) == []
         assert elegy.utils.parameters_count(collections) == 0
 
-        m.set_parameters(current_collection)
+        m.set_default_parameters(current_collection)
 
-        assert m.get_parameters()["parameters"]["bias"][0] == -1
-        assert m.linear.get_parameters()["parameters"]["w"][0, 0] == -1
-        assert m.linear.get_parameters()["parameters"]["b"][0] == -1
-        assert m.linear1.get_parameters()["parameters"]["w"][0, 0] == -1
-        assert m.linear1.get_parameters()["parameters"]["b"][0] == -1
+        assert m.get_default_parameters()["parameters"]["bias"][0] == -1
+        assert m.linear.get_default_parameters()["parameters"]["w"][0, 0] == -1
+        assert m.linear.get_default_parameters()["parameters"]["b"][0] == -1
+        assert m.linear1.get_default_parameters()["parameters"]["w"][0, 0] == -1
+        assert m.linear1.get_default_parameters()["parameters"]["b"][0] == -1
 
     def test_set_parameters_shape_check(self):
         x = np.random.uniform(-1, 1, size=(4, 5))
         m = ModuleTest.MyModule()
         m.init()(x)
 
-        params0 = m.get_parameters()
+        params0 = m.get_default_parameters()
         # new random params
         params1 = jax.tree_map(lambda x: np.random.random(x.shape), params0)
         # set a parameter with incorrect shape
@@ -380,22 +401,24 @@ class ModuleTest(TestCase):
 
         # should raise error when trying to set the incorrect params
         with pytest.raises(ValueError):
-            m.set_parameters(params1, check_shapes=True)
+            m.set_default_parameters(params1)
 
         # the parameters should not have changed despite the error
         assert np.all(
             jax.tree_leaves(
                 jax.tree_multimap(
-                    lambda x, y: np.allclose(x, y), params0, m.get_parameters()
+                    lambda x, y: np.allclose(x, y), params0, m.get_default_parameters()
                 )
             )
         )
 
         # should not raise an error
-        m.set_parameters(params1, check_shapes=True, ignore_on_error=True)
+        with pytest.raises(ValueError):
+            m.set_default_parameters(params1)
+
         # linear1.w should not change
         assert np.allclose(
-            m.get_parameters()["parameters"]["linear1"]["w"],
+            m.get_default_parameters()["parameters"]["linear1"]["w"],
             params0["parameters"]["linear1"]["w"],
         )
         # but all others
@@ -403,15 +426,15 @@ class ModuleTest(TestCase):
             jax.tree_multimap(
                 lambda x, y: np.allclose(x, y) if x.shape == y.shape else True,
                 params1,
-                m.get_parameters(),
+                m.get_default_parameters(),
             )
         )
 
         # remove a parameter
-        del params1["parameters"]["linear1"]["w"]
+        params1["parameters"]["linear1"].pop("w")
         # should raise with check_missing=True
         with pytest.raises(ValueError):
-            m.set_parameters(params1, check_missing=True, ignore_on_error=False)
+            m.set_default_parameters(params1)
 
 
 class ModuleDynamicTest(TestCase):
@@ -451,10 +474,9 @@ class ModuleDynamicTest(TestCase):
     def test_basic(self):
         x = np.random.uniform(-1, 1, size=(4, 5))
         m = ModuleDynamicTest.MyModule()
-        m.init()(x)
-        y: jnp.ndarray = m(x)
+        y: jnp.ndarray = m.defaults_call(x)
         assert y.shape == (4, 7)
-        print(m.get_parameters)
+        print(m.get_default_parameters)
 
     def test_get_parameters(self):
         x = np.random.uniform(-1, 1, size=(4, 5))
@@ -462,7 +484,7 @@ class ModuleDynamicTest(TestCase):
 
         m.init_jit()(x)
 
-        collections = m.get_parameters()
+        collections = m.get_default_parameters()
         parameters, states = (
             collections["parameters"],
             collections["states"],
@@ -472,16 +494,16 @@ class ModuleDynamicTest(TestCase):
         assert "linear" in parameters
         assert "w" in parameters["linear"]
         assert "b" in parameters["linear"]
-        assert m.linear.get_parameters()["states"]["n"] == 0
+        assert m.linear.get_default_parameters()["states"]["n"] == 0
         assert states["linear"]["n"] == 0
         assert "linear_1" in parameters
 
         with elegy.update_context(set_defaults=True):
-            # y: jnp.ndarray = m(x)
-            collections = m.get_parameters()
+            # y: jnp.ndarray = m.defaults_call(x)
+            collections = m.get_default_parameters()
             y: jnp.ndarray
             y, collections = m.apply_jit(collections)(x)
-            m.set_parameters(collections)
+            m.set_default_parameters(collections)
             parameters, states = (
                 collections["parameters"],
                 collections["states"],
@@ -500,7 +522,7 @@ class ModuleDynamicTest(TestCase):
         assert "linear" in parameters
         assert "w" in parameters["linear"]
         assert "b" in parameters["linear"]
-        assert m.linear.get_parameters()["states"]["n"] == 1
+        assert m.linear.get_default_parameters()["states"]["n"] == 1
         assert states["linear"]["n"] == 1
         assert "linear_1" in parameters
 
@@ -515,50 +537,50 @@ class ModuleDynamicTest(TestCase):
         assert summaries[2][:2] == ((), m)
         assert summaries[2][2].shape == (4, 7)
 
-        m.set_parameters(jax.tree_map(lambda x: -x, m.get_parameters()))
+        m.set_default_parameters(jax.tree_map(lambda x: -x, m.get_default_parameters()))
 
-        collections = m.get_parameters()
+        collections = m.get_default_parameters()
         parameters, states = (
             collections["parameters"],
             collections["states"],
         )
 
         assert parameters["bias"][0] == -1
-        assert m.linear.get_parameters()["parameters"]["w"][0, 0] == -1
-        assert m.linear.get_parameters()["parameters"]["b"][0] == -1
-        assert m.linear_1.get_parameters()["parameters"]["w"][0, 0] == -1
-        assert m.linear_1.get_parameters()["parameters"]["b"][0] == -1
+        assert m.linear.get_default_parameters()["parameters"]["w"][0, 0] == -1
+        assert m.linear.get_default_parameters()["parameters"]["b"][0] == -1
+        assert m.linear_1.get_default_parameters()["parameters"]["w"][0, 0] == -1
+        assert m.linear_1.get_default_parameters()["parameters"]["b"][0] == -1
 
-        current_parameters = m.get_parameters()
+        current_parameters = m.get_default_parameters()
 
-        m.reset()
+        m.clear_default_parameters()
 
-        assert jax.tree_leaves(m.get_parameters()) == []
-        assert elegy.utils.parameters_count(m.get_parameters()) == 0
+        assert jax.tree_leaves(m.get_default_parameters()) == []
+        assert elegy.utils.parameters_count(m.get_default_parameters()) == 0
 
-        m.set_parameters(current_parameters)
+        m.set_default_parameters(current_parameters)
 
-        assert m.get_parameters()["parameters"]["bias"][0] == -1
-        assert m.linear.get_parameters()["parameters"]["w"][0, 0] == -1
-        assert m.linear.get_parameters()["parameters"]["b"][0] == -1
-        assert m.linear_1.get_parameters()["parameters"]["w"][0, 0] == -1
-        assert m.linear_1.get_parameters()["parameters"]["b"][0] == -1
+        assert m.get_default_parameters()["parameters"]["bias"][0] == -1
+        assert m.linear.get_default_parameters()["parameters"]["w"][0, 0] == -1
+        assert m.linear.get_default_parameters()["parameters"]["b"][0] == -1
+        assert m.linear_1.get_default_parameters()["parameters"]["w"][0, 0] == -1
+        assert m.linear_1.get_default_parameters()["parameters"]["b"][0] == -1
 
     def test_auto_init(self):
         x = np.random.uniform(-1, 1, size=(4, 5))
         m = ModuleDynamicTest.MyModule()
 
-        m(x)
+        m.defaults_call(x)
 
         # THESE:
-        assert m.linear.get_parameters()["states"]["n"] == 1
-        assert m.get_parameters()["states"]["linear"]["n"] == 1
+        assert m.linear.get_default_parameters()["states"]["n"] == 1
+        assert m.get_default_parameters()["states"]["linear"]["n"] == 1
 
-        assert "bias" in m.get_parameters()["parameters"]
-        assert "linear" in m.get_parameters()["parameters"]
-        assert "w" in m.get_parameters()["parameters"]["linear"]
-        assert "b" in m.get_parameters()["parameters"]["linear"]
-        assert "linear_1" in m.get_parameters()["parameters"]
+        assert "bias" in m.get_default_parameters()["parameters"]
+        assert "linear" in m.get_default_parameters()["parameters"]
+        assert "w" in m.get_default_parameters()["parameters"]["linear"]
+        assert "b" in m.get_default_parameters()["parameters"]["linear"]
+        assert "linear_1" in m.get_default_parameters()["parameters"]
 
 
 class TestTransforms(TestCase):
@@ -579,7 +601,7 @@ class TestTransforms(TestCase):
 
         params = {"w": jnp.array(1.0), "b": jnp.array(2.0)}
         params, outputs = f(params, 1)
-        # m.set_parameters(params)
+        # m.set_default_parameters(params)
 
         print(params, type(params))
 
@@ -587,7 +609,7 @@ class TestTransforms(TestCase):
 
         params = {"b": params["b"], "w": params["w"]}
         params, outputs = f(params, 1)
-        # m.set_parameters(params)
+        # m.set_default_parameters(params)
 
         assert total_called == 1
 
@@ -616,11 +638,11 @@ class TestTransforms(TestCase):
         @jax.jit
         def f(params, x):
 
-            m.set_parameters(params)
+            m.set_default_parameters(params)
 
-            outputs = m(x)
+            outputs = m.defaults_call(x)
 
-            return m.get_parameters(), outputs
+            return m.get_default_parameters(), outputs
 
         with elegy.update_context(training=True):
             assert total_called == 0
@@ -628,16 +650,16 @@ class TestTransforms(TestCase):
             m.init()(1)
             assert total_called == 1
 
-            params = m.get_parameters()
+            params = m.get_default_parameters()
             params, outputs = f(params, 1)
-            m.set_parameters(params)
+            m.set_default_parameters(params)
 
             assert total_called == 2
 
-            params = m.get_parameters()
+            params = m.get_default_parameters()
             print(params)
             params, outputs = f(params, 1)
-            m.set_parameters(params)
+            m.set_default_parameters(params)
 
             assert total_called == 2
 
@@ -670,47 +692,47 @@ class TestTransforms(TestCase):
             assert m.n == 0
 
         with elegy.context(training=True):
-            y = m.call_jit(0)
+            y = m.defaults_call_jit(0)
 
             assert y == 1
             assert m.n == 1
             assert total_called == 2
 
         with elegy.context(training=True):
-            y = m.call_jit(0)
+            y = m.defaults_call_jit(0)
             assert m.n == 2
             assert total_called == 2
 
         with elegy.context(training=False):
-            y = m.call_jit(0)
+            y = m.defaults_call_jit(0)
             assert y == -1
             # triggers call because training changed and is static
             assert total_called == 3
             assert m.n == 3
 
         with elegy.context(training=False):
-            y = m.call_jit(0)
+            y = m.defaults_call_jit(0)
             assert y == -1
             # does not trigger call function for training = True exists
             assert total_called == 3
             assert m.n == 4
 
         with elegy.update_context(training=True):
-            y = m.call_jit(0)
+            y = m.defaults_call_jit(0)
             assert y == 1
             # does not trigger call function for training = True exists
             assert total_called == 3
             assert m.n == 5
 
         with elegy.context(training=True, summaries=True):
-            y = m.call_jit(0)
+            y = m.defaults_call_jit(0)
             assert y == 1
             # triggers call because summaries are now present
             assert total_called == 4
             assert m.n == 6
 
         with elegy.update_context(training=False, summaries=True):
-            y = m.call_jit(0)
+            y = m.defaults_call_jit(0)
             assert y == -1
             # triggers call because configuration training=False,  is new
             assert total_called == 5
@@ -740,18 +762,18 @@ class TestTransforms(TestCase):
         assert total_called == 0
 
         with elegy.update_context(training=True):
-            m.call_jit(0)
-            assert total_called == 1
+            m.defaults_call_jit(0)
+            assert total_called == 2
 
             assert m.n == 1
 
-            y = m.call_jit(0)
+            y = m.defaults_call_jit(0)
 
             assert y == 1
             assert m.n == 2
             assert total_called == 2
 
-            y = m.call_jit(0)
+            y = m.defaults_call_jit(0)
             assert m.n == 3
             assert total_called == 2
 
@@ -810,4 +832,4 @@ class TestOthers(TestCase):
         for step in range(1):
             loss, parameters = update_jit(parameters, x, y)
 
-        mlp.set_parameters(dict(parameters=parameters))
+        mlp.set_default_parameters(dict(parameters=parameters))

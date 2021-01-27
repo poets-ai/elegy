@@ -92,7 +92,7 @@ State = tp.Mapping[str, tp.Mapping[str, np.ndarray]]
 PadFn = tp.Callable[[int], tp.Tuple[int, int]]
 PadFnOrFns = tp.Union[PadFn, tp.Sequence[PadFn]]
 PRNGKey = np.ndarray
-Parameters = tp.Any
+Parameters = tp.Dict[str, tp.Any]
 ParameterCollection = tp.Dict[str, Parameters]
 Logs = tp.Dict[str, tp.Union[np.ndarray, float]]
 Index = tp.Union[int, str]
@@ -205,8 +205,20 @@ class States(tp.NamedTuple):
 
 @dataclass
 class Parameter:
-    value: tp.Any
     collection: str
+    value: tp.Any
+
+
+@dataclass
+class Info:
+    shape: tp.Tuple[int, ...]
+    dtype: tp.Any
+
+
+@dataclass
+class ParameterSpec:
+    collection: str
+    info: tp.Any
 
 
 class Prediction(tp.NamedTuple):
