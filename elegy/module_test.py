@@ -86,7 +86,7 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        y = m.defaults_call(2.0)
+        y = m.call_with_defaults(2.0)
         collections = m.get_default_parameters()
 
         assert y == 3
@@ -94,7 +94,7 @@ class NewModuleTest(TestCase):
 
         # update params
         m.set_default_parameters({"parameters": {"n": 20}})
-        y = m.defaults_call(2.0)
+        y = m.call_with_defaults(2.0)
         collections = m.get_default_parameters()
 
         assert y == 22
@@ -108,11 +108,15 @@ class NewModuleTest(TestCase):
 
         m = M()
 
+        assert m.get_default_parameters() == {}
+
         y, collections = m.init()(2.0)
 
         assert y == 3
-
         assert collections == {"parameters": {"n": 1}}
+
+        # set default parameters
+        m.set_default_parameters(collections)
 
         # run with new params
         y, collections = m.apply({"parameters": {"n": 5}})(2.0)
@@ -298,7 +302,7 @@ class ModuleTest(TestCase):
     def test_basic(self):
         x = np.random.uniform(-1, 1, size=(4, 5))
         m = ModuleTest.MyModule()
-        y = m.defaults_call(x)
+        y = m.call_with_defaults(x)
         assert y.shape == (4, 7)
 
     def test_get_parameters(self):
@@ -391,7 +395,8 @@ class ModuleTest(TestCase):
     def test_set_parameters_shape_check(self):
         x = np.random.uniform(-1, 1, size=(4, 5))
         m = ModuleTest.MyModule()
-        m.init()(x)
+
+        m.init(set_defaults=True)(x)
 
         params0 = m.get_default_parameters()
         # new random params
@@ -474,7 +479,7 @@ class ModuleDynamicTest(TestCase):
     def test_basic(self):
         x = np.random.uniform(-1, 1, size=(4, 5))
         m = ModuleDynamicTest.MyModule()
-        y: jnp.ndarray = m.defaults_call(x)
+        y: jnp.ndarray = m.call_with_defaults(x)
         assert y.shape == (4, 7)
         print(m.get_default_parameters)
 
@@ -482,7 +487,7 @@ class ModuleDynamicTest(TestCase):
         x = np.random.uniform(-1, 1, size=(4, 5))
         m = ModuleDynamicTest.MyModule()
 
-        m.init_jit()(x)
+        m.init_jit(set_defaults=True)(x)
 
         collections = m.get_default_parameters()
         parameters, states = (
@@ -499,7 +504,7 @@ class ModuleDynamicTest(TestCase):
         assert "linear_1" in parameters
 
         with elegy.update_context(set_defaults=True):
-            # y: jnp.ndarray = m.defaults_call(x)
+            # y: jnp.ndarray = m.call_with_defaults(x)
             collections = m.get_default_parameters()
             y: jnp.ndarray
             y, collections = m.apply_jit(collections)(x)
@@ -570,7 +575,7 @@ class ModuleDynamicTest(TestCase):
         x = np.random.uniform(-1, 1, size=(4, 5))
         m = ModuleDynamicTest.MyModule()
 
-        m.defaults_call(x)
+        m.call_with_defaults(x)
 
         # THESE:
         assert m.linear.get_default_parameters()["states"]["n"] == 1
@@ -613,7 +618,7 @@ class TestTransforms(TestCase):
 
         assert total_called == 1
 
-    def test_simple(self):
+    def test_simple_defaults(self):
 
         total_called = 0
 
@@ -640,26 +645,69 @@ class TestTransforms(TestCase):
 
             m.set_default_parameters(params)
 
-            outputs = m.defaults_call(x)
+            outputs = m.call_with_defaults(x)
 
             return m.get_default_parameters(), outputs
 
         with elegy.update_context(training=True):
             assert total_called == 0
 
-            m.init()(1)
+            _, collections = m.init(set_defaults=True)(1)
             assert total_called == 1
 
-            params = m.get_default_parameters()
-            params, outputs = f(params, 1)
-            m.set_default_parameters(params)
+            collections, outputs = f(collections, 1)
+            m.set_default_parameters(collections)
 
             assert total_called == 2
 
-            params = m.get_default_parameters()
-            print(params)
-            params, outputs = f(params, 1)
-            m.set_default_parameters(params)
+            collections = m.get_default_parameters()
+            print(collections)
+            collections, outputs = f(collections, 1)
+            m.set_default_parameters(collections)
+
+            assert total_called == 2
+
+    def test_simple_apply(self):
+
+        total_called = 0
+
+        class SomeModule(elegy.Module):
+            n: jnp.ndarray
+
+            def call(self, x):
+                nonlocal total_called
+
+                total_called += 1
+
+                n = self.add_parameter("n", lambda: jnp.array(0))
+                self.update_parameter("n", n + 1)
+
+                if elegy.is_training():
+                    return x + 1
+                else:
+                    return x - 1
+
+        m = SomeModule()
+
+        @jax.jit
+        def f(collections, x):
+
+            y, collections = m.apply(collections)(x)
+
+            return collections, y
+
+        with elegy.update_context(training=True):
+            assert total_called == 0
+
+            y, collections = m.init()(1)
+
+            assert total_called == 1
+
+            collections, y = f(collections, 1)
+
+            assert total_called == 2
+
+            collections, y = f(collections, 1)
 
             assert total_called == 2
 
@@ -686,53 +734,53 @@ class TestTransforms(TestCase):
         assert total_called == 0
 
         with elegy.context(training=True):
-            m.init()(0)
+            m.init_jit(set_defaults=True)(0)
             # triggers call because its the first time
             assert total_called == 1
             assert m.n == 0
 
         with elegy.context(training=True):
-            y = m.defaults_call_jit(0)
+            y = m.call_with_defaults_jit(0)
 
             assert y == 1
             assert m.n == 1
             assert total_called == 2
 
         with elegy.context(training=True):
-            y = m.defaults_call_jit(0)
+            y = m.call_with_defaults_jit(0)
             assert m.n == 2
             assert total_called == 2
 
         with elegy.context(training=False):
-            y = m.defaults_call_jit(0)
+            y = m.call_with_defaults_jit(0)
             assert y == -1
             # triggers call because training changed and is static
             assert total_called == 3
             assert m.n == 3
 
         with elegy.context(training=False):
-            y = m.defaults_call_jit(0)
+            y = m.call_with_defaults_jit(0)
             assert y == -1
             # does not trigger call function for training = True exists
             assert total_called == 3
             assert m.n == 4
 
         with elegy.update_context(training=True):
-            y = m.defaults_call_jit(0)
+            y = m.call_with_defaults_jit(0)
             assert y == 1
             # does not trigger call function for training = True exists
             assert total_called == 3
             assert m.n == 5
 
         with elegy.context(training=True, summaries=True):
-            y = m.defaults_call_jit(0)
+            y = m.call_with_defaults_jit(0)
             assert y == 1
             # triggers call because summaries are now present
             assert total_called == 4
             assert m.n == 6
 
         with elegy.update_context(training=False, summaries=True):
-            y = m.defaults_call_jit(0)
+            y = m.call_with_defaults_jit(0)
             assert y == -1
             # triggers call because configuration training=False,  is new
             assert total_called == 5
@@ -762,18 +810,18 @@ class TestTransforms(TestCase):
         assert total_called == 0
 
         with elegy.update_context(training=True):
-            m.defaults_call_jit(0)
+            m.call_with_defaults_jit(0)
             assert total_called == 2
 
             assert m.n == 1
 
-            y = m.defaults_call_jit(0)
+            y = m.call_with_defaults_jit(0)
 
             assert y == 1
             assert m.n == 2
             assert total_called == 2
 
-            y = m.defaults_call_jit(0)
+            y = m.call_with_defaults_jit(0)
             assert m.n == 3
             assert total_called == 2
 

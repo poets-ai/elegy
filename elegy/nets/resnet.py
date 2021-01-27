@@ -154,11 +154,10 @@ class ResNet(module.Module):
 
             x = np.empty([0, 224, 224, 3], dtype=self.dtype)
             # quick but dirty module initialization
-            with hooks.update_context(rng=RNGSeq(42)):
-                jax.eval_shape(self.init(), x)
-            self.set_parameters(
-                parameters, check_missing=True, check_shapes=True, ignore_on_error=False
-            )
+            with hooks.context():
+                jax.eval_shape(self.init(rng=RNGSeq(42)), x)
+
+            self.set_default_parameters(parameters)
 
     def call(self, x: jnp.ndarray):
         x = nn.Conv2D(

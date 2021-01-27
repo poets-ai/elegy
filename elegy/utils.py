@@ -41,19 +41,23 @@ def wraps(f, docs: bool = True):
     return functools.wraps(f, assigned=assignments, updated=())
 
 
+def get_signature_f_recursive(f: tp.Callable) -> tp.Callable:
+
+    if hasattr(f, "_signature_f"):
+        return get_signature_f_recursive(f._signature_f)
+    else:
+        return f
+
+
 def inject_dependencies(
     f: tp.Callable,
     signature_f: tp.Optional[tp.Callable] = None,
     rename: tp.Optional[tp.Dict[str, str]] = None,
 ):
-    if signature_f is not None:
-        pass
-    elif hasattr(f, "_signature_f") and f._signature_f is not None:
-        signature_f = f._signature_f
-    elif signature_f is None:
+    if signature_f is None:
         signature_f = f
-    assert signature_f is not None
 
+    signature_f = get_signature_f_recursive(signature_f)
     f_params = get_function_args(signature_f)
 
     @functools.wraps(signature_f)

@@ -71,7 +71,13 @@ class ModelBasicTest(unittest.TestCase):
         assert "loss" in logs
 
     def test_metrics(self):
-        metrics = elegy.model.model.Metrics(dict(a=dict(b=[MLP(), MLP()], c=MLP())))
+        class M(elegy.Module):
+            def call(self, x):
+                n = self.add_parameter("n", lambda: 0, trainable=False)
+                self.update_parameter("n", n + 1)
+                return x
+
+        metrics = elegy.model.model.Metrics(dict(a=dict(b=[M(), M()], c=M())))
 
         rng = elegy.RNGSeq(42)
         x = np.random.uniform(size=(5, 7, 7))
@@ -85,20 +91,20 @@ class ModelBasicTest(unittest.TestCase):
             logs, states = metrics.apply(states, rng)(x, training=True)
 
         assert len(metrics.metrics) == 3
-        assert "a/b/mlp" in metrics.metrics
-        assert "a/b/mlp_1" in metrics.metrics
-        assert "a/c/mlp" in metrics.metrics
+        assert "a/b/m" in metrics.metrics
+        assert "a/b/m_1" in metrics.metrics
+        assert "a/c/m" in metrics.metrics
 
         assert len(logs) == 4
-        assert "a/b/mlp" in logs
-        assert "a/b/mlp_1" in logs
-        assert "a/c/mlp" in logs
+        assert "a/b/m" in logs
+        assert "a/b/m_1" in logs
+        assert "a/c/m" in logs
         assert "d" in logs
 
         assert len(states) == 3
-        assert "a/b/mlp" in states
-        assert "a/b/mlp_1" in states
-        assert "a/c/mlp" in states
+        assert "a/b/m" in states
+        assert "a/b/m_1" in states
+        assert "a/c/m" in states
 
     def test_losses(self):
         def loss_fn():

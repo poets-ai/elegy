@@ -258,6 +258,7 @@ class InitJit(Protocol):
     def __call__(
         self,
         rng: tp.Optional[RNGSeq] = None,
+        set_defaults: bool = False,
         **hooks_kwargs,
     ) -> JitCallable:
         ...
@@ -268,6 +269,7 @@ class ApplyJit(Protocol):
         self,
         collections: ParameterCollection,
         *,
+        set_defaults: bool = False,
         rng: tp.Optional[RNGSeq] = None,
         **hooks_kwargs,
     ) -> JitCallable:

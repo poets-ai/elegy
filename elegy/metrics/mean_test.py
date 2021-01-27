@@ -16,12 +16,12 @@ class LossTest(TestCase):
 
         mae = MAE()
 
-        loss = mae(y_true, y_pred)
+        loss = mae.call_with_defaults(y_true, y_pred)
         assert jnp.allclose(loss, 1)
 
         y_pred = jnp.array([3.0, 4.0, 5.0])
 
-        loss = mae(y_true, y_pred)
+        loss = mae.call_with_defaults(y_true, y_pred)
         assert jnp.allclose(loss, 1.5)
 
     def test_slice(self):
@@ -36,16 +36,16 @@ class LossTest(TestCase):
 
         # raises because it doesn't use kwargs
         with pytest.raises(BaseException):
-            sample_loss = mae(y_true, y_pred)
+            sample_loss = mae.call_with_defaults(y_true, y_pred)
 
         # raises because it doesn't use __call__ which filters
         with pytest.raises(BaseException):
             sample_loss = mae.call(y_true=y_true, y_pred=y_pred)
 
-        loss = mae(y_true=y_true, y_pred=y_pred)
+        loss = mae.call_with_defaults(y_true=y_true, y_pred=y_pred)
         assert jnp.allclose(loss, 1)
 
         y_pred = dict(a=jnp.array([3.0, 4.0, 5.0]))
 
-        loss = mae(y_true=y_true, y_pred=y_pred)
+        loss = mae.call_with_defaults(y_true=y_true, y_pred=y_pred)
         assert jnp.allclose(loss, 1.5)

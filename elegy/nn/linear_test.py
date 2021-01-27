@@ -12,7 +12,7 @@ class LinearTest(TestCase):
             x = np.random.uniform(-1, 1, size=(4, 3))
             linear = elegy.nn.Linear(5)
 
-            y_pred = linear(x)
+            y_pred = linear.call_with_defaults(x)
 
             assert y_pred.shape == (4, 5)
 

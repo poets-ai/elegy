@@ -13,7 +13,7 @@ class MAETest(TestCase):
         y_pred = jnp.array([0, 1, 1, 1])
 
         assert np.allclose(
-            elegy.metrics.MeanAbsoluteError()(y_true, y_pred),
+            elegy.metrics.MeanAbsoluteError().call_with_defaults(y_true, y_pred),
             tfk.metrics.MeanAbsoluteError()(y_true, y_pred),
         )
 
@@ -21,7 +21,7 @@ class MAETest(TestCase):
         y_pred = jnp.array([1, 0, 0, 0])
 
         assert np.allclose(
-            elegy.metrics.MeanAbsoluteError()(y_true, y_pred),
+            elegy.metrics.MeanAbsoluteError().call_with_defaults(y_true, y_pred),
             tfk.metrics.MeanAbsoluteError()(y_true, y_pred),
         )
 
@@ -30,5 +30,5 @@ class MAETest(TestCase):
 
         assert np.allclose(
             tfk.metrics.MeanAbsoluteError()(y_true, y_pred),
-            elegy.metrics.MeanAbsoluteError()(y_true, y_pred),
+            elegy.metrics.MeanAbsoluteError().call_with_defaults(y_true, y_pred),
         )

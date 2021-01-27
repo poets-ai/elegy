@@ -151,7 +151,7 @@ class Module(metaclass=ModuleMeta):
     _submodule_name: tp.Dict["Module", str]
     _dynamic_submodules: tp.List["Module"]
     _default_params: tp.Dict[str, Parameter]
-    _params: tp.Optional[tp.Dict[str, Parameter]]
+    _scope_params: tp.Optional[tp.Dict[str, Parameter]]
     _spec: tp.Dict[str, ParameterSpec]
     _initialized: bool = False
 
@@ -185,7 +185,7 @@ class Module(metaclass=ModuleMeta):
         self._submodule_name = {}
         self._dynamic_submodules = []
         self._default_params = {}
-        self._params = None
+        self._scope_params = None
         self._spec = {}
         self._initialized = False
 
@@ -210,28 +210,27 @@ class Module(metaclass=ModuleMeta):
         self._spec[name] = ParameterSpec(
             collection=parameter.collection, info=param_info
         )
-        self._default_params[name] = parameter
+        # commenting this out makes Module.init stateful by default
+        # self._default_params[name] = parameter
 
-    def defaults_call(self, *args, **kwargs):
+    def call_with_defaults(self, *args, **kwargs):
         if not self.initialized:
-            y, collections = self.init()(*args)
+            _, collections = self.init(set_defaults=True)(*args, **kwargs)
         else:
             collections = self.get_default_parameters()
 
-        y, collections = self.apply(collections)(*args)
-
-        self.set_default_parameters(collections)
+        y, _ = self.apply(collections, set_defaults=True)(*args, **kwargs)
 
         return y
 
-    def defaults_call_jit(self, *args) -> tp.Any:
+    def call_with_defaults_jit(self, *args) -> tp.Any:
 
         if not self.initialized:
-            y, collections = self.init_jit()(*args)
+            _, collections = self.init_jit(set_defaults=True)(*args)
         else:
             collections = self.get_default_parameters()
 
-        y, collections = self.apply_jit(collections)(*args)
+        y, collections = self.apply_jit(collections, set_defaults=True)(*args)
 
         self.set_default_parameters(collections)
 
@@ -248,6 +247,7 @@ class Module(metaclass=ModuleMeta):
 
         def init_jit_wrapper(
             rng: tp.Optional[RNGSeq] = None,
+            set_defaults: bool = False,
             **hooks_kwargs,
         ) -> JitCallable:
             def init_jit_callable(
@@ -256,10 +256,10 @@ class Module(metaclass=ModuleMeta):
                 with hooks.update_context(rng=rng, **hooks_kwargs):
                     y, collections = init_jit(*args)
 
-                    # set parameters to avoid traced arrays
+                if set_defaults:
                     self.set_default_parameters(collections)
 
-                    return y, collections
+                return y, collections
 
             init_jit_callable._signature_f = self.call
 
@@ -276,6 +276,7 @@ class Module(metaclass=ModuleMeta):
         def apply_jit_wrapper(
             collections: ParameterCollection,
             *,
+            set_defaults: bool = False,
             rng: tp.Optional[RNGSeq] = None,
             **hooks_kwargs,
         ) -> JitCallable:
@@ -283,7 +284,12 @@ class Module(metaclass=ModuleMeta):
                 *args,
             ) -> tp.Tuple[tp.Any, ParameterCollection]:
                 with hooks.update_context(rng=rng, **hooks_kwargs):
-                    return apply_jit(collections, *args)
+                    y, collections_ = apply_jit(collections, *args)
+
+                if set_defaults:
+                    self.set_default_parameters(collections_)
+
+                return y, collections_
 
             apply_jit_callable._signature_f = self.call
 
@@ -338,6 +344,7 @@ class Module(metaclass=ModuleMeta):
         self,
         *,
         rng: tp.Optional[RNGSeq] = None,
+        set_defaults: bool = False,
         **hooks_kwargs,
     ) -> tp.Callable[..., tp.Tuple[tp.Any, ParameterCollection]]:
         """
@@ -356,6 +363,9 @@ class Module(metaclass=ModuleMeta):
 
             self._mark_initialized_recursive()
 
+            if set_defaults:
+                self.set_default_parameters(collections)
+
             return y, collections
 
         init_callable._signature_f = self.call
@@ -366,6 +376,7 @@ class Module(metaclass=ModuleMeta):
         self,
         collections: ParameterCollection,
         rng: tp.Optional[RNGSeq] = None,
+        set_defaults: bool = False,
         **hooks_kwargs,
     ) -> tp.Callable[..., tp.Union[tp.Any, tp.Tuple[tp.Any, ParameterCollection]]]:
         """
@@ -382,6 +393,9 @@ class Module(metaclass=ModuleMeta):
                 y = self(*args, **kwargs)
                 collections_ = self.get_parameters_internal()
 
+            if set_defaults:
+                self.set_default_parameters(collections_)
+
             return y, collections_
 
         apply_callable._signature_f = self.call
@@ -393,8 +407,8 @@ class Module(metaclass=ModuleMeta):
         if name in self._submodules:
             return self._submodules[name]
 
-        if self._params is not None and name in self._params:
-            return self._params[name].value
+        if self._scope_params is not None and name in self._scope_params:
+            return self._scope_params[name].value
 
         if not has_scope() and self.initialized and name in self._default_params:
             return self._default_params[name].value
@@ -435,12 +449,10 @@ class Module(metaclass=ModuleMeta):
         if collection is None:
             collection = "parameters" if trainable else "states"
 
-        if self._params is None and hooks.is_initializing():
-            self._params = {}
+        if self._scope_params is None:
+            self._scope_params = {}
 
-        assert self._params is not None
-
-        if name not in self._params:
+        if name not in self._scope_params:
 
             if not hooks.is_initializing():
                 raise ValueError(f"Cannot add parameter {name} outside `init`")
@@ -456,9 +468,9 @@ class Module(metaclass=ModuleMeta):
                 parameter = Parameter(collection, initial_value)
                 self._register_parameter(name, parameter)
 
-            self._params[name] = parameter
+            self._scope_params[name] = parameter
 
-        parameter = self._params[name]
+        parameter = self._scope_params[name]
 
         if parameter.collection != collection:
             raise ValueError(
@@ -495,15 +507,15 @@ class Module(metaclass=ModuleMeta):
             `ValueError` if parameter is not present in current module.
         """
 
-        assert self._params is not None
+        assert self._scope_params is not None
 
-        if name not in self._params:
+        if name not in self._scope_params:
             raise ValueError(f"Parameter {name} not found in {self}.")
 
         if hooks.is_initializing():
             return
 
-        parameter = self._params[name]
+        parameter = self._scope_params[name]
         assert isinstance(parameter, Parameter)
         parameter.value = value
 
@@ -533,9 +545,9 @@ class Module(metaclass=ModuleMeta):
         Raises:
             `ValueError` if parameter is not present in current module.
         """
-        assert self._params is not None
+        assert self._scope_params is not None
 
-        if name not in self._params:
+        if name not in self._scope_params:
             self.add_parameter(
                 name, lambda: value, trainable=trainable, collection=collection
             )
@@ -547,7 +559,7 @@ class Module(metaclass=ModuleMeta):
 
     def _clear_parameters(self, default_params: bool = False):
 
-        self._params = None
+        self._scope_params = None
 
         if default_params:
             self._default_params.clear()
@@ -591,13 +603,6 @@ class Module(metaclass=ModuleMeta):
         )
         expected_submodule_names = set(self._submodules)
         expected_parameter_names = set(self._spec)
-
-        # check missing submodules
-        missing_submodules = expected_submodule_names - incoming_names
-        if missing_submodules:
-            raise ValueError(
-                f"Missing submodule parameters {missing_submodules} for module {self.name}"
-            )
 
         # check missing parameters
         missing_parameters = expected_parameter_names - incoming_names
@@ -658,7 +663,7 @@ class Module(metaclass=ModuleMeta):
         if set_default_params:
             self._default_params = new_params
         else:
-            self._params = new_params
+            self._scope_params = new_params
 
         # set submodule parameters
         for name, submodule in self._submodules.items():
@@ -677,19 +682,23 @@ class Module(metaclass=ModuleMeta):
         return utils.split_into_collections(parameters)
 
     def _get_parameters(self, defaults: bool) -> tp.Dict[str, tp.Any]:
-        if (self._params is None and not defaults) or (
-            not self.initialized and defaults
-        ):
-            return {}
+        # if (self._params is None and not defaults) or (
+        #     not self.initialized and defaults
+        # ):
+        #     return {}
 
         parameters: tp.Dict[str, tp.Any]
 
         if defaults:
-            assert self.initialized
-            parameters = self._default_params.copy()
+            if self.initialized:
+                parameters = self._default_params.copy()
+            else:
+                parameters = {}
         else:
-            assert self._params is not None
-            parameters = self._params.copy()
+            if self._scope_params is not None:
+                parameters = self._scope_params.copy()
+            else:
+                parameters = {}
 
         for name, submodule in self._submodules.items():
             parameters[name] = submodule._get_parameters(defaults=defaults)
@@ -744,6 +753,7 @@ def _scope_context(module: Module, collections: tp.Optional[ParameterCollection]
     try:
         if collections is not None:
             module._set_parameters_internal(collections)
+
         yield
     finally:
         module._clear_parameters()
@@ -806,18 +816,15 @@ def instantiation_context(module: Module) -> tp.ContextManager[None]:
 @contextmanager
 def _instantiation_context(module: Module):
 
-    prev_module = LOCAL.parent
     prev_inside_call = LOCAL.inside_call
     prev_module_path = LOCAL.module_path
 
     LOCAL.inside_call = False
     LOCAL.module_path = None
-    LOCAL.parent = module
 
     try:
         yield
     finally:
-        LOCAL.parent = prev_module
         LOCAL.inside_call = prev_inside_call
         LOCAL.module_path = prev_module_path
 

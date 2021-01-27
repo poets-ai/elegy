@@ -56,7 +56,7 @@ class ElegyModule(GeneralizedModule):
 
         if not utils.none_or_uninitialized(collections):
             assert collections is not None
-            self.module.set_parameters(collections)
+            self.module.set_default_parameters(collections)
 
         return params, states
 
@@ -102,10 +102,11 @@ class ElegyModule(GeneralizedModule):
             params_tree = utils.get_path_params(path, net_params)
             # filter only params
             if not include_submodules and params_tree is not None:
+                assert isinstance(module, Module)
                 params_tree = {
                     name: value
                     for name, value in params_tree.items()
-                    if name in module._params
+                    if name in module._spec
                 }
 
         if net_states is None:
@@ -121,7 +122,7 @@ class ElegyModule(GeneralizedModule):
                     collection: {
                         name: value
                         for name, value in states.items()
-                        if name in module._params
+                        if name in module._spec
                     }
                     for collection, states in states_tree.items()
                     if states is not None
