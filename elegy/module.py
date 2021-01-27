@@ -309,6 +309,10 @@ class Module(metaclass=ModuleMeta):
         d = dict(self.__dict__)
         del d["apply_jit"]
         del d["init_jit"]
+
+        d["_default_params"] = {}
+        d["_scope_params"] = None
+
         return d
 
     def __call__(self, *args, **kwargs) -> tp.Any:
