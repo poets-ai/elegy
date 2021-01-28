@@ -141,7 +141,7 @@ class VariationalAutoEncoder(elegy.Model):
         nets_states = (enc_states, dec_states)
 
         # optimizer
-        optimizer_states = self.optimizer_internal.init(rng, net_params)
+        optimizer_states = self.api_optimizer.init(rng, net_params)
 
         return elegy.States(
             net_params=(w, b),

@@ -44,9 +44,9 @@ class Model(ModelBase):
     seed: int = 42
 
     api_module: tp.Optional[GeneralizedModule]
-    loss_internal: "Losses"
-    metrics_internal: "Metrics"
-    optimizer_internal: tp.Optional[GeneralizedOptimizer]
+    api_loss: "Losses"
+    api_metrics: "Metrics"
+    api_optimizer: tp.Optional[GeneralizedOptimizer]
 
     def __init__(
         self,
@@ -106,9 +106,9 @@ class Model(ModelBase):
             metrics = {}
 
         self.api_module = generalize(module) if module is not None else None
-        self.loss_internal = Losses(loss)
-        self.metrics_internal = Metrics(metrics)
-        self.optimizer_internal = (
+        self.api_loss = Losses(loss)
+        self.api_metrics = Metrics(metrics)
+        self.api_optimizer = (
             generalize_optimizer(optimizer) if optimizer is not None else None
         )
         self.seed = seed
@@ -201,15 +201,15 @@ class Model(ModelBase):
 
         if initializing:
             metrics_states, loss_states = None, None
-            metrics_fn = self.metrics_internal.init(states.rng)
-            losses_fn = self.loss_internal.init(states.rng)
+            metrics_fn = self.api_metrics.init(states.rng)
+            losses_fn = self.api_loss.init(states.rng)
         else:
             metrics_states, loss_states = states.metrics_states
-            metrics_fn = self.metrics_internal.apply(
+            metrics_fn = self.api_metrics.apply(
                 states=metrics_states,
                 rng=states.rng,
             )
-            losses_fn = self.loss_internal.apply(states=loss_states)
+            losses_fn = self.api_loss.apply(states=loss_states)
 
         # [DI]
         metrics_logs, metrics_states = metrics_fn(
@@ -339,9 +339,7 @@ class Model(ModelBase):
 
         # calculate current lr before update
         if initializing:
-            optimizer_states = self.optimizer_internal.init(
-                states.rng, states.net_params
-            )
+            optimizer_states = self.api_optimizer.init(states.rng, states.net_params)
             net_params = states.net_params
         else:
             if isinstance(self.states.optimizer_states, Uninitialized):
@@ -357,7 +355,7 @@ class Model(ModelBase):
                 if lr is not None:
                     logs["lr"] = lr
 
-            net_params, optimizer_states = self.optimizer_internal.apply(
+            net_params, optimizer_states = self.api_optimizer.apply(
                 states.net_params,
                 grads,
                 states.optimizer_states,
