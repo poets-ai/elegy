@@ -176,7 +176,7 @@ class Model(ModelBase):
         net_states: tp.Any,
         rng: tp.Any,
         states: States,
-    ) -> Evaluation:
+    ) -> States:
         y_pred, states = self.call_init_pred(x=x, states=states)
         assert isinstance(states.rng, RNGSeq)
 
@@ -206,10 +206,9 @@ class Model(ModelBase):
             training=True,
         )
 
-        logs = utils.merge_with_unique_names(metrics_logs, loss_logs)
         states = states.update(metrics_states=(metrics_states, loss_logs_states))
 
-        return Evaluation(loss, logs, states)
+        return states
 
     def call_init_test(
         self,
@@ -218,7 +217,7 @@ class Model(ModelBase):
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         states: States,
-    ) -> Evaluation:
+    ) -> States:
         return utils.inject_dependencies(self.init_test)(
             x=x,
             y_true=y_true,
@@ -242,7 +241,7 @@ class Model(ModelBase):
         rng: tp.Any,
         states: States,
     ) -> States:
-        loss, logs, states = self.call_init_test(
+        states = self.call_init_test(
             x=x,
             y_true=y_true,
             sample_weight=sample_weight,
@@ -298,26 +297,28 @@ class Model(ModelBase):
         with hooks.update_context(rng=states.rng):
 
             if mode == Mode.pred:
-                y_true, states = self.call_init_pred(
+                _, states = self.call_init_pred(
                     x=x,
                     states=states,
                 )
             elif mode == Mode.test:
-                loss, logs, states = self.call_init_test(
-                    x=x,
-                    y_true=y_true,
-                    sample_weight=sample_weight,
-                    class_weight=class_weight,
-                    states=states,
-                )
+                with hooks.update_context(losses=True, metrics=True):
+                    states = self.call_init_test(
+                        x=x,
+                        y_true=y_true,
+                        sample_weight=sample_weight,
+                        class_weight=class_weight,
+                        states=states,
+                    )
             elif mode == Mode.train:
-                states = self.call_init_train(
-                    x=x,
-                    y_true=y_true,
-                    sample_weight=sample_weight,
-                    class_weight=class_weight,
-                    states=states,
-                )
+                with hooks.update_context(losses=True, metrics=True):
+                    states = self.call_init_train(
+                        x=x,
+                        y_true=y_true,
+                        sample_weight=sample_weight,
+                        class_weight=class_weight,
+                        states=states,
+                    )
             else:
                 raise ValueError(f"Unknown mode {mode}")
 

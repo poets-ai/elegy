@@ -106,9 +106,7 @@ class VariationalAutoEncoder(elegy.Model):
 
     # request parameters by name via depending injection.
     # possible: mode, x, y_true, sample_weight, class_weight
-    def init(self, x):
-        # friendly RNG interface: rng.next() == jax.random.split(...)
-        rng = elegy.RNGSeq(42)
+    def init_test(self, x, states, rng):
 
         (z, mean, stddev), enc_variables = self.encoder.init_with_output(rng.next(), x)
         logits, dec_variables = self.decoder.init_with_output(rng.next(), z)
@@ -117,14 +115,16 @@ class VariationalAutoEncoder(elegy.Model):
         net_params = (enc_params, dec_params)
         nets_states = (enc_states, dec_states)
 
-        _, metrics_states = self.loss_metrics.init()(dict(loss=0.0))
+        logs = dict(
+            loss=0.0,
+            kl_loss=0.0,
+            bce_loss=0.0,
+        )
 
-        # optimizer
-        optimizer_states = self.optimizer.init(net_params)
+        _, metrics_states = self.loss_metrics.init()(logs)
 
-        return elegy.States(
+        return states.update(
             net_params=net_params,
-            optimizer_states=optimizer_states,
             net_states=nets_states,
             metrics_states=metrics_states,
             rng=rng,
@@ -140,58 +140,53 @@ class VariationalAutoEncoder(elegy.Model):
             enc_variables, x, rngs={"params": rng.next()}, mutable=True
         )
 
+        elegy.add_loss(
+            "kl_divergence",
+            2e-1 * kl_divergence(mean, stddev),
+        )
+
         dec_variables = dict(params=dec_params, **dec_states)
         logits, dec_variables = self.decoder.apply(
             dec_variables, z, rngs={"params": rng.next()}, mutable=True
         )
 
-        y_pred = jax.nn.sigmoid(logits) > 0.5
-
-        return y_pred, states
+        return logits, states
 
     # request parameters by name via depending injection.
     # possible: net_params, x, y_true, net_states, metrics_states, sample_weight, class_weight, rng, states
     def test_step(
-        self, x, net_params, states: elegy.States, net_states, rng, metrics_states
+        self,
+        x,
+        net_params,
+        states: elegy.States,
+        net_states,
+        rng,
+        metrics_states,
+        training,
     ):
-
-        (enc_states, dec_states) = net_states
-        (enc_params, dec_params) = net_params
-
-        enc_variables = dict(params=enc_params, **enc_states)
-        (z, mean, stddev), enc_variables = self.encoder.apply(
-            enc_variables, x, rngs={"params": rng.next()}, mutable=True
-        )
-
-        dec_variables = dict(params=dec_params, **dec_states)
-        logits, dec_variables = self.decoder.apply(
-            dec_variables, z, rngs={"params": rng.next()}, mutable=True
+        logits, states = self.call_pred_step(
+            x=x,
+            training=training,
+            states=states,
         )
 
         # crossentropy loss + kl
-        loss = elegy.losses.binary_crossentropy(
-            x, logits, from_logits=True
-        ).mean() + 2e-1 * kl_divergence(mean, stddev)
+        kl_loss = elegy.get_losses()["kl_divergence_loss"]
+        bce = elegy.losses.binary_crossentropy(x, logits, from_logits=True).mean()
+        loss = bce + kl_loss
 
         # metrics
         logs = dict(
             loss=loss,
+            kl_loss=kl_loss,
+            bce_loss=bce,
         )
 
         logs, metrics_states = self.loss_metrics.apply(metrics_states)(logs)
 
-        enc_states, enc_params = enc_variables.pop("params")
-        dec_states, dec_params = dec_variables.pop("params")
+        states = states.update(metrics_states=metrics_states)
 
-        return (
-            loss,
-            logs,
-            states.update(
-                net_params=(enc_params, dec_params),
-                net_states=(enc_states, dec_states),
-                metrics_states=metrics_states,
-            ),
-        )
+        return (loss, logs, states)
 
 
 def main(
@@ -245,6 +240,7 @@ def main(
 
     # get predictions
     y_pred = model.predict(x=x_sample)
+    y_pred = jax.nn.sigmoid(y_pred)
 
     # plot and save results
     with SummaryWriter(os.path.join(logdir, "val")) as tbwriter:
@@ -266,8 +262,8 @@ def main(
     )
 
     z_samples = np.random.normal(size=(12, LATENT_SIZE))
-    samples = model_decoder.predict(z_samples)
-    samples = jax.nn.sigmoid(samples)
+    logits = model_decoder.predict(z_samples)
+    samples = jax.nn.sigmoid(logits)
 
     # plot and save results
     # with SummaryWriter(os.path.join(logdir, "val")) as tbwriter:

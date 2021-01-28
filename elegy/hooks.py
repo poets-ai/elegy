@@ -269,17 +269,17 @@ def update_context(
     if LOCAL.losses is None and losses is None and set_defaults:
         losses = {}
     elif isinstance(losses, bool):
-        losses = {} if losses else None
+        losses = {} if LOCAL.losses is None and losses else None
 
     if LOCAL.metrics is None and metrics is None and set_defaults:
         metrics = {}
     elif isinstance(metrics, bool):
-        metrics = {} if metrics else None
+        metrics = {} if LOCAL.metrics is None and metrics else None
 
     if LOCAL.summaries is None and summaries is None and set_defaults:
         summaries = []
     elif isinstance(summaries, bool):
-        summaries = [] if summaries else None
+        summaries = [] if LOCAL.summaries is None and summaries else None
 
     return _update_context(
         losses=losses,
