@@ -67,11 +67,11 @@ class ModelCore(ABC):
         )
         self.pred_step_internal_jit = hooks.jit(
             self.call_pred_step,
-            static_argnums=[2],
+            static_argnums=[1],
         )
         self.test_step_internal_jit = hooks.jit(
             self.call_test_step,
-            static_argnums=[5],
+            static_argnums=[4],
         )
         self.train_step_internal_jit = hooks.jit(
             self.call_train_step,
@@ -143,9 +143,9 @@ class ModelCore(ABC):
 
     def call_pred_step(
         self,
-        states: States,
         x: tp.Any,
         training: bool,
+        states: States,
     ) -> tp.Tuple[tp.Any, States]:
         return utils.inject_dependencies(self.pred_step)(
             net_params=states.net_params,
@@ -174,12 +174,12 @@ class ModelCore(ABC):
 
     def call_test_step(
         self,
-        states: States,
         x: tp.Any,
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         training: bool,
+        states: States,
     ) -> Evaluation:
         return utils.inject_dependencies(self.test_step)(
             net_params=states.net_params,
@@ -211,12 +211,12 @@ class ModelCore(ABC):
 
     def call_grad_step(
         self,
-        states: States,
         x: tp.Any,
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         training: bool,
+        states: States,
     ) -> Backprop:
         return utils.inject_dependencies(self.grad_step)(
             net_params=states.net_params,
@@ -250,11 +250,11 @@ class ModelCore(ABC):
 
     def call_train_step(
         self,
-        states: States,
         x: tp.Any,
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
+        states: States,
     ) -> Training:
         return utils.inject_dependencies(self.train_step)(
             net_params=states.net_params,
@@ -303,9 +303,9 @@ class ModelCore(ABC):
 
         with hooks.context(rng=rng, initializing=False, training=False):
             y_pred, state_updates = method(
-                self.states,
                 x,
                 training,
+                self.states,
             )
 
         self.states = self.states.merge(state_updates)
@@ -362,12 +362,12 @@ class ModelCore(ABC):
             rng=rng, losses=True, metrics=True, initializing=False, training=False
         ):
             loss, logs, state_updates = method(
-                self.states,
                 x,
                 y,
                 sample_weight,
                 class_weight,
                 training,
+                self.states,
             )
 
         self.states = self.states.merge(state_updates)
@@ -430,11 +430,11 @@ class ModelCore(ABC):
             rng=rng, losses=True, metrics=True, initializing=False, training=True
         ):
             logs, state_updates = method(
-                self.states,
                 x,
                 y,
                 sample_weight,
                 class_weight,
+                self.states,
             )
 
         self.states = self.states.merge(state_updates)

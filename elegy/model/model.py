@@ -123,6 +123,166 @@ class Model(ModelBase):
             self.states.rng,
         )(*args, **kwargs)
 
+    # ----------------------------------------------------------------
+    # init API
+    # ----------------------------------------------------------------
+
+    def init_pred(
+        self,
+        x: tp.Any,
+        rng: RNGSeq,
+        states: States,
+    ) -> Prediction:
+        if self.module is None:
+            raise MissingModule(
+                "Trying run default `init` on a Model with no `module`, try overriding `init`."
+            )
+        assert isinstance(states.rng, RNGSeq)
+
+        x_args, x_kwargs = utils.get_input_args(
+            x,
+            states=states,
+            training=True,
+        )
+        y_pred, net_params, net_states = self.module_internal.init(states.rng)(
+            *x_args, **x_kwargs
+        )
+
+        states = states.update(
+            net_states=net_states,
+            net_params=net_params,
+        )
+
+        return Prediction(y_pred, states)
+
+    def call_init_pred(
+        self,
+        x: tp.Any,
+        states: States,
+    ) -> Prediction:
+        return utils.inject_dependencies(self.init_pred)(
+            x=x,
+            rng=states.rng,
+            states=states,
+        )
+
+    def init_test(
+        self,
+        x: tp.Any,
+        y_true: tp.Any,
+        sample_weight: tp.Optional[np.ndarray],
+        class_weight: tp.Optional[np.ndarray],
+        net_params: tp.Any,
+        net_states: tp.Any,
+        rng: tp.Any,
+        states: States,
+    ) -> Evaluation:
+        y_pred, states = self.call_init_pred(x=x, states=states)
+        assert isinstance(states.rng, RNGSeq)
+
+        metrics_logs, metrics_states = self.metrics_internal.init(states.rng)(
+            x=x,
+            y_true=y_true,
+            y_pred=y_pred,
+            net_params=states.net_params,
+            net_states=states.net_states,
+            metrics_states=states.metrics_states,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            rng=states.rng,
+            training=True,
+        )
+
+        loss, loss_logs, loss_logs_states = self.loss_internal.init(states.rng)(
+            x=x,
+            y_true=y_true,
+            y_pred=y_pred,
+            net_params=states.net_params,
+            net_states=states.net_states,
+            metrics_states=states.metrics_states,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            rng=states.rng,
+            training=True,
+        )
+
+        logs = utils.merge_with_unique_names(metrics_logs, loss_logs)
+        states = states.update(metrics_states=(metrics_states, loss_logs_states))
+
+        return Evaluation(loss, logs, states)
+
+    def call_init_test(
+        self,
+        x: tp.Any,
+        y_true: tp.Any,
+        sample_weight: tp.Optional[np.ndarray],
+        class_weight: tp.Optional[np.ndarray],
+        states: States,
+    ) -> Evaluation:
+        return utils.inject_dependencies(self.init_test)(
+            x=x,
+            y_true=y_true,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            net_params=states.net_params,
+            net_states=states.net_states,
+            rng=states.rng,
+            states=states,
+        )
+
+    def init_train(
+        self,
+        x: tp.Any,
+        y_true: tp.Any,
+        sample_weight: tp.Optional[np.ndarray],
+        class_weight: tp.Optional[np.ndarray],
+        net_params: tp.Any,
+        net_states: tp.Any,
+        metrics_states: tp.Any,
+        rng: tp.Any,
+        states: States,
+    ) -> States:
+        loss, logs, states = self.call_init_test(
+            x=x,
+            y_true=y_true,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            states=states,
+        )
+        assert isinstance(states.rng, RNGSeq)
+
+        if self.optimizer is not None:
+            optimizer_states = self.optimizer_internal.init(
+                states.rng,
+                states.net_params,
+            )
+        else:
+            optimizer_states = None
+
+        states = states.update(optimizer_states=optimizer_states)
+
+        return states
+
+    def call_init_train(
+        self,
+        x: tp.Any,
+        y_true: tp.Any,
+        sample_weight: tp.Optional[np.ndarray],
+        class_weight: tp.Optional[np.ndarray],
+        states: States,
+    ) -> States:
+        return utils.inject_dependencies(self.init_train)(
+            net_params=states.net_params,
+            x=x,
+            y_true=y_true,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            net_states=states.net_states,
+            metrics_states=states.metrics_states,
+            rng=states.rng,
+            states=states,
+        )
+
     def init(
         self,
         mode: Mode,
@@ -130,70 +290,36 @@ class Model(ModelBase):
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
+        states: States,
     ) -> States:
-        if self.module is None:
-            raise MissingModule(
-                "Trying run default `init` on a Model with no `module`, try overriding `init`."
-            )
 
-        states = States(rng=RNGSeq(self.seed))
         assert isinstance(states.rng, RNGSeq)
 
         with hooks.update_context(rng=states.rng):
 
-            x_args, x_kwargs = utils.get_input_args(
-                x,
-                states=states,
-                training=True,
-            )
-            y_pred, net_params, net_states = self.module_internal.init(states.rng)(
-                *x_args, **x_kwargs
-            )
-
-            states = states.update(net_states=net_states, net_params=net_params)
-
             if mode == Mode.pred:
-                return states
-
-            assert isinstance(states.rng, RNGSeq)
-            metrics_logs, metrics_states = self.metrics_internal.init(states.rng)(
-                x=x,
-                y_true=y_true,
-                y_pred=y_pred,
-                net_params=net_params,
-                net_states=net_states,
-                metrics_states=UNINITIALIZED,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                rng=states.rng,
-                training=True,
-            )
-
-            loss, loss_logs, loss_logs_states = self.loss_internal.init(states.rng)(
-                x=x,
-                y_true=y_true,
-                y_pred=y_pred,
-                net_params=net_params,
-                net_states=net_states,
-                metrics_states=UNINITIALIZED,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                rng=states.rng,
-                training=True,
-            )
-
-            states = states.update(metrics_states=(metrics_states, loss_logs_states))
-            assert isinstance(states.rng, RNGSeq)
-
-            if mode == Mode.test:
-                return states
-
-            if self.optimizer is not None:
-                optimizer_states = self.optimizer_internal.init(states.rng, net_params)
+                y_true, states = self.call_init_pred(
+                    x=x,
+                    states=states,
+                )
+            elif mode == Mode.test:
+                loss, logs, states = self.call_init_test(
+                    x=x,
+                    y_true=y_true,
+                    sample_weight=sample_weight,
+                    class_weight=class_weight,
+                    states=states,
+                )
+            elif mode == Mode.train:
+                states = self.call_init_train(
+                    x=x,
+                    y_true=y_true,
+                    sample_weight=sample_weight,
+                    class_weight=class_weight,
+                    states=states,
+                )
             else:
-                optimizer_states = None
-
-            states = states.update(optimizer_states=optimizer_states)
+                raise ValueError(f"Unknown mode {mode}")
 
             return states
 
@@ -425,9 +551,9 @@ class Model(ModelBase):
             summaries=True,
         ):
             _, _1 = method(
-                self.states,
                 x,
                 training,
+                self.states,
             )
             summaries = hooks.get_summaries()
 
