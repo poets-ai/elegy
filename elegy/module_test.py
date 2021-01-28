@@ -279,7 +279,7 @@ class ModuleTest(TestCase):
 
             y = jnp.dot(x, w) + b
 
-            path = elegy.get_module_path_str(self)
+            path = elegy.module.get_module_path_str(self)
             elegy.add_loss(f"activation_sum", jnp.sum(y))
             elegy.add_metric(f"{path}/activation_mean", jnp.mean(y))
 
@@ -460,7 +460,7 @@ class ModuleDynamicTest(TestCase):
 
             y = jnp.dot(x, w) + b
 
-            path = elegy.get_module_path_str(self)
+            path = elegy.module.get_module_path_str(self)
             elegy.add_loss(f"activation_sum", jnp.sum(y))
             elegy.add_metric(f"{path}/activation_mean", jnp.mean(y))
 

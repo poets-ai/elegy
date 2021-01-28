@@ -1,88 +1,79 @@
 import elegy
 import jax.numpy as jnp
 import numpy as np
+import unittest
 
 
-def test_predict():
-    class Model(elegy.model.model_base.ModelBase):
-        def init(self, mode: elegy.Mode):
-            return elegy.States(net_states=0)
+class TestModelBase(unittest.TestCase):
+    def test_predict(self):
+        class Model(elegy.model.model_base.ModelBase):
+            def pred_step(self, x, net_states, initializing):
+                if initializing:
+                    states = elegy.States(net_states=0)
+                else:
+                    states = elegy.States(net_states=net_states + 1)
 
-        def pred_step(self, x, net_states):
-            return x + 1.0, elegy.States(net_states=net_states + 1)
+                return x + 1.0, states
 
-        def test_step(self):
-            ...
+        model = Model()
 
-        def train_step(self):
-            ...
+        x = np.random.uniform(size=(100, 1))
+        y = model.predict(x, batch_size=50)
 
-    model = Model()
+        assert np.allclose(y, x + 1.0)
+        assert model.states.net_states == 2
+        assert model.initial_states.net_states == 0
 
-    x = np.random.uniform(size=(100, 1))
-    y = model.predict(x, batch_size=50)
+    def test_evaluate(self):
+        class Model(elegy.model.model_base.ModelBase):
+            def test_step(self, x, metrics_states, initializing):
+                if initializing:
+                    states = elegy.States(metrics_states=0)
+                else:
+                    states = elegy.States(metrics_states=metrics_states + 1)
 
-    assert np.allclose(y, x + 1.0)
-    assert model.states.net_states == 2
-    assert model.initial_states.net_states == 0
+                return elegy.Evaluation(
+                    loss=0.1,
+                    logs=dict(loss=jnp.sum(x)),
+                    states=states,
+                )
 
+            def train_step(self):
+                ...
 
-def test_evaluate():
-    class Model(elegy.model.model_base.ModelBase):
-        def init(self, mode: elegy.Mode):
-            return elegy.States(metrics_states=0)
+        model = Model(run_eagerly=True)
 
-        def pred_step(self, x):
-            return x + 1, elegy.States()
+        x = np.random.uniform(size=(100, 1))
 
-        def test_step(self, x, metrics_states):
-            return elegy.Evaluation(
-                loss=0.1,
-                logs=dict(loss=jnp.sum(x)),
-                states=elegy.States(metrics_states=metrics_states + 1),
-            )
+        logs = model.evaluate(x, batch_size=100)
+        assert np.allclose(logs["loss"], np.sum(x))
+        assert model.states.metrics_states == 1
 
-        def train_step(self):
-            ...
+        logs = model.evaluate(x, batch_size=50)
+        assert np.allclose(logs["loss"], np.sum(x[50:]))
+        assert model.states.metrics_states == 2
 
-    model = Model(run_eagerly=True)
+    def test_fit(self):
+        class Model(elegy.model.model_base.ModelBase):
+            def train_step(self, x, optimizer_states, initializing):
+                if initializing:
+                    states = elegy.States(optimizer_states=0)
+                else:
+                    states = elegy.States(optimizer_states=optimizer_states + 1)
 
-    x = np.random.uniform(size=(100, 1))
+                return elegy.Training(
+                    logs=dict(loss=jnp.sum(x)),
+                    states=states,
+                )
 
-    logs = model.evaluate(x, batch_size=100)
-    assert np.allclose(logs["loss"], np.sum(x))
-    assert model.states.metrics_states == 1
+        model = Model()
 
-    logs = model.evaluate(x, batch_size=50)
-    assert np.allclose(logs["loss"], np.sum(x[50:]))
-    assert model.states.metrics_states == 2
+        x = np.random.uniform(size=(100, 1))
 
+        history = model.fit(x, batch_size=100)
+        assert np.allclose(history.history["loss"], np.sum(x))
+        assert model.states.optimizer_states == 1
 
-def test_fit():
-    class Model(elegy.model.model_base.ModelBase):
-        def init(self, mode: elegy.Mode):
-            return elegy.States(optimizer_states=0)
-
-        def pred_step(self, x):
-            ...
-
-        def test_step(self, x, optimizer_states):
-            ...
-
-        def train_step(self, x, optimizer_states):
-            return elegy.Training(
-                logs=dict(loss=jnp.sum(x)),
-                states=elegy.States(optimizer_states=optimizer_states + 1),
-            )
-
-    model = Model()
-
-    x = np.random.uniform(size=(100, 1))
-
-    history = model.fit(x, batch_size=100)
-    assert np.allclose(history.history["loss"], np.sum(x))
-    assert model.states.optimizer_states == 1
-
-    history = model.fit(x, batch_size=50, shuffle=False)
-    assert np.allclose(history.history["loss"], np.sum(x[50:]))
-    assert model.states.optimizer_states == 3
+        history = model.fit(x, batch_size=50, shuffle=False)
+        assert np.allclose(history.history["loss"], np.sum(x[50:]))
+        assert model.states.optimizer_states == 3

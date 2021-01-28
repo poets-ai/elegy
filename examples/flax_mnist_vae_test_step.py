@@ -105,52 +105,41 @@ class VariationalAutoEncoder(elegy.Model):
         self.loss_metrics = elegy.model.model.LossMetrics()
 
     # request parameters by name via depending injection.
-    # possible: mode, x, y_true, sample_weight, class_weight
-    def init_test(self, x, states, rng):
+    # possible: x, y_true, sample_weight, class_weight, initializing
+    def pred_step(self, x, rng, net_states, net_params, states, initializing):
 
-        (z, mean, stddev), enc_variables = self.encoder.init_with_output(rng.next(), x)
-        logits, dec_variables = self.decoder.init_with_output(rng.next(), z)
-        enc_states, enc_params = enc_variables.pop("params")
-        dec_states, dec_params = dec_variables.pop("params")
-        net_params = (enc_params, dec_params)
-        nets_states = (enc_states, dec_states)
-
-        logs = dict(
-            loss=0.0,
-            kl_loss=0.0,
-            bce_loss=0.0,
-        )
-
-        _, metrics_states = self.loss_metrics.init()(logs)
-
-        return states.update(
-            net_params=net_params,
-            net_states=nets_states,
-            metrics_states=metrics_states,
-            rng=rng,
-        )
-
-    def pred_step(self, x, rng, net_states, net_params, states):
-
-        (enc_states, dec_states) = net_states
-        (enc_params, dec_params) = net_params
-
-        enc_variables = dict(params=enc_params, **enc_states)
-        (z, mean, stddev), enc_variables = self.encoder.apply(
-            enc_variables, x, rngs={"params": rng.next()}, mutable=True
-        )
+        if initializing:
+            (z, mean, stddev), enc_variables = self.encoder.init_with_output(
+                rng.next(), x
+            )
+            logits, dec_variables = self.decoder.init_with_output(rng.next(), z)
+        else:
+            (enc_states, dec_states) = net_states
+            (enc_params, dec_params) = net_params
+            enc_variables = dict(params=enc_params, **enc_states)
+            (z, mean, stddev), enc_variables = self.encoder.apply(
+                enc_variables, x, rngs={"params": rng.next()}, mutable=True
+            )
+            dec_variables = dict(params=dec_params, **dec_states)
+            logits, dec_variables = self.decoder.apply(
+                dec_variables, z, rngs={"params": rng.next()}, mutable=True
+            )
 
         elegy.add_loss(
             "kl_divergence",
             2e-1 * kl_divergence(mean, stddev),
         )
 
-        dec_variables = dict(params=dec_params, **dec_states)
-        logits, dec_variables = self.decoder.apply(
-            dec_variables, z, rngs={"params": rng.next()}, mutable=True
-        )
+        enc_states, enc_params = enc_variables.pop("params")
+        dec_states, dec_params = dec_variables.pop("params")
+        net_params = (enc_params, dec_params)
+        nets_states = (enc_states, dec_states)
 
-        return logits, states
+        return logits, states.update(
+            net_params=net_params,
+            net_states=nets_states,
+            rng=rng,
+        )
 
     # request parameters by name via depending injection.
     # possible: net_params, x, y_true, net_states, metrics_states, sample_weight, class_weight, rng, states
@@ -163,11 +152,13 @@ class VariationalAutoEncoder(elegy.Model):
         rng,
         metrics_states,
         training,
+        initializing,
     ):
         logits, states = self.call_pred_step(
             x=x,
-            training=training,
             states=states,
+            training=training,
+            initializing=initializing,
         )
 
         # crossentropy loss + kl
@@ -182,7 +173,12 @@ class VariationalAutoEncoder(elegy.Model):
             bce_loss=bce,
         )
 
-        logs, metrics_states = self.loss_metrics.apply(metrics_states)(logs)
+        if initializing:
+            loss_metrics_fn = self.loss_metrics.init(rng=rng)
+        else:
+            loss_metrics_fn = self.loss_metrics.apply(metrics_states)
+
+        logs, metrics_states = loss_metrics_fn(logs)
 
         states = states.update(metrics_states=metrics_states)
 

@@ -11,37 +11,31 @@ import typer
 
 from utils import plot_history
 
-# TODO: use elegy.Model
+
 class Model(elegy.Model):
-    # request parameters by name via depending injection.
-    # possible: mode, x, y_true, sample_weight, class_weight
-    def init(self, x):
-        # friendly RNG interface: rng.next() == jax.random.split(...)
-        rng = elegy.RNGSeq(42)
-
-        # params
-        w = jax.random.uniform(
-            rng.next(), shape=[np.prod(x.shape[1:]), 10], minval=-1, maxval=1
-        )
-        b = jax.random.uniform(rng.next(), shape=[1], minval=-1, maxval=1)
-        net_params = (w, b)
-
-        # optimizer
-        optimizer_states = self.optimizer.init(rng, net_params)
-
-        return elegy.States(
-            net_params=(w, b),
-            optimizer_states=optimizer_states,
-            rng=rng,
-        )
 
     # request parameters by name via depending injection.
-    # possible: net_params, x, y_true, net_states, metrics_states, sample_weight, class_weight, rng, states
-    def test_step(self, x, y_true, net_params, states: elegy.States):
+    # possible: net_params, x, y_true, net_states, metrics_states, sample_weight, class_weight, rng, states, initializing
+    def test_step(
+        self,
+        x,
+        y_true,
+        net_params,
+        states: elegy.States,
+        initializing: bool,
+        rng: elegy.RNGSeq,
+    ):
         # flatten + scale
         x = jnp.reshape(x, (x.shape[0], -1)) / 255
 
         # model
+        if initializing:
+            w = jax.random.uniform(
+                rng.next(), shape=[np.prod(x.shape[1:]), 10], minval=-1, maxval=1
+            )
+            b = jax.random.uniform(rng.next(), shape=[1], minval=-1, maxval=1)
+            net_params = (w, b)
+
         w, b = net_params
         logits = jnp.dot(x, w) + b
 

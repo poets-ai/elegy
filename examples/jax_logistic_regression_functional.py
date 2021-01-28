@@ -45,18 +45,20 @@ def main(
     def accuracy(y_true, y_pred):
         return jnp.mean(jnp.argmax(y_pred, axis=-1) == y_true)
 
-    def logistic_regression(x: jnp.ndarray, net_params, rng) -> elegy.OutputStates:
+    def logistic_regression(
+        x: jnp.ndarray, net_params, rng, initializing
+    ) -> elegy.OutputStates:
         x = x.reshape((x.shape[0], -1)) / 255
 
-        if isinstance(net_params, elegy.Uninitialized):
+        if initializing:
             w = jax.random.uniform(rng.next(), shape=[x.shape[-1], 10])
             b = jax.random.uniform(rng.next(), shape=[10])
-        else:
-            w, b = net_params
+            net_params = (w, b)
 
+        w, b = net_params
         y_pred = jnp.dot(x, w) + b
 
-        return elegy.OutputStates(y_pred, (w, b), None)
+        return elegy.OutputStates(y_pred, net_params, None)
 
     model = elegy.Model(
         module=logistic_regression,

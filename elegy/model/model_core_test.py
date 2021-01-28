@@ -1,170 +1,147 @@
 import typing as tp
+import unittest
 
 import elegy
 import jax.numpy as jnp
 import numpy as np
 
 
-def test_init():
-    N = 0
+class ModelCoreTest(unittest.TestCase):
+    def test_init(self):
+        N = 0
 
-    class Model(elegy.model.model_core.ModelCore):
-        def init(self, mode: elegy.Mode):
-            nonlocal N
-            N = N + 1
+        class Model(elegy.model.model_core.ModelCore):
+            def pred_step(self):
+                nonlocal N
+                N = N + 1
 
-            step_states = elegy.States(net_params=1, net_states=2)
+                return elegy.Prediction(None, elegy.States(net_params=1, net_states=2))
 
-            if mode == "pred":
-                return step_states
+            def test_step(self):
+                _, states = self.pred_step()
+                return elegy.Evaluation(0, {}, states.update(metrics_states=3))
 
-            step_states = step_states.update(metrics_states=3)
+            def train_step(self):
+                _, logs, states = self.test_step()
+                return elegy.Training(logs, states.update(optimizer_states=4))
 
-            if mode == "test":
-                return step_states
+        model = Model()
 
-            step_states = step_states.update(optimizer_states=4)
+        assert N == 0
+        assert model.states.net_params != 1
+        assert model.states.net_states != 2
+        assert model.states.metrics_states != 3
+        assert model.states.optimizer_states != 4
 
-            return step_states
+        model.maybe_initialize(mode=elegy.Mode.pred)
 
-        def pred_step(self):
-            ...
+        assert N == 1
+        assert model.states.net_params == 1
+        assert model.states.net_states == 2
 
-        def test_step(self):
-            ...
+        model.maybe_initialize(mode=elegy.Mode.pred)
 
-        def train_step(self):
-            ...
+        assert N == 1
 
-    model = Model()
+        model.maybe_initialize(mode=elegy.Mode.test)
 
-    assert N == 0
-    assert model.states.net_params != 1
-    assert model.states.net_states != 2
-    assert model.states.metrics_states != 3
-    assert model.states.optimizer_states != 4
+        assert N == 2
+        assert model.states.metrics_states == 3
 
-    model.maybe_initialize(mode=elegy.Mode.pred)
+        model.maybe_initialize(mode=elegy.Mode.test)
 
-    assert N == 1
-    assert model.states.net_params == 1
-    assert model.states.net_states == 2
+        assert N == 2
 
-    model.maybe_initialize(mode=elegy.Mode.pred)
+        model.maybe_initialize(mode=elegy.Mode.train)
 
-    assert N == 1
+        assert N == 3
+        assert model.states.optimizer_states == 4
 
-    model.maybe_initialize(mode=elegy.Mode.test)
+        model.maybe_initialize(mode=elegy.Mode.train)
 
-    assert N == 2
-    assert model.states.metrics_states == 3
+        assert N == 3
 
-    model.maybe_initialize(mode=elegy.Mode.test)
+    def test_pred_step(self):
+        class Model(elegy.model.model_core.ModelCore):
+            def pred_step(self, x, net_states, initializing):
+                if initializing:
+                    states = elegy.States(net_states=0)
+                else:
+                    states = elegy.States(net_states=net_states + 1)
 
-    assert N == 2
+                return elegy.Prediction(
+                    pred=1,
+                    states=states,
+                )
 
-    model.maybe_initialize(mode=elegy.Mode.train)
+            def test_step(self):
+                ...
 
-    assert N == 3
-    assert model.states.optimizer_states == 4
+            def train_step(self):
+                ...
 
-    model.maybe_initialize(mode=elegy.Mode.train)
+        model = Model()
+        assert isinstance(model.states.net_states, elegy.types.Uninitialized)
 
-    assert N == 3
+        preds = model.predict_on_batch(x=(np.array(1.0)))
+        assert preds == 1
+        assert model.states.net_states == 1
+        assert isinstance(model.states.net_params, elegy.types.Uninitialized)
 
+        model.run_eagerly = False
 
-def test_pred_step():
-    class Model(elegy.model.model_core.ModelCore):
-        def init(self, mode: elegy.Mode):
-            return elegy.States(net_states=0)
+        preds = model.predict_on_batch(x=(np.array(1.0)))
+        assert preds == 1
+        assert model.states.net_states == 2
 
-        def pred_step(self, x, net_states):
-            return elegy.Prediction(
-                pred=1,
-                states=elegy.States(net_states=net_states + 1),
-            )
+    def test_test_step(self):
+        class Model(elegy.model.model_core.ModelCore):
+            def test_step(self, metrics_states, initializing):
+                return elegy.Evaluation(
+                    loss=0.1,
+                    logs=dict(loss=1.0),
+                    states=elegy.States(metrics_states=0)
+                    if initializing
+                    else elegy.States(metrics_states=metrics_states + 1),
+                )
 
-        def test_step(self):
-            ...
+            def train_step(self):
+                ...
 
-        def train_step(self):
-            ...
+        model = Model()
+        assert isinstance(model.states.metrics_states, elegy.types.Uninitialized)
 
-    model = Model()
-    assert isinstance(model.states.net_states, elegy.types.Uninitialized)
+        logs = model.test_on_batch(x=(np.array(1.0)), y=(1.0,))
+        assert logs["loss"] == 1
+        assert model.states.metrics_states == 1
+        assert isinstance(model.states.net_params, elegy.types.Uninitialized)
 
-    preds = model.predict_on_batch(x=(np.array(1.0)))
-    assert preds == 1
-    assert model.states.net_states == 1
-    assert isinstance(model.states.net_params, elegy.types.Uninitialized)
+        model.run_eagerly = False
 
-    model.run_eagerly = False
+        logs = model.test_on_batch(x=(np.array(1.0)), y=(1.0,))
+        assert logs["loss"] == 1
+        assert model.states.metrics_states == 2
 
-    preds = model.predict_on_batch(x=(np.array(1.0)))
-    assert preds == 1
-    assert model.states.net_states == 2
+    def test_train_step(self):
+        class Model(elegy.model.model_core.ModelCore):
+            def train_step(self, optimizer_states, initializing):
+                return elegy.Training(
+                    logs=dict(loss=2.0),
+                    states=elegy.States(optimizer_states=0)
+                    if initializing
+                    else elegy.States(optimizer_states=optimizer_states + 1),
+                )
 
+        model = Model()
+        assert isinstance(model.states.optimizer_states, elegy.types.Uninitialized)
 
-def test_test_step():
-    class Model(elegy.model.model_core.ModelCore):
-        def init(self, mode: elegy.Mode):
-            return elegy.States(metrics_states=0)
+        logs = model.train_on_batch(x=(np.array(1.0)), y=(1.0,))
+        assert logs["loss"] == 2
+        assert model.states.optimizer_states == 1
+        assert isinstance(model.states.net_params, elegy.types.Uninitialized)
 
-        def pred_step(self, x):
-            return 1, elegy.States()
+        model.run_eagerly = False
 
-        def test_step(self, metrics_states):
-            return elegy.Evaluation(
-                loss=0.1,
-                logs=dict(loss=1.0),
-                states=elegy.States(metrics_states=metrics_states + 1),
-            )
-
-        def train_step(self):
-            ...
-
-    model = Model()
-    assert isinstance(model.states.metrics_states, elegy.types.Uninitialized)
-
-    logs = model.test_on_batch(x=(np.array(1.0)), y=(1.0,))
-    assert logs["loss"] == 1
-    assert model.states.metrics_states == 1
-    assert isinstance(model.states.net_params, elegy.types.Uninitialized)
-
-    model.run_eagerly = False
-
-    logs = model.test_on_batch(x=(np.array(1.0)), y=(1.0,))
-    assert logs["loss"] == 1
-    assert model.states.metrics_states == 2
-
-
-def test_train_step():
-    class Model(elegy.model.model_core.ModelCore):
-        def init(self, mode: elegy.Mode):
-            return elegy.States(optimizer_states=0)
-
-        def pred_step(self, x):
-            return 1, elegy.States()
-
-        def test_step(self):
-            return dict(loss=1.0), elegy.States()
-
-        def train_step(self, optimizer_states):
-            return elegy.Training(
-                logs=dict(loss=2.0),
-                states=elegy.States(optimizer_states=optimizer_states + 1),
-            )
-
-    model = Model()
-    assert isinstance(model.states.optimizer_states, elegy.types.Uninitialized)
-
-    logs = model.train_on_batch(x=(np.array(1.0)), y=(1.0,))
-    assert logs["loss"] == 2
-    assert model.states.optimizer_states == 1
-    assert isinstance(model.states.net_params, elegy.types.Uninitialized)
-
-    model.run_eagerly = False
-
-    logs = model.train_on_batch(x=(np.array(1.0)), y=(1.0,))
-    assert logs["loss"] == 2
-    assert model.states.optimizer_states == 2
+        logs = model.train_on_batch(x=(np.array(1.0)), y=(1.0,))
+        assert logs["loss"] == 2
+        assert model.states.optimizer_states == 2

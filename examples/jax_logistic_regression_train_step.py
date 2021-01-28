@@ -18,41 +18,20 @@ class Model(elegy.Model):
         self.optim = optax.adam(1e-3)
 
     # request parameters by name via depending injection.
-    # possible: mode, x, y_true, sample_weight, class_weight
-    def init(self, x):
-        d = np.prod(x.shape[1:])
-
-        # friendly RNG interface: rng.next() == jax.random.split(...)
-        rng = elegy.RNGSeq(42)
-
-        # params
-        w = jax.random.uniform(rng.next(), shape=[d, 10], minval=-1, maxval=1)
-        b = jax.random.uniform(rng.next(), shape=[1], minval=-1, maxval=1)
-        net_params = (w, b)
-
-        # metrics
-        total_samples = jnp.array(0, dtype=jnp.float32)
-        total_tp = jnp.array(0, dtype=jnp.float32)
-        total_loss = jnp.array(0, dtype=jnp.float32)
-
-        # optimizer
-        optimizer_states = self.optim.init(net_params)
-
-        return elegy.States(
-            net_params=net_params,
-            metrics_states=(total_samples, total_tp, total_loss),
-            optimizer_states=optimizer_states,
-            rng=rng,
-        )
-
-    # request parameters by name via depending injection.
-    # possible: net_params, x, y_true, net_states, metrics_states, optimizer_states, sample_weight, class_weight, rng
-    def train_step(self, x, y_true, net_params, optimizer_states):
+    # possible: initializing, net_params, x, y_true, net_states, metrics_states, optimizer_states, sample_weight, class_weight, rng
+    def train_step(self, x, y_true, net_params, optimizer_states, initializing, rng):
         def loss_fn(net_params, x, y_true):
             # flatten + scale
             x = jnp.reshape(x, (x.shape[0], -1)) / 255
 
             # model
+            if initializing:
+                w = jax.random.uniform(
+                    rng.next(), shape=[np.prod(x.shape[1:]), 10], minval=-1, maxval=1
+                )
+                b = jax.random.uniform(rng.next(), shape=[1], minval=-1, maxval=1)
+                net_params = (w, b)
+
             w, b = net_params
             logits = jnp.dot(x, w) + b
 
@@ -67,17 +46,22 @@ class Model(elegy.Model):
                 loss=loss,
             )
 
-            return loss, logs
+            return loss, (logs, net_params)
 
         # train
-        (loss, logs), grads = jax.value_and_grad(loss_fn, has_aux=True)(
+        (loss, (logs, net_params)), grads = jax.value_and_grad(loss_fn, has_aux=True)(
             net_params,  # gradients target
             x,
             y_true,
         )
 
-        grads, optimizer_states = self.optim.update(grads, optimizer_states, net_params)
-        net_params = optax.apply_updates(net_params, grads)
+        if initializing:
+            optimizer_states = self.optim.init(net_params)
+        else:
+            grads, optimizer_states = self.optim.update(
+                grads, optimizer_states, net_params
+            )
+            net_params = optax.apply_updates(net_params, grads)
 
         return logs, elegy.States(
             net_params=net_params,

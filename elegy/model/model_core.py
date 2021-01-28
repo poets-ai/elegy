@@ -1,7 +1,6 @@
 from copy import copy
 import pickle
 import typing as tp
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from io import StringIO
@@ -32,7 +31,7 @@ from elegy.types import Mode
 from tabulate import tabulate
 
 
-class ModelCore(ABC):
+class ModelCore:
     states: States
     initial_states: States
     history: tp.Dict[str, tp.Any]
@@ -61,20 +60,17 @@ class ModelCore(ABC):
         self._jit_functions()
 
     def _jit_functions(self):
-        self.init_internal_jit = hooks.jit(
-            self.call_init,
-            static_argnums=[0],
-        )
-        self.pred_step_internal_jit = hooks.jit(
+        self.call_pred_step_jit = hooks.jit(
             self.call_pred_step,
-            static_argnums=[1],
+            static_argnums=[2, 3],
         )
-        self.test_step_internal_jit = hooks.jit(
+        self.call_test_step_jit = hooks.jit(
             self.call_test_step,
-            static_argnums=[4],
+            static_argnums=[5, 6],
         )
-        self.train_step_internal_jit = hooks.jit(
+        self.call_train_step_jit = hooks.jit(
             self.call_train_step,
+            static_argnums=[5],
         )
 
     def __setstate__(self, d):
@@ -89,74 +85,45 @@ class ModelCore(ABC):
         # del d["initial_states"]
 
         # remove jitted functions
-        del d["init_internal_jit"]
-        del d["pred_step_internal_jit"]
-        del d["test_step_internal_jit"]
-        del d["train_step_internal_jit"]
+        del d["call_pred_step_jit"]
+        del d["call_test_step_jit"]
+        del d["call_train_step_jit"]
 
         return d
 
     # ----------------------------------------------------------------
     # Abstract API
     # ----------------------------------------------------------------
-    @abstractmethod
-    def init(
-        self,
-        mode: Mode,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-        states: States,
-    ) -> States:
-        ...
 
-    def call_init(
-        self,
-        mode: Mode,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-        states: States,
-    ) -> States:
-        return utils.inject_dependencies(self.init)(
-            mode=mode,
-            x=x,
-            y_true=y_true,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            states=states,
-        )
-
-    @abstractmethod
     def pred_step(
         self,
         net_params: tp.Any,
         x: tp.Any,
         net_states: tp.Any,
         rng: tp.Any,
-        training: bool,
         states: States,
+        training: bool,
+        initializing: bool,
     ) -> Prediction:
-        ...
+        raise NotImplementedError()
 
     def call_pred_step(
         self,
         x: tp.Any,
-        training: bool,
         states: States,
+        training: bool,
+        initializing: bool,
     ) -> tp.Tuple[tp.Any, States]:
         return utils.inject_dependencies(self.pred_step)(
             net_params=states.net_params,
             x=x,
             net_states=states.net_states,
             rng=states.rng,
-            training=training,
             states=states,
+            training=training,
+            initializing=initializing,
         )
 
-    @abstractmethod
     def test_step(
         self,
         net_params: tp.Any,
@@ -167,10 +134,11 @@ class ModelCore(ABC):
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         rng: tp.Any,
-        training: bool,
         states: States,
+        training: bool,
+        initializing: bool,
     ) -> Evaluation:
-        ...
+        raise NotImplementedError()
 
     def call_test_step(
         self,
@@ -178,8 +146,9 @@ class ModelCore(ABC):
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        training: bool,
         states: States,
+        training: bool,
+        initializing: bool,
     ) -> Evaluation:
         return utils.inject_dependencies(self.test_step)(
             net_params=states.net_params,
@@ -190,8 +159,9 @@ class ModelCore(ABC):
             sample_weight=sample_weight,
             class_weight=class_weight,
             rng=states.rng,
-            training=training,
             states=states,
+            training=training,
+            initializing=initializing,
         )
 
     def grad_step(
@@ -204,8 +174,9 @@ class ModelCore(ABC):
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         rng: tp.Any,
-        training: bool,
         states: States,
+        training: bool,
+        initializing: bool,
     ) -> Backprop:
         raise NotImplementedError()
 
@@ -215,8 +186,9 @@ class ModelCore(ABC):
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        training: bool,
         states: States,
+        training: bool,
+        initializing: bool,
     ) -> Backprop:
         return utils.inject_dependencies(self.grad_step)(
             net_params=states.net_params,
@@ -227,11 +199,11 @@ class ModelCore(ABC):
             sample_weight=sample_weight,
             class_weight=class_weight,
             rng=states.rng,
-            training=training,
             states=states,
+            training=training,
+            initializing=initializing,
         )
 
-    @abstractmethod
     def train_step(
         self,
         net_params: tp.Any,
@@ -243,10 +215,11 @@ class ModelCore(ABC):
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         rng: tp.Any,
-        training: bool,
         states: States,
+        training: bool,
+        initializing: bool,
     ) -> Training:
-        ...
+        raise NotImplementedError()
 
     def call_train_step(
         self,
@@ -255,6 +228,7 @@ class ModelCore(ABC):
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         states: States,
+        initializing: bool,
     ) -> Training:
         return utils.inject_dependencies(self.train_step)(
             net_params=states.net_params,
@@ -266,8 +240,9 @@ class ModelCore(ABC):
             sample_weight=sample_weight,
             class_weight=class_weight,
             rng=states.rng,
-            training=True,
             states=states,
+            training=True,
+            initializing=initializing,
         )
 
     # ----------------------------------------------------------------
@@ -294,19 +269,14 @@ class ModelCore(ABC):
         """
         self.maybe_initialize(mode=Mode.pred, x=x)
 
-        method = (
-            self.call_pred_step if self.run_eagerly else self.pred_step_internal_jit
-        )
+        method = self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
 
         training = False
+        initializing = False
         rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
 
         with hooks.context(rng=rng, initializing=False, training=False):
-            y_pred, state_updates = method(
-                x,
-                training,
-                self.states,
-            )
+            y_pred, state_updates = method(x, self.states, training, initializing)
 
         self.states = self.states.merge(state_updates)
 
@@ -351,11 +321,10 @@ class ModelCore(ABC):
             class_weight=class_weight,
         )
 
-        method = (
-            self.call_test_step if self.run_eagerly else self.test_step_internal_jit
-        )
+        method = self.call_test_step if self.run_eagerly else self.call_test_step_jit
 
         training = False
+        initializing = False
         rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
 
         with hooks.context(
@@ -366,8 +335,9 @@ class ModelCore(ABC):
                 y,
                 sample_weight,
                 class_weight,
-                training,
                 self.states,
+                training,
+                initializing,
             )
 
         self.states = self.states.merge(state_updates)
@@ -420,10 +390,9 @@ class ModelCore(ABC):
             class_weight=class_weight,
         )
 
-        method = (
-            self.call_train_step if self.run_eagerly else self.train_step_internal_jit
-        )
+        method = self.call_train_step if self.run_eagerly else self.call_train_step_jit
 
+        initializing = False
         rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
 
         with hooks.context(
@@ -435,6 +404,7 @@ class ModelCore(ABC):
                 sample_weight,
                 class_weight,
                 self.states,
+                initializing,
             )
 
         self.states = self.states.merge(state_updates)
@@ -465,38 +435,65 @@ class ModelCore(ABC):
         class_weight: tp.Optional[np.ndarray] = None,
     ):
 
-        if (
-            (
-                mode == Mode.pred
-                and not isinstance(self.states.net_params, Uninitialized)
-                and not isinstance(self.states.net_states, Uninitialized)
-            )
-            or (
-                mode == Mode.test
-                and not isinstance(self.states.metrics_states, Uninitialized)
-            )
-            or (
-                mode == Mode.train
-                and not isinstance(self.states.optimizer_states, Uninitialized)
-            )
-        ):
-            return
-
-        method = self.call_init if self.run_eagerly else self.init_internal_jit
-
         rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
+        training = True
+        initializing = True
+        state_updates: States
 
         with hooks.context(
             rng=rng, initializing=True, training=True, set_defaults=True
         ):
-            state_updates: States = method(
-                mode,
-                x,
-                y_true,
-                sample_weight,
-                class_weight,
-                self.states,
-            )
+            if (
+                mode == Mode.pred
+                and isinstance(self.states.net_params, Uninitialized)
+                and isinstance(self.states.net_states, Uninitialized)
+            ):
+                method = (
+                    self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
+                )
+
+                _, state_updates = method(
+                    x,
+                    self.states,
+                    training,
+                    initializing,
+                )
+            elif mode == Mode.test and isinstance(
+                self.states.metrics_states, Uninitialized
+            ):
+                method = (
+                    self.call_test_step if self.run_eagerly else self.call_test_step_jit
+                )
+
+                _, _, state_updates = method(
+                    x,
+                    y_true,
+                    sample_weight,
+                    class_weight,
+                    self.states,
+                    training,
+                    initializing,
+                )
+            elif mode == Mode.train and isinstance(
+                self.states.optimizer_states, Uninitialized
+            ):
+                method = (
+                    self.call_train_step
+                    if self.run_eagerly
+                    else self.call_train_step_jit
+                )
+
+                _, state_updates = method(
+                    x,
+                    y_true,
+                    sample_weight,
+                    class_weight,
+                    self.states,
+                    initializing,
+                )
+
+            else:
+                return
 
         if mode in (Mode.pred, Mode.test, Mode.train):
             if isinstance(state_updates.net_params, Uninitialized):

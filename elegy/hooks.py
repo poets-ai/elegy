@@ -196,19 +196,21 @@ def context(
     set_defaults: bool = False,
 ) -> tp.ContextManager[None]:
 
-    if losses is None and set_defaults:
-        losses = {}
-    elif isinstance(losses, bool):
+    if set_defaults:
+        if losses is None:
+            losses = True
+        if metrics is None:
+            metrics = True
+        if summaries is None:
+            summaries = True
+
+    if isinstance(losses, bool):
         losses = {} if losses else None
 
-    if metrics is None and set_defaults:
-        metrics = {}
-    elif isinstance(metrics, bool):
+    if isinstance(metrics, bool):
         metrics = {} if metrics else None
 
-    if summaries is None and set_defaults:
-        summaries = []
-    elif isinstance(summaries, bool):
+    if isinstance(summaries, bool):
         summaries = [] if summaries else None
 
     return _context(
