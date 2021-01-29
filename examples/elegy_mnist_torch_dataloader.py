@@ -115,7 +115,7 @@ def main(
 
                 plt.title(f"{np.argmax(y_pred[k])}")
                 plt.imshow(x_sample[k], cmap="gray")
-        tbwriter.add_figure("Conv classifier", figure, 100)
+        # tbwriter.add_figure("Conv classifier", figure, 100)
 
     plt.show()
 

@@ -101,7 +101,7 @@ def main(
             plt.subplot(2, 5, 5 + i + 1)
             plt.imshow(y_pred[i], cmap="gray")
 
-        # tbwriter.add_figure("AutoEncoder images", figure, 20)
+        # # tbwriter.add_figure("AutoEncoder images", figure, 20)
 
     plt.show()
 

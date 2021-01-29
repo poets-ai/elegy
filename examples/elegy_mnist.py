@@ -83,8 +83,6 @@ def main(
         callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],
     )
 
-    print(model.module.submodules)
-
     plot_history(history)
 
     # get random samples
@@ -103,7 +101,7 @@ def main(
                 plt.subplot(3, 3, k + 1)
                 plt.title(f"{np.argmax(y_pred[k])}")
                 plt.imshow(x_sample[k], cmap="gray")
-        tbwriter.add_figure("Predictions", figure, 100)
+        # tbwriter.add_figure("Predictions", figure, 100)
 
     plt.show()
 

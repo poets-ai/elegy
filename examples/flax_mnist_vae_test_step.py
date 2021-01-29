@@ -249,7 +249,7 @@ def main(
             plt.imshow(x_sample[i], cmap="gray")
             plt.subplot(2, 5, 5 + i + 1)
             plt.imshow(y_pred[i], cmap="gray")
-        # tbwriter.add_figure("VAE Example", figure, epochs)
+        # # tbwriter.add_figure("VAE Example", figure, epochs)
 
     plt.show()
 
@@ -273,7 +273,7 @@ def main(
         plt.imshow(samples[i], cmap="gray")
         plt.subplot(2, 5, 2 * i + 2)
         plt.imshow(samples[i + 1], cmap="gray")
-    # tbwriter.add_figure("VAE Generative Example", figure, epochs)
+    # # tbwriter.add_figure("VAE Generative Example", figure, epochs)
 
     plt.show()
 

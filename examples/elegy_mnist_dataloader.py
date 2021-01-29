@@ -125,7 +125,7 @@ def main(
 
     with SummaryWriter(os.path.join(logdir, "val")) as tbwriter:
         make_plot()
-        tbwriter.add_figure("Predictions", plt.gcf(), 100)
+        # tbwriter.add_figure("Predictions", plt.gcf(), 100)
 
     make_plot()
     plt.show()
