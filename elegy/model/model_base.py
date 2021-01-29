@@ -21,7 +21,7 @@ from elegy.data import (
     train_validation_split,
     unpack_x_y_sample_weight,
 )
-from elegy.model.model_core import Evaluation, Logs, ModelCore, Prediction
+from elegy.model.model_core import TestStep, Logs, ModelCore, PredStep
 from tabulate import tabulate
 
 # from elegy.module import Module

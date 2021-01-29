@@ -16,19 +16,54 @@ from elegy import hooks, module, utils
 from elegy.losses.loss import Loss
 from elegy.metrics.metric import Metric
 from elegy.types import (
-    Backprop,
-    Evaluation,
+    Grads,
+    Scalar,
+    Summaries,
     Logs,
-    Prediction,
     RNG,
     RNGSeq,
     States,
-    Training,
     UNINITIALIZED,
     Uninitialized,
 )
 from elegy.types import Mode
 from tabulate import tabulate
+
+
+class PredStep(tp.NamedTuple):
+    y_pred: tp.Any
+    states: States
+    aux_losses: Logs
+    aux_metrics: Logs
+    summaries: Summaries
+
+    @classmethod
+    def simple(cls, y_pred: tp.Any, states: States):
+        return cls(
+            y_pred=y_pred,
+            states=states,
+            aux_losses=hooks.get_losses(),
+            aux_metrics=hooks.get_metrics(),
+            summaries=hooks.get_summaries(),
+        )
+
+
+class TestStep(tp.NamedTuple):
+    loss: Scalar
+    logs: Logs
+    states: States
+
+
+class GradStep(tp.NamedTuple):
+    loss: Scalar
+    logs: Logs
+    states: States
+    grads: Grads
+
+
+class TrainStep(tp.NamedTuple):
+    logs: Logs
+    states: States
 
 
 class ModelCore:
@@ -104,7 +139,7 @@ class ModelCore:
         states: States,
         training: bool,
         initializing: bool,
-    ) -> Prediction:
+    ) -> PredStep:
         raise NotImplementedError()
 
     def call_pred_step(
@@ -113,7 +148,7 @@ class ModelCore:
         states: States,
         training: bool,
         initializing: bool,
-    ) -> tp.Tuple[tp.Any, States]:
+    ) -> PredStep:
         return utils.inject_dependencies(self.pred_step)(
             net_params=states.net_params,
             x=x,
@@ -137,7 +172,7 @@ class ModelCore:
         states: States,
         training: bool,
         initializing: bool,
-    ) -> Evaluation:
+    ) -> TestStep:
         raise NotImplementedError()
 
     def call_test_step(
@@ -149,7 +184,7 @@ class ModelCore:
         states: States,
         training: bool,
         initializing: bool,
-    ) -> Evaluation:
+    ) -> TestStep:
         return utils.inject_dependencies(self.test_step)(
             net_params=states.net_params,
             x=x,
@@ -177,7 +212,7 @@ class ModelCore:
         states: States,
         training: bool,
         initializing: bool,
-    ) -> Backprop:
+    ) -> GradStep:
         raise NotImplementedError()
 
     def call_grad_step(
@@ -189,7 +224,7 @@ class ModelCore:
         states: States,
         training: bool,
         initializing: bool,
-    ) -> Backprop:
+    ) -> GradStep:
         return utils.inject_dependencies(self.grad_step)(
             net_params=states.net_params,
             x=x,
@@ -218,7 +253,7 @@ class ModelCore:
         states: States,
         training: bool,
         initializing: bool,
-    ) -> Training:
+    ) -> TrainStep:
         raise NotImplementedError()
 
     def call_train_step(
@@ -229,7 +264,7 @@ class ModelCore:
         class_weight: tp.Optional[np.ndarray],
         states: States,
         initializing: bool,
-    ) -> Training:
+    ) -> TrainStep:
         return utils.inject_dependencies(self.train_step)(
             net_params=states.net_params,
             x=x,
@@ -276,7 +311,9 @@ class ModelCore:
         rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
 
         with hooks.context(losses=True, metrics=True):
-            y_pred, state_updates = method(x, self.states, training, initializing)
+            y_pred, state_updates, _, _, _ = method(
+                x, self.states, training, initializing
+            )
 
         self.states = self.states.merge(state_updates)
 
@@ -446,7 +483,7 @@ class ModelCore:
                     self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
                 )
 
-                _, state_updates = method(
+                _, state_updates, _, _, _ = method(
                     x,
                     self.states,
                     training,

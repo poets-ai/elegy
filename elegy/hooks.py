@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from elegy.types import Logs, Path, RNGSeq, Scalar, Summaries
+from elegy.types import Logs, NoContext, Path, RNGSeq, Scalar, Summaries, Summary
 from elegy import utils
 import functools
 import threading
@@ -115,27 +115,36 @@ def add_summary(
     if not summaries_active():
         return
 
-    LOCAL.summaries.append((path, module, value))
+    LOCAL.summaries.append(Summary(path, module, value))
 
 
-def get_losses() -> tp.Optional[Logs]:
-    return LOCAL.losses.copy() if LOCAL.losses is not None else None
+def get_losses() -> Logs:
+    if LOCAL.losses is None:
+        return {}
+
+    return LOCAL.losses.copy()
 
 
 def losses_active() -> bool:
     return LOCAL.losses is not None
 
 
-def get_metrics() -> tp.Optional[Logs]:
-    return LOCAL.metrics.copy() if LOCAL.metrics is not None else None
+def get_metrics() -> Logs:
+    if LOCAL.metrics is None:
+        return {}
+
+    return LOCAL.metrics.copy()
 
 
 def metrics_active() -> bool:
     return LOCAL.metrics is not None
 
 
-def get_summaries() -> tp.Optional[Summaries]:
-    return LOCAL.summaries.copy() if LOCAL.summaries is not None else None
+def get_summaries() -> Summaries:
+    if LOCAL.summaries is None:
+        return []
+
+    return LOCAL.summaries.copy()
 
 
 def summaries_active() -> bool:
@@ -263,41 +272,23 @@ class TransformtOutput(tp.NamedTuple):
     output: tp.Any
     losses: tp.Optional[Logs]
     metrics: tp.Optional[Logs]
-    summary_values: tp.Optional[tp.List[tp.Any]]
+    summaries: tp.Optional[tp.List[tp.Any]]
 
 
 class DynamicArgs(tp.NamedTuple):
     losses: tp.Optional[Logs]
     metrics: tp.Optional[Logs]
-    summary_values: tp.Optional[tp.List[tp.Any]]
+    summaries: tp.Optional[tp.List[tp.Any]]
 
 
 class StaticArgs(tp.NamedTuple):
     pass
 
 
-def _patch_summary_values(
-    summaries: Summaries,
-    values: tp.List[tp.Any],
-) -> Summaries:
-    return [
-        (path, module, value) for (path, module, _), value in zip(summaries, values)
-    ]
-
-
-def _extract_summary_values(
-    summaries: tp.Optional[Summaries],
-) -> tp.Optional[tp.List[tp.Any]]:
-    if summaries is not None:
-        return [value for path, module, value in summaries]
-    else:
-        return None
-
-
 def _update_local_context(
     losses: tp.Optional[Logs],
     metrics: tp.Optional[Logs],
-    summary_values: tp.Optional[tp.List[tp.Any]],
+    summaries: tp.Optional[Summaries],
 ):
     if LOCAL.losses is not None and losses is not None:
         LOCAL.losses.clear()
@@ -307,10 +298,9 @@ def _update_local_context(
         LOCAL.metrics.clear()
         LOCAL.metrics.update(metrics)
 
-    if LOCAL.summaries is not None and summary_values is not None:
-        new_summaries = _patch_summary_values(LOCAL.summaries, summary_values)
+    if LOCAL.summaries is not None and summaries is not None:
         LOCAL.summaries.clear()
-        LOCAL.summaries.extend(new_summaries)
+        LOCAL.summaries.extend(summaries)
 
 
 def jit(
@@ -329,10 +319,10 @@ def jit(
         static_args, dynamic_args = args[:2]  # get from beginning
         args = args[2:]
 
-        (losses, metrics, summary_values) = dynamic_args
+        (losses, metrics, summaries) = dynamic_args
 
         # perform updates
-        _update_local_context(losses, metrics, summary_values)
+        _update_local_context(losses, metrics, summaries)
 
         # call
         output = f(*args)
@@ -340,9 +330,9 @@ def jit(
         # add outputs context
         return TransformtOutput(
             output=output,
-            losses=get_losses(),
-            metrics=get_metrics(),
-            summary_values=_extract_summary_values(get_summaries()),
+            losses=LOCAL.losses,
+            metrics=LOCAL.metrics,
+            summaries=LOCAL.summaries,
         )
 
     # transform kwargs
@@ -363,9 +353,9 @@ def jit(
 
         # add input context
         dynamic_args = DynamicArgs(
-            losses=get_losses(),
-            metrics=get_metrics(),
-            summary_values=_extract_summary_values(get_summaries()),
+            losses=LOCAL.losses,
+            metrics=LOCAL.metrics,
+            summaries=LOCAL.summaries,
         )
         static_args = StaticArgs()
         # put them first because of static_args
@@ -376,15 +366,83 @@ def jit(
             output,
             losses,
             metrics,
-            summary_values,
+            summaries,
         ) = transform_fn(*args)
 
         # perform updates
-        _update_local_context(losses, metrics, summary_values)
+        _update_local_context(losses, metrics, summaries)
 
         return output
 
     return wrapper
+
+
+def hooks_aware(transform):
+    def transform_wrapper(
+        f,
+        **kwargs,
+    ):
+        def f_wrapper(
+            *args,
+        ) -> TransformtOutput:
+
+            # extract input context
+            dynamic_args: DynamicArgs
+
+            # static_args is unused because they dont need to be set back
+            dynamic_args = args[0]  # get from beginning
+            args = args[1:]
+
+            (losses, metrics, summaries) = dynamic_args
+
+            # perform updates
+            _update_local_context(losses, metrics, summaries)
+
+            # call
+            output = f(*args)
+
+            # add outputs context
+            return TransformtOutput(
+                output=output,
+                losses=LOCAL.losses,
+                metrics=LOCAL.metrics,
+                summaries=LOCAL.summaries,
+            )
+
+        # make fn
+        transform_fn = transform(
+            f_wrapper,
+            **kwargs,
+        )
+
+        @functools.wraps(f)
+        def wrapper(*args):
+
+            # add input context
+            dynamic_args = DynamicArgs(
+                losses=LOCAL.losses,
+                metrics=LOCAL.metrics,
+                summaries=LOCAL.summaries,
+            )
+            # put them first because of static_args
+            args = (dynamic_args,) + args
+
+            # call and patch
+            (
+                output,
+                losses,
+                metrics,
+                summaries,
+            ) = transform_fn(*args)
+
+            # perform updates
+            _update_local_context(losses, metrics, summaries)
+
+            return output
+
+        return wrapper
+
+    return transform_wrapper
 
 
 # NOTE: it is unclear if these can be implemented since they dont support `hax_aux`
@@ -403,6 +461,6 @@ def jit(
 
 
 # NOTE: these can work but require special handling of the axis dimension
-# vmap = hooks_aware(jax.vmap)
-# pmap = hooks_aware(jax.pmap)
+vmap = hooks_aware(jax.vmap)
+pmap = hooks_aware(jax.pmap)
 # soft_pmap = hooks_aware(jax.soft_pmap)

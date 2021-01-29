@@ -84,11 +84,13 @@ class ModelBasicTest(unittest.TestCase):
 
         with elegy.context(metrics=True):
             elegy.add_metric("d", 10)
-            logs, states = metrics.init(rng)(x, training=True)
+            aux_metrics = elegy.get_metrics()
+            logs, states = metrics.init(aux_metrics, rng)(x, training=True)
 
         with elegy.context(metrics=True):
             elegy.add_metric("d", 10)
-            logs, states = metrics.apply(states, rng)(x, training=True)
+            aux_metrics = elegy.get_metrics()
+            logs, states = metrics.apply(aux_metrics, rng, states)(x, training=True)
 
         assert len(metrics.metrics) == 3
         assert "a/b/m" in metrics.metrics
@@ -117,11 +119,13 @@ class ModelBasicTest(unittest.TestCase):
 
         with elegy.context(losses=True):
             elegy.add_loss("d", 1.0)
-            logs, logs, states = losses.init(rng)()
+            aux_losses = elegy.get_losses()
+            logs, logs, states = losses.init(aux_losses, rng)()
 
         with elegy.context(losses=True):
             elegy.add_loss("d", 1.0)
-            loss, logs, states = losses.apply(states)()
+            aux_losses = elegy.get_losses()
+            loss, logs, states = losses.apply(aux_losses, states)()
 
         assert loss == 10
 

@@ -102,9 +102,7 @@ RNG = tp.Union[RNGSeq, np.ndarray]
 Scalar = tp.Union[np.ndarray, float, int]
 SummaryModule = tp.Any
 SummaryValue = tp.Any
-Summaries = tp.List[
-    tp.Tuple[Path, tp.Optional[SummaryModule], SummaryValue],
-]
+
 NetParams = tp.Any
 NetStates = tp.Any
 ModuleParams = tp.Any
@@ -114,6 +112,26 @@ OptimizerStates = tp.Any
 OptimizerStates = tp.Any
 Grads = tp.Any
 Pytree = tp.Any
+
+
+@jax.tree_util.register_pytree_node_class
+class Summary(tp.NamedTuple):
+    path: Path
+    module: tp.Optional[SummaryModule]
+    value: SummaryValue
+
+    def tree_flatten(self):
+        return ((self.value,), (self.path, self.module))
+
+    @classmethod
+    def tree_unflatten(cls, aux_data, children):
+        (value,) = children
+        path, module = aux_data
+
+        return cls(path, module, value)
+
+
+Summaries = tp.List[Summary]
 
 
 class OutputStates(tp.NamedTuple):
@@ -219,29 +237,6 @@ class Info:
 class ParameterSpec:
     collection: str
     info: tp.Any
-
-
-class Prediction(tp.NamedTuple):
-    pred: tp.Any
-    states: States
-
-
-class Evaluation(tp.NamedTuple):
-    loss: Scalar
-    logs: Logs
-    states: States
-
-
-class Backprop(tp.NamedTuple):
-    loss: Scalar
-    logs: Logs
-    states: States
-    grads: Grads
-
-
-class Training(tp.NamedTuple):
-    logs: Logs
-    states: States
 
 
 class Initializer(Protocol):

@@ -18,18 +18,14 @@ from elegy.model.generalized_optimizer.generalized_optimizer import (
     generalize_optimizer,
 )
 from elegy.model.model_base import ModelBase
-from elegy.model.model_core import Prediction, States
+from elegy.model.model_core import GradStep, PredStep, States, TestStep, TrainStep
 from elegy.types import (
-    Backprop,
     MissingOptimizer,
     RNG,
-    Evaluation,
     Logs,
     MissingModule,
     OutputStates,
-    Prediction,
     Scalar,
-    Training,
     UNINITIALIZED,
 )
 from elegy.types import Mode, RNGSeq, Uninitialized
@@ -142,7 +138,7 @@ class Model(ModelBase):
         training: bool,
         initializing: bool,
         states: States,
-    ) -> Prediction:
+    ) -> PredStep:
 
         if self.module is None:
             raise MissingModule(
@@ -170,8 +166,8 @@ class Model(ModelBase):
 
         y_pred, net_params, net_states = module_fn(*x_args, **x_kwargs)
 
-        return Prediction(
-            pred=y_pred,
+        return PredStep.simple(
+            y_pred=y_pred,
             states=states.update(net_states=net_states, net_params=net_params),
         )
 
@@ -188,10 +184,10 @@ class Model(ModelBase):
         training: bool,
         initializing: bool,
         states: States,
-    ) -> Evaluation:
+    ) -> TestStep:
 
         # TODO: add DI
-        y_pred, states = self.call_pred_step(
+        y_pred, states, aux_losses, aux_metrics, _ = self.call_pred_step(
             states=states,
             x=x,
             training=training,
@@ -201,15 +197,16 @@ class Model(ModelBase):
 
         if initializing:
             metrics_states, loss_states = None, None
-            metrics_fn = self.api_metrics.init(states.rng)
-            losses_fn = self.api_loss.init(states.rng)
+            metrics_fn = self.api_metrics.init(aux_metrics, states.rng)
+            losses_fn = self.api_loss.init(aux_losses, states.rng)
         else:
             metrics_states, loss_states = states.metrics_states
             metrics_fn = self.api_metrics.apply(
-                states=metrics_states,
-                rng=states.rng,
+                aux_metrics,
+                states.rng,
+                metrics_states,
             )
-            losses_fn = self.api_loss.apply(states=loss_states)
+            losses_fn = self.api_loss.apply(aux_losses, loss_states)
 
         # [DI]
         metrics_logs, metrics_states = metrics_fn(
@@ -246,7 +243,7 @@ class Model(ModelBase):
         logs = utils.merge_with_unique_names(metrics_logs, loss_logs)
         states = states.update(metrics_states=(metrics_states, loss_states))
 
-        return Evaluation(loss, logs, states)
+        return TestStep(loss, logs, states)
 
     def grad_step(
         self,
@@ -257,7 +254,7 @@ class Model(ModelBase):
         states: States,
         training: bool,
         initializing: bool,
-    ) -> Backprop:
+    ) -> GradStep:
         def loss_fn(
             net_params: tp.Any,
             states: States,
@@ -288,7 +285,7 @@ class Model(ModelBase):
             class_weight,
         )
 
-        return Backprop(loss, logs, states, grads)
+        return GradStep(loss, logs, states, grads)
 
     def train_step(
         self,
@@ -304,7 +301,7 @@ class Model(ModelBase):
         states: States,
         training: bool,
         initializing: bool,
-    ) -> Training:
+    ) -> TrainStep:
 
         if initializing:
             loss, logs, states = self.call_test_step(
@@ -367,7 +364,7 @@ class Model(ModelBase):
             optimizer_states=optimizer_states,
         )
 
-        return Training(logs, states)
+        return TrainStep(logs, states)
 
     def summary(
         self, x, depth: int = 2, tablefmt: str = "fancy_grid", **tablulate_kwargs
@@ -396,13 +393,12 @@ class Model(ModelBase):
         rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
 
         with hooks.context(set_all=True):
-            _, _ = method(
+            _, _, _, _, summaries = method(
                 x,
                 self.states,
                 training,
                 initializing,
             )
-            summaries = hooks.get_summaries()
 
         assert summaries is not None
 
@@ -569,14 +565,12 @@ class Metrics:
         }
 
     def calculate_metrics(
-        self, callback: tp.Callable[[str, GeneralizedModule], OutputStates]
+        self,
+        aux_metrics: Logs,
+        callback: tp.Callable[[str, GeneralizedModule], OutputStates],
     ) -> tp.Tuple[Logs, tp.Any]:
 
         states = {}
-        logs = hooks.get_metrics()
-
-        if logs is None:
-            logs = {}
 
         for name, module in self.metrics.items():
             y_pred, _, states[name] = callback(name, module)
@@ -586,23 +580,30 @@ class Metrics:
                 inner_name = f"{name}/{inner_name}" if inner_name else name
                 inner_name = utils.get_unique_name(names, inner_name)
 
-                logs[inner_name] = inner_value
+                aux_metrics[inner_name] = inner_value
 
-        return logs, states
+        return aux_metrics, states
 
-    def init(self, rng: RNGSeq) -> tp.Callable[..., tp.Tuple[Logs, tp.Any]]:
+    def init(
+        self,
+        aux_metrics: Logs,
+        rng: RNGSeq,
+    ) -> tp.Callable[..., tp.Tuple[Logs, tp.Any]]:
         def lambda_(*args, **kwargs):
             def callback(name, module):
                 kwargs_ = kwargs.copy()
                 kwargs_["metrics_states"] = None
                 return module.init(rng)(*args, **kwargs_)
 
-            return self.calculate_metrics(callback)
+            return self.calculate_metrics(aux_metrics, callback)
 
         return lambda_
 
     def apply(
-        self, states: tp.Any, rng: RNGSeq
+        self,
+        aux_metrics: Logs,
+        rng: RNGSeq,
+        states: tp.Any,
     ) -> tp.Callable[..., tp.Tuple[Logs, tp.Any]]:
         assert states is not None
 
@@ -613,7 +614,7 @@ class Metrics:
 
                 return module.apply(None, states[name], rng)(*args, **kwargs_)
 
-            return self.calculate_metrics(callback)
+            return self.calculate_metrics(aux_metrics, callback)
 
         return lambda_
 
@@ -698,18 +699,18 @@ class Losses:
 
         return logs
 
-    def init(self, rng: RNGSeq) -> tp.Callable[..., tp.Tuple[Scalar, Logs, tp.Any]]:
+    def init(
+        self,
+        aux_losses: Logs,
+        rng: RNGSeq,
+    ) -> tp.Callable[..., tp.Tuple[Scalar, Logs, tp.Any]]:
         def _lambda(*args, **kwargs):
             module_logs = self.calculate_losses(*args, **kwargs)
-            hooks_logs = hooks.get_losses()
 
-            if hooks_logs is None:
-                hooks_logs = {}
-
-            loss = sum(hooks_logs.values(), 0.0) + sum(module_logs.values(), 0.0)
+            loss = sum(aux_losses.values(), 0.0) + sum(module_logs.values(), 0.0)
             loss_logs = dict(loss=loss)
 
-            logs = utils.merge_with_unique_names(loss_logs, hooks_logs, module_logs)
+            logs = utils.merge_with_unique_names(loss_logs, aux_losses, module_logs)
 
             names = set()
             logs = {
@@ -725,18 +726,18 @@ class Losses:
 
         return _lambda
 
-    def apply(self, states: tp.Any) -> tp.Callable[..., tp.Tuple[Scalar, Logs, tp.Any]]:
+    def apply(
+        self,
+        aux_losses: Logs,
+        states: tp.Any,
+    ) -> tp.Callable[..., tp.Tuple[Scalar, Logs, tp.Any]]:
         def _lambda(*args, **kwargs):
             module_logs = self.calculate_losses(*args, **kwargs)
-            hooks_logs = hooks.get_losses()
 
-            if hooks_logs is None:
-                hooks_logs = {}
-
-            loss = sum(hooks_logs.values(), 0.0) + sum(module_logs.values(), 0.0)
+            loss = sum(aux_losses.values(), 0.0) + sum(module_logs.values(), 0.0)
             loss_logs = dict(loss=loss)
 
-            logs = utils.merge_with_unique_names(loss_logs, hooks_logs, module_logs)
+            logs = utils.merge_with_unique_names(loss_logs, aux_losses, module_logs)
 
             names = set()
             logs = {

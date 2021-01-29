@@ -15,15 +15,18 @@ class ModelCoreTest(unittest.TestCase):
                 nonlocal N
                 N = N + 1
 
-                return elegy.Prediction(None, elegy.States(net_params=1, net_states=2))
+                return elegy.PredStep.simple(
+                    y_pred=None,
+                    states=elegy.States(net_params=1, net_states=2),
+                )
 
             def test_step(self):
-                _, states = self.pred_step()
-                return elegy.Evaluation(0, {}, states.update(metrics_states=3))
+                _, states, _, _, _ = self.pred_step()
+                return elegy.TestStep(0, {}, states.update(metrics_states=3))
 
             def train_step(self):
                 _, logs, states = self.test_step()
-                return elegy.Training(logs, states.update(optimizer_states=4))
+                return elegy.TrainStep(logs, states.update(optimizer_states=4))
 
         model = Model()
 
@@ -69,8 +72,8 @@ class ModelCoreTest(unittest.TestCase):
                 else:
                     states = elegy.States(net_states=net_states + 1)
 
-                return elegy.Prediction(
-                    pred=1,
+                return elegy.PredStep.simple(
+                    y_pred=1,
                     states=states,
                 )
 
@@ -97,7 +100,7 @@ class ModelCoreTest(unittest.TestCase):
     def test_test_step(self):
         class Model(elegy.model.model_core.ModelCore):
             def test_step(self, metrics_states, initializing):
-                return elegy.Evaluation(
+                return elegy.TestStep(
                     loss=0.1,
                     logs=dict(loss=1.0),
                     states=elegy.States(metrics_states=0)
@@ -125,7 +128,7 @@ class ModelCoreTest(unittest.TestCase):
     def test_train_step(self):
         class Model(elegy.model.model_core.ModelCore):
             def train_step(self, optimizer_states, initializing):
-                return elegy.Training(
+                return elegy.TrainStep(
                     logs=dict(loss=2.0),
                     states=elegy.States(optimizer_states=0)
                     if initializing

@@ -13,7 +13,7 @@ class TestModelBase(unittest.TestCase):
                 else:
                     states = elegy.States(net_states=net_states + 1)
 
-                return x + 1.0, states
+                return elegy.PredStep.simple(x + 1.0, states)
 
         model = Model()
 
@@ -32,7 +32,7 @@ class TestModelBase(unittest.TestCase):
                 else:
                     states = elegy.States(metrics_states=metrics_states + 1)
 
-                return elegy.Evaluation(
+                return elegy.TestStep(
                     loss=0.1,
                     logs=dict(loss=jnp.sum(x)),
                     states=states,
@@ -61,7 +61,7 @@ class TestModelBase(unittest.TestCase):
                 else:
                     states = elegy.States(optimizer_states=optimizer_states + 1)
 
-                return elegy.Training(
+                return elegy.TrainStep(
                     logs=dict(loss=jnp.sum(x)),
                     states=states,
                 )

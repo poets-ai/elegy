@@ -8,7 +8,7 @@ import elegy
 
 class TestHooks(unittest.TestCase):
     def test_losses(self):
-        assert elegy.get_losses() is None
+        assert not elegy.hooks.losses_active()
 
         with elegy.update_context(set_defaults=True):
             elegy.add_loss("x", 2.0)
@@ -17,7 +17,7 @@ class TestHooks(unittest.TestCase):
         assert losses["x_loss"] == 2.0
 
     def test_metrics(self):
-        assert elegy.get_metrics() is None
+        assert not elegy.hooks.metrics_active()
 
         with elegy.update_context(set_defaults=True):
             elegy.add_metric("x", 2.0)
@@ -26,7 +26,7 @@ class TestHooks(unittest.TestCase):
         assert metrics["x"] == 2.0
 
     def test_summaries(self):
-        assert elegy.get_summaries() is None
+        assert not elegy.hooks.summaries_active()
 
         with elegy.update_context(summaries=True):
             elegy.add_summary(("a", 0, "b"), None, 2.0)
@@ -35,16 +35,16 @@ class TestHooks(unittest.TestCase):
         assert summaries[0] == (("a", 0, "b"), None, 2.0)
 
     def test_no_summaries(self):
-        assert elegy.get_summaries() is None
+        assert not elegy.hooks.summaries_active()
 
         with elegy.update_context(summaries=False):
             elegy.add_summary(("a", 0, "b"), None, 2.0)
-            summaries = elegy.get_summaries()
+            has_summaries = elegy.hooks.summaries_active()
 
-        assert summaries is None
+        assert not has_summaries
 
     def test_jit(self):
-        assert elegy.get_losses() is None
+        assert not elegy.hooks.losses_active()
 
         def f(x):
             x = 2.0 * x

@@ -135,10 +135,13 @@ class VariationalAutoEncoder(elegy.Model):
         net_params = (enc_params, dec_params)
         nets_states = (enc_states, dec_states)
 
-        return logits, states.update(
-            net_params=net_params,
-            net_states=nets_states,
-            rng=rng,
+        return elegy.PredStep.simple(
+            logits,
+            states.update(
+                net_params=net_params,
+                net_states=nets_states,
+                rng=rng,
+            ),
         )
 
     # request parameters by name via depending injection.
@@ -154,7 +157,7 @@ class VariationalAutoEncoder(elegy.Model):
         training,
         initializing,
     ):
-        logits, states = self.call_pred_step(
+        logits, states, _, _, _ = self.call_pred_step(
             x=x,
             states=states,
             training=training,

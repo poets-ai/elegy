@@ -12,7 +12,7 @@ from elegy.hooks import (
     jit,
     update_context,
 )
-from elegy.types import Evaluation, OutputStates, Prediction, States, Training
+from elegy.types import OutputStates, States
 from elegy.utils import inject_dependencies
 
 from . import losses  # module,
@@ -31,6 +31,7 @@ from . import (
 from .losses import Loss
 from .metrics import Metric
 from .model import Logs, Metrics, Model
+from .model.model_core import PredStep, TestStep, GradStep, TrainStep
 from .model.model_base import ModelBase
 from .module import Module, to_module
 from .optimizer import Optimizer
