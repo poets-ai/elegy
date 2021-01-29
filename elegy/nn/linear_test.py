@@ -8,13 +8,12 @@ import elegy
 class LinearTest(TestCase):
     def test_connects(self):
 
-        with elegy.update_context(rng=elegy.RNGSeq(42)):
-            x = np.random.uniform(-1, 1, size=(4, 3))
-            linear = elegy.nn.Linear(5)
+        x = np.random.uniform(-1, 1, size=(4, 3))
+        linear = elegy.nn.Linear(5)
 
-            y_pred = linear.call_with_defaults(x)
+        y_pred = linear.call_with_defaults(rng=elegy.RNGSeq(42))(x)
 
-            assert y_pred.shape == (4, 5)
+        assert y_pred.shape == (4, 5)
 
     def test_on_model(self):
 

@@ -8,8 +8,9 @@ import elegy
 
 class DropoutTest(TestCase):
     def test_dropout_connects(self):
-        with elegy.update_context(rng=elegy.RNGSeq(42)):
-            elegy.nn.Dropout(0.25).call_with_defaults(jnp.ones([3, 3]), training=True)
+        elegy.nn.Dropout(0.25).call_with_defaults(rng=elegy.RNGSeq(42))(
+            jnp.ones([3, 3]), training=True
+        )
 
     def test_on_predict(self):
         class TestModule(elegy.Module):

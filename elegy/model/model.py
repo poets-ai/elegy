@@ -279,7 +279,7 @@ class Model(ModelBase):
 
             return loss, (logs, states)
 
-        (loss, (logs, states)), grads = hooks.value_and_grad(loss_fn, has_aux=True)(
+        (loss, (logs, states)), grads = jax.value_and_grad(loss_fn, has_aux=True)(
             states.net_params,
             states,
             x,
@@ -395,12 +395,7 @@ class Model(ModelBase):
         initializing = False
         rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
 
-        with hooks.context(
-            rng=rng,
-            initializing=False,
-            training=False,
-            set_defaults=True,
-        ):
+        with hooks.context(set_all=True):
             _, _ = method(
                 x,
                 self.states,

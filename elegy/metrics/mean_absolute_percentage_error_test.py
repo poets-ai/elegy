@@ -15,7 +15,7 @@ class MeanAbsolutePercentageErrorTest(TestCase):
 
         assert np.allclose(
             tfk.metrics.MeanAbsolutePercentageError()(y_true, y_pred),
-            elegy.metrics.MeanAbsolutePercentageError().call_with_defaults(
+            elegy.metrics.MeanAbsolutePercentageError().call_with_defaults()(
                 jnp.asarray(y_true), jnp.asarray(y_pred)
             ),
         )
@@ -32,7 +32,7 @@ class MeanAbsolutePercentageErrorTest(TestCase):
 
         assert np.allclose(
             tm(y_true, y_pred),
-            em.call_with_defaults(jnp.asarray(y_true), jnp.asarray(y_pred)),
+            em.call_with_defaults()(jnp.asarray(y_true), jnp.asarray(y_pred)),
         )
 
         # 2nd run
@@ -41,5 +41,5 @@ class MeanAbsolutePercentageErrorTest(TestCase):
 
         assert np.allclose(
             tm(y_true, y_pred),
-            em.call_with_defaults(jnp.asarray(y_true), jnp.asarray(y_pred)),
+            em.call_with_defaults()(jnp.asarray(y_true), jnp.asarray(y_pred)),
         )

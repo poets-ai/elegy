@@ -86,7 +86,7 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        y = m.call_with_defaults(2.0)
+        y = m.call_with_defaults()(2.0)
         collections = m.get_default_parameters()
 
         assert y == 3
@@ -94,7 +94,7 @@ class NewModuleTest(TestCase):
 
         # update params
         m.set_default_parameters({"parameters": {"n": 20}})
-        y = m.call_with_defaults(2.0)
+        y = m.call_with_defaults()(2.0)
         collections = m.get_default_parameters()
 
         assert y == 22
@@ -302,7 +302,7 @@ class ModuleTest(TestCase):
     def test_basic(self):
         x = np.random.uniform(-1, 1, size=(4, 5))
         m = ModuleTest.MyModule()
-        y = m.call_with_defaults(x)
+        y = m.call_with_defaults()(x)
         assert y.shape == (4, 7)
 
     def test_get_parameters(self):
@@ -479,7 +479,7 @@ class ModuleDynamicTest(TestCase):
     def test_basic(self):
         x = np.random.uniform(-1, 1, size=(4, 5))
         m = ModuleDynamicTest.MyModule()
-        y: jnp.ndarray = m.call_with_defaults(x)
+        y: jnp.ndarray = m.call_with_defaults()(x)
         assert y.shape == (4, 7)
         print(m.get_default_parameters)
 
@@ -504,7 +504,7 @@ class ModuleDynamicTest(TestCase):
         assert "linear_1" in parameters
 
         with elegy.update_context(set_defaults=True):
-            # y: jnp.ndarray = m.call_with_defaults(x)
+            # y: jnp.ndarray = m.call_with_defaults()(x)
             collections = m.get_default_parameters()
             y: jnp.ndarray
             y, collections = m.apply_jit(collections)(x)
@@ -575,7 +575,7 @@ class ModuleDynamicTest(TestCase):
         x = np.random.uniform(-1, 1, size=(4, 5))
         m = ModuleDynamicTest.MyModule()
 
-        m.call_with_defaults(x)
+        m.call_with_defaults()(x)
 
         # THESE:
         assert m.linear.get_default_parameters()["states"]["n"] == 1
@@ -633,7 +633,7 @@ class TestTransforms(TestCase):
                 n = self.add_parameter("n", lambda: jnp.array(0))
                 self.update_parameter("n", n + 1)
 
-                if elegy.is_training():
+                if self.is_training():
                     return x + 1
                 else:
                     return x - 1
@@ -645,27 +645,26 @@ class TestTransforms(TestCase):
 
             m.set_default_parameters(params)
 
-            outputs = m.call_with_defaults(x)
+            outputs = m.call_with_defaults()(x)
 
             return m.get_default_parameters(), outputs
 
-        with elegy.update_context(training=True):
-            assert total_called == 0
+        assert total_called == 0
 
-            _, collections = m.init(set_defaults=True)(1)
-            assert total_called == 1
+        _, collections = m.init(set_defaults=True)(1)
+        assert total_called == 1
 
-            collections, outputs = f(collections, 1)
-            m.set_default_parameters(collections)
+        collections, outputs = f(collections, 1)
+        m.set_default_parameters(collections)
 
-            assert total_called == 2
+        assert total_called == 2
 
-            collections = m.get_default_parameters()
-            print(collections)
-            collections, outputs = f(collections, 1)
-            m.set_default_parameters(collections)
+        collections = m.get_default_parameters()
+        print(collections)
+        collections, outputs = f(collections, 1)
+        m.set_default_parameters(collections)
 
-            assert total_called == 2
+        assert total_called == 2
 
     def test_simple_apply(self):
 
@@ -682,7 +681,7 @@ class TestTransforms(TestCase):
                 n = self.add_parameter("n", lambda: jnp.array(0))
                 self.update_parameter("n", n + 1)
 
-                if elegy.is_training():
+                if self.is_training():
                     return x + 1
                 else:
                     return x - 1
@@ -696,20 +695,19 @@ class TestTransforms(TestCase):
 
             return collections, y
 
-        with elegy.update_context(training=True):
-            assert total_called == 0
+        assert total_called == 0
 
-            y, collections = m.init()(1)
+        y, collections = m.init()(1)
 
-            assert total_called == 1
+        assert total_called == 1
 
-            collections, y = f(collections, 1)
+        collections, y = f(collections, 1)
 
-            assert total_called == 2
+        assert total_called == 2
 
-            collections, y = f(collections, 1)
+        collections, y = f(collections, 1)
 
-            assert total_called == 2
+        assert total_called == 2
 
     def test_jit(self):
         total_called = 0
@@ -725,7 +723,7 @@ class TestTransforms(TestCase):
                 n = self.add_parameter("n", lambda: jnp.array(0))
                 self.update_parameter("n", n + 1)
 
-                if elegy.is_training():
+                if elegy.hooks.losses_active():
                     return x + 1
                 else:
                     return x - 1
@@ -733,54 +731,54 @@ class TestTransforms(TestCase):
         m = SomeModule()
         assert total_called == 0
 
-        with elegy.context(training=True):
+        with elegy.context(losses=True):
             m.init_jit(set_defaults=True)(0)
             # triggers call because its the first time
             assert total_called == 1
             assert m.n == 0
 
-        with elegy.context(training=True):
-            y = m.call_with_defaults_jit(0)
+        with elegy.context(losses=True):
+            y = m.call_with_defaults_jit()(0)
 
             assert y == 1
             assert m.n == 1
             assert total_called == 2
 
-        with elegy.context(training=True):
-            y = m.call_with_defaults_jit(0)
+        with elegy.context(losses=True):
+            y = m.call_with_defaults_jit()(0)
             assert m.n == 2
             assert total_called == 2
 
-        with elegy.context(training=False):
-            y = m.call_with_defaults_jit(0)
+        with elegy.context(losses=False):
+            y = m.call_with_defaults_jit()(0)
             assert y == -1
             # triggers call because training changed and is static
             assert total_called == 3
             assert m.n == 3
 
-        with elegy.context(training=False):
-            y = m.call_with_defaults_jit(0)
+        with elegy.context(losses=False):
+            y = m.call_with_defaults_jit()(0)
             assert y == -1
             # does not trigger call function for training = True exists
             assert total_called == 3
             assert m.n == 4
 
-        with elegy.update_context(training=True):
-            y = m.call_with_defaults_jit(0)
+        with elegy.update_context(losses=True):
+            y = m.call_with_defaults_jit()(0)
             assert y == 1
             # does not trigger call function for training = True exists
             assert total_called == 3
             assert m.n == 5
 
-        with elegy.context(training=True, summaries=True):
-            y = m.call_with_defaults_jit(0)
+        with elegy.context(losses=True, summaries=True):
+            y = m.call_with_defaults_jit()(0)
             assert y == 1
             # triggers call because summaries are now present
             assert total_called == 4
             assert m.n == 6
 
-        with elegy.update_context(training=False, summaries=True):
-            y = m.call_with_defaults_jit(0)
+        with elegy.update_context(losses=False, summaries=True):
+            y = m.call_with_defaults_jit()(0)
             assert y == -1
             # triggers call because configuration training=False,  is new
             assert total_called == 5
@@ -800,7 +798,7 @@ class TestTransforms(TestCase):
                 n = self.add_parameter("n", lambda: jnp.array(0))
                 self.update_parameter("n", n + 1)
 
-                if elegy.is_training():
+                if elegy.hooks.losses_active():
                     return x + 1
                 else:
                     return x - 1
@@ -809,19 +807,19 @@ class TestTransforms(TestCase):
 
         assert total_called == 0
 
-        with elegy.update_context(training=True):
-            m.call_with_defaults_jit(0)
+        with elegy.update_context(losses=True):
+            m.call_with_defaults_jit()(0)
             assert total_called == 2
 
             assert m.n == 1
 
-            y = m.call_with_defaults_jit(0)
+            y = m.call_with_defaults_jit()(0)
 
             assert y == 1
             assert m.n == 2
             assert total_called == 2
 
-            y = m.call_with_defaults_jit(0)
+            y = m.call_with_defaults_jit()(0)
             assert m.n == 3
             assert total_called == 2
 
@@ -870,8 +868,7 @@ class TestOthers(TestCase):
         y = np.random.uniform(size=(15, 1))
         mlp = MLP()
 
-        with elegy.update_context(rng=elegy.RNGSeq(42)):
-            y_pred, collections = mlp.init()(x)
+        y_pred, collections = mlp.init(rng=elegy.RNGSeq(42))(x)
 
         parameters = collections["parameters"]
 

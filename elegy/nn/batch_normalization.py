@@ -123,7 +123,7 @@ class BatchNormalization(module.Module):
         inputs = jnp.asarray(inputs, jnp.float32)
 
         if training is None:
-            training = hooks.is_training()
+            training = self.is_training()
 
         if self.create_scale and scale is not None:
             raise ValueError("Cannot pass `scale` at call time if `create_scale=True`.")

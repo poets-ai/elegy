@@ -17,9 +17,6 @@ class HooksContext(Protocol):
     losses: tp.Optional[Logs]
     metrics: tp.Optional[Logs]
     summaries: tp.Optional[Summaries]
-    rng: tp.Optional[RNGSeq]
-    training: tp.Optional[bool]
-    initializing: tp.Optional[bool]
 
 
 @dataclass
@@ -27,18 +24,12 @@ class _HooksContext(threading.local):
     losses: tp.Optional[Logs]
     metrics: tp.Optional[Logs]
     summaries: tp.Optional[Summaries]
-    rng: tp.Optional[RNGSeq]
-    training: tp.Optional[bool]
-    initializing: tp.Optional[bool]
 
 
 LOCAL: HooksContext = _HooksContext(
     losses=None,
     metrics=None,
     summaries=None,
-    rng=None,
-    training=None,
-    initializing=None,
 )
 
 
@@ -151,35 +142,6 @@ def summaries_active() -> bool:
     return LOCAL.summaries is not None
 
 
-def get_rng() -> tp.Optional[RNGSeq]:
-    return LOCAL.rng
-
-
-def next_key() -> jnp.ndarray:
-    if LOCAL.rng is None:
-        raise ValueError(
-            f"No rng present in context, please set it in `update_context`."
-        )
-
-    return LOCAL.rng.next()
-
-
-def get_training() -> tp.Optional[bool]:
-    return LOCAL.training
-
-
-def is_training() -> bool:
-    return bool(LOCAL.training)
-
-
-def get_initializing() -> tp.Optional[bool]:
-    return LOCAL.initializing
-
-
-def is_initializing() -> bool:
-    return bool(LOCAL.initializing)
-
-
 # ----------------------------------------------------------------
 # contexts
 # ----------------------------------------------------------------
@@ -190,13 +152,10 @@ def context(
     losses: tp.Union[Logs, bool, None] = None,
     metrics: tp.Union[Logs, bool, None] = None,
     summaries: tp.Union[Summaries, bool, None] = None,
-    rng: tp.Optional[RNGSeq] = None,
-    training: tp.Optional[bool] = None,
-    initializing: tp.Optional[bool] = None,
-    set_defaults: bool = False,
+    set_all: bool = False,
 ) -> tp.ContextManager[None]:
 
-    if set_defaults:
+    if set_all:
         if losses is None:
             losses = True
         if metrics is None:
@@ -217,9 +176,6 @@ def context(
         losses=losses,
         metrics=metrics,
         summaries=summaries,
-        rng=rng,
-        training=training,
-        initializing=initializing,
     )
 
 
@@ -228,24 +184,15 @@ def _context(
     losses: tp.Optional[Logs],
     metrics: tp.Optional[Logs],
     summaries: tp.Optional[Summaries],
-    rng: tp.Optional[RNGSeq],
-    training: tp.Optional[bool],
-    initializing: tp.Optional[bool],
 ) -> tp.Iterator[None]:
 
     prev_losses = LOCAL.losses
     prev_metrics = LOCAL.metrics
     prev_summaries = LOCAL.summaries
-    prev_rng = LOCAL.rng
-    prev_training = LOCAL.training
-    prev_initializing = LOCAL.initializing
 
     LOCAL.losses = losses
     LOCAL.metrics = metrics
     LOCAL.summaries = summaries
-    LOCAL.rng = rng
-    LOCAL.training = training
-    LOCAL.initializing = initializing
 
     try:
         yield
@@ -253,18 +200,12 @@ def _context(
         LOCAL.losses = prev_losses
         LOCAL.metrics = prev_metrics
         LOCAL.summaries = prev_summaries
-        LOCAL.rng = prev_rng
-        LOCAL.training = prev_training
-        LOCAL.initializing = prev_initializing
 
 
 def update_context(
     losses: tp.Union[Logs, bool, None] = None,
     metrics: tp.Union[Logs, bool, None] = None,
     summaries: tp.Union[Summaries, bool, None] = None,
-    rng: tp.Optional[RNGSeq] = None,
-    training: tp.Optional[bool] = None,
-    initializing: tp.Optional[bool] = None,
     set_defaults: bool = False,
 ) -> tp.ContextManager[None]:
 
@@ -287,9 +228,6 @@ def update_context(
         losses=losses,
         metrics=metrics,
         summaries=summaries,
-        rng=rng,
-        training=training,
-        initializing=initializing,
     )
 
 
@@ -298,24 +236,15 @@ def _update_context(
     losses: tp.Optional[Logs],
     metrics: tp.Optional[Logs],
     summaries: tp.Optional[Summaries],
-    rng: tp.Optional[RNGSeq],
-    training: tp.Optional[bool],
-    initializing: tp.Optional[bool],
 ) -> tp.Iterator[None]:
 
     prev_losses = LOCAL.losses
     prev_metrics = LOCAL.metrics
     prev_summaries = LOCAL.summaries
-    prev_rng = LOCAL.rng
-    prev_training = LOCAL.training
-    prev_initializing = LOCAL.initializing
 
     LOCAL.losses = losses if losses is not None else prev_losses
     LOCAL.metrics = metrics if metrics is not None else prev_metrics
     LOCAL.summaries = summaries if summaries is not None else prev_summaries
-    LOCAL.rng = rng if rng is not None else prev_rng
-    LOCAL.training = training if training is not None else prev_training
-    LOCAL.initializing = initializing if initializing is not None else prev_training
 
     try:
         yield
@@ -323,9 +252,6 @@ def _update_context(
         LOCAL.losses = prev_losses
         LOCAL.metrics = prev_metrics
         LOCAL.summaries = prev_summaries
-        LOCAL.rng = prev_rng
-        LOCAL.training = prev_training
-        LOCAL.initializing = prev_initializing
 
 
 # -------------------------------------------------------------
@@ -338,19 +264,16 @@ class TransformtOutput(tp.NamedTuple):
     losses: tp.Optional[Logs]
     metrics: tp.Optional[Logs]
     summary_values: tp.Optional[tp.List[tp.Any]]
-    rng: tp.Optional[RNGSeq]
 
 
 class DynamicArgs(tp.NamedTuple):
     losses: tp.Optional[Logs]
     metrics: tp.Optional[Logs]
     summary_values: tp.Optional[tp.List[tp.Any]]
-    rng: tp.Optional[RNGSeq]
 
 
 class StaticArgs(tp.NamedTuple):
-    training: tp.Optional[bool]
-    initializing: tp.Optional[bool]
+    pass
 
 
 def _patch_summary_values(
@@ -375,7 +298,6 @@ def _update_local_context(
     losses: tp.Optional[Logs],
     metrics: tp.Optional[Logs],
     summary_values: tp.Optional[tp.List[tp.Any]],
-    rng: tp.Optional[RNGSeq],
 ):
     if LOCAL.losses is not None and losses is not None:
         LOCAL.losses.clear()
@@ -389,9 +311,6 @@ def _update_local_context(
         new_summaries = _patch_summary_values(LOCAL.summaries, summary_values)
         LOCAL.summaries.clear()
         LOCAL.summaries.extend(new_summaries)
-
-    if LOCAL.rng is not None and rng is not None:
-        LOCAL.rng.key = rng.key
 
 
 def jit(
@@ -410,10 +329,10 @@ def jit(
         static_args, dynamic_args = args[:2]  # get from beginning
         args = args[2:]
 
-        (losses, metrics, summary_values, rng) = dynamic_args
+        (losses, metrics, summary_values) = dynamic_args
 
         # perform updates
-        _update_local_context(losses, metrics, summary_values, rng)
+        _update_local_context(losses, metrics, summary_values)
 
         # call
         output = f(*args)
@@ -424,7 +343,6 @@ def jit(
             losses=get_losses(),
             metrics=get_metrics(),
             summary_values=_extract_summary_values(get_summaries()),
-            rng=get_rng(),
         )
 
     # transform kwargs
@@ -448,12 +366,8 @@ def jit(
             losses=get_losses(),
             metrics=get_metrics(),
             summary_values=_extract_summary_values(get_summaries()),
-            rng=get_rng(),
         )
-        static_args = StaticArgs(
-            training=get_training(),
-            initializing=get_initializing(),
-        )
+        static_args = StaticArgs()
         # put them first because of static_args
         args = (static_args, dynamic_args) + args
 
@@ -463,86 +377,12 @@ def jit(
             losses,
             metrics,
             summary_values,
-            rng,
         ) = transform_fn(*args)
 
         # perform updates
-        _update_local_context(losses, metrics, summary_values, rng)
+        _update_local_context(losses, metrics, summary_values)
 
         return output
-
-    return wrapper
-
-
-def value_and_grad(
-    f,
-    **kwargs,
-) -> tp.Callable[..., tp.Tuple[tp.Any, tp.Any]]:
-    def _transform_fn(
-        *args,
-    ) -> tp.Tuple[np.ndarray, TransformtOutput]:
-        # extract input context
-        dynamic_args: DynamicArgs
-        static_args: StaticArgs
-
-        # static_args is unused because they dont need to be set back
-        dynamic_args, static_args = args[-2:]  # get from end
-        args = args[:-2]
-
-        (losses, metrics, summary_values, rng) = dynamic_args
-        _update_local_context(losses, metrics, summary_values, rng)
-
-        # call
-        output = f(*args)
-        loss = output[0] if isinstance(output, tuple) else output
-
-        # add outputs context
-        return loss, TransformtOutput(
-            output=output,
-            losses=get_losses(),
-            metrics=get_metrics(),
-            summary_values=_extract_summary_values(get_summaries()),
-            rng=get_rng(),
-        )
-
-    kwargs["has_aux"] = True
-    transform_fn: tp.Callable[
-        ..., tp.Tuple[tp.Tuple[np.ndarray, TransformtOutput], tp.Any]
-    ] = jax.value_and_grad(_transform_fn, **kwargs)
-
-    @functools.wraps(f)
-    def wrapper(*args):
-        # add input context
-        dynamic_args = DynamicArgs(
-            losses=get_losses(),
-            metrics=get_metrics(),
-            summary_values=_extract_summary_values(get_summaries()),
-            rng=get_rng(),
-        )
-        static_args = StaticArgs(
-            training=get_training(),
-            initializing=get_initializing(),
-        )
-        # put them last because params have to go first
-        args += (dynamic_args, static_args)
-
-        # call and patch
-        (
-            (
-                loss,
-                (
-                    output,
-                    losses,
-                    metrics,
-                    summary_values,
-                    rng,
-                ),
-            ),
-            grads,
-        ) = transform_fn(*args)
-        _update_local_context(losses, metrics, summary_values, rng)
-
-        return output, grads
 
     return wrapper
 

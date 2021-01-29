@@ -47,6 +47,9 @@ class LocalContext(Protocol):
     module_path: tp.Optional[tp.Dict["Module", Path]]
     inside_call: tp.Optional[bool]
     module_index: tp.Optional[int]
+    rng: tp.Optional[RNGSeq]
+    training: tp.Optional[bool]
+    initializing: tp.Optional[bool]
 
 
 @dataclass
@@ -55,6 +58,9 @@ class _LocalContext(threading.local):
     module_path: tp.Optional[tp.Dict["Module", Path]]
     inside_call: tp.Optional[bool]
     module_index: tp.Optional[int]
+    rng: tp.Optional[RNGSeq]
+    training: tp.Optional[bool]
+    initializing: tp.Optional[bool]
 
 
 LOCAL: LocalContext = _LocalContext(
@@ -62,6 +68,9 @@ LOCAL: LocalContext = _LocalContext(
     module_path=None,
     inside_call=None,
     module_index=None,
+    rng=None,
+    training=None,
+    initializing=None,
 )
 
 
@@ -213,48 +222,72 @@ class Module(metaclass=ModuleMeta):
         # commenting this out makes Module.init stateful by default
         # self._default_params[name] = parameter
 
-    def call_with_defaults(self, *args, **kwargs):
-        if not self.initialized:
-            _, collections = self.init(set_defaults=True)(*args, **kwargs)
-        else:
-            collections = self.get_default_parameters()
+    def call_with_defaults(
+        self,
+        *,
+        rng: tp.Optional[RNGSeq] = None,
+        training: bool = False,
+    ) -> tp.Callable[..., tp.Any]:
+        def call_with_defaults_wrapper(*args, **kwargs):
+            if not self.initialized:
+                _, collections = self.init(rng=rng, set_defaults=True)(*args, **kwargs)
+            else:
+                collections = self.get_default_parameters()
 
-        y, _ = self.apply(collections, set_defaults=True)(*args, **kwargs)
+            y, _ = self.apply(
+                collections,
+                training=training,
+                rng=rng,
+                set_defaults=True,
+            )(*args, **kwargs)
 
-        return y
+            return y
 
-    def call_with_defaults_jit(self, *args) -> tp.Any:
+        return call_with_defaults_wrapper
 
-        if not self.initialized:
-            _, collections = self.init_jit(set_defaults=True)(*args)
-        else:
-            collections = self.get_default_parameters()
+    def call_with_defaults_jit(
+        self,
+        *,
+        rng: tp.Optional[RNGSeq] = None,
+        training: bool = False,
+    ) -> tp.Callable[..., tp.Any]:
+        def call_with_defaults_jit_wrapper(*args):
 
-        y, collections = self.apply_jit(collections, set_defaults=True)(*args)
+            if not self.initialized:
+                _, collections = self.init_jit(rng=rng)(*args)
+            else:
+                collections = self.get_default_parameters()
 
-        self.set_default_parameters(collections)
+            y, collections = self.apply_jit(
+                collections,
+                training=training,
+                rng=rng,
+            )(*args)
 
-        return y
+            self.set_default_parameters(collections)
+
+            return y
+
+        return call_with_defaults_jit_wrapper
 
     def _jit_functions(self):
         # ------------------------------
         # init
         # ------------------------------
-        def init_jit_raw(*args):
-            return self.init()(*args)
+        def init_jit_raw(rng: tp.Optional[RNGSeq], *args):
+            return self.init(rng=rng)(*args)
 
         init_jit: JitCallable = hooks.jit(init_jit_raw)
 
         def init_jit_wrapper(
             rng: tp.Optional[RNGSeq] = None,
             set_defaults: bool = False,
-            **hooks_kwargs,
         ) -> JitCallable:
             def init_jit_callable(
                 *args,
             ) -> tp.Tuple[tp.Any, ParameterCollection]:
-                with hooks.update_context(rng=rng, **hooks_kwargs):
-                    y, collections = init_jit(*args)
+
+                y, collections = init_jit(rng, *args)
 
                 if set_defaults:
                     self.set_default_parameters(collections)
@@ -268,23 +301,27 @@ class Module(metaclass=ModuleMeta):
         # ------------------------------
         # apply
         # ------------------------------
-        def apply_jit_raw(parameters, *args):
-            return self.apply(parameters)(*args)
+        def apply_jit_raw(parameters, training: bool, rng: tp.Optional[RNGSeq], *args):
+            return self.apply(
+                collections=parameters,
+                training=training,
+                rng=rng,
+            )(*args)
 
-        apply_jit = hooks.jit(apply_jit_raw)
+        apply_jit = hooks.jit(apply_jit_raw, static_argnums=[1])
 
         def apply_jit_wrapper(
             collections: ParameterCollection,
             *,
-            set_defaults: bool = False,
+            training: bool = True,
             rng: tp.Optional[RNGSeq] = None,
-            **hooks_kwargs,
+            set_defaults: bool = False,
         ) -> JitCallable:
             def apply_jit_callable(
                 *args,
             ) -> tp.Tuple[tp.Any, ParameterCollection]:
-                with hooks.update_context(rng=rng, **hooks_kwargs):
-                    y, collections_ = apply_jit(collections, *args)
+
+                y, collections_ = apply_jit(collections, training, rng, *args)
 
                 if set_defaults:
                     self.set_default_parameters(collections_)
@@ -349,7 +386,6 @@ class Module(metaclass=ModuleMeta):
         *,
         rng: tp.Optional[RNGSeq] = None,
         set_defaults: bool = False,
-        **hooks_kwargs,
     ) -> tp.Callable[..., tp.Tuple[tp.Any, ParameterCollection]]:
         """
         Initializes the module,
@@ -357,11 +393,9 @@ class Module(metaclass=ModuleMeta):
 
         def init_callable(*args, **kwargs) -> tp.Tuple[tp.Any, ParameterCollection]:
 
-            with hooks.update_context(
-                rng=rng,
-                initializing=True,
-                **hooks_kwargs,
-            ), scope_context(self, None):
+            with module_context(
+                module=self, collections=None, initializing=True, training=True, rng=rng
+            ):
                 y = self(*args, **kwargs)
                 collections = self.get_parameters_internal()
 
@@ -379,9 +413,10 @@ class Module(metaclass=ModuleMeta):
     def apply(
         self,
         collections: ParameterCollection,
+        *,
+        training: bool = True,
         rng: tp.Optional[RNGSeq] = None,
         set_defaults: bool = False,
-        **hooks_kwargs,
     ) -> tp.Callable[..., tp.Union[tp.Any, tp.Tuple[tp.Any, ParameterCollection]]]:
         """
         Call the module.
@@ -389,11 +424,13 @@ class Module(metaclass=ModuleMeta):
 
         def apply_callable(*args, **kwargs) -> tp.Tuple[tp.Any, ParameterCollection]:
 
-            with hooks.update_context(
+            with module_context(
+                module=self,
+                collections=collections,
                 initializing=False,
+                training=training,
                 rng=rng,
-                **hooks_kwargs,
-            ), scope_context(self, collections):
+            ):
                 y = self(*args, **kwargs)
                 collections_ = self.get_parameters_internal()
 
@@ -458,7 +495,7 @@ class Module(metaclass=ModuleMeta):
 
         if name not in self._scope_params:
 
-            if not hooks.is_initializing():
+            if not self.is_initializing():
                 raise ValueError(f"Cannot add parameter {name} outside `init`")
 
             if name in self._default_params:
@@ -516,7 +553,7 @@ class Module(metaclass=ModuleMeta):
         if name not in self._scope_params:
             raise ValueError(f"Parameter {name} not found in {self}.")
 
-        if hooks.is_initializing():
+        if self.is_initializing():
             return
 
         parameter = self._scope_params[name]
@@ -557,6 +594,29 @@ class Module(metaclass=ModuleMeta):
             )
         else:
             self.update_parameter(name, value)
+
+    def next_key(self) -> jnp.ndarray:
+        if LOCAL.rng is None:
+            raise ValueError(
+                f"No rng present in context, please set it in `update_context`."
+            )
+
+        return LOCAL.rng.next()
+
+    def is_training(self) -> bool:
+        if LOCAL.training is None:
+            raise NoContext(
+                f"Trying to call `is_training` from module '{self}' outside `init` or `apply`."
+            )
+        return LOCAL.training
+
+    def is_initializing(self) -> bool:
+        if LOCAL.initializing is None:
+            raise NoContext(
+                f"Trying to call `is_initializing` from module '{self}' outside `init` or `apply`."
+            )
+
+        return LOCAL.initializing
 
     def clear_default_parameters(self):
         self._clear_parameters(default_params=True)
@@ -718,6 +778,15 @@ class Module(metaclass=ModuleMeta):
 # -------------------------------------------------------------
 
 
+def next_key() -> jnp.ndarray:
+    if LOCAL.rng is None:
+        raise ValueError(
+            f"No rng present in context, please set it in `update_context`."
+        )
+
+    return LOCAL.rng.next()
+
+
 def get_module_path(module: tp.Optional[Module] = None) -> tp.Optional[Path]:
     if module is None:
         module = LOCAL.parent
@@ -742,17 +811,39 @@ def has_scope() -> bool:
 # -----------------------------------------------------------------------------
 
 
-def scope_context(
-    module: Module, collections: tp.Optional[ParameterCollection]
+def module_context(
+    module: Module,
+    collections: tp.Optional[ParameterCollection],
+    initializing: bool,
+    training: bool,
+    rng: tp.Optional[RNGSeq],
 ) -> tp.ContextManager[None]:
-    return _scope_context(module, collections)
+    return _scope_context(
+        module=module,
+        collections=collections,
+        initializing=initializing,
+        training=training,
+        rng=rng,
+    )
 
 
 @contextmanager
-def _scope_context(module: Module, collections: tp.Optional[ParameterCollection]):
+def _scope_context(
+    module: Module,
+    collections: tp.Optional[ParameterCollection],
+    initializing: bool,
+    training: bool,
+    rng: tp.Optional[RNGSeq],
+):
     prev_module_path = LOCAL.module_path
+    prev_initializing = LOCAL.initializing
+    prev_training = LOCAL.training
+    prev_rng = LOCAL.rng
 
     LOCAL.module_path = {}
+    LOCAL.initializing = initializing
+    LOCAL.training = training
+    LOCAL.rng = rng
 
     try:
         if collections is not None:
@@ -762,6 +853,9 @@ def _scope_context(module: Module, collections: tp.Optional[ParameterCollection]
     finally:
         module._clear_parameters()
         LOCAL.module_path = prev_module_path
+        LOCAL.initializing = prev_initializing
+        LOCAL.training = prev_training
+        LOCAL.rng = prev_rng
 
 
 def call_context(module: Module) -> tp.ContextManager[None]:

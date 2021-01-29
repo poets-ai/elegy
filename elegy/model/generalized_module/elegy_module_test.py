@@ -16,7 +16,7 @@ class ElegyModuleTest(TestCase):
 
                 self.update_parameter("n", n + 1)
 
-                key = elegy.next_key()
+                key = self.next_key()
 
                 return x * w
 

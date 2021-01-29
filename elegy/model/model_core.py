@@ -275,7 +275,7 @@ class ModelCore:
         initializing = False
         rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
 
-        with hooks.context(rng=rng, initializing=False, training=False):
+        with hooks.context(losses=True, metrics=True):
             y_pred, state_updates = method(x, self.states, training, initializing)
 
         self.states = self.states.merge(state_updates)
@@ -327,9 +327,7 @@ class ModelCore:
         initializing = False
         rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
 
-        with hooks.context(
-            rng=rng, losses=True, metrics=True, initializing=False, training=False
-        ):
+        with hooks.context(losses=True, metrics=True):
             loss, logs, state_updates = method(
                 x,
                 y,
@@ -395,9 +393,7 @@ class ModelCore:
         initializing = False
         rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
 
-        with hooks.context(
-            rng=rng, losses=True, metrics=True, initializing=False, training=True
-        ):
+        with hooks.context(losses=True, metrics=True):
             logs, state_updates = method(
                 x,
                 y,
@@ -440,9 +436,7 @@ class ModelCore:
         initializing = True
         state_updates: States
 
-        with hooks.context(
-            rng=rng, initializing=True, training=True, set_defaults=True
-        ):
+        with hooks.context(losses=True, metrics=True):
             if (
                 mode == Mode.pred
                 and isinstance(self.states.net_params, Uninitialized)

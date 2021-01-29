@@ -16,7 +16,7 @@ class MetricTest(TestCase):
 
         mae = MAE()
 
-        loss = mae.call_with_defaults(y_true, y_pred)
+        loss = mae.call_with_defaults()(y_true, y_pred)
 
         assert jnp.alltrue(loss == jnp.array([1.0, 1.0, 1.0]))
 
@@ -32,12 +32,12 @@ class MetricTest(TestCase):
 
         # raises because it doesn't use kwargs
         with pytest.raises(BaseException):
-            sample_loss = mae.call_with_defaults(y_true, y_pred)
+            sample_loss = mae.call_with_defaults()(y_true, y_pred)
 
         # raises because it doesn't use __call__ which filters
         with pytest.raises(BaseException):
             sample_loss = mae.call(y_true=y_true, y_pred=y_pred)
 
-        loss = mae.call_with_defaults(y_true=y_true, y_pred=y_pred)
+        loss = mae.call_with_defaults()(y_true=y_true, y_pred=y_pred)
 
         assert jnp.alltrue(loss == jnp.array([1.0, 1.0, 1.0]))
