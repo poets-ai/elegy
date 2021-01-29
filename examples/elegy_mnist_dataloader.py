@@ -102,8 +102,6 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
         callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],
     )
 
-    print(model.module.submodules)
-
     plot_history(history)
 
     # get random samples
