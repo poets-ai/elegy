@@ -154,8 +154,7 @@ class ResNet(module.Module):
 
             x = np.empty([0, 224, 224, 3], dtype=self.dtype)
             # quick but dirty module initialization
-            with hooks.context():
-                jax.eval_shape(self.init(rng=RNGSeq(42)), x)
+            jax.eval_shape(self.init(rng=RNGSeq(42)), x)
 
             self.set_default_parameters(parameters)
 

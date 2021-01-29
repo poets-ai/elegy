@@ -10,7 +10,7 @@ from elegy.hooks import (
     get_metrics,
     get_summaries,
     jit,
-    update_context,
+    context,
 )
 from elegy.types import OutputStates, States
 from elegy.utils import inject_dependencies
@@ -61,7 +61,7 @@ __all__ = [
     "get_rng",
     "get_static_context",
     "get_summaries",
-    "update_context",
+    "context",
     "initializers",
     "is_training",
     "jit",

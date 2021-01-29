@@ -1,3 +1,4 @@
+from hashlib import new
 import unittest
 
 import elegy
@@ -195,6 +196,9 @@ class ModelTest(unittest.TestCase):
 
         model_pkl = cloudpickle.dumps(model)
         newmodel = cloudpickle.loads(model_pkl)
+
+        newmodel.states = model.states
+        newmodel.initial_states = model.initial_states
 
         y1 = newmodel.predict(X)
         assert np.all(y0 == y1)

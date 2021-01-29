@@ -597,8 +597,8 @@ class Module(metaclass=ModuleMeta):
 
     def next_key(self) -> jnp.ndarray:
         if LOCAL.rng is None:
-            raise ValueError(
-                f"No rng present in context, please set it in `update_context`."
+            raise NoContext(
+                f"Trying to call `next_key` from module {self} outside `init` or `apply`."
             )
 
         return LOCAL.rng.next()
@@ -780,9 +780,7 @@ class Module(metaclass=ModuleMeta):
 
 def next_key() -> jnp.ndarray:
     if LOCAL.rng is None:
-        raise ValueError(
-            f"No rng present in context, please set it in `update_context`."
-        )
+        raise ValueError(f"No rng present in context, please set it in `context`.")
 
     return LOCAL.rng.next()
 

@@ -165,7 +165,7 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        with elegy.update_context(set_defaults=True):
+        with elegy.context(set_all=True):
             y, collections = m.init()(2.0)
             summaries = elegy.get_summaries()
 
@@ -208,7 +208,7 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        with elegy.update_context(set_defaults=True):
+        with elegy.context(set_all=True):
             y, params = m.init()(2.0)
             summaries = elegy.get_summaries()
 
@@ -325,7 +325,7 @@ class ModuleTest(TestCase):
         assert states["linear1"]["n"] == 0
         assert "linear1" in parameters
 
-        with elegy.update_context(set_defaults=True):
+        with elegy.context(set_all=True):
             y, collections = m.apply(collections)(x)
             # y2: jnp.ndarray = m.call_jit(x)
 
@@ -503,7 +503,7 @@ class ModuleDynamicTest(TestCase):
         assert states["linear"]["n"] == 0
         assert "linear_1" in parameters
 
-        with elegy.update_context(set_defaults=True):
+        with elegy.context(set_all=True):
             # y: jnp.ndarray = m.call_with_defaults()(x)
             collections = m.get_default_parameters()
             y: jnp.ndarray
@@ -763,7 +763,7 @@ class TestTransforms(TestCase):
             assert total_called == 3
             assert m.n == 4
 
-        with elegy.update_context(losses=True):
+        with elegy.context(losses=True):
             y = m.call_with_defaults_jit()(0)
             assert y == 1
             # does not trigger call function for training = True exists
@@ -777,7 +777,7 @@ class TestTransforms(TestCase):
             assert total_called == 4
             assert m.n == 6
 
-        with elegy.update_context(losses=False, summaries=True):
+        with elegy.context(losses=False, summaries=True):
             y = m.call_with_defaults_jit()(0)
             assert y == -1
             # triggers call because configuration training=False,  is new
@@ -807,7 +807,7 @@ class TestTransforms(TestCase):
 
         assert total_called == 0
 
-        with elegy.update_context(losses=True):
+        with elegy.context(losses=True):
             m.call_with_defaults_jit()(0)
             assert total_called == 2
 

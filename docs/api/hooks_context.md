@@ -1,6 +1,6 @@
 
-# elegy.update_context
+# elegy.context
 
-::: elegy.module.update_context
+::: elegy.module.context
     selection:
         inherited_members: true

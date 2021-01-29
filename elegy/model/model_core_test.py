@@ -36,31 +36,37 @@ class ModelCoreTest(unittest.TestCase):
         assert model.states.metrics_states != 3
         assert model.states.optimizer_states != 4
 
-        model.maybe_initialize(mode=elegy.Mode.pred)
+        with elegy.model.model_core.model_context(elegy.Mode.pred):
+            model.maybe_initialize()
 
         assert N == 1
         assert model.states.net_params == 1
         assert model.states.net_states == 2
 
-        model.maybe_initialize(mode=elegy.Mode.pred)
+        with elegy.model.model_core.model_context(elegy.Mode.pred):
+            model.maybe_initialize()
 
         assert N == 1
 
-        model.maybe_initialize(mode=elegy.Mode.test)
+        with elegy.model.model_core.model_context(elegy.Mode.test):
+            model.maybe_initialize()
 
         assert N == 2
         assert model.states.metrics_states == 3
 
-        model.maybe_initialize(mode=elegy.Mode.test)
+        with elegy.model.model_core.model_context(elegy.Mode.test):
+            model.maybe_initialize()
 
         assert N == 2
 
-        model.maybe_initialize(mode=elegy.Mode.train)
+        with elegy.model.model_core.model_context(elegy.Mode.train):
+            model.maybe_initialize()
 
         assert N == 3
         assert model.states.optimizer_states == 4
 
-        model.maybe_initialize(mode=elegy.Mode.train)
+        with elegy.model.model_core.model_context(elegy.Mode.train):
+            model.maybe_initialize()
 
         assert N == 3
 

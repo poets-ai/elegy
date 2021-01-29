@@ -18,7 +18,14 @@ from elegy.model.generalized_optimizer.generalized_optimizer import (
     generalize_optimizer,
 )
 from elegy.model.model_base import ModelBase
-from elegy.model.model_core import GradStep, PredStep, States, TestStep, TrainStep
+from elegy.model.model_core import (
+    GradStep,
+    PredStep,
+    States,
+    TestStep,
+    TrainStep,
+    model_context,
+)
 from elegy.types import (
     MissingOptimizer,
     RNG,
@@ -384,15 +391,16 @@ class Model(ModelBase):
                 See [python-tabulate](https://github.com/astanin/python-tabulate)
                 for more options.
         """
-        self.maybe_initialize(mode=Mode.pred, x=x)
+        with model_context(Mode.summary):
+            self.maybe_initialize(x=x)
 
-        method = self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
+            method = (
+                self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
+            )
 
-        training = False
-        initializing = False
-        rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
+            training = False
+            initializing = False
 
-        with hooks.context(set_all=True):
             _, _, _, _, summaries = method(
                 x,
                 self.states,

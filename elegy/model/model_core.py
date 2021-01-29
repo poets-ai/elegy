@@ -1,10 +1,12 @@
 from copy import copy
 import pickle
+import threading
 import typing as tp
 from dataclasses import dataclass
 from enum import Enum
 from io import StringIO
 import pathlib
+from contextlib import contextmanager
 
 import cloudpickle
 import jax
@@ -25,9 +27,22 @@ from elegy.types import (
     States,
     UNINITIALIZED,
     Uninitialized,
+    Protocol,
 )
 from elegy.types import Mode
 from tabulate import tabulate
+
+
+class LocalContext(Protocol):
+    mode: tp.Optional[Mode]
+
+
+@dataclass
+class _LocalContext(threading.local):
+    mode: tp.Optional[Mode]
+
+
+LOCAL: LocalContext = _LocalContext(mode=None)
 
 
 class PredStep(tp.NamedTuple):
@@ -116,8 +131,8 @@ class ModelCore:
         d = self.__dict__.copy()
 
         # remove states
-        # del d["states"]
-        # del d["initial_states"]
+        del d["states"]
+        del d["initial_states"]
 
         # remove jitted functions
         del d["call_pred_step_jit"]
@@ -149,15 +164,21 @@ class ModelCore:
         training: bool,
         initializing: bool,
     ) -> PredStep:
-        return utils.inject_dependencies(self.pred_step)(
-            net_params=states.net_params,
-            x=x,
-            net_states=states.net_states,
-            rng=states.rng,
-            states=states,
-            training=training,
-            initializing=initializing,
-        )
+        assert LOCAL.mode is not None
+
+        losses = metrics = LOCAL.mode in (Mode.test, Mode.train)
+        summaries = LOCAL.mode == Mode.summary
+
+        with hooks.context(losses=losses, metrics=metrics, summaries=summaries):
+            return utils.inject_dependencies(self.pred_step)(
+                net_params=states.net_params,
+                x=x,
+                net_states=states.net_states,
+                rng=states.rng,
+                states=states,
+                training=training,
+                initializing=initializing,
+            )
 
     def test_step(
         self,
@@ -302,15 +323,16 @@ class ModelCore:
             ValueError: In case of mismatch between given number of inputs and
                 expectations of the model.
         """
-        self.maybe_initialize(mode=Mode.pred, x=x)
+        with model_context(Mode.pred):
+            self.maybe_initialize(x=x)
 
-        method = self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
+            method = (
+                self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
+            )
 
-        training = False
-        initializing = False
-        rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
+            training = False
+            initializing = False
 
-        with hooks.context(losses=True, metrics=True):
             y_pred, state_updates, _, _, _ = method(
                 x, self.states, training, initializing
             )
@@ -350,21 +372,21 @@ class ModelCore:
         Raises:
             ValueError: In case of invalid user-provided arguments.
         """
-        self.maybe_initialize(
-            mode=Mode.test,
-            x=x,
-            y_true=y,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-        )
+        with model_context(Mode.test):
+            self.maybe_initialize(
+                x=x,
+                y_true=y,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+            )
 
-        method = self.call_test_step if self.run_eagerly else self.call_test_step_jit
+            method = (
+                self.call_test_step if self.run_eagerly else self.call_test_step_jit
+            )
 
-        training = False
-        initializing = False
-        rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
+            training = False
+            initializing = False
 
-        with hooks.context(losses=True, metrics=True):
             loss, logs, state_updates = method(
                 x,
                 y,
@@ -417,20 +439,20 @@ class ModelCore:
             ValueError: In case of invalid user-provided arguments.
         """
 
-        self.maybe_initialize(
-            mode=Mode.train,
-            x=x,
-            y_true=y,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-        )
+        with model_context(Mode.train):
+            self.maybe_initialize(
+                x=x,
+                y_true=y,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+            )
 
-        method = self.call_train_step if self.run_eagerly else self.call_train_step_jit
+            method = (
+                self.call_train_step if self.run_eagerly else self.call_train_step_jit
+            )
 
-        initializing = False
-        rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
+            initializing = False
 
-        with hooks.context(losses=True, metrics=True):
             logs, state_updates = method(
                 x,
                 y,
@@ -461,70 +483,68 @@ class ModelCore:
 
     def maybe_initialize(
         self,
-        mode: Mode,
         x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple] = (),
         y_true: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
         sample_weight: tp.Optional[np.ndarray] = None,
         class_weight: tp.Optional[np.ndarray] = None,
     ):
+        assert LOCAL.mode is not None
 
+        mode = LOCAL.mode
         rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
         training = True
         initializing = True
         state_updates: States
 
-        with hooks.context(losses=True, metrics=True):
-            if (
-                mode == Mode.pred
-                and isinstance(self.states.net_params, Uninitialized)
-                and isinstance(self.states.net_states, Uninitialized)
-            ):
-                method = (
-                    self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
-                )
+        if (
+            mode in (Mode.pred, Mode.summary)
+            and isinstance(self.states.net_params, Uninitialized)
+            and isinstance(self.states.net_states, Uninitialized)
+        ):
+            method = (
+                self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
+            )
 
-                _, state_updates, _, _, _ = method(
-                    x,
-                    self.states,
-                    training,
-                    initializing,
-                )
-            elif mode == Mode.test and isinstance(
-                self.states.metrics_states, Uninitialized
-            ):
-                method = (
-                    self.call_test_step if self.run_eagerly else self.call_test_step_jit
-                )
+            _, state_updates, _, _, _ = method(
+                x,
+                self.states,
+                training,
+                initializing,
+            )
+        elif mode == Mode.test and isinstance(
+            self.states.metrics_states, Uninitialized
+        ):
+            method = (
+                self.call_test_step if self.run_eagerly else self.call_test_step_jit
+            )
 
-                _, _, state_updates = method(
-                    x,
-                    y_true,
-                    sample_weight,
-                    class_weight,
-                    self.states,
-                    training,
-                    initializing,
-                )
-            elif mode == Mode.train and isinstance(
-                self.states.optimizer_states, Uninitialized
-            ):
-                method = (
-                    self.call_train_step
-                    if self.run_eagerly
-                    else self.call_train_step_jit
-                )
+            _, _, state_updates = method(
+                x,
+                y_true,
+                sample_weight,
+                class_weight,
+                self.states,
+                training,
+                initializing,
+            )
+        elif mode == Mode.train and isinstance(
+            self.states.optimizer_states, Uninitialized
+        ):
+            method = (
+                self.call_train_step if self.run_eagerly else self.call_train_step_jit
+            )
 
-                _, state_updates = method(
-                    x,
-                    y_true,
-                    sample_weight,
-                    class_weight,
-                    self.states,
-                    initializing,
-                )
+            _, state_updates = method(
+                x,
+                y_true,
+                sample_weight,
+                class_weight,
+                self.states,
+                initializing,
+            )
 
-            else:
-                return
+        else:
+            return
 
         if mode in (Mode.pred, Mode.test, Mode.train):
             if isinstance(state_updates.net_params, Uninitialized):
@@ -618,5 +638,26 @@ class ModelCore:
 
         self.states = cloudpickle.loads((path / "states.pkl").read_bytes())
         self.initial_states = cloudpickle.loads(
-            (path / "intial_states.pkl").read_bytes()
+            (path / "initial_states.pkl").read_bytes()
         )
+
+
+# ----------------------------------------------------------------
+# context managers
+# ---------------------------------------------------------------
+
+
+def model_context(mode: Mode) -> tp.ContextManager[None]:
+    return _model_context(mode)
+
+
+@contextmanager
+def _model_context(mode: Mode):
+    prev_mode = LOCAL.mode
+
+    LOCAL.mode = mode
+
+    try:
+        yield
+    finally:
+        LOCAL.mode = prev_mode

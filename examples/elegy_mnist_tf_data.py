@@ -15,7 +15,9 @@ from tensorboardX.writer import SummaryWriter
 from utils import plot_history
 
 
-def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
+def main(
+    debug: bool = False, eager: bool = False, logdir: str = "runs", epochs: int = 100
+):
 
     if debug:
         import debugpy
@@ -95,7 +97,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
 
     history = model.fit(
         train_dataset,
-        epochs=10,
+        epochs=epochs,
         steps_per_epoch=200,
         validation_data=test_dataset,
         callbacks=[TensorBoard(logdir=logdir)],

@@ -35,7 +35,9 @@ class MNIST(elegy.data.Dataset):
         return (self.x[i], self.y[i])
 
 
-def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
+def main(
+    debug: bool = False, eager: bool = False, logdir: str = "runs", epochs: int = 100
+):
 
     if debug:
         import debugpy
@@ -95,7 +97,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
 
     history = model.fit(
         x=train_loader,
-        epochs=100,
+        epochs=epochs,
         steps_per_epoch=200,
         validation_data=test_loader,
         shuffle=True,

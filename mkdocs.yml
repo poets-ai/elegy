@@ -45,7 +45,7 @@ nav:
     get_rng: api/get_rng.md
     get_static_context: api/get_static_context.md
     get_summaries: api/get_summaries.md
-    update_context: api/update_context.md
+    context: api/context.md
     initializers:
       Constant: api/initializers/Constant.md
       Orthogonal: api/initializers/Orthogonal.md

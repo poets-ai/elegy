@@ -17,7 +17,9 @@ from torch.utils.data import DataLoader, TensorDataset
 from utils import plot_history
 
 
-def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
+def main(
+    debug: bool = False, eager: bool = False, logdir: str = "runs", epochs: int = 100
+):
 
     if debug:
         import debugpy

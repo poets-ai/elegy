@@ -50,7 +50,7 @@ class Encoder(nn.Module):
     latent_size: int = 128
 
     @nn.compact
-    def __call__(self, x: np.ndarray) -> np.ndarray:
+    def __call__(self, x: np.ndarray, rng: elegy.RNGSeq) -> np.ndarray:
         x = x.reshape((x.shape[0], -1))  # flatten
         x = nn.Dense(self.hidden_size)(x)
         x = jax.nn.relu(x)
@@ -60,7 +60,7 @@ class Encoder(nn.Module):
         stddev = jnp.exp(log_stddev)
 
         # friendly RNG interface: rng.next() == jax.random.split(...)
-        z = mean + stddev * jax.random.normal(elegy.next_key(), mean.shape)
+        z = mean + stddev * jax.random.normal(rng.next(), mean.shape)
 
         return z, mean, stddev
 
@@ -88,10 +88,10 @@ class VAE(nn.Module):
     output_shape: tp.Sequence[int] = MNIST_IMAGE_SHAPE
 
     @nn.compact
-    def __call__(self, x):
+    def __call__(self, x, rng: elegy.RNGSeq):
         z, mean, stddev = Encoder(
             hidden_size=self.hidden_size, latent_size=self.latent_size
-        )(x)
+        )(x, rng)
         logits = Decoder(hidden_size=self.hidden_size, output_shape=self.output_shape)(
             z
         )
@@ -99,74 +99,6 @@ class VAE(nn.Module):
 
     def generate(self, z):
         return nn.sigmoid(self.decoder(z))
-
-
-class VariationalAutoEncoder(elegy.Model):
-    """Main VAE model class, uses Encoder & Decoder under the hood."""
-
-    def __init__(
-        self,
-        hidden_size: int = 512,
-        latent_size: int = 32,
-        output_shape: tp.Sequence[int] = MNIST_IMAGE_SHAPE,
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
-        self.hidden_size = hidden_size
-        self.latent_size = latent_size
-        self.output_shape = output_shape
-        self.encoder = Encoder(
-            hidden_size=self.hidden_size, latent_size=self.latent_size
-        )
-        self.decoder = Decoder(
-            hidden_size=self.hidden_size, output_shape=self.output_shape
-        )
-
-    # request parameters by name via depending injection.
-    # possible: mode, x, y_true, sample_weight, class_weight
-    def init(self, x):
-        # friendly RNG interface: rng.next() == jax.random.split(...)
-        rng = elegy.RNGSeq(42)
-
-        with elegy.update_context(rng=rng):
-            (z, mean, stddev), enc_variables = self.encoder.init_with_output(
-                rng.next(), x
-            )
-            (logits, mean, stddev), dec_variables = self.decoder.init_with_output(
-                rng.next(), x
-            )
-        enc_states, enc_params = enc_variables.pop("params")
-        dec_states, dec_params = dec_variables.pop("params")
-        net_params = (enc_params, dec_params)
-        nets_states = (enc_states, dec_states)
-
-        # optimizer
-        optimizer_states = self.api_optimizer.init(rng, net_params)
-
-        return elegy.States(
-            net_params=(w, b),
-            optimizer_states=optimizer_states,
-            rng=rng,
-        )
-
-    # request parameters by name via depending injection.
-    # possible: net_params, x, y_true, net_states, metrics_states, sample_weight, class_weight, rng, states
-    def test_step(self, x, y_true, net_params, states: elegy.States):
-
-        z, mean, stddev = self.encoder(x)
-        logits = self.decoder(z)
-
-        # crossentropy loss
-        loss = elegy.losses.binary_crossentropy(
-            y_true, logits, from_logits=True
-        ).mean() + 2e-1 * kl_divergence(mean, stddev)
-
-        # metrics
-        logs = dict(
-            loss=loss,
-        )
-
-        return loss, logs, states.update(net_params=net_params)
 
 
 def main(
@@ -230,7 +162,8 @@ def main(
     x_sample = X_test[idxs]
 
     # get predictions
-    y_pred = model.predict(x=x_sample)
+    logits, mean, stddev = model.predict(x=x_sample)
+    y_pred = jax.nn.sigmoid(logits)
 
     # plot and save results
     with SummaryWriter(os.path.join(logdir, "val")) as tbwriter:
@@ -239,13 +172,14 @@ def main(
             plt.subplot(2, 5, i + 1)
             plt.imshow(x_sample[i], cmap="gray")
             plt.subplot(2, 5, 5 + i + 1)
-            plt.imshow(y_pred["det_image"][i], cmap="gray")
-        tbwriter.add_figure("VAE Example", figure, epochs)
+            plt.imshow(y_pred[i], cmap="gray")
+        # tbwriter.add_figure("VAE Example", figure, epochs)
 
     plt.show()
 
     # sample
-    model_decoder = elegy.Model(vae.decoder)
+    # TODO: transfer parameters
+    model_decoder = elegy.Model(Decoder(latent_size=LATENT_SIZE))
 
     z_samples = np.random.normal(size=(12, LATENT_SIZE))
     samples = model_decoder.predict(z_samples)

@@ -50,7 +50,7 @@ class Encoder(nn.Module):
     latent_size: int = 128
 
     @nn.compact
-    def __call__(self, x: np.ndarray) -> np.ndarray:
+    def __call__(self, x: np.ndarray, rng: elegy.RNGSeq) -> np.ndarray:
         x = x.reshape((x.shape[0], -1))  # flatten
         x = nn.Dense(self.hidden_size)(x)
         x = jax.nn.relu(x)
@@ -60,7 +60,7 @@ class Encoder(nn.Module):
         stddev = jnp.exp(log_stddev)
 
         # friendly RNG interface: rng.next() == jax.random.split(...)
-        z = mean + stddev * jax.random.normal(elegy.next_key(), mean.shape)
+        z = mean + stddev * jax.random.normal(rng.next(), mean.shape)
 
         return z, mean, stddev
 

@@ -211,58 +211,6 @@ def _context(
         LOCAL.summaries = prev_summaries
 
 
-def update_context(
-    losses: tp.Union[Logs, bool, None] = None,
-    metrics: tp.Union[Logs, bool, None] = None,
-    summaries: tp.Union[Summaries, bool, None] = None,
-    set_defaults: bool = False,
-) -> tp.ContextManager[None]:
-
-    if LOCAL.losses is None and losses is None and set_defaults:
-        losses = {}
-    elif isinstance(losses, bool):
-        losses = {} if LOCAL.losses is None and losses else None
-
-    if LOCAL.metrics is None and metrics is None and set_defaults:
-        metrics = {}
-    elif isinstance(metrics, bool):
-        metrics = {} if LOCAL.metrics is None and metrics else None
-
-    if LOCAL.summaries is None and summaries is None and set_defaults:
-        summaries = []
-    elif isinstance(summaries, bool):
-        summaries = [] if LOCAL.summaries is None and summaries else None
-
-    return _update_context(
-        losses=losses,
-        metrics=metrics,
-        summaries=summaries,
-    )
-
-
-@contextmanager
-def _update_context(
-    losses: tp.Optional[Logs],
-    metrics: tp.Optional[Logs],
-    summaries: tp.Optional[Summaries],
-) -> tp.Iterator[None]:
-
-    prev_losses = LOCAL.losses
-    prev_metrics = LOCAL.metrics
-    prev_summaries = LOCAL.summaries
-
-    LOCAL.losses = losses if losses is not None else prev_losses
-    LOCAL.metrics = metrics if metrics is not None else prev_metrics
-    LOCAL.summaries = summaries if summaries is not None else prev_summaries
-
-    try:
-        yield
-    finally:
-        LOCAL.losses = prev_losses
-        LOCAL.metrics = prev_metrics
-        LOCAL.summaries = prev_summaries
-
-
 # -------------------------------------------------------------
 # transforms
 # -------------------------------------------------------------

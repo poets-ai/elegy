@@ -16,7 +16,9 @@ import elegy
 from utils import plot_history
 
 
-def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
+def main(
+    debug: bool = False, eager: bool = False, logdir: str = "runs", epochs: int = 100
+):
 
     if debug:
         import debugpy
@@ -73,7 +75,7 @@ def main(debug: bool = False, eager: bool = False, logdir: str = "runs"):
     history = model.fit(
         x=X_train,
         y=y_train,
-        epochs=100,
+        epochs=epochs,
         steps_per_epoch=200,
         batch_size=64,
         validation_data=(X_test, y_test),

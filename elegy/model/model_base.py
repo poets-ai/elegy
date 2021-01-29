@@ -530,7 +530,7 @@ class ModelBase(ModelCore):
         batch_size: tp.Optional[int] = None,
         steps: tp.Optional[int] = None,
         callbacks: tp.Union[tp.List[Callback], CallbackList, None] = None,
-    ) -> np.ndarray:
+    ) -> tp.Any:
         """Generates output predictions for the input samples.
         Computation is done in batches.
 

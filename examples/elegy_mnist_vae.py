@@ -26,7 +26,7 @@ MNIST_IMAGE_SHAPE: tp.Sequence[int] = (28, 28)
 
 
 class KLDivergence(elegy.Loss):
-    def call(self, mean: np.ndarray, std: np.ndarray) -> np.ndarray:
+    def call(self, mean: jnp.ndarray, std: jnp.ndarray) -> np.ndarray:
         r"""Calculate KL divergence between given and standard gaussian distributions.
         KL(p, q) = H(p, q) - H(p) = -\int p(x)log(q(x))dx - -\int p(x)log(p(x))dx
                 = 0.5 * [log(|s2|/|s1|) - 1 + tr(s1/s2) + (m1-m2)^2/s2]
@@ -40,7 +40,7 @@ class KLDivergence(elegy.Loss):
         return 0.5 * jnp.mean(-jnp.log(std ** 2) - 1.0 + std ** 2 + mean ** 2, axis=-1)
 
 
-class Encoder:
+class Encoder(elegy.Module):
     """Encoder model."""
 
     def __init__(self, hidden_size: int = 512, latent_size: int = 128):
@@ -52,7 +52,8 @@ class Encoder:
         x = elegy.nn.Flatten()(x)
         x = elegy.nn.Linear(self.hidden_size)(x)
         x = jax.nn.relu(x)
-        elegy.add_summary("relu", x)
+
+        self.add_summary("relu", jax.nn.relu, x)
 
         mean = elegy.nn.Linear(self.latent_size, name="linear_mean")(x)
         log_stddev = elegy.nn.Linear(self.latent_size, name="linear_std")(x)
@@ -60,12 +61,12 @@ class Encoder:
 
         elegy.add_loss("kl_divergence", KLDivergence(weight=2e-1)(mean, stddev))
 
-        z = mean + stddev * jax.random.normal(elegy.next_key(), mean.shape)
+        z = mean + stddev * jax.random.normal(self.next_key(), mean.shape)
 
         return z
 
 
-class Decoder:
+class Decoder(elegy.Module):
     """Decoder model."""
 
     def __init__(
@@ -80,16 +81,16 @@ class Decoder:
     def call(self, z: np.ndarray) -> np.ndarray:
         z = elegy.nn.Linear(self.hidden_size)(z)
         z = jax.nn.relu(z)
-        elegy.add_summary("relu", z)
 
-        logits = elegy.nn.Linear(jnp.prod(jnp.array(self.output_shape)))(z)
+        self.add_summary("relu", jax.nn.relu, z)
+
+        logits = elegy.nn.Linear(np.prod(self.output_shape))(z)
         logits = jnp.reshape(logits, (-1, *self.output_shape))
-        elegy.add_summary("relu", z)
 
         return logits
 
 
-class VariationalAutoEncoder:
+class VariationalAutoEncoder(elegy.Module):
     """Main VAE model class, uses Encoder & Decoder under the hood."""
 
     encoder: Encoder
@@ -113,13 +114,13 @@ class VariationalAutoEncoder:
         logits = Decoder(self.hidden_size, self.output_shape)(z)
 
         p = jax.nn.sigmoid(logits)
-        image = jax.random.bernoulli(elegy.next_key(), p)
+        image = jax.random.bernoulli(self.next_key(), p)
 
         return dict(image=image, logits=logits, det_image=p)
 
 
 class BinaryCrossEntropy(elegy.losses.BinaryCrossentropy):
-    def call(self, x: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
+    def call(self, x: jnp.ndarray, y_pred: jnp.ndarray) -> np.ndarray:
         return super().call(y_true=x, y_pred=y_pred)
 
 

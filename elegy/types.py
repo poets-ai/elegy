@@ -23,6 +23,7 @@ class Mode(str, Enum):
     pred = "pred"
     test = "test"
     train = "train"
+    summary = "summary"
 
 
 class TrivialPytree:
