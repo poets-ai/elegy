@@ -17,6 +17,7 @@ def main(
     debug: bool = False,
     eager: bool = False,
     logdir: str = "runs",
+    steps_per_epoch: int = 200,
     epochs: int = 100,
 ):
 
@@ -65,13 +66,14 @@ def main(
         loss=crossentropy,
         metrics=accuracy,
         optimizer=optax.adam(1e-3),
+        run_eagerly=eager,
     )
 
     history = model.fit(
         x=X_train,
         y=y_train,
         epochs=epochs,
-        steps_per_epoch=200,
+        steps_per_epoch=steps_per_epoch,
         batch_size=64,
         validation_data=(X_test, y_test),
         shuffle=True,

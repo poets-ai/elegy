@@ -16,7 +16,11 @@ from utils import plot_history
 
 
 def main(
-    debug: bool = False, eager: bool = False, logdir: str = "runs", epochs: int = 100
+    debug: bool = False,
+    eager: bool = False,
+    logdir: str = "runs",
+    steps_per_epoch: int = 200,
+    epochs: int = 100,
 ):
 
     if debug:
@@ -98,7 +102,7 @@ def main(
     history = model.fit(
         train_dataset,
         epochs=epochs,
-        steps_per_epoch=200,
+        steps_per_epoch=steps_per_epoch,
         validation_data=test_dataset,
         callbacks=[TensorBoard(logdir=logdir)],
     )

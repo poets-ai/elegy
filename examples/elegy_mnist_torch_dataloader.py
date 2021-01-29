@@ -18,7 +18,11 @@ from utils import plot_history
 
 
 def main(
-    debug: bool = False, eager: bool = False, logdir: str = "runs", epochs: int = 100
+    debug: bool = False,
+    eager: bool = False,
+    logdir: str = "runs",
+    steps_per_epoch: int = 200,
+    epochs: int = 100,
 ):
 
     if debug:

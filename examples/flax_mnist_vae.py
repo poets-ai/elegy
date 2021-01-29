@@ -102,7 +102,11 @@ class VAE(nn.Module):
 
 
 def main(
-    epochs: int = 50, debug: bool = False, eager: bool = False, logdir: str = "runs"
+    steps_per_epoch: int = 200,
+    epochs: int = 50,
+    debug: bool = False,
+    eager: bool = False,
+    logdir: str = "runs",
 ):
 
     if debug:
@@ -137,6 +141,7 @@ def main(
         module=vae,
         loss=loss,
         optimizer=optax.adam(1e-3),
+        run_eagerly=eager,
     )
 
     # Fit with datasets in memory
@@ -144,7 +149,7 @@ def main(
         x=X_train,
         epochs=epochs,
         batch_size=64,
-        steps_per_epoch=200,
+        steps_per_epoch=steps_per_epoch,
         validation_data=(X_test,),
         shuffle=True,
         callbacks=[TensorBoard(logdir)],
@@ -177,26 +182,26 @@ def main(
 
     plt.show()
 
+    # TODO: implement parameter transfer to sample
     # sample
-    # TODO: transfer parameters
-    model_decoder = elegy.Model(Decoder(latent_size=LATENT_SIZE))
+    # model_decoder = elegy.Model(Decoder(latent_size=LATENT_SIZE))
 
-    z_samples = np.random.normal(size=(12, LATENT_SIZE))
-    samples = model_decoder.predict(z_samples)
-    samples = jax.nn.sigmoid(samples)
+    # z_samples = np.random.normal(size=(12, LATENT_SIZE))
+    # samples = model_decoder.predict(z_samples)
+    # samples = jax.nn.sigmoid(samples)
 
-    # plot and save results
-    # with SummaryWriter(os.path.join(logdir, "val")) as tbwriter:
-    figure = plt.figure(figsize=(5, 12))
-    plt.title("Generative Samples")
-    for i in range(5):
-        plt.subplot(2, 5, 2 * i + 1)
-        plt.imshow(samples[i], cmap="gray")
-        plt.subplot(2, 5, 2 * i + 2)
-        plt.imshow(samples[i + 1], cmap="gray")
-    # # tbwriter.add_figure("VAE Generative Example", figure, epochs)
+    # # plot and save results
+    # # with SummaryWriter(os.path.join(logdir, "val")) as tbwriter:
+    # figure = plt.figure(figsize=(5, 12))
+    # plt.title("Generative Samples")
+    # for i in range(5):
+    #     plt.subplot(2, 5, 2 * i + 1)
+    #     plt.imshow(samples[i], cmap="gray")
+    #     plt.subplot(2, 5, 2 * i + 2)
+    #     plt.imshow(samples[i + 1], cmap="gray")
+    # # # tbwriter.add_figure("VAE Generative Example", figure, epochs)
 
-    plt.show()
+    # plt.show()
 
 
 if __name__ == "__main__":

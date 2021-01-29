@@ -36,7 +36,11 @@ class MNIST(elegy.data.Dataset):
 
 
 def main(
-    debug: bool = False, eager: bool = False, logdir: str = "runs", epochs: int = 100
+    debug: bool = False,
+    eager: bool = False,
+    logdir: str = "runs",
+    steps_per_epoch: int = 200,
+    epochs: int = 100,
 ):
 
     if debug:
@@ -98,7 +102,7 @@ def main(
     history = model.fit(
         x=train_loader,
         epochs=epochs,
-        steps_per_epoch=200,
+        steps_per_epoch=steps_per_epoch,
         validation_data=test_loader,
         shuffle=True,
         callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],

@@ -110,7 +110,7 @@ class VariationalAutoEncoder(elegy.Model):
 
         if initializing:
             (z, mean, stddev), enc_variables = self.encoder.init_with_output(
-                rng.next(), x
+                rng.next(), x, rng
             )
             logits, dec_variables = self.decoder.init_with_output(rng.next(), z)
         else:
@@ -118,7 +118,7 @@ class VariationalAutoEncoder(elegy.Model):
             (enc_params, dec_params) = net_params
             enc_variables = dict(params=enc_params, **enc_states)
             (z, mean, stddev), enc_variables = self.encoder.apply(
-                enc_variables, x, rngs={"params": rng.next()}, mutable=True
+                enc_variables, x, rng, rngs={"params": rng.next()}, mutable=True
             )
             dec_variables = dict(params=dec_params, **dec_states)
             logits, dec_variables = self.decoder.apply(
@@ -157,7 +157,7 @@ class VariationalAutoEncoder(elegy.Model):
         training,
         initializing,
     ):
-        logits, states, _, _, _ = self.call_pred_step(
+        logits, states, aux_losses, _, _ = self.call_pred_step(
             x=x,
             states=states,
             training=training,
@@ -165,7 +165,7 @@ class VariationalAutoEncoder(elegy.Model):
         )
 
         # crossentropy loss + kl
-        kl_loss = elegy.get_losses()["kl_divergence_loss"]
+        kl_loss = aux_losses["kl_divergence_loss"]
         bce = elegy.losses.binary_crossentropy(x, logits, from_logits=True).mean()
         loss = bce + kl_loss
 
@@ -189,7 +189,11 @@ class VariationalAutoEncoder(elegy.Model):
 
 
 def main(
-    epochs: int = 50, debug: bool = False, eager: bool = False, logdir: str = "runs"
+    steps_per_epoch: int = 200,
+    epochs: int = 50,
+    debug: bool = False,
+    eager: bool = False,
+    logdir: str = "runs",
 ):
 
     if debug:
@@ -213,6 +217,7 @@ def main(
     model = VariationalAutoEncoder(
         latent_size=LATENT_SIZE,
         optimizer=optax.adam(1e-3),
+        run_eagerly=eager,
     )
 
     # Fit with datasets in memory
@@ -220,7 +225,7 @@ def main(
         x=X_train,
         epochs=epochs,
         batch_size=64,
-        steps_per_epoch=200,
+        steps_per_epoch=steps_per_epoch,
         validation_data=(X_test,),
         shuffle=True,
         callbacks=[TensorBoard(logdir)],

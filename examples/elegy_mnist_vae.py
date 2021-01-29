@@ -125,7 +125,11 @@ class BinaryCrossEntropy(elegy.losses.BinaryCrossentropy):
 
 
 def main(
-    epochs: int = 50, debug: bool = False, eager: bool = False, logdir: str = "runs"
+    steps_per_epoch: int = 200,
+    epochs: int = 50,
+    debug: bool = False,
+    eager: bool = False,
+    logdir: str = "runs",
 ):
 
     if debug:
@@ -162,7 +166,7 @@ def main(
         x=X_train,
         epochs=epochs,
         batch_size=64,
-        steps_per_epoch=200,
+        steps_per_epoch=steps_per_epoch,
         validation_data=(X_test,),
         shuffle=True,
         callbacks=[TensorBoard(logdir)],
