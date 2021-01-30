@@ -146,37 +146,24 @@ class Model(ModelBase):
 
         assert isinstance(states.rng, types.RNGSeq)
 
-        get_losses_and_metrics = mode in (types.Mode.test, types.Mode.train)
-        get_summaries = mode == types.Mode.summary
+        if initializing:
+            module_fn = self.api_module.init(states.rng)
+        else:
+            module_fn = self.api_module.apply(
+                params=states.net_params,
+                states=states.net_states,
+                training=training,
+                rng=states.rng,
+            )
 
-        with hooks.context(
-            losses=get_losses_and_metrics,
-            metrics=get_losses_and_metrics,
-            summaries=get_summaries,
-        ):
-
-            if initializing:
-                module_fn = self.api_module.init(states.rng)
-            else:
-                module_fn = self.api_module.apply(
-                    params=states.net_params,
-                    states=states.net_states,
-                    training=training,
-                    rng=states.rng,
-                )
-
-            y_pred, net_params, net_states = module_fn(*x_args, **x_kwargs)
-
-            aux_losses = hooks.get_losses()
-            aux_metrics = hooks.get_metrics()
-            summaries = hooks.get_summaries()
+        y_pred, net_params, net_states = module_fn(*x_args, **x_kwargs)
 
         return model_core.PredStep(
             y_pred=y_pred,
             states=states.update(net_states=net_states, net_params=net_params),
-            aux_losses=aux_losses,
-            aux_metrics=aux_metrics,
-            summaries=summaries,
+            aux_losses=hooks.get_losses(),
+            aux_metrics=hooks.get_metrics(),
+            summaries=hooks.get_summaries(),
         )
 
     def test_step(

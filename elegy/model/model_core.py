@@ -140,16 +140,24 @@ class ModelCore:
         states: types.States,
         initializing: bool,
     ) -> PredStep:
-        return utils.inject_dependencies(self.pred_step)(
-            x=x,
-            mode=mode,
-            net_params=states.net_params,
-            net_states=states.net_states,
-            rng=states.rng,
-            states=states,
-            initializing=initializing,
-            training=(mode == types.Mode.train),
-        )
+        get_losses_and_metrics = mode in (types.Mode.test, types.Mode.train)
+        get_summaries = mode == types.Mode.summary
+
+        with hooks.context(
+            losses=get_losses_and_metrics,
+            metrics=get_losses_and_metrics,
+            summaries=get_summaries,
+        ):
+            return utils.inject_dependencies(self.pred_step)(
+                x=x,
+                mode=mode,
+                net_params=states.net_params,
+                net_states=states.net_states,
+                rng=states.rng,
+                states=states,
+                initializing=initializing,
+                training=(mode == types.Mode.train),
+            )
 
     def test_step(
         self,
