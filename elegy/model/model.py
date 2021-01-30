@@ -7,12 +7,12 @@ import numpy as np
 import yaml
 from elegy import hooks, module, types, utils
 from elegy.model import model_core
-from elegy.model.generalized_module.generalized_module import (
+from elegy.generalized_module.generalized_module import (
     GeneralizedModule,
     generalize,
     is_generalizable,
 )
-from elegy.model.generalized_optimizer.generalized_optimizer import (
+from elegy.generalized_optimizer.generalized_optimizer import (
     GeneralizedOptimizer,
     generalize_optimizer,
 )
@@ -150,9 +150,10 @@ class Model(ModelBase):
             module_fn = self.api_module.init(states.rng)
         else:
             module_fn = self.api_module.apply(
-                states.net_params,
-                states.net_states,
-                states.rng,
+                params=states.net_params,
+                states=states.net_states,
+                training=training,
+                rng=states.rng,
             )
 
         y_pred, net_params, net_states = module_fn(*x_args, **x_kwargs)
@@ -600,11 +601,13 @@ class Metrics:
         assert states is not None
 
         def lambda_(*args, **kwargs):
-            def callback(name, module):
+            def callback(name, module: GeneralizedModule):
                 kwargs_ = kwargs.copy()
                 kwargs_["metrics_states"] = states[name]
 
-                return module.apply(None, states[name], rng)(*args, **kwargs_)
+                return module.apply(
+                    params=None, states=states[name], training=True, rng=rng
+                )(*args, **kwargs_)
 
             return self.calculate_metrics(aux_metrics, callback)
 
@@ -637,6 +640,7 @@ class AvgMetric(GeneralizedModule):
         self,
         params: tp.Any,
         states: tp.Any,
+        training: bool,
         rng: types.RNGSeq,
     ) -> tp.Callable[..., types.OutputStates]:
         def _lambda(*args, **kwargs) -> types.OutputStates:

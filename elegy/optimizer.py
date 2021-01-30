@@ -5,7 +5,7 @@ import numpy as np
 import optax
 
 from elegy import module, types, utils
-from elegy.model.generalized_optimizer.generalized_optimizer import GeneralizedOptimizer
+from elegy.generalized_optimizer.generalized_optimizer import GeneralizedOptimizer
 
 
 class LRScheduler(types.Protocol):

@@ -3,7 +3,7 @@ from unittest import TestCase
 import jax
 
 import elegy
-from elegy.model.generalized_module.generalized_module import generalize
+from elegy.generalized_module.generalized_module import generalize
 import jax.numpy as jnp
 
 
@@ -30,7 +30,9 @@ class ElegyModuleTest(TestCase):
         assert states["states"]["n"] == 0
 
         params["w"] = 10.0
-        y_true, params, states = gm.apply(params, states, rng)(x=3.0, y=1)
+        y_true, params, states = gm.apply(params, states, training=True, rng=rng)(
+            x=3.0, y=1
+        )
 
         assert y_true == 30
         assert params["w"] == 10

@@ -24,6 +24,7 @@ class GeneralizedModule(ABC):
         self,
         params: tp.Any,
         states: tp.Any,
+        training: bool,
         rng: types.RNGSeq,
     ) -> tp.Callable[..., types.OutputStates]:
         ...
@@ -71,6 +72,7 @@ class CallableModule(GeneralizedModule):
         self,
         params: tp.Any,
         states: tp.Any,
+        training: bool,
         rng: types.RNGSeq,
     ) -> tp.Callable[..., types.OutputStates]:
         def lambda_(*args, **kwargs) -> types.OutputStates:

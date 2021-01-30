@@ -1,5 +1,5 @@
 
-# elegy.Mode
+# elegy.types.Mode
 
 ::: elegy.types.Mode
     selection:

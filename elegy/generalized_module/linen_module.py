@@ -46,6 +46,7 @@ class LinenModule(GeneralizedModule):
         self,
         params: tp.Any,
         states: tp.Any,
+        training: bool,
         rng: types.RNGSeq,
     ) -> tp.Callable[..., types.OutputStates]:
         if params is None:

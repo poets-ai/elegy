@@ -3,7 +3,7 @@ import unittest
 import elegy
 import jax
 import jax.numpy as jnp
-from elegy.model.generalized_module.generalized_module import generalize
+from elegy.generalized_module.generalized_module import generalize
 from flax import linen
 
 
@@ -34,7 +34,9 @@ class TestLinenModule(unittest.TestCase):
         assert states["batch_stats"]["n"] == 0
 
         params = params.copy(dict(w=10.0))
-        y_true, params, states = gm.apply(params, states, rng)(x=3.0, y=1)
+        y_true, params, states = gm.apply(params, states, training=True, rng=rng)(
+            x=3.0, y=1
+        )
 
         assert y_true == 30
         assert params["w"] == 10

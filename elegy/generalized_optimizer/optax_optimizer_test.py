@@ -1,5 +1,5 @@
 import elegy
-from elegy.model.generalized_optimizer.generalized_optimizer import generalize_optimizer
+from elegy.generalized_optimizer.generalized_optimizer import generalize_optimizer
 import optax
 
 
