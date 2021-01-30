@@ -3,6 +3,7 @@ import haiku as hk
 import jax.numpy as jnp
 import dataget
 
+
 def main(debug: bool = False):
     if debug:
         import debugpy
@@ -23,9 +24,7 @@ def main(debug: bool = False):
 
     def softmax_cross_entropy(logits, labels):
         one_hot = jax.nn.one_hot(labels, logits.shape[-1])
-        return -jnp.
-
-
+        # return -jnp.
 
 
 if __name__ == "__main__":
