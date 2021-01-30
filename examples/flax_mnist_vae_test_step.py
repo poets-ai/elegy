@@ -156,9 +156,11 @@ class VariationalAutoEncoder(elegy.Model):
         metrics_states,
         training,
         initializing,
+        mode,
     ):
         logits, states, aux_losses, _, _ = self.call_pred_step(
             x=x,
+            mode=mode,
             states=states,
             training=training,
             initializing=initializing,

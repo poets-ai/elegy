@@ -1,6 +1,6 @@
 
-# elegy.types.Mode
+# elegy.Losses
 
-::: elegy.types.Mode
+::: elegy.model.model.Losses
     selection:
         inherited_members: true

@@ -97,7 +97,7 @@ def main(
 
     model.save("models/conv")
 
-    model = elegy.model.load("models/conv")
+    model = elegy.load("models/conv")
 
     print(model.evaluate(x=X_test, y=y_test))
 

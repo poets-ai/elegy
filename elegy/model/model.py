@@ -125,10 +125,11 @@ class Model(ModelBase):
         # net_states: tp.Any,
         # rng: types.RNG,
         mode: types.Mode,
-        training: bool,
         initializing: bool,
         states: types.States,
     ) -> model_core.PredStep:
+
+        training = mode == types.Mode.train
 
         if self.module is None:
             raise types.MissingModule(
@@ -139,7 +140,6 @@ class Model(ModelBase):
         x_args, x_kwargs = utils.get_input_args(
             x,
             states=states,
-            training=training,
             initializing=initializing,
             mode=mode,
         )
@@ -190,17 +190,13 @@ class Model(ModelBase):
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         # rng: types.RNG,
-        training: bool,
         initializing: bool,
         states: types.States,
     ) -> model_core.TestStep:
-
-        # TODO: add DI
         y_pred, states, aux_losses, aux_metrics, _ = self.call_pred_step(
             x=x,
             mode=mode,
             states=states,
-            training=training,
             initializing=initializing,
         )
         assert isinstance(states.rng, types.RNGSeq)
@@ -229,10 +225,10 @@ class Model(ModelBase):
             sample_weight=sample_weight,
             class_weight=class_weight,
             rng=states.rng,
-            training=False,
             initializing=initializing,
             states=states,
             mode=mode,
+            training=(mode == types.Mode.train),
         )
 
         # [DI]
@@ -246,10 +242,10 @@ class Model(ModelBase):
             sample_weight=sample_weight,
             class_weight=class_weight,
             rng=states.rng,
-            training=False,
             initializing=initializing,
             states=states,
             mode=mode,
+            training=(mode == types.Mode.train),
         )
 
         logs = utils.merge_with_unique_names(metrics_logs, loss_logs)
@@ -265,7 +261,6 @@ class Model(ModelBase):
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         states: types.States,
-        training: bool,
         initializing: bool,
     ) -> model_core.GradStep:
         def loss_fn(
@@ -284,7 +279,6 @@ class Model(ModelBase):
                 states=states,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
-                training=training,
                 initializing=initializing,
             )
 
@@ -314,7 +308,6 @@ class Model(ModelBase):
         class_weight: tp.Optional[np.ndarray],
         # rng: types.RNG,
         states: types.States,
-        training: bool,
         initializing: bool,
     ) -> model_core.TrainStep:
 
@@ -326,7 +319,6 @@ class Model(ModelBase):
                 states=states,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
-                training=training,
                 initializing=initializing,
             )
             grads = None
@@ -339,7 +331,6 @@ class Model(ModelBase):
                 states=states,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
-                training=training,
                 initializing=initializing,
             )
 
@@ -402,7 +393,6 @@ class Model(ModelBase):
                 for more options.
         """
         mode = types.Mode.summary
-        training = False
         initializing = False
 
         self.maybe_initialize(mode, x=x)
@@ -413,7 +403,6 @@ class Model(ModelBase):
             x,
             mode,
             self.states,
-            training,
             initializing,
         )
 

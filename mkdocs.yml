@@ -16,16 +16,19 @@ nav:
     Modules, Losses, and Metrics: guides/modules-losses-metrics.md
     Contributing: guides/contributing.md
 - API Reference:
-    DependencyUnavailable: api/DependencyUnavailable.md
+    GeneralizedModule: api/GeneralizedModule.md
+    GeneralizedOptimizer: api/GeneralizedOptimizer.md
     GradStep: api/GradStep.md
+    HaikuModule: api/HaikuModule.md
     Loss: api/Loss.md
+    Losses: api/Losses.md
     Metric: api/Metric.md
     Metrics: api/Metrics.md
-    Mode: api/Mode.md
     Model: api/Model.md
     ModelBase: api/ModelBase.md
     Module: api/Module.md
     Optimizer: api/Optimizer.md
+    OutputStates: api/OutputStates.md
     PredStep: api/PredStep.md
     RNGSeq: api/RNGSeq.md
     States: api/States.md
@@ -47,9 +50,6 @@ nav:
       TensorBoard: api/callbacks/TensorBoard.md
       TerminateOnNaN: api/callbacks/TerminateOnNaN.md
     context: api/context.md
-    data:
-      DataLoader: api/data/DataLoader.md
-      Dataset: api/data/Dataset.md
     flax_summarize: api/flax_summarize.md
     flax_summary: api/flax_summary.md
     get_losses: api/get_losses.md
@@ -93,11 +93,13 @@ nav:
       F1: api/metrics/F1.md
       Mean: api/metrics/Mean.md
       MeanAbsoluteError: api/metrics/MeanAbsoluteError.md
+      MeanAbsolutePercentageError: api/metrics/MeanAbsolutePercentageError.md
       MeanSquaredError: api/metrics/MeanSquaredError.md
       Metric: api/metrics/Metric.md
       Precision: api/metrics/Precision.md
       Recall: api/metrics/Recall.md
       Reduce: api/metrics/Reduce.md
+      Reduction: api/metrics/Reduction.md
       SparseCategoricalAccuracy: api/metrics/SparseCategoricalAccuracy.md
       Sum: api/metrics/Sum.md
       accuracy: api/metrics/accuracy.md
@@ -106,24 +108,20 @@ nav:
       categorical_accuracy: api/metrics/categorical_accuracy.md
       f1: api/metrics/f1.md
       mean_absolute_error: api/metrics/mean_absolute_error.md
+      mean_absolute_percentage_error: api/metrics/mean_absolute_percentage_error.md
       mean_squared_error: api/metrics/mean_squared_error.md
       precision: api/metrics/precision.md
       recall: api/metrics/recall.md
       reduce: api/metrics/reduce.md
       sparse_categorical_accuracy: api/metrics/sparse_categorical_accuracy.md
-    model:
-      Model: api/model/Model.md
-      ModelBase: api/model/ModelBase.md
-      load: api/model/load.md
     nets:
-      resnet:
-        ResNet: api/nets/resnet/ResNet.md
-        ResNet101: api/nets/resnet/ResNet101.md
-        ResNet152: api/nets/resnet/ResNet152.md
-        ResNet18: api/nets/resnet/ResNet18.md
-        ResNet200: api/nets/resnet/ResNet200.md
-        ResNet34: api/nets/resnet/ResNet34.md
-        ResNet50: api/nets/resnet/ResNet50.md
+      ResNet: api/nets/ResNet.md
+      ResNet101: api/nets/ResNet101.md
+      ResNet152: api/nets/ResNet152.md
+      ResNet18: api/nets/ResNet18.md
+      ResNet200: api/nets/ResNet200.md
+      ResNet34: api/nets/ResNet34.md
+      ResNet50: api/nets/ResNet50.md
     nn:
       AvgPool: api/nn/AvgPool.md
       BatchNormalization: api/nn/BatchNormalization.md

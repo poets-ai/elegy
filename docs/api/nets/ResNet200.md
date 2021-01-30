@@ -1,7 +1,7 @@
 
-# elegy.nets.resnet.ResNet101
+# elegy.nets.ResNet200
 
-::: elegy.nets.resnet.ResNet101
+::: elegy.nets.resnet.ResNet200
     selection:
         inherited_members: true
         members:

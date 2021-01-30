@@ -1,7 +1,7 @@
 
-# elegy.nets.resnet.ResNet152
+# elegy.nets.ResNet
 
-::: elegy.nets.resnet.ResNet152
+::: elegy.nets.resnet.ResNet
     selection:
         inherited_members: true
         members:

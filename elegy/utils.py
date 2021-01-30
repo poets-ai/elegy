@@ -91,7 +91,6 @@ def get_input_args(
     x: tp.Union[np.ndarray, jnp.ndarray, tp.Dict[str, tp.Any], tp.Tuple],
     *,
     states: types.States,
-    training: bool,
     initializing: bool,
     mode: types.Mode,
 ) -> tp.Tuple[tp.Tuple, tp.Dict[str, tp.Any]]:
@@ -107,13 +106,13 @@ def get_input_args(
         kwargs = {}
 
     apply_kwargs = dict(
-        training=training,
         initializing=initializing,
         net_params=states.net_params,
         net_states=states.net_states,
         rng=states.rng,
         states=states,
         mode=mode,
+        training=(mode == types.Mode.train),
     )
     apply_kwargs.update(kwargs)
 

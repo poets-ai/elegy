@@ -31,7 +31,7 @@ from .losses import Loss
 from .metrics import Metric
 from .model.model import Metrics, Model, Losses
 from .model.model_core import PredStep, TestStep, GradStep, TrainStep
-from .model.model_base import ModelBase
+from .model.model_base import ModelBase, load
 from .module import Module, to_module
 from .optimizer import Optimizer
 from .types import (

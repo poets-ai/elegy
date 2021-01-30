@@ -9,6 +9,7 @@ from elegy.nn.dropout import Dropout
 from elegy.nn.layer_normalization import LayerNormalization
 from elegy.nn.linear import Linear
 from elegy.nn.sequential_module import sequential
+from elegy import types
 
 
 class MultiHeadAttention(module.Module):
