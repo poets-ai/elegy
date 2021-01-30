@@ -11,24 +11,7 @@ import jax.numpy as jnp
 import numpy as np
 
 from elegy import hooks, utils
-from elegy.types import (
-    ApplyJit,
-    Info,
-    InitJit,
-    JitCallable,
-    MissingParameter,
-    NoContext,
-    ModuleOrderError,
-    Parameter,
-    ParameterCollection,
-    ParameterSpec,
-    Parameters,
-    Path,
-    Protocol,
-    RNGSeq,
-    ShapeMismatch,
-    SubmoduleNotRegistered,
-)
+from elegy import types
 
 __all__ = [
     "Module",
@@ -42,12 +25,12 @@ __all__ = [
 T = tp.TypeVar("T")
 
 
-class LocalContext(Protocol):
+class LocalContext(types.Protocol):
     parent: tp.Optional["Module"]
-    module_path: tp.Optional[tp.Dict["Module", Path]]
+    module_path: tp.Optional[tp.Dict["Module", types.Path]]
     inside_call: tp.Optional[bool]
     module_index: tp.Optional[int]
-    rng: tp.Optional[RNGSeq]
+    rng: tp.Optional[types.RNGSeq]
     training: tp.Optional[bool]
     initializing: tp.Optional[bool]
 
@@ -55,10 +38,10 @@ class LocalContext(Protocol):
 @dataclass
 class _LocalContext(threading.local):
     parent: tp.Optional["Module"]
-    module_path: tp.Optional[tp.Dict["Module", Path]]
+    module_path: tp.Optional[tp.Dict["Module", types.Path]]
     inside_call: tp.Optional[bool]
     module_index: tp.Optional[int]
-    rng: tp.Optional[RNGSeq]
+    rng: tp.Optional[types.RNGSeq]
     training: tp.Optional[bool]
     initializing: tp.Optional[bool]
 
@@ -120,7 +103,7 @@ class ModuleMeta(ABCMeta):
 
                 # if not isinstance(module, cls):
                 if module.__class__.__name__ != cls.__name__:
-                    raise ModuleOrderError(
+                    raise types.ModuleOrderError(
                         f"Error retrieving module, expected type {cls.__name__}, got {module.__class__.__name__}. "
                         "This is probably due to control flow, you must guarantee that the same amount "
                         "of submodules will be created every time and that their order is the same."
@@ -159,13 +142,13 @@ class Module(metaclass=ModuleMeta):
     _submodules: tp.Dict[str, "Module"]
     _submodule_name: tp.Dict["Module", str]
     _dynamic_submodules: tp.List["Module"]
-    _default_params: tp.Dict[str, Parameter]
-    _scope_params: tp.Optional[tp.Dict[str, Parameter]]
-    _spec: tp.Dict[str, ParameterSpec]
+    _default_params: tp.Dict[str, types.Parameter]
+    _scope_params: tp.Optional[tp.Dict[str, types.Parameter]]
+    _spec: tp.Dict[str, types.ParameterSpec]
     _initialized: bool = False
 
-    init_jit: InitJit
-    apply_jit: ApplyJit
+    init_jit: types.InitJit
+    apply_jit: types.ApplyJit
 
     __all__ = [
         "__init__",
@@ -211,12 +194,12 @@ class Module(metaclass=ModuleMeta):
         for submodule in self._submodules.values():
             submodule._mark_initialized_recursive()
 
-    def _register_parameter(self, name: str, parameter: Parameter):
+    def _register_parameter(self, name: str, parameter: types.Parameter):
         param_info = jax.tree_map(
-            lambda x: Info(shape=x.shape, dtype=x.dtype),
+            lambda x: types.Info(shape=x.shape, dtype=x.dtype),
             parameter.value,
         )
-        self._spec[name] = ParameterSpec(
+        self._spec[name] = types.ParameterSpec(
             collection=parameter.collection, info=param_info
         )
         # commenting this out makes Module.init stateful by default
@@ -225,7 +208,7 @@ class Module(metaclass=ModuleMeta):
     def call_with_defaults(
         self,
         *,
-        rng: tp.Optional[RNGSeq] = None,
+        rng: tp.Optional[types.RNGSeq] = None,
         training: bool = False,
     ) -> tp.Callable[..., tp.Any]:
         def call_with_defaults_wrapper(*args, **kwargs):
@@ -248,7 +231,7 @@ class Module(metaclass=ModuleMeta):
     def call_with_defaults_jit(
         self,
         *,
-        rng: tp.Optional[RNGSeq] = None,
+        rng: tp.Optional[types.RNGSeq] = None,
         training: bool = False,
     ) -> tp.Callable[..., tp.Any]:
         def call_with_defaults_jit_wrapper(*args):
@@ -274,18 +257,18 @@ class Module(metaclass=ModuleMeta):
         # ------------------------------
         # init
         # ------------------------------
-        def init_jit_raw(rng: tp.Optional[RNGSeq], *args):
+        def init_jit_raw(rng: tp.Optional[types.RNGSeq], *args):
             return self.init(rng=rng)(*args)
 
-        init_jit: JitCallable = hooks.jit(init_jit_raw)
+        init_jit: types.JitCallable = hooks.jit(init_jit_raw)
 
         def init_jit_wrapper(
-            rng: tp.Optional[RNGSeq] = None,
+            rng: tp.Optional[types.RNGSeq] = None,
             set_defaults: bool = False,
-        ) -> JitCallable:
+        ) -> types.JitCallable:
             def init_jit_callable(
                 *args,
-            ) -> tp.Tuple[tp.Any, ParameterCollection]:
+            ) -> tp.Tuple[tp.Any, types.ParameterCollection]:
 
                 y, collections = init_jit(rng, *args)
 
@@ -301,7 +284,9 @@ class Module(metaclass=ModuleMeta):
         # ------------------------------
         # apply
         # ------------------------------
-        def apply_jit_raw(parameters, training: bool, rng: tp.Optional[RNGSeq], *args):
+        def apply_jit_raw(
+            parameters, training: bool, rng: tp.Optional[types.RNGSeq], *args
+        ):
             return self.apply(
                 collections=parameters,
                 training=training,
@@ -311,15 +296,15 @@ class Module(metaclass=ModuleMeta):
         apply_jit = hooks.jit(apply_jit_raw, static_argnums=[1])
 
         def apply_jit_wrapper(
-            collections: ParameterCollection,
+            collections: types.ParameterCollection,
             *,
             training: bool = True,
-            rng: tp.Optional[RNGSeq] = None,
+            rng: tp.Optional[types.RNGSeq] = None,
             set_defaults: bool = False,
-        ) -> JitCallable:
+        ) -> types.JitCallable:
             def apply_jit_callable(
                 *args,
-            ) -> tp.Tuple[tp.Any, ParameterCollection]:
+            ) -> tp.Tuple[tp.Any, types.ParameterCollection]:
 
                 y, collections_ = apply_jit(collections, training, rng, *args)
 
@@ -384,14 +369,16 @@ class Module(metaclass=ModuleMeta):
     def init(
         self,
         *,
-        rng: tp.Optional[RNGSeq] = None,
+        rng: tp.Optional[types.RNGSeq] = None,
         set_defaults: bool = False,
-    ) -> tp.Callable[..., tp.Tuple[tp.Any, ParameterCollection]]:
+    ) -> tp.Callable[..., tp.Tuple[tp.Any, types.ParameterCollection]]:
         """
         Initializes the module,
         """
 
-        def init_callable(*args, **kwargs) -> tp.Tuple[tp.Any, ParameterCollection]:
+        def init_callable(
+            *args, **kwargs
+        ) -> tp.Tuple[tp.Any, types.ParameterCollection]:
 
             with module_context(
                 module=self, collections=None, initializing=True, training=True, rng=rng
@@ -412,17 +399,21 @@ class Module(metaclass=ModuleMeta):
 
     def apply(
         self,
-        collections: ParameterCollection,
+        collections: types.ParameterCollection,
         *,
         training: bool = True,
-        rng: tp.Optional[RNGSeq] = None,
+        rng: tp.Optional[types.RNGSeq] = None,
         set_defaults: bool = False,
-    ) -> tp.Callable[..., tp.Union[tp.Any, tp.Tuple[tp.Any, ParameterCollection]]]:
+    ) -> tp.Callable[
+        ..., tp.Union[tp.Any, tp.Tuple[tp.Any, types.ParameterCollection]]
+    ]:
         """
         Call the module.
         """
 
-        def apply_callable(*args, **kwargs) -> tp.Tuple[tp.Any, ParameterCollection]:
+        def apply_callable(
+            *args, **kwargs
+        ) -> tp.Tuple[tp.Any, types.ParameterCollection]:
 
             with module_context(
                 module=self,
@@ -506,7 +497,7 @@ class Module(metaclass=ModuleMeta):
             else:
                 initial_value = initializer()
                 initial_value = jax.tree_map(jnp.asarray, initial_value)
-                parameter = Parameter(collection, initial_value)
+                parameter = types.Parameter(collection, initial_value)
                 self._register_parameter(name, parameter)
 
             self._scope_params[name] = parameter
@@ -515,7 +506,7 @@ class Module(metaclass=ModuleMeta):
 
         if parameter.collection != collection:
             raise ValueError(
-                f"Parameter {name} previously found in collection {parameter.collection} "
+                f"types.Parameter {name} previously found in collection {parameter.collection} "
                 f"but currently being added for collection {collection}"
             )
 
@@ -537,7 +528,7 @@ class Module(metaclass=ModuleMeta):
         Update a parameter of the current module.
 
         !!! Note
-            Parameters are not updated when `Module.init` is called.
+            types.Parameters are not updated when `Module.init` is called.
 
         Arguments:
             name: The name of the parameter to be updated. It must be unique and no other field/property/method
@@ -551,13 +542,13 @@ class Module(metaclass=ModuleMeta):
         assert self._scope_params is not None
 
         if name not in self._scope_params:
-            raise ValueError(f"Parameter {name} not found in {self}.")
+            raise ValueError(f"types.Parameter {name} not found in {self}.")
 
         if self.is_initializing():
             return
 
         parameter = self._scope_params[name]
-        assert isinstance(parameter, Parameter)
+        assert isinstance(parameter, types.Parameter)
         parameter.value = value
 
     def add_or_update_parameter(
@@ -571,7 +562,7 @@ class Module(metaclass=ModuleMeta):
         Add a parameter to the current module or update it if it already exists.
 
         !!! Note
-            Parameters are not updated when `Module.init` is called.
+            types.Parameters are not updated when `Module.init` is called.
 
         Arguments:
             name: The name of the state. It must be unique and no other field/property/method
@@ -597,7 +588,7 @@ class Module(metaclass=ModuleMeta):
 
     def next_key(self) -> jnp.ndarray:
         if LOCAL.rng is None:
-            raise NoContext(
+            raise types.NoContext(
                 f"Trying to call `next_key` from module {self} outside `init` or `apply`."
             )
 
@@ -605,14 +596,14 @@ class Module(metaclass=ModuleMeta):
 
     def is_training(self) -> bool:
         if LOCAL.training is None:
-            raise NoContext(
+            raise types.NoContext(
                 f"Trying to call `is_training` from module '{self}' outside `init` or `apply`."
             )
         return LOCAL.training
 
     def is_initializing(self) -> bool:
         if LOCAL.initializing is None:
-            raise NoContext(
+            raise types.NoContext(
                 f"Trying to call `is_initializing` from module '{self}' outside `init` or `apply`."
             )
 
@@ -633,7 +624,7 @@ class Module(metaclass=ModuleMeta):
 
     def set_default_parameters(
         self,
-        collections: ParameterCollection,
+        collections: types.ParameterCollection,
     ):
         self._set_parameters_internal(
             collections=collections,
@@ -642,7 +633,7 @@ class Module(metaclass=ModuleMeta):
 
     def _set_parameters_internal(
         self,
-        collections: ParameterCollection,
+        collections: types.ParameterCollection,
         set_default_params: bool = False,
     ):
         old_colletions = self.get_default_parameters()
@@ -660,7 +651,7 @@ class Module(metaclass=ModuleMeta):
             )
             raise
 
-    def _validate_parameters(self, collections: ParameterCollection):
+    def _validate_parameters(self, collections: types.ParameterCollection):
         # define sets
         incoming_names = set(
             name for parameters in collections.values() for name in parameters
@@ -689,11 +680,11 @@ class Module(metaclass=ModuleMeta):
 
             if parameter.collection != param_spec.collection:
                 raise ValueError(
-                    f"Parameter {name} on module {self.name} was expected to be on collection {param_spec.collection} "
+                    f"types.Parameter {name} on module {self.name} was expected to be on collection {param_spec.collection} "
                     f"but was found on collection {parameter.collection}"
                 )
 
-            def validate_value(value: jnp.ndarray, info: Info):
+            def validate_value(value: jnp.ndarray, info: types.Info):
                 if value.shape != info.shape:
                     incoming_shapes = jax.tree_map(lambda x: x.shape, parameter.value)
                     expected_shape = jax.tree_map(lambda x: x.shape, param_spec.info)
@@ -708,7 +699,7 @@ class Module(metaclass=ModuleMeta):
 
     def _set_parameters(
         self,
-        collections: ParameterCollection,
+        collections: types.ParameterCollection,
         check_shapes: bool = False,
         set_default_params: bool = False,
     ):
@@ -737,11 +728,13 @@ class Module(metaclass=ModuleMeta):
                 set_default_params=set_default_params,
             )
 
-    def get_default_parameters(self) -> ParameterCollection:
+    def get_default_parameters(self) -> types.ParameterCollection:
         parameters = self._get_parameters(defaults=True)
         return utils.split_into_collections(parameters)
 
-    def get_parameters_internal(self, defaults: bool = False) -> ParameterCollection:
+    def get_parameters_internal(
+        self, defaults: bool = False
+    ) -> types.ParameterCollection:
         parameters = self._get_parameters(defaults=defaults)
         return utils.split_into_collections(parameters)
 
@@ -785,7 +778,7 @@ def next_key() -> jnp.ndarray:
     return LOCAL.rng.next()
 
 
-def get_module_path(module: tp.Optional[Module] = None) -> tp.Optional[Path]:
+def get_module_path(module: tp.Optional[Module] = None) -> tp.Optional[types.Path]:
     if module is None:
         module = LOCAL.parent
 
@@ -811,10 +804,10 @@ def has_scope() -> bool:
 
 def module_context(
     module: Module,
-    collections: tp.Optional[ParameterCollection],
+    collections: tp.Optional[types.ParameterCollection],
     initializing: bool,
     training: bool,
-    rng: tp.Optional[RNGSeq],
+    rng: tp.Optional[types.RNGSeq],
 ) -> tp.ContextManager[None]:
     return _scope_context(
         module=module,
@@ -828,10 +821,10 @@ def module_context(
 @contextmanager
 def _scope_context(
     module: Module,
-    collections: tp.Optional[ParameterCollection],
+    collections: tp.Optional[types.ParameterCollection],
     initializing: bool,
     training: bool,
-    rng: tp.Optional[RNGSeq],
+    rng: tp.Optional[types.RNGSeq],
 ):
     prev_module_path = LOCAL.module_path
     prev_initializing = LOCAL.initializing
@@ -874,12 +867,12 @@ def _call_context(module: Module):
     try:
 
         if not has_scope():
-            raise NoContext(
+            raise types.NoContext(
                 f"Trying to call top-level module '{module}' directly, use `apply` instead."
             )
 
         elif prev_parent is not None and module not in prev_parent._submodule_name:
-            raise SubmoduleNotRegistered(
+            raise types.SubmoduleNotRegistered(
                 f"Submodule {utils.get_name(module)} not registered in {utils.get_name(prev_parent)}, "
                 f"this is probably due to some of the following reasons:\n"
                 f"- The submodule is being captured by closure and not registered to any field.\n"

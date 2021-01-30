@@ -1,7 +1,6 @@
 # Implementation based on tf.keras.engine.training.py
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
-from elegy.types import MissingMethod, MissingModule
 import pickle
 import typing as tp
 from copy import copy
@@ -13,6 +12,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import optax
+from elegy import types
 from elegy.callbacks import Callback, CallbackList, History
 from elegy.data import (
     DataHandler,
@@ -21,7 +21,7 @@ from elegy.data import (
     train_validation_split,
     unpack_x_y_sample_weight,
 )
-from elegy.model.model_core import TestStep, Logs, ModelCore, PredStep
+from elegy.model.model_core import ModelCore, PredStep, TestStep
 from tabulate import tabulate
 
 # from elegy.module import Module
@@ -111,13 +111,13 @@ class ModelBase(ModelCore):
     ]
 
     def pred_step(self, *args, **kwargs):
-        raise MissingMethod()
+        raise types.MissingMethod()
 
     def test_step(self, *args, **kwargs):
-        raise MissingMethod()
+        raise types.MissingMethod()
 
     def train_step(self, *args, **kwargs):
-        raise MissingMethod()
+        raise types.MissingMethod()
 
     def fit(
         self,
@@ -381,7 +381,7 @@ class ModelBase(ModelCore):
 
                     val_logs = {"val_" + name: val for name, val in val_logs.items()}
                     epoch_logs.update(val_logs)
-                except (MissingMethod, MissingModule) as e:
+                except (types.MissingMethod, types.MissingModule) as e:
                     pass
 
             callbacks.on_epoch_end(epoch, epoch_logs)
@@ -417,7 +417,7 @@ class ModelBase(ModelCore):
         sample_weight: tp.Optional[np.ndarray] = None,
         steps: tp.Optional[int] = None,
         callbacks: tp.Union[tp.List[Callback], CallbackList, None] = None,
-    ) -> Logs:
+    ) -> types.Logs:
         """Returns the loss value & metrics values for the model in test mode.
         Computation is done in batches.
 

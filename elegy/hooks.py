@@ -1,6 +1,5 @@
 from contextlib import contextmanager
-from elegy.types import Logs, NoContext, Path, RNGSeq, Scalar, Summaries, Summary
-from elegy import utils
+from elegy import utils, types
 import functools
 import threading
 import typing as tp
@@ -10,20 +9,20 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-from elegy.types import Protocol
+from elegy import types
 
 
-class HooksContext(Protocol):
-    losses: tp.Optional[Logs]
-    metrics: tp.Optional[Logs]
-    summaries: tp.Optional[Summaries]
+class HooksContext(types.Protocol):
+    losses: tp.Optional[types.Logs]
+    metrics: tp.Optional[types.Logs]
+    summaries: tp.Optional[types.Summaries]
 
 
 @dataclass
 class _HooksContext(threading.local):
-    losses: tp.Optional[Logs]
-    metrics: tp.Optional[Logs]
-    summaries: tp.Optional[Summaries]
+    losses: tp.Optional[types.Logs]
+    metrics: tp.Optional[types.Logs]
+    summaries: tp.Optional[types.Summaries]
 
 
 LOCAL: HooksContext = _HooksContext(
@@ -38,7 +37,7 @@ LOCAL: HooksContext = _HooksContext(
 # ----------------------------------------------------------------
 
 
-def add_loss(name: str, value: Scalar) -> None:
+def add_loss(name: str, value: types.Scalar) -> None:
     """
     A hook that lets you define a loss within a [`module`][elegy.module.Module].
 
@@ -66,7 +65,7 @@ def add_loss(name: str, value: Scalar) -> None:
         LOCAL.losses[name] = value
 
 
-def add_metric(name: str, value: Scalar) -> None:
+def add_metric(name: str, value: types.Scalar) -> None:
     """
     A hook that lets you define a metric within a [`module`][elegy.module.Module].
 
@@ -89,7 +88,7 @@ def add_metric(name: str, value: Scalar) -> None:
 
 
 def add_summary(
-    path: Path,
+    path: types.Path,
     module: tp.Any,
     value: tp.Any,
 ) -> None:
@@ -115,10 +114,10 @@ def add_summary(
     if not summaries_active():
         return
 
-    LOCAL.summaries.append(Summary(path, module, value))
+    LOCAL.summaries.append(types.Summary(path, module, value))
 
 
-def get_losses() -> Logs:
+def get_losses() -> types.Logs:
     if LOCAL.losses is None:
         return {}
 
@@ -129,7 +128,7 @@ def losses_active() -> bool:
     return LOCAL.losses is not None
 
 
-def get_metrics() -> Logs:
+def get_metrics() -> types.Logs:
     if LOCAL.metrics is None:
         return {}
 
@@ -140,7 +139,7 @@ def metrics_active() -> bool:
     return LOCAL.metrics is not None
 
 
-def get_summaries() -> Summaries:
+def get_summaries() -> types.Summaries:
     if LOCAL.summaries is None:
         return []
 
@@ -158,9 +157,9 @@ def summaries_active() -> bool:
 
 def context(
     *,
-    losses: tp.Union[Logs, bool, None] = None,
-    metrics: tp.Union[Logs, bool, None] = None,
-    summaries: tp.Union[Summaries, bool, None] = None,
+    losses: tp.Union[types.Logs, bool, None] = None,
+    metrics: tp.Union[types.Logs, bool, None] = None,
+    summaries: tp.Union[types.Summaries, bool, None] = None,
     set_all: bool = False,
 ) -> tp.ContextManager[None]:
 
@@ -190,9 +189,9 @@ def context(
 
 @contextmanager
 def _context(
-    losses: tp.Optional[Logs],
-    metrics: tp.Optional[Logs],
-    summaries: tp.Optional[Summaries],
+    losses: tp.Optional[types.Logs],
+    metrics: tp.Optional[types.Logs],
+    summaries: tp.Optional[types.Summaries],
 ) -> tp.Iterator[None]:
 
     prev_losses = LOCAL.losses
@@ -218,14 +217,14 @@ def _context(
 
 class TransformtOutput(tp.NamedTuple):
     output: tp.Any
-    losses: tp.Optional[Logs]
-    metrics: tp.Optional[Logs]
+    losses: tp.Optional[types.Logs]
+    metrics: tp.Optional[types.Logs]
     summaries: tp.Optional[tp.List[tp.Any]]
 
 
 class DynamicArgs(tp.NamedTuple):
-    losses: tp.Optional[Logs]
-    metrics: tp.Optional[Logs]
+    losses: tp.Optional[types.Logs]
+    metrics: tp.Optional[types.Logs]
     summaries: tp.Optional[tp.List[tp.Any]]
 
 
@@ -234,9 +233,9 @@ class StaticArgs(tp.NamedTuple):
 
 
 def _update_local_context(
-    losses: tp.Optional[Logs],
-    metrics: tp.Optional[Logs],
-    summaries: tp.Optional[Summaries],
+    losses: tp.Optional[types.Logs],
+    metrics: tp.Optional[types.Logs],
+    summaries: tp.Optional[types.Summaries],
 ):
     if LOCAL.losses is not None and losses is not None:
         LOCAL.losses.clear()

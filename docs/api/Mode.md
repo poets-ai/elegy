@@ -1,6 +1,6 @@
 
-# elegy.RNG
+# elegy.Mode
 
-::: elegy.random.RNG
+::: elegy.types.Mode
     selection:
         inherited_members: true

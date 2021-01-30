@@ -1,13 +1,12 @@
-from io import StringIO
-from tabulate import tabulate
-import yaml
-from elegy.optimizer import Optimizer
 import typing as tp
+from io import StringIO
 
 import jax
 import jax.numpy as jnp
 import numpy as np
-from elegy import hooks, utils, module
+import yaml
+from elegy import hooks, module, types, utils
+from elegy.model import model_core
 from elegy.model.generalized_module.generalized_module import (
     GeneralizedModule,
     generalize,
@@ -18,25 +17,10 @@ from elegy.model.generalized_optimizer.generalized_optimizer import (
     generalize_optimizer,
 )
 from elegy.model.model_base import ModelBase
-from elegy.model.model_core import (
-    GradStep,
-    PredStep,
-    States,
-    TestStep,
-    TrainStep,
-    model_context,
-)
-from elegy.types import (
-    MissingOptimizer,
-    RNG,
-    Logs,
-    MissingModule,
-    OutputStates,
-    Scalar,
-    UNINITIALIZED,
-)
-from elegy.types import Mode, RNGSeq, Uninitialized
+from elegy.model.model_core import model_context
+from elegy.optimizer import Optimizer
 from jax._src.random import t
+from tabulate import tabulate
 
 
 class Model(ModelBase):
@@ -90,12 +74,12 @@ class Model(ModelBase):
                 using Jax's `jit` to. Your model might run slower, but it should become easier for you to debug
                 it by stepping into individual layer calls.
         """
-        if "rng" in kwargs and not isinstance(kwargs["rng"], (int, RNGSeq)):
+        if "rng" in kwargs and not isinstance(kwargs["rng"], (int, types.RNGSeq)):
             raise ValueError(
-                f"rng must be one of the following types: int, RNGSeq. Got {kwargs['rng']}"
+                f"rng must be one of the following types: int, types.RNGSeq. Got {kwargs['rng']}"
             )
 
-        super().__init__(rng=RNGSeq(seed), **kwargs)
+        super().__init__(rng=types.RNGSeq(seed), **kwargs)
 
         self.module = module
         self.loss = loss
@@ -117,7 +101,7 @@ class Model(ModelBase):
         self.seed = seed
 
     def __call__(self, *args, **kwargs):
-        assert isinstance(self.states.rng, RNGSeq)
+        assert isinstance(self.states.rng, types.RNGSeq)
         assert self.module is not None
 
         return self.module.apply(
@@ -141,14 +125,14 @@ class Model(ModelBase):
         # net_params: tp.Any,
         x: tp.Any,
         # net_states: tp.Any,
-        # rng: RNG,
+        # rng: types.RNG,
         training: bool,
         initializing: bool,
-        states: States,
-    ) -> PredStep:
+        states: types.States,
+    ) -> model_core.PredStep:
 
         if self.module is None:
-            raise MissingModule(
+            raise types.MissingModule(
                 "Trying run default `pred_step` on a Model with no `module`, try overriding `pred_step`."
             )
 
@@ -160,7 +144,7 @@ class Model(ModelBase):
             initializing=initializing,
         )
 
-        assert isinstance(states.rng, RNGSeq)
+        assert isinstance(states.rng, types.RNGSeq)
 
         if initializing:
             module_fn = self.api_module.init(states.rng)
@@ -173,7 +157,7 @@ class Model(ModelBase):
 
         y_pred, net_params, net_states = module_fn(*x_args, **x_kwargs)
 
-        return PredStep.simple(
+        return model_core.PredStep.simple(
             y_pred=y_pred,
             states=states.update(net_states=net_states, net_params=net_params),
         )
@@ -187,11 +171,11 @@ class Model(ModelBase):
         # metrics_states: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        # rng: RNG,
+        # rng: types.RNG,
         training: bool,
         initializing: bool,
-        states: States,
-    ) -> TestStep:
+        states: types.States,
+    ) -> model_core.TestStep:
 
         # TODO: add DI
         y_pred, states, aux_losses, aux_metrics, _ = self.call_pred_step(
@@ -200,7 +184,7 @@ class Model(ModelBase):
             training=training,
             initializing=initializing,
         )
-        assert isinstance(states.rng, RNGSeq)
+        assert isinstance(states.rng, types.RNGSeq)
 
         if initializing:
             metrics_states, loss_states = None, None
@@ -250,7 +234,7 @@ class Model(ModelBase):
         logs = utils.merge_with_unique_names(metrics_logs, loss_logs)
         states = states.update(metrics_states=(metrics_states, loss_states))
 
-        return TestStep(loss, logs, states)
+        return model_core.TestStep(loss, logs, states)
 
     def grad_step(
         self,
@@ -258,13 +242,13 @@ class Model(ModelBase):
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        states: States,
+        states: types.States,
         training: bool,
         initializing: bool,
-    ) -> GradStep:
+    ) -> model_core.GradStep:
         def loss_fn(
             net_params: tp.Any,
-            states: States,
+            states: types.States,
             x: tp.Any,
             y_true: tp.Any,
             sample_weight: tp.Optional[np.ndarray],
@@ -292,7 +276,7 @@ class Model(ModelBase):
             class_weight,
         )
 
-        return GradStep(loss, logs, states, grads)
+        return model_core.GradStep(loss, logs, states, grads)
 
     def train_step(
         self,
@@ -304,11 +288,11 @@ class Model(ModelBase):
         # optimizer_states: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        # rng: RNG,
-        states: States,
+        # rng: types.RNG,
+        states: types.States,
         training: bool,
         initializing: bool,
-    ) -> TrainStep:
+    ) -> model_core.TrainStep:
 
         if initializing:
             loss, logs, states = self.call_test_step(
@@ -334,19 +318,19 @@ class Model(ModelBase):
             )
 
         if self.optimizer is None:
-            raise MissingOptimizer(
+            raise types.MissingOptimizer(
                 "Trying to run `train_step` without an optimizer, "
                 "please provide an optimizer to the Model(...) constructor or "
                 "override `train_step`."
             )
-        assert isinstance(states.rng, RNGSeq)
+        assert isinstance(states.rng, types.RNGSeq)
 
         # calculate current lr before update
         if initializing:
             optimizer_states = self.api_optimizer.init(states.rng, states.net_params)
             net_params = states.net_params
         else:
-            if isinstance(self.states.optimizer_states, Uninitialized):
+            if isinstance(self.states.optimizer_states, types.Uninitialized):
                 raise ValueError(
                     f"Trying to run default `train_step` with an optimizer "
                     "but `optimizer_states` was not initialized on `init`. Please initialize optimizer."
@@ -371,7 +355,7 @@ class Model(ModelBase):
             optimizer_states=optimizer_states,
         )
 
-        return TrainStep(logs, states)
+        return model_core.TrainStep(logs, states)
 
     def summary(
         self, x, depth: int = 2, tablefmt: str = "fancy_grid", **tablulate_kwargs
@@ -391,7 +375,7 @@ class Model(ModelBase):
                 See [python-tabulate](https://github.com/astanin/python-tabulate)
                 for more options.
         """
-        with model_context(Mode.summary):
+        with model_context(types.Mode.summary):
             self.maybe_initialize(x=x)
 
             method = (
@@ -574,9 +558,9 @@ class Metrics:
 
     def calculate_metrics(
         self,
-        aux_metrics: Logs,
-        callback: tp.Callable[[str, GeneralizedModule], OutputStates],
-    ) -> tp.Tuple[Logs, tp.Any]:
+        aux_metrics: types.Logs,
+        callback: tp.Callable[[str, GeneralizedModule], types.OutputStates],
+    ) -> tp.Tuple[types.Logs, tp.Any]:
 
         states = {}
 
@@ -594,9 +578,9 @@ class Metrics:
 
     def init(
         self,
-        aux_metrics: Logs,
-        rng: RNGSeq,
-    ) -> tp.Callable[..., tp.Tuple[Logs, tp.Any]]:
+        aux_metrics: types.Logs,
+        rng: types.RNGSeq,
+    ) -> tp.Callable[..., tp.Tuple[types.Logs, tp.Any]]:
         def lambda_(*args, **kwargs):
             def callback(name, module):
                 kwargs_ = kwargs.copy()
@@ -609,10 +593,10 @@ class Metrics:
 
     def apply(
         self,
-        aux_metrics: Logs,
-        rng: RNGSeq,
+        aux_metrics: types.Logs,
+        rng: types.RNGSeq,
         states: tp.Any,
-    ) -> tp.Callable[..., tp.Tuple[Logs, tp.Any]]:
+    ) -> tp.Callable[..., tp.Tuple[types.Logs, tp.Any]]:
         assert states is not None
 
         def lambda_(*args, **kwargs):
@@ -631,19 +615,19 @@ class AvgMetric(GeneralizedModule):
     def __init__(self, f: tp.Callable):
         self.f = f
 
-    def init(self, rng: RNGSeq) -> tp.Callable[..., OutputStates]:
-        def _lambda(*args, **kwargs) -> OutputStates:
+    def init(self, rng: types.RNGSeq) -> tp.Callable[..., types.OutputStates]:
+        def _lambda(*args, **kwargs) -> types.OutputStates:
 
             preds = utils.inject_dependencies(self.f)(*args, **kwargs)
 
-            if isinstance(preds, OutputStates):
+            if isinstance(preds, types.OutputStates):
                 return preds
 
             n = 0
             total = jax.tree_map(lambda x: jnp.zeros_like(x), preds)
-            return OutputStates(
+            return types.OutputStates(
                 preds=preds,
-                params=UNINITIALIZED,
+                params=types.UNINITIALIZED,
                 states=(n, total),
             )
 
@@ -653,22 +637,22 @@ class AvgMetric(GeneralizedModule):
         self,
         params: tp.Any,
         states: tp.Any,
-        rng: RNGSeq,
-    ) -> tp.Callable[..., OutputStates]:
-        def _lambda(*args, **kwargs) -> OutputStates:
+        rng: types.RNGSeq,
+    ) -> tp.Callable[..., types.OutputStates]:
+        def _lambda(*args, **kwargs) -> types.OutputStates:
 
             preds = utils.inject_dependencies(self.f)(*args, **kwargs)
 
-            if isinstance(preds, OutputStates):
+            if isinstance(preds, types.OutputStates):
                 return preds
 
             n, total = states
             n += 1
             total = jax.tree_multimap(lambda a, b: a + b, preds, total)
             preds = jax.tree_map(lambda total: total / n, total)
-            return OutputStates(
+            return types.OutputStates(
                 preds=preds,
-                params=UNINITIALIZED,
+                params=types.UNINITIALIZED,
                 states=(n, total),
             )
 
@@ -692,8 +676,8 @@ class Losses:
         }
         self.loss_metrics = LossMetrics()
 
-    def calculate_losses(self, *args, **kwargs) -> Logs:
-        logs: Logs = {}
+    def calculate_losses(self, *args, **kwargs) -> types.Logs:
+        logs: types.Logs = {}
 
         for name, loss_fn in self.losses.items():
             losses = utils.inject_dependencies(loss_fn)(*args, **kwargs)
@@ -709,9 +693,9 @@ class Losses:
 
     def init(
         self,
-        aux_losses: Logs,
-        rng: RNGSeq,
-    ) -> tp.Callable[..., tp.Tuple[Scalar, Logs, tp.Any]]:
+        aux_losses: types.Logs,
+        rng: types.RNGSeq,
+    ) -> tp.Callable[..., tp.Tuple[types.Scalar, types.Logs, tp.Any]]:
         def _lambda(*args, **kwargs):
             module_logs = self.calculate_losses(*args, **kwargs)
 
@@ -736,9 +720,9 @@ class Losses:
 
     def apply(
         self,
-        aux_losses: Logs,
+        aux_losses: types.Logs,
         states: tp.Any,
-    ) -> tp.Callable[..., tp.Tuple[Scalar, Logs, tp.Any]]:
+    ) -> tp.Callable[..., tp.Tuple[types.Scalar, types.Logs, tp.Any]]:
         def _lambda(*args, **kwargs):
             module_logs = self.calculate_losses(*args, **kwargs)
 

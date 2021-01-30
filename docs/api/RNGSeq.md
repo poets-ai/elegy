@@ -1,6 +1,6 @@
 
-# elegy.set_rng
+# elegy.RNGSeq
 
-::: elegy.module.set_rng
+::: elegy.types.RNGSeq
     selection:
         inherited_members: true

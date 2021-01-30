@@ -1,9 +1,7 @@
 import typing as tp
 from abc import ABC, abstractmethod
 
-from elegy import utils
-from elegy.types import Grads, NetParams, OptimizerStates, OutputStates, RNGSeq
-import typing as tp
+from elegy import types, utils
 
 REGISTRY: tp.Dict[tp.Type, tp.Type["GeneralizedOptimizer"]] = {}
 
@@ -18,17 +16,19 @@ class GeneralizedOptimizer(ABC):
         ...
 
     @abstractmethod
-    def init(self, rng: RNGSeq, net_params: NetParams) -> OptimizerStates:
+    def init(
+        self, rng: types.RNGSeq, net_params: types.NetParams
+    ) -> types.OptimizerStates:
         ...
 
     @abstractmethod
     def apply(
         self,
-        net_params: NetParams,
-        grads: Grads,
-        optimizer_states: OptimizerStates,
-        rng: RNGSeq,
-    ) -> tp.Tuple[NetParams, OptimizerStates]:
+        net_params: types.NetParams,
+        grads: types.Grads,
+        optimizer_states: types.OptimizerStates,
+        rng: types.RNGSeq,
+    ) -> tp.Tuple[types.NetParams, types.OptimizerStates]:
         ...
 
 

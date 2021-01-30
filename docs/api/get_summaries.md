@@ -1,6 +1,6 @@
 
 # elegy.get_summaries
 
-::: elegy.module.get_summaries
+::: elegy.hooks.get_summaries
     selection:
         inherited_members: true

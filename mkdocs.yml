@@ -16,12 +16,22 @@ nav:
     Modules, Losses, and Metrics: guides/modules-losses-metrics.md
     Contributing: guides/contributing.md
 - API Reference:
+    DependencyUnavailable: api/DependencyUnavailable.md
+    GradStep: api/GradStep.md
     Loss: api/Loss.md
     Metric: api/Metric.md
+    Metrics: api/Metrics.md
+    Mode: api/Mode.md
     Model: api/Model.md
+    ModelBase: api/ModelBase.md
     Module: api/Module.md
     Optimizer: api/Optimizer.md
-    RNG: api/RNG.md
+    PredStep: api/PredStep.md
+    RNGSeq: api/RNGSeq.md
+    States: api/States.md
+    TestStep: api/TestStep.md
+    TrainStep: api/TrainStep.md
+    Uninitialized: api/Uninitialized.md
     add_loss: api/add_loss.md
     add_metric: api/add_metric.md
     add_summary: api/add_summary.md
@@ -36,16 +46,15 @@ nav:
       RemoteMonitor: api/callbacks/RemoteMonitor.md
       TensorBoard: api/callbacks/TensorBoard.md
       TerminateOnNaN: api/callbacks/TerminateOnNaN.md
+    context: api/context.md
     data:
       DataLoader: api/data/DataLoader.md
       Dataset: api/data/Dataset.md
-    get_dynamic_context: api/get_dynamic_context.md
+    flax_summarize: api/flax_summarize.md
+    flax_summary: api/flax_summary.md
     get_losses: api/get_losses.md
     get_metrics: api/get_metrics.md
-    get_rng: api/get_rng.md
-    get_static_context: api/get_static_context.md
     get_summaries: api/get_summaries.md
-    context: api/context.md
     initializers:
       Constant: api/initializers/Constant.md
       Orthogonal: api/initializers/Orthogonal.md
@@ -54,7 +63,7 @@ nav:
       TruncatedNormal: api/initializers/TruncatedNormal.md
       UniformScaling: api/initializers/UniformScaling.md
       VarianceScaling: api/initializers/VarianceScaling.md
-    is_training: api/is_training.md
+    inject_dependencies: api/inject_dependencies.md
     jit: api/jit.md
     losses:
       BinaryCrossentropy: api/losses/BinaryCrossentropy.md
@@ -104,16 +113,8 @@ nav:
       sparse_categorical_accuracy: api/metrics/sparse_categorical_accuracy.md
     model:
       Model: api/model/Model.md
-      Optimizer: api/model/Optimizer.md
+      ModelBase: api/model/ModelBase.md
       load: api/model/load.md
-    module:
-      Module: api/module/Module.md
-      add_loss: api/module/add_loss.md
-      add_metric: api/module/add_metric.md
-      add_summary: api/module/add_summary.md
-      next_key: api/module/next_key.md
-      to_module: api/module/to_module.md
-    name_context: api/name_context.md
     nets:
       resnet:
         ResNet: api/nets/resnet/ResNet.md
@@ -123,7 +124,6 @@ nav:
         ResNet200: api/nets/resnet/ResNet200.md
         ResNet34: api/nets/resnet/ResNet34.md
         ResNet50: api/nets/resnet/ResNet50.md
-    next_key: api/next_key.md
     nn:
       AvgPool: api/nn/AvgPool.md
       BatchNormalization: api/nn/BatchNormalization.md
@@ -146,12 +146,7 @@ nav:
       GlobalL1: api/regularizers/GlobalL1.md
       GlobalL1L2: api/regularizers/GlobalL1L2.md
       GlobalL2: api/regularizers/GlobalL2.md
-    set_context: api/set_context.md
-    set_rng: api/set_rng.md
-    set_training: api/set_training.md
     to_module: api/to_module.md
-    training_context: api/training_context.md
-    value_and_grad: api/value_and_grad.md
 extra:
   search:
     language: en

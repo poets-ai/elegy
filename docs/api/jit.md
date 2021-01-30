@@ -1,6 +1,6 @@
 
 # elegy.jit
 
-::: elegy.module.jit
+::: elegy.hooks.jit
     selection:
         inherited_members: true

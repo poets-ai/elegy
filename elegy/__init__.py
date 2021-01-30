@@ -12,7 +12,7 @@ from elegy.hooks import (
     jit,
     context,
 )
-from elegy.types import OutputStates, States
+from elegy import types
 from elegy.utils import inject_dependencies
 
 from . import losses  # module,
@@ -30,12 +30,12 @@ from . import (
 )
 from .losses import Loss
 from .metrics import Metric
-from .model import Logs, Metrics, Model
+from .model import Metrics, Model
 from .model.model_core import PredStep, TestStep, GradStep, TrainStep
 from .model.model_base import ModelBase
 from .module import Module, to_module
 from .optimizer import Optimizer
-from .types import DependencyUnavailable, Mode, RNGSeq, Uninitialized
+from .types import DependencyUnavailable, Mode, RNGSeq, Uninitialized, States
 
 try:
     from .model.generalized_module.linen_module import flax_summarize, flax_summary
@@ -44,40 +44,44 @@ except DependencyUnavailable as e:
 
 
 __all__ = [
-    "Loss",
-    "Metric",
-    "Model",
-    "Module",
-    "Optimizer",
-    "RNG",
     "add_loss",
     "add_metric",
     "add_summary",
-    "callbacks",
-    "data",
-    "get_dynamic_context",
+    "context",
     "get_losses",
     "get_metrics",
-    "get_rng",
-    "get_static_context",
     "get_summaries",
-    "context",
-    "initializers",
-    "is_training",
     "jit",
+    "context",
+    "States",
+    "inject_dependencies",
     "losses",
+    "callbacks",
+    "data",
+    "hooks",
+    "initializers",
     "metrics",
     "model",
-    "module",
-    "name_context",
     "nets",
-    "next_key",
     "nn",
     "regularizers",
-    "set_context",
-    "set_rng",
-    "set_training",
+    "utils",
+    "Loss",
+    "Metric",
+    "Metrics",
+    "Model",
+    "PredStep",
+    "TestStep",
+    "GradStep",
+    "TrainStep",
+    "ModelBase",
+    "Module",
     "to_module",
-    "training_context",
-    "value_and_grad",
+    "Optimizer",
+    "DependencyUnavailable",
+    "Mode",
+    "RNGSeq",
+    "Uninitialized",
+    "flax_summarize",
+    "flax_summary",
 ]

@@ -1,17 +1,7 @@
 import functools
 import typing as tp
 
-from elegy import hooks, utils
-from elegy.types import (
-    DependencyUnavailable,
-    NetParams,
-    NetStates,
-    OutputStates,
-    Path,
-    Pytree,
-    RNGSeq,
-    Scalar,
-)
+from elegy import hooks, types, utils
 
 from .generalized_module import GeneralizedModule, register_module_for
 
@@ -20,7 +10,7 @@ try:
     from flax import linen
     from flax.core import FrozenDict, freeze, unfreeze
 except ImportError:
-    raise DependencyUnavailable("Flax is not available")
+    raise types.DependencyUnavailable("Flax is not available")
 
 
 @register_module_for(nn.Module)
@@ -28,7 +18,7 @@ class LinenModule(GeneralizedModule):
     def __init__(self, module: nn.Module):
         self.module = module
 
-    def init(self, rng: RNGSeq) -> tp.Callable[..., OutputStates]:
+    def init(self, rng: types.RNGSeq) -> tp.Callable[..., types.OutputStates]:
         def _lambda(*args, **kwargs):
             def init_fn(*args, **kwargs):
                 return self.module.init_with_output(rng.next(), *args, **kwargs)
@@ -48,7 +38,7 @@ class LinenModule(GeneralizedModule):
                 else (variables, FrozenDict())
             )
 
-            return OutputStates(y_pred, net_params, net_states)
+            return types.OutputStates(y_pred, net_params, net_states)
 
         return _lambda
 
@@ -56,8 +46,8 @@ class LinenModule(GeneralizedModule):
         self,
         params: tp.Any,
         states: tp.Any,
-        rng: RNGSeq,
-    ) -> tp.Callable[..., OutputStates]:
+        rng: types.RNGSeq,
+    ) -> tp.Callable[..., types.OutputStates]:
         if params is None:
             params = FrozenDict()
 
@@ -89,19 +79,19 @@ class LinenModule(GeneralizedModule):
                 else (variables, FrozenDict())
             )
 
-            return OutputStates(y_pred, net_params, net_states)
+            return types.OutputStates(y_pred, net_params, net_states)
 
         return _lambda
 
     def get_summary_params(
         self,
-        path: Path,
+        path: types.Path,
         module: tp.Any,
         value: tp.Any,
         include_submodules: bool,
-        net_params: NetParams,
-        net_states: NetStates,
-    ) -> tp.Tuple[tp.Optional[Pytree], tp.Optional[Pytree]]:
+        net_params: types.NetParams,
+        net_states: types.NetStates,
+    ) -> tp.Tuple[tp.Optional[types.Pytree], tp.Optional[types.Pytree]]:
 
         if net_params is None:
             params_tree = None
@@ -159,7 +149,7 @@ def flax_summary(
     flax_module: linen.Module,
     name: str,
     f: tp.Any,
-    value: Scalar,
+    value: types.Scalar,
 ):
     if hooks.summaries_active():
         path = flax_module.scope.path + (name,)

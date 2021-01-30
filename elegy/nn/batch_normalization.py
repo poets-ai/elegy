@@ -11,7 +11,7 @@ import jax.numpy as jnp
 import numpy as np
 from haiku._src import utils as haiku_utils
 
-from elegy import initializers, module
+from elegy import initializers, module, types
 from elegy import module
 from elegy import hooks
 from elegy.nn.moving_averages import ExponentialMovingAverage
@@ -46,8 +46,8 @@ class BatchNormalization(module.Module):
         create_offset: bool = True,
         decay_rate: float = 0.99,
         eps: float = 1e-5,
-        scale_init: Optional[initializers.Initializer] = None,
-        offset_init: Optional[initializers.Initializer] = None,
+        scale_init: Optional[types.Initializer] = None,
+        offset_init: Optional[types.Initializer] = None,
         axis: Optional[Sequence[int]] = None,
         cross_replica_axis: Optional[str] = None,
         data_format: str = "channels_last",

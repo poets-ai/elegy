@@ -1,6 +1,6 @@
 
-# elegy.context
+# elegy.States
 
-::: elegy.module.context
+::: elegy.types.States
     selection:
         inherited_members: true

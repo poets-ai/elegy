@@ -1,4 +1,4 @@
-from elegy.types import NoContext
+from elegy import types
 from unittest import TestCase
 
 import jax
@@ -75,7 +75,7 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        with pytest.raises(NoContext):
+        with pytest.raises(types.NoContext):
             y = m(2.0)
 
     def test_basic_call(self):

@@ -3,10 +3,8 @@ import typing as tp
 import haiku as hk
 import jax.numpy as jnp
 import numpy as np
-from elegy import module
-from elegy import hooks
+from elegy import hooks, module, types
 from elegy.initializers import TruncatedNormal
-from elegy.types import Initializer
 
 
 class Linear(module.Module):
@@ -19,8 +17,8 @@ class Linear(module.Module):
         self,
         output_size: int,
         with_bias: bool = True,
-        w_init: tp.Optional[Initializer] = None,
-        b_init: tp.Optional[Initializer] = None,
+        w_init: tp.Optional[types.Initializer] = None,
+        b_init: tp.Optional[types.Initializer] = None,
         **kwargs
     ):
         """

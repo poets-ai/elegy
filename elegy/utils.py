@@ -1,23 +1,21 @@
-from elegy.types import (
-    Parameter,
-    ParameterCollection,
-    Path,
-    States,
-    Uninitialized,
-)
 import functools
+import hashlib
 import inspect
+import os
 import re
+import shutil
 import sys
 import typing as tp
+import urllib
 from functools import total_ordering
-import urllib, hashlib, shutil, os
 
 import jax
 import jax.numpy as jnp
 import jax.tree_util
 import numpy as np
 import toolz
+
+from elegy import types
 
 
 def maybe_expand_dims(a: np.ndarray, b: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
@@ -92,7 +90,7 @@ def get_function_args(f) -> tp.List[inspect.Parameter]:
 def get_input_args(
     x: tp.Union[np.ndarray, jnp.ndarray, tp.Dict[str, tp.Any], tp.Tuple],
     *,
-    states: States,
+    states: types.States,
     training: bool,
     initializing: bool,
 ) -> tp.Tuple[tp.Tuple, tp.Dict[str, tp.Any]]:
@@ -145,7 +143,9 @@ def get_name(obj) -> str:
         raise ValueError(f"Could not get name for: {obj}")
 
 
-def _leaf_paths(path: Path, inputs: tp.Any) -> tp.Iterable[tp.Tuple[Path, tp.Any]]:
+def _leaf_paths(
+    path: types.Path, inputs: tp.Any
+) -> tp.Iterable[tp.Tuple[types.Path, tp.Any]]:
 
     if isinstance(inputs, (tp.Tuple, tp.List)):
         for i, value in enumerate(inputs):
@@ -157,11 +157,13 @@ def _leaf_paths(path: Path, inputs: tp.Any) -> tp.Iterable[tp.Tuple[Path, tp.Any
         yield (path, inputs)
 
 
-def leaf_paths(inputs: tp.Any) -> tp.List[tp.Tuple[Path, tp.Any]]:
+def leaf_paths(inputs: tp.Any) -> tp.List[tp.Tuple[types.Path, tp.Any]]:
     return list(_leaf_paths((), inputs))
 
 
-def _flatten_names(path: Path, inputs: tp.Any) -> tp.Iterable[tp.Tuple[Path, tp.Any]]:
+def _flatten_names(
+    path: types.Path, inputs: tp.Any
+) -> tp.Iterable[tp.Tuple[types.Path, tp.Any]]:
 
     if isinstance(inputs, (tp.Tuple, tp.List)):
         for i, value in enumerate(inputs):
@@ -278,7 +280,7 @@ def merge_params(a: tp.Any, b: tp.Any):
         raise ValueError(f"Cannot merge structs:\na={a}\nb={b}")
 
 
-def get_path_params(path: Path, params: tp.Any) -> tp.Any:
+def get_path_params(path: types.Path, params: tp.Any) -> tp.Any:
     for key in path:
         try:
             params = params[key]
@@ -289,14 +291,14 @@ def get_path_params(path: Path, params: tp.Any) -> tp.Any:
 
 
 def none_or_uninitialized(x: tp.Any) -> bool:
-    return x is None or isinstance(x, Uninitialized)
+    return x is None or isinstance(x, types.Uninitialized)
 
 
-# def merge_collections(collections: ParameterCollection) -> tp.Dict[str, tp.Any]:
+# def merge_collections(collections: types.ParameterCollection) -> tp.Dict[str, tp.Any]:
 #     output_parameters = {}
 
 #     for collection, values in collections.items():
-#         params = jax.tree_map(lambda x: Parameter(x, collection), values)
+#         params = jax.tree_map(lambda x: types.Parameter(x, collection), values)
 #         output_parameters = merge_params(params, output_parameters)
 
 #     assert isinstance(output_parameters, dict)
@@ -304,7 +306,7 @@ def none_or_uninitialized(x: tp.Any) -> bool:
 #     return output_parameters
 
 
-def get_parameter(collections: ParameterCollection, name: str) -> Parameter:
+def get_parameter(collections: types.ParameterCollection, name: str) -> types.Parameter:
 
     parameters = [
         (collection, parameters[name])
@@ -321,12 +323,12 @@ def get_parameter(collections: ParameterCollection, name: str) -> Parameter:
 
     [(collection, value)] = parameters
 
-    return Parameter(collection=collection, value=value)
+    return types.Parameter(collection=collection, value=value)
 
 
 def get_submodule_colletions(
-    collections: ParameterCollection, name: str
-) -> ParameterCollection:
+    collections: types.ParameterCollection, name: str
+) -> types.ParameterCollection:
     return {
         collection: parameters[name]
         for collection, parameters in collections.items()
@@ -334,10 +336,12 @@ def get_submodule_colletions(
     }
 
 
-def split_into_collections(parameters: tp.Dict[str, tp.Any]) -> ParameterCollection:
+def split_into_collections(
+    parameters: tp.Dict[str, tp.Any]
+) -> types.ParameterCollection:
     all_collections = set()
 
-    def find_collections(parameter: Parameter):
+    def find_collections(parameter: types.Parameter):
         all_collections.add(parameter.collection)
 
     jax.tree_map(find_collections, parameters)
@@ -352,13 +356,13 @@ def split_into_collections(parameters: tp.Dict[str, tp.Any]) -> ParameterCollect
 
 
 def unwrap_filter(
-    f: tp.Callable[[Parameter], bool], parameters: tp.Dict[str, tp.Any]
+    f: tp.Callable[[types.Parameter], bool], parameters: tp.Dict[str, tp.Any]
 ) -> tp.Dict[str, tp.Any]:
     outputs = {}
 
     for name, parameter in parameters.items():
 
-        if isinstance(parameter, Parameter):
+        if isinstance(parameter, types.Parameter):
             if f(parameter):
                 outputs[name] = parameter.value
         else:

@@ -1,6 +1,6 @@
 
-# elegy.next_key
+# elegy.Metrics
 
-::: elegy.hooks.next_key
+::: elegy.model.model.Metrics
     selection:
         inherited_members: true

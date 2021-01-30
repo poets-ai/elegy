@@ -1,22 +1,7 @@
 import typing as tp
 
-from elegy import utils
-from elegy.types import (
-    ModuleParams,
-    ModuleStates,
-    NetParams,
-    NetStates,
-    OutputStates,
-    Path,
-    Pytree,
-    RNGSeq,
-    States,
-    SummaryModule,
-    SummaryValue,
-    Uninitialized,
-)
+from elegy import hooks, types, utils
 from elegy.module import Module
-from elegy import hooks
 
 from .generalized_module import GeneralizedModule, register_module_for
 
@@ -26,7 +11,7 @@ class ElegyModule(GeneralizedModule):
     def __init__(self, module: Module):
         self.module = module
 
-    def init(self, rng: RNGSeq) -> tp.Callable[..., OutputStates]:
+    def init(self, rng: types.RNGSeq) -> tp.Callable[..., types.OutputStates]:
         def _lambda(*args, **kwargs):
 
             y_pred, collections = utils.inject_dependencies(self.module.init(rng=rng))(
@@ -38,15 +23,15 @@ class ElegyModule(GeneralizedModule):
             net_params = collections.pop("parameters", {})
             net_states = collections
 
-            return OutputStates(y_pred, net_params, net_states)
+            return types.OutputStates(y_pred, net_params, net_states)
 
         return _lambda
 
     def update(
         self,
-        params: tp.Optional[ModuleParams],
-        states: tp.Optional[ModuleStates],
-    ) -> tp.Tuple[tp.Optional[ModuleParams], tp.Optional[ModuleStates]]:
+        params: tp.Optional[types.ModuleParams],
+        states: tp.Optional[types.ModuleStates],
+    ) -> tp.Tuple[tp.Optional[types.ModuleParams], tp.Optional[types.ModuleStates]]:
 
         collections = states
 
@@ -64,8 +49,8 @@ class ElegyModule(GeneralizedModule):
         self,
         params: tp.Any,
         states: tp.Any,
-        rng: RNGSeq,
-    ) -> tp.Callable[..., OutputStates]:
+        rng: types.RNGSeq,
+    ) -> tp.Callable[..., types.OutputStates]:
         def _lambda(*args, **kwargs):
             collections = states.copy() if states is not None else {}
             if params is not None:
@@ -82,19 +67,19 @@ class ElegyModule(GeneralizedModule):
             net_params = collections.pop("parameters", {})
             net_states = collections
 
-            return OutputStates(y_pred, net_params, net_states)
+            return types.OutputStates(y_pred, net_params, net_states)
 
         return _lambda
 
     def get_summary_params(
         self,
-        path: Path,
+        path: types.Path,
         module: tp.Any,
         value: tp.Any,
         include_submodules: bool,
-        net_params: NetParams,
-        net_states: NetStates,
-    ) -> tp.Tuple[tp.Optional[Pytree], tp.Optional[Pytree]]:
+        net_params: types.NetParams,
+        net_states: types.NetStates,
+    ) -> tp.Tuple[tp.Optional[types.Pytree], tp.Optional[types.Pytree]]:
 
         if net_params is None:
             params_tree = None

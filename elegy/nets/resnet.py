@@ -1,12 +1,12 @@
 # adapted from the flax library https://github.com/google/flax
 
-from elegy.types import RNGSeq
-import jax, jax.numpy as jnp
-from elegy import hooks, module, nn, utils
-import typing as tp
 import pickle
-import numpy as np
+import typing as tp
 
+import jax
+import jax.numpy as jnp
+import numpy as np
+from elegy import hooks, module, nn, types, utils
 
 __all__ = [
     "ResNet",
@@ -154,7 +154,7 @@ class ResNet(module.Module):
 
             x = np.empty([0, 224, 224, 3], dtype=self.dtype)
             # quick but dirty module initialization
-            jax.eval_shape(self.init(rng=RNGSeq(42)), x)
+            jax.eval_shape(self.init(rng=types.RNGSeq(42)), x)
 
             self.set_default_parameters(parameters)
 

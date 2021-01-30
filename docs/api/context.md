@@ -1,6 +1,6 @@
 
-# elegy.get_rng
+# elegy.context
 
-::: elegy.module.get_rng
+::: elegy.hooks.context
     selection:
         inherited_members: true

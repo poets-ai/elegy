@@ -1,12 +1,12 @@
-from copy import copy
+import pathlib
 import pickle
 import threading
 import typing as tp
+from contextlib import contextmanager
+from copy import copy
 from dataclasses import dataclass
 from enum import Enum
 from io import StringIO
-import pathlib
-from contextlib import contextmanager
 
 import cloudpickle
 import jax
@@ -14,32 +14,19 @@ import jax.numpy as jnp
 import numpy as np
 import optax
 import yaml
-from elegy import hooks, module, utils
+from elegy import hooks, module, types, utils
 from elegy.losses.loss import Loss
 from elegy.metrics.metric import Metric
-from elegy.types import (
-    Grads,
-    Scalar,
-    Summaries,
-    Logs,
-    RNG,
-    RNGSeq,
-    States,
-    UNINITIALIZED,
-    Uninitialized,
-    Protocol,
-)
-from elegy.types import Mode
 from tabulate import tabulate
 
 
-class LocalContext(Protocol):
-    mode: tp.Optional[Mode]
+class LocalContext(types.Protocol):
+    mode: tp.Optional[types.Mode]
 
 
 @dataclass
 class _LocalContext(threading.local):
-    mode: tp.Optional[Mode]
+    mode: tp.Optional[types.Mode]
 
 
 LOCAL: LocalContext = _LocalContext(mode=None)
@@ -47,13 +34,13 @@ LOCAL: LocalContext = _LocalContext(mode=None)
 
 class PredStep(tp.NamedTuple):
     y_pred: tp.Any
-    states: States
-    aux_losses: Logs
-    aux_metrics: Logs
-    summaries: Summaries
+    states: types.States
+    aux_losses: types.Logs
+    aux_metrics: types.Logs
+    summaries: types.Summaries
 
     @classmethod
-    def simple(cls, y_pred: tp.Any, states: States):
+    def simple(cls, y_pred: tp.Any, states: types.States):
         return cls(
             y_pred=y_pred,
             states=states,
@@ -64,39 +51,39 @@ class PredStep(tp.NamedTuple):
 
 
 class TestStep(tp.NamedTuple):
-    loss: Scalar
-    logs: Logs
-    states: States
+    loss: types.Scalar
+    logs: types.Logs
+    states: types.States
 
 
 class GradStep(tp.NamedTuple):
-    loss: Scalar
-    logs: Logs
-    states: States
-    grads: Grads
+    loss: types.Scalar
+    logs: types.Logs
+    states: types.States
+    grads: types.Grads
 
 
 class TrainStep(tp.NamedTuple):
-    logs: Logs
-    states: States
+    logs: types.Logs
+    states: types.States
 
 
 class ModelCore:
-    states: States
-    initial_states: States
+    states: types.States
+    initial_states: types.States
     history: tp.Dict[str, tp.Any]
     run_eagerly: bool = False
 
     def __init__(
         self,
-        net_params: tp.Union[Uninitialized, tp.Any] = UNINITIALIZED,
-        net_states: tp.Union[Uninitialized, tp.Any] = UNINITIALIZED,
-        metrics_states: tp.Union[Uninitialized, tp.Any] = UNINITIALIZED,
-        optimizer_states: tp.Union[Uninitialized, tp.Any] = UNINITIALIZED,
-        rng: tp.Union[Uninitialized, tp.Any] = UNINITIALIZED,
+        net_params: tp.Union[types.Uninitialized, tp.Any] = types.UNINITIALIZED,
+        net_states: tp.Union[types.Uninitialized, tp.Any] = types.UNINITIALIZED,
+        metrics_states: tp.Union[types.Uninitialized, tp.Any] = types.UNINITIALIZED,
+        optimizer_states: tp.Union[types.Uninitialized, tp.Any] = types.UNINITIALIZED,
+        rng: tp.Union[types.Uninitialized, tp.Any] = types.UNINITIALIZED,
         run_eagerly: bool = False,
     ):
-        self.states = States(
+        self.states = types.States(
             net_params=net_params,
             net_states=net_states,
             metrics_states=metrics_states,
@@ -151,7 +138,7 @@ class ModelCore:
         x: tp.Any,
         net_states: tp.Any,
         rng: tp.Any,
-        states: States,
+        states: types.States,
         training: bool,
         initializing: bool,
     ) -> PredStep:
@@ -160,14 +147,14 @@ class ModelCore:
     def call_pred_step(
         self,
         x: tp.Any,
-        states: States,
+        states: types.States,
         training: bool,
         initializing: bool,
     ) -> PredStep:
         assert LOCAL.mode is not None
 
-        losses = metrics = LOCAL.mode in (Mode.test, Mode.train)
-        summaries = LOCAL.mode == Mode.summary
+        losses = metrics = LOCAL.mode in (types.Mode.test, types.Mode.train)
+        summaries = LOCAL.mode == types.Mode.summary
 
         with hooks.context(losses=losses, metrics=metrics, summaries=summaries):
             return utils.inject_dependencies(self.pred_step)(
@@ -190,7 +177,7 @@ class ModelCore:
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         rng: tp.Any,
-        states: States,
+        states: types.States,
         training: bool,
         initializing: bool,
     ) -> TestStep:
@@ -202,7 +189,7 @@ class ModelCore:
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        states: States,
+        states: types.States,
         training: bool,
         initializing: bool,
     ) -> TestStep:
@@ -230,7 +217,7 @@ class ModelCore:
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         rng: tp.Any,
-        states: States,
+        states: types.States,
         training: bool,
         initializing: bool,
     ) -> GradStep:
@@ -242,7 +229,7 @@ class ModelCore:
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        states: States,
+        states: types.States,
         training: bool,
         initializing: bool,
     ) -> GradStep:
@@ -271,7 +258,7 @@ class ModelCore:
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         rng: tp.Any,
-        states: States,
+        states: types.States,
         training: bool,
         initializing: bool,
     ) -> TrainStep:
@@ -283,7 +270,7 @@ class ModelCore:
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        states: States,
+        states: types.States,
         initializing: bool,
     ) -> TrainStep:
         return utils.inject_dependencies(self.train_step)(
@@ -323,7 +310,7 @@ class ModelCore:
             ValueError: In case of mismatch between given number of inputs and
                 expectations of the model.
         """
-        with model_context(Mode.pred):
+        with model_context(types.Mode.pred):
             self.maybe_initialize(x=x)
 
             method = (
@@ -347,7 +334,7 @@ class ModelCore:
         y: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
         sample_weight: tp.Optional[np.ndarray] = None,
         class_weight: tp.Optional[np.ndarray] = None,
-    ) -> Logs:
+    ) -> types.Logs:
         """
         Test the model on a single batch of samples.
 
@@ -372,7 +359,7 @@ class ModelCore:
         Raises:
             ValueError: In case of invalid user-provided arguments.
         """
-        with model_context(Mode.test):
+        with model_context(types.Mode.test):
             self.maybe_initialize(
                 x=x,
                 y_true=y,
@@ -407,7 +394,7 @@ class ModelCore:
         y: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
         sample_weight: tp.Optional[np.ndarray] = None,
         class_weight: tp.Optional[np.ndarray] = None,
-    ) -> Logs:
+    ) -> types.Logs:
         """
         Runs a single gradient update on a single batch of data.
 
@@ -439,7 +426,7 @@ class ModelCore:
             ValueError: In case of invalid user-provided arguments.
         """
 
-        with model_context(Mode.train):
+        with model_context(types.Mode.train):
             self.maybe_initialize(
                 x=x,
                 y_true=y,
@@ -491,15 +478,15 @@ class ModelCore:
         assert LOCAL.mode is not None
 
         mode = LOCAL.mode
-        rng = self.states.rng if isinstance(self.states.rng, RNGSeq) else None
+        rng = self.states.rng if isinstance(self.states.rng, types.RNGSeq) else None
         training = True
         initializing = True
-        state_updates: States
+        state_updates: types.States
 
         if (
-            mode in (Mode.pred, Mode.summary)
-            and isinstance(self.states.net_params, Uninitialized)
-            and isinstance(self.states.net_states, Uninitialized)
+            mode in (types.Mode.pred, types.Mode.summary)
+            and isinstance(self.states.net_params, types.Uninitialized)
+            and isinstance(self.states.net_states, types.Uninitialized)
         ):
             method = (
                 self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
@@ -511,8 +498,8 @@ class ModelCore:
                 training,
                 initializing,
             )
-        elif mode == Mode.test and isinstance(
-            self.states.metrics_states, Uninitialized
+        elif mode == types.Mode.test and isinstance(
+            self.states.metrics_states, types.Uninitialized
         ):
             method = (
                 self.call_test_step if self.run_eagerly else self.call_test_step_jit
@@ -527,8 +514,8 @@ class ModelCore:
                 training,
                 initializing,
             )
-        elif mode == Mode.train and isinstance(
-            self.states.optimizer_states, Uninitialized
+        elif mode == types.Mode.train and isinstance(
+            self.states.optimizer_states, types.Uninitialized
         ):
             method = (
                 self.call_train_step if self.run_eagerly else self.call_train_step_jit
@@ -546,18 +533,18 @@ class ModelCore:
         else:
             return
 
-        if mode in (Mode.pred, Mode.test, Mode.train):
-            if isinstance(state_updates.net_params, Uninitialized):
+        if mode in (types.Mode.pred, types.Mode.test, types.Mode.train):
+            if isinstance(state_updates.net_params, types.Uninitialized):
                 state_updates = state_updates.update(net_params=None)
 
-            if isinstance(state_updates.net_states, Uninitialized):
+            if isinstance(state_updates.net_states, types.Uninitialized):
                 state_updates = state_updates.update(net_states=None)
-        if mode in (Mode.test, Mode.train):
-            if isinstance(state_updates.metrics_states, Uninitialized):
+        if mode in (types.Mode.test, types.Mode.train):
+            if isinstance(state_updates.metrics_states, types.Uninitialized):
                 state_updates = state_updates.update(metrics_states=None)
 
-        if mode == Mode.train:
-            if isinstance(state_updates.optimizer_states, Uninitialized):
+        if mode == types.Mode.train:
+            if isinstance(state_updates.optimizer_states, types.Uninitialized):
                 state_updates = state_updates.update(optimizer_states=None)
 
         self.states = self.states.merge_new(state_updates)
@@ -647,12 +634,12 @@ class ModelCore:
 # ---------------------------------------------------------------
 
 
-def model_context(mode: Mode) -> tp.ContextManager[None]:
+def model_context(mode: types.Mode) -> tp.ContextManager[None]:
     return _model_context(mode)
 
 
 @contextmanager
-def _model_context(mode: Mode):
+def _model_context(mode: types.Mode):
     prev_mode = LOCAL.mode
 
     LOCAL.mode = mode

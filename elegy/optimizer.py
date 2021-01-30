@@ -1,23 +1,14 @@
-from elegy.types import (
-    Grads,
-    NetParams,
-    OptimizerStates,
-    RNGSeq,
-    Scalar,
-    Uninitialized,
-    Protocol,
-)
 import typing as tp
 
 import jax.numpy as jnp
 import numpy as np
 import optax
 
-from elegy import module, utils
+from elegy import module, types, utils
 from elegy.model.generalized_optimizer.generalized_optimizer import GeneralizedOptimizer
 
 
-class LRScheduler(Protocol):
+class LRScheduler(types.Protocol):
     def __call__(
         self, step: jnp.ndarray, epoch: tp.Optional[jnp.ndarray] = None
     ) -> jnp.ndarray:
@@ -73,16 +64,18 @@ class Optimizer(GeneralizedOptimizer):
         self.optimizer = optimizer
         self.lr_schedule = lr_schedule
 
-    def init(self, rng: RNGSeq, net_params: NetParams) -> OptimizerStates:
+    def init(
+        self, rng: types.RNGSeq, net_params: types.NetParams
+    ) -> types.OptimizerStates:
         return self.optimizer.init(net_params)
 
     def apply(
         self,
-        net_params: NetParams,
-        grads: Grads,
-        optimizer_states: OptimizerStates,
-        rng: RNGSeq,
-    ) -> tp.Tuple[NetParams, OptimizerStates]:
+        net_params: types.NetParams,
+        grads: types.Grads,
+        optimizer_states: types.OptimizerStates,
+        rng: types.RNGSeq,
+    ) -> tp.Tuple[types.NetParams, types.OptimizerStates]:
         updates, optimizer_states = self.optimizer.update(
             grads, optimizer_states, net_params
         )
@@ -90,11 +83,13 @@ class Optimizer(GeneralizedOptimizer):
 
         return net_params, optimizer_states
 
-    def current_lr(self, optimizer_states: OptimizerStates) -> tp.Optional[jnp.ndarray]:
+    def current_lr(
+        self, optimizer_states: types.OptimizerStates
+    ) -> tp.Optional[jnp.ndarray]:
         """Returns the learning rate scaled by schedule(s) that will be used for the next training step"""
 
         if (
-            not isinstance(optimizer_states, Uninitialized)
+            not isinstance(optimizer_states, types.Uninitialized)
             and self.lr_schedule is not None
         ):
             step = optimizer_states[-1].count

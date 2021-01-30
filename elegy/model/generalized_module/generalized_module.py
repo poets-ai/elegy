@@ -1,22 +1,7 @@
 import typing as tp
 from abc import ABC, abstractmethod
 
-from elegy import utils
-from elegy.types import (
-    ModuleParams,
-    ModuleStates,
-    NetParams,
-    NetStates,
-    OutputStates,
-    Path,
-    Pytree,
-    RNGSeq,
-    States,
-    SummaryModule,
-    SummaryValue,
-    UNINITIALIZED,
-)
-import typing as tp
+from elegy import types, utils
 
 REGISTRY: tp.Dict[tp.Type, tp.Type["GeneralizedModule"]] = {}
 
@@ -31,7 +16,7 @@ class GeneralizedModule(ABC):
         ...
 
     @abstractmethod
-    def init(self, rng: RNGSeq) -> tp.Callable[..., OutputStates]:
+    def init(self, rng: types.RNGSeq) -> tp.Callable[..., types.OutputStates]:
         ...
 
     @abstractmethod
@@ -39,26 +24,26 @@ class GeneralizedModule(ABC):
         self,
         params: tp.Any,
         states: tp.Any,
-        rng: RNGSeq,
-    ) -> tp.Callable[..., OutputStates]:
+        rng: types.RNGSeq,
+    ) -> tp.Callable[..., types.OutputStates]:
         ...
 
     def get_summary_params(
         self,
-        path: Path,
+        path: types.Path,
         module: tp.Any,
         value: tp.Any,
         include_submodules: bool,
-        net_params: NetParams,
-        net_states: NetStates,
-    ) -> tp.Tuple[tp.Optional[Pytree], tp.Optional[Pytree]]:
+        net_params: types.NetParams,
+        net_states: types.NetStates,
+    ) -> tp.Tuple[tp.Optional[types.Pytree], tp.Optional[types.Pytree]]:
         return None, None
 
     def update(
         self,
-        params: tp.Optional[ModuleParams],
-        states: tp.Optional[ModuleStates],
-    ) -> tp.Tuple[tp.Optional[ModuleParams], tp.Optional[ModuleStates]]:
+        params: tp.Optional[types.ModuleParams],
+        states: tp.Optional[types.ModuleStates],
+    ) -> tp.Tuple[tp.Optional[types.ModuleParams], tp.Optional[types.ModuleStates]]:
         return params, states
 
 
@@ -66,18 +51,18 @@ class CallableModule(GeneralizedModule):
     def __init__(self, f: tp.Callable):
         self.f = f
 
-    def init(self, rng: RNGSeq) -> tp.Callable[..., OutputStates]:
-        def lambda_(*args, **kwargs) -> OutputStates:
+    def init(self, rng: types.RNGSeq) -> tp.Callable[..., types.OutputStates]:
+        def lambda_(*args, **kwargs) -> types.OutputStates:
 
             output = utils.inject_dependencies(self.f)(*args, **kwargs)
 
-            if isinstance(output, OutputStates):
+            if isinstance(output, types.OutputStates):
                 return output
             else:
-                return OutputStates(
+                return types.OutputStates(
                     preds=output,
-                    params=UNINITIALIZED,
-                    states=UNINITIALIZED,
+                    params=types.UNINITIALIZED,
+                    states=types.UNINITIALIZED,
                 )
 
         return lambda_
@@ -86,19 +71,19 @@ class CallableModule(GeneralizedModule):
         self,
         params: tp.Any,
         states: tp.Any,
-        rng: RNGSeq,
-    ) -> tp.Callable[..., OutputStates]:
-        def lambda_(*args, **kwargs) -> OutputStates:
+        rng: types.RNGSeq,
+    ) -> tp.Callable[..., types.OutputStates]:
+        def lambda_(*args, **kwargs) -> types.OutputStates:
 
             output = utils.inject_dependencies(self.f)(*args, **kwargs)
 
-            if isinstance(output, OutputStates):
+            if isinstance(output, types.OutputStates):
                 return output
             else:
-                return OutputStates(
+                return types.OutputStates(
                     preds=output,
-                    params=UNINITIALIZED,
-                    states=UNINITIALIZED,
+                    params=types.UNINITIALIZED,
+                    states=types.UNINITIALIZED,
                 )
 
         return lambda_

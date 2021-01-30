@@ -10,10 +10,7 @@ import typing as tp
 import jax.numpy as jnp
 import numpy as np
 import six
-
-from elegy import types
-from elegy.types import ArrayHolder
-from elegy import utils
+from elegy import types, utils
 
 
 class Multimap(types.Protocol):
