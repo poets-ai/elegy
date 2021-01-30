@@ -85,48 +85,34 @@ class TestLinenModule(unittest.TestCase):
 
         model = elegy.Model(ModuleA())
 
-        summary_text = model.summary(x=jnp.ones([10, 2]), depth=10)
+        summary_text = model.summary(x=jnp.ones([10, 2]), depth=1)
 
         lines = summary_text.split("\n")
 
-        assert "ModuleB_0/ModuleC_0/relu" in lines[7]
+        assert "ModuleB_0" in lines[7]
+        assert "ModuleB" in lines[7]
         assert "(10, 2)" in lines[7]
+        assert "8" in lines[7]
+        assert "32 B" in lines[7]
+        assert "10" in lines[7]
+        assert "40 B" in lines[7]
 
-        assert "ModuleB_0/ModuleC_0" in lines[9]
-        assert "ModuleC" in lines[9]
+        assert "relu" in lines[9]
         assert "(10, 2)" in lines[9]
-        assert "5" in lines[9]
-        assert "20 B" in lines[9]
-        assert "6" in lines[9]
-        assert "24 B" in lines[9]
 
-        assert "ModuleB_0/relu" in lines[11]
+        assert "*" in lines[11]
+        assert "ModuleA" in lines[11]
         assert "(10, 2)" in lines[11]
+        assert "1" in lines[11]
+        assert "4 B" in lines[11]
+        assert "2" in lines[11]
+        assert "8 B" in lines[11]
 
-        assert "ModuleB_0" in lines[13]
-        assert "ModuleB" in lines[13]
-        assert "(10, 2)" in lines[13]
-        assert "3" in lines[13]
-        assert "12 B" in lines[13]
-        assert "4" in lines[13]
-        assert "16 B" in lines[13]
+        assert "21" in lines[13]
+        assert "84 B" in lines[13]
 
-        assert "relu" in lines[15]
-        assert "(10, 2)" in lines[15]
+        assert "9" in lines[14]
+        assert "36 B" in lines[14]
 
-        assert "*" in lines[17]
-        assert "ModuleA" in lines[17]
-        assert "(10, 2)" in lines[17]
-        assert "1" in lines[17]
-        assert "4 B" in lines[17]
-        assert "2" in lines[17]
-        assert "8 B" in lines[17]
-
-        assert "21" in lines[19]
-        assert "84 B" in lines[19]
-
-        assert "9" in lines[20]
-        assert "36 B" in lines[20]
-
-        assert "12" in lines[21]
-        assert "48 B" in lines[21]
+        assert "12" in lines[15]
+        assert "48 B" in lines[15]

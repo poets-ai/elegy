@@ -18,7 +18,6 @@ from elegy.utils import inject_dependencies
 from . import losses  # module,
 from . import (
     callbacks,
-    data,
     hooks,
     initializers,
     metrics,
@@ -30,13 +29,12 @@ from . import (
 )
 from .losses import Loss
 from .metrics import Metric
-from .model.model import Metrics, Model
+from .model.model import Metrics, Model, Losses
 from .model.model_core import PredStep, TestStep, GradStep, TrainStep
 from .model.model_base import ModelBase
 from .module import Module, to_module
 from .optimizer import Optimizer
 from .types import (
-    DependencyUnavailable,
     RNGSeq,
     Uninitialized,
     States,
@@ -47,7 +45,15 @@ from .generalized_optimizer.generalized_optimizer import GeneralizedOptimizer
 
 try:
     from .generalized_module.linen_module import flax_summarize, flax_summary
-except DependencyUnavailable as e:
+except types.DependencyUnavailable as e:
+    pass
+try:
+    from .generalized_module.haiku_module import (
+        HaikuModule,
+        haiku_summarize,
+        haiku_summary,
+    )
+except types.DependencyUnavailable as e:
     pass
 
 
@@ -55,7 +61,9 @@ __all__ = [
     "GeneralizedModule",
     "GeneralizedOptimizer",
     "GradStep",
+    "HaikuModule",
     "Loss",
+    "Losses",
     "Metric",
     "Metrics",
     "Model",
@@ -75,7 +83,6 @@ __all__ = [
     "callbacks",
     "context",
     "context",
-    "data",
     "flax_summarize",
     "flax_summary",
     "get_losses",
@@ -87,10 +94,8 @@ __all__ = [
     "jit",
     "losses",
     "metrics",
-    "model",
     "nets",
     "nn",
     "regularizers",
     "to_module",
-    "utils",
 ]
