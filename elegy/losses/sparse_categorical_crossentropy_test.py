@@ -51,6 +51,33 @@ def test_scce_out_of_bounds():
     assert not jnp.isnan(scce(ytrue1, ypred)).any()
 
 
+def test_scce_ignore_class():
+    ypred0 = jnp.zeros([4, 10])
+    ypred1 = ypred0 + jnp.array([0, 0, 0, 1])[:, jnp.newaxis]
+
+    ytrue1 = jnp.array([0, 1, 2, 255])
+
+    scce = elegy.losses.SparseCategoricalCrossentropy(
+        check_bounds=True, ignore_index=255
+    )
+    loss0 = scce(ytrue1, ypred0)
+    loss1 = scce(ytrue1, ypred1)
+    assert not jnp.isnan(loss0) and not jnp.isnan(loss1)
+    assert loss0 == loss1
+
+
+def test_class_weight():
+    y_true = jnp.array([1, 2])
+    y_pred = jnp.array([[0.05, 0.95, 0], [0.1, 0.8, 0.1]])
+    # reduce the weight of class 1, all others stay at 1
+    class_weight = {1: 0.3}
+
+    # Using 'auto'/'sum_over_batch_size' reduction type.
+    scce = elegy.losses.SparseCategoricalCrossentropy()
+    result = scce(y_true, y_pred, class_weight=class_weight)  # 1.1589
+    assert jnp.isclose(result, 1.1589, rtol=0.001)
+
+
 def test_scce_uint8_ytrue():
     ypred = np.random.random([2, 256, 256, 10])
     ytrue = np.random.randint(0, 10, size=(2, 256, 256)).astype(np.uint8)

@@ -1,7 +1,7 @@
 
-# elegy.nn.MaxPool
+# elegy.nets.unet.UNet_R18
 
-::: elegy.nn.pool.MaxPool
+::: elegy.nets.segmentation.unet.UNet_R18
     selection:
         inherited_members: true
         members:

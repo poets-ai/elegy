@@ -19,6 +19,7 @@ from .sparse_categorical_accuracy import (
     sparse_categorical_accuracy,
 )
 from .sum import Sum
+from .iou import MeanIoU
 
 __all__ = [
     "Accuracy",

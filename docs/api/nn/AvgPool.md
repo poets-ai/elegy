@@ -13,4 +13,5 @@
             - reset
             - init
             - initialized
+            - slice
         

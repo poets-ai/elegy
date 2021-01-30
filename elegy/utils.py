@@ -194,7 +194,6 @@ def download_file(url, cache="~/.elegy/downloads", sha256=None):
     if cache.startswith("~/"):
         cache = os.path.join(os.path.expanduser("~"), cache[2:])
     cachefilename = os.path.basename(url)
-    cachefilename = cachefilename[: cachefilename.find("?")]
     cachefilename = os.path.join(cache, cachefilename)
 
     if not os.path.exists(cachefilename):

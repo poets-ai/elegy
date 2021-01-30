@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from io import StringIO
 import copy
+import pickle
 
 import haiku as hk
 import jax
@@ -167,7 +168,10 @@ def construct_module(cls, *args, **kwargs) -> "Module":
 
     for key, value in vars(module).items():
         if not key.startswith("_") and leaf_isinstance(value, Module):
-            module._submodules.append(key)
+            if key not in module._submodules:
+                module._submodules.append(key)
+            # else case can happen when manually initializing modules inside __init__
+            # e.g. see ResNet(weights='imagenet') or UNet_R50(weights='coco')
 
     return module
 
@@ -1267,3 +1271,26 @@ def to_module(f):
 
 def as_initial(name):
     return f"{name}__initial__"
+
+
+def load_pretrained_weights(module, weights, pretrained_urls):
+    if weights.endswith(".pkl"):
+        parameters = pickle.load(open(weights, "rb"))
+    elif weights in pretrained_urls:
+        pretrained_urls = pretrained_urls[weights]
+        clsname = module.__class__.__name__
+        urldict = pretrained_urls.get(clsname, None)
+        if urldict is None:
+            raise ValueError(f"No pretrained weights for {clsname} available")
+        fname = utils.download_file(urldict["url"], sha256=urldict["sha256"])
+        parameters = pickle.load(open(fname, "rb"))
+    else:
+        raise ValueError("Unknown weights value: ", weights)
+
+    x = np.empty([0, 224, 224, 3], dtype=module.dtype)
+    # quick but dirty module initialization
+    with rng_context(RNG(0)):
+        jax.eval_shape(module.init, x)
+    module.set_parameters(
+        parameters, check_missing=True, check_shapes=True, ignore_on_error=False
+    )
