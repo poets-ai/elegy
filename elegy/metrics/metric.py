@@ -7,40 +7,42 @@ from elegy import module, types, utils
 
 class Metric(module.Module):
     """
-    Encapsulates metric logic and state.
+    Encapsulates metric logic and state. Metrics accumulate state between `apply`s such
+    that their output value reflect the metric as if calculated on the whole data
+    given up to that point.
 
     Usage:
 
     ```python
-    m = SomeMetric(...)
-    for input in ...:
-        result = m(input)
+    m = SomeMetric()
+    _, state = m.init()(x)
+    for x in batch:
+        result = m.apply(state)(x)
     print('Final result: ', result)
     ```
 
     Usage with the Model API:
 
     ```python
-    class MLP(elegy.Module):
-        def call(self, image: jnp.ndarray) -> jnp.ndarray:
-            mlp = elegy.nn.Sequential([
-                elegy.nn.Flatten(),
-                elegy.nn.Linear(300),
-                jax.nn.relu,
-                elegy.nn.Linear(10),
-            ])
-            return mlp(image)
+    >>> import elegy, jax, optax
+    >>> model = elegy.Model(
+    ...     module=elegy.nn.Sequential(
+    ...         lambda: [
+    ...             elegy.nn.Flatten(),
+    ...             elegy.nn.Linear(300),
+    ...             jax.nn.relu,
+    ...             elegy.nn.Linear(10),
+    ...         ]
+    ...     ),
+    ...     loss=[
+    ...         elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
+    ...     ],
+    ...     metrics=[
+    ...         elegy.metrics.SparseCategoricalAccuracy()
+    ...     ],
+    ...     optimizer=optax.rmsprop(1e-3),
+    ... )
 
-    model = elegy.Model(
-        module=MLP(),
-        loss=[
-            elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-        ],
-        metrics=[
-            elegy.metrics.SparseCategoricalAccuracy()
-        ],
-        optimizer=optax.rmsprop(1e-3),
-    )
     ```
 
     To be implemented by subclasses:
@@ -52,19 +54,20 @@ class Metric(module.Module):
     Example subclass implementation:
 
     ```python
-    class Accuracy(elegy.Metric):
-        def call(self, y_true, y_pred):
+    >>> class Accuracy(elegy.Metric):
+    ...    def call(self, y_true, y_pred):
+    ...
+    ...        total = self.add_parameter("total", lambda: jnp.array(0), trainable=False)
+    ...        count = self.add_parameter("count", lambda: jnp.array(0), trainable=False)
+    ...
+    ...        total += jnp.sum(y_true == y_pred)
+    ...        count += jnp.prod(y_true.shape)
+    ...
+    ...        self.update_parameter("total", total)
+    ...        self.update_parameter("count", count)
+    ...
+    ...        return total / count
 
-            total = hk.add_parameter("total", initializer=0, trainable=False)
-            count = hk.add_parameter("count", initializer=0, trainable=False)
-
-            total += jnp.sum(y_true == y_pred)
-            count += jnp.prod(y_true.shape)
-
-            hk.update_parameter("total", total)
-            hk.update_parameter("count", count)
-
-            return total / count
     ```
     """
 

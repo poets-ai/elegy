@@ -36,19 +36,30 @@ class ModelBase(ModelCore):
     `elegy.Module` or `haiku.Module`.
 
     To create a `Model` you first have to define its architecture in a `Module`:
+
     ```python
-    class MLP(elegy.Module):
-        def call(self, image: jnp.ndarray) -> jnp.ndarray:
-            mlp = hk.Sequential([
-                hk.Flatten(),
-                hk.Linear(300),
-                jax.nn.relu,
-                hk.Linear(10),
-            ])
-            return mlp(image)
+    >>> import elegy, jax
+    >>> import jax.numpy as jnp
+
+    >>> class MLP(elegy.Module):
+    ...     def call(self, x: jnp.ndarray) -> jnp.ndarray:
+    ...         x = elegy.nn.Flatten()(x)
+    ...         x = elegy.nn.Linear(5)(x)
+    ...         x = jax.nn.relu(x)
+    ...         x = elegy.nn.Linear(2)(x)
+    ...         return x
+
+    >>> mlp = MLP()
+    >>> x = jnp.ones(shape=[10, 2])
+
+    >>> y_pred, collections = mlp.init(rng=elegy.RNGSeq(42))(x)
+    >>> y_pred.shape
+    (10, 2)
+
     ```
 
-    Then you can pass this `Module` to the `Model`'s constructor and specify additional things like losses, metrics, optimizer, and callbacks:
+
+    You can pass use `Module` with the Model API:
     ```python
     model = elegy.Model(
         module=MLP(),

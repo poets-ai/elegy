@@ -130,6 +130,7 @@ nav:
       Conv3D: api/nn/Conv3D.md
       ConvND: api/nn/ConvND.md
       Dropout: api/nn/Dropout.md
+      EMAParamsTree: api/nn/EMAParamsTree.md
       EmbedLookupStyle: api/nn/EmbedLookupStyle.md
       Embedding: api/nn/Embedding.md
       Flatten: api/nn/Flatten.md
