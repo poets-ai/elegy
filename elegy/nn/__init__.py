@@ -8,8 +8,10 @@ from .sequential_module import Sequential, sequential
 from .layer_normalization import LayerNormalization, InstanceNormalization
 from .embedding import Embedding, EmbedLookupStyle
 from .pool import MaxPool, AvgPool
+from .moving_averages import EMAParamsTree
 
 __all__ = [
+    "EMAParamsTree",
     "BatchNormalization",
     "Conv1D",
     "Conv2D",

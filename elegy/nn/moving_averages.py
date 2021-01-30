@@ -22,7 +22,7 @@ import jax.numpy as jnp
 from haiku._src import data_structures
 import numpy as np
 
-from elegy import initializers, module
+from elegy import initializers, module, types
 
 
 class ExponentialMovingAverage(module.Module):
@@ -136,15 +136,22 @@ class EMAParamsTree(module.Module):
 
     Given a set of parameters for some network:
 
-    >>> network_fn = lambda x: hk.Linear(10)(x)
+    ```python
+    >>> import elegy
     >>> x = jnp.ones([1, 1])
-    >>> params = hk.transform(network_fn).init(jax.random.PRNGKey(428), x)
+    >>> linear = elegy.nn.Linear(10)
+    >>> y, params = linear.init(rng=elegy.RNGSeq(42))(x)
+
+    ```
 
     You might use the EMAParamsTree like follows:
 
-    >>> ema_fn = hk.transform_with_state(lambda x: hk.EMAParamsTree(0.2)(x))
-    >>> _, ema_state = ema_fn.init(None, params)
-    >>> ema_params, ema_state = ema_fn.apply(None, ema_state, None, params)
+    ```python
+    >>> ema = elegy.nn.EMAParamsTree(0.2)
+    >>> _, ema_state = ema.init()(params)
+    >>> ema_params, ema_state = ema.apply(ema_state)(params)
+
+    ```
 
     Here, we are transforming a Haiku function and constructing its parameters via
     an init_fn as normal, but are creating a second transformed function which
