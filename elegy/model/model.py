@@ -17,9 +17,7 @@ from elegy.generalized_optimizer.generalized_optimizer import (
     generalize_optimizer,
 )
 from elegy.model.model_base import ModelBase
-from elegy.model.model_core import model_context
 from elegy.optimizer import Optimizer
-from jax._src.random import t
 from tabulate import tabulate
 
 
@@ -126,6 +124,7 @@ class Model(ModelBase):
         x: tp.Any,
         # net_states: tp.Any,
         # rng: types.RNG,
+        mode: types.Mode,
         training: bool,
         initializing: bool,
         states: types.States,
@@ -142,29 +141,47 @@ class Model(ModelBase):
             states=states,
             training=training,
             initializing=initializing,
+            mode=mode,
         )
 
         assert isinstance(states.rng, types.RNGSeq)
 
-        if initializing:
-            module_fn = self.api_module.init(states.rng)
-        else:
-            module_fn = self.api_module.apply(
-                params=states.net_params,
-                states=states.net_states,
-                training=training,
-                rng=states.rng,
-            )
+        get_losses_and_metrics = mode in (types.Mode.test, types.Mode.train)
+        get_summaries = mode == types.Mode.summary
 
-        y_pred, net_params, net_states = module_fn(*x_args, **x_kwargs)
+        with hooks.context(
+            losses=get_losses_and_metrics,
+            metrics=get_losses_and_metrics,
+            summaries=get_summaries,
+        ):
 
-        return model_core.PredStep.simple(
+            if initializing:
+                module_fn = self.api_module.init(states.rng)
+            else:
+                module_fn = self.api_module.apply(
+                    params=states.net_params,
+                    states=states.net_states,
+                    training=training,
+                    rng=states.rng,
+                )
+
+            y_pred, net_params, net_states = module_fn(*x_args, **x_kwargs)
+
+            aux_losses = hooks.get_losses()
+            aux_metrics = hooks.get_metrics()
+            summaries = hooks.get_summaries()
+
+        return model_core.PredStep(
             y_pred=y_pred,
             states=states.update(net_states=net_states, net_params=net_params),
+            aux_losses=aux_losses,
+            aux_metrics=aux_metrics,
+            summaries=summaries,
         )
 
     def test_step(
         self,
+        mode: types.Mode,
         # net_params: tp.Any,
         x: tp.Any,
         y_true: tp.Any,
@@ -180,8 +197,9 @@ class Model(ModelBase):
 
         # TODO: add DI
         y_pred, states, aux_losses, aux_metrics, _ = self.call_pred_step(
-            states=states,
             x=x,
+            mode=mode,
+            states=states,
             training=training,
             initializing=initializing,
         )
@@ -214,6 +232,7 @@ class Model(ModelBase):
             training=False,
             initializing=initializing,
             states=states,
+            mode=mode,
         )
 
         # [DI]
@@ -230,6 +249,7 @@ class Model(ModelBase):
             training=False,
             initializing=initializing,
             states=states,
+            mode=mode,
         )
 
         logs = utils.merge_with_unique_names(metrics_logs, loss_logs)
@@ -241,6 +261,7 @@ class Model(ModelBase):
         self,
         x: tp.Any,
         y_true: tp.Any,
+        mode: types.Mode,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         states: types.States,
@@ -257,9 +278,10 @@ class Model(ModelBase):
         ):
             states = states.update(net_params=net_params)
             loss, logs, states = self.call_test_step(
-                states=states,
                 x=x,
                 y_true=y_true,
+                mode=mode,
+                states=states,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 training=training,
@@ -281,9 +303,10 @@ class Model(ModelBase):
 
     def train_step(
         self,
-        # net_params: tp.Any,
         x: tp.Any,
         y_true: tp.Any,
+        mode: types.Mode,
+        # net_params: tp.Any,
         # net_states: tp.Any,
         # metrics_states: tp.Any,
         # optimizer_states: tp.Any,
@@ -297,9 +320,10 @@ class Model(ModelBase):
 
         if initializing:
             loss, logs, states = self.call_test_step(
-                states=states,
                 x=x,
                 y_true=y_true,
+                mode=mode,
+                states=states,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 training=training,
@@ -309,9 +333,10 @@ class Model(ModelBase):
 
         else:
             loss, logs, states, grads = self.call_grad_step(
-                states=states,
                 x=x,
                 y_true=y_true,
+                mode=mode,
+                states=states,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 training=training,
@@ -376,22 +401,21 @@ class Model(ModelBase):
                 See [python-tabulate](https://github.com/astanin/python-tabulate)
                 for more options.
         """
-        with model_context(types.Mode.summary):
-            self.maybe_initialize(x=x)
+        mode = types.Mode.summary
+        training = False
+        initializing = False
 
-            method = (
-                self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
-            )
+        self.maybe_initialize(mode, x=x)
 
-            training = False
-            initializing = False
+        method = self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
 
-            _, _, _, _, summaries = method(
-                x,
-                self.states,
-                training,
-                initializing,
-            )
+        _, _, _, _, summaries = method(
+            x,
+            mode,
+            self.states,
+            training,
+            initializing,
+        )
 
         assert summaries is not None
 

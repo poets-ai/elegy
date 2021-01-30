@@ -27,7 +27,7 @@ LATENT_SIZE = 32
 MNIST_IMAGE_SHAPE: tp.Sequence[int] = (28, 28)
 
 
-def kl_divergence(mean: np.ndarray, std: np.ndarray) -> np.ndarray:
+def kl_divergence(mean: jnp.ndarray, std: jnp.ndarray) -> jnp.ndarray:
     r"""Calculate KL divergence between given and standard gaussian distributions.
     KL(p, q) = H(p, q) - H(p) = -\int p(x)log(q(x))dx - -\int p(x)log(p(x))dx
             = 0.5 * [log(|s2|/|s1|) - 1 + tr(s1/s2) + (m1-m2)^2/s2]
@@ -125,23 +125,23 @@ class VariationalAutoEncoder(elegy.Model):
                 dec_variables, z, rngs={"params": rng.next()}, mutable=True
             )
 
-        elegy.add_loss(
-            "kl_divergence",
-            2e-1 * kl_divergence(mean, stddev),
-        )
+        aux_losses = dict(kl_divergence_loss=2e-1 * kl_divergence(mean, stddev))
 
         enc_states, enc_params = enc_variables.pop("params")
         dec_states, dec_params = dec_variables.pop("params")
         net_params = (enc_params, dec_params)
         nets_states = (enc_states, dec_states)
 
-        return elegy.PredStep.simple(
+        return elegy.PredStep(
             logits,
             states.update(
                 net_params=net_params,
                 net_states=nets_states,
                 rng=rng,
             ),
+            aux_losses=aux_losses,
+            aux_metrics={},
+            summaries=[],
         )
 
     # request parameters by name via depending injection.

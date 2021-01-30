@@ -93,6 +93,7 @@ def get_input_args(
     states: types.States,
     training: bool,
     initializing: bool,
+    mode: types.Mode,
 ) -> tp.Tuple[tp.Tuple, tp.Dict[str, tp.Any]]:
 
     if isinstance(x, tp.Tuple):
@@ -112,6 +113,7 @@ def get_input_args(
         net_states=states.net_states,
         rng=states.rng,
         states=states,
+        mode=mode,
     )
     apply_kwargs.update(kwargs)
 

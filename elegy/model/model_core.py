@@ -20,18 +20,6 @@ from elegy.metrics.metric import Metric
 from tabulate import tabulate
 
 
-class LocalContext(types.Protocol):
-    mode: tp.Optional[types.Mode]
-
-
-@dataclass
-class _LocalContext(threading.local):
-    mode: tp.Optional[types.Mode]
-
-
-LOCAL: LocalContext = _LocalContext(mode=None)
-
-
 class PredStep(tp.NamedTuple):
     y_pred: tp.Any
     states: types.States
@@ -99,15 +87,15 @@ class ModelCore:
     def _jit_functions(self):
         self.call_pred_step_jit = hooks.jit(
             self.call_pred_step,
-            static_argnums=[2, 3],
+            static_argnums=[1, 3, 4],
         )
         self.call_test_step_jit = hooks.jit(
             self.call_test_step,
-            static_argnums=[5, 6],
+            static_argnums=[2, 6, 7],
         )
         self.call_train_step_jit = hooks.jit(
             self.call_train_step,
-            static_argnums=[5],
+            static_argnums=[2, 6],
         )
 
     def __setstate__(self, d):
@@ -134,8 +122,9 @@ class ModelCore:
 
     def pred_step(
         self,
-        net_params: tp.Any,
         x: tp.Any,
+        mode: types.Mode,
+        net_params: tp.Any,
         net_states: tp.Any,
         rng: tp.Any,
         states: types.States,
@@ -147,31 +136,29 @@ class ModelCore:
     def call_pred_step(
         self,
         x: tp.Any,
+        mode: types.Mode,
         states: types.States,
         training: bool,
         initializing: bool,
     ) -> PredStep:
-        assert LOCAL.mode is not None
 
-        losses = metrics = LOCAL.mode in (types.Mode.test, types.Mode.train)
-        summaries = LOCAL.mode == types.Mode.summary
-
-        with hooks.context(losses=losses, metrics=metrics, summaries=summaries):
-            return utils.inject_dependencies(self.pred_step)(
-                net_params=states.net_params,
-                x=x,
-                net_states=states.net_states,
-                rng=states.rng,
-                states=states,
-                training=training,
-                initializing=initializing,
-            )
+        return utils.inject_dependencies(self.pred_step)(
+            x=x,
+            mode=mode,
+            net_params=states.net_params,
+            net_states=states.net_states,
+            rng=states.rng,
+            states=states,
+            training=training,
+            initializing=initializing,
+        )
 
     def test_step(
         self,
-        net_params: tp.Any,
         x: tp.Any,
         y_true: tp.Any,
+        mode: types.Mode,
+        net_params: tp.Any,
         net_states: tp.Any,
         metrics_states: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
@@ -187,6 +174,7 @@ class ModelCore:
         self,
         x: tp.Any,
         y_true: tp.Any,
+        mode: types.Mode,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         states: types.States,
@@ -197,6 +185,7 @@ class ModelCore:
             net_params=states.net_params,
             x=x,
             y_true=y_true,
+            mode=mode,
             net_states=states.net_states,
             metrics_states=states.metrics_states,
             sample_weight=sample_weight,
@@ -209,9 +198,10 @@ class ModelCore:
 
     def grad_step(
         self,
-        net_params: tp.Any,
         x: tp.Any,
         y_true: tp.Any,
+        mode: types.Mode,
+        net_params: tp.Any,
         net_states: tp.Any,
         metrics_states: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
@@ -227,6 +217,7 @@ class ModelCore:
         self,
         x: tp.Any,
         y_true: tp.Any,
+        mode: types.Mode,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         states: types.States,
@@ -234,9 +225,10 @@ class ModelCore:
         initializing: bool,
     ) -> GradStep:
         return utils.inject_dependencies(self.grad_step)(
-            net_params=states.net_params,
             x=x,
             y_true=y_true,
+            mode=mode,
+            net_params=states.net_params,
             net_states=states.net_states,
             metrics_states=states.metrics_states,
             sample_weight=sample_weight,
@@ -249,9 +241,10 @@ class ModelCore:
 
     def train_step(
         self,
-        net_params: tp.Any,
         x: tp.Any,
         y_true: tp.Any,
+        mode: types.Mode,
+        net_params: tp.Any,
         net_states: tp.Any,
         metrics_states: tp.Any,
         optimizer_states: tp.Any,
@@ -268,15 +261,17 @@ class ModelCore:
         self,
         x: tp.Any,
         y_true: tp.Any,
+        mode: types.Mode,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         states: types.States,
         initializing: bool,
     ) -> TrainStep:
         return utils.inject_dependencies(self.train_step)(
-            net_params=states.net_params,
             x=x,
             y_true=y_true,
+            mode=mode,
+            net_params=states.net_params,
             net_states=states.net_states,
             metrics_states=states.metrics_states,
             optimizer_states=states.optimizer_states,
@@ -310,19 +305,17 @@ class ModelCore:
             ValueError: In case of mismatch between given number of inputs and
                 expectations of the model.
         """
-        with model_context(types.Mode.pred):
-            self.maybe_initialize(x=x)
+        mode = types.Mode.pred
+        training = False
+        initializing = False
 
-            method = (
-                self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
-            )
+        self.maybe_initialize(mode=mode, x=x)
 
-            training = False
-            initializing = False
+        method = self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
 
-            y_pred, state_updates, _, _, _ = method(
-                x, self.states, training, initializing
-            )
+        y_pred, state_updates, _, _, _ = method(
+            x, mode, self.states, training, initializing
+        )
 
         self.states = self.states.merge(state_updates)
 
@@ -359,30 +352,30 @@ class ModelCore:
         Raises:
             ValueError: In case of invalid user-provided arguments.
         """
-        with model_context(types.Mode.test):
-            self.maybe_initialize(
-                x=x,
-                y_true=y,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-            )
+        mode = types.Mode.test
+        training = False
+        initializing = False
 
-            method = (
-                self.call_test_step if self.run_eagerly else self.call_test_step_jit
-            )
+        self.maybe_initialize(
+            mode,
+            x=x,
+            y_true=y,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+        )
 
-            training = False
-            initializing = False
+        method = self.call_test_step if self.run_eagerly else self.call_test_step_jit
 
-            loss, logs, state_updates = method(
-                x,
-                y,
-                sample_weight,
-                class_weight,
-                self.states,
-                training,
-                initializing,
-            )
+        loss, logs, state_updates = method(
+            x,
+            y,
+            mode,
+            sample_weight,
+            class_weight,
+            self.states,
+            training,
+            initializing,
+        )
 
         self.states = self.states.merge(state_updates)
 
@@ -425,29 +418,28 @@ class ModelCore:
         Raises:
             ValueError: In case of invalid user-provided arguments.
         """
+        mode = types.Mode.train
+        initializing = False
 
-        with model_context(types.Mode.train):
-            self.maybe_initialize(
-                x=x,
-                y_true=y,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-            )
+        self.maybe_initialize(
+            mode=mode,
+            x=x,
+            y_true=y,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+        )
 
-            method = (
-                self.call_train_step if self.run_eagerly else self.call_train_step_jit
-            )
+        method = self.call_train_step if self.run_eagerly else self.call_train_step_jit
 
-            initializing = False
-
-            logs, state_updates = method(
-                x,
-                y,
-                sample_weight,
-                class_weight,
-                self.states,
-                initializing,
-            )
+        logs, state_updates = method(
+            x,
+            y,
+            mode,
+            sample_weight,
+            class_weight,
+            self.states,
+            initializing,
+        )
 
         self.states = self.states.merge(state_updates)
 
@@ -470,14 +462,12 @@ class ModelCore:
 
     def maybe_initialize(
         self,
+        mode: types.Mode,
         x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple] = (),
         y_true: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
         sample_weight: tp.Optional[np.ndarray] = None,
         class_weight: tp.Optional[np.ndarray] = None,
     ):
-        assert LOCAL.mode is not None
-
-        mode = LOCAL.mode
         rng = self.states.rng if isinstance(self.states.rng, types.RNGSeq) else None
         training = True
         initializing = True
@@ -494,6 +484,7 @@ class ModelCore:
 
             _, state_updates, _, _, _ = method(
                 x,
+                mode,
                 self.states,
                 training,
                 initializing,
@@ -508,6 +499,7 @@ class ModelCore:
             _, _, state_updates = method(
                 x,
                 y_true,
+                mode,
                 sample_weight,
                 class_weight,
                 self.states,
@@ -524,6 +516,7 @@ class ModelCore:
             _, state_updates = method(
                 x,
                 y_true,
+                mode,
                 sample_weight,
                 class_weight,
                 self.states,
@@ -627,24 +620,3 @@ class ModelCore:
         self.initial_states = cloudpickle.loads(
             (path / "initial_states.pkl").read_bytes()
         )
-
-
-# ----------------------------------------------------------------
-# context managers
-# ---------------------------------------------------------------
-
-
-def model_context(mode: types.Mode) -> tp.ContextManager[None]:
-    return _model_context(mode)
-
-
-@contextmanager
-def _model_context(mode: types.Mode):
-    prev_mode = LOCAL.mode
-
-    LOCAL.mode = mode
-
-    try:
-        yield
-    finally:
-        LOCAL.mode = prev_mode
