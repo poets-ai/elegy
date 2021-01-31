@@ -12,8 +12,6 @@ import typer
 from elegy.callbacks.tensorboard import TensorBoard
 from tensorboardX.writer import SummaryWriter
 
-from utils import plot_history
-
 
 def main(
     debug: bool = False,
@@ -107,7 +105,7 @@ def main(
         callbacks=[TensorBoard(logdir=logdir)],
     )
 
-    plot_history(history)
+    elegy.utils.plot_history(history)
 
     model.save("models/conv")
 

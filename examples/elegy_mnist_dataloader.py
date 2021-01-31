@@ -13,7 +13,6 @@ import typer
 import optax
 
 import elegy
-from utils import plot_history
 
 
 class MNIST(elegy.data.Dataset):
@@ -108,7 +107,7 @@ def main(
         callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],
     )
 
-    plot_history(history)
+    elegy.utils.plot_history(history)
 
     # get random samples
     idxs = np.random.randint(0, 10000, size=(9,))

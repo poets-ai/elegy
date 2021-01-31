@@ -14,8 +14,6 @@ from elegy.callbacks.tensorboard import TensorBoard
 from tensorboardX.writer import SummaryWriter
 from torch.utils.data import DataLoader, TensorDataset
 
-from utils import plot_history
-
 
 def main(
     debug: bool = False,
@@ -88,13 +86,13 @@ def main(
 
     history = model.fit(
         train_dataloader,
-        epochs=10,
-        steps_per_epoch=200,
+        epochs=epochs,
+        steps_per_epoch=steps_per_epoch,
         validation_data=test_dataloader,
         callbacks=[TensorBoard(logdir=logdir)],
     )
 
-    plot_history(history)
+    elegy.utils.plot_history(history)
 
     model.save("models/conv")
 

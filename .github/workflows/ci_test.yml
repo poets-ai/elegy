@@ -62,3 +62,6 @@ jobs:
 
       - name: Upload coverage
         uses: codecov/codecov-action@v1
+
+      - name: Test Examples
+        run: bash scripts/test-examples.sh

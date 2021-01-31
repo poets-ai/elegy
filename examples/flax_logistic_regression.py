@@ -10,8 +10,6 @@ import numpy as np
 import optax
 import typer
 
-from utils import plot_history
-
 
 def main(
     debug: bool = False,
@@ -72,7 +70,7 @@ def main(
         callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],
     )
 
-    plot_history(history)
+    elegy.utils.plot_history(history)
 
 
 if __name__ == "__main__":

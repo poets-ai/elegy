@@ -15,7 +15,6 @@ import optax
 
 import elegy
 from elegy.callbacks.tensorboard import TensorBoard
-from utils import plot_history
 
 
 def main(
@@ -93,7 +92,7 @@ def main(
         callbacks=[TensorBoard(logdir=logdir)],
     )
 
-    plot_history(history)
+    elegy.utils.plot_history(history)
 
     model.save("models/conv")
 

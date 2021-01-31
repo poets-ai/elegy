@@ -18,7 +18,7 @@ import typer
 import optax
 
 import elegy
-from utils import plot_history
+
 
 Batch = Mapping[str, np.ndarray]
 np.random.seed(42)
@@ -160,7 +160,7 @@ def main(
         f"\n \t\t\t tensorboard --logdir {logdir}",
     )
 
-    plot_history(history)
+    elegy.utils.plot_history(history)
 
     # get random samples
     idxs = np.random.randint(0, len(X_test), size=(5,))

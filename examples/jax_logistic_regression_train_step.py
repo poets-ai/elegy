@@ -9,8 +9,6 @@ import numpy as np
 import optax
 import typer
 
-from utils import plot_history
-
 
 class Model(elegy.Model):
     def __init__(self, **kwargs):
@@ -107,7 +105,7 @@ def main(
         callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],
     )
 
-    plot_history(history)
+    elegy.utils.plot_history(history)
 
 
 if __name__ == "__main__":
