@@ -50,6 +50,13 @@ jobs:
           poetry config virtualenvs.create false
           poetry install
 
+      - name: Build Docs
+        run: |
+          cp README.md docs/index.md
+          cp CONTRIBUTING.md docs/guides/contributing.md
+          python scripts/update_docs.py
+          mkdocs build
+
       - name: Run Tests
         run: pytest --cov=elegy --cov-report=term-missing --cov-report=xml
 
