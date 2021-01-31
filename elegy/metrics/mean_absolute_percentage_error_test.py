@@ -6,13 +6,6 @@ import numpy as np
 import jax.numpy as jnp
 
 
-# import debugpy
-
-# print("Waiting for debugger...")
-# debugpy.listen(5679)
-# debugpy.wait_for_client()
-
-
 class MeanAbsolutePercentageErrorTest(TestCase):
     #
     def test_basic(self):
@@ -22,7 +15,7 @@ class MeanAbsolutePercentageErrorTest(TestCase):
 
         assert np.allclose(
             tfk.metrics.MeanAbsolutePercentageError()(y_true, y_pred),
-            elegy.metrics.MeanAbsolutePercentageError()(
+            elegy.metrics.MeanAbsolutePercentageError().call_with_defaults()(
                 jnp.asarray(y_true), jnp.asarray(y_pred)
             ),
         )
@@ -39,7 +32,7 @@ class MeanAbsolutePercentageErrorTest(TestCase):
 
         assert np.allclose(
             tm(y_true, y_pred),
-            em(jnp.asarray(y_true), jnp.asarray(y_pred)),
+            em.call_with_defaults()(jnp.asarray(y_true), jnp.asarray(y_pred)),
         )
 
         # 2nd run
@@ -48,5 +41,5 @@ class MeanAbsolutePercentageErrorTest(TestCase):
 
         assert np.allclose(
             tm(y_true, y_pred),
-            em(jnp.asarray(y_true), jnp.asarray(y_pred)),
+            em.call_with_defaults()(jnp.asarray(y_true), jnp.asarray(y_pred)),
         )

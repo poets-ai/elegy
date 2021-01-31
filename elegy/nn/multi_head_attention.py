@@ -9,6 +9,7 @@ from elegy.nn.dropout import Dropout
 from elegy.nn.layer_normalization import LayerNormalization
 from elegy.nn.linear import Linear
 from elegy.nn.sequential_module import sequential
+from elegy import types
 
 
 class MultiHeadAttention(module.Module):
@@ -67,10 +68,8 @@ class MultiHeadAttention(module.Module):
         dropout: float = 0.0,
         use_projection_bias: bool = True,
         return_attn_coef: bool = False,
-        kernel_initializer: initializers.Initializer = initializers.VarianceScaling(
-            scale=2.0
-        ),
-        bias_initializer: initializers.Initializer = initializers.Constant(0.0),
+        kernel_initializer: types.Initializer = initializers.VarianceScaling(scale=2.0),
+        bias_initializer: types.Initializer = initializers.Constant(0.0),
         # kernel_initializer: typing.Union[str, typing.Callable] = "glorot_uniform",
         # kernel_regularizer: typing.Union[str, typing.Callable] = None,
         # kernel_constraint: typing.Union[str, typing.Callable] = None,

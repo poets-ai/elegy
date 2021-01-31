@@ -41,7 +41,7 @@ mkdocs-material = "^5.4.0"
 mkdocstrings = "^0.12.0"
 black = {version = "^20.8b1", allow-prereleases = true}
 typer = "^0.3.0"
-mkdocs-jupyter = "^0.13.0"
+mkdocs-jupyter = { version = "^0.15.1", python = ">=3.7" }
 matplotlib = "^3.3.0"
 tensorflow-cpu = "^2.2.0"
 dataget = "^0.4.14"
@@ -51,6 +51,7 @@ jaxlib = "^0.1.56"
 jupyter = "^1.0.0"
 jupyterlab = "^2.2.9"
 tensorflow-addons = "^0.11.2"
+flax = "^0.3.0"
 torch = "1.4.0+cpu"
 
 [build-system]

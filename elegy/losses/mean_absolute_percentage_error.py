@@ -1,7 +1,7 @@
 from elegy import types
 import typing as tp
 import jax.numpy as jnp
-from elegy import utils
+from elegy import utils, types
 from elegy.losses.loss import Loss, Reduction
 
 
@@ -26,7 +26,7 @@ def mean_absolute_percentage_error(
 
     assert loss.shape == (2,)
 
-    assert jnp.array_equal(loss, 100. * jnp.mean(jnp.abs((y_pred - y_true) / jnp.clip(y_true, utils.EPSILON, None))))
+    assert jnp.array_equal(loss, 100. * jnp.mean(jnp.abs((y_pred - y_true) / jnp.clip(y_true, types.EPSILON, None))))
     ```
 
     Arguments:
@@ -37,7 +37,7 @@ def mean_absolute_percentage_error(
         Mean absolute percentage error values. shape = `[batch_size, d0, .. dN-1]`.
     """
     y_true = y_true.astype(y_pred.dtype)
-    diff = jnp.abs((y_pred - y_true) / jnp.maximum(jnp.abs(y_true), utils.EPSILON))
+    diff = jnp.abs((y_pred - y_true) / jnp.maximum(jnp.abs(y_true), types.EPSILON))
     return 100.0 * jnp.mean(diff, axis=-1)
 
 

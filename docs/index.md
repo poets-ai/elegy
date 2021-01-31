@@ -102,7 +102,7 @@ We believe that **Elegy** can offer the best experience for coding Deep Learning
 1. Its hook-based [Module System](https://poets-ai.github.io/elegy/guides/module-system/) makes it easier (less verbose) to write model code compared to Keras & Pytorch since it lets you declare sub-modules, parameters, and states directly on your `call` (forward) method. Thanks to this you get shape inference for free so there is no need for a `build` method (Keras) or propagating shape information all over the place (Pytorch). A naive implementation of `Linear` could be as simple as:
 
 ```python
-class Linear(elegy.Module):
+class Linear:
     def __init__(self, units):
         super().__init__()
         self.units = units

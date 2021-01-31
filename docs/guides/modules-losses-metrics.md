@@ -58,7 +58,7 @@ Modules define the architecture of the network, their primary task (in Elegy ter
 **1.** If `x` is simply an array it will be passed directly:
 
 ```python hl_lines="2 10"
-class SomeModule(elegy.Module):
+class SomeModule:
     def call(self, m):
         ...
 
@@ -76,7 +76,7 @@ In this case `a` is passed as `m`.
 **2.** If `x` is a `tuple`, then `x` will be expanded positional arguments a.k.a. `*args`, this means that the module will have define **exactly** as many arguments as there are inputs. For example:
   
 ```python hl_lines="2 10"
-class SomeModule(elegy.Module):
+class SomeModule:
     def call(self, m, n):
         ...
 
@@ -94,7 +94,7 @@ In this case `a` is passed as `m` and `b` is passed as `n`.
 **3.** If `x` is a `dict`, then `x` will be expanded as keyword arguments a.k.a. `**kwargs`, in this case the module can optionally request any key defined in `x` as an argument. For example:
 
 ```python hl_lines="2 10"
-class SomeModule(elegy.Module):
+class SomeModule:
     def call(self, n, o):
         ...
 
@@ -237,7 +237,7 @@ model.compile(
 To do this Elegy lets each `Loss` optionally filter / index the `y_true` and `y_pred` arguments based on a string key (for `dict`s) or integer key (for `tuple`s) in the constructor's `on` parameter:
 
 ```python
-class MyModule(elegy.Module):
+class MyModule:
     def call(self, x):
         ...
         return {

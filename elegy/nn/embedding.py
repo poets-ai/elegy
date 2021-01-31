@@ -9,7 +9,7 @@ import jax
 import jax.numpy as jnp
 
 from elegy.module import Module
-from elegy import initializers
+from elegy import initializers, types
 
 
 class EmbedLookupStyle(enum.Enum):
@@ -32,7 +32,7 @@ class Embedding(Module):
         vocab_size: Optional[int] = None,
         embed_dim: Optional[int] = None,
         embedding_matrix: Optional[jnp.ndarray] = None,
-        w_init: Optional[initializers.Initializer] = None,
+        w_init: Optional[types.Initializer] = None,
         lookup_style: Union[str, EmbedLookupStyle] = "ARRAY_INDEX",
         name: Optional[str] = None,
     ):

@@ -1,63 +1,67 @@
-# Implementation based on tf.keras.engine.training.py
-# https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
-
-from elegy.model.model_base import ModelBase, Optimizer
-import pickle
 import typing as tp
-from copy import copy
-from pathlib import Path
+from io import StringIO
 
-import cloudpickle
-import deepdish
 import jax
 import jax.numpy as jnp
 import numpy as np
-import optax
-from tabulate import tabulate
-
-from elegy.module import Module
-
-from elegy.callbacks import Callback, CallbackList, History
-from elegy.data import (
-    DataHandler,
-    map_append,
-    map_structure,
-    train_validation_split,
-    unpack_x_y_sample_weight,
+import yaml
+from elegy import hooks, module, types, utils
+from elegy.model import model_core
+from elegy.generalized_module.generalized_module import (
+    GeneralizedModule,
+    generalize,
+    is_generalizable,
 )
-
-__all__ = ["Model", "load"]
+from elegy.generalized_optimizer.generalized_optimizer import (
+    GeneralizedOptimizer,
+    generalize_optimizer,
+)
+from elegy.model.model_base import ModelBase
+from elegy.optimizer import Optimizer
+from tabulate import tabulate
 
 
 class Model(ModelBase):
     """
-    `Model` is tasked with performing training, evaluation, and inference for a given
-    `elegy.Module` or `haiku.Module`.
+    Model is a framework-agnostic trainer interface that is tasked with performing training, evaluation, and inference.
+    It provides 2 main APIs:
 
-    To create a `Model` you first have to define its architecture in a `Module`:
+    * The high-level API provides the Keras-like experience of simplicity and speed. The user provides things like the
+        a modules, losses, metrics, and callbacks and Elegy takes care of the rest.
+    * The low-level API provides the Pytorch Lightning-like experience of experisiveness and power. The user can
+        override methods like `pred_step`, `test_step`, and `train_step` to perform jax-based computation with very
+        few restrictions.
+
+    ## High-level API
+    To use the high-level API you first have to define a network architecture in a Module, currently we support Modules from
+    Flax, Haiku, Elegy, and pure jax functions. Using `elegy.Module` this could look like this:
+
     ```python
-    class MLP(elegy.Module):
-        def call(self, image: jnp.ndarray) -> jnp.ndarray:
-            mlp = hk.Sequential([
-                hk.Flatten(),
-                hk.Linear(300),
-                jax.nn.relu,
-                hk.Linear(10),
-            ])
-            return mlp(image)
+    >>> import elegy, jax, optax
+    >>> import jax.numpy as jnp
+
+    >>> class MLP(elegy.Module):
+    ...     def call(self, x: jnp.ndarray) -> jnp.ndarray:
+    ...         x = elegy.nn.Linear(5)(x)
+    ...         x = jax.nn.relu(x)
+    ...         x = elegy.nn.Linear(2)(x)
+    ...         return x
+
     ```
 
-    Then you can pass this `Module` to the `Model`'s constructor and specify additional things like losses, metrics, optimizer, and callbacks:
+
+    You can pass this architecture to the Model API along with losses, metrics, optimizer, etc:
     ```python
-    model = elegy.Model(
-        module=MLP(),
-        loss=[
-            elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-            elegy.regularizers.GlobalL2(l=1e-5),
-        ],
-        metrics=elegy.metrics.SparseCategoricalAccuracy(),
-        optimizer=optax.rmsprop(1e-3),
-    )
+    >>> model = elegy.Model(
+    ...     module=MLP(),
+    ...     loss=[
+    ...         elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
+    ...         elegy.regularizers.GlobalL2(l=1e-5),
+    ...     ],
+    ...     metrics=elegy.metrics.SparseCategoricalAccuracy(),
+    ...     optimizer=optax.rmsprop(1e-3),
+    ... )
+
     ```
 
     Once the model is created, you can train the model with `model.fit()`, or use the model
@@ -65,57 +69,60 @@ class Model(ModelBase):
     Checkout [Getting Started](https://poets-ai.github.io/elegy/getting-started) for
     additional details.
 
-    Model supports defining + monitoring custom learning rate schedules by passing an instance of `elegy.Optimizer` instead of
-    an `optax` object:
+    ```python
+    >>> x = jnp.ones(shape=[12, 10])
+    >>> y = jnp.ones(shape=[12])
+
+    >>> history = model.fit(x, y) # doctest: +SKIP
+
+    ```
+
+    Model supports optax optimizers as well as `elegy.Optimizer` which has a feature for definint + monitoring
+    custom learning rate schedules, it is implemented on top of optax and you can use it like this:
 
     ```python
-    model = elegy.Model(
-        module=MLP(n1=3, n2=1),
-        loss=elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics=elegy.metrics.SparseCategoricalAccuracy(),
-        optimizer=elegy.Optimizer(
-            optax.adam(1.0), # <---- important to set this to 1.0
-            lr_schedule=lambda step, epoch: 1 / (epoch * 100 + step),
-            steps_per_epoch=1000,
-        ),
-        run_eagerly=True,
-    )
+    >>> model = elegy.Model(
+    ...     module=MLP(),
+    ...     loss=elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
+    ...     metrics=elegy.metrics.SparseCategoricalAccuracy(),
+    ...     optimizer=elegy.Optimizer(
+    ...         # one or more optax optimizers as *args,
+    ...         # these will be passed to optax.chain(...)
+    ...         optax.adam(1.0), # <---- important to set this to 1.0
+    ...
+    ...         lr_schedule=lambda step, epoch: 1 / (epoch * 100 + step),
+    ...         steps_per_epoch=1000,
+    ...     ),
+    ...     run_eagerly=True,
+    ... )
 
-    history = model.fit(
-        ...
-    )
-
-    assert "lr" in history.history
     ```
     Notice how we set the learning rate parameter of the `adam` optimizer to `1.0`, this is necessary if you want the logged `lr`
-    be closer to the "actual" learning rate because we implement this feature by chaining an additional `optax.scale_by_schedule`
+    be closer to the "actual" learning rate since this feature was implemented by chaining an additional `optax.scale_by_schedule`
     at the end.
+
+    ## High-level API
+
     """
 
-    __all__ = [
-        "evaluate",
-        "fit",
-        "load",
-        "predict",
-        "predict_on_batch",
-        "reset",
-        "reset_metrics",
-        "save",
-        "summary",
-        "test_on_batch",
-        "train_on_batch",
-        "full_state",
-        "parameters",
-        "states",
-    ]
+    module: tp.Any = None
+    loss: tp.Any = None
+    metrics: tp.Any = None
+    optimizer: tp.Any = None
+    seed: int = 42
+
+    api_module: tp.Optional[GeneralizedModule]
+    api_loss: "Losses"
+    api_metrics: "Metrics"
+    api_optimizer: tp.Optional[GeneralizedOptimizer]
 
     def __init__(
         self,
-        module: Module,
-        loss: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
-        metrics: tp.Union[tp.Callable, tp.List, tp.Dict, None] = None,
-        optimizer: tp.Union[Optimizer, optax.GradientTransformation, None] = None,
-        run_eagerly: bool = False,
+        module: tp.Any = None,
+        loss: tp.Any = None,
+        metrics: tp.Any = None,
+        optimizer: tp.Any = None,
+        seed: int = 42,
         **kwargs,
     ):
         """[summary]
@@ -148,674 +155,694 @@ class Model(ModelBase):
                 using Jax's `jit` to. Your model might run slower, but it should become easier for you to debug
                 it by stepping into individual layer calls.
         """
-        super().__init__(
-            module=module,
-            loss=loss,
-            metrics=metrics,
-            optimizer=optimizer,
-            run_eagerly=run_eagerly,
-            **kwargs,
+        if "rng" in kwargs and not isinstance(kwargs["rng"], (int, types.RNGSeq)):
+            raise ValueError(
+                f"rng must be one of the following types: int, types.RNGSeq. Got {kwargs['rng']}"
+            )
+
+        super().__init__(rng=types.RNGSeq(seed), **kwargs)
+
+        self.module = module
+        self.loss = loss
+        self.metrics = metrics
+        self.optimizer = optimizer
+
+        if loss is None:
+            loss = {}
+
+        if metrics is None:
+            metrics = {}
+
+        self.api_module = generalize(module) if module is not None else None
+        self.api_loss = Losses(loss)
+        self.api_metrics = Metrics(metrics)
+        self.api_optimizer = (
+            generalize_optimizer(optimizer) if optimizer is not None else None
         )
+        self.seed = seed
 
     def __call__(self, *args, **kwargs):
-        return self.module(*args, **kwargs)
+        assert isinstance(self.states.rng, types.RNGSeq)
+        assert self.module is not None
 
-    def fit(
-        self,
-        x: tp.Union[
-            np.ndarray,
-            tp.Mapping[str, np.ndarray],
-            tp.Tuple[np.ndarray],
-            tp.Iterable,
-            None,
-        ] = None,
-        y: tp.Union[
-            np.ndarray,
-            tp.Mapping[str, np.ndarray],
-            tp.Tuple[np.ndarray],
-            None,
-        ] = None,
-        batch_size: tp.Optional[int] = None,
-        epochs: int = 1,
-        verbose: int = 1,
-        callbacks: tp.Union[tp.List[Callback], CallbackList, None] = None,
-        validation_split: float = 0.0,
-        validation_data: tp.Union[tp.Tuple, tp.Iterable, None] = None,
-        shuffle: bool = True,
-        class_weight: tp.Optional[tp.Mapping[str, float]] = None,
-        sample_weight: tp.Optional[np.ndarray] = None,
-        initial_epoch: int = 0,
-        steps_per_epoch: tp.Optional[int] = None,
-        validation_steps: tp.Optional[int] = None,
-        validation_batch_size: tp.Optional[int] = None,
-        validation_freq: int = 1,
-    ) -> History:
-        """
-        Trains the model for a fixed number of epochs (iterations on a dataset).
+        return self.module.apply(
+            self.states.net_params,
+            self.states.net_states,
+            self.states.rng,
+        )(*args, **kwargs)
 
-        Arguments:
-            x: Input data. It could be:
-
-                - A Numpy or Jax array (or array-like), or a list of arrays
-                    (in case the model has multiple inputs).
-                - A dict mapping input names to the corresponding arrays,
-                    if the model has named inputs.
-                - A generator returning `(inputs,)`, `(inputs, targets)`
-                    or `(inputs, targets, sample_weights)`.
-
-                A more detailed description of unpacking behavior for generator type
-                is given below.
-            y: Target data. Like the input data `x`,
-                it could be either Numpy or Jax array(s).
-                It should be consistent with `x`. If `x` is a generator,
-                `y` should not be specified (since targets will be obtained from `x`).
-            batch_size: Integer or `None`.
-                Number of samples per gradient update.
-                If unspecified, `batch_size` will default to 32.
-                Do not specify the `batch_size` if your data is in the
-                form of generator (since they generate batches).
-            epochs: Integer. Number of epochs to train the model.
-                An epoch is an iteration over the entire `x` and `y`
-                data provided.
-                Note that in conjunction with `initial_epoch`,
-                `epochs` is to be understood as "final epoch".
-                The model is not trained for a number of iterations
-                given by `epochs`, but merely until the epoch
-                of index `epochs` is reached.
-            verbose: 0, 1, 2, 3 or 4. Verbosity mode.
-                0 = silent, 1 = progress bar, 2 = one line per epoch,
-                3 = table with updates per step, 4 = table with updates per epoch.
-                Note: verbosity options 1 and 3 may slow down training
-                Note: the progress bar is not particularly useful when
-                logged to a file, so verbose=2 or verbose=4 is recommended when not running
-                interactively (eg, in a production environment).
-            callbacks: List of [elegy.callbacks.callback.Callback][] instances.
-                List of callbacks to apply during training.
-            validation_split: Float between 0 and 1.
-                Fraction of the training data to be used as validation data.
-                The model will set apart this fraction of the training data,
-                will not train on it, and will evaluate
-                the loss and any model metrics
-                on this data at the end of each epoch.
-                The validation data is selected from the last samples
-                in the `x` and `y` data provided, before shuffling. This argument is
-                not supported when `x` is a generator.
-            validation_data: Data on which to evaluate
-                the loss and any model metrics at the end of each epoch.
-                The model will not be trained on this data.
-                `validation_data` will override `validation_split`.
-                `validation_data` could be:
-
-                - tuple `(x_val, y_val)` of Numpy/Jax arrays, list of arrays or mappings
-                - tuple `(x_val, y_val, val_sample_weights)` of Numpy/Jax arrays, list
-                of arrays or mappings
-                - generator
-
-                For the first two cases, `batch_size` must be provided.
-                For the last case, `validation_steps` should be provided, and should
-                follow the same convention for yielding data as `x`.
-                Note that `validation_data` does not support all the data types that
-                are supported in `x`, eg, dict.
-            shuffle: Boolean (whether to shuffle the training data
-                before each epoch). This argument is ignored
-                when `x` is a generator. Has no effect when `steps_per_epoch` is not `None`.
-            class_weight: Optional dictionary mapping class indices (integers)
-                to a weight (float) value, used for weighting the loss function
-                (during training only).
-                This can be useful to tell the model to
-                "pay more attention" to samples from
-                an under-represented class.
-            sample_weight: Optional Numpy/Jax array of weights for
-                the training samples, used for weighting the loss function
-                (during training only). You can either pass a flat (1D)
-                Numpy array with the same length as the input samples
-                (1:1 mapping between weights and samples). This argument is not
-                supported when `x` is generator, instead provide the sample_weights
-                as the third element of `x`.
-            initial_epoch: Integer.
-                Epoch at which to start training
-                (useful for resuming a previous training run).
-            steps_per_epoch: Integer or `None`.
-                Total number of steps (batches of samples)
-                before declaring one epoch finished and starting the
-                next epoch. When training with input arrays such as
-                jax data arrays, the default `None` is equal to
-                the number of samples in your dataset divided by
-                the batch size, or 1 if that cannot be determined.
-                When passing a generator, you must specify the
-                `steps_per_epoch` argument. This argument is not supported with
-                array inputs.
-            validation_steps: Only relevant if `validation_data` is provided and
-                is a generator. Total number of steps (batches of
-                samples) to draw before stopping when performing validation
-                at the end of every epoch. If 'validation_steps' is None, validation
-                will run until the `validation_data` dataset is exhausted. In the
-                case of an infinitely repeated dataset, it will run into an
-                infinite loop. If 'validation_steps' is specified and only part of
-                the dataset will be consumed, the evaluation will start from the
-                beginning of the dataset at each epoch. This ensures that the same
-                validation samples are used every time.
-            validation_batch_size: Integer or `None`.
-                Number of samples per validation batch.
-                If unspecified, will default to `batch_size`.
-                Do not specify the `validation_batch_size` if your data is in the
-                form of generators (since they generate batches).
-            validation_freq: Only relevant if validation data is provided. Integer
-                or `collections_abc.Container` instance (e.g. list, tuple, etc.).
-                If an integer, specifies how many training epochs to run before a
-                new validation run is performed, e.g. `validation_freq=2` runs
-                validation every 2 epochs. If a Container, specifies the epochs on
-                which to run validation, e.g. `validation_freq=[1, 2, 10]` runs
-                validation at the end of the 1st, 2nd, and 10th epochs.
-
-        Unpacking behavior for iterator-like inputs:
-
-        A common pattern is to pass a generator, which will in fact
-        yield not only features (x) but optionally targets (y) and sample weights.
-        Elegy requires that the output of such iterator-likes be unambiguous. The
-        iterator should return a tuple of length 1, 2, or 3, where the optional
-        second and third elements will be used for y and sample_weight
-        respectively. Any other type provided will be wrapped in a length one
-        tuple, effectively treating everything as 'x'. When yielding dicts, they
-        should still adhere to the top-level tuple structure.
-        e.g. `({"x0": x0, "x1": x1}, y)`. Elegy will not attempt to separate
-        features, targets, and weights from the keys of a single dict.
-
-        A notable unsupported data type is the namedtuple. The reason is that
-        it behaves like both an ordered datatype (tuple) and a mapping
-        datatype (dict). So given a namedtuple of the form:
-            `namedtuple("example_tuple", ["y", "x"])`
-        it is ambiguous whether to reverse the order of the elements when
-        interpreting the value. Even worse is a tuple of the form:
-            `namedtuple("other_tuple", ["x", "y", "z"])`
-        where it is unclear if the tuple was intended to be unpacked into x, y,
-        and sample_weight or passed through as a single element to `x`. As a
-        result the data processing code will simply raise a ValueError if it
-        encounters a namedtuple. (Along with instructions to remedy the issue.)
-
-        Returns:
-            A `History` object. Its `History.history` attribute is
-            a record of training loss values and metrics values
-            at successive epochs, as well as validation loss values
-            and validation metrics values (if applicable).
-        Raises:
-            ValueError: In case of mismatch between the provided input data
-                and what the model expects.
-        """
-        if x is None:
-            x = {}
-
-        if validation_split:
-            # Create the validation data using the training data. Only supported for
-            # `Jax Numpy` and `NumPy` input.
-            (x, y, sample_weight), validation_data = train_validation_split(
-                (x, y, sample_weight), validation_split=validation_split, shuffle=False
+    def update_modules(self):
+        if self.api_module is not None:
+            net_params, net_states = self.api_module.update(
+                params=self.states.net_params,
+                states=self.states.net_states,
+            )
+            self.states = self.states.update(
+                net_params=net_params, net_states=net_states
             )
 
-        self.stop_training = False
-        data_handler = DataHandler(
+    def pred_step(
+        self,
+        # net_params: tp.Any,
+        x: tp.Any,
+        # net_states: tp.Any,
+        # rng: types.RNG,
+        mode: types.Mode,
+        initializing: bool,
+        states: types.States,
+    ) -> model_core.PredStep:
+
+        training = mode == types.Mode.train
+
+        if self.module is None:
+            raise types.MissingModule(
+                "Trying run default `pred_step` on a Model with no `module`, try overriding `pred_step`."
+            )
+
+        # [DI]
+        x_args, x_kwargs = utils.get_input_args(
+            x,
+            states=states,
+            initializing=initializing,
+            mode=mode,
+        )
+
+        assert isinstance(states.rng, types.RNGSeq)
+
+        if initializing:
+            module_fn = self.api_module.init(states.rng)
+        else:
+            module_fn = self.api_module.apply(
+                params=states.net_params,
+                states=states.net_states,
+                training=training,
+                rng=states.rng,
+            )
+
+        y_pred, net_params, net_states = module_fn(*x_args, **x_kwargs)
+
+        return model_core.PredStep(
+            y_pred=y_pred,
+            states=states.update(net_states=net_states, net_params=net_params),
+            aux_losses=hooks.get_losses(),
+            aux_metrics=hooks.get_metrics(),
+            summaries=hooks.get_summaries(),
+        )
+
+    def test_step(
+        self,
+        mode: types.Mode,
+        # net_params: tp.Any,
+        x: tp.Any,
+        y_true: tp.Any,
+        # net_states: tp.Any,
+        # metrics_states: tp.Any,
+        sample_weight: tp.Optional[np.ndarray],
+        class_weight: tp.Optional[np.ndarray],
+        # rng: types.RNG,
+        initializing: bool,
+        states: types.States,
+    ) -> model_core.TestStep:
+        y_pred, states, aux_losses, aux_metrics, _ = self.call_pred_step(
             x=x,
-            y=y,
+            mode=mode,
+            states=states,
+            initializing=initializing,
+        )
+        assert isinstance(states.rng, types.RNGSeq)
+
+        if initializing:
+            metrics_states, loss_states = None, None
+            metrics_fn = self.api_metrics.init(aux_metrics, states.rng)
+            losses_fn = self.api_loss.init(aux_losses, states.rng)
+        else:
+            metrics_states, loss_states = states.metrics_states
+            metrics_fn = self.api_metrics.apply(
+                aux_metrics,
+                states.rng,
+                metrics_states,
+            )
+            losses_fn = self.api_loss.apply(aux_losses, loss_states)
+
+        # [DI]
+        metrics_logs, metrics_states = metrics_fn(
+            x=x,
+            y_true=y_true,
+            y_pred=y_pred,
+            net_params=states.net_params,
+            net_states=states.net_states,
+            metrics_states=states.metrics_states,
             sample_weight=sample_weight,
-            batch_size=batch_size,
-            steps_per_epoch=steps_per_epoch,
-            initial_epoch=initial_epoch,
-            epochs=epochs,
-            shuffle=shuffle,
             class_weight=class_weight,
+            rng=states.rng,
+            initializing=initializing,
+            states=states,
+            mode=mode,
+            training=(mode == types.Mode.train),
         )
-        # Container that configures and calls `elegy.callbacks.Callback`s.
-        if not isinstance(callbacks, CallbackList):
-            callbacks = CallbackList(
-                callbacks,
-                add_history=True,
-                add_progbar=verbose != 0,
-                model=self,
-                verbose=verbose,
-                epochs=epochs,
-                steps=data_handler.inferred_steps,
-            )
 
-        callbacks.on_train_begin()
-        # data_handler._initial_epoch = (  # pylint: disable=protected-access
-        #     self._maybe_load_initial_epoch_from_ckpt(initial_epoch))
-
-        for epoch, iterator in data_handler.enumerate_epochs():
-            self.reset_metrics()
-            callbacks.on_epoch_begin(epoch)
-            logs = {}
-            with data_handler.catch_stop_iteration():
-                for step in data_handler.steps():
-                    callbacks.on_train_batch_begin(step)
-                    batch = next(iterator)
-                    # sample_weight = batch[2] if len(batch) == 3 else None
-                    x_batch, y_batch, sample_weight = unpack_x_y_sample_weight(batch)
-
-                    tmp_logs = self.train_on_batch(
-                        x=x_batch,
-                        y=y_batch,
-                        sample_weight=sample_weight,
-                        class_weight=class_weight,
-                    )
-                    tmp_logs.update({"size": data_handler.batch_size})
-                    # print(epoch, step, tmp_logs["accuracy"], batch[0].shape)
-
-                    logs = tmp_logs
-                    callbacks.on_train_batch_end(step, logs)
-
-            epoch_logs = copy(logs)
-            epoch_logs.update({"size": data_handler.batch_size})
-
-            # Run validation.
-            if validation_data and self._should_eval(epoch, validation_freq):
-                val_x, val_y, val_sample_weight = unpack_x_y_sample_weight(
-                    validation_data
-                )
-                val_logs = self.evaluate(
-                    x=val_x,
-                    y=val_y,
-                    sample_weight=val_sample_weight,
-                    batch_size=validation_batch_size or batch_size,
-                    steps=validation_steps,
-                    callbacks=callbacks,
-                    # return_dict=True,
-                )
-                val_logs = {"val_" + name: val for name, val in val_logs.items()}
-                epoch_logs.update(val_logs)
-
-            callbacks.on_epoch_end(epoch, epoch_logs)
-            # print(
-            #     f"epoch: {epoch} - "
-            #     + " - ".join(f"{key}: {value:.3f}" for key, value in epoch_logs.items())
-            # )
-            if self.stop_training:
-                break
-
-        callbacks.on_train_end()
-
-        return self.history
-
-    def evaluate(
-        self,
-        x: tp.Union[
-            np.ndarray,
-            tp.Mapping[str, np.ndarray],
-            tp.Tuple[np.ndarray],
-            tp.Iterable,
-        ],
-        y: tp.Union[
-            jnp.ndarray,
-            np.ndarray,
-            tp.Mapping[str, np.ndarray],
-            tp.Tuple[np.ndarray],
-            None,
-        ] = None,
-        verbose: int = 1,
-        batch_size: tp.Optional[int] = None,
-        sample_weight: tp.Optional[np.ndarray] = None,
-        steps: tp.Optional[int] = None,
-        callbacks: tp.Union[tp.List[Callback], CallbackList, None] = None,
-    ) -> tp.Dict[str, np.ndarray]:
-        """Returns the loss value & metrics values for the model in test mode.
-        Computation is done in batches.
-
-        Arguments:
-            x: Input data. It could be:
-
-                - A Numpy or Jax array (or array-like), or a list of arrays
-                    (in case the model has multiple inputs).
-                - A dict mapping input names to the corresponding arrays,
-                    if the model has named inputs.
-                - A generator returning `(inputs,)`, `(inputs, targets)`
-                    or `(inputs, targets, sample_weights)`.
-
-                A more detailed description of
-                unpacking behavior for iterator types generator
-                is given in the `Unpacking behavior for iterator-like inputs` section
-                of `Model.fit`.
-            y: Target data. Like the input data `x`,
-                it could be either Numpy or Jax array(s).
-                It should be consistent with `x`. If `x` is a generator,
-                `y` should not be specified (since targets will be obtained from `x`).
-            verbose: 0, 1, 2, 3 or 4. Verbosity mode.
-                0 = silent, 1 = progress bar, 2 = one line per epoch
-                3 = table with updates per step, 4 = table with updates per epoch.
-            batch_size: Integer or `None`.
-                Number of samples per gradient update.
-                If unspecified, `batch_size` will default to 32.
-                Do not specify the `batch_size` if your data is in the
-                form of generator (since they generate batches).
-            sample_weight: Optional Numpy/Jax array of weights for
-                the training samples, used for weighting the loss function
-                (during training only). You can either pass a flat (1D)
-                Numpy array with the same length as the input samples
-                (1:1 mapping between weights and samples). This argument is not
-                supported when `x` is generator, instead provide the sample_weights
-                as the third element of `x`.
-            steps: Integer or `None`. Total number of steps (batches of samples)
-                before declaring the evaluation round finished. Ignored with the
-                default value of `None`. This
-                argument is not supported with array inputs.
-            callbacks: List of [elegy.callbacks.callback.Callback][] instances.
-                List of callbacks to apply during training.
-
-        See the discussion of `Unpacking behavior for iterator-like inputs` for
-        [`Model.fit`][elegy.model.model.Model.fit].
-
-        Returns:
-            A dictionary for mapping the losses and metrics names to the values obtained.
-        Raises:
-            ValueError: in case of invalid arguments.
-        """
-
-        data_handler = DataHandler(
+        # [DI]
+        loss, loss_logs, loss_states = losses_fn(
             x=x,
-            y=y,
+            y_true=y_true,
+            y_pred=y_pred,
+            net_params=states.net_params,
+            net_states=states.net_states,
+            metrics_states=states.metrics_states,
             sample_weight=sample_weight,
-            batch_size=batch_size,
-            steps_per_epoch=steps,
-            initial_epoch=0,
-            epochs=1,
-            shuffle=False,
-            training=False,
+            class_weight=class_weight,
+            rng=states.rng,
+            initializing=initializing,
+            states=states,
+            mode=mode,
+            training=(mode == types.Mode.train),
         )
 
-        # Container that configures and calls `tf.keras.Callback`s.
-        if not isinstance(callbacks, CallbackList):
-            callbacks = CallbackList(
-                callbacks,
-                add_history=True,
-                add_progbar=verbose != 0,
-                model=self,
-                verbose=verbose,
-                epochs=1,
-                steps=data_handler.inferred_steps,
+        logs = utils.merge_with_unique_names(metrics_logs, loss_logs)
+        states = states.update(metrics_states=(metrics_states, loss_states))
+
+        return model_core.TestStep(loss, logs, states)
+
+    def grad_step(
+        self,
+        x: tp.Any,
+        y_true: tp.Any,
+        mode: types.Mode,
+        sample_weight: tp.Optional[np.ndarray],
+        class_weight: tp.Optional[np.ndarray],
+        states: types.States,
+        initializing: bool,
+    ) -> model_core.GradStep:
+        def loss_fn(
+            net_params: tp.Any,
+            states: types.States,
+            x: tp.Any,
+            y_true: tp.Any,
+            sample_weight: tp.Optional[np.ndarray],
+            class_weight: tp.Optional[np.ndarray],
+        ):
+            states = states.update(net_params=net_params)
+            loss, logs, states = self.call_test_step(
+                x=x,
+                y_true=y_true,
+                mode=mode,
+                states=states,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+                initializing=initializing,
             )
 
-        callbacks.on_test_begin()
+            return loss, (logs, states)
 
-        logs = {}
-        for _, iterator in data_handler.enumerate_epochs():
-            self.reset_metrics()
-            with data_handler.catch_stop_iteration():
-                for step in data_handler.steps():
-                    callbacks.on_test_batch_begin(step)
-                    batch = next(iterator)
-                    x_batch, y_batch, sample_weight = unpack_x_y_sample_weight(batch)
+        (loss, (logs, states)), grads = jax.value_and_grad(loss_fn, has_aux=True)(
+            states.net_params,
+            states,
+            x,
+            y_true,
+            sample_weight,
+            class_weight,
+        )
 
-                    tmp_logs = self.test_on_batch(
-                        x=x_batch,
-                        y=y_batch,
-                        sample_weight=sample_weight,
+        return model_core.GradStep(loss, logs, states, grads)
+
+    def train_step(
+        self,
+        x: tp.Any,
+        y_true: tp.Any,
+        mode: types.Mode,
+        # net_params: tp.Any,
+        # net_states: tp.Any,
+        # metrics_states: tp.Any,
+        # optimizer_states: tp.Any,
+        sample_weight: tp.Optional[np.ndarray],
+        class_weight: tp.Optional[np.ndarray],
+        # rng: types.RNG,
+        states: types.States,
+        initializing: bool,
+    ) -> model_core.TrainStep:
+
+        if initializing:
+            loss, logs, states = self.call_test_step(
+                x=x,
+                y_true=y_true,
+                mode=mode,
+                states=states,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+                initializing=initializing,
+            )
+            grads = None
+
+        else:
+            loss, logs, states, grads = self.call_grad_step(
+                x=x,
+                y_true=y_true,
+                mode=mode,
+                states=states,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+                initializing=initializing,
+            )
+
+        if self.optimizer is None:
+            raise types.MissingOptimizer(
+                "Trying to run `train_step` without an optimizer, "
+                "please provide an optimizer to the Model(...) constructor or "
+                "override `train_step`."
+            )
+        assert isinstance(states.rng, types.RNGSeq)
+
+        # calculate current lr before update
+        if initializing:
+            optimizer_states = self.api_optimizer.init(states.rng, states.net_params)
+            net_params = states.net_params
+        else:
+            if isinstance(self.states.optimizer_states, types.Uninitialized):
+                raise ValueError(
+                    f"Trying to run default `train_step` with an optimizer "
+                    "but `optimizer_states` was not initialized on `init`. Please initialize optimizer."
+                )
+            assert grads is not None
+
+            if isinstance(self.optimizer, Optimizer):
+                lr = self.optimizer.current_lr(self.states.optimizer_states)
+
+                if lr is not None:
+                    logs["lr"] = lr
+
+            net_params, optimizer_states = self.api_optimizer.apply(
+                states.net_params,
+                grads,
+                states.optimizer_states,
+                states.rng,
+            )
+
+        states = states.update(
+            net_params=net_params,
+            optimizer_states=optimizer_states,
+        )
+
+        return model_core.TrainStep(logs, states)
+
+    def summary(
+        self, x, depth: int = 2, tablefmt: str = "fancy_grid", **tablulate_kwargs
+    ) -> str:
+        """
+        Prints a summary of the network.
+        Arguments:
+            x: A sample of inputs to the network.
+            depth: The level number of nested level which will be showed.
+                Information about summaries from modules deeper than `depth`
+                will be aggregated together.
+            tablefmt: A string representing the style of the table generated by
+                `tabulate`. See
+                [python-tabulate](https://github.com/astanin/python-tabulate)
+                for more options.
+            tablulate_kwargs: Additional keyword arguments passed to `tabulate`.
+                See [python-tabulate](https://github.com/astanin/python-tabulate)
+                for more options.
+        """
+        mode = types.Mode.summary
+        initializing = False
+
+        self.maybe_initialize(mode, x=x)
+
+        method = self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
+
+        _, _, _, _, summaries = method(
+            x,
+            mode,
+            self.states,
+            initializing,
+        )
+
+        assert summaries is not None
+
+        def format_output(outputs) -> str:
+            file = StringIO()
+            outputs = jax.tree_map(lambda x: f"{x.shape}{{pad}}  {x.dtype}", outputs)
+            yaml.safe_dump(
+                outputs, file, default_flow_style=False, indent=2, explicit_end=False
+            )
+            return file.getvalue().replace("\n...", "")
+
+        def format_size(size):
+            return (
+                f"{size / 1e9 :,.1f} GB"
+                if size > 1e9
+                else f"{size / 1e6 :,.1f} MB"
+                if size > 1e6
+                else f"{size / 1e3 :,.1f} KB"
+                if size > 1e3
+                else f"{size:,} B"
+            )
+
+        table: tp.List = [["Inputs", format_output(x), "", ""]]
+
+        for path, module, value in summaries:
+
+            module_depth = len(path)
+
+            if module_depth > depth:
+                continue
+
+            include_submodules = module_depth == depth
+
+            module_params, module_states = self.api_module.get_summary_params(
+                path=path,
+                module=module,
+                value=value,
+                include_submodules=include_submodules,
+                net_params=self.states.net_params,
+                net_states=self.states.net_states,
+            )
+
+            params_count = (
+                utils.parameters_count(module_params)
+                if module_params is not None
+                else 0
+            )
+            params_size = (
+                utils.parameters_bytes(module_params)
+                if module_params is not None
+                else 0
+            )
+            states_count = (
+                utils.parameters_count(module_states)
+                if module_states is not None
+                else 0
+            )
+            states_size = (
+                utils.parameters_bytes(module_states)
+                if module_states is not None
+                else 0
+            )
+            base_name = "/".join(map(str, path))
+
+            if not base_name:
+                base_name = "*"
+
+            class_name = module.__class__.__name__ if is_generalizable(module) else ""
+
+            table.append(
+                [
+                    f"{base_name}{{pad}}  {class_name}",
+                    format_output(value),
+                    f"{params_count:,}{{pad}}    {format_size(params_size)}"
+                    if params_count > 0
+                    else "",
+                    f"{states_count:,}{{pad}}    {format_size(states_size)}"
+                    if states_count > 0
+                    else "",
+                ]
+            )
+
+        # add padding
+        for col in range(4):
+            max_length = max(
+                len(line.split("{pad}")[0])
+                for row in table
+                for line in row[col].split("\n")
+            )
+
+            for row in table:
+                row[col] = "\n".join(
+                    line.format(
+                        pad=" " * (max_length - len(line.rstrip().split("{pad}")[0]))
                     )
-                    tmp_logs.update({"size": data_handler.batch_size})
-                    logs = tmp_logs
-                    callbacks.on_test_batch_end(step, logs)
+                    for line in row[col].rstrip().split("\n")
+                )
 
-        callbacks.on_test_end()
+        # global summaries
+        params_count = utils.parameters_count(self.states.net_params)
+        params_size = utils.parameters_bytes(self.states.net_params)
+        states_count = utils.parameters_count(self.states.net_states)
+        states_size = utils.parameters_bytes(self.states.net_states)
+        total_count = params_count + states_count
+        total_size = params_size + states_size
+
+        summary = (
+            "\n"
+            + tabulate(
+                table,
+                headers=[
+                    "Layer",
+                    "Outputs Shape",
+                    "Trainable\nParameters",
+                    "Non-trainable\nParameters",
+                ],
+                tablefmt=tablefmt,
+                **tablulate_kwargs,
+            )
+            + "\n"
+            + tabulate(
+                [
+                    [
+                        f"Total Parameters:",
+                        f"{total_count:,}",
+                        f"{format_size(total_size)}" if total_count > 0 else "",
+                    ],
+                    [
+                        f"Trainable Parameters:",
+                        f"{params_count:,}",
+                        f"{format_size(params_size)}" if params_count > 0 else "",
+                    ],
+                    [
+                        f"Non-trainable Parameters:",
+                        f"{states_count:,}",
+                        f"{format_size(states_size)}" if states_count > 0 else "",
+                    ],
+                ],
+                tablefmt="plain",
+            )
+            + "\n"
+        )
+
+        print(summary)
+        return summary
+
+
+class Metrics:
+    metrics: tp.Dict[str, GeneralizedModule]
+
+    def __init__(self, modules: tp.Any):
+        names: tp.Set[str] = set()
+
+        def get_name(module, path):
+            name = utils.get_name(module)
+            return f"{path}/{name}" if path else name
+
+        self.metrics = {
+            utils.get_unique_name(names, get_name(module, path)): generalize(
+                module,
+                callable_default=AvgMetric,
+            )
+            for path, module in utils.flatten_names(modules)
+        }
+
+    def calculate_metrics(
+        self,
+        aux_metrics: types.Logs,
+        callback: tp.Callable[[str, GeneralizedModule], types.OutputStates],
+    ) -> tp.Tuple[types.Logs, tp.Any]:
+
+        states = {}
+
+        for name, module in self.metrics.items():
+            y_pred, _, states[name] = callback(name, module)
+
+            names = set()
+            for inner_name, inner_value in utils.flatten_names(y_pred):
+                inner_name = f"{name}/{inner_name}" if inner_name else name
+                inner_name = utils.get_unique_name(names, inner_name)
+
+                aux_metrics[inner_name] = inner_value
+
+        return aux_metrics, states
+
+    def init(
+        self,
+        aux_metrics: types.Logs,
+        rng: types.RNGSeq,
+    ) -> tp.Callable[..., tp.Tuple[types.Logs, tp.Any]]:
+        def lambda_(*args, **kwargs):
+            def callback(name, module):
+                kwargs_ = kwargs.copy()
+                kwargs_["metrics_states"] = None
+                return module.init(rng)(*args, **kwargs_)
+
+            return self.calculate_metrics(aux_metrics, callback)
+
+        return lambda_
+
+    def apply(
+        self,
+        aux_metrics: types.Logs,
+        rng: types.RNGSeq,
+        states: tp.Any,
+    ) -> tp.Callable[..., tp.Tuple[types.Logs, tp.Any]]:
+        assert states is not None
+
+        def lambda_(*args, **kwargs):
+            def callback(name, module: GeneralizedModule):
+                kwargs_ = kwargs.copy()
+                kwargs_["metrics_states"] = states[name]
+
+                return module.apply(
+                    params=None, states=states[name], training=True, rng=rng
+                )(*args, **kwargs_)
+
+            return self.calculate_metrics(aux_metrics, callback)
+
+        return lambda_
+
+
+class AvgMetric(GeneralizedModule):
+    def __init__(self, f: tp.Callable):
+        self.f = f
+
+    def init(self, rng: types.RNGSeq) -> tp.Callable[..., types.OutputStates]:
+        def _lambda(*args, **kwargs) -> types.OutputStates:
+
+            preds = utils.inject_dependencies(self.f)(*args, **kwargs)
+
+            if isinstance(preds, types.OutputStates):
+                return preds
+
+            n = 0
+            total = jax.tree_map(lambda x: jnp.zeros_like(x), preds)
+            return types.OutputStates(
+                preds=preds,
+                params=types.UNINITIALIZED,
+                states=(n, total),
+            )
+
+        return _lambda
+
+    def apply(
+        self,
+        params: tp.Any,
+        states: tp.Any,
+        training: bool,
+        rng: types.RNGSeq,
+    ) -> tp.Callable[..., types.OutputStates]:
+        def _lambda(*args, **kwargs) -> types.OutputStates:
+
+            preds = utils.inject_dependencies(self.f)(*args, **kwargs)
+
+            if isinstance(preds, types.OutputStates):
+                return preds
+
+            n, total = states
+            n += 1
+            total = jax.tree_multimap(lambda a, b: a + b, preds, total)
+            preds = jax.tree_map(lambda total: total / n, total)
+            return types.OutputStates(
+                preds=preds,
+                params=types.UNINITIALIZED,
+                states=(n, total),
+            )
+
+        return _lambda
+
+
+class Losses:
+    losses: tp.Dict[str, tp.Callable]
+    loss_metrics: "LossMetrics"
+
+    def __init__(self, losses: tp.Any):
+        names: tp.Set[str] = set()
+
+        def get_name(loss_fn, path):
+            name = utils.get_name(loss_fn)
+            return f"{path}/{name}" if path else name
+
+        self.losses = {
+            utils.get_unique_name(names, get_name(loss_fn, path)): loss_fn
+            for path, loss_fn in utils.flatten_names(losses)
+        }
+        self.loss_metrics = LossMetrics()
+
+    def calculate_losses(self, *args, **kwargs) -> types.Logs:
+        logs: types.Logs = {}
+
+        for name, loss_fn in self.losses.items():
+            losses = utils.inject_dependencies(loss_fn)(*args, **kwargs)
+
+            names = set()
+            for inner_name, loss in utils.flatten_names(losses):
+                inner_name = f"{name}/{inner_name}" if inner_name else name
+                inner_name = utils.get_unique_name(names, inner_name)
+
+                logs[inner_name] = loss
 
         return logs
 
-    def predict(
+    def init(
         self,
-        x: tp.Union[
-            np.ndarray,
-            tp.Mapping[str, np.ndarray],
-            tp.Tuple[np.ndarray],
-            tp.Iterable,
-        ],
-        verbose: int = 0,
-        batch_size: tp.Optional[int] = None,
-        steps: tp.Optional[int] = None,
-        callbacks: tp.Union[tp.List[Callback], CallbackList, None] = None,
-    ) -> np.ndarray:
-        """Generates output predictions for the input samples.
-        Computation is done in batches.
+        aux_losses: types.Logs,
+        rng: types.RNGSeq,
+    ) -> tp.Callable[..., tp.Tuple[types.Scalar, types.Logs, tp.Any]]:
+        def _lambda(*args, **kwargs):
+            module_logs = self.calculate_losses(*args, **kwargs)
 
-        Arguments:
-            x: Input data. It could be:
+            loss = sum(aux_losses.values(), 0.0) + sum(module_logs.values(), 0.0)
+            loss_logs = dict(loss=loss)
 
-                - A Numpy or Jax array (or array-like), or a list of arrays
-                    (in case the model has multiple inputs).
-                - A dict mapping input names to the corresponding arrays,
-                    if the model has named inputs.
-                - A generator returning `(inputs,)`, `(inputs, targets)`
-                    or `(inputs, targets, sample_weights)`.
+            logs = utils.merge_with_unique_names(loss_logs, aux_losses, module_logs)
 
-                A more detailed description of
-                unpacking behavior for iterator types generator
-                is given in the `Unpacking behavior for iterator-like inputs` section
-                of `Model.fit`.
-            batch_size: Integer or `None`.
-                Number of samples per batch.
-                If unspecified, `batch_size` will default to 32.
-                Do not specify the `batch_size` if your data is in the
-                form of generators (since they generate batches).
-            verbose: Verbosity mode, 0, 1, 2, 3 or 4.
-                0 = silent, 1 = progress bar, 2 = one line per epoch
-                3 = table with updates per step, 4 = table with updates per epoch.
-            steps: Total number of steps (batches of samples)
-                before declaring the prediction round finished.
-                Ignored with the default value of `None`.
-            callbacks: List of [elegy.callbacks.callback.Callback][] instances.
-                List of callbacks to apply during training.
+            names = set()
+            logs = {
+                utils.get_unique_name(names, f"{name}_loss")
+                if "loss" not in name
+                else utils.get_unique_name(names, name): value
+                for name, value in logs.items()
+            }
 
-        See the discussion of `Unpacking behavior for iterator-like inputs` for
-        [`Model.fit`][elegy.model.model.Model.fit].
-        Note that Model.predict uses the same interpretation rules as
-        `Model.fit` and `Model.evaluate`, so inputs must be unambiguous for all
-        three methods.
-        Returns:
-            Numpy array(s) of predictions.
-        Raises:
-            ValueError: In case of mismatch between the provided
-                input data and the model's expectations,
-                or in case a stateful model receives a number of samples
-                that is not a multiple of the batch size.
-        """
+            logs, states = self.loss_metrics.init(rng=rng)(logs)
 
-        outputs = None
+            return loss, logs, states
 
-        data_handler = DataHandler(
-            x=x,
-            batch_size=batch_size,
-            steps_per_epoch=steps,
-            initial_epoch=0,
-            epochs=1,
-            shuffle=False,
-        )
+        return _lambda
 
-        # Container that configures and calls `tf.keras.Callback`s.
-        if not isinstance(callbacks, CallbackList):
-            callbacks = CallbackList(
-                callbacks,
-                add_history=True,
-                add_progbar=verbose != 0,
-                model=self,
-                verbose=verbose,
-                epochs=1,
-                steps=data_handler.inferred_steps,
-            )
+    def apply(
+        self,
+        aux_losses: types.Logs,
+        states: tp.Any,
+    ) -> tp.Callable[..., tp.Tuple[types.Scalar, types.Logs, tp.Any]]:
+        def _lambda(*args, **kwargs):
+            module_logs = self.calculate_losses(*args, **kwargs)
 
-        callbacks.on_predict_begin()
+            loss = sum(aux_losses.values(), 0.0) + sum(module_logs.values(), 0.0)
+            loss_logs = dict(loss=loss)
 
-        for _, iterator in data_handler.enumerate_epochs():
-            self.reset_metrics()
-            with data_handler.catch_stop_iteration():
-                for step in data_handler.steps():
-                    callbacks.on_predict_batch_begin(step)
-                    batch = next(iterator)
-                    tmp_batch_outputs = self.predict_on_batch(x=batch[0])
-                    batch_outputs = tmp_batch_outputs
+            logs = utils.merge_with_unique_names(loss_logs, aux_losses, module_logs)
 
-                    if outputs is None:
-                        outputs = map_structure(
-                            lambda batch_output: [batch_output], batch_outputs
-                        )
-                    else:
+            names = set()
+            logs = {
+                utils.get_unique_name(names, f"{name}_loss")
+                if "loss" not in name
+                else utils.get_unique_name(names, name): value
+                for name, value in logs.items()
+            }
 
-                        outputs = map_structure(
-                            map_append,
-                            outputs,
-                            batch_outputs,
-                        )
+            logs, states_ = self.loss_metrics.apply(states)(logs)
 
-                    callbacks.on_predict_batch_end(
-                        step,
-                        {"outputs": batch_outputs, "size": data_handler.batch_size},
-                    )
+            return loss, logs, states_
 
-        callbacks.on_predict_end()
-
-        all_outputs = map_structure(jnp.concatenate, outputs)
-
-        return all_outputs
-
-    def _should_eval(self, epoch, validation_freq):
-        epoch = epoch + 1  # one-index the user-facing epoch.
-        if isinstance(validation_freq, int):
-            return epoch % validation_freq == 0
-        elif isinstance(validation_freq, list):
-            return epoch in validation_freq
-        else:
-            raise ValueError("Expected `validation_freq` to be a list or int.")
-
-    # ----------------------------------------------------------------
-    # save
-    # ----------------------------------------------------------------
-
-    def save(self, path: tp.Union[str, Path], include_optimizer: bool = True) -> None:
-        """
-        Saves the model to disk.
-
-        It creates a directory that includes:
-
-        - The `Model` object instance serialized with `pickle` as
-            as `{path}/model.pkl`, this allows you to re-instantiate
-            the model later.
-        - The model parameters + states serialized into HDF5 as `{path}/parameters.h5`.
-        - The states of the optimizer serialized with `pickle` as
-            as `{path}/optimizer_parameters.pkl`, allowing to resume training
-            exactly where you left off. We hope to use HDF5 in the future
-            but `optax` states is incompatible with `deepdish`.
-
-        This allows you to save the entirety of the states of a model
-        in a directory structure which can be fully restored via
-        `Model.load` if the model is already instantiated or `elegy.model.load`
-        to load the model instance from its pickled version.
-
-        ```python
-        import elegy
-
-        model.save('my_model')  # creates folder at 'my_model'
-        del model  # deletes the existing model
-
-        # returns a model identical to the previous one
-        model = elegy.model.load('my_model')
-        ```
-        Arguments:
-            path: path where model structure will be saved.
-            include_optimizer: If True, save optimizer states together.
-        """
-        if isinstance(path, str):
-            path = Path(path)
-
-        path.mkdir(parents=True, exist_ok=True)
-
-        parameters = self.get_parameters()
-
-        if "optimizer" in parameters:
-            del parameters["optimizer"]
-
-        deepdish.io.save(path / "parameters.h5", parameters)
-
-        # optimizer parameters saved as a pickle because optax uses named tuples
-        # which are converted to regular tuples by deepdish when loading.
-        if include_optimizer and self.optimizer is not None:
-            optimizer_params = self.optimizer.get_parameters()
-            with open(path / "optimizer_parameters.pkl", "wb") as f:
-                pickle.dump(optimizer_params, f)
-        else:
-            optimizer_params = None
-
-        self.reset()
-
-        try:
-            path = path / "model.pkl"
-            with open(path, "wb") as f:
-                cloudpickle.dump(self, f)
-        except BaseException as e:
-            print(f"Error occurred saving the model object at {path}\nContinuing....")
-
-        if optimizer_params is not None:
-            parameters["optimizer"] = optimizer_params
-
-        self.set_parameters(parameters)
-
-    def load(self, path: tp.Union[str, Path], include_optimizer: bool = True) -> None:
-        """
-        Loads all weights + states from a folder structure.
-
-        You can load states from other models that have slightly different architecture
-        as long as long as it preserves the ordering of the `haiku.Params` + `haiku.State`
-        structures, adding or removing layers is fine as long as they don't have weights,
-        new layers with weights will be initialized from scratch.
-
-        Arguments:
-            path: path to a saved model's directory.
-            include_optimizer: If True, loads optimizer's state if available.
-        """
-        if isinstance(path, str):
-            path = Path(path)
-
-        parameters: tp.Dict = deepdish.io.load(path / "parameters.h5")
-
-        optimizer_params_path = path / "optimizer_parameters.pkl"
-
-        if include_optimizer and optimizer_params_path.exists():
-            with open(optimizer_params_path, "rb") as f:
-                parameters["optimizer"] = pickle.load(f)
-
-        self.set_parameters(parameters)
+        return _lambda
 
 
-def load(path: tp.Union[str, Path], include_optimizer: bool = True) -> Model:
-    """
-    Loads a model from disk.
+class LossMetrics(module.Module):
+    def call(self, logs):
 
-    This function will restore both the model architecture,
-    that is, its `Model` class instance, along with all of its
-    parameters, states, and optimizer states.
+        count = self.add_parameter("count", lambda: jnp.array(0, dtype=jnp.int32))
+        total = self.add_parameter("total", lambda: jax.tree_map(jnp.zeros_like, logs))
 
-    Example:
+        count = count + 1
+        total = jax.tree_multimap(lambda a, b: a + b, total, logs)
 
-    ```python
-    import elegy
+        self.update_parameter("count", count)
+        self.update_parameter("total", total)
 
-    model.save('my_model')  # creates folder at 'my_model'
-    del model  # deletes the existing model
-
-    # returns a model identical to the previous one
-    model = elegy.model.load('my_model')
-    ```
-
-    Arguments:
-        path: path to a saved model's directory.
-        include_optimizer: If True, loads optimizer's state if available.
-
-    Raises:
-        OSError: in case the model was not found or could not be
-            loaded from disk successfully.
-    """
-    if isinstance(path, str):
-        path = Path(path)
-
-    with open(path / "model.pkl", "rb") as f:
-        try:
-            model: Model = pickle.load(f)
-        except BaseException as e:
-            raise OSError(f"Could not load the model. Got exception: {e}")
-
-    model.load(path, include_optimizer=include_optimizer)
-
-    return model
+        return jax.tree_map(lambda total: total / count, total)

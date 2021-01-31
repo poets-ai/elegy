@@ -102,15 +102,41 @@ class DIFunctionTests(TestCase):
         assert y == "abc"
 
 
-class SplitTest(TestCase):
+class TestMergeStructs:
     def test_basic(self):
-        from deepmerge import always_merger
-        import toolz
+        a = dict(x=1)
+        b = dict(y=2)
 
-        d = {"a/n/m": {"x": 1, "y/hola": 2}, "a/n/m/x/t": 10, "b": {"z": 3, "k": 5}}
-        ds = list(utils.split(d))
+        c = utils.merge_params(a, b)
 
-        dn = toolz.reduce(always_merger.merge, ds, {})
+        assert c == {"x": 1, "y": 2}
 
-        print(ds)
-        print(dn)
+    def test_hierarchy(self):
+        a = dict(a=dict(x=1))
+        b = dict(a=dict(y=2))
+
+        c = utils.merge_params(a, b)
+
+        assert c == {"a": {"x": 1, "y": 2}}
+
+    def test_repeated_leafs(self):
+        a = dict(a=dict(x=1))
+        b = dict(a=dict(x=2))
+
+        with pytest.raises(ValueError):
+            c = utils.merge_params(a, b)
+
+    def test_list(self):
+        a = [dict(x=1)]
+        b = [dict(y=2)]
+
+        c = utils.merge_params(a, b)
+
+        assert c == [{"x": 1, "y": 2}]
+
+    def test_different_lengths(self):
+        a = [dict(x=1)]
+        b = []
+
+        with pytest.raises(ValueError):
+            c = utils.merge_params(a, b)

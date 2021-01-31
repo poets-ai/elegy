@@ -1,11 +1,12 @@
 # adapted from the flax library https://github.com/google/flax
 
-import jax, jax.numpy as jnp
-from elegy import module, nn, random, utils
-import typing as tp
 import pickle
-import numpy as np
+import typing as tp
 
+import jax
+import jax.numpy as jnp
+import numpy as np
+from elegy import hooks, module, nn, types, utils
 
 __all__ = [
     "ResNet",
@@ -113,10 +114,10 @@ class ResNet(module.Module):
     def __init__(
         self,
         stages: tp.List[int],
-        block_type: tp.Union[ResNetBlock, BottleneckResNetBlock],
-        lowres: tp.Optional[bool] = False,
-        weights: tp.Optional[tp.Union[str, None]] = None,
-        dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
+        block_type: tp.Union[tp.Type[ResNetBlock], tp.Type[BottleneckResNetBlock]],
+        lowres: bool = False,
+        weights: tp.Optional[str] = None,
+        dtype: tp.Optional[tp.Any] = jnp.float32,
         *args,
         **kwargs,
     ):
@@ -153,11 +154,9 @@ class ResNet(module.Module):
 
             x = np.empty([0, 224, 224, 3], dtype=self.dtype)
             # quick but dirty module initialization
-            with module.rng_context(random.RNG(0)):
-                jax.eval_shape(self.init, x)
-            self.set_parameters(
-                parameters, check_missing=True, check_shapes=True, ignore_on_error=False
-            )
+            jax.eval_shape(self.init(rng=types.RNGSeq(42)), x)
+
+            self.set_default_parameters(parameters)
 
     def call(self, x: jnp.ndarray):
         x = nn.Conv2D(
@@ -190,9 +189,9 @@ class ResNet(module.Module):
 class ResNet18(ResNet):
     def __init__(
         self,
-        lowres: tp.Optional[bool] = False,
-        weights: tp.Optional[tp.Union[str, None]] = None,
-        dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
+        lowres: bool = False,
+        weights: tp.Optional[str] = None,
+        dtype: tp.Optional[tp.Any] = jnp.float32,
         *args,
         **kwargs,
     ):
@@ -210,9 +209,9 @@ class ResNet18(ResNet):
 class ResNet34(ResNet):
     def __init__(
         self,
-        lowres: tp.Optional[bool] = False,
-        weights: tp.Optional[tp.Union[str, None]] = None,
-        dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
+        lowres: bool = False,
+        weights: tp.Optional[str] = None,
+        dtype: tp.Optional[tp.Any] = jnp.float32,
         *args,
         **kwargs,
     ):
@@ -230,9 +229,9 @@ class ResNet34(ResNet):
 class ResNet50(ResNet):
     def __init__(
         self,
-        lowres: tp.Optional[bool] = False,
-        weights: tp.Optional[tp.Union[str, None]] = None,
-        dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
+        lowres: bool = False,
+        weights: tp.Optional[str] = None,
+        dtype: tp.Optional[tp.Any] = jnp.float32,
         *args,
         **kwargs,
     ):
@@ -250,9 +249,9 @@ class ResNet50(ResNet):
 class ResNet101(ResNet):
     def __init__(
         self,
-        lowres: tp.Optional[bool] = False,
-        weights: tp.Optional[tp.Union[str, None]] = None,
-        dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
+        lowres: bool = False,
+        weights: tp.Optional[str] = None,
+        dtype: tp.Optional[tp.Any] = jnp.float32,
         *args,
         **kwargs,
     ):
@@ -270,9 +269,9 @@ class ResNet101(ResNet):
 class ResNet152(ResNet):
     def __init__(
         self,
-        lowres: tp.Optional[bool] = False,
-        weights: tp.Optional[tp.Union[str, None]] = None,
-        dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
+        lowres: bool = False,
+        weights: tp.Optional[str] = None,
+        dtype: tp.Optional[tp.Any] = jnp.float32,
         *args,
         **kwargs,
     ):
@@ -290,9 +289,9 @@ class ResNet152(ResNet):
 class ResNet200(ResNet):
     def __init__(
         self,
-        lowres: tp.Optional[bool] = False,
-        weights: tp.Optional[tp.Union[str, None]] = None,
-        dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
+        lowres: bool = False,
+        weights: tp.Optional[str] = None,
+        dtype: tp.Optional[tp.Any] = jnp.float32,
         *args,
         **kwargs,
     ):
