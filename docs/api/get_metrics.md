@@ -1,5 +1,5 @@
 
-# elegy.get_metrics
+# elegy.hooks.get_metrics
 
 ::: elegy.hooks.get_metrics
     selection:

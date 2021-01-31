@@ -340,7 +340,7 @@ class Module(metaclass=ModuleMeta):
     def __call__(self, *args, **kwargs) -> tp.Any:
         """
         Forwards all input arguments to the Module's `call` method and calls
-        `elegy.add_summary` on the outputs.
+        `elegy.hooks.add_summary` on the outputs.
         """
 
         # this marks initialization

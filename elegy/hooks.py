@@ -45,7 +45,7 @@ def add_loss(name: str, value: types.Scalar) -> None:
     w = self.add_parameter("w", [3, 5], initializer=jnp.ones)
 
     # L2 regularization penalty
-    elegy.add_loss("l2_regularization", 0.01 * jnp.mean(w ** 2))
+    elegy.hooks.add_loss("l2_regularization", 0.01 * jnp.mean(w ** 2))
     ```
 
     Arguments:
@@ -71,7 +71,7 @@ def add_metric(name: str, value: types.Scalar) -> None:
 
     ```python
     y = jax.nn.relu(x)
-    elegy.add_metric("activation_mean", jnp.mean(y))
+    elegy.hooks.add_metric("activation_mean", jnp.mean(y))
     ```
 
     Arguments:
@@ -101,7 +101,7 @@ def add_summary(
     def call(self, x):
         ...
         y = jax.nn.relu(x)
-        elegy.add_summary("relu", y)
+        elegy.hooks.add_summary("relu", y)
         ...
     ```
 

@@ -59,7 +59,7 @@ class Encoder(elegy.Module):
         log_stddev = elegy.nn.Linear(self.latent_size, name="linear_std")(x)
         stddev = jnp.exp(log_stddev)
 
-        elegy.add_loss("kl_divergence", KLDivergence(weight=2e-1)(mean, stddev))
+        elegy.hooks.add_loss("kl_divergence", KLDivergence(weight=2e-1)(mean, stddev))
 
         z = mean + stddev * jax.random.normal(self.next_key(), mean.shape)
 

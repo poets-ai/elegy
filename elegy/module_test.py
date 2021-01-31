@@ -165,9 +165,9 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        with elegy.context(set_all=True):
+        with elegy.hooks.context(set_all=True):
             y, collections = m.init()(2.0)
-            summaries = elegy.get_summaries()
+            summaries = elegy.hooks.get_summaries()
 
         assert summaries == [
             (
@@ -208,9 +208,9 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        with elegy.context(set_all=True):
+        with elegy.hooks.context(set_all=True):
             y, params = m.init()(2.0)
-            summaries = elegy.get_summaries()
+            summaries = elegy.hooks.get_summaries()
 
         assert summaries == [
             (
@@ -280,8 +280,8 @@ class ModuleTest(TestCase):
             y = jnp.dot(x, w) + b
 
             path = elegy.module.get_module_path_str(self)
-            elegy.add_loss(f"activation_sum", jnp.sum(y))
-            elegy.add_metric(f"{path}/activation_mean", jnp.mean(y))
+            elegy.hooks.add_loss(f"activation_sum", jnp.sum(y))
+            elegy.hooks.add_metric(f"{path}/activation_mean", jnp.mean(y))
 
             return y
 
@@ -325,13 +325,13 @@ class ModuleTest(TestCase):
         assert states["linear1"]["n"] == 0
         assert "linear1" in parameters
 
-        with elegy.context(set_all=True):
+        with elegy.hooks.context(set_all=True):
             y, collections = m.apply(collections)(x)
             # y2: jnp.ndarray = m.call_jit(x)
 
-            losses = elegy.get_losses()
-            metrics = elegy.get_metrics()
-            summaries = elegy.get_summaries()
+            losses = elegy.hooks.get_losses()
+            metrics = elegy.hooks.get_metrics()
+            summaries = elegy.hooks.get_summaries()
 
         assert losses
         assert metrics
@@ -461,8 +461,8 @@ class ModuleDynamicTest(TestCase):
             y = jnp.dot(x, w) + b
 
             path = elegy.module.get_module_path_str(self)
-            elegy.add_loss(f"activation_sum", jnp.sum(y))
-            elegy.add_metric(f"{path}/activation_mean", jnp.mean(y))
+            elegy.hooks.add_loss(f"activation_sum", jnp.sum(y))
+            elegy.hooks.add_metric(f"{path}/activation_mean", jnp.mean(y))
 
             return y
 
@@ -503,7 +503,7 @@ class ModuleDynamicTest(TestCase):
         assert states["linear"]["n"] == 0
         assert "linear_1" in parameters
 
-        with elegy.context(set_all=True):
+        with elegy.hooks.context(set_all=True):
             # y: jnp.ndarray = m.call_with_defaults()(x)
             collections = m.get_default_parameters()
             y: jnp.ndarray
@@ -514,9 +514,9 @@ class ModuleDynamicTest(TestCase):
                 collections["states"],
             )
 
-            losses = elegy.get_losses()
-            metrics = elegy.get_metrics()
-            summaries = elegy.get_summaries()
+            losses = elegy.hooks.get_losses()
+            metrics = elegy.hooks.get_metrics()
+            summaries = elegy.hooks.get_summaries()
 
         assert losses is not None
         assert metrics
@@ -731,53 +731,53 @@ class TestTransforms(TestCase):
         m = SomeModule()
         assert total_called == 0
 
-        with elegy.context(losses=True):
+        with elegy.hooks.context(losses=True):
             m.init_jit(set_defaults=True)(0)
             # triggers call because its the first time
             assert total_called == 1
             assert m.n == 0
 
-        with elegy.context(losses=True):
+        with elegy.hooks.context(losses=True):
             y = m.call_with_defaults_jit()(0)
 
             assert y == 1
             assert m.n == 1
             assert total_called == 2
 
-        with elegy.context(losses=True):
+        with elegy.hooks.context(losses=True):
             y = m.call_with_defaults_jit()(0)
             assert m.n == 2
             assert total_called == 2
 
-        with elegy.context(losses=False):
+        with elegy.hooks.context(losses=False):
             y = m.call_with_defaults_jit()(0)
             assert y == -1
             # triggers call because training changed and is static
             assert total_called == 3
             assert m.n == 3
 
-        with elegy.context(losses=False):
+        with elegy.hooks.context(losses=False):
             y = m.call_with_defaults_jit()(0)
             assert y == -1
             # does not trigger call function for training = True exists
             assert total_called == 3
             assert m.n == 4
 
-        with elegy.context(losses=True):
+        with elegy.hooks.context(losses=True):
             y = m.call_with_defaults_jit()(0)
             assert y == 1
             # does not trigger call function for training = True exists
             assert total_called == 3
             assert m.n == 5
 
-        with elegy.context(losses=True, summaries=True):
+        with elegy.hooks.context(losses=True, summaries=True):
             y = m.call_with_defaults_jit()(0)
             assert y == 1
             # triggers call because summaries are now present
             assert total_called == 4
             assert m.n == 6
 
-        with elegy.context(losses=False, summaries=True):
+        with elegy.hooks.context(losses=False, summaries=True):
             y = m.call_with_defaults_jit()(0)
             assert y == -1
             # triggers call because configuration training=False,  is new
@@ -807,7 +807,7 @@ class TestTransforms(TestCase):
 
         assert total_called == 0
 
-        with elegy.context(losses=True):
+        with elegy.hooks.context(losses=True):
             m.call_with_defaults_jit()(0)
             assert total_called == 2
 

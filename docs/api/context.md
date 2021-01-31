@@ -1,6 +1,6 @@
 
 # elegy.context
 
-::: elegy.hooks.context
+::: with elegy.hooks.context
     selection:
         inherited_members: true

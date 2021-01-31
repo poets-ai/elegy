@@ -1,5 +1,5 @@
 
-# elegy.add_loss
+# elegy.hooks.add_loss
 
 ::: elegy.hooks.add_loss
     selection:

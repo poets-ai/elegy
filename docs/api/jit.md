@@ -1,5 +1,5 @@
 
-# elegy.jit
+# elegy.hooks.jit
 
 ::: elegy.hooks.jit
     selection:

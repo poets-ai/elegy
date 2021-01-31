@@ -58,9 +58,9 @@ In Elegy we have the following list of hooks:
 | Hook                 | Description                                                                                           |
 | -------------------- | ----------------------------------------------------------------------------------------------------- |
 | `self.add_parameter` | Gives us access to trainable and non-trainable parameters.                                            |
-| `elegy.add_loss`     | Lets us declare a loss from some intermediate module.                                                 |
-| `elegy.add_metric`   | Lets us declare a metric in some intermediate module.                                                 |
-| `elegy.add_summary`  | Lets us declare a summary in some intermediate module.                                                |
+| `elegy.hooks.add_loss`     | Lets us declare a loss from some intermediate module.                                                 |
+| `elegy.hooks.add_metric`   | Lets us declare a metric in some intermediate module.                                                 |
+| `elegy.hooks.add_summary`  | Lets us declare a summary in some intermediate module.                                                |
 | `elegy.training`     | Tells us whether training is currently happening or not.                                              |
 | `elegy.next_key` | Gives us access to a unique `PRNGKey` we can pass to functions like `jax.random.uniform` and friends. |
 
@@ -233,7 +233,7 @@ def update(x, y):
 
     return loss
 
-update_jit = elegy.jit(update, modules=mlp)
+update_jit = elegy.hooks.jit(update, modules=mlp)
 
 for step in range(1000):
     loss = update_jit(x, y)
@@ -274,12 +274,12 @@ def update(x, y):
     return loss
 ```
 
-Having our update function we can use `elegy.jit` to create
+Having our update function we can use `elegy.hooks.jit` to create
 an optimized version of our computation and create a minimal
 training loop.
 
 ```python hl_lines="1"
-update_jit = elegy.jit(update, modules=mlp)
+update_jit = elegy.hooks.jit(update, modules=mlp)
 
 for step in range(1000):
     loss = update_jit(x, y)

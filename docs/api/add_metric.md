@@ -1,5 +1,5 @@
 
-# elegy.add_metric
+# elegy.hooks.add_metric
 
 ::: elegy.hooks.add_metric
     selection:

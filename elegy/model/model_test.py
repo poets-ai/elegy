@@ -83,14 +83,14 @@ class ModelBasicTest(unittest.TestCase):
         rng = elegy.RNGSeq(42)
         x = np.random.uniform(size=(5, 7, 7))
 
-        with elegy.context(metrics=True):
-            elegy.add_metric("d", 10)
-            aux_metrics = elegy.get_metrics()
+        with elegy.hooks.context(metrics=True):
+            elegy.hooks.add_metric("d", 10)
+            aux_metrics = elegy.hooks.get_metrics()
             logs, states = metrics.init(aux_metrics, rng)(x, training=True)
 
-        with elegy.context(metrics=True):
-            elegy.add_metric("d", 10)
-            aux_metrics = elegy.get_metrics()
+        with elegy.hooks.context(metrics=True):
+            elegy.hooks.add_metric("d", 10)
+            aux_metrics = elegy.hooks.get_metrics()
             logs, states = metrics.apply(aux_metrics, rng, states)(x, training=True)
 
         assert len(metrics.metrics) == 3
@@ -118,14 +118,14 @@ class ModelBasicTest(unittest.TestCase):
         rng = elegy.RNGSeq(42)
         hooks_losses = dict(x=0.3, y=4.5)
 
-        with elegy.context(losses=True):
-            elegy.add_loss("d", 1.0)
-            aux_losses = elegy.get_losses()
+        with elegy.hooks.context(losses=True):
+            elegy.hooks.add_loss("d", 1.0)
+            aux_losses = elegy.hooks.get_losses()
             logs, logs, states = losses.init(aux_losses, rng)()
 
-        with elegy.context(losses=True):
-            elegy.add_loss("d", 1.0)
-            aux_losses = elegy.get_losses()
+        with elegy.hooks.context(losses=True):
+            elegy.hooks.add_loss("d", 1.0)
+            aux_losses = elegy.hooks.get_losses()
             loss, logs, states = losses.apply(aux_losses, states)()
 
         assert loss == 10
