@@ -11,6 +11,20 @@ import numpy as np
 
 from elegy import types
 
+__all__ = [
+    "add_loss",
+    "add_metric",
+    "add_summary",
+    "get_losses",
+    "losses_active",
+    "get_metrics",
+    "metrics_active",
+    "get_summaries",
+    "summaries_active",
+    "context",
+    "jit",
+]
+
 
 class HooksContext(types.Protocol):
     losses: tp.Optional[types.Logs]

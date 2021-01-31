@@ -35,9 +35,6 @@ nav:
     TestStep: api/TestStep.md
     TrainStep: api/TrainStep.md
     Uninitialized: api/Uninitialized.md
-    add_loss: api/add_loss.md
-    add_metric: api/add_metric.md
-    add_summary: api/add_summary.md
     callbacks:
       CSVLogger: api/callbacks/CSVLogger.md
       Callback: api/callbacks/Callback.md
@@ -49,12 +46,20 @@ nav:
       RemoteMonitor: api/callbacks/RemoteMonitor.md
       TensorBoard: api/callbacks/TensorBoard.md
       TerminateOnNaN: api/callbacks/TerminateOnNaN.md
-    context: api/context.md
     flax_summarize: api/flax_summarize.md
     flax_summary: api/flax_summary.md
-    get_losses: api/get_losses.md
-    get_metrics: api/get_metrics.md
-    get_summaries: api/get_summaries.md
+    hooks:
+      add_loss: api/hooks/add_loss.md
+      add_metric: api/hooks/add_metric.md
+      add_summary: api/hooks/add_summary.md
+      context: api/hooks/context.md
+      get_losses: api/hooks/get_losses.md
+      get_metrics: api/hooks/get_metrics.md
+      get_summaries: api/hooks/get_summaries.md
+      jit: api/hooks/jit.md
+      losses_active: api/hooks/losses_active.md
+      metrics_active: api/hooks/metrics_active.md
+      summaries_active: api/hooks/summaries_active.md
     initializers:
       Constant: api/initializers/Constant.md
       Orthogonal: api/initializers/Orthogonal.md
@@ -64,7 +69,6 @@ nav:
       UniformScaling: api/initializers/UniformScaling.md
       VarianceScaling: api/initializers/VarianceScaling.md
     inject_dependencies: api/inject_dependencies.md
-    jit: api/jit.md
     losses:
       BinaryCrossentropy: api/losses/BinaryCrossentropy.md
       CategoricalCrossentropy: api/losses/CategoricalCrossentropy.md

@@ -1009,19 +1009,18 @@ tornado = ">=5.0"
 
 [[package]]
 name = "mkdocs-jupyter"
-version = "0.13.0"
+version = "0.15.1"
 description = ""
 category = "dev"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 
 [package.dependencies]
-ipython = "*"
 mkdocs = ">=1.1.0"
-nbconvert = "*"
+nbconvert = ">=6.0.7,<7"
 
 [package.extras]
-dev = ["setuptools", "setuptools-scm", "pylint", "flake8", "black", "isort", "twine", "wheel", "pytest", "pytest-cov", "notebook", "nbconvert", "mkdocs", "mkdocs-material", "mkdocs-minify-plugin", "pygments", "pymdown-extensions"]
+dev = ["setuptools", "setuptools-scm", "pylint", "flake8", "black", "isort", "twine", "wheel", "pytest", "pytest-cov", "nbconvert", "mkdocs", "mkdocs-material", "mkdocs-minify-plugin", "pygments", "pymdown-extensions"]
 test = ["pytest"]
 
 [[package]]
@@ -2074,7 +2073,7 @@ testing = ["pytest (>=3.5,!=3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.1"
-content-hash = "d77e5b7d241f53cbacfd088469ef041816391c9fc4e89c947d01c59274830609"
+content-hash = "524d1b358439ffedc85eea6a009ca4e15c22832d9ef8b400368f864fbe761c6f"
 
 [metadata.files]
 absl-py = [
@@ -2729,7 +2728,7 @@ mkdocs = [
     {file = "mkdocs-1.1.2.tar.gz", hash = "sha256:f0b61e5402b99d7789efa032c7a74c90a20220a9c81749da06dbfbcbd52ffb39"},
 ]
 mkdocs-jupyter = [
-    {file = "mkdocs-jupyter-0.13.0.tar.gz", hash = "sha256:304d0a511159e1414663a1ef1f3a751860251e65a021c305351474ada7520475"},
+    {file = "mkdocs-jupyter-0.15.1.tar.gz", hash = "sha256:12ec960590381c0ea5174b0e723da763d35b2a660c01920f377c30f65a31e9aa"},
 ]
 mkdocs-material = [
     {file = "mkdocs-material-5.5.14.tar.gz", hash = "sha256:9f3237df1a72f91e0330a5e3b3711cb7aaa0d5705f9585e6ce6fbacaa16e777f"},
