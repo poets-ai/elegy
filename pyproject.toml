@@ -5,7 +5,7 @@ authors = ["Cristian Garcia <cgarcia.e88@gmail.com>",
            "Carlos Alvarez <candres.alv@gmail.com>",
            "David Cardozo <davidcardozo@berkeley.edu>",
            "Sebastian Arango"]
-version = "0.3.0"
+version = "0.4.0"
 license = "APACHE"
 readme = "README.md"
 repository = "https://github.com/poets-ai/elegy"
@@ -19,26 +19,24 @@ secondary = true
 [tool.poetry.dependencies]
 python = "^3.6.1"
 numpy = "^1.0.0"
-pytest = "^5.4.3"
-deepdish = "^0.3.6"
+jax = "^0.2.9"
+jaxlib = "^0.1.59"
 typing_extensions = { version = "^3.7.4", python = "<3.8" }
 dataclasses =  { version = "^0.7", python = ">=3.6,<3.7" }
 cloudpickle = "^1.5.0"
 tensorboardx = "^2.1"
-tables = "^3.6.1"
 tabulate = "^0.8.7"
 toolz = "^0.10.0"
-deepmerge = "^0.1.0"
 pyyaml = "^5.3.1"
-pytest-cov = "^2.10.0"
 dm-haiku = "^0.0.2"
 optax = "^0.0.1"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
+pytest = "^5.4.3"
+pytest-cov = "^2.10.0"
 mkdocs = "^1.1.2"
-mkdocs-material = "^5.4.0"
-mkdocstrings = "^0.12.0"
+mkdocs-material = "^6.2.7"
+mkdocstrings = "^0.14.0"
 black = {version = "^20.8b1", allow-prereleases = true}
 typer = "^0.3.0"
 mkdocs-jupyter = { version = "^0.15.1", python = ">=3.7" }
@@ -46,10 +44,9 @@ matplotlib = "^3.3.0"
 tensorflow-cpu = "^2.2.0"
 dataget = "^0.4.14"
 debugpy = "^1.0.0-beta.12"
-jax = "^0.2.5"
-jaxlib = "^0.1.56"
-jupyter = "^1.0.0"
-jupyterlab = "^2.2.9"
+jupyter = { version = "^1.0.0", python = ">=3.7" }
+jupyterlab = { version = "^3.0.6", python = ">=3.7" }
+ipython = { version = "^7.20.0", python = ">=3.7" }
 tensorflow-addons = "^0.11.2"
 flax = "^0.3.0"
 torch = "1.4.0+cpu"

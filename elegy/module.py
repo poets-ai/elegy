@@ -750,7 +750,9 @@ class Module(metaclass=ModuleMeta):
             if self.initialized:
                 parameters = self._default_params.copy()
             else:
-                parameters = {}
+                raise ValueError(
+                    f"Cannot get default parameters from uninitialized Module {self.name}"
+                )
         else:
             if self._scope_params is not None:
                 parameters = self._scope_params.copy()

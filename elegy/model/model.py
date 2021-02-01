@@ -445,8 +445,13 @@ class Model(ModelBase):
         return model_core.TrainStep(logs, states)
 
     def summary(
-        self, x, depth: int = 2, tablefmt: str = "fancy_grid", **tablulate_kwargs
-    ) -> str:
+        self,
+        x,
+        depth: int = 2,
+        tablefmt: str = "fancy_grid",
+        return_repr: bool = False,
+        **tablulate_kwargs,
+    ) -> tp.Optional[str]:
         """
         Prints a summary of the network.
         Arguments:
@@ -619,7 +624,9 @@ class Model(ModelBase):
         )
 
         print(summary)
-        return summary
+
+        if return_repr:
+            return summary
 
 
 class Metrics:
