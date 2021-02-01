@@ -5,22 +5,15 @@ import tensorflow.keras as tfk
 import numpy as np
 import elegy
 
-# import debugpy
-
-# print("Waiting for debugger...")
-# debugpy.listen(5679)
-# debugpy.wait_for_client()
-
 
 class MAETest(TestCase):
-    #
     def test_basic(self):
 
         y_true = jnp.array([1, 1, 1, 1])
         y_pred = jnp.array([0, 1, 1, 1])
 
         assert np.allclose(
-            elegy.metrics.MeanAbsoluteError()(y_true, y_pred),
+            elegy.metrics.MeanAbsoluteError().call_with_defaults()(y_true, y_pred),
             tfk.metrics.MeanAbsoluteError()(y_true, y_pred),
         )
 
@@ -28,7 +21,7 @@ class MAETest(TestCase):
         y_pred = jnp.array([1, 0, 0, 0])
 
         assert np.allclose(
-            elegy.metrics.MeanAbsoluteError()(y_true, y_pred),
+            elegy.metrics.MeanAbsoluteError().call_with_defaults()(y_true, y_pred),
             tfk.metrics.MeanAbsoluteError()(y_true, y_pred),
         )
 
@@ -37,5 +30,5 @@ class MAETest(TestCase):
 
         assert np.allclose(
             tfk.metrics.MeanAbsoluteError()(y_true, y_pred),
-            elegy.metrics.MeanAbsoluteError()(jnp.asarray(y_true), jnp.asarray(y_pred)),
+            elegy.metrics.MeanAbsoluteError().call_with_defaults()(y_true, y_pred),
         )

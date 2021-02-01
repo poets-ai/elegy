@@ -31,7 +31,7 @@ def categorical_crossentropy(
         y_pred = jax.nn.log_softmax(y_pred)
 
     else:
-        y_pred = jnp.maximum(y_pred, utils.EPSILON)
+        y_pred = jnp.maximum(y_pred, types.EPSILON)
         y_pred = jnp.log(y_pred)
 
     return -jnp.sum(y_true * y_pred, axis=-1)

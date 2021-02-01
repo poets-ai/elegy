@@ -15,7 +15,7 @@
 """Layer Norm."""
 
 import collections
-import types
+from elegy import types
 from typing import Optional, Sequence, Union
 
 import jax
@@ -39,8 +39,8 @@ class LayerNormalization(module.Module):
         create_scale: bool = True,
         create_offset: bool = True,
         eps: float = 1e-5,
-        scale_init: Optional[initializers.Initializer] = None,
-        offset_init: Optional[initializers.Initializer] = None,
+        scale_init: Optional[types.Initializer] = None,
+        offset_init: Optional[types.Initializer] = None,
         **kwargs
     ):
         """Constructs a LayerNorm module.
@@ -151,8 +151,8 @@ class InstanceNormalization(LayerNormalization):
         create_scale: bool = True,
         create_offset: bool = True,
         eps: float = 1e-5,
-        scale_init: Optional[initializers.Initializer] = None,
-        offset_init: Optional[initializers.Initializer] = None,
+        scale_init: Optional[types.Initializer] = None,
+        offset_init: Optional[types.Initializer] = None,
         data_format: str = "channels_last",
         **kwargs
     ):

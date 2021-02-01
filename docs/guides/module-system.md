@@ -11,7 +11,7 @@ track of the parameters and states each module might require. Here we will creat
 very basic `Linear` and `MLP` modules which will seem very familiar:
 
 ```python
-class Linear(elegy.Module):
+class Linear:
     def __init__(self, n_in, n_out):
         super().__init__()
         self.w = self.add_parameter(
@@ -58,11 +58,11 @@ In Elegy we have the following list of hooks:
 | Hook                 | Description                                                                                           |
 | -------------------- | ----------------------------------------------------------------------------------------------------- |
 | `self.add_parameter` | Gives us access to trainable and non-trainable parameters.                                            |
-| `elegy.add_loss`     | Lets us declare a loss from some intermediate module.                                                 |
-| `elegy.add_metric`   | Lets us declare a metric in some intermediate module.                                                 |
-| `elegy.add_summary`  | Lets us declare a summary in some intermediate module.                                                |
+| `elegy.hooks.add_loss`     | Lets us declare a loss from some intermediate module.                                                 |
+| `elegy.hooks.add_metric`   | Lets us declare a metric in some intermediate module.                                                 |
+| `elegy.hooks.add_summary`  | Lets us declare a summary in some intermediate module.                                                |
 | `elegy.training`     | Tells us whether training is currently happening or not.                                              |
-| `elegy.next_rng_key` | Gives us access to a unique `PRNGKey` we can pass to functions like `jax.random.uniform` and friends. |
+| `elegy.next_key` | Gives us access to a unique `PRNGKey` we can pass to functions like `jax.random.uniform` and friends. |
 
 !!! Note
     If you use existing `Module`s you might not need to worry much about these hooks, but keep them in mind
@@ -81,7 +81,7 @@ will be able to move a lot of the code defined on the `__init__` method to
 the `call` method:
 
 ```python
-class Linear(elegy.Module):
+class Linear:
     def __init__(self, n_out):
         super().__init__()
         self.n_out = n_out
@@ -110,7 +110,7 @@ What happened here? Lets decompose it into two parts. First we moved the `add_pa
 on the `Linear` module to the `call` method:
 
 ```python hl_lines="7 8 9 10 11"
-class Linear(elegy.Module):
+class Linear:
     def __init__(self, n_out):
         super().__init__()
         self.n_out = n_out
@@ -233,7 +233,7 @@ def update(x, y):
 
     return loss
 
-update_jit = elegy.jit(update, modules=mlp)
+update_jit = elegy.hooks.jit(update, modules=mlp)
 
 for step in range(1000):
     loss = update_jit(x, y)
@@ -274,12 +274,12 @@ def update(x, y):
     return loss
 ```
 
-Having our update function we can use `elegy.jit` to create
+Having our update function we can use `elegy.hooks.jit` to create
 an optimized version of our computation and create a minimal
 training loop.
 
 ```python hl_lines="1"
-update_jit = elegy.jit(update, modules=mlp)
+update_jit = elegy.hooks.jit(update, modules=mlp)
 
 for step in range(1000):
     loss = update_jit(x, y)

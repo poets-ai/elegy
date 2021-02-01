@@ -1,7 +1,7 @@
 import elegy
 
 
-from elegy import utils
+from elegy import utils, types
 import jax.numpy as jnp
 import jax
 import tensorflow.keras as tfk
@@ -52,8 +52,8 @@ def test_function():
 
     assert loss.shape == (2,)
 
-    first_log = jnp.log(jnp.maximum(y_true, utils.EPSILON) + 1.0)
-    second_log = jnp.log(jnp.maximum(y_pred, utils.EPSILON) + 1.0)
+    first_log = jnp.log(jnp.maximum(y_true, types.EPSILON) + 1.0)
+    second_log = jnp.log(jnp.maximum(y_pred, types.EPSILON) + 1.0)
     assert jnp.array_equal(loss, jnp.mean(jnp.square(first_log - second_log), axis=-1))
 
 

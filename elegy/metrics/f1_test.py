@@ -14,7 +14,7 @@ class F1Test(TestCase):
         y_pred = jnp.array([1, 0, 1, 1])
 
         assert np.allclose(
-            elegy.metrics.F1()(y_true, y_pred),
+            elegy.metrics.F1().call_with_defaults()(y_true, y_pred),
             tfa.metrics.F1Score(2, average="micro", threshold=0.5)(y_true, y_pred),
         )  # 2 * (0.44445 / 1.33334)
 
@@ -22,7 +22,7 @@ class F1Test(TestCase):
         y_pred = jnp.array([1, 1, 0, 0])
 
         assert np.allclose(
-            elegy.metrics.F1()(y_true, y_pred),
+            elegy.metrics.F1().call_with_defaults()(y_true, y_pred),
             tfa.metrics.F1Score(2, average="micro", threshold=0.5)(y_true, y_pred),
         )  # 2 * (0.5 / 1.5)
 
@@ -34,14 +34,16 @@ class F1Test(TestCase):
 
         assert np.allclose(
             tfa.metrics.F1Score(2, average="micro", threshold=0.3)(y_true, y_pred),
-            elegy.metrics.F1(threshold=0.3)(jnp.asarray(y_true), jnp.asarray(y_pred)),
+            elegy.metrics.F1(threshold=0.3).call_with_defaults()(
+                jnp.asarray(y_true), jnp.asarray(y_pred)
+            ),
         )
 
         assert np.allclose(
             tfa.metrics.F1Score(2, average="micro", threshold=0.3)(
                 y_true, y_pred, sample_weight=sample_weight
             ),
-            elegy.metrics.F1(threshold=0.3)(
+            elegy.metrics.F1(threshold=0.3).call_with_defaults()(
                 jnp.asarray(y_true), jnp.asarray(y_pred), sample_weight=sample_weight
             ),
         )
@@ -60,7 +62,7 @@ class F1Test(TestCase):
 
         assert np.allclose(
             tm(y_true, y_pred, sample_weight=sample_weight),
-            em(
+            em.call_with_defaults()(
                 jnp.asarray(y_true),
                 jnp.asarray(y_pred),
                 sample_weight=jnp.asarray(sample_weight),
@@ -76,7 +78,7 @@ class F1Test(TestCase):
 
         assert np.allclose(
             tm(y_true, y_pred, sample_weight=sample_weight),
-            em(
+            em.call_with_defaults()(
                 jnp.asarray(y_true),
                 jnp.asarray(y_pred),
                 sample_weight=jnp.asarray(sample_weight),

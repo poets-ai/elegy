@@ -3,7 +3,7 @@ import typing as tp
 
 import jax.numpy as jnp
 
-from elegy import utils
+from elegy import utils, types
 from elegy.losses.loss import Loss, Reduction
 
 
@@ -28,8 +28,8 @@ def cosine_similarity(
     loss = elegy.losses.cosine_similarity(y_true, y_pred, axis=1)
     assert loss.shape == (2,)
 
-    y_true = y_true / jnp.maximum(jnp.linalg.norm(y_true, axis=1, keepdims=True), jnp.sqrt(utils.EPSILON))
-    y_pred = y_pred / jnp.maximum(jnp.linalg.norm(y_pred, axis=1, keepdims=True), jnp.sqrt(utils.EPSILON))
+    y_true = y_true / jnp.maximum(jnp.linalg.norm(y_true, axis=1, keepdims=True), jnp.sqrt(types.EPSILON))
+    y_pred = y_pred / jnp.maximum(jnp.linalg.norm(y_pred, axis=1, keepdims=True), jnp.sqrt(types.EPSILON))
     assert jnp.array_equal(loss, -jnp.sum(y_true * y_pred, axis=1))
     ```
 
@@ -44,10 +44,10 @@ def cosine_similarity(
          (Note dN-1 because all loss functions reduce by 1 dimension, usually axis=-1.)
     """
     y_true = y_true / jnp.maximum(
-        jnp.linalg.norm(y_true, axis=axis, keepdims=True), jnp.sqrt(utils.EPSILON)
+        jnp.linalg.norm(y_true, axis=axis, keepdims=True), jnp.sqrt(types.EPSILON)
     )
     y_pred = y_pred / jnp.maximum(
-        jnp.linalg.norm(y_pred, axis=axis, keepdims=True), jnp.sqrt(utils.EPSILON)
+        jnp.linalg.norm(y_pred, axis=axis, keepdims=True), jnp.sqrt(types.EPSILON)
     )
     return -jnp.sum(y_true * y_pred, axis=axis)
 

@@ -9,38 +9,44 @@ import elegy
 class SequentialTest(TestCase):
     #
     def test_connects(self):
-        elegy.nn.Sequential(
+
+        y = elegy.nn.Sequential(
             lambda: [
                 elegy.nn.Flatten(),
                 elegy.nn.Linear(5),
                 jax.nn.relu,
                 elegy.nn.Linear(2),
             ]
-        )(jnp.ones([10, 3]))
+        ).call_with_defaults(rng=elegy.RNGSeq(42))(jnp.ones([10, 3]))
 
-        elegy.nn.Sequential(
+        assert y.shape == (10, 2)
+
+        y = elegy.nn.Sequential(
             lambda: [
                 elegy.nn.Flatten(),
                 elegy.nn.Linear(5),
                 jax.nn.relu,
                 elegy.nn.Linear(2),
             ]
-        )(jnp.ones([10, 3]))
+        ).call_with_defaults(rng=elegy.RNGSeq(42), training=False)(jnp.ones([10, 3]))
 
-    def test_on_predict(self):
+        assert y.shape == (10, 2)
 
-        model = elegy.Model(
-            elegy.nn.Sequential(
-                lambda: [
-                    elegy.nn.Flatten(),
-                    elegy.nn.Linear(5),
-                    jax.nn.relu,
-                    elegy.nn.Linear(2),
-                ]
-            )
+    def test_di(self):
+
+        m = elegy.nn.Sequential(
+            lambda: [
+                elegy.nn.Flatten(),
+                elegy.nn.Linear(2),
+            ]
         )
 
-        x = jnp.ones([3, 5])
+        y = elegy.inject_dependencies(
+            m.call_with_defaults(rng=elegy.RNGSeq(42), training=False), signature_f=m
+        )(
+            jnp.ones([5, 3]),
+            a=1,
+            b=2,
+        )
 
-        y_pred = model.predict(x)
-        logs = model.evaluate(x)
+        assert y.shape == (5, 2)

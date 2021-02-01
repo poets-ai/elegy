@@ -11,8 +11,9 @@ import jax.numpy as jnp
 import numpy as np
 from haiku._src import utils as haiku_utils
 
-from elegy import initializers, module
+from elegy import initializers, module, types
 from elegy import module
+from elegy import hooks
 from elegy.nn.moving_averages import ExponentialMovingAverage
 
 
@@ -45,8 +46,8 @@ class BatchNormalization(module.Module):
         create_offset: bool = True,
         decay_rate: float = 0.99,
         eps: float = 1e-5,
-        scale_init: Optional[initializers.Initializer] = None,
-        offset_init: Optional[initializers.Initializer] = None,
+        scale_init: Optional[types.Initializer] = None,
+        offset_init: Optional[types.Initializer] = None,
         axis: Optional[Sequence[int]] = None,
         cross_replica_axis: Optional[str] = None,
         data_format: str = "channels_last",
@@ -122,7 +123,7 @@ class BatchNormalization(module.Module):
         inputs = jnp.asarray(inputs, jnp.float32)
 
         if training is None:
-            training = module.is_training()
+            training = self.is_training()
 
         if self.create_scale and scale is not None:
             raise ValueError("Cannot pass `scale` at call time if `create_scale=True`.")
@@ -140,7 +141,7 @@ class BatchNormalization(module.Module):
         else:
             axis = [i for i in range(inputs.ndim) if i != channel_index]
 
-        if training or test_local_stats:
+        if training or test_local_stats or not hasattr(self.mean_ema, "average"):
             cross_replica_axis = self.cross_replica_axis
             if self.cross_replica_axis:
                 mean = jnp.mean(inputs, axis, keepdims=True)
@@ -158,7 +159,7 @@ class BatchNormalization(module.Module):
             mean = self.mean_ema.average
             var = self.var_ema.average
 
-        if training:
+        if training or not hasattr(self.mean_ema, "average"):
             self.mean_ema(mean)
             self.var_ema(var)
 
@@ -166,12 +167,16 @@ class BatchNormalization(module.Module):
         w_dtype = jnp.float32
 
         if self.create_scale:
-            scale = self.add_parameter("scale", w_shape, w_dtype, self.scale_init)
+            scale = self.add_parameter(
+                "scale", lambda: self.scale_init(w_shape, w_dtype)
+            )
         elif scale is None:
             scale = np.ones([], dtype=w_dtype)
 
         if self.create_offset:
-            offset = self.add_parameter("offset", w_shape, w_dtype, self.offset_init)
+            offset = self.add_parameter(
+                "offset", lambda: self.offset_init(w_shape, w_dtype)
+            )
         elif offset is None:
             offset = np.zeros([], dtype=w_dtype)
 

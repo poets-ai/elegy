@@ -16,7 +16,8 @@
 """Haiku initializers."""
 
 from elegy import module
-from elegy.types import DType, Initializer, Shape
+from elegy import hooks
+from elegy import types
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -49,7 +50,7 @@ def _compute_fans(shape):
     return fan_in, fan_out
 
 
-class Constant(Initializer):
+class Constant(types.Initializer):
     """Initializes with a constant."""
 
     def __init__(self, constant):
@@ -61,11 +62,11 @@ class Constant(Initializer):
         """
         self.constant = constant
 
-    def __call__(self, shape: Shape, dtype: DType) -> np.ndarray:
+    def __call__(self, shape: types.Shape, dtype: types.DType) -> np.ndarray:
         return jnp.broadcast_to(self.constant, shape).astype(dtype)
 
 
-class RandomNormal(Initializer):
+class RandomNormal(types.Initializer):
     """Initializes by sampling from a normal distribution."""
 
     def __init__(self, stddev=1.0, mean=0.0):
@@ -79,13 +80,13 @@ class RandomNormal(Initializer):
         self.stddev = stddev
         self.mean = mean
 
-    def __call__(self, shape: Shape, dtype: DType) -> np.ndarray:
+    def __call__(self, shape: types.Shape, dtype: types.DType) -> np.ndarray:
         m = jax.lax.convert_element_type(self.mean, dtype)
         s = jax.lax.convert_element_type(self.stddev, dtype)
-        return m + s * jax.random.normal(module.next_rng_key(), shape, dtype)
+        return m + s * jax.random.normal(module.next_key(), shape, dtype)
 
 
-class TruncatedNormal(Initializer):
+class TruncatedNormal(types.Initializer):
     """Initializes by sampling from a truncated normal distribution."""
 
     def __init__(self, stddev=1.0, mean=0.0):
@@ -100,16 +101,16 @@ class TruncatedNormal(Initializer):
         self.stddev = stddev
         self.mean = mean
 
-    def __call__(self, shape: Shape, dtype: DType) -> np.ndarray:
+    def __call__(self, shape: types.Shape, dtype: types.DType) -> np.ndarray:
         m = jax.lax.convert_element_type(self.mean, dtype)
         s = jax.lax.convert_element_type(self.stddev, dtype)
         unscaled = jax.random.truncated_normal(
-            module.next_rng_key(), -2.0, 2.0, shape, dtype
+            module.next_key(), -2.0, 2.0, shape, dtype
         )
         return s * unscaled + m
 
 
-class RandomUniform(Initializer):
+class RandomUniform(types.Initializer):
     """Initializes by sampling from a uniform distribution."""
 
     def __init__(self, minval=0.0, maxval=1.0):
@@ -123,14 +124,14 @@ class RandomUniform(Initializer):
         self.minval = minval
         self.maxval = maxval
 
-    def __call__(self, shape: Shape, dtype: DType) -> np.ndarray:
+    def __call__(self, shape: types.Shape, dtype: types.DType) -> np.ndarray:
         return jax.random.uniform(
-            module.next_rng_key(), shape, dtype, self.minval, self.maxval
+            module.next_key(), shape, dtype, self.minval, self.maxval
         )
 
 
-class VarianceScaling(Initializer):
-    """Initializer which adapts its scale to the shape of the initialized array.
+class VarianceScaling(types.Initializer):
+    """types.Initializer which adapts its scale to the shape of the initialized array.
 
     The initializer first computes the scaling factor ``s = scale / n``, where n
     is:
@@ -183,7 +184,7 @@ class VarianceScaling(Initializer):
         self.mode = mode
         self.distribution = distribution
 
-    def __call__(self, shape: Shape, dtype: DType) -> np.ndarray:
+    def __call__(self, shape: types.Shape, dtype: types.DType) -> np.ndarray:
         scale = self.scale
         fan_in, fan_out = _compute_fans(shape)
         if self.mode == "fan_in":
@@ -208,7 +209,7 @@ class VarianceScaling(Initializer):
             return RandomUniform(minval=-limit, maxval=limit)(shape, dtype)
 
 
-class UniformScaling(Initializer):
+class UniformScaling(types.Initializer):
     """
     Uniform scaling initializer.
 
@@ -225,13 +226,13 @@ class UniformScaling(Initializer):
         """
         self.scale = scale
 
-    def __call__(self, shape: Shape, dtype: DType) -> np.ndarray:
+    def __call__(self, shape: types.Shape, dtype: types.DType) -> np.ndarray:
         input_size = np.product(shape[:-1])
         max_val = np.sqrt(3 / input_size) * self.scale
         return RandomUniform(-max_val, max_val)(shape, dtype)
 
 
-class Orthogonal(Initializer):
+class Orthogonal(types.Initializer):
     """Uniform scaling initializer."""
 
     def __init__(self, scale=1.0, axis=-1):
@@ -257,13 +258,13 @@ class Orthogonal(Initializer):
         self.scale = scale
         self.axis = axis
 
-    def __call__(self, shape: Shape, dtype: DType) -> np.ndarray:
+    def __call__(self, shape: types.Shape, dtype: types.DType) -> np.ndarray:
         if len(shape) < 2:
             raise ValueError("Orthogonal initializer requires at least a 2D shape.")
         n_rows = shape[self.axis]
         n_cols = np.prod(shape) // n_rows
         matrix_shape = (n_rows, n_cols) if n_rows > n_cols else (n_cols, n_rows)
-        norm_dst = jax.random.normal(module.next_rng_key(), matrix_shape, dtype)
+        norm_dst = jax.random.normal(module.next_key(), matrix_shape, dtype)
         q_mat, r_mat = jnp.linalg.qr(norm_dst)
         # Enforce Q is uniformly distributed
         q_mat *= jnp.sign(jnp.diag(r_mat))
