@@ -9,7 +9,7 @@
 
 -----------------
 
-_Elegy is a framework-agnostic Trainer interface for the Jax ecosystem_  
+_Elegy is a framework-agnostic Trainer interface for the Jax ecosystem._  
 
 #### Main Features
 * **Flexible**: Elegy provides a functional Pytorch Lightning-like low-level API that provides maximal flexibility when needed.
