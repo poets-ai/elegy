@@ -1,9 +1,10 @@
 from elegy import utils
 
-import jax.numpy as jnp
+import jax, jax.numpy as jnp
 import numpy as np
 from unittest import TestCase
 import tempfile, os, pickle
+import PIL, urllib
 
 import elegy
 
@@ -31,3 +32,23 @@ class ResNetTest(TestCase):
             y2 = elegy.Model(new_r18, run_eagerly=True).predict(x)
 
         assert np.allclose(y, y2, rtol=0.001)
+
+    def test_autodownload_pretrained_r18(self):
+        fname, _ = urllib.request.urlretrieve(
+            "https://upload.wikimedia.org/wikipedia/commons/e/e4/A_French_Bulldog.jpg"
+        )
+        im = np.array(PIL.Image.open(fname).resize([224, 224])) / np.float32(255)
+
+        r18 = elegy.nets.resnet.ResNet18(weights="imagenet")
+        with jax.disable_jit():
+            assert elegy.Model(r18).predict(im[np.newaxis]).argmax() == 245
+
+    def test_autodownload_pretrained_r50(self):
+        fname, _ = urllib.request.urlretrieve(
+            "https://upload.wikimedia.org/wikipedia/commons/e/e4/A_French_Bulldog.jpg"
+        )
+        im = np.array(PIL.Image.open(fname).resize([224, 224])) / np.float32(255)
+
+        r50 = elegy.nets.resnet.ResNet50(weights="imagenet")
+        with jax.disable_jit():
+            assert elegy.Model(r50).predict(im[np.newaxis]).argmax() == 245
