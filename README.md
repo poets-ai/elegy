@@ -9,12 +9,13 @@
 
 -----------------
 
-_Elegy is a framework-agnostic Trainer interface for the Jax ecosystem._  
+_Elegy is a framework-agnostic Trainer interface for the Jax ecosystem_  
 
 #### Main Features
-* **Flexible**: Elegy provides a functional pure Jax Pytorch Lightning-like low-level API that provides maximal flexibility when needed.
-* **Easy-to-use**: Elegy provides a Keras-like high-level API that makes it easy to do common tasks.
-* **Compatible**: Currently Elegy provides support for Flax, Haiku, and Optax on the high-level API and is 100% Framework Agnostic on the low-level API.
+* **Flexible**: Elegy provides a functional Pytorch Lightning-like low-level API that provides maximal flexibility when needed.
+* **Easy-to-use**: Elegy provides a Keras-like high-level API that makes it very easy to do common tasks.
+* **Agnostic**: Elegy provides support a variety of frameworks including Flax, Haiku, and Optax on the high-level API, and it is 100% framework-agnostic on the low-level API.
+* **Compatible**: Elegy can consume a wide variety of common data sources including TensorFlow Datasets, Pytorch DataLoaders, Python generators, and Numpy pytrees.
 
 For more information take a look at the [Documentation](https://poets-ai.github.io/elegy).
 
