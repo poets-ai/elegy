@@ -108,7 +108,8 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        assert m.get_default_parameters() == {}
+        with pytest.raises(ValueError):
+            m.get_default_parameters()
 
         y, collections = m.init()(2.0)
 

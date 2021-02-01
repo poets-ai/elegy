@@ -1,4 +1,4 @@
-# The Module System
+# Elegy Module
 
 This is a guide to Elegy's underlying Module System. It will help get a better understanding of how
 Elegy interacts with Jax at the lower level, certain details about the hooks system and how it

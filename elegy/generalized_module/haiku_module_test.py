@@ -87,7 +87,8 @@ class TestHaikuModule(unittest.TestCase):
 
         model = elegy.Model(elegy.HaikuModule(f))
 
-        summary_text = model.summary(x=jnp.ones([10, 2]), depth=2)
+        summary_text = model.summary(x=jnp.ones([10, 2]), depth=2, return_repr=True)
+        assert summary_text is not None
 
         lines = summary_text.split("\n")
 

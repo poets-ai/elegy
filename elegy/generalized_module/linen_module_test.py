@@ -85,7 +85,8 @@ class TestLinenModule(unittest.TestCase):
 
         model = elegy.Model(ModuleA())
 
-        summary_text = model.summary(x=jnp.ones([10, 2]), depth=1)
+        summary_text = model.summary(x=jnp.ones([10, 2]), depth=1, return_repr=True)
+        assert summary_text is not None
 
         lines = summary_text.split("\n")
 
