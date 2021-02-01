@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.4.0](https://github.com/poets-ai/elegy/tree/0.4.0) (2021-02-01)
+
+[Full Changelog](https://github.com/poets-ai/elegy/compare/0.3.0...0.4.0)
+
+**Implemented enhancements:**
+
+- \[Feature Request\] Monitoring learning rates [\#124](https://github.com/poets-ai/elegy/issues/124)
+
+**Merged pull requests:**
+
+- Update Getting Started + README [\#152](https://github.com/poets-ai/elegy/pull/152) ([cgarciae](https://github.com/cgarciae))
+- Pretrained ResNet fix after \#139 [\#151](https://github.com/poets-ai/elegy/pull/151) ([alexander-g](https://github.com/alexander-g))
+- Dataset: better default batch\_fn and custom batch\_fn [\#148](https://github.com/poets-ai/elegy/pull/148) ([alexander-g](https://github.com/alexander-g))
+- Label Smoothing for Binary Crossentropy [\#146](https://github.com/poets-ai/elegy/pull/146) ([alexander-g](https://github.com/alexander-g))
+- Add adapter for handling torch dataloaders [\#145](https://github.com/poets-ai/elegy/pull/145) ([charlielito](https://github.com/charlielito))
+- Feature/tf dataset adapter [\#144](https://github.com/poets-ai/elegy/pull/144) ([charlielito](https://github.com/charlielito))
+- \[\*.md,\*.py,\*.sh\] Fix typos [\#142](https://github.com/poets-ai/elegy/pull/142) ([SamuelMarks](https://github.com/SamuelMarks))
+- verbose=4 [\#140](https://github.com/poets-ai/elegy/pull/140) ([alexander-g](https://github.com/alexander-g))
+- Framework Agnostic API: Introduces a new low-level API, removes the dependency between Model and Module, adds support for Flax and Haiku, simplifies hooks. [\#139](https://github.com/poets-ai/elegy/pull/139) ([cgarciae](https://github.com/cgarciae))
+- DataLoader Optimizations [\#137](https://github.com/poets-ai/elegy/pull/137) ([alexander-g](https://github.com/alexander-g))
+- Autodownload pretrained ResNet [\#136](https://github.com/poets-ai/elegy/pull/136) ([alexander-g](https://github.com/alexander-g))
+- Add learning rate logging [\#135](https://github.com/poets-ai/elegy/pull/135) ([cgarciae](https://github.com/cgarciae))
+- Adds gitpod support to be able to develop elegy on the cloud [\#134](https://github.com/poets-ai/elegy/pull/134) ([cgarciae](https://github.com/cgarciae))
+- Make Models Pickleable Again [\#133](https://github.com/poets-ai/elegy/pull/133) ([alexander-g](https://github.com/alexander-g))
+- SCCE fix for bug in Jax\<0.2.7 [\#130](https://github.com/poets-ai/elegy/pull/130) ([alexander-g](https://github.com/alexander-g))
+- table progress [\#127](https://github.com/poets-ai/elegy/pull/127) ([alexander-g](https://github.com/alexander-g))
+
 ## [0.3.0](https://github.com/poets-ai/elegy/tree/0.3.0) (2020-12-17)
 
 [Full Changelog](https://github.com/poets-ai/elegy/compare/0.2.2...0.3.0)
