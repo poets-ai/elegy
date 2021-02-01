@@ -9,31 +9,32 @@ nav:
   - Low Level API: na.md
 - Basic API:
   - Intro: basic-api/modules-losses-metrics.md
-  - Module: na.md
+  - Data Sources: na.md
+  - Module:
+    - Flax: na.md
+    - Haiku: na.md
+    - Elegy: na.md
+    - Pure Jax: na.md
+    - Supporting Other Modules: na.md
   - Losses: na.md
   - Metrics: na.md
   - Dependency Injection: na.md
   - Hooks: na.md
   - Optimizer:
-      - Basics: na.md
-      - Monitoring Learning Rate: na.md
-  - Callbacks: na.md
-  - Serialization: na.md
-  - Supported Frameworks:
-    - Flax Module: na.md
-    - Haiku Module: na.md
-    - Elegy Module: na.md
     - Optax Optimizer: na.md
     - Elegy Optimizer: na.md
-    - Supporting New Frameworks: na.md
+    - Monitoring Learning Rate: na.md
+    - Supporting Other Optimizers : na.md
+  - Callbacks: na.md
+  - Serialization: na.md
 - Low Level API:
   - Intro: na.md
-  - pred_step: na.md
-  - test_step: na.md
-  - grad_step: na.md
-  - train_step: na.md
+  - Custom pred_step: na.md
+  - Custom test_step: na.md
+  - Custom grad_step: na.md
+  - Custom train_step: na.md
   - Supporting the Basic API: low-level-api/supporting-the-basic-api.md
-  - ModelBase: na.md
+  - Implementing a Model from Scratch: na.md
 - Elegy Module: module-system.md
 - Contributing: contributing.md
 - API Reference:
@@ -171,8 +172,6 @@ nav:
       GlobalL1L2: api/regularizers/GlobalL1L2.md
       GlobalL2: api/regularizers/GlobalL2.md
     to_module: api/to_module.md
-
-
 extra:
   search:
     language: en

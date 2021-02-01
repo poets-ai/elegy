@@ -616,3 +616,4 @@ class ModelCore:
         self.initial_states = cloudpickle.loads(
             (path / "initial_states.pkl").read_bytes()
         )
+        self.update_modules()

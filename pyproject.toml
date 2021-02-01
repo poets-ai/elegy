@@ -19,6 +19,8 @@ secondary = true
 [tool.poetry.dependencies]
 python = "^3.6.1"
 numpy = "^1.0.0"
+jax = "^0.2.9"
+jaxlib = "^0.1.59"
 typing_extensions = { version = "^3.7.4", python = "<3.8" }
 dataclasses =  { version = "^0.7", python = ">=3.6,<3.7" }
 cloudpickle = "^1.5.0"
@@ -42,10 +44,8 @@ matplotlib = "^3.3.0"
 tensorflow-cpu = "^2.2.0"
 dataget = "^0.4.14"
 debugpy = "^1.0.0-beta.12"
-jax = "^0.2.5"
-jaxlib = "^0.1.56"
 jupyter = "^1.0.0"
-jupyterlab = "^2.2.9"
+jupyterlab = { version = "^3.0.6", python = ">=3.7" }
 tensorflow-addons = "^0.11.2"
 flax = "^0.3.0"
 torch = "1.4.0+cpu"
