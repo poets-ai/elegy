@@ -21,12 +21,12 @@ __all__ = [
 
 PRETRAINED_URLS = {
     "ResNet18": {
-        "url": "https://github.com/poets-ai/elegy-assets/releases/download/resnet18_rev0/ResNet18_ImageNet.pkl",
-        "sha256": "4397cd02b56a29825243341204710daa1de9f3d6ad776558e61b34690896aaaa",
+        "url": "https://github.com/poets-ai/elegy-assets/releases/download/resnet18_rev1/ResNet18_ImageNet_rev1.pkl",
+        "sha256": "02824ae2f29563add46feff14f40c362ae5f9af3f01ea2edc0812e5ca06ca9ae",
     },
     "ResNet50": {
-        "url": "https://github.com/poets-ai/elegy-assets/releases/download/resnet50_rev0/ResNet50_ImageNet.pkl",
-        "sha256": "aadeb068ee6b5e114bc1902159e592c5170a27a661fb3a3d7c463607b25f1381",
+        "url": "https://github.com/poets-ai/elegy-assets/releases/download/resnet50_rev1/ResNet50_ImageNet_rev1.pkl",
+        "sha256": "c69086813ccff6b67b2452daabdf64772f8a7f5c04591e1962185129e18989fc",
     },
 }
 
