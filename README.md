@@ -12,8 +12,8 @@
 _Elegy is a framework-agnostic Trainer interface for the Jax ecosystem._  
 
 #### Main Features
-* **Flexible**: Elegy provides a functional Pytorch Lightning-like low-level API that provides maximal flexibility when needed.
 * **Easy-to-use**: Elegy provides a Keras-like high-level API that makes it very easy to do common tasks.
+* **Flexible**: Elegy provides a functional Pytorch Lightning-like low-level API that provides maximal flexibility when needed.
 * **Agnostic**: Elegy provides support a variety of frameworks including Flax, Haiku, and Optax on the high-level API, and it is 100% framework-agnostic on the low-level API.
 * **Compatible**: Elegy can consume a wide variety of common data sources including TensorFlow Datasets, Pytorch DataLoaders, Python generators, and Numpy pytrees.
 
@@ -29,7 +29,7 @@ pip install elegy
 For Windows users we recommend the Windows subsystem for linux 2 [WSL2](https://docs.microsoft.com/es-es/windows/wsl/install-win10?redirectedfrom=MSDN) since [jax](https://github.com/google/jax/issues/438) does not support it yet.
 
 ## Quick Start: High-level API
-In Elegy's high-level API provides a very simple interface you can use by implementing following steps:
+Elegy's high-level API provides a very simple interface you can use by implementing following steps:
 
 **1.** Define the architecture inside a `Module`. We will use Flax Linen for this example:
 ```python
@@ -74,7 +74,7 @@ model.fit(
 ```
 
 ## Quick Start: Low-level API
-In Elegy's low-level API provides lets you define exactly what goes on during training, testing, and inference. Lets define the `test_step` to implement a linear classifier in pure jax:
+In Elegy's low-level API lets you define exactly what goes on during training, testing, and inference. Lets define the `test_step` to implement a linear classifier in pure jax:
 
 **1.** Calculate our loss, logs, and states:
 ```python
@@ -90,7 +90,7 @@ class LinearClassifier(elegy.Model):
     ):  
         # flatten + scale
         x = jnp.reshape(x, (x.shape[0], -1)) / 255
-        # maybe initialize or use existing
+        # initialize or use existing parameters
         if initializing:
             w = jax.random.uniform(
                 jax.random.PRNGKey(42), shape=[np.prod(x.shape[1:]), 10]
