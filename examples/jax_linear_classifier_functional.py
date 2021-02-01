@@ -44,7 +44,7 @@ def main(
     def accuracy(y_true, y_pred):
         return jnp.mean(jnp.argmax(y_pred, axis=-1) == y_true)
 
-    def logistic_regression(
+    def linear_classifier(
         x: jnp.ndarray, net_params, rng, initializing
     ) -> elegy.OutputStates:
         x = x.reshape((x.shape[0], -1)) / 255
@@ -60,7 +60,7 @@ def main(
         return elegy.OutputStates(y_pred, net_params, None)
 
     model = elegy.Model(
-        module=logistic_regression,
+        module=linear_classifier,
         loss=crossentropy,
         metrics=accuracy,
         optimizer=optax.adam(1e-3),
