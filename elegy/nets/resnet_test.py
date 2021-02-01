@@ -18,6 +18,11 @@ class ResNetTest(TestCase):
 
         x = np.random.random((2, 224, 224, 3)).astype(np.float32)
         y = model.predict(x)
+
+        # update_modules results in a call to `set_default_parameters` for elegy Modules
+        # it might be better to have the user call this explicitly to avoid potential OOM
+        model.update_modules()
+
         assert jnp.all(y.shape == (2, 1000))
 
         # test loading weights from file

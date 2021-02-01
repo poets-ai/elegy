@@ -539,9 +539,6 @@ class ModelCore:
         self.states = self.states.merge_new(state_updates)
         self.initial_states = self.initial_states.merge_new(state_updates)
 
-        # update modules
-        self.update_modules()
-
     def save(
         self,
         path: tp.Union[str, pathlib.Path],
@@ -616,4 +613,3 @@ class ModelCore:
         self.initial_states = cloudpickle.loads(
             (path / "initial_states.pkl").read_bytes()
         )
-        self.update_modules()

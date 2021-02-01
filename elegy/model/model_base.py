@@ -400,7 +400,6 @@ class ModelBase(ModelCore):
                 break
 
         callbacks.on_train_end()
-        self.update_modules()
 
         return self.history
 
@@ -521,7 +520,6 @@ class ModelBase(ModelCore):
                     callbacks.on_test_batch_end(step, logs)
 
         callbacks.on_test_end()
-        self.update_modules()
 
         return logs
 
@@ -633,7 +631,6 @@ class ModelBase(ModelCore):
                     )
 
         callbacks.on_predict_end()
-        self.update_modules()
 
         all_outputs = map_structure(jnp.concatenate, outputs)
 
