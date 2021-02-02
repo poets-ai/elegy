@@ -235,8 +235,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting-started-basic-api.ipynb" class="md-nav__link">
-        Basic API
+      <a href="../../../getting-started-high-level-api/" class="md-nav__link">
+        High Level API
       </a>
     </li>
   
@@ -247,7 +247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../na/" class="md-nav__link">
+      <a href="../../../getting-started-low-level-api/" class="md-nav__link">
         Low Level API
       </a>
     </li>
@@ -274,13 +274,13 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
       
       <label class="md-nav__link" for="nav-3">
-        Basic API
+        High Level API
         <span class="md-nav__icon md-icon"></span>
       </label>
-      <nav class="md-nav" aria-label="Basic API" data-md-level="1">
+      <nav class="md-nav" aria-label="High Level API" data-md-level="1">
         <label class="md-nav__title" for="nav-3">
           <span class="md-nav__icon md-icon"></span>
-          Basic API
+          High Level API
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -641,8 +641,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../low-level-api/supporting-the-basic-api/" class="md-nav__link">
-        Supporting the Basic API
+      <a href="../../../low-level-api/supporting-the-high-level-api/" class="md-nav__link">
+        Supporting the High Level API
       </a>
     </li>
   
@@ -1540,9 +1540,52 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          MeanSquaredLogarithmicError
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         MeanSquaredLogarithmicError
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.losses.mean_squared_logarithmic_error.MeanSquaredLogarithmicError" class="md-nav__link">
+    elegy.losses.mean_squared_logarithmic_error.MeanSquaredLogarithmicError
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.losses.mean_squared_logarithmic_error.MeanSquaredLogarithmicError.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.losses.mean_squared_logarithmic_error.MeanSquaredLogarithmicError.call" class="md-nav__link">
+    call()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -2494,6 +2537,35 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.losses.mean_squared_logarithmic_error.MeanSquaredLogarithmicError" class="md-nav__link">
+    elegy.losses.mean_squared_logarithmic_error.MeanSquaredLogarithmicError
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.losses.mean_squared_logarithmic_error.MeanSquaredLogarithmicError.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.losses.mean_squared_logarithmic_error.MeanSquaredLogarithmicError.call" class="md-nav__link">
+    call()
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2510,12 +2582,274 @@
                 
                 
                 <h1 id="elegylossesmeansquaredlogarithmicerror">elegy.losses.MeanSquaredLogarithmicError</h1>
-<p>::: elegy.losses.mean_squared_logarithmic_error.MeanSquaredLogarithmicError
-    selection:
-        inherited_members: true
-        members:
-            - <strong>init</strong>
-            - call</p>
+<div class="doc doc-object doc-class">
+<h2 class="hidden-toc" id="elegy.losses.mean_squared_logarithmic_error.MeanSquaredLogarithmicError" style="visibility: hidden; position: absolute;">
+        </h2>
+<div class="doc doc-contents first">
+<p>Computes the mean squared logarithmic errors between labels and predictions.</p>
+<p><code>loss = mean(square(log(y_true + 1) - log(y_pred + 1)), axis=-1)</code></p>
+<p>Usage:</p>
+<div class="codehilite">
+<pre><span></span><code><span class="n">y_true</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]])</span>
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]])</span>
+
+<span class="c1"># Using 'auto'/'sum_over_batch_size' reduction type.</span>
+<span class="n">msle</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredLogarithmicError</span><span class="p">()</span>
+
+<span class="k">assert</span> <span class="n">msle</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">==</span> <span class="mf">0.24022643</span>
+
+<span class="c1"># Calling with 'sample_weight'.</span>
+<span class="k">assert</span> <span class="n">msle</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">]))</span> <span class="o">=</span> <span class="mf">0.12011322</span>
+
+<span class="c1"># Using 'sum' reduction type.</span>
+<span class="n">msle</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredLogarithmicError</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">Reduction</span><span class="o">.</span><span class="n">SUM</span><span class="p">)</span>
+
+<span class="k">assert</span> <span class="n">msle</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">==</span> <span class="mf">0.48045287</span>
+
+<span class="c1"># Using 'none' reduction type.</span>
+<span class="n">msle</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredLogarithmicError</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">Reduction</span><span class="o">.</span><span class="n">NONE</span><span class="p">)</span>
+
+<span class="k">assert</span> <span class="n">jnp</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">msle</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">),</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.24022643</span><span class="p">,</span> <span class="mf">0.24022643</span><span class="p">]))</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+</code></pre>
+</div>
+<p>Usage with the Elegy API:</p>
+<div class="codehilite">
+<pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
+    <span class="n">module_fn</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredLogarithmicError</span><span class="p">(),</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">Mean</span><span class="p">(),</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<div class="doc doc-children">
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.losses.mean_squared_logarithmic_error.MeanSquaredLogarithmicError.__init__">
+
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Initializes <code>Mean</code> class.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>reduction</code></td>
+<td><code>Optional[elegy.losses.loss.Reduction]</code></td>
+<td>
+<p>(Optional) Type of <code>elegy.losses.Reduction</code> to apply to
+loss. Default value is <code>SUM_OVER_BATCH_SIZE</code>. For almost all cases
+this defaults to <code>SUM_OVER_BATCH_SIZE</code>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>weight</code></td>
+<td><code>Optional[float]</code></td>
+<td>
+<p>Optional weight contribution for the total loss. Defaults to <code>1</code>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>on</code></td>
+<td><code>Union[str, int, Iterable[Union[str, int]]]</code></td>
+<td>
+<p>A string or integer, or iterable of string or integers, that
+indicate how to index/filter the <code>y_true</code> and <code>y_pred</code>
+arguments before passing them to <code>call</code>. For example if <code>on = "a"</code> then
+<code>y_true = y_true["a"]</code>. If <code>on</code> is an iterable
+the structures will be indexed iteratively, for example if <code>on = ["a", 0, "b"]</code>
+then <code>y_true = y_true["a"][0]["b"]</code>, same for <code>y_pred</code>. For more information
+check out <a href="https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior">Keras-like behavior</a>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/losses/mean_squared_logarithmic_error.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">reduction</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">Reduction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">weight</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">on</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">IndexLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Initializes `Mean` class.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        reduction: (Optional) Type of `elegy.losses.Reduction` to apply to</span>
+<span class="sd">            loss. Default value is `SUM_OVER_BATCH_SIZE`. For almost all cases</span>
+<span class="sd">            this defaults to `SUM_OVER_BATCH_SIZE`.</span>
+<span class="sd">        weight: Optional weight contribution for the total loss. Defaults to `1`.</span>
+<span class="sd">        on: A string or integer, or iterable of string or integers, that</span>
+<span class="sd">            indicate how to index/filter the `y_true` and `y_pred`</span>
+<span class="sd">            arguments before passing them to `call`. For example if `on = "a"` then</span>
+<span class="sd">            `y_true = y_true["a"]`. If `on` is an iterable</span>
+<span class="sd">            the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`</span>
+<span class="sd">            then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information</span>
+<span class="sd">            check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).</span>
+<span class="sd">    """</span>
+
+    <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="n">reduction</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">on</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.losses.mean_squared_logarithmic_error.MeanSquaredLogarithmicError.call">
+
+<code class="highlight language-python"><span class="n">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Invokes the <code>MeanSquaredLogarithmicError</code> instance.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>y_true</code></td>
+<td><code>ndarray</code></td>
+<td>
+<p>Ground truth values. shape = <code>[batch_size, d0, .. dN]</code>, except
+sparse loss functions such as sparse categorical crossentropy where
+shape = <code>[batch_size, d0, .. dN-1]</code></p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>y_pred</code></td>
+<td><code>ndarray</code></td>
+<td>
+<p>The predicted values. shape = <code>[batch_size, d0, .. dN]</code></p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>sample_weight</code></td>
+<td><code>Optional[jax._src.numpy.lax_numpy.ndarray]</code></td>
+<td>
+<p>Optional <code>sample_weight</code> acts as a
+coefficient for the loss. If a scalar is provided, then the loss is
+simply scaled by the given value. If <code>sample_weight</code> is a tensor of size
+<code>[batch_size]</code>, then the total loss for each sample of the batch is
+rescaled by the corresponding element in the <code>sample_weight</code> vector. If
+the shape of <code>sample_weight</code> is <code>[batch_size, d0, .. dN-1]</code> (or can be
+broadcasted to this shape), then each loss element of <code>y_pred</code> is scaled
+by the corresponding value of <code>sample_weight</code>. (Note on<code>dN-1</code>: all loss
+functions reduce by 1 dimension, usually axis=-1.)</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ndarray</code></td>
+<td>
+<p>Weighted loss float <code>Tensor</code>. If <code>reduction</code> is <code>NONE</code>, this has
+    shape <code>[batch_size, d0, .. dN-1]</code>; otherwise, it is scalar. (Note <code>dN-1</code>
+    because all loss functions reduce by 1 dimension, usually axis=-1.)</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exceptions:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ValueError</code></td>
+<td>
+<p>If the shape of <code>sample_weight</code> is invalid.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/losses/mean_squared_logarithmic_error.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">y_true</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">y_pred</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">sample_weight</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span>
+        <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># not used, __call__ handles it, left for documentation purposes.</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Invokes the `MeanSquaredLogarithmicError` instance.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`, except</span>
+<span class="sd">            sparse loss functions such as sparse categorical crossentropy where</span>
+<span class="sd">            shape = `[batch_size, d0, .. dN-1]`</span>
+<span class="sd">        y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`</span>
+<span class="sd">        sample_weight: Optional `sample_weight` acts as a</span>
+<span class="sd">            coefficient for the loss. If a scalar is provided, then the loss is</span>
+<span class="sd">            simply scaled by the given value. If `sample_weight` is a tensor of size</span>
+<span class="sd">            `[batch_size]`, then the total loss for each sample of the batch is</span>
+<span class="sd">            rescaled by the corresponding element in the `sample_weight` vector. If</span>
+<span class="sd">            the shape of `sample_weight` is `[batch_size, d0, .. dN-1]` (or can be</span>
+<span class="sd">            broadcasted to this shape), then each loss element of `y_pred` is scaled</span>
+<span class="sd">            by the corresponding value of `sample_weight`. (Note on`dN-1`: all loss</span>
+<span class="sd">            functions reduce by 1 dimension, usually axis=-1.)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Weighted loss float `Tensor`. If `reduction` is `NONE`, this has</span>
+<span class="sd">            shape `[batch_size, d0, .. dN-1]`; otherwise, it is scalar. (Note `dN-1`</span>
+<span class="sd">            because all loss functions reduce by 1 dimension, usually axis=-1.)</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If the shape of `sample_weight` is invalid.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">mean_squared_logarithmic_error</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+</div>
+</div>
+</div>
                 
               
               

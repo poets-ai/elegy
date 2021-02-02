@@ -235,8 +235,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting-started-basic-api.ipynb" class="md-nav__link">
-        Basic API
+      <a href="../../../getting-started-high-level-api/" class="md-nav__link">
+        High Level API
       </a>
     </li>
   
@@ -247,7 +247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../na/" class="md-nav__link">
+      <a href="../../../getting-started-low-level-api/" class="md-nav__link">
         Low Level API
       </a>
     </li>
@@ -274,13 +274,13 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
       
       <label class="md-nav__link" for="nav-3">
-        Basic API
+        High Level API
         <span class="md-nav__icon md-icon"></span>
       </label>
-      <nav class="md-nav" aria-label="Basic API" data-md-level="1">
+      <nav class="md-nav" aria-label="High Level API" data-md-level="1">
         <label class="md-nav__title" for="nav-3">
           <span class="md-nav__icon md-icon"></span>
-          Basic API
+          High Level API
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -641,8 +641,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../low-level-api/supporting-the-basic-api/" class="md-nav__link">
-        Supporting the Basic API
+      <a href="../../../low-level-api/supporting-the-high-level-api/" class="md-nav__link">
+        Supporting the High Level API
       </a>
     </li>
   
@@ -2380,9 +2380,38 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          sequential
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         sequential
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.sequential_module.sequential" class="md-nav__link">
+    elegy.nn.sequential_module.sequential
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -2494,6 +2523,21 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.sequential_module.sequential" class="md-nav__link">
+    elegy.nn.sequential_module.sequential
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2510,9 +2554,127 @@
                 
                 
                 <h1 id="elegynnsequential">elegy.nn.sequential</h1>
-<p>::: elegy.nn.sequential_module.sequential
-    selection:
-        inherited_members: true</p>
+<div class="doc doc-object doc-function">
+<h2 class="hidden-toc" id="elegy.nn.sequential_module.sequential" style="visibility: hidden; position: absolute;">
+        </h2>
+<div class="doc doc-contents first">
+<p>Connects all layers. <code>*args</code> and <code>**kwargs</code> are passed to the first layer.</p>
+<div class="codehilite">
+<pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="n">mlp</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">sequential</span><span class="p">(</span>
+        <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">64</span><span class="p">),</span>
+        <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">,</span>
+        <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span>
+        <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">,</span>
+        <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+        <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">softmax</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">mlp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="o">...</span>
+</code></pre>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code>sequential</code> is not a <code>Module</code>, that is, it wont create a scope over the layers it runs,
+in contrast to <code>Sequential</code> layers are eagerly instantiate outside of <code>sequential</code>
+and just passed to it to automate the execution.</p>
+</div>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>layers</code></td>
+<td><code>Callable[..., Any]</code></td>
+<td>
+<p>Modules or functions passed as <code>*args</code></p>
+</td>
+<td><code>()</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Callable[..., Any]</code></td>
+<td>
+<p>A callable that waits for the inputs and applies the layers sequentially.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/nn/sequential_module.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">sequential</span><span class="p">(</span><span class="o">*</span><span class="n">layers</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">]:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Connects all layers. `*args` and `**kwargs` are passed to the first layer.</span>
+
+<span class="sd">    ```python</span>
+<span class="sd">    def call(self, x):</span>
+<span class="sd">        mlp = elegy.nn.sequential(</span>
+<span class="sd">            elegy.nn.Linear(64),</span>
+<span class="sd">            jax.nn.relu,</span>
+<span class="sd">            elegy.nn.Linear(32),</span>
+<span class="sd">            jax.nn.relu,</span>
+<span class="sd">            elegy.nn.Linear(10),</span>
+<span class="sd">            jax.nn.softmax,</span>
+<span class="sd">        )</span>
+<span class="sd">        y = mlp(x)</span>
+<span class="sd">        ...</span>
+<span class="sd">    ```</span>
+
+<span class="sd">    !!! Note</span>
+<span class="sd">        `sequential` is not a `Module`, that is, it wont create a scope over the layers it runs,</span>
+<span class="sd">        in contrast to `Sequential` layers are eagerly instantiate outside of `sequential`</span>
+<span class="sd">        and just passed to it to automate the execution.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        layers: Modules or functions passed as `*args`</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A callable that waits for the inputs and applies the layers sequentially.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="n">inputs</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">layers</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">layer</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">layer</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">hooks</span><span class="o">.</span><span class="n">summaries_active</span><span class="p">():</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_name</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+
+                    <span class="n">path</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">get_module_path</span><span class="p">()</span>
+                    <span class="n">path</span> <span class="o">=</span> <span class="n">path</span> <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">()</span>
+
+                    <span class="n">hooks</span><span class="o">.</span><span class="n">add_summary</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="p">(</span><span class="n">name</span><span class="p">,),</span> <span class="n">layer</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">return</span> <span class="n">call</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
                 
               
               

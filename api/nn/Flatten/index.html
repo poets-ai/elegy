@@ -235,8 +235,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting-started-basic-api.ipynb" class="md-nav__link">
-        Basic API
+      <a href="../../../getting-started-high-level-api/" class="md-nav__link">
+        High Level API
       </a>
     </li>
   
@@ -247,7 +247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../na/" class="md-nav__link">
+      <a href="../../../getting-started-low-level-api/" class="md-nav__link">
         Low Level API
       </a>
     </li>
@@ -274,13 +274,13 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
       
       <label class="md-nav__link" for="nav-3">
-        Basic API
+        High Level API
         <span class="md-nav__icon md-icon"></span>
       </label>
-      <nav class="md-nav" aria-label="Basic API" data-md-level="1">
+      <nav class="md-nav" aria-label="High Level API" data-md-level="1">
         <label class="md-nav__title" for="nav-3">
           <span class="md-nav__icon md-icon"></span>
-          Basic API
+          High Level API
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -641,8 +641,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../low-level-api/supporting-the-basic-api/" class="md-nav__link">
-        Supporting the Basic API
+      <a href="../../../low-level-api/supporting-the-high-level-api/" class="md-nav__link">
+        Supporting the High Level API
       </a>
     </li>
   
@@ -2296,9 +2296,59 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Flatten
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         Flatten
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.flatten.Flatten" class="md-nav__link">
+    elegy.nn.flatten.Flatten
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.flatten.Flatten.add_parameter" class="md-nav__link">
+    add_parameter()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.flatten.Flatten.call" class="md-nav__link">
+    call()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.flatten.Flatten.init" class="md-nav__link">
+    init()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -2494,6 +2544,42 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.flatten.Flatten" class="md-nav__link">
+    elegy.nn.flatten.Flatten
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.flatten.Flatten.add_parameter" class="md-nav__link">
+    add_parameter()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.flatten.Flatten.call" class="md-nav__link">
+    call()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.flatten.Flatten.init" class="md-nav__link">
+    init()
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2510,17 +2596,332 @@
                 
                 
                 <h1 id="elegynnflatten">elegy.nn.Flatten</h1>
-<p>::: elegy.nn.flatten.Flatten
-    selection:
-        inherited_members: true
-        members:
-            - <strong>init</strong>
-            - call
-            - add_parameter
-            - get_parameters
-            - set_parameters
-            - reset
-            - init</p>
+<div class="doc doc-object doc-class">
+<h2 class="hidden-toc" id="elegy.nn.flatten.Flatten" style="visibility: hidden; position: absolute;">
+        </h2>
+<div class="doc doc-contents first">
+<p>Flattens the input, preserving the batch dimension(s).</p>
+<p>By default, Flatten combines all dimensions except the first.
+Additional leading dimensions can be preserved by setting preserve_dims.</p>
+<div class="codehilite">
+<pre><span></span><code><span class="n">x</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+<span class="n">flat</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Flatten</span><span class="p">()</span>
+<span class="k">assert</span> <span class="n">flat</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+</code></pre>
+</div>
+<p>When the input to flatten has fewer than <code>preserve_dims</code> dimensions it is
+returned unchanged:</p>
+<div class="codehilite">
+<pre><span></span><code><span class="n">x</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">3</span><span class="p">])</span>
+<span class="k">assert</span> <span class="n">flat</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">3</span><span class="p">,)</span>
+</code></pre>
+</div>
+<div class="doc doc-children">
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.flatten.Flatten.add_parameter">
+
+<code class="highlight language-python"><span class="n">add_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">initializer</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">regularizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">constraint</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-inherited"><code>inherited</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Adds a parameter to the current module. The parameter will only be initialized once and
+will reused afterwards.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td><code>str</code></td>
+<td>
+<p>The name of the parameter. It must be unique and no other field/property/method
+of the instance can have that name.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>initializer</code></td>
+<td><code>Callable[[], Any]</code></td>
+<td>
+<p>A callable that takes not arguments returns the initial value.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>collection</code></td>
+<td><code>Optional[str]</code></td>
+<td>
+<p>Optional name of the parameter collection, if not defined it will be se to
+<code>"parameters"</code> if <code>trainable=True</code> else it will be set to <code>"states"</code>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>trainable</code></td>
+<td><code>bool</code></td>
+<td>
+<p>Specify whether this parameter should be added to the default trainable <code>"parameters"</code>
+collection or to the default non-trainable <code>"states"</code> collection. If collection is
+passed this parameter will ignored.</p>
+</td>
+<td><code>True</code></td>
+</tr>
+<tr>
+<td><code>regularizer</code></td>
+<td><code>Optional[Callable[[Any], jax._src.numpy.lax_numpy.ndarray]]</code></td>
+<td>
+<p>Regularizer instance (callable).</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>constraint</code></td>
+<td><code>Optional[Callable[[Any], Any]]</code></td>
+<td>
+<p>Constraint instance (callable).</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Any</code></td>
+<td>
+<p>The value of the parameter.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/nn/flatten.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">add_parameter</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">initializer</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">],</span>
+    <span class="n">collection</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">trainable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">regularizer</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">],</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">constraint</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">],</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Adds a parameter to the current module. The parameter will only be initialized once and</span>
+<span class="sd">    will reused afterwards.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        name: The name of the parameter. It must be unique and no other field/property/method</span>
+<span class="sd">            of the instance can have that name.</span>
+<span class="sd">        initializer: A callable that takes not arguments returns the initial value.</span>
+<span class="sd">        collection: Optional name of the parameter collection, if not defined it will be se to</span>
+<span class="sd">            `"parameters"` if `trainable=True` else it will be set to `"states"`.</span>
+<span class="sd">        trainable: Specify whether this parameter should be added to the default trainable `"parameters"`</span>
+<span class="sd">            collection or to the default non-trainable `"states"` collection. If collection is</span>
+<span class="sd">            passed this parameter will ignored.</span>
+<span class="sd">        regularizer: Regularizer instance (callable).</span>
+<span class="sd">        constraint: Constraint instance (callable).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The value of the parameter.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="n">collection</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">collection</span> <span class="o">=</span> <span class="s2">"parameters"</span> <span class="k">if</span> <span class="n">trainable</span> <span class="k">else</span> <span class="s2">"states"</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_initializing</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Cannot add parameter </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> outside `init`"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_params</span><span class="p">:</span>
+            <span class="n">parameter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_params</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="n">collection</span> <span class="o">==</span> <span class="n">parameter</span><span class="o">.</span><span class="n">collection</span>
+            <span class="n">initial_value</span> <span class="o">=</span> <span class="n">parameter</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">initial_value</span> <span class="o">=</span> <span class="n">initializer</span><span class="p">()</span>
+            <span class="n">initial_value</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_map</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">asarray</span><span class="p">,</span> <span class="n">initial_value</span><span class="p">)</span>
+            <span class="n">parameter</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">initial_value</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_register_parameter</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">parameter</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameter</span>
+
+    <span class="n">parameter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">parameter</span><span class="o">.</span><span class="n">collection</span> <span class="o">!=</span> <span class="n">collection</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"types.Parameter </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> previously found in collection </span><span class="si">{</span><span class="n">parameter</span><span class="o">.</span><span class="n">collection</span><span class="si">}</span><span class="s2"> "</span>
+            <span class="sa">f</span><span class="s2">"but currently being added for collection </span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="n">value</span> <span class="o">=</span> <span class="n">parameter</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="k">if</span> <span class="n">constraint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">constraint</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">regularizer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">hooks</span><span class="o">.</span><span class="n">add_loss</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">get_name</span><span class="p">(</span><span class="n">regularizer</span><span class="p">),</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">regularizer</span><span class="p">(</span><span class="n">value</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">value</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.flatten.Flatten.call">
+
+<code class="highlight language-python"><span class="n">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-inherited"><code>inherited</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>inputs</code></td>
+<td><code>ndarray</code></td>
+<td>
+<p>the array to be reshaped.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ndarray</code></td>
+<td>
+<p>A reshaped array.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/nn/flatten.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Arguments:</span>
+<span class="sd">        inputs: the array to be reshaped.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A reshaped array.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preserve_dims</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">inputs</span>
+
+    <span class="k">if</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_shape</span><span class="p">:</span>
+        <span class="n">reshaped_shape</span> <span class="o">=</span> <span class="n">_infer_shape</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_shape</span><span class="p">,</span> <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">preserve_dims</span> <span class="p">:]</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">reshaped_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_shape</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">preserve_dims</span><span class="p">]</span> <span class="o">+</span> <span class="n">reshaped_shape</span>
+    <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.flatten.Flatten.init">
+
+<code class="highlight language-python"><span class="n">init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">set_defaults</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-inherited"><code>inherited</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Initializes the module,</p>
+<details class="quote">
+          <summary>Source code in <code>elegy/nn/flatten.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">init</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">rng</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">RNGSeq</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">set_defaults</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">ParameterCollection</span><span class="p">]]:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Initializes the module,</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="nf">init_callable</span><span class="p">(</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">ParameterCollection</span><span class="p">]:</span>
+
+        <span class="k">with</span> <span class="n">module_context</span><span class="p">(</span>
+            <span class="n">module</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">collections</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">initializing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span>
+        <span class="p">):</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">collections</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameters_internal</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mark_initialized_recursive</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">set_defaults</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_default_parameters</span><span class="p">(</span><span class="n">collections</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">collections</span>
+
+    <span class="n">init_callable</span><span class="o">.</span><span class="n">_signature_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span>
+
+    <span class="k">return</span> <span class="n">init_callable</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+</div>
+</div>
+</div>
                 
               
               

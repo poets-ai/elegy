@@ -235,8 +235,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting-started-basic-api.ipynb" class="md-nav__link">
-        Basic API
+      <a href="../../../getting-started-high-level-api/" class="md-nav__link">
+        High Level API
       </a>
     </li>
   
@@ -247,7 +247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../na/" class="md-nav__link">
+      <a href="../../../getting-started-low-level-api/" class="md-nav__link">
         Low Level API
       </a>
     </li>
@@ -274,13 +274,13 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
       
       <label class="md-nav__link" for="nav-3">
-        Basic API
+        High Level API
         <span class="md-nav__icon md-icon"></span>
       </label>
-      <nav class="md-nav" aria-label="Basic API" data-md-level="1">
+      <nav class="md-nav" aria-label="High Level API" data-md-level="1">
         <label class="md-nav__title" for="nav-3">
           <span class="md-nav__icon md-icon"></span>
-          Basic API
+          High Level API
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -641,8 +641,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../low-level-api/supporting-the-basic-api/" class="md-nav__link">
-        Supporting the Basic API
+      <a href="../../../low-level-api/supporting-the-high-level-api/" class="md-nav__link">
+        Supporting the High Level API
       </a>
     </li>
   
@@ -2260,9 +2260,59 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          EMAParamsTree
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         EMAParamsTree
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.moving_averages.EMAParamsTree" class="md-nav__link">
+    elegy.nn.moving_averages.EMAParamsTree
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.moving_averages.EMAParamsTree.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.moving_averages.EMAParamsTree.add_parameter" class="md-nav__link">
+    add_parameter()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.moving_averages.EMAParamsTree.init" class="md-nav__link">
+    init()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -2494,6 +2544,42 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.moving_averages.EMAParamsTree" class="md-nav__link">
+    elegy.nn.moving_averages.EMAParamsTree
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.moving_averages.EMAParamsTree.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.moving_averages.EMAParamsTree.add_parameter" class="md-nav__link">
+    add_parameter()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.moving_averages.EMAParamsTree.init" class="md-nav__link">
+    init()
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2510,17 +2596,368 @@
                 
                 
                 <h1 id="elegynnemaparamstree">elegy.nn.EMAParamsTree</h1>
-<p>::: elegy.nn.moving_averages.EMAParamsTree
-    selection:
-        inherited_members: true
-        members:
-            - <strong>init</strong>
-            - call
-            - add_parameter
-            - get_parameters
-            - set_parameters
-            - reset
-            - init</p>
+<div class="doc doc-object doc-class">
+<h2 class="hidden-toc" id="elegy.nn.moving_averages.EMAParamsTree" style="visibility: hidden; position: absolute;">
+        </h2>
+<div class="doc doc-contents first">
+<p>Maintains an exponential moving average for all parameters in a tree.</p>
+<p>While ExponentialMovingAverage is meant to be applied to single parameters
+within a function, this class is meant to be applied to the entire tree of
+parameters for a function.</p>
+<p>Given a set of parameters for some network:</p>
+<div class="codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">elegy</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">x</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">linear</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">y</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">linear</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">rng</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">RNGSeq</span><span class="p">(</span><span class="mi">42</span><span class="p">))(</span><span class="n">x</span><span class="p">)</span>
+</code></pre>
+</div>
+<p>You might use the EMAParamsTree like follows:</p>
+<div class="codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">ema</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">EMAParamsTree</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">_</span><span class="p">,</span> <span class="n">ema_state</span> <span class="o">=</span> <span class="n">ema</span><span class="o">.</span><span class="n">init</span><span class="p">()(</span><span class="n">params</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">ema_params</span><span class="p">,</span> <span class="n">ema_state</span> <span class="o">=</span> <span class="n">ema</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">ema_state</span><span class="p">)(</span><span class="n">params</span><span class="p">)</span>
+</code></pre>
+</div>
+<p>Here, we are transforming a Haiku function and constructing its parameters via
+an init_fn as normal, but are creating a second transformed function which
+expects a tree of parameters as input. This function is then called with
+the current parameters as input, which then returns an identical tree with
+every parameter replaced with its exponentially decayed average. This
+ema_params object can then be passed into the <code>network_fn</code> as usual, and will
+cause it to run with EMA weights.</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.moving_averages.EMAParamsTree.__init__">
+
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">decay</span><span class="p">,</span> <span class="n">zero_debias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">warmup_length</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ignore_regex</span><span class="o">=</span><span class="s1">''</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Initializes an EMAParamsTree module.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>decay</code></td>
+<td><code></code></td>
+<td>
+<p>The chosen decay. Must in [0, 1). Values close to 1 result in slow
+decay; values close to 0 result in fast decay.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>zero_debias</code></td>
+<td><code></code></td>
+<td>
+<p>Whether to run with zero-debiasing.</p>
+</td>
+<td><code>True</code></td>
+</tr>
+<tr>
+<td><code>warmup_length</code></td>
+<td><code></code></td>
+<td>
+<p>A positive integer, EMA has no effect until
+the internal counter has reached <code>warmup_length</code> at which point the
+initial value for the decaying average is initialized to the input value
+after <code>warmup_length</code> iterations.</p>
+</td>
+<td><code>0</code></td>
+</tr>
+<tr>
+<td><code>ignore_regex</code></td>
+<td><code></code></td>
+<td>
+<p>A string. Any parameter in the tree whose name matches this
+regex will not have any moving average applied to it. The empty string
+means this module will EMA all parameters.</p>
+</td>
+<td><code>''</code></td>
+</tr>
+<tr>
+<td><code>kwargs</code></td>
+<td><code></code></td>
+<td>
+<p>Additional keyword arguments passed to Module.</p>
+</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/nn/moving_averages.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span> <span class="n">decay</span><span class="p">,</span> <span class="n">zero_debias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">warmup_length</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ignore_regex</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">):</span>
+    <span class="sd">"""Initializes an EMAParamsTree module.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        decay: The chosen decay. Must in [0, 1). Values close to 1 result in slow</span>
+<span class="sd">            decay; values close to 0 result in fast decay.</span>
+<span class="sd">        zero_debias: Whether to run with zero-debiasing.</span>
+<span class="sd">        warmup_length: A positive integer, EMA has no effect until</span>
+<span class="sd">            the internal counter has reached `warmup_length` at which point the</span>
+<span class="sd">            initial value for the decaying average is initialized to the input value</span>
+<span class="sd">            after `warmup_length` iterations.</span>
+<span class="sd">        ignore_regex: A string. Any parameter in the tree whose name matches this</span>
+<span class="sd">            regex will not have any moving average applied to it. The empty string</span>
+<span class="sd">            means this module will EMA all parameters.</span>
+<span class="sd">        kwargs: Additional keyword arguments passed to Module.</span>
+<span class="sd">    """</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_decay</span> <span class="o">=</span> <span class="n">decay</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_zero_debias</span> <span class="o">=</span> <span class="n">zero_debias</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_warmup_length</span> <span class="o">=</span> <span class="n">warmup_length</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_ignore_regex</span> <span class="o">=</span> <span class="n">ignore_regex</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.moving_averages.EMAParamsTree.add_parameter">
+
+<code class="highlight language-python"><span class="n">add_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">initializer</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">regularizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">constraint</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-inherited"><code>inherited</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Adds a parameter to the current module. The parameter will only be initialized once and
+will reused afterwards.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td><code>str</code></td>
+<td>
+<p>The name of the parameter. It must be unique and no other field/property/method
+of the instance can have that name.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>initializer</code></td>
+<td><code>Callable[[], Any]</code></td>
+<td>
+<p>A callable that takes not arguments returns the initial value.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>collection</code></td>
+<td><code>Optional[str]</code></td>
+<td>
+<p>Optional name of the parameter collection, if not defined it will be se to
+<code>"parameters"</code> if <code>trainable=True</code> else it will be set to <code>"states"</code>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>trainable</code></td>
+<td><code>bool</code></td>
+<td>
+<p>Specify whether this parameter should be added to the default trainable <code>"parameters"</code>
+collection or to the default non-trainable <code>"states"</code> collection. If collection is
+passed this parameter will ignored.</p>
+</td>
+<td><code>True</code></td>
+</tr>
+<tr>
+<td><code>regularizer</code></td>
+<td><code>Optional[Callable[[Any], jax._src.numpy.lax_numpy.ndarray]]</code></td>
+<td>
+<p>Regularizer instance (callable).</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>constraint</code></td>
+<td><code>Optional[Callable[[Any], Any]]</code></td>
+<td>
+<p>Constraint instance (callable).</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Any</code></td>
+<td>
+<p>The value of the parameter.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/nn/moving_averages.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">add_parameter</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">initializer</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">],</span>
+    <span class="n">collection</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">trainable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">regularizer</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">],</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">constraint</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">],</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Adds a parameter to the current module. The parameter will only be initialized once and</span>
+<span class="sd">    will reused afterwards.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        name: The name of the parameter. It must be unique and no other field/property/method</span>
+<span class="sd">            of the instance can have that name.</span>
+<span class="sd">        initializer: A callable that takes not arguments returns the initial value.</span>
+<span class="sd">        collection: Optional name of the parameter collection, if not defined it will be se to</span>
+<span class="sd">            `"parameters"` if `trainable=True` else it will be set to `"states"`.</span>
+<span class="sd">        trainable: Specify whether this parameter should be added to the default trainable `"parameters"`</span>
+<span class="sd">            collection or to the default non-trainable `"states"` collection. If collection is</span>
+<span class="sd">            passed this parameter will ignored.</span>
+<span class="sd">        regularizer: Regularizer instance (callable).</span>
+<span class="sd">        constraint: Constraint instance (callable).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The value of the parameter.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="n">collection</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">collection</span> <span class="o">=</span> <span class="s2">"parameters"</span> <span class="k">if</span> <span class="n">trainable</span> <span class="k">else</span> <span class="s2">"states"</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_initializing</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Cannot add parameter </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> outside `init`"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_params</span><span class="p">:</span>
+            <span class="n">parameter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_params</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="n">collection</span> <span class="o">==</span> <span class="n">parameter</span><span class="o">.</span><span class="n">collection</span>
+            <span class="n">initial_value</span> <span class="o">=</span> <span class="n">parameter</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">initial_value</span> <span class="o">=</span> <span class="n">initializer</span><span class="p">()</span>
+            <span class="n">initial_value</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_map</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">asarray</span><span class="p">,</span> <span class="n">initial_value</span><span class="p">)</span>
+            <span class="n">parameter</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">initial_value</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_register_parameter</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">parameter</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameter</span>
+
+    <span class="n">parameter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">parameter</span><span class="o">.</span><span class="n">collection</span> <span class="o">!=</span> <span class="n">collection</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"types.Parameter </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> previously found in collection </span><span class="si">{</span><span class="n">parameter</span><span class="o">.</span><span class="n">collection</span><span class="si">}</span><span class="s2"> "</span>
+            <span class="sa">f</span><span class="s2">"but currently being added for collection </span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="n">value</span> <span class="o">=</span> <span class="n">parameter</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="k">if</span> <span class="n">constraint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">constraint</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">regularizer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">hooks</span><span class="o">.</span><span class="n">add_loss</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">get_name</span><span class="p">(</span><span class="n">regularizer</span><span class="p">),</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">regularizer</span><span class="p">(</span><span class="n">value</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">value</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.moving_averages.EMAParamsTree.init">
+
+<code class="highlight language-python"><span class="n">init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">set_defaults</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-inherited"><code>inherited</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Initializes the module,</p>
+<details class="quote">
+          <summary>Source code in <code>elegy/nn/moving_averages.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">init</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">rng</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">RNGSeq</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">set_defaults</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">ParameterCollection</span><span class="p">]]:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Initializes the module,</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="nf">init_callable</span><span class="p">(</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">ParameterCollection</span><span class="p">]:</span>
+
+        <span class="k">with</span> <span class="n">module_context</span><span class="p">(</span>
+            <span class="n">module</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">collections</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">initializing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span>
+        <span class="p">):</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">collections</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameters_internal</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mark_initialized_recursive</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">set_defaults</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_default_parameters</span><span class="p">(</span><span class="n">collections</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">collections</span>
+
+    <span class="n">init_callable</span><span class="o">.</span><span class="n">_signature_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span>
+
+    <span class="k">return</span> <span class="n">init_callable</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+</div>
+</div>
+</div>
                 
               
               

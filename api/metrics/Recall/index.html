@@ -235,8 +235,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting-started-basic-api.ipynb" class="md-nav__link">
-        Basic API
+      <a href="../../../getting-started-high-level-api/" class="md-nav__link">
+        High Level API
       </a>
     </li>
   
@@ -247,7 +247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../na/" class="md-nav__link">
+      <a href="../../../getting-started-low-level-api/" class="md-nav__link">
         Low Level API
       </a>
     </li>
@@ -274,13 +274,13 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
       
       <label class="md-nav__link" for="nav-3">
-        Basic API
+        High Level API
         <span class="md-nav__icon md-icon"></span>
       </label>
-      <nav class="md-nav" aria-label="Basic API" data-md-level="1">
+      <nav class="md-nav" aria-label="High Level API" data-md-level="1">
         <label class="md-nav__title" for="nav-3">
           <span class="md-nav__icon md-icon"></span>
-          Basic API
+          High Level API
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -641,8 +641,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../low-level-api/supporting-the-basic-api/" class="md-nav__link">
-        Supporting the Basic API
+      <a href="../../../low-level-api/supporting-the-high-level-api/" class="md-nav__link">
+        Supporting the High Level API
       </a>
     </li>
   
@@ -1832,9 +1832,52 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Recall
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         Recall
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.metrics.recall.Recall" class="md-nav__link">
+    elegy.metrics.recall.Recall
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.metrics.recall.Recall.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.metrics.recall.Recall.call" class="md-nav__link">
+    call()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -2494,6 +2537,35 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.metrics.recall.Recall" class="md-nav__link">
+    elegy.metrics.recall.Recall
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.metrics.recall.Recall.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.metrics.recall.Recall.call" class="md-nav__link">
+    call()
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2510,12 +2582,265 @@
                 
                 
                 <h1 id="elegymetricsrecall">elegy.metrics.Recall</h1>
-<p>::: elegy.metrics.recall.Recall
-    selection:
-        inherited_members: true
-        members:
-            - <strong>init</strong>
-            - call</p>
+<div class="doc doc-object doc-class">
+<h2 class="hidden-toc" id="elegy.metrics.recall.Recall" style="visibility: hidden; position: absolute;">
+        </h2>
+<div class="doc doc-contents first">
+<p>This metric creates two local variables, <code>true_positives</code> and
+<code>false_negatives</code>, that are used to compute the recall. This value is
+ultimately returned as <code>recall</code>, an idempotent operation that simply divides
+<code>true_positives</code> by the sum of <code>true_positives</code> and <code>false_negatives</code>.</p>
+<p>If <code>sample_weight</code> is <code>None</code>, weights default to 1. Use <code>sample_weight</code> of 0 to mask values.</p>
+<p>If sample_weight is None, weights default to 1. Use sample_weight of 0 to mask values.</p>
+<p>If class_id is specified, we calculate recall by considering only the entries in the batch
+for which class_id is above the threshold and computing the fraction of them for which class_id
+is indeed a correct label.</p>
+<div class="codehilite">
+<pre><span></span><code>    <span class="n">recall</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">Recall</span><span class="p">()</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">recall</span><span class="p">(</span>
+        <span class="n">y_true</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">y_pred</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="p">)</span>
+    <span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="mf">0.6666667</span> <span class="c1"># 2 / 3</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">recall</span><span class="p">(</span>
+        <span class="n">y_true</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">y_pred</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="p">)</span>
+    <span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="mf">0.42857143</span> <span class="c1"># 3 / 7</span>
+</code></pre>
+</div>
+<p>Usage with elegy API:</p>
+<div class="codehilite">
+<pre><span></span><code>    <span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
+    <span class="n">module_fn</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">CategoricalCrossentropy</span><span class="p">(),</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">Recall</span><span class="p">(),</span>
+    <span class="n">optimizer</span><span class="o">=</span><span class="n">optix</span><span class="o">.</span><span class="n">adam</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">),</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<div class="doc doc-children">
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.metrics.recall.Recall.__init__">
+
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">class_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Creates a <code>Recall</code> instance.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>on</code></td>
+<td><code>Union[str, int, Iterable[Union[str, int]]]</code></td>
+<td>
+<p>A string or integer, or iterable of string or integers, that
+indicate how to index/filter the <code>y_true</code> and <code>y_pred</code>
+arguments before passing them to <code>call</code>. For example if <code>on = "a"</code> then
+<code>y_true = y_true["a"]</code>. If <code>on</code> is an iterable
+the structures will be indexed iteratively, for example if <code>on = ["a", 0, "b"]</code>
+then <code>y_true = y_true["a"][0]["b"]</code>, same for <code>y_pred</code>. For more information
+check out <a href="https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior">Keras-like behavior</a>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>threshold</code></td>
+<td><code></code></td>
+<td>
+<p>(Optional) A float value or a python list/tuple of float threshold
+values in [0, 1]. A threshold is compared with prediction values to determine
+the truth value of predictions (i.e., above the threshold is true, below is false).
+One metric value is generated for each threshold value. If neither threshold is set
+the default is to calculate recall with threshold=0.5.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>class_id</code></td>
+<td><code></code></td>
+<td>
+<p>(Optional) Integer class ID for which we want binary metrics.
+This must be in the half-open interval <code>[0, num_classes)</code>, where
+<code>num_classes</code> is the last dimension of predictions.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>kwargs</code></td>
+<td><code></code></td>
+<td>
+<p>Additional keyword arguments passed to Module.</p>
+</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/metrics/recall.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">on</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">IndexLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">class_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Creates a `Recall` instance.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        on: A string or integer, or iterable of string or integers, that</span>
+<span class="sd">            indicate how to index/filter the `y_true` and `y_pred`</span>
+<span class="sd">            arguments before passing them to `call`. For example if `on = "a"` then</span>
+<span class="sd">            `y_true = y_true["a"]`. If `on` is an iterable</span>
+<span class="sd">            the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`</span>
+<span class="sd">            then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information</span>
+<span class="sd">            check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).</span>
+
+<span class="sd">        threshold: (Optional) A float value or a python list/tuple of float threshold</span>
+<span class="sd">            values in [0, 1]. A threshold is compared with prediction values to determine</span>
+<span class="sd">            the truth value of predictions (i.e., above the threshold is true, below is false).</span>
+<span class="sd">            One metric value is generated for each threshold value. If neither threshold is set</span>
+<span class="sd">            the default is to calculate recall with threshold=0.5.</span>
+
+<span class="sd">        class_id: (Optional) Integer class ID for which we want binary metrics.</span>
+<span class="sd">            This must be in the half-open interval `[0, num_classes)`, where</span>
+<span class="sd">            `num_classes` is the last dimension of predictions.</span>
+
+<span class="sd">        kwargs: Additional keyword arguments passed to Module.</span>
+<span class="sd">    """</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">on</span><span class="o">=</span><span class="n">on</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="k">if</span> <span class="n">threshold</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">threshold</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">class_id</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">class_id</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">class_id</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">true_positives</span> <span class="o">=</span> <span class="n">ReduceConfusionMatrix</span><span class="p">(</span><span class="n">reduction</span><span class="o">=</span><span class="n">Reduction</span><span class="o">.</span><span class="n">TRUE_POSITIVES</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">false_negatives</span> <span class="o">=</span> <span class="n">ReduceConfusionMatrix</span><span class="p">(</span>
+        <span class="n">reduction</span><span class="o">=</span><span class="n">Reduction</span><span class="o">.</span><span class="n">FALSE_NEGATIVES</span>
+    <span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.metrics.recall.Recall.call">
+
+<code class="highlight language-python"><span class="n">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Accumulates metric statistics. <code>y_true</code> and <code>y_pred</code> should have the same shape.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>y_true</code></td>
+<td><code>ndarray</code></td>
+<td>
+<p>Ground truth values. shape = <code>[batch_size, d0, .. dN]</code>.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>y_pred</code></td>
+<td><code>ndarray</code></td>
+<td>
+<p>The predicted values. shape = <code>[batch_size, d0, .. dN]</code>.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>sample_weight</code></td>
+<td><code>Optional[jax._src.numpy.lax_numpy.ndarray]</code></td>
+<td>
+<p>Optional weighting of each example. Defaults to 1. Can be a
+<code>Tensor</code> whose rank is either 0, or the same rank as <code>y_true</code>, and must
+be broadcastable to <code>y_true</code>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ndarray</code></td>
+<td>
+<p>Array with the cumulative recall.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/metrics/recall.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">y_true</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">y_pred</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">sample_weight</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Accumulates metric statistics. `y_true` and `y_pred` should have the same shape.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.</span>
+
+<span class="sd">        y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.</span>
+
+<span class="sd">        sample_weight: Optional weighting of each example. Defaults to 1. Can be a</span>
+<span class="sd">            `Tensor` whose rank is either 0, or the same rank as `y_true`, and must</span>
+<span class="sd">            be broadcastable to `y_true`.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Array with the cumulative recall.</span>
+<span class="sd">    """</span>
+
+    <span class="k">return</span> <span class="n">recall</span><span class="p">(</span>
+        <span class="n">y_true</span><span class="o">=</span><span class="n">y_true</span><span class="p">,</span>
+        <span class="n">y_pred</span><span class="o">=</span><span class="n">y_pred</span><span class="p">,</span>
+        <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span>
+        <span class="n">threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">,</span>
+        <span class="n">class_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">class_id</span><span class="p">,</span>
+        <span class="n">true_positives</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">true_positives</span><span class="p">,</span>
+        <span class="n">false_negatives</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">false_negatives</span><span class="p">,</span>
+    <span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+</div>
+</div>
+</div>
                 
               
               

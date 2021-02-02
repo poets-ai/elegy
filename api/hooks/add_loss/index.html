@@ -235,8 +235,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting-started-basic-api.ipynb" class="md-nav__link">
-        Basic API
+      <a href="../../../getting-started-high-level-api/" class="md-nav__link">
+        High Level API
       </a>
     </li>
   
@@ -247,7 +247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../na/" class="md-nav__link">
+      <a href="../../../getting-started-low-level-api/" class="md-nav__link">
         Low Level API
       </a>
     </li>
@@ -274,13 +274,13 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
       
       <label class="md-nav__link" for="nav-3">
-        Basic API
+        High Level API
         <span class="md-nav__icon md-icon"></span>
       </label>
-      <nav class="md-nav" aria-label="Basic API" data-md-level="1">
+      <nav class="md-nav" aria-label="High Level API" data-md-level="1">
         <label class="md-nav__title" for="nav-3">
           <span class="md-nav__icon md-icon"></span>
-          Basic API
+          High Level API
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -641,8 +641,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../low-level-api/supporting-the-basic-api/" class="md-nav__link">
-        Supporting the Basic API
+      <a href="../../../low-level-api/supporting-the-high-level-api/" class="md-nav__link">
+        Supporting the High Level API
       </a>
     </li>
   
@@ -1160,9 +1160,38 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          add_loss
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         add_loss
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.hooks.add_loss" class="md-nav__link">
+    elegy.hooks.add_loss
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -2494,6 +2523,21 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.hooks.add_loss" class="md-nav__link">
+    elegy.hooks.add_loss
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2510,9 +2554,82 @@
                 
                 
                 <h1 id="elegyhooksadd_loss">elegy.hooks.add_loss</h1>
-<p>::: elegy.hooks.add_loss
-    selection:
-        inherited_members: true</p>
+<div class="doc doc-object doc-function">
+<h2 class="hidden-toc" id="elegy.hooks.add_loss" style="visibility: hidden; position: absolute;">
+        </h2>
+<div class="doc doc-contents first">
+<p>A hook that lets you define a loss within a <a href="../../Module/#elegy.module.Module"><code>module</code></a>.</p>
+<div class="codehilite">
+<pre><span></span><code><span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s2">"w"</span><span class="p">,</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="n">initializer</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">ones</span><span class="p">)</span>
+
+<span class="c1"># L2 regularization penalty</span>
+<span class="n">elegy</span><span class="o">.</span><span class="n">hooks</span><span class="o">.</span><span class="n">add_loss</span><span class="p">(</span><span class="s2">"l2_regularization"</span><span class="p">,</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">w</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+</code></pre>
+</div>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td><code>str</code></td>
+<td>
+<p>The name of the loss. If a <code>name</code> is repeated on
+different calls values will be added together.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>value</code></td>
+<td><code>Union[numpy.ndarray, float, int]</code></td>
+<td>
+<p>The value for the loss.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/hooks.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">add_loss</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">Scalar</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">"""</span>
+<span class="sd">    A hook that lets you define a loss within a [`module`][elegy.module.Module].</span>
+
+<span class="sd">    ```python</span>
+<span class="sd">    w = self.add_parameter("w", [3, 5], initializer=jnp.ones)</span>
+
+<span class="sd">    # L2 regularization penalty</span>
+<span class="sd">    elegy.hooks.add_loss("l2_regularization", 0.01 * jnp.mean(w ** 2))</span>
+<span class="sd">    ```</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        name: The name of the loss. If a `name` is repeated on</span>
+<span class="sd">            different calls values will be added together.</span>
+<span class="sd">        value: The value for the loss.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">LOCAL</span><span class="o">.</span><span class="n">losses</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"loss"</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">+=</span> <span class="s2">"_loss"</span>
+
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">LOCAL</span><span class="o">.</span><span class="n">losses</span><span class="p">:</span>
+        <span class="n">LOCAL</span><span class="o">.</span><span class="n">losses</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">LOCAL</span><span class="o">.</span><span class="n">losses</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">+</span> <span class="n">value</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">LOCAL</span><span class="o">.</span><span class="n">losses</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
                 
               
               

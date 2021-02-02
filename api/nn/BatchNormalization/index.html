@@ -235,8 +235,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting-started-basic-api.ipynb" class="md-nav__link">
-        Basic API
+      <a href="../../../getting-started-high-level-api/" class="md-nav__link">
+        High Level API
       </a>
     </li>
   
@@ -247,7 +247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../na/" class="md-nav__link">
+      <a href="../../../getting-started-low-level-api/" class="md-nav__link">
         Low Level API
       </a>
     </li>
@@ -274,13 +274,13 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
       
       <label class="md-nav__link" for="nav-3">
-        Basic API
+        High Level API
         <span class="md-nav__icon md-icon"></span>
       </label>
-      <nav class="md-nav" aria-label="Basic API" data-md-level="1">
+      <nav class="md-nav" aria-label="High Level API" data-md-level="1">
         <label class="md-nav__title" for="nav-3">
           <span class="md-nav__icon md-icon"></span>
-          Basic API
+          High Level API
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -641,8 +641,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../low-level-api/supporting-the-basic-api/" class="md-nav__link">
-        Supporting the Basic API
+      <a href="../../../low-level-api/supporting-the-high-level-api/" class="md-nav__link">
+        Supporting the High Level API
       </a>
     </li>
   
@@ -2188,9 +2188,66 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          BatchNormalization
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         BatchNormalization
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.batch_normalization.BatchNormalization" class="md-nav__link">
+    elegy.nn.batch_normalization.BatchNormalization
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.batch_normalization.BatchNormalization.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.batch_normalization.BatchNormalization.add_parameter" class="md-nav__link">
+    add_parameter()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.batch_normalization.BatchNormalization.call" class="md-nav__link">
+    call()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.batch_normalization.BatchNormalization.init" class="md-nav__link">
+    init()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -2494,6 +2551,49 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.batch_normalization.BatchNormalization" class="md-nav__link">
+    elegy.nn.batch_normalization.BatchNormalization
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.batch_normalization.BatchNormalization.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.batch_normalization.BatchNormalization.add_parameter" class="md-nav__link">
+    add_parameter()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.batch_normalization.BatchNormalization.call" class="md-nav__link">
+    call()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.batch_normalization.BatchNormalization.init" class="md-nav__link">
+    init()
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2510,17 +2610,616 @@
                 
                 
                 <h1 id="elegynnbatchnormalization">elegy.nn.BatchNormalization</h1>
-<p>::: elegy.nn.batch_normalization.BatchNormalization
-    selection:
-        inherited_members: true
-        members:
-            - <strong>init</strong>
-            - call
-            - add_parameter
-            - get_parameters
-            - set_parameters
-            - reset
-            - init</p>
+<div class="doc doc-object doc-class">
+<h2 class="hidden-toc" id="elegy.nn.batch_normalization.BatchNormalization" style="visibility: hidden; position: absolute;">
+        </h2>
+<div class="doc doc-contents first">
+<p>Normalizes inputs to maintain a mean of ~0 and stddev of ~1.</p>
+<p>See: https://arxiv.org/abs/1502.03167.</p>
+<p>There are many different variations for how users want to manage scale and
+offset if they require them at all. These are:</p>
+<ul>
+<li>No scale/offset in which case <code>create_*</code> should be set to <code>False</code> and
+    <code>scale</code>/<code>offset</code> aren't passed when the module is called.</li>
+<li>Trainable scale/offset in which case <code>create_*</code> should be set to
+    <code>True</code> and again <code>scale</code>/<code>offset</code> aren't passed when the module is
+    called. In this case this module creates and owns the <code>scale</code>/<code>offset</code>
+    variables.</li>
+<li>Externally generated <code>scale</code>/<code>offset</code>, such as for conditional
+    normalization, in which case <code>create_*</code> should be set to <code>False</code> and
+    then the values fed in at call time.</li>
+</ul>
+<p>NOTE: <code>jax.vmap(hk.transform(BatchNorm))</code> will update summary statistics and
+normalize values on a per-batch basis; we currently do <em>not</em> support
+normalizing across a batch axis introduced by vmap.</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.batch_normalization.BatchNormalization.__init__">
+
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">create_scale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">create_offset</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">decay_rate</span><span class="o">=</span><span class="mf">0.99</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-05</span><span class="p">,</span> <span class="n">scale_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cross_replica_axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="s1">'channels_last'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Constructs a BatchNorm module.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>create_scale</code></td>
+<td><code>bool</code></td>
+<td>
+<p>Whether to include a trainable scaling factor.</p>
+</td>
+<td><code>True</code></td>
+</tr>
+<tr>
+<td><code>create_offset</code></td>
+<td><code>bool</code></td>
+<td>
+<p>Whether to include a trainable offset.</p>
+</td>
+<td><code>True</code></td>
+</tr>
+<tr>
+<td><code>decay_rate</code></td>
+<td><code>float</code></td>
+<td>
+<p>Decay rate for EMA.</p>
+</td>
+<td><code>0.99</code></td>
+</tr>
+<tr>
+<td><code>eps</code></td>
+<td><code>float</code></td>
+<td>
+<p>Small epsilon to avoid division by zero variance. Defaults <code>1e-5</code>,
+as in the paper and Sonnet.</p>
+</td>
+<td><code>1e-05</code></td>
+</tr>
+<tr>
+<td><code>scale_init</code></td>
+<td><code>Optional[elegy.types.Initializer]</code></td>
+<td>
+<p>Optional initializer for gain (aka scale). Can only be set
+if <code>create_scale=True</code>. By default, <code>1</code>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>offset_init</code></td>
+<td><code>Optional[elegy.types.Initializer]</code></td>
+<td>
+<p>Optional initializer for bias (aka offset). Can only be set
+if <code>create_offset=True</code>. By default, <code>0</code>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>axis</code></td>
+<td><code>Optional[Sequence[int]]</code></td>
+<td>
+<p>Which axes to reduce over. The default (<code>None</code>) signifies that all
+but the channel axis should be normalized. Otherwise this is a list of
+axis indices which will have normalization statistics calculated.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>cross_replica_axis</code></td>
+<td><code>Optional[str]</code></td>
+<td>
+<p>If not <code>None</code>, it should be a string representing
+the axis name over which this module is being run within a <code>jax.pmap</code>.
+Supplying this argument means that batch statistics are calculated
+across all replicas on that axis.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>data_format</code></td>
+<td><code>str</code></td>
+<td>
+<p>The data format of the input. Can be either
+<code>channels_first</code>, <code>channels_last</code>, <code>N...C</code> or <code>NC...</code>. By
+default it is <code>channels_last</code>.</p>
+</td>
+<td><code>'channels_last'</code></td>
+</tr>
+<tr>
+<td><code>kwargs</code></td>
+<td><code></code></td>
+<td>
+<p>Additional keyword arguments passed to Module.</p>
+</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/nn/batch_normalization.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">create_scale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">create_offset</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">decay_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.99</span><span class="p">,</span>
+    <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-5</span><span class="p">,</span>
+    <span class="n">scale_init</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">Initializer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">offset_init</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">Initializer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">axis</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">cross_replica_axis</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">data_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"channels_last"</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">):</span>
+    <span class="sd">"""Constructs a BatchNorm module.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        create_scale: Whether to include a trainable scaling factor.</span>
+<span class="sd">        create_offset: Whether to include a trainable offset.</span>
+<span class="sd">        decay_rate: Decay rate for EMA.</span>
+<span class="sd">        eps: Small epsilon to avoid division by zero variance. Defaults ``1e-5``,</span>
+<span class="sd">            as in the paper and Sonnet.</span>
+<span class="sd">        scale_init: Optional initializer for gain (aka scale). Can only be set</span>
+<span class="sd">            if ``create_scale=True``. By default, ``1``.</span>
+<span class="sd">        offset_init: Optional initializer for bias (aka offset). Can only be set</span>
+<span class="sd">            if ``create_offset=True``. By default, ``0``.</span>
+<span class="sd">        axis: Which axes to reduce over. The default (``None``) signifies that all</span>
+<span class="sd">            but the channel axis should be normalized. Otherwise this is a list of</span>
+<span class="sd">            axis indices which will have normalization statistics calculated.</span>
+<span class="sd">        cross_replica_axis: If not ``None``, it should be a string representing</span>
+<span class="sd">            the axis name over which this module is being run within a ``jax.pmap``.</span>
+<span class="sd">            Supplying this argument means that batch statistics are calculated</span>
+<span class="sd">            across all replicas on that axis.</span>
+<span class="sd">        data_format: The data format of the input. Can be either</span>
+<span class="sd">            ``channels_first``, ``channels_last``, ``N...C`` or ``NC...``. By</span>
+<span class="sd">            default it is ``channels_last``.</span>
+<span class="sd">        kwargs: Additional keyword arguments passed to Module.</span>
+<span class="sd">    """</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">create_scale</span> <span class="ow">and</span> <span class="n">scale_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Cannot set `scale_init` if `create_scale=False`"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">create_offset</span> <span class="ow">and</span> <span class="n">offset_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Cannot set `offset_init` if `create_offset=False`"</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">create_scale</span> <span class="o">=</span> <span class="n">create_scale</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">create_offset</span> <span class="o">=</span> <span class="n">create_offset</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="o">=</span> <span class="n">eps</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">scale_init</span> <span class="o">=</span> <span class="n">scale_init</span> <span class="ow">or</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ones</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">offset_init</span> <span class="o">=</span> <span class="n">offset_init</span> <span class="ow">or</span> <span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cross_replica_axis</span> <span class="o">=</span> <span class="n">cross_replica_axis</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">channel_index</span> <span class="o">=</span> <span class="n">haiku_utils</span><span class="o">.</span><span class="n">get_channel_index</span><span class="p">(</span><span class="n">data_format</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">mean_ema</span> <span class="o">=</span> <span class="n">ExponentialMovingAverage</span><span class="p">(</span><span class="n">decay_rate</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"mean_ema"</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">var_ema</span> <span class="o">=</span> <span class="n">ExponentialMovingAverage</span><span class="p">(</span><span class="n">decay_rate</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"var_ema"</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.batch_normalization.BatchNormalization.add_parameter">
+
+<code class="highlight language-python"><span class="n">add_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">initializer</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">regularizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">constraint</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-inherited"><code>inherited</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Adds a parameter to the current module. The parameter will only be initialized once and
+will reused afterwards.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td><code>str</code></td>
+<td>
+<p>The name of the parameter. It must be unique and no other field/property/method
+of the instance can have that name.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>initializer</code></td>
+<td><code>Callable[[], Any]</code></td>
+<td>
+<p>A callable that takes not arguments returns the initial value.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>collection</code></td>
+<td><code>Optional[str]</code></td>
+<td>
+<p>Optional name of the parameter collection, if not defined it will be se to
+<code>"parameters"</code> if <code>trainable=True</code> else it will be set to <code>"states"</code>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>trainable</code></td>
+<td><code>bool</code></td>
+<td>
+<p>Specify whether this parameter should be added to the default trainable <code>"parameters"</code>
+collection or to the default non-trainable <code>"states"</code> collection. If collection is
+passed this parameter will ignored.</p>
+</td>
+<td><code>True</code></td>
+</tr>
+<tr>
+<td><code>regularizer</code></td>
+<td><code>Optional[Callable[[Any], jax._src.numpy.lax_numpy.ndarray]]</code></td>
+<td>
+<p>Regularizer instance (callable).</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>constraint</code></td>
+<td><code>Optional[Callable[[Any], Any]]</code></td>
+<td>
+<p>Constraint instance (callable).</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Any</code></td>
+<td>
+<p>The value of the parameter.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/nn/batch_normalization.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">add_parameter</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">initializer</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">],</span>
+    <span class="n">collection</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">trainable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">regularizer</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">],</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">constraint</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">],</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Adds a parameter to the current module. The parameter will only be initialized once and</span>
+<span class="sd">    will reused afterwards.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        name: The name of the parameter. It must be unique and no other field/property/method</span>
+<span class="sd">            of the instance can have that name.</span>
+<span class="sd">        initializer: A callable that takes not arguments returns the initial value.</span>
+<span class="sd">        collection: Optional name of the parameter collection, if not defined it will be se to</span>
+<span class="sd">            `"parameters"` if `trainable=True` else it will be set to `"states"`.</span>
+<span class="sd">        trainable: Specify whether this parameter should be added to the default trainable `"parameters"`</span>
+<span class="sd">            collection or to the default non-trainable `"states"` collection. If collection is</span>
+<span class="sd">            passed this parameter will ignored.</span>
+<span class="sd">        regularizer: Regularizer instance (callable).</span>
+<span class="sd">        constraint: Constraint instance (callable).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The value of the parameter.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="n">collection</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">collection</span> <span class="o">=</span> <span class="s2">"parameters"</span> <span class="k">if</span> <span class="n">trainable</span> <span class="k">else</span> <span class="s2">"states"</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_initializing</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Cannot add parameter </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> outside `init`"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_params</span><span class="p">:</span>
+            <span class="n">parameter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_params</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="n">collection</span> <span class="o">==</span> <span class="n">parameter</span><span class="o">.</span><span class="n">collection</span>
+            <span class="n">initial_value</span> <span class="o">=</span> <span class="n">parameter</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">initial_value</span> <span class="o">=</span> <span class="n">initializer</span><span class="p">()</span>
+            <span class="n">initial_value</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_map</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">asarray</span><span class="p">,</span> <span class="n">initial_value</span><span class="p">)</span>
+            <span class="n">parameter</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">initial_value</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_register_parameter</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">parameter</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameter</span>
+
+    <span class="n">parameter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">parameter</span><span class="o">.</span><span class="n">collection</span> <span class="o">!=</span> <span class="n">collection</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"types.Parameter </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> previously found in collection </span><span class="si">{</span><span class="n">parameter</span><span class="o">.</span><span class="n">collection</span><span class="si">}</span><span class="s2"> "</span>
+            <span class="sa">f</span><span class="s2">"but currently being added for collection </span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="n">value</span> <span class="o">=</span> <span class="n">parameter</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="k">if</span> <span class="n">constraint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">constraint</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">regularizer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">hooks</span><span class="o">.</span><span class="n">add_loss</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">get_name</span><span class="p">(</span><span class="n">regularizer</span><span class="p">),</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">regularizer</span><span class="p">(</span><span class="n">value</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">value</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.batch_normalization.BatchNormalization.call">
+
+<code class="highlight language-python"><span class="n">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">test_local_stats</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Computes the normalized version of the input.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>inputs</code></td>
+<td><code>ndarray</code></td>
+<td>
+<p>An array, where the data format is <code>[..., C]</code>.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>training</code></td>
+<td><code>Optional[bool]</code></td>
+<td>
+<p>Whether training is currently happening.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>test_local_stats</code></td>
+<td><code>bool</code></td>
+<td>
+<p>Whether local stats are used when training=False.</p>
+</td>
+<td><code>False</code></td>
+</tr>
+<tr>
+<td><code>scale</code></td>
+<td><code>Optional[jax._src.numpy.lax_numpy.ndarray]</code></td>
+<td>
+<p>An array up to n-D. The shape of this tensor must be broadcastable
+to the shape of <code>inputs</code>. This is the scale applied to the normalized
+inputs. This cannot be passed in if the module was constructed with
+<code>create_scale=True</code>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>offset</code></td>
+<td><code>Optional[jax._src.numpy.lax_numpy.ndarray]</code></td>
+<td>
+<p>An array up to n-D. The shape of this tensor must be broadcastable
+to the shape of <code>inputs</code>. This is the offset applied to the normalized
+inputs. This cannot be passed in if the module was constructed with
+<code>create_offset=True</code>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ndarray</code></td>
+<td>
+<p>The array, normalized across all but the last dimension.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/nn/batch_normalization.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">training</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">test_local_stats</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">scale</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">offset</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">"""Computes the normalized version of the input.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        inputs: An array, where the data format is ``[..., C]``.</span>
+<span class="sd">        training: Whether training is currently happening.</span>
+<span class="sd">        test_local_stats: Whether local stats are used when training=False.</span>
+<span class="sd">        scale: An array up to n-D. The shape of this tensor must be broadcastable</span>
+<span class="sd">            to the shape of ``inputs``. This is the scale applied to the normalized</span>
+<span class="sd">            inputs. This cannot be passed in if the module was constructed with</span>
+<span class="sd">            ``create_scale=True``.</span>
+<span class="sd">        offset: An array up to n-D. The shape of this tensor must be broadcastable</span>
+<span class="sd">            to the shape of ``inputs``. This is the offset applied to the normalized</span>
+<span class="sd">            inputs. This cannot be passed in if the module was constructed with</span>
+<span class="sd">            ``create_offset=True``.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The array, normalized across all but the last dimension.</span>
+<span class="sd">    """</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">training</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">training</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_training</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_scale</span> <span class="ow">and</span> <span class="n">scale</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Cannot pass `scale` at call time if `create_scale=True`."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_offset</span> <span class="ow">and</span> <span class="n">offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Cannot pass `offset` at call time if `create_offset=True`."</span>
+        <span class="p">)</span>
+
+    <span class="n">channel_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_index</span>
+    <span class="k">if</span> <span class="n">channel_index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">channel_index</span> <span class="o">+=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">ndim</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">axis</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">channel_index</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">training</span> <span class="ow">or</span> <span class="n">test_local_stats</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean_ema</span><span class="p">,</span> <span class="s2">"average"</span><span class="p">):</span>
+        <span class="n">cross_replica_axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cross_replica_axis</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cross_replica_axis</span><span class="p">:</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">lax</span><span class="o">.</span><span class="n">pmean</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">cross_replica_axis</span><span class="p">)</span>
+            <span class="n">mean_of_squares</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">inputs</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">mean_of_squares</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">lax</span><span class="o">.</span><span class="n">pmean</span><span class="p">(</span><span class="n">mean_of_squares</span><span class="p">,</span> <span class="n">cross_replica_axis</span><span class="p">)</span>
+            <span class="n">var</span> <span class="o">=</span> <span class="n">mean_of_squares</span> <span class="o">-</span> <span class="n">mean</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="c1"># This uses E[(X - E[X])^2].</span>
+            <span class="c1"># TODO(tycai): Consider the faster, but possibly less stable</span>
+            <span class="c1"># E[X^2] - E[X]^2 method.</span>
+            <span class="n">var</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_ema</span><span class="o">.</span><span class="n">average</span>
+        <span class="n">var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_ema</span><span class="o">.</span><span class="n">average</span>
+
+    <span class="k">if</span> <span class="n">training</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean_ema</span><span class="p">,</span> <span class="s2">"average"</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean_ema</span><span class="p">(</span><span class="n">mean</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">var_ema</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+
+    <span class="n">w_shape</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">axis</span> <span class="k">else</span> <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">ndim</span><span class="p">)]</span>
+    <span class="n">w_dtype</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">float32</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_scale</span><span class="p">:</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span>
+            <span class="s2">"scale"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_init</span><span class="p">(</span><span class="n">w_shape</span><span class="p">,</span> <span class="n">w_dtype</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">scale</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">w_dtype</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_offset</span><span class="p">:</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span>
+            <span class="s2">"offset"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset_init</span><span class="p">(</span><span class="n">w_shape</span><span class="p">,</span> <span class="n">w_dtype</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">offset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">w_dtype</span><span class="p">)</span>
+
+    <span class="n">inv</span> <span class="o">=</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">jax</span><span class="o">.</span><span class="n">lax</span><span class="o">.</span><span class="n">rsqrt</span><span class="p">(</span><span class="n">var</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="p">(</span><span class="n">inputs</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span> <span class="o">*</span> <span class="n">inv</span> <span class="o">+</span> <span class="n">offset</span>
+    <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.batch_normalization.BatchNormalization.init">
+
+<code class="highlight language-python"><span class="n">init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">set_defaults</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-inherited"><code>inherited</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Initializes the module,</p>
+<details class="quote">
+          <summary>Source code in <code>elegy/nn/batch_normalization.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">init</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">rng</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">RNGSeq</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">set_defaults</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">ParameterCollection</span><span class="p">]]:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Initializes the module,</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="nf">init_callable</span><span class="p">(</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">ParameterCollection</span><span class="p">]:</span>
+
+        <span class="k">with</span> <span class="n">module_context</span><span class="p">(</span>
+            <span class="n">module</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">collections</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">initializing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span>
+        <span class="p">):</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">collections</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameters_internal</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mark_initialized_recursive</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">set_defaults</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_default_parameters</span><span class="p">(</span><span class="n">collections</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">collections</span>
+
+    <span class="n">init_callable</span><span class="o">.</span><span class="n">_signature_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span>
+
+    <span class="k">return</span> <span class="n">init_callable</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+</div>
+</div>
+</div>
                 
               
               

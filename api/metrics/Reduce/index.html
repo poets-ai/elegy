@@ -235,8 +235,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting-started-basic-api.ipynb" class="md-nav__link">
-        Basic API
+      <a href="../../../getting-started-high-level-api/" class="md-nav__link">
+        High Level API
       </a>
     </li>
   
@@ -247,7 +247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../na/" class="md-nav__link">
+      <a href="../../../getting-started-low-level-api/" class="md-nav__link">
         Low Level API
       </a>
     </li>
@@ -274,13 +274,13 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
       
       <label class="md-nav__link" for="nav-3">
-        Basic API
+        High Level API
         <span class="md-nav__icon md-icon"></span>
       </label>
-      <nav class="md-nav" aria-label="Basic API" data-md-level="1">
+      <nav class="md-nav" aria-label="High Level API" data-md-level="1">
         <label class="md-nav__title" for="nav-3">
           <span class="md-nav__icon md-icon"></span>
-          Basic API
+          High Level API
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -641,8 +641,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../low-level-api/supporting-the-basic-api/" class="md-nav__link">
-        Supporting the Basic API
+      <a href="../../../low-level-api/supporting-the-high-level-api/" class="md-nav__link">
+        Supporting the High Level API
       </a>
     </li>
   
@@ -1844,9 +1844,45 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Reduce
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         Reduce
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.metrics.reduce.Reduce" class="md-nav__link">
+    elegy.metrics.reduce.Reduce
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.metrics.reduce.Reduce.call" class="md-nav__link">
+    call()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -2494,6 +2530,28 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.metrics.reduce.Reduce" class="md-nav__link">
+    elegy.metrics.reduce.Reduce
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.metrics.reduce.Reduce.call" class="md-nav__link">
+    call()
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2510,12 +2568,128 @@
                 
                 
                 <h1 id="elegymetricsreduce">elegy.metrics.Reduce</h1>
-<p>::: elegy.metrics.reduce.Reduce
-    selection:
-        inherited_members: true
-        members:
-            - <strong>init</strong>
-            - call</p>
+<div class="doc doc-object doc-class">
+<h2 class="hidden-toc" id="elegy.metrics.reduce.Reduce" style="visibility: hidden; position: absolute;">
+        </h2>
+<div class="doc doc-contents first">
+<p>Encapsulates metrics that perform a reduce operation on the values.</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.metrics.reduce.Reduce.call">
+
+<code class="highlight language-python"><span class="n">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Accumulates statistics for computing the reduction metric. For example, if <code>values</code> is [1, 3, 5, 7]
+and reduction=SUM_OVER_BATCH_SIZE, then the value of <code>result()</code> is 4. If the <code>sample_weight</code>
+is specified as [1, 1, 0, 0] then value of <code>result()</code> would be 2.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>values</code></td>
+<td><code>ndarray</code></td>
+<td>
+<p>Per-example value.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>sample_weight</code></td>
+<td><code>Optional[jax._src.numpy.lax_numpy.ndarray]</code></td>
+<td>
+<p>Optional weighting of each example. Defaults to 1.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ndarray</code></td>
+<td>
+<p>Array with the cumulative reduce.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/metrics/reduce.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">sample_weight</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Accumulates statistics for computing the reduction metric. For example, if `values` is [1, 3, 5, 7]</span>
+<span class="sd">    and reduction=SUM_OVER_BATCH_SIZE, then the value of `result()` is 4. If the `sample_weight`</span>
+<span class="sd">    is specified as [1, 1, 0, 0] then value of `result()` would be 2.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        values: Per-example value.</span>
+<span class="sd">        sample_weight: Optional weighting of each example. Defaults to 1.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Array with the cumulative reduce.</span>
+<span class="sd">    """</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span>
+        <span class="s2">"total"</span><span class="p">,</span>
+        <span class="k">lambda</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+        <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reduction</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="n">Reduction</span><span class="o">.</span><span class="n">SUM_OVER_BATCH_SIZE</span><span class="p">,</span>
+        <span class="n">Reduction</span><span class="o">.</span><span class="n">WEIGHTED_MEAN</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span>
+            <span class="s2">"count"</span><span class="p">,</span>
+            <span class="k">lambda</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+            <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">value</span><span class="p">,</span> <span class="n">total</span><span class="p">,</span> <span class="n">count</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span>
+        <span class="n">total</span><span class="o">=</span><span class="n">total</span><span class="p">,</span>
+        <span class="n">count</span><span class="o">=</span><span class="n">count</span><span class="p">,</span>
+        <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="p">,</span>
+        <span class="n">reduction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_reduction</span><span class="p">,</span>
+        <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">update_parameter</span><span class="p">(</span><span class="s2">"total"</span><span class="p">,</span> <span class="n">total</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">count</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_parameter</span><span class="p">(</span><span class="s2">"count"</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">value</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+</div>
+</div>
+</div>
                 
               
               

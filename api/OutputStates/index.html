@@ -235,8 +235,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started-basic-api.ipynb" class="md-nav__link">
-        Basic API
+      <a href="../../getting-started-high-level-api/" class="md-nav__link">
+        High Level API
       </a>
     </li>
   
@@ -247,7 +247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
+      <a href="../../getting-started-low-level-api/" class="md-nav__link">
         Low Level API
       </a>
     </li>
@@ -274,13 +274,13 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
       
       <label class="md-nav__link" for="nav-3">
-        Basic API
+        High Level API
         <span class="md-nav__icon md-icon"></span>
       </label>
-      <nav class="md-nav" aria-label="Basic API" data-md-level="1">
+      <nav class="md-nav" aria-label="High Level API" data-md-level="1">
         <label class="md-nav__title" for="nav-3">
           <span class="md-nav__icon md-icon"></span>
-          Basic API
+          High Level API
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -641,8 +641,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../low-level-api/supporting-the-basic-api/" class="md-nav__link">
-        Supporting the Basic API
+      <a href="../../low-level-api/supporting-the-high-level-api/" class="md-nav__link">
+        Supporting the High Level API
       </a>
     </li>
   
@@ -880,9 +880,59 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          OutputStates
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         OutputStates
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.types.OutputStates" class="md-nav__link">
+    elegy.types.OutputStates
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.types.OutputStates.__getnewargs__" class="md-nav__link">
+    __getnewargs__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.types.OutputStates.__new__" class="md-nav__link">
+    __new__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.types.OutputStates.__repr__" class="md-nav__link">
+    __repr__()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -2492,6 +2542,42 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.types.OutputStates" class="md-nav__link">
+    elegy.types.OutputStates
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.types.OutputStates.__getnewargs__" class="md-nav__link">
+    __getnewargs__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.types.OutputStates.__new__" class="md-nav__link">
+    __new__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.types.OutputStates.__repr__" class="md-nav__link">
+    __repr__()
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2508,9 +2594,76 @@
                 
                 
                 <h1 id="elegyoutputstates">elegy.OutputStates</h1>
-<p>::: elegy.types.OutputStates
-    selection:
-        inherited_members: true</p>
+<div class="doc doc-object doc-class">
+<h2 class="hidden-toc" id="elegy.types.OutputStates" style="visibility: hidden; position: absolute;">
+        </h2>
+<div class="doc doc-contents first">
+<p>OutputStates(preds, params, states)</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.types.OutputStates.__getnewargs__">
+
+<code class="highlight language-python"><span class="n">__getnewargs__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Return self as a plain tuple.  Used by copy and pickle.</p>
+<details class="quote">
+          <summary>Source code in <code>elegy/types.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">__getnewargs__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="s1">'Return self as a plain tuple.  Used by copy and pickle.'</span>
+    <span class="k">return</span> <span class="n">_tuple</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.types.OutputStates.__new__">
+
+<code class="highlight language-python"><span class="fm">__new__</span><span class="p">(</span><span class="n">_cls</span><span class="p">,</span> <span class="n">preds</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">states</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+      <small class="doc doc-property doc-property-staticmethod"><code>staticmethod</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Create new instance of OutputStates(preds, params, states)</p>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.types.OutputStates.__repr__">
+
+<code class="highlight language-python"><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Return a nicely formatted representation string</p>
+<details class="quote">
+          <summary>Source code in <code>elegy/types.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="s1">'Return a nicely formatted representation string'</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="n">repr_fmt</span> <span class="o">%</span> <span class="bp">self</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+</div>
+</div>
+</div>
                 
               
               

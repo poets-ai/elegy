@@ -235,8 +235,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started-basic-api.ipynb" class="md-nav__link">
-        Basic API
+      <a href="../../getting-started-high-level-api/" class="md-nav__link">
+        High Level API
       </a>
     </li>
   
@@ -247,7 +247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
+      <a href="../../getting-started-low-level-api/" class="md-nav__link">
         Low Level API
       </a>
     </li>
@@ -274,13 +274,13 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
       
       <label class="md-nav__link" for="nav-3">
-        Basic API
+        High Level API
         <span class="md-nav__icon md-icon"></span>
       </label>
-      <nav class="md-nav" aria-label="Basic API" data-md-level="1">
+      <nav class="md-nav" aria-label="High Level API" data-md-level="1">
         <label class="md-nav__title" for="nav-3">
           <span class="md-nav__icon md-icon"></span>
-          Basic API
+          High Level API
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -641,8 +641,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../low-level-api/supporting-the-basic-api/" class="md-nav__link">
-        Supporting the Basic API
+      <a href="../../low-level-api/supporting-the-high-level-api/" class="md-nav__link">
+        Supporting the High Level API
       </a>
     </li>
   
@@ -808,9 +808,45 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Metric
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         Metric
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.metrics.metric.Metric" class="md-nav__link">
+    elegy.metrics.metric.Metric
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.metrics.metric.Metric.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -2492,6 +2528,28 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.metrics.metric.Metric" class="md-nav__link">
+    elegy.metrics.metric.Metric
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.metrics.metric.Metric.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2508,12 +2566,135 @@
                 
                 
                 <h1 id="elegymetric">elegy.Metric</h1>
-<p>::: elegy.metrics.metric.Metric
-    selection:
-        inherited_members: true
-        members:
-            - <strong>init</strong>
-            - call</p>
+<div class="doc doc-object doc-class">
+<h2 class="hidden-toc" id="elegy.metrics.metric.Metric" style="visibility: hidden; position: absolute;">
+        </h2>
+<div class="doc doc-contents first">
+<p>Encapsulates metric logic and state. Metrics accumulate state between <code>apply</code>s such
+that their output value reflect the metric as if calculated on the whole data
+given up to that point.</p>
+<p>Usage:</p>
+<div class="codehilite">
+<pre><span></span><code><span class="n">m</span> <span class="o">=</span> <span class="n">SomeMetric</span><span class="p">()</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">init</span><span class="p">()(</span><span class="n">x</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">:</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">state</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'Final result: '</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+</code></pre>
+</div>
+<p>Usage with the Model API:</p>
+<div class="codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">elegy</span><span class="o">,</span> <span class="nn">jax</span><span class="o">,</span> <span class="nn">optax</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
+<span class="o">...</span>     <span class="n">module</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+<span class="o">...</span>         <span class="k">lambda</span><span class="p">:</span> <span class="p">[</span>
+<span class="o">...</span>             <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Flatten</span><span class="p">(),</span>
+<span class="o">...</span>             <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">300</span><span class="p">),</span>
+<span class="o">...</span>             <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">,</span>
+<span class="o">...</span>             <span class="n">elegy</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+<span class="o">...</span>         <span class="p">]</span>
+<span class="o">...</span>     <span class="p">),</span>
+<span class="o">...</span>     <span class="n">loss</span><span class="o">=</span><span class="p">[</span>
+<span class="o">...</span>         <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">SparseCategoricalCrossentropy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+<span class="o">...</span>     <span class="p">],</span>
+<span class="o">...</span>     <span class="n">metrics</span><span class="o">=</span><span class="p">[</span>
+<span class="o">...</span>         <span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">SparseCategoricalAccuracy</span><span class="p">()</span>
+<span class="o">...</span>     <span class="p">],</span>
+<span class="o">...</span>     <span class="n">optimizer</span><span class="o">=</span><span class="n">optax</span><span class="o">.</span><span class="n">rmsprop</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">),</span>
+<span class="o">...</span> <span class="p">)</span>
+</code></pre>
+</div>
+<p>To be implemented by subclasses:</p>
+<ul>
+<li><code>call()</code>: All state variables should be created in this method by
+    calling <code>self.add_parameter(..., trainable=False)</code>, update this state by calling
+    <code>self.update_parameter(...)</code>, and return a result based on these states.</li>
+</ul>
+<p>Example subclass implementation:</p>
+<div class="codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">class</span> <span class="nc">Accuracy</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Metric</span><span class="p">):</span>
+<span class="o">...</span>    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
+<span class="o">...</span>
+<span class="o">...</span>        <span class="n">total</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s2">"total"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="o">...</span>        <span class="n">count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s2">"count"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>        <span class="n">total</span> <span class="o">+=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_true</span> <span class="o">==</span> <span class="n">y_pred</span><span class="p">)</span>
+<span class="o">...</span>        <span class="n">count</span> <span class="o">+=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">y_true</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>        <span class="bp">self</span><span class="o">.</span><span class="n">update_parameter</span><span class="p">(</span><span class="s2">"total"</span><span class="p">,</span> <span class="n">total</span><span class="p">)</span>
+<span class="o">...</span>        <span class="bp">self</span><span class="o">.</span><span class="n">update_parameter</span><span class="p">(</span><span class="s2">"count"</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>        <span class="k">return</span> <span class="n">total</span> <span class="o">/</span> <span class="n">count</span>
+</code></pre>
+</div>
+<div class="doc doc-children">
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.metrics.metric.Metric.__init__">
+
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Base Metric constructor.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>on</code></td>
+<td><code>Union[str, int, Iterable[Union[str, int]]]</code></td>
+<td>
+<p>A string or integer, or iterable of string or integers, that
+indicate how to index/filter the <code>y_true</code> and <code>y_pred</code>
+arguments before passing them to <code>call</code>. For example if <code>on = "a"</code> then
+<code>y_true = y_true["a"]</code>. If <code>on</code> is an iterable
+the structures will be indexed iteratively, for example if <code>on = ["a", 0, "b"]</code>
+then <code>y_true = y_true["a"][0]["b"]</code>, same for <code>y_pred</code>. For more information
+check out <a href="https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior">Keras-like behavior</a>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/metrics/metric.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">on</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">IndexLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Base Metric constructor.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        on: A string or integer, or iterable of string or integers, that</span>
+<span class="sd">            indicate how to index/filter the `y_true` and `y_pred`</span>
+<span class="sd">            arguments before passing them to `call`. For example if `on = "a"` then</span>
+<span class="sd">            `y_true = y_true["a"]`. If `on` is an iterable</span>
+<span class="sd">            the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`</span>
+<span class="sd">            then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information</span>
+<span class="sd">            check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).</span>
+<span class="sd">    """</span>
+
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_labels_filter</span> <span class="o">=</span> <span class="p">(</span><span class="n">on</span><span class="p">,)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">on</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">))</span> <span class="k">else</span> <span class="n">on</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+</div>
+</div>
+</div>
                 
               
               

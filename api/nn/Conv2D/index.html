@@ -235,8 +235,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting-started-basic-api.ipynb" class="md-nav__link">
-        Basic API
+      <a href="../../../getting-started-high-level-api/" class="md-nav__link">
+        High Level API
       </a>
     </li>
   
@@ -247,7 +247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../na/" class="md-nav__link">
+      <a href="../../../getting-started-low-level-api/" class="md-nav__link">
         Low Level API
       </a>
     </li>
@@ -274,13 +274,13 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
       
       <label class="md-nav__link" for="nav-3">
-        Basic API
+        High Level API
         <span class="md-nav__icon md-icon"></span>
       </label>
-      <nav class="md-nav" aria-label="Basic API" data-md-level="1">
+      <nav class="md-nav" aria-label="High Level API" data-md-level="1">
         <label class="md-nav__title" for="nav-3">
           <span class="md-nav__icon md-icon"></span>
-          Basic API
+          High Level API
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -641,8 +641,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../low-level-api/supporting-the-basic-api/" class="md-nav__link">
-        Supporting the Basic API
+      <a href="../../../low-level-api/supporting-the-high-level-api/" class="md-nav__link">
+        Supporting the High Level API
       </a>
     </li>
   
@@ -2212,9 +2212,66 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Conv2D
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         Conv2D
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.conv.Conv2D" class="md-nav__link">
+    elegy.nn.conv.Conv2D
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.conv.Conv2D.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.conv.Conv2D.add_parameter" class="md-nav__link">
+    add_parameter()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.conv.Conv2D.call" class="md-nav__link">
+    call()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.conv.Conv2D.init" class="md-nav__link">
+    init()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -2494,6 +2551,49 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.conv.Conv2D" class="md-nav__link">
+    elegy.nn.conv.Conv2D
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.conv.Conv2D.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.conv.Conv2D.add_parameter" class="md-nav__link">
+    add_parameter()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.conv.Conv2D.call" class="md-nav__link">
+    call()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.conv.Conv2D.init" class="md-nav__link">
+    init()
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2510,17 +2610,569 @@
                 
                 
                 <h1 id="elegynnconv2d">elegy.nn.Conv2D</h1>
-<p>::: elegy.nn.conv.Conv2D
-    selection:
-        inherited_members: true
-        members:
-            - <strong>init</strong>
-            - call
-            - add_parameter
-            - get_parameters
-            - set_parameters
-            - reset
-            - init</p>
+<div class="doc doc-object doc-class">
+<h2 class="hidden-toc" id="elegy.nn.conv.Conv2D" style="visibility: hidden; position: absolute;">
+        </h2>
+<div class="doc doc-contents first">
+<p>Two dimensional convolution.</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.conv.Conv2D.__init__">
+
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_channels</span><span class="p">,</span> <span class="n">kernel_shape</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s1">'SAME'</span><span class="p">,</span> <span class="n">with_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">w_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">b_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="s1">'NHWC'</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Initializes the module.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>output_channels</code></td>
+<td><code>int</code></td>
+<td>
+<p>Number of output channels.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>kernel_shape</code></td>
+<td><code>Union[int, Sequence[int]]</code></td>
+<td>
+<p>The shape of the kernel. Either an integer or a sequence of
+length 2.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>stride</code></td>
+<td><code>Union[int, Sequence[int]]</code></td>
+<td>
+<p>tp.Optional stride for the kernel. Either an integer or a sequence of
+length 2. Defaults to 1.</p>
+</td>
+<td><code>1</code></td>
+</tr>
+<tr>
+<td><code>rate</code></td>
+<td><code>Union[int, Sequence[int]]</code></td>
+<td>
+<p>tp.Optional kernel dilation rate. Either an integer or a sequence of
+length 2. 1 corresponds to standard ND convolution,
+<code>rate &gt; 1</code> corresponds to dilated convolution. Defaults to 1.</p>
+</td>
+<td><code>1</code></td>
+</tr>
+<tr>
+<td><code>padding</code></td>
+<td><code>Union[str, Sequence[Tuple[int, int]], Callable[[int], Tuple[int, int]], Sequence[Callable[[int], Tuple[int, int]]]]</code></td>
+<td>
+<p>tp.Optional padding algorithm. Either <code>VALID</code> or <code>SAME</code> or
+a callable or sequence of callables of length 2. Any callables must
+take a single integer argument equal to the effective kernel size and
+return a list of two integers representing the padding before and after.
+See haiku.pad.* for more details and example functions.
+Defaults to <code>SAME</code>. See:
+https://www.tensorflow.org/xla/operation_semantics#conv_convolution.</p>
+</td>
+<td><code>'SAME'</code></td>
+</tr>
+<tr>
+<td><code>with_bias</code></td>
+<td><code>bool</code></td>
+<td>
+<p>Whether to add a bias. By default, true.</p>
+</td>
+<td><code>True</code></td>
+</tr>
+<tr>
+<td><code>w_init</code></td>
+<td><code>Optional[elegy.types.Initializer]</code></td>
+<td>
+<p>tp.Optional weight initialization. By default, truncated normal.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>b_init</code></td>
+<td><code>Optional[elegy.types.Initializer]</code></td>
+<td>
+<p>tp.Optional bias initialization. By default, zeros.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>data_format</code></td>
+<td><code>str</code></td>
+<td>
+<p>The data format of the input. Either <code>NHWC</code> or <code>NCHW</code>. By
+default, <code>NHWC</code>.</p>
+</td>
+<td><code>'NHWC'</code></td>
+</tr>
+<tr>
+<td><code>mask</code></td>
+<td><code>Optional[numpy.ndarray]</code></td>
+<td>
+<p>tp.Optional mask of the weights.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>groups</code></td>
+<td><code>int</code></td>
+<td>
+<p>A positive integer specifying the number of groups in which the
+input is split along the channel axis. Each group is convolved separately
+with filters / groups filters. The output is the concatenation of all the
+groups results along the channel axis. Input channels and filters must both
+be divisible by groups.</p>
+</td>
+<td><code>1</code></td>
+</tr>
+<tr>
+<td><code>kwargs</code></td>
+<td><code></code></td>
+<td>
+<p>Additional keyword arguments passed to Module.</p>
+</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/nn/conv.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">output_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">kernel_shape</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+    <span class="n">stride</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">rate</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">padding</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span>
+        <span class="nb">str</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Sequence</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span> <span class="n">types</span><span class="o">.</span><span class="n">PadFnOrFns</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="s2">"SAME"</span><span class="p">,</span>
+    <span class="n">with_bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">w_init</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">Initializer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">b_init</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">Initializer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">data_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"NHWC"</span><span class="p">,</span>
+    <span class="n">mask</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">groups</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Initializes the module.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        output_channels: Number of output channels.</span>
+<span class="sd">        kernel_shape: The shape of the kernel. Either an integer or a sequence of</span>
+<span class="sd">            length 2.</span>
+<span class="sd">        stride: tp.Optional stride for the kernel. Either an integer or a sequence of</span>
+<span class="sd">            length 2. Defaults to 1.</span>
+<span class="sd">        rate: tp.Optional kernel dilation rate. Either an integer or a sequence of</span>
+<span class="sd">            length 2. 1 corresponds to standard ND convolution,</span>
+<span class="sd">            ``rate &gt; 1`` corresponds to dilated convolution. Defaults to 1.</span>
+<span class="sd">        padding: tp.Optional padding algorithm. Either ``VALID`` or ``SAME`` or</span>
+<span class="sd">            a callable or sequence of callables of length 2. Any callables must</span>
+<span class="sd">            take a single integer argument equal to the effective kernel size and</span>
+<span class="sd">            return a list of two integers representing the padding before and after.</span>
+<span class="sd">            See haiku.pad.* for more details and example functions.</span>
+<span class="sd">            Defaults to ``SAME``. See:</span>
+<span class="sd">            https://www.tensorflow.org/xla/operation_semantics#conv_convolution.</span>
+<span class="sd">        with_bias: Whether to add a bias. By default, true.</span>
+<span class="sd">        w_init: tp.Optional weight initialization. By default, truncated normal.</span>
+<span class="sd">        b_init: tp.Optional bias initialization. By default, zeros.</span>
+<span class="sd">        data_format: The data format of the input. Either ``NHWC`` or ``NCHW``. By</span>
+<span class="sd">            default, ``NHWC``.</span>
+<span class="sd">        mask: tp.Optional mask of the weights.</span>
+<span class="sd">        groups: A positive integer specifying the number of groups in which the</span>
+<span class="sd">            input is split along the channel axis. Each group is convolved separately</span>
+<span class="sd">            with filters / groups filters. The output is the concatenation of all the</span>
+<span class="sd">            groups results along the channel axis. Input channels and filters must both</span>
+<span class="sd">            be divisible by groups.</span>
+<span class="sd">        kwargs: Additional keyword arguments passed to Module.</span>
+<span class="sd">    """</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="n">num_spatial_dims</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">output_channels</span><span class="o">=</span><span class="n">output_channels</span><span class="p">,</span>
+        <span class="n">kernel_shape</span><span class="o">=</span><span class="n">kernel_shape</span><span class="p">,</span>
+        <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span>
+        <span class="n">rate</span><span class="o">=</span><span class="n">rate</span><span class="p">,</span>
+        <span class="n">padding</span><span class="o">=</span><span class="n">padding</span><span class="p">,</span>
+        <span class="n">with_bias</span><span class="o">=</span><span class="n">with_bias</span><span class="p">,</span>
+        <span class="n">w_init</span><span class="o">=</span><span class="n">w_init</span><span class="p">,</span>
+        <span class="n">b_init</span><span class="o">=</span><span class="n">b_init</span><span class="p">,</span>
+        <span class="n">data_format</span><span class="o">=</span><span class="n">data_format</span><span class="p">,</span>
+        <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
+        <span class="n">groups</span><span class="o">=</span><span class="n">groups</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.conv.Conv2D.add_parameter">
+
+<code class="highlight language-python"><span class="n">add_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">initializer</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">regularizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">constraint</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-inherited"><code>inherited</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Adds a parameter to the current module. The parameter will only be initialized once and
+will reused afterwards.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td><code>str</code></td>
+<td>
+<p>The name of the parameter. It must be unique and no other field/property/method
+of the instance can have that name.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>initializer</code></td>
+<td><code>Callable[[], Any]</code></td>
+<td>
+<p>A callable that takes not arguments returns the initial value.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>collection</code></td>
+<td><code>Optional[str]</code></td>
+<td>
+<p>Optional name of the parameter collection, if not defined it will be se to
+<code>"parameters"</code> if <code>trainable=True</code> else it will be set to <code>"states"</code>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>trainable</code></td>
+<td><code>bool</code></td>
+<td>
+<p>Specify whether this parameter should be added to the default trainable <code>"parameters"</code>
+collection or to the default non-trainable <code>"states"</code> collection. If collection is
+passed this parameter will ignored.</p>
+</td>
+<td><code>True</code></td>
+</tr>
+<tr>
+<td><code>regularizer</code></td>
+<td><code>Optional[Callable[[Any], jax._src.numpy.lax_numpy.ndarray]]</code></td>
+<td>
+<p>Regularizer instance (callable).</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>constraint</code></td>
+<td><code>Optional[Callable[[Any], Any]]</code></td>
+<td>
+<p>Constraint instance (callable).</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Any</code></td>
+<td>
+<p>The value of the parameter.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/nn/conv.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">add_parameter</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">initializer</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">],</span>
+    <span class="n">collection</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">trainable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">regularizer</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">],</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">constraint</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">],</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Adds a parameter to the current module. The parameter will only be initialized once and</span>
+<span class="sd">    will reused afterwards.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        name: The name of the parameter. It must be unique and no other field/property/method</span>
+<span class="sd">            of the instance can have that name.</span>
+<span class="sd">        initializer: A callable that takes not arguments returns the initial value.</span>
+<span class="sd">        collection: Optional name of the parameter collection, if not defined it will be se to</span>
+<span class="sd">            `"parameters"` if `trainable=True` else it will be set to `"states"`.</span>
+<span class="sd">        trainable: Specify whether this parameter should be added to the default trainable `"parameters"`</span>
+<span class="sd">            collection or to the default non-trainable `"states"` collection. If collection is</span>
+<span class="sd">            passed this parameter will ignored.</span>
+<span class="sd">        regularizer: Regularizer instance (callable).</span>
+<span class="sd">        constraint: Constraint instance (callable).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The value of the parameter.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="n">collection</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">collection</span> <span class="o">=</span> <span class="s2">"parameters"</span> <span class="k">if</span> <span class="n">trainable</span> <span class="k">else</span> <span class="s2">"states"</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_initializing</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Cannot add parameter </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> outside `init`"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_params</span><span class="p">:</span>
+            <span class="n">parameter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_params</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="n">collection</span> <span class="o">==</span> <span class="n">parameter</span><span class="o">.</span><span class="n">collection</span>
+            <span class="n">initial_value</span> <span class="o">=</span> <span class="n">parameter</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">initial_value</span> <span class="o">=</span> <span class="n">initializer</span><span class="p">()</span>
+            <span class="n">initial_value</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_map</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">asarray</span><span class="p">,</span> <span class="n">initial_value</span><span class="p">)</span>
+            <span class="n">parameter</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">initial_value</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_register_parameter</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">parameter</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameter</span>
+
+    <span class="n">parameter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">parameter</span><span class="o">.</span><span class="n">collection</span> <span class="o">!=</span> <span class="n">collection</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"types.Parameter </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> previously found in collection </span><span class="si">{</span><span class="n">parameter</span><span class="o">.</span><span class="n">collection</span><span class="si">}</span><span class="s2"> "</span>
+            <span class="sa">f</span><span class="s2">"but currently being added for collection </span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="n">value</span> <span class="o">=</span> <span class="n">parameter</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="k">if</span> <span class="n">constraint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">constraint</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">regularizer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">hooks</span><span class="o">.</span><span class="n">add_loss</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">get_name</span><span class="p">(</span><span class="n">regularizer</span><span class="p">),</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">regularizer</span><span class="p">(</span><span class="n">value</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">value</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.conv.Conv2D.call">
+
+<code class="highlight language-python"><span class="n">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-inherited"><code>inherited</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Connects <code>ConvND</code> layer.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>inputs</code></td>
+<td><code>ndarray</code></td>
+<td>
+<p>A rank-N+2 array with shape <code>[N, spatial_dims, C]</code>.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ndarray</code></td>
+<td>
+<p>A rank-N+2 array with shape <code>[N, spatial_dims, output_channels]</code>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/nn/conv.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Connects ``ConvND`` layer.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        inputs: A rank-N+2 array with shape ``[N, spatial_dims, C]``.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A rank-N+2 array with shape ``[N, spatial_dims, output_channels]``.</span>
+<span class="sd">    """</span>
+    <span class="n">required_rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_spatial_dims</span> <span class="o">+</span> <span class="mi">2</span>
+    <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="n">required_rank</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Input to ConvND needs to have rank </span><span class="si">{</span><span class="n">required_rank</span><span class="si">}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"but input has shape </span><span class="si">{</span><span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+
+    <span class="n">w_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_shape</span> <span class="o">+</span> <span class="p">(</span>
+        <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">channel_index</span><span class="p">]</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_channels</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">w_shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Mask needs to have the same shape as weights. "</span>
+            <span class="sa">f</span><span class="s2">"Shapes are: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">w_shape</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="n">w_init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w_init</span>
+    <span class="k">if</span> <span class="n">w_init</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fan_in_shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">w_shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">stddev</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">fan_in_shape</span><span class="p">)</span>
+        <span class="n">w_init</span> <span class="o">=</span> <span class="n">initializers</span><span class="o">.</span><span class="n">TruncatedNormal</span><span class="p">(</span><span class="n">stddev</span><span class="o">=</span><span class="n">stddev</span><span class="p">)</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s2">"w"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">w_init</span><span class="p">(</span><span class="n">w_shape</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span>
+
+    <span class="n">inputs</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">lax</span><span class="o">.</span><span class="n">conv_general_dilated</span><span class="p">(</span>
+        <span class="n">inputs</span><span class="p">,</span>
+        <span class="n">w</span><span class="p">,</span>
+        <span class="n">window_strides</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">,</span>
+        <span class="n">padding</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">padding</span><span class="p">,</span>
+        <span class="n">lhs_dilation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lhs_dilation</span><span class="p">,</span>
+        <span class="n">rhs_dilation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_dilation</span><span class="p">,</span>
+        <span class="n">dimension_numbers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dimension_numbers</span><span class="p">,</span>
+        <span class="n">feature_group_count</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_bias</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_index</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">bias_shape</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_channels</span><span class="p">,)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">bias_shape</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_channels</span><span class="p">,)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_spatial_dims</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s2">"b"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_init</span><span class="p">(</span><span class="n">bias_shape</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">out</span> <span class="o">+</span> <span class="n">b</span>
+
+    <span class="k">return</span> <span class="n">out</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.conv.Conv2D.init">
+
+<code class="highlight language-python"><span class="n">init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">set_defaults</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-inherited"><code>inherited</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Initializes the module,</p>
+<details class="quote">
+          <summary>Source code in <code>elegy/nn/conv.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">init</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">rng</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">RNGSeq</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">set_defaults</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">ParameterCollection</span><span class="p">]]:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Initializes the module,</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="nf">init_callable</span><span class="p">(</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">ParameterCollection</span><span class="p">]:</span>
+
+        <span class="k">with</span> <span class="n">module_context</span><span class="p">(</span>
+            <span class="n">module</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">collections</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">initializing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span>
+        <span class="p">):</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">collections</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameters_internal</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mark_initialized_recursive</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">set_defaults</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_default_parameters</span><span class="p">(</span><span class="n">collections</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">collections</span>
+
+    <span class="n">init_callable</span><span class="o">.</span><span class="n">_signature_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span>
+
+    <span class="k">return</span> <span class="n">init_callable</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+</div>
+</div>
+</div>
                 
               
               

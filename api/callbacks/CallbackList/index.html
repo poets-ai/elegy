@@ -235,8 +235,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting-started-basic-api.ipynb" class="md-nav__link">
-        Basic API
+      <a href="../../../getting-started-high-level-api/" class="md-nav__link">
+        High Level API
       </a>
     </li>
   
@@ -247,7 +247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../na/" class="md-nav__link">
+      <a href="../../../getting-started-low-level-api/" class="md-nav__link">
         Low Level API
       </a>
     </li>
@@ -274,13 +274,13 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
       
       <label class="md-nav__link" for="nav-3">
-        Basic API
+        High Level API
         <span class="md-nav__icon md-icon"></span>
       </label>
-      <nav class="md-nav" aria-label="Basic API" data-md-level="1">
+      <nav class="md-nav" aria-label="High Level API" data-md-level="1">
         <label class="md-nav__title" for="nav-3">
           <span class="md-nav__icon md-icon"></span>
-          Basic API
+          High Level API
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -641,8 +641,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../low-level-api/supporting-the-basic-api/" class="md-nav__link">
-        Supporting the Basic API
+      <a href="../../../low-level-api/supporting-the-high-level-api/" class="md-nav__link">
+        Supporting the High Level API
       </a>
     </li>
   
@@ -1012,9 +1012,143 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          CallbackList
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         CallbackList
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList" class="md-nav__link">
+    elegy.callbacks.callback_list.CallbackList
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_epoch_begin" class="md-nav__link">
+    on_epoch_begin()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_epoch_end" class="md-nav__link">
+    on_epoch_end()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_predict_batch_begin" class="md-nav__link">
+    on_predict_batch_begin()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_predict_batch_end" class="md-nav__link">
+    on_predict_batch_end()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_predict_begin" class="md-nav__link">
+    on_predict_begin()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_predict_end" class="md-nav__link">
+    on_predict_end()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_test_batch_begin" class="md-nav__link">
+    on_test_batch_begin()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_test_batch_end" class="md-nav__link">
+    on_test_batch_end()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_test_begin" class="md-nav__link">
+    on_test_begin()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_test_end" class="md-nav__link">
+    on_test_end()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_train_batch_begin" class="md-nav__link">
+    on_train_batch_begin()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_train_batch_end" class="md-nav__link">
+    on_train_batch_end()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_train_begin" class="md-nav__link">
+    on_train_begin()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_train_end" class="md-nav__link">
+    on_train_end()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -2494,6 +2628,126 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList" class="md-nav__link">
+    elegy.callbacks.callback_list.CallbackList
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_epoch_begin" class="md-nav__link">
+    on_epoch_begin()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_epoch_end" class="md-nav__link">
+    on_epoch_end()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_predict_batch_begin" class="md-nav__link">
+    on_predict_batch_begin()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_predict_batch_end" class="md-nav__link">
+    on_predict_batch_end()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_predict_begin" class="md-nav__link">
+    on_predict_begin()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_predict_end" class="md-nav__link">
+    on_predict_end()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_test_batch_begin" class="md-nav__link">
+    on_test_batch_begin()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_test_batch_end" class="md-nav__link">
+    on_test_batch_end()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_test_begin" class="md-nav__link">
+    on_test_begin()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_test_end" class="md-nav__link">
+    on_test_end()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_train_batch_begin" class="md-nav__link">
+    on_train_batch_begin()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_train_batch_end" class="md-nav__link">
+    on_train_batch_end()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_train_begin" class="md-nav__link">
+    on_train_begin()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.callbacks.callback_list.CallbackList.on_train_end" class="md-nav__link">
+    on_train_end()
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2510,9 +2764,898 @@
                 
                 
                 <h1 id="elegycallbackscallbacklist">elegy.callbacks.CallbackList</h1>
-<p>::: elegy.callbacks.callback_list.CallbackList
-    selection:
-        inherited_members: true</p>
+<div class="doc doc-object doc-class">
+<h2 class="hidden-toc" id="elegy.callbacks.callback_list.CallbackList" style="visibility: hidden; position: absolute;">
+        </h2>
+<div class="doc doc-contents first">
+<p>Container abstracting a list of callbacks.</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.callbacks.callback_list.CallbackList.__init__">
+
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">add_history</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">add_progbar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Creates a container for <code>Callbacks</code>.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>callbacks</code></td>
+<td><code>Optional[List[elegy.callbacks.callback.Callback]]</code></td>
+<td>
+<p>List of <code>Callback</code> instances.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>add_history</code></td>
+<td><code>bool</code></td>
+<td>
+<p>Whether a <code>History</code> callback should be added, if one does not
+already exist in <code>callback</code>s.</p>
+</td>
+<td><code>False</code></td>
+</tr>
+<tr>
+<td><code>add_progbar</code></td>
+<td><code>bool</code></td>
+<td>
+<p>Whether a <code>ProgbarLogger</code> callback should be added, if one
+does not already exist in <code>callback</code>s.</p>
+</td>
+<td><code>False</code></td>
+</tr>
+<tr>
+<td><code>model</code></td>
+<td><code>Optional[Any]</code></td>
+<td>
+<p>The <code>Model</code> these <code>Callback</code>s are used with.`</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>**params</code></td>
+<td><code></code></td>
+<td>
+<p>If provided, parameters will be passed to each <code>Callback</code> via
+<code>Callback.set_params</code>.</p>
+</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/callbacks/callback_list.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">callbacks</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">Callback</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">add_history</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">add_progbar</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">params</span>
+<span class="p">):</span>
+    <span class="sd">"""Creates a container for `Callbacks`.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">      callbacks: List of `Callback` instances.</span>
+<span class="sd">      add_history: Whether a `History` callback should be added, if one does not</span>
+<span class="sd">        already exist in `callback`s.</span>
+<span class="sd">      add_progbar: Whether a `ProgbarLogger` callback should be added, if one</span>
+<span class="sd">        does not already exist in `callback`s.</span>
+<span class="sd">      model: The `Model` these `Callback`s are used with.`</span>
+<span class="sd">      **params: If provided, parameters will be passed to each `Callback` via</span>
+<span class="sd">        `Callback.set_params`.</span>
+<span class="sd">    """</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span> <span class="o">=</span> <span class="n">callbacks</span> <span class="k">if</span> <span class="n">callbacks</span> <span class="k">else</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_add_default_callbacks</span><span class="p">(</span><span class="n">add_history</span><span class="p">,</span> <span class="n">add_progbar</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">model</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">params</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_queue_length</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_reset_batch_timing</span><span class="p">()</span>
+
+    <span class="c1"># Determines if batch-level hooks need to be called.</span>
+    <span class="c1"># This is important for performance, because processing batch-level logs</span>
+    <span class="c1"># will cause async eager to block on each batch.</span>
+    <span class="c1"># pylint: disable=protected-access</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_should_call_train_batch_hooks</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span>
+        <span class="n">cb</span><span class="o">.</span><span class="n">_implements_train_batch_hooks</span><span class="p">()</span> <span class="k">for</span> <span class="n">cb</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span>
+    <span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_should_call_test_batch_hooks</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span>
+        <span class="n">cb</span><span class="o">.</span><span class="n">_implements_test_batch_hooks</span><span class="p">()</span> <span class="k">for</span> <span class="n">cb</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span>
+    <span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_should_call_predict_batch_hooks</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span>
+        <span class="n">cb</span><span class="o">.</span><span class="n">_implements_predict_batch_hooks</span><span class="p">()</span> <span class="k">for</span> <span class="n">cb</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span>
+    <span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.callbacks.callback_list.CallbackList.on_epoch_begin">
+
+<code class="highlight language-python"><span class="n">on_epoch_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Calls the <code>on_epoch_begin</code> methods of its callbacks.</p>
+<p>This function should only be called during TRAIN mode.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>epoch</code></td>
+<td><code></code></td>
+<td>
+<p>integer, index of epoch.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>logs</code></td>
+<td><code></code></td>
+<td>
+<p>dict. Currently no data is passed to this argument for this method
+but that may change in the future.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/callbacks/callback_list.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">on_epoch_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">"""Calls the `on_epoch_begin` methods of its callbacks.</span>
+
+<span class="sd">    This function should only be called during TRAIN mode.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        epoch: integer, index of epoch.</span>
+<span class="sd">        logs: dict. Currently no data is passed to this argument for this method</span>
+<span class="sd">            but that may change in the future.</span>
+<span class="sd">    """</span>
+    <span class="n">logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_logs</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">:</span>
+        <span class="n">callback</span><span class="o">.</span><span class="n">on_epoch_begin</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_reset_batch_timing</span><span class="p">()</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.callbacks.callback_list.CallbackList.on_epoch_end">
+
+<code class="highlight language-python"><span class="n">on_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Calls the <code>on_epoch_end</code> methods of its callbacks.</p>
+<p>This function should only be called during TRAIN mode.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>epoch</code></td>
+<td><code></code></td>
+<td>
+<p>integer, index of epoch.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>logs</code></td>
+<td><code></code></td>
+<td>
+<p>dict, metric results for this training epoch, and for the
+validation epoch if validation is performed. Validation result keys
+are prefixed with <code>val_</code>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/callbacks/callback_list.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">on_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">"""Calls the `on_epoch_end` methods of its callbacks.</span>
+
+<span class="sd">    This function should only be called during TRAIN mode.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        epoch: integer, index of epoch.</span>
+<span class="sd">        logs: dict, metric results for this training epoch, and for the</span>
+<span class="sd">            validation epoch if validation is performed. Validation result keys</span>
+<span class="sd">            are prefixed with `val_`.</span>
+<span class="sd">    """</span>
+    <span class="n">logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_logs</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">:</span>
+        <span class="n">callback</span><span class="o">.</span><span class="n">on_epoch_end</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.callbacks.callback_list.CallbackList.on_predict_batch_begin">
+
+<code class="highlight language-python"><span class="n">on_predict_batch_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Calls the <code>on_predict_batch_begin</code> methods of its callbacks.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>batch</code></td>
+<td><code></code></td>
+<td>
+<p>integer, index of batch within the current epoch.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>logs</code></td>
+<td><code></code></td>
+<td>
+<p>dict. Has keys <code>batch</code> and <code>size</code> representing the current batch
+number and the size of the batch.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/callbacks/callback_list.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">on_predict_batch_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">"""Calls the `on_predict_batch_begin` methods of its callbacks.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        batch: integer, index of batch within the current epoch.</span>
+<span class="sd">        logs: dict. Has keys `batch` and `size` representing the current batch</span>
+<span class="sd">            number and the size of the batch.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_should_call_predict_batch_hooks</span><span class="p">:</span>
+        <span class="n">logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_logs</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_call_batch_hook</span><span class="p">(</span><span class="n">ModeKeys</span><span class="o">.</span><span class="n">PREDICT</span><span class="p">,</span> <span class="s2">"begin"</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="n">logs</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.callbacks.callback_list.CallbackList.on_predict_batch_end">
+
+<code class="highlight language-python"><span class="n">on_predict_batch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Calls the <code>on_predict_batch_end</code> methods of its callbacks.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>batch</code></td>
+<td><code></code></td>
+<td>
+<p>integer, index of batch within the current epoch.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>logs</code></td>
+<td><code></code></td>
+<td>
+<p>dict. Metric results for this batch.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/callbacks/callback_list.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">on_predict_batch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">"""Calls the `on_predict_batch_end` methods of its callbacks.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        batch: integer, index of batch within the current epoch.</span>
+<span class="sd">        logs: dict. Metric results for this batch.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_should_call_predict_batch_hooks</span><span class="p">:</span>
+        <span class="n">logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_logs</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_call_batch_hook</span><span class="p">(</span><span class="n">ModeKeys</span><span class="o">.</span><span class="n">PREDICT</span><span class="p">,</span> <span class="s2">"end"</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="n">logs</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.callbacks.callback_list.CallbackList.on_predict_begin">
+
+<code class="highlight language-python"><span class="n">on_predict_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Calls the 'on_predict_begin` methods of its callbacks.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>logs</code></td>
+<td><code></code></td>
+<td>
+<p>dict. Currently no data is passed to this argument for this method
+but that may change in the future.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/callbacks/callback_list.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">on_predict_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">"""Calls the 'on_predict_begin` methods of its callbacks.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        logs: dict. Currently no data is passed to this argument for this method</span>
+<span class="sd">            but that may change in the future.</span>
+<span class="sd">    """</span>
+    <span class="n">logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_logs</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">:</span>
+        <span class="n">callback</span><span class="o">.</span><span class="n">on_predict_begin</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.callbacks.callback_list.CallbackList.on_predict_end">
+
+<code class="highlight language-python"><span class="n">on_predict_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Calls the <code>on_predict_end</code> methods of its callbacks.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>logs</code></td>
+<td><code></code></td>
+<td>
+<p>dict. Currently no data is passed to this argument for this method
+but that may change in the future.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/callbacks/callback_list.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">on_predict_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">"""Calls the `on_predict_end` methods of its callbacks.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        logs: dict. Currently no data is passed to this argument for this method</span>
+<span class="sd">            but that may change in the future.</span>
+<span class="sd">    """</span>
+    <span class="n">logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_logs</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">:</span>
+        <span class="n">callback</span><span class="o">.</span><span class="n">on_predict_end</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.callbacks.callback_list.CallbackList.on_test_batch_begin">
+
+<code class="highlight language-python"><span class="n">on_test_batch_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Calls the <code>on_test_batch_begin</code> methods of its callbacks.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>batch</code></td>
+<td><code></code></td>
+<td>
+<p>integer, index of batch within the current epoch.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>logs</code></td>
+<td><code></code></td>
+<td>
+<p>dict. Has keys <code>batch</code> and <code>size</code> representing the current batch
+number and the size of the batch.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/callbacks/callback_list.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">on_test_batch_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">"""Calls the `on_test_batch_begin` methods of its callbacks.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        batch: integer, index of batch within the current epoch.</span>
+<span class="sd">        logs: dict. Has keys `batch` and `size` representing the current batch</span>
+<span class="sd">            number and the size of the batch.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_should_call_test_batch_hooks</span><span class="p">:</span>
+        <span class="n">logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_logs</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_call_batch_hook</span><span class="p">(</span><span class="n">ModeKeys</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span> <span class="s2">"begin"</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="n">logs</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.callbacks.callback_list.CallbackList.on_test_batch_end">
+
+<code class="highlight language-python"><span class="n">on_test_batch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Calls the <code>on_test_batch_end</code> methods of its callbacks.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>batch</code></td>
+<td><code></code></td>
+<td>
+<p>integer, index of batch within the current epoch.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>logs</code></td>
+<td><code></code></td>
+<td>
+<p>dict. Metric results for this batch.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/callbacks/callback_list.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">on_test_batch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">"""Calls the `on_test_batch_end` methods of its callbacks.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        batch: integer, index of batch within the current epoch.</span>
+<span class="sd">        logs: dict. Metric results for this batch.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_should_call_test_batch_hooks</span><span class="p">:</span>
+        <span class="n">logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_logs</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_call_batch_hook</span><span class="p">(</span><span class="n">ModeKeys</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span> <span class="s2">"end"</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="n">logs</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.callbacks.callback_list.CallbackList.on_test_begin">
+
+<code class="highlight language-python"><span class="n">on_test_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Calls the <code>on_test_begin</code> methods of its callbacks.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>logs</code></td>
+<td><code></code></td>
+<td>
+<p>dict. Currently no data is passed to this argument for this method
+but that may change in the future.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/callbacks/callback_list.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">on_test_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">"""Calls the `on_test_begin` methods of its callbacks.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        logs: dict. Currently no data is passed to this argument for this method</span>
+<span class="sd">            but that may change in the future.</span>
+<span class="sd">    """</span>
+    <span class="n">logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_logs</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">:</span>
+        <span class="n">callback</span><span class="o">.</span><span class="n">on_test_begin</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.callbacks.callback_list.CallbackList.on_test_end">
+
+<code class="highlight language-python"><span class="n">on_test_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Calls the <code>on_test_end</code> methods of its callbacks.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>logs</code></td>
+<td><code></code></td>
+<td>
+<p>dict. Currently no data is passed to this argument for this method
+but that may change in the future.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/callbacks/callback_list.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">on_test_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">"""Calls the `on_test_end` methods of its callbacks.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        logs: dict. Currently no data is passed to this argument for this method</span>
+<span class="sd">            but that may change in the future.</span>
+<span class="sd">    """</span>
+    <span class="n">logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_logs</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">:</span>
+        <span class="n">callback</span><span class="o">.</span><span class="n">on_test_end</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.callbacks.callback_list.CallbackList.on_train_batch_begin">
+
+<code class="highlight language-python"><span class="n">on_train_batch_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Calls the <code>on_train_batch_begin</code> methods of its callbacks.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>batch</code></td>
+<td><code></code></td>
+<td>
+<p>integer, index of batch within the current epoch.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>logs</code></td>
+<td><code></code></td>
+<td>
+<p>dict. Has keys <code>batch</code> and <code>size</code> representing the current batch
+number and the size of the batch.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/callbacks/callback_list.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">on_train_batch_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">"""Calls the `on_train_batch_begin` methods of its callbacks.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        batch: integer, index of batch within the current epoch.</span>
+<span class="sd">        logs: dict. Has keys `batch` and `size` representing the current batch</span>
+<span class="sd">            number and the size of the batch.</span>
+<span class="sd">    """</span>
+    <span class="c1"># TODO(b/150629188): Make ProgBarLogger callback not use batch hooks</span>
+    <span class="c1"># when verbose != 1</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_should_call_train_batch_hooks</span><span class="p">:</span>
+        <span class="n">logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_logs</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_call_batch_hook</span><span class="p">(</span><span class="n">ModeKeys</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span> <span class="s2">"begin"</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="n">logs</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.callbacks.callback_list.CallbackList.on_train_batch_end">
+
+<code class="highlight language-python"><span class="n">on_train_batch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Calls the <code>on_train_batch_end</code> methods of its callbacks.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>batch</code></td>
+<td><code></code></td>
+<td>
+<p>integer, index of batch within the current epoch.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>logs</code></td>
+<td><code></code></td>
+<td>
+<p>dict. Metric results for this batch.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/callbacks/callback_list.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">on_train_batch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">"""Calls the `on_train_batch_end` methods of its callbacks.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        batch: integer, index of batch within the current epoch.</span>
+<span class="sd">        logs: dict. Metric results for this batch.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_should_call_train_batch_hooks</span><span class="p">:</span>
+        <span class="n">logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_logs</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_call_batch_hook</span><span class="p">(</span><span class="n">ModeKeys</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span> <span class="s2">"end"</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="n">logs</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.callbacks.callback_list.CallbackList.on_train_begin">
+
+<code class="highlight language-python"><span class="n">on_train_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Calls the <code>on_train_begin</code> methods of its callbacks.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>logs</code></td>
+<td><code></code></td>
+<td>
+<p>dict. Currently no data is passed to this argument for this method
+but that may change in the future.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/callbacks/callback_list.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">on_train_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">"""Calls the `on_train_begin` methods of its callbacks.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        logs: dict. Currently no data is passed to this argument for this method</span>
+<span class="sd">            but that may change in the future.</span>
+<span class="sd">    """</span>
+    <span class="n">logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_logs</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">:</span>
+        <span class="n">callback</span><span class="o">.</span><span class="n">on_train_begin</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.callbacks.callback_list.CallbackList.on_train_end">
+
+<code class="highlight language-python"><span class="n">on_train_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Calls the <code>on_train_end</code> methods of its callbacks.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>logs</code></td>
+<td><code></code></td>
+<td>
+<p>dict. Currently no data is passed to this argument for this method
+but that may change in the future.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/callbacks/callback_list.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">on_train_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">"""Calls the `on_train_end` methods of its callbacks.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        logs: dict. Currently no data is passed to this argument for this method</span>
+<span class="sd">            but that may change in the future.</span>
+<span class="sd">    """</span>
+    <span class="n">logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_logs</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span><span class="p">:</span>
+        <span class="n">callback</span><span class="o">.</span><span class="n">on_train_end</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+</div>
+</div>
+</div>
                 
               
               

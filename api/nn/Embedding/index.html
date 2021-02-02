@@ -235,8 +235,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting-started-basic-api.ipynb" class="md-nav__link">
-        Basic API
+      <a href="../../../getting-started-high-level-api/" class="md-nav__link">
+        High Level API
       </a>
     </li>
   
@@ -247,7 +247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../na/" class="md-nav__link">
+      <a href="../../../getting-started-low-level-api/" class="md-nav__link">
         Low Level API
       </a>
     </li>
@@ -274,13 +274,13 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
       
       <label class="md-nav__link" for="nav-3">
-        Basic API
+        High Level API
         <span class="md-nav__icon md-icon"></span>
       </label>
-      <nav class="md-nav" aria-label="Basic API" data-md-level="1">
+      <nav class="md-nav" aria-label="High Level API" data-md-level="1">
         <label class="md-nav__title" for="nav-3">
           <span class="md-nav__icon md-icon"></span>
-          Basic API
+          High Level API
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -641,8 +641,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../low-level-api/supporting-the-basic-api/" class="md-nav__link">
-        Supporting the Basic API
+      <a href="../../../low-level-api/supporting-the-high-level-api/" class="md-nav__link">
+        Supporting the High Level API
       </a>
     </li>
   
@@ -2284,9 +2284,66 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Embedding
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         Embedding
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.embedding.Embedding" class="md-nav__link">
+    elegy.nn.embedding.Embedding
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.embedding.Embedding.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.embedding.Embedding.add_parameter" class="md-nav__link">
+    add_parameter()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.embedding.Embedding.call" class="md-nav__link">
+    call()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.embedding.Embedding.init" class="md-nav__link">
+    init()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -2494,6 +2551,49 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.embedding.Embedding" class="md-nav__link">
+    elegy.nn.embedding.Embedding
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.embedding.Embedding.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.embedding.Embedding.add_parameter" class="md-nav__link">
+    add_parameter()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.embedding.Embedding.call" class="md-nav__link">
+    call()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.nn.embedding.Embedding.init" class="md-nav__link">
+    init()
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2510,17 +2610,569 @@
                 
                 
                 <h1 id="elegynnembedding">elegy.nn.Embedding</h1>
-<p>::: elegy.nn.embedding.Embedding
-    selection:
-        inherited_members: true
-        members:
-            - <strong>init</strong>
-            - call
-            - add_parameter
-            - get_parameters
-            - set_parameters
-            - reset
-            - init</p>
+<div class="doc doc-object doc-class">
+<h2 class="hidden-toc" id="elegy.nn.embedding.Embedding" style="visibility: hidden; position: absolute;">
+        </h2>
+<div class="doc doc-contents first">
+<p>Module for embedding tokens in a low-dimensional space.</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.embedding.Embedding.__init__">
+
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vocab_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">embed_dim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">embedding_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">w_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lookup_style</span><span class="o">=</span><span class="s1">'ARRAY_INDEX'</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Constructs an Embed module.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vocab_size</code></td>
+<td><code>Optional[int]</code></td>
+<td>
+<p>The number of unique tokens to embed. If not provided, an
+existing vocabulary matrix from which <code>vocab_size</code> can be inferred
+must be provided as <code>existing_vocab</code>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>embed_dim</code></td>
+<td><code>Optional[int]</code></td>
+<td>
+<p>Number of dimensions to assign to each embedding. If an
+existing vocabulary matrix initializes the module, this should not be
+provided as it will be inferred.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>embedding_matrix</code></td>
+<td><code>Optional[jax._src.numpy.lax_numpy.ndarray]</code></td>
+<td>
+<p>A matrix-like object equivalent in size to
+<code>[vocab_size, embed_dim]</code>. If given, it is used as the initial value
+for the embedding matrix and neither <code>vocab_size</code> or <code>embed_dim</code>
+need be given. If they are given, their values are checked to be
+consistent with the dimensions of <code>embedding_matrix</code>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>w_init</code></td>
+<td><code>Optional[elegy.types.Initializer]</code></td>
+<td>
+<p>An initializer for the embeddings matrix. As a default,
+embeddings are initialized via a truncated normal distribution.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>lookup_style</code></td>
+<td><code>Union[str, elegy.nn.embedding.EmbedLookupStyle]</code></td>
+<td>
+<p>One of the enum values of :class:<code>EmbedLookupStyle</code>
+determining how to access the value of the embeddings given an ID.
+Regardless the input should be a dense array of integer values
+representing ids. This setting changes how internally this module maps
+those ides to embeddings. The result is the same, but the speed and
+memory tradeoffs are different. It default to using numpy-style array
+indexing. This value is only the default for the module, and at any
+given invocation can be overridden in :meth:<code>__call__</code>.</p>
+</td>
+<td><code>'ARRAY_INDEX'</code></td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td><code>Optional[str]</code></td>
+<td>
+<p>Optional name for this module.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exceptions:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ValueError</code></td>
+<td>
+<p>If none of <code>embed_dim</code>, <code>embedding_matrix</code> and
+<code>vocab_size</code> are supplied, or if <code>embedding_matrix</code> is supplied
+and <code>embed_dim</code> or <code>vocab_size</code> is not consistent with the
+supplied matrix.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/nn/embedding.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">vocab_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">embed_dim</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">embedding_matrix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">w_init</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">Initializer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">lookup_style</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EmbedLookupStyle</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"ARRAY_INDEX"</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Constructs an Embed module.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        vocab_size: The number of unique tokens to embed. If not provided, an</span>
+<span class="sd">            existing vocabulary matrix from which ``vocab_size`` can be inferred</span>
+<span class="sd">            must be provided as ``existing_vocab``.</span>
+<span class="sd">        embed_dim: Number of dimensions to assign to each embedding. If an</span>
+<span class="sd">            existing vocabulary matrix initializes the module, this should not be</span>
+<span class="sd">            provided as it will be inferred.</span>
+<span class="sd">        embedding_matrix: A matrix-like object equivalent in size to</span>
+<span class="sd">            ``[vocab_size, embed_dim]``. If given, it is used as the initial value</span>
+<span class="sd">            for the embedding matrix and neither ``vocab_size`` or ``embed_dim``</span>
+<span class="sd">            need be given. If they are given, their values are checked to be</span>
+<span class="sd">            consistent with the dimensions of ``embedding_matrix``.</span>
+<span class="sd">        w_init: An initializer for the embeddings matrix. As a default,</span>
+<span class="sd">            embeddings are initialized via a truncated normal distribution.</span>
+<span class="sd">        lookup_style: One of the enum values of :class:`EmbedLookupStyle`</span>
+<span class="sd">            determining how to access the value of the embeddings given an ID.</span>
+<span class="sd">            Regardless the input should be a dense array of integer values</span>
+<span class="sd">            representing ids. This setting changes how internally this module maps</span>
+<span class="sd">            those ides to embeddings. The result is the same, but the speed and</span>
+<span class="sd">            memory tradeoffs are different. It default to using numpy-style array</span>
+<span class="sd">            indexing. This value is only the default for the module, and at any</span>
+<span class="sd">            given invocation can be overridden in :meth:`__call__`.</span>
+<span class="sd">        name: Optional name for this module.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If none of ``embed_dim``, ``embedding_matrix`` and</span>
+<span class="sd">            ``vocab_size`` are supplied, or if ``embedding_matrix`` is supplied</span>
+<span class="sd">            and ``embed_dim`` or ``vocab_size`` is not consistent with the</span>
+<span class="sd">            supplied matrix.</span>
+<span class="sd">    """</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">embedding_matrix</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="n">vocab_size</span> <span class="ow">and</span> <span class="n">embed_dim</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Embedding must be supplied either with an initial `embedding_matrix` "</span>
+            <span class="s2">"or with `embed_dim` and `vocab_size`."</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">embedding_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">embedding_matrix</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">embedding_matrix</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">vocab_size</span> <span class="ow">and</span> <span class="n">embedding_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">vocab_size</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"An `embedding_matrix` was supplied but the `vocab_size` of "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">vocab_size</span><span class="si">}</span><span class="s2"> was not consistent with its shape "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">embedding_matrix</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">embed_dim</span> <span class="ow">and</span> <span class="n">embedding_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">embed_dim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"An `embedding_matrix` was supplied but the `embed_dim` of "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">embed_dim</span><span class="si">}</span><span class="s2"> was not consistent with its shape "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">embedding_matrix</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span>
+            <span class="s2">"embeddings"</span><span class="p">,</span>
+            <span class="n">embedding_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">initializer</span><span class="o">=</span><span class="k">lambda</span> <span class="n">_</span><span class="p">,</span> <span class="n">__</span><span class="p">:</span> <span class="n">embedding_matrix</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">embed_dim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="n">vocab_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="n">w_init</span> <span class="o">=</span> <span class="n">w_init</span> <span class="ow">or</span> <span class="n">initializers</span><span class="o">.</span><span class="n">TruncatedNormal</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span>
+            <span class="s2">"embeddings"</span><span class="p">,</span> <span class="p">[</span><span class="n">vocab_size</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">],</span> <span class="n">initializer</span><span class="o">=</span><span class="n">w_init</span>
+        <span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">vocab_size</span> <span class="o">=</span> <span class="n">vocab_size</span> <span class="ow">or</span> <span class="n">embedding_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">embed_dim</span> <span class="o">=</span> <span class="n">embed_dim</span> <span class="ow">or</span> <span class="n">embedding_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lookup_style</span> <span class="o">=</span> <span class="n">lookup_style</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.embedding.Embedding.add_parameter">
+
+<code class="highlight language-python"><span class="n">add_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">initializer</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">regularizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">constraint</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-inherited"><code>inherited</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Adds a parameter to the current module. The parameter will only be initialized once and
+will reused afterwards.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td><code>str</code></td>
+<td>
+<p>The name of the parameter. It must be unique and no other field/property/method
+of the instance can have that name.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>initializer</code></td>
+<td><code>Callable[[], Any]</code></td>
+<td>
+<p>A callable that takes not arguments returns the initial value.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>collection</code></td>
+<td><code>Optional[str]</code></td>
+<td>
+<p>Optional name of the parameter collection, if not defined it will be se to
+<code>"parameters"</code> if <code>trainable=True</code> else it will be set to <code>"states"</code>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>trainable</code></td>
+<td><code>bool</code></td>
+<td>
+<p>Specify whether this parameter should be added to the default trainable <code>"parameters"</code>
+collection or to the default non-trainable <code>"states"</code> collection. If collection is
+passed this parameter will ignored.</p>
+</td>
+<td><code>True</code></td>
+</tr>
+<tr>
+<td><code>regularizer</code></td>
+<td><code>Optional[Callable[[Any], jax._src.numpy.lax_numpy.ndarray]]</code></td>
+<td>
+<p>Regularizer instance (callable).</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>constraint</code></td>
+<td><code>Optional[Callable[[Any], Any]]</code></td>
+<td>
+<p>Constraint instance (callable).</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Any</code></td>
+<td>
+<p>The value of the parameter.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/nn/embedding.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">add_parameter</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">initializer</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">],</span>
+    <span class="n">collection</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">trainable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">regularizer</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">],</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">constraint</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">],</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Adds a parameter to the current module. The parameter will only be initialized once and</span>
+<span class="sd">    will reused afterwards.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        name: The name of the parameter. It must be unique and no other field/property/method</span>
+<span class="sd">            of the instance can have that name.</span>
+<span class="sd">        initializer: A callable that takes not arguments returns the initial value.</span>
+<span class="sd">        collection: Optional name of the parameter collection, if not defined it will be se to</span>
+<span class="sd">            `"parameters"` if `trainable=True` else it will be set to `"states"`.</span>
+<span class="sd">        trainable: Specify whether this parameter should be added to the default trainable `"parameters"`</span>
+<span class="sd">            collection or to the default non-trainable `"states"` collection. If collection is</span>
+<span class="sd">            passed this parameter will ignored.</span>
+<span class="sd">        regularizer: Regularizer instance (callable).</span>
+<span class="sd">        constraint: Constraint instance (callable).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The value of the parameter.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="n">collection</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">collection</span> <span class="o">=</span> <span class="s2">"parameters"</span> <span class="k">if</span> <span class="n">trainable</span> <span class="k">else</span> <span class="s2">"states"</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_initializing</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Cannot add parameter </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> outside `init`"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_params</span><span class="p">:</span>
+            <span class="n">parameter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_params</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="n">collection</span> <span class="o">==</span> <span class="n">parameter</span><span class="o">.</span><span class="n">collection</span>
+            <span class="n">initial_value</span> <span class="o">=</span> <span class="n">parameter</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">initial_value</span> <span class="o">=</span> <span class="n">initializer</span><span class="p">()</span>
+            <span class="n">initial_value</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_map</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">asarray</span><span class="p">,</span> <span class="n">initial_value</span><span class="p">)</span>
+            <span class="n">parameter</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">initial_value</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_register_parameter</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">parameter</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameter</span>
+
+    <span class="n">parameter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope_params</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">parameter</span><span class="o">.</span><span class="n">collection</span> <span class="o">!=</span> <span class="n">collection</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"types.Parameter </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> previously found in collection </span><span class="si">{</span><span class="n">parameter</span><span class="o">.</span><span class="n">collection</span><span class="si">}</span><span class="s2"> "</span>
+            <span class="sa">f</span><span class="s2">"but currently being added for collection </span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="n">value</span> <span class="o">=</span> <span class="n">parameter</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="k">if</span> <span class="n">constraint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">constraint</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">regularizer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">hooks</span><span class="o">.</span><span class="n">add_loss</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">get_name</span><span class="p">(</span><span class="n">regularizer</span><span class="p">),</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">regularizer</span><span class="p">(</span><span class="n">value</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">value</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.embedding.Embedding.call">
+
+<code class="highlight language-python"><span class="n">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="n">lookup_style</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Lookup embeddings.</p>
+<p>Looks up an embedding vector for each value in <code>ids</code>. All ids must be
+within <code>[0, vocab_size)</code> to prevent <code>NaN</code>\ s from propagating.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ids</code></td>
+<td><code>ndarray</code></td>
+<td>
+<p>integer array.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>lookup_style</code></td>
+<td><code>Union[str, elegy.nn.embedding.EmbedLookupStyle]</code></td>
+<td>
+<p>Overrides the <code>lookup_style</code> given in the constructor.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ndarray</code></td>
+<td>
+<p>Tensor of <code>ids.shape + [embedding_dim]</code>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exceptions:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AttributeError</code></td>
+<td>
+<p>If <code>lookup_style</code> is not valid.</p>
+</td>
+</tr>
+<tr>
+<td><code>ValueError</code></td>
+<td>
+<p>If <code>ids</code> is not an integer array.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/nn/embedding.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">ids</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">lookup_style</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EmbedLookupStyle</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Lookup embeddings.</span>
+
+<span class="sd">    Looks up an embedding vector for each value in ``ids``. All ids must be</span>
+<span class="sd">    within ``[0, vocab_size)`` to prevent ``NaN``\ s from propagating.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ids: integer array.</span>
+<span class="sd">        lookup_style: Overrides the ``lookup_style`` given in the constructor.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tensor of ``ids.shape + [embedding_dim]``.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        AttributeError: If ``lookup_style`` is not valid.</span>
+<span class="sd">        ValueError: If ``ids`` is not an integer array.</span>
+<span class="sd">    """</span>
+    <span class="c1"># TODO(tomhennigan) Consider removing asarray here.</span>
+    <span class="n">ids</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">jnp</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">ids</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Embedding's __call__ method must take an array of "</span>
+            <span class="s2">"integer dtype but was called with an array of "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ids</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="n">lookup_style</span> <span class="o">=</span> <span class="n">lookup_style</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookup_style</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lookup_style</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">lookup_style</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">EmbedLookupStyle</span><span class="p">,</span> <span class="n">lookup_style</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">lookup_style</span> <span class="o">==</span> <span class="n">EmbedLookupStyle</span><span class="o">.</span><span class="n">ARRAY_INDEX</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span><span class="p">[(</span><span class="n">ids</span><span class="p">,)]</span>
+
+    <span class="k">elif</span> <span class="n">lookup_style</span> <span class="o">==</span> <span class="n">EmbedLookupStyle</span><span class="o">.</span><span class="n">ONE_HOT</span><span class="p">:</span>
+        <span class="n">one_hot_ids</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">one_hot</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocab_size</span><span class="p">)[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span> <span class="o">*</span> <span class="n">one_hot_ids</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">lookup_style</span><span class="si">}</span><span class="s2"> is not supported by Embedding."</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.nn.embedding.Embedding.init">
+
+<code class="highlight language-python"><span class="n">init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">set_defaults</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-inherited"><code>inherited</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Initializes the module,</p>
+<details class="quote">
+          <summary>Source code in <code>elegy/nn/embedding.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">init</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">rng</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">RNGSeq</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">set_defaults</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">ParameterCollection</span><span class="p">]]:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Initializes the module,</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="nf">init_callable</span><span class="p">(</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">ParameterCollection</span><span class="p">]:</span>
+
+        <span class="k">with</span> <span class="n">module_context</span><span class="p">(</span>
+            <span class="n">module</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">collections</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">initializing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span>
+        <span class="p">):</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">collections</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameters_internal</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mark_initialized_recursive</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">set_defaults</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_default_parameters</span><span class="p">(</span><span class="n">collections</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">collections</span>
+
+    <span class="n">init_callable</span><span class="o">.</span><span class="n">_signature_f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span>
+
+    <span class="k">return</span> <span class="n">init_callable</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+</div>
+</div>
+</div>
                 
               
               

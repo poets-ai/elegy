@@ -235,8 +235,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting-started-basic-api.ipynb" class="md-nav__link">
-        Basic API
+      <a href="../../../getting-started-high-level-api/" class="md-nav__link">
+        High Level API
       </a>
     </li>
   
@@ -247,7 +247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../na/" class="md-nav__link">
+      <a href="../../../getting-started-low-level-api/" class="md-nav__link">
         Low Level API
       </a>
     </li>
@@ -274,13 +274,13 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
       
       <label class="md-nav__link" for="nav-3">
-        Basic API
+        High Level API
         <span class="md-nav__icon md-icon"></span>
       </label>
-      <nav class="md-nav" aria-label="Basic API" data-md-level="1">
+      <nav class="md-nav" aria-label="High Level API" data-md-level="1">
         <label class="md-nav__title" for="nav-3">
           <span class="md-nav__icon md-icon"></span>
-          Basic API
+          High Level API
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -641,8 +641,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../low-level-api/supporting-the-basic-api/" class="md-nav__link">
-        Supporting the Basic API
+      <a href="../../../low-level-api/supporting-the-high-level-api/" class="md-nav__link">
+        Supporting the High Level API
       </a>
     </li>
   
@@ -1196,9 +1196,38 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          context
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         context
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.hooks.context" class="md-nav__link">
+    elegy.hooks.context
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -2494,6 +2523,21 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.hooks.context" class="md-nav__link">
+    elegy.hooks.context
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2510,9 +2554,48 @@
                 
                 
                 <h1 id="elegyhookscontext">elegy.hooks.context</h1>
-<p>::: elegy.hooks.context
-    selection:
-        inherited_members: true</p>
+<div class="doc doc-object doc-function">
+<h2 class="hidden-toc" id="elegy.hooks.context" style="visibility: hidden; position: absolute;">
+        </h2>
+<div class="doc doc-contents first">
+<details class="quote">
+          <summary>Source code in <code>elegy/hooks.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">context</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">losses</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">Logs</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">metrics</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">Logs</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">summaries</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">Summaries</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">set_all</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">ContextManager</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
+
+    <span class="k">if</span> <span class="n">set_all</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">losses</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">losses</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">metrics</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">metrics</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">summaries</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">summaries</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">losses</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="n">losses</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">losses</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">metrics</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">summaries</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="n">summaries</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">summaries</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">_context</span><span class="p">(</span>
+        <span class="n">losses</span><span class="o">=</span><span class="n">losses</span><span class="p">,</span>
+        <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
+        <span class="n">summaries</span><span class="o">=</span><span class="n">summaries</span><span class="p">,</span>
+    <span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
                 
               
               

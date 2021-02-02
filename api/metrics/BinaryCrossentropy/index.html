@@ -235,8 +235,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting-started-basic-api.ipynb" class="md-nav__link">
-        Basic API
+      <a href="../../../getting-started-high-level-api/" class="md-nav__link">
+        High Level API
       </a>
     </li>
   
@@ -247,7 +247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../na/" class="md-nav__link">
+      <a href="../../../getting-started-low-level-api/" class="md-nav__link">
         Low Level API
       </a>
     </li>
@@ -274,13 +274,13 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
       
       <label class="md-nav__link" for="nav-3">
-        Basic API
+        High Level API
         <span class="md-nav__icon md-icon"></span>
       </label>
-      <nav class="md-nav" aria-label="Basic API" data-md-level="1">
+      <nav class="md-nav" aria-label="High Level API" data-md-level="1">
         <label class="md-nav__title" for="nav-3">
           <span class="md-nav__icon md-icon"></span>
-          Basic API
+          High Level API
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -641,8 +641,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../low-level-api/supporting-the-basic-api/" class="md-nav__link">
-        Supporting the Basic API
+      <a href="../../../low-level-api/supporting-the-high-level-api/" class="md-nav__link">
+        Supporting the High Level API
       </a>
     </li>
   
@@ -1724,9 +1724,52 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          BinaryCrossentropy
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         BinaryCrossentropy
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.metrics.binary_crossentropy.BinaryCrossentropy" class="md-nav__link">
+    elegy.metrics.binary_crossentropy.BinaryCrossentropy
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.metrics.binary_crossentropy.BinaryCrossentropy.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.metrics.binary_crossentropy.BinaryCrossentropy.call" class="md-nav__link">
+    call()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -2494,6 +2537,35 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.metrics.binary_crossentropy.BinaryCrossentropy" class="md-nav__link">
+    elegy.metrics.binary_crossentropy.BinaryCrossentropy
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.metrics.binary_crossentropy.BinaryCrossentropy.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#elegy.metrics.binary_crossentropy.BinaryCrossentropy.call" class="md-nav__link">
+    call()
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2510,12 +2582,245 @@
                 
                 
                 <h1 id="elegymetricsbinarycrossentropy">elegy.metrics.BinaryCrossentropy</h1>
-<p>::: elegy.metrics.binary_crossentropy.BinaryCrossentropy
-    selection:
-        inherited_members: true
-        members:
-            - <strong>init</strong>
-            - call</p>
+<div class="doc doc-object doc-class">
+<h2 class="hidden-toc" id="elegy.metrics.binary_crossentropy.BinaryCrossentropy" style="visibility: hidden; position: absolute;">
+        </h2>
+<div class="doc doc-contents first">
+<p>Computes the crossentropy metric between the labels and predictions.
+This is the crossentropy metric class to be used when there are only two
+label classes (0 and 1).</p>
+<p>Usage:</p>
+<div class="codehilite">
+<pre><span></span><code><span class="n">y_true</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">]]),</span>
+<span class="n">y_pred</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">]])</span>
+
+<span class="n">bce</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">BinaryCrossentropy</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">bce</span><span class="p">(</span>
+    <span class="n">y_true</span><span class="o">=</span><span class="n">y_true</span><span class="p">,</span>
+    <span class="n">y_pred</span><span class="o">=</span><span class="n">y_pred</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="n">jnp</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="mf">0.815</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+
+<span class="c1"># BCE using sample_weight</span>
+<span class="n">bce</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">BinaryCrossentropy</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">bce</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">]))</span>
+<span class="k">assert</span> <span class="n">jnp</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="mf">0.916</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+</code></pre>
+</div>
+<p>Usage with elegy API:</p>
+<div class="codehilite">
+<pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
+    <span class="n">module_fn</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">CategoricalCrossentropy</span><span class="p">(),</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">BinaryCrossentropy</span><span class="p">(),</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<div class="doc doc-children">
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.metrics.binary_crossentropy.BinaryCrossentropy.__init__">
+
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_logits</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Creates a <code>BinaryCrossentropy</code> instance.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>from_logits</code></td>
+<td><code>bool</code></td>
+<td>
+<p>Whether <code>y_pred</code> is expected to be a logits tensor. By
+default, we assume that <code>y_pred</code> encodes a probability distribution.
+<strong>Note - Using from_logits=True is more numerically stable.</strong></p>
+</td>
+<td><code>False</code></td>
+</tr>
+<tr>
+<td><code>on</code></td>
+<td><code>Union[str, int, Iterable[Union[str, int]]]</code></td>
+<td>
+<p>A string or integer, or iterable of string or integers, that
+indicate how to index/filter the <code>y_true</code> and <code>y_pred</code>
+arguments before passing them to <code>call</code>. For example if <code>on = "a"</code> then
+<code>y_true = y_true["a"]</code>. If <code>on</code> is an iterable
+the structures will be indexed iteratively, for example if <code>on = ["a", 0, "b"]</code>
+then <code>y_true = y_true["a"][0]["b"]</code>, same for <code>y_pred</code>. For more information
+check out <a href="https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior">Keras-like behavior</a>.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+<tr>
+<td><code>kwargs</code></td>
+<td><code></code></td>
+<td>
+<p>Additional keyword arguments passed to Module.</p>
+</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/metrics/binary_crossentropy.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">from_logits</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">on</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">IndexLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Creates a `BinaryCrossentropy` instance.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        from_logits: Whether `y_pred` is expected to be a logits tensor. By</span>
+<span class="sd">            default, we assume that `y_pred` encodes a probability distribution.</span>
+<span class="sd">            **Note - Using from_logits=True is more numerically stable.**</span>
+<span class="sd">        on: A string or integer, or iterable of string or integers, that</span>
+<span class="sd">            indicate how to index/filter the `y_true` and `y_pred`</span>
+<span class="sd">            arguments before passing them to `call`. For example if `on = "a"` then</span>
+<span class="sd">            `y_true = y_true["a"]`. If `on` is an iterable</span>
+<span class="sd">            the structures will be indexed iteratively, for example if `on = ["a", 0, "b"]`</span>
+<span class="sd">            then `y_true = y_true["a"][0]["b"]`, same for `y_pred`. For more information</span>
+<span class="sd">            check out [Keras-like behavior](https://poets-ai.github.io/elegy/guides/modules-losses-metrics/#keras-like-behavior).</span>
+<span class="sd">        kwargs: Additional keyword arguments passed to Module.</span>
+<span class="sd">    """</span>
+
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">on</span><span class="o">=</span><span class="n">on</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_from_logits</span> <span class="o">=</span> <span class="n">from_logits</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="elegy.metrics.binary_crossentropy.BinaryCrossentropy.call">
+
+<code class="highlight language-python"><span class="n">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Accumulates metric statistics. <code>y_true</code> and <code>y_pred</code> should have the same shape.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>y_true</code></td>
+<td><code>ndarray</code></td>
+<td>
+<p>Ground truth values. shape = <code>[batch_size, d0, .. dN]</code>.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>y_pred</code></td>
+<td><code>ndarray</code></td>
+<td>
+<p>The predicted values. shape = <code>[batch_size, d0, .. dN]</code>.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>sample_weight</code></td>
+<td><code>Optional[jax._src.numpy.lax_numpy.ndarray]</code></td>
+<td>
+<p>Optional <code>sample_weight</code> acts as a
+coefficient for the metric. If a scalar is provided, then the metric is
+simply scaled by the given value. If <code>sample_weight</code> is a tensor of size
+<code>[batch_size]</code>, then the metric for each sample of the batch is rescaled
+by the corresponding element in the <code>sample_weight</code> vector. If the shape
+of <code>sample_weight</code> is <code>[batch_size, d0, .. dN-1]</code> (or can be broadcasted
+to this shape), then each metric element of <code>y_pred</code> is scaled by the
+corresponding value of <code>sample_weight</code>. (Note on <code>dN-1</code>: all metric
+functions reduce by 1 dimension, usually the last axis (-1)).</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ndarray</code></td>
+<td>
+<p>Array with the cumulative accuracy.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>elegy/metrics/binary_crossentropy.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">call</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">y_true</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">y_pred</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">sample_weight</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+
+    <span class="sd">"""</span>
+<span class="sd">    Accumulates metric statistics. `y_true` and `y_pred` should have the same shape.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        y_true: Ground truth values. shape = `[batch_size, d0, .. dN]`.</span>
+<span class="sd">        y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.</span>
+<span class="sd">        sample_weight: Optional `sample_weight` acts as a</span>
+<span class="sd">            coefficient for the metric. If a scalar is provided, then the metric is</span>
+<span class="sd">            simply scaled by the given value. If `sample_weight` is a tensor of size</span>
+<span class="sd">            `[batch_size]`, then the metric for each sample of the batch is rescaled</span>
+<span class="sd">            by the corresponding element in the `sample_weight` vector. If the shape</span>
+<span class="sd">            of `sample_weight` is `[batch_size, d0, .. dN-1]` (or can be broadcasted</span>
+<span class="sd">            to this shape), then each metric element of `y_pred` is scaled by the</span>
+<span class="sd">            corresponding value of `sample_weight`. (Note on `dN-1`: all metric</span>
+<span class="sd">            functions reduce by 1 dimension, usually the last axis (-1)).</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Array with the cumulative accuracy.</span>
+<span class="sd">    """</span>
+
+    <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">call</span><span class="p">(</span>
+        <span class="n">values</span><span class="o">=</span><span class="n">binary_crossentropy</span><span class="p">(</span>
+            <span class="n">y_true</span><span class="o">=</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="o">=</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">from_logits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_from_logits</span>
+        <span class="p">),</span>
+        <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span>
+    <span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+</div>
+</div>
+</div>
                 
               
               
