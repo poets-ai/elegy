@@ -134,7 +134,7 @@ model.fit(
 
 ## More Info
 * [Getting Started: High-level API](https://poets-ai.github.io/elegy/getting-started-high-level-api/) tutorial.
-* [Getting Started: High-level API](https://poets-ai.github.io/elegy/getting-started-low-level-api/) tutorial.
+* [Getting Started: Low-level API](https://poets-ai.github.io/elegy/getting-started-low-level-api/) tutorial.
 * Elegy's [Documentation](https://poets-ai.github.io/elegy).
 * The [examples](https://github.com/poets-ai/elegy/tree/master/examples) directory.
 * [What is Jax?](https://github.com/google/jax#what-is-jax)
