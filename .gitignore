@@ -148,3 +148,4 @@ cython_debug/
 /docs/models/
 /models
 /TODO
+.git
