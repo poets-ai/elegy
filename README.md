@@ -131,7 +131,7 @@ model.fit(
     callbacks=[elegy.callbacks.TensorBoard("summaries")]
 )
 ```
-
+#### Using Jax Frameworks
 It is straightforward to integrate other functional JAX libraries with this 
 low-level API:
 
