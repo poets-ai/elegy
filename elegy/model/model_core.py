@@ -522,12 +522,13 @@ class ModelCore:
         else:
             return
 
-        if mode in (types.Mode.pred, types.Mode.test, types.Mode.train):
-            if isinstance(state_updates.net_params, types.Uninitialized):
-                state_updates = state_updates.update(net_params=None)
+        # all
+        if isinstance(state_updates.net_params, types.Uninitialized):
+            state_updates = state_updates.update(net_params=None)
 
-            if isinstance(state_updates.net_states, types.Uninitialized):
-                state_updates = state_updates.update(net_states=None)
+        if isinstance(state_updates.net_states, types.Uninitialized):
+            state_updates = state_updates.update(net_states=None)
+
         if mode in (types.Mode.test, types.Mode.train):
             if isinstance(state_updates.metrics_states, types.Uninitialized):
                 state_updates = state_updates.update(metrics_states=None)
