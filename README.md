@@ -132,6 +132,31 @@ model.fit(
 )
 ```
 
+It is straightforward to integrate other functional JAX libraries with this 
+low-level API:
+
+```python
+class LinearClassifier(elegy.Model):
+    def test_step(
+        self, x, y_true, states: elegy.States, initializing: bool, rng: elegy.RNGSeq
+    ):
+        x = jnp.reshape(x, (x.shape[0], -1)) / 255
+        if initializing:
+            params = self.module.init({'params': rng.next()}, x)['params']
+        else:
+            params = states.net_params
+
+        logits = self.module.apply(
+            {'params': params}, x, rngs={'params': rng.next(), 'dropout': rng.next()}
+        )
+        labels = jax.nn.one_hot(y_true, 10)
+        loss = jnp.mean(-jnp.sum(labels * jax.nn.log_softmax(logits), axis=-1))
+        accuracy = jnp.mean(jnp.argmax(logits, axis=-1) == y_true)
+
+        logs = dict(accuracy=accuracy, loss=loss)
+        return loss, logs, states.update(rng=rng, net_params=params)
+```
+
 ## More Info
 * [Getting Started: High-level API](https://poets-ai.github.io/elegy/getting-started-high-level-api/) tutorial.
 * [Getting Started: Low-level API](https://poets-ai.github.io/elegy/getting-started-low-level-api/) tutorial.
