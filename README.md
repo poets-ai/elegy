@@ -187,7 +187,7 @@ To cite this project:
 author = {PoetsAI},
 title = {Elegy: A framework-agnostic Trainer interface for the Jax ecosystem},
 url = {https://github.com/poets-ai/elegy},
-version = {0.4.0},
+version = {0.4.1},
 year = {2020},
 }
 ```
