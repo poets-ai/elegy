@@ -28,7 +28,7 @@ nav:
   - Callbacks: na.md
   - Serialization: na.md
 - Low Level API:
-  - Intro: low-level-api/intro.md
+  - Basics: low-level-api/basics.md
   - pred_step: na.md
   - test_step: na.md
   - grad_step: na.md
