@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.1](https://github.com/poets-ai/elegy/tree/0.4.1) (2021-02-03)
+
+[Full Changelog](https://github.com/poets-ai/elegy/compare/0.4.0...0.4.1)
+
+**Merged pull requests:**
+
+- fix-maybe-initialize [\#155](https://github.com/poets-ai/elegy/pull/155) ([cgarciae](https://github.com/cgarciae))
+- Add simple Flax low-level API Model example to README.md [\#153](https://github.com/poets-ai/elegy/pull/153) ([sooheon](https://github.com/sooheon))
+
 ## [0.4.0](https://github.com/poets-ai/elegy/tree/0.4.0) (2021-02-01)
 
 [Full Changelog](https://github.com/poets-ai/elegy/compare/0.3.0...0.4.0)

@@ -19,7 +19,9 @@ flags:
 ### Examples of generated images:
 
 After  10 epochs: ![Example of generated images after 10 epochs](images/epoch-0009.png)
+
 After  50 epochs: ![Example of generated images after 10 epochs](images/epoch-0049.png)
+
 After 100 epochs: ![Example of generated images after 10 epochs](images/epoch-0099.png)
 
 
