@@ -131,6 +131,34 @@ model.fit(
     callbacks=[elegy.callbacks.TensorBoard("summaries")]
 )
 ```
+#### Using Jax Frameworks
+It is straightforward to integrate other functional JAX libraries with this 
+low-level API:
+
+```python
+class LinearClassifier(elegy.Model):
+    def test_step(
+        self, x, y_true, states: elegy.States, initializing: bool, rng: elegy.RNGSeq
+    ):
+        x = jnp.reshape(x, (x.shape[0], -1)) / 255
+        if initializing:
+            logits, variables = self.module.init_with_output(
+                {"params": rng.next(), "dropout": rng.next()}, x
+            )
+        else:
+            variables = dict(params=states.net_params, **states.net_states)
+            logits, variables = self.module.apply(
+                variables, x, rngs={"dropout": rng.next()}, mutable=True
+            )
+        net_states, net_params = variables.pop("params")
+        
+        labels = jax.nn.one_hot(y_true, 10)
+        loss = jnp.mean(-jnp.sum(labels * jax.nn.log_softmax(logits), axis=-1))
+        accuracy = jnp.mean(jnp.argmax(logits, axis=-1) == y_true)
+
+        logs = dict(accuracy=accuracy, loss=loss)
+        return loss, logs, states.update(rng=rng, net_params=net_params, net_states=net_states)
+```
 
 ## More Info
 * [Getting Started: High-level API](https://poets-ai.github.io/elegy/getting-started-high-level-api/) tutorial.

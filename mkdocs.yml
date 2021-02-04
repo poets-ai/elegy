@@ -5,8 +5,8 @@ site_url: https://poets-ai.github.io/elegy
 nav:
 - Introduction: index.md
 - Getting Started:
-  - High Level API: getting-started-high-level-api.ipynb
-  - Low Level API: getting-started-low-level-api.ipynb
+  - High Level API: getting-started/high-level-api.ipynb
+  - Low Level API: getting-started/low-level-api.ipynb
 - High Level API:
   - Intro: basic-api/modules-losses-metrics.md
   - Data Sources: na.md
@@ -28,11 +28,11 @@ nav:
   - Callbacks: na.md
   - Serialization: na.md
 - Low Level API:
-  - Intro: na.md
-  - Custom pred_step: na.md
-  - Custom test_step: na.md
-  - Custom grad_step: na.md
-  - Custom train_step: na.md
+  - Intro: low-level-api/intro.md
+  - pred_step: na.md
+  - test_step: na.md
+  - grad_step: na.md
+  - train_step: na.md
   - Supporting the High Level API: low-level-api/supporting-the-high-level-api.md
   - Implementing a Model from Scratch: na.md
 - Elegy Module: module-system.md
@@ -199,6 +199,5 @@ markdown_extensions:
 plugins:
 - search
 - mkdocs-jupyter
-- mkdocstrings
 extra_javascript:
 - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML
