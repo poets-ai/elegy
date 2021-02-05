@@ -25,7 +25,6 @@ from .module import Module, to_module
 from .optimizer import Optimizer
 from .types import (
     RNGSeq,
-    Uninitialized,
     States,
     OutputStates,
 )
@@ -65,7 +64,6 @@ __all__ = [
     "States",
     "TestStep",
     "TrainStep",
-    "Uninitialized",
     "callbacks",
     "flax_summarize",
     "flax_summary",

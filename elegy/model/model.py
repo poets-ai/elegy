@@ -160,7 +160,7 @@ class Model(ModelBase):
                 f"rng must be one of the following types: int, types.RNGSeq. Got {kwargs['rng']}"
             )
 
-        super().__init__(rng=types.RNGSeq(seed), **kwargs)
+        super().__init__(**kwargs)
 
         self.module = module
         self.loss = loss
@@ -191,6 +191,9 @@ class Model(ModelBase):
             self.states.rng,
         )(*args, **kwargs)
 
+    def base_states(self) -> types.States:
+        return types.States(rng=types.RNGSeq(self.seed))
+
     def update_modules(self):
         if self.api_module is not None:
             net_params, net_states = self.api_module.update(
@@ -201,18 +204,26 @@ class Model(ModelBase):
                 net_params=net_params, net_states=net_states
             )
 
+    def summary_step(
+        self,
+        x: tp.Any,
+        states: types.States,
+        initializing: bool,
+        training: bool,
+    ) -> types.Summaries:
+        with hooks.context(summaries=True):
+            self.call_pred_step(x, states, initializing, training)
+            summaries = hooks.get_summaries()
+
+        return summaries
+
     def pred_step(
         self,
-        # net_params: tp.Any,
         x: tp.Any,
-        # net_states: tp.Any,
-        # rng: types.RNG,
-        mode: types.Mode,
-        initializing: bool,
         states: types.States,
+        initializing: bool,
+        training: bool,
     ) -> model_core.PredStep:
-
-        training = mode == types.Mode.train
 
         if self.module is None:
             raise types.MissingModule(
@@ -224,7 +235,7 @@ class Model(ModelBase):
             x,
             states=states,
             initializing=initializing,
-            mode=mode,
+            training=training,
         )
 
         assert isinstance(states.rng, types.RNGSeq)
@@ -244,31 +255,31 @@ class Model(ModelBase):
         return model_core.PredStep(
             y_pred=y_pred,
             states=states.update(net_states=net_states, net_params=net_params),
-            aux_losses=hooks.get_losses(),
-            aux_metrics=hooks.get_metrics(),
-            summaries=hooks.get_summaries(),
         )
 
     def test_step(
         self,
-        mode: types.Mode,
-        # net_params: tp.Any,
         x: tp.Any,
         y_true: tp.Any,
-        # net_states: tp.Any,
-        # metrics_states: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        # rng: types.RNG,
-        initializing: bool,
         states: types.States,
+        initializing: bool,
+        training: bool,
     ) -> model_core.TestStep:
-        y_pred, states, aux_losses, aux_metrics, _ = self.call_pred_step(
-            x=x,
-            mode=mode,
-            states=states,
-            initializing=initializing,
-        )
+
+        with hooks.context(losses=True, summaries=True):
+            y_pred, states = self.call_pred_step(
+                x=x,
+                states=states,
+                initializing=initializing,
+                training=training,
+            )
+
+            aux_losses = hooks.get_losses()
+            aux_metrics = hooks.get_metrics()
+
+        assert hasattr(states, "rng")
         assert isinstance(states.rng, types.RNGSeq)
 
         if initializing:
@@ -289,16 +300,11 @@ class Model(ModelBase):
             x=x,
             y_true=y_true,
             y_pred=y_pred,
-            net_params=states.net_params,
-            net_states=states.net_states,
-            metrics_states=states.metrics_states,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            rng=states.rng,
             initializing=initializing,
             states=states,
-            mode=mode,
-            training=(mode == types.Mode.train),
+            training=training,
         )
 
         # [DI]
@@ -306,16 +312,11 @@ class Model(ModelBase):
             x=x,
             y_true=y_true,
             y_pred=y_pred,
-            net_params=states.net_params,
-            net_states=states.net_states,
-            metrics_states=states.metrics_states,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            rng=states.rng,
             initializing=initializing,
             states=states,
-            mode=mode,
-            training=(mode == types.Mode.train),
+            training=training,
         )
 
         logs = utils.merge_with_unique_names(metrics_logs, loss_logs)
@@ -327,11 +328,11 @@ class Model(ModelBase):
         self,
         x: tp.Any,
         y_true: tp.Any,
-        mode: types.Mode,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         states: types.States,
         initializing: bool,
+        training: bool,
     ) -> model_core.GradStep:
         def loss_fn(
             net_params: tp.Any,
@@ -345,11 +346,11 @@ class Model(ModelBase):
             loss, logs, states = self.call_test_step(
                 x=x,
                 y_true=y_true,
-                mode=mode,
                 states=states,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 initializing=initializing,
+                training=training,
             )
 
             return loss, (logs, states)
@@ -369,27 +370,22 @@ class Model(ModelBase):
         self,
         x: tp.Any,
         y_true: tp.Any,
-        mode: types.Mode,
-        # net_params: tp.Any,
-        # net_states: tp.Any,
-        # metrics_states: tp.Any,
-        # optimizer_states: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        # rng: types.RNG,
         states: types.States,
         initializing: bool,
+        training: bool,
     ) -> model_core.TrainStep:
 
         if initializing:
             loss, logs, states = self.call_test_step(
                 x=x,
                 y_true=y_true,
-                mode=mode,
                 states=states,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 initializing=initializing,
+                training=training,
             )
             grads = None
 
@@ -397,11 +393,11 @@ class Model(ModelBase):
             loss, logs, states, grads = self.call_grad_step(
                 x=x,
                 y_true=y_true,
-                mode=mode,
                 states=states,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 initializing=initializing,
+                training=training,
             )
 
         if self.optimizer is None:
@@ -417,13 +413,9 @@ class Model(ModelBase):
             optimizer_states = self.api_optimizer.init(states.rng, states.net_params)
             net_params = states.net_params
         else:
-            if isinstance(self.states.optimizer_states, types.Uninitialized):
-                raise ValueError(
-                    f"Trying to run default `train_step` with an optimizer "
-                    "but `optimizer_states` was not initialized on `init`. Please initialize optimizer."
-                )
             assert grads is not None
 
+            # TODO: add current_lr this to GeneralizedOptimizer and do this generically
             if isinstance(self.optimizer, Optimizer):
                 lr = self.optimizer.current_lr(self.states.optimizer_states)
 
@@ -467,21 +459,22 @@ class Model(ModelBase):
                 See [python-tabulate](https://github.com/astanin/python-tabulate)
                 for more options.
         """
-        mode = types.Mode.summary
+        mode = types.Mode.pred
         initializing = False
+        training = False
 
         self.maybe_initialize(mode, x=x)
 
-        method = self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
-
-        _, _, _, _, summaries = method(
-            x,
-            mode,
-            self.states,
-            initializing,
+        method = (
+            self.call_summary_step if self.run_eagerly else self.call_summary_step_jit
         )
 
-        assert summaries is not None
+        summaries = method(
+            x,
+            self.states,
+            initializing,
+            training,
+        )
 
         def format_output(outputs) -> str:
             file = StringIO()
@@ -720,7 +713,7 @@ class AvgMetric(GeneralizedModule):
             total = jax.tree_map(lambda x: jnp.zeros_like(x), preds)
             return types.OutputStates(
                 preds=preds,
-                params=types.UNINITIALIZED,
+                params=None,
                 states=(n, total),
             )
 
@@ -746,7 +739,7 @@ class AvgMetric(GeneralizedModule):
             preds = jax.tree_map(lambda total: total / n, total)
             return types.OutputStates(
                 preds=preds,
-                params=types.UNINITIALIZED,
+                params=None,
                 states=(n, total),
             )
 

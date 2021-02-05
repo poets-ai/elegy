@@ -23,19 +23,6 @@ from tabulate import tabulate
 class PredStep(tp.NamedTuple):
     y_pred: tp.Any
     states: types.States
-    aux_losses: types.Logs
-    aux_metrics: types.Logs
-    summaries: types.Summaries
-
-    @classmethod
-    def simple(cls, y_pred: tp.Any, states: types.States):
-        return cls(
-            y_pred=y_pred,
-            states=states,
-            aux_losses=hooks.get_losses(),
-            aux_metrics=hooks.get_metrics(),
-            summaries=hooks.get_summaries(),
-        )
 
 
 class TestStep(tp.NamedTuple):
@@ -61,41 +48,46 @@ class ModelCore:
     initial_states: types.States
     history: tp.Dict[str, tp.Any]
     run_eagerly: bool = False
+    init_stage: types.Mode = types.Mode.none
 
     def __init__(
         self,
-        net_params: tp.Union[types.Uninitialized, tp.Any] = types.UNINITIALIZED,
-        net_states: tp.Union[types.Uninitialized, tp.Any] = types.UNINITIALIZED,
-        metrics_states: tp.Union[types.Uninitialized, tp.Any] = types.UNINITIALIZED,
-        optimizer_states: tp.Union[types.Uninitialized, tp.Any] = types.UNINITIALIZED,
-        rng: tp.Union[types.Uninitialized, tp.Any] = types.UNINITIALIZED,
+        states: tp.Optional[types.States] = None,
         run_eagerly: bool = False,
+        init_stage: types.Mode = types.Mode.none,
     ):
-        self.states = types.States(
-            net_params=net_params,
-            net_states=net_states,
-            metrics_states=metrics_states,
-            optimizer_states=optimizer_states,
-            rng=rng,
-        )
-        self.initial_states = self.states.copy()
+
+        base_states = self.base_states()
+
+        if states is None:
+            states = types.States()
+
+        states = states.maybe_update(**base_states)
+
+        self.initial_states = states
+        self.states = states.copy()  # explicity do this to copy RNGSeq
         self.run_eagerly = run_eagerly
         self.history = {}
+        self.init_stage = init_stage
 
         self._jit_functions()
 
     def _jit_functions(self):
-        self.call_pred_step_jit = hooks.jit(
+        self.call_summary_step_jit = jax.jit(
+            self.call_summary_step,
+            static_argnums=[2, 3],
+        )
+        self.call_pred_step_jit = jax.jit(
             self.call_pred_step,
-            static_argnums=[1, 3],
+            static_argnums=[2, 3],
         )
-        self.call_test_step_jit = hooks.jit(
+        self.call_test_step_jit = jax.jit(
             self.call_test_step,
-            static_argnums=[2, 6],
+            static_argnums=[5, 6],
         )
-        self.call_train_step_jit = hooks.jit(
+        self.call_train_step_jit = jax.jit(
             self.call_train_step,
-            static_argnums=[2, 6],
+            static_argnums=[5, 6],
         )
 
     def __setstate__(self, d):
@@ -110,6 +102,7 @@ class ModelCore:
         del d["initial_states"]
 
         # remove jitted functions
+        del d["call_summary_step_jit"]
         del d["call_pred_step_jit"]
         del d["call_test_step_jit"]
         del d["call_train_step_jit"]
@@ -120,13 +113,35 @@ class ModelCore:
     # Abstract API
     # ----------------------------------------------------------------
 
+    def base_states(self) -> types.States:
+        return types.States()
+
+    def summary_step(
+        self,
+        x: tp.Any,
+        states: types.States,
+        initializing: bool,
+        training: bool,
+    ) -> types.Summaries:
+        raise NotImplementedError()
+
+    def call_summary_step(
+        self,
+        x: tp.Any,
+        states: types.States,
+        initializing: bool,
+        training: bool,
+    ) -> types.Summaries:
+        return utils.inject_dependencies(self.summary_step)(
+            x=x,
+            states=states,
+            initializing=initializing,
+            training=training,
+        )
+
     def pred_step(
         self,
         x: tp.Any,
-        mode: types.Mode,
-        net_params: tp.Any,
-        net_states: tp.Any,
-        rng: tp.Any,
         states: types.States,
         initializing: bool,
         training: bool,
@@ -136,40 +151,24 @@ class ModelCore:
     def call_pred_step(
         self,
         x: tp.Any,
-        mode: types.Mode,
         states: types.States,
         initializing: bool,
+        training: bool,
     ) -> PredStep:
-        get_losses_and_metrics = mode in (types.Mode.test, types.Mode.train)
-        get_summaries = mode == types.Mode.summary
 
-        with hooks.context(
-            losses=get_losses_and_metrics,
-            metrics=get_losses_and_metrics,
-            summaries=get_summaries,
-        ):
-            return utils.inject_dependencies(self.pred_step)(
-                x=x,
-                mode=mode,
-                net_params=states.net_params,
-                net_states=states.net_states,
-                rng=states.rng,
-                states=states,
-                initializing=initializing,
-                training=(mode == types.Mode.train),
-            )
+        return utils.inject_dependencies(self.pred_step)(
+            x=x,
+            states=states,
+            initializing=initializing,
+            training=training,
+        )
 
     def test_step(
         self,
         x: tp.Any,
         y_true: tp.Any,
-        mode: types.Mode,
-        net_params: tp.Any,
-        net_states: tp.Any,
-        metrics_states: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        rng: tp.Any,
         states: types.States,
         initializing: bool,
         training: bool,
@@ -180,38 +179,28 @@ class ModelCore:
         self,
         x: tp.Any,
         y_true: tp.Any,
-        mode: types.Mode,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         states: types.States,
         initializing: bool,
+        training: bool,
     ) -> TestStep:
         return utils.inject_dependencies(self.test_step)(
-            net_params=states.net_params,
             x=x,
             y_true=y_true,
-            mode=mode,
-            net_states=states.net_states,
-            metrics_states=states.metrics_states,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            rng=states.rng,
             states=states,
             initializing=initializing,
-            training=(mode == types.Mode.train),
+            training=training,
         )
 
     def grad_step(
         self,
         x: tp.Any,
         y_true: tp.Any,
-        mode: types.Mode,
-        net_params: tp.Any,
-        net_states: tp.Any,
-        metrics_states: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        rng: tp.Any,
         states: types.States,
         initializing: bool,
         training: bool,
@@ -222,39 +211,28 @@ class ModelCore:
         self,
         x: tp.Any,
         y_true: tp.Any,
-        mode: types.Mode,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         states: types.States,
         initializing: bool,
+        training: bool,
     ) -> GradStep:
         return utils.inject_dependencies(self.grad_step)(
             x=x,
             y_true=y_true,
-            mode=mode,
-            net_params=states.net_params,
-            net_states=states.net_states,
-            metrics_states=states.metrics_states,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            rng=states.rng,
             states=states,
             initializing=initializing,
-            training=(mode == types.Mode.train),
+            training=training,
         )
 
     def train_step(
         self,
         x: tp.Any,
         y_true: tp.Any,
-        mode: types.Mode,
-        net_params: tp.Any,
-        net_states: tp.Any,
-        metrics_states: tp.Any,
-        optimizer_states: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        rng: tp.Any,
         states: types.States,
         initializing: bool,
         training: bool,
@@ -265,26 +243,20 @@ class ModelCore:
         self,
         x: tp.Any,
         y_true: tp.Any,
-        mode: types.Mode,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         states: types.States,
         initializing: bool,
+        training: bool,
     ) -> TrainStep:
         return utils.inject_dependencies(self.train_step)(
             x=x,
             y_true=y_true,
-            mode=mode,
-            net_params=states.net_params,
-            net_states=states.net_states,
-            metrics_states=states.metrics_states,
-            optimizer_states=states.optimizer_states,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            rng=states.rng,
             states=states,
             initializing=initializing,
-            training=(mode == types.Mode.train),
+            training=training,
         )
 
     # ----------------------------------------------------------------
@@ -311,14 +283,13 @@ class ModelCore:
         """
         mode = types.Mode.pred
         initializing = False
+        training = False
 
         self.maybe_initialize(mode=mode, x=x)
 
         method = self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
 
-        y_pred, state_updates, _, _, _ = method(x, mode, self.states, initializing)
-
-        self.states = self.states.merge(state_updates)
+        y_pred, self.states = method(x, self.states, initializing, training)
 
         return y_pred
 
@@ -355,6 +326,7 @@ class ModelCore:
         """
         mode = types.Mode.test
         initializing = False
+        training = False
 
         self.maybe_initialize(
             mode,
@@ -366,17 +338,9 @@ class ModelCore:
 
         method = self.call_test_step if self.run_eagerly else self.call_test_step_jit
 
-        loss, logs, state_updates = method(
-            x,
-            y,
-            mode,
-            sample_weight,
-            class_weight,
-            self.states,
-            initializing,
+        loss, logs, self.states = method(
+            x, y, sample_weight, class_weight, self.states, initializing, training
         )
-
-        self.states = self.states.merge(state_updates)
 
         return logs
 
@@ -419,6 +383,7 @@ class ModelCore:
         """
         mode = types.Mode.train
         initializing = False
+        training = True
 
         self.maybe_initialize(
             mode=mode,
@@ -430,17 +395,15 @@ class ModelCore:
 
         method = self.call_train_step if self.run_eagerly else self.call_train_step_jit
 
-        logs, state_updates = method(
+        logs, self.states = method(
             x,
             y,
-            mode,
             sample_weight,
             class_weight,
             self.states,
             initializing,
+            training,
         )
-
-        self.states = self.states.merge(state_updates)
 
         return logs
 
@@ -455,9 +418,10 @@ class ModelCore:
         self.states = self.initial_states.copy()
 
     def reset_metrics(self):
-        self.states = self.states.update(
-            metrics_states=self.initial_states.metrics_states
-        )
+        if hasattr(self.initial_states, "metrics_states"):
+            self.states = self.states.update(
+                metrics_states=self.initial_states.metrics_states
+            )
 
     def maybe_initialize(
         self,
@@ -467,28 +431,26 @@ class ModelCore:
         sample_weight: tp.Optional[np.ndarray] = None,
         class_weight: tp.Optional[np.ndarray] = None,
     ):
-        rng = self.states.rng if isinstance(self.states.rng, types.RNGSeq) else None
+
+        if mode <= self.init_stage:
+            return
+
         initializing = True
+        training = True
         state_updates: types.States
 
-        if (
-            mode in (types.Mode.pred, types.Mode.summary)
-            and isinstance(self.states.net_params, types.Uninitialized)
-            and isinstance(self.states.net_states, types.Uninitialized)
-        ):
+        if mode == types.Mode.pred:
             method = (
                 self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
             )
 
-            _, state_updates, _, _, _ = method(
+            _, state_updates = method(
                 x,
-                mode,
                 self.states,
                 initializing,
+                training,
             )
-        elif mode == types.Mode.test and isinstance(
-            self.states.metrics_states, types.Uninitialized
-        ):
+        elif mode == types.Mode.test:
             method = (
                 self.call_test_step if self.run_eagerly else self.call_test_step_jit
             )
@@ -496,15 +458,13 @@ class ModelCore:
             _, _, state_updates = method(
                 x,
                 y_true,
-                mode,
                 sample_weight,
                 class_weight,
                 self.states,
                 initializing,
+                training,
             )
-        elif mode == types.Mode.train and isinstance(
-            self.states.optimizer_states, types.Uninitialized
-        ):
+        elif mode == types.Mode.train:
             method = (
                 self.call_train_step if self.run_eagerly else self.call_train_step_jit
             )
@@ -512,33 +472,18 @@ class ModelCore:
             _, state_updates = method(
                 x,
                 y_true,
-                mode,
                 sample_weight,
                 class_weight,
                 self.states,
                 initializing,
+                training,
             )
-
         else:
-            return
+            raise ValueError(f"Invalid mode '{mode}'")
 
-        # all
-        if isinstance(state_updates.net_params, types.Uninitialized):
-            state_updates = state_updates.update(net_params=None)
-
-        if isinstance(state_updates.net_states, types.Uninitialized):
-            state_updates = state_updates.update(net_states=None)
-
-        if mode in (types.Mode.test, types.Mode.train):
-            if isinstance(state_updates.metrics_states, types.Uninitialized):
-                state_updates = state_updates.update(metrics_states=None)
-
-        if mode == types.Mode.train:
-            if isinstance(state_updates.optimizer_states, types.Uninitialized):
-                state_updates = state_updates.update(optimizer_states=None)
-
-        self.states = self.states.merge_new(state_updates)
-        self.initial_states = self.initial_states.merge_new(state_updates)
+        self.init_stage = mode
+        self.states = self.states.maybe_update(**state_updates)
+        self.initial_states = self.initial_states.maybe_update(**state_updates)
 
     def save(
         self,

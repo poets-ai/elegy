@@ -35,11 +35,11 @@ class ElegyModule(GeneralizedModule):
 
         collections = states
 
-        if not utils.none_or_uninitialized(params):
+        if params is not None:
             collections = collections.copy() if collections is not None else {}
             collections["parameters"] = params
 
-        if not utils.none_or_uninitialized(collections):
+        if collections is not None:
             assert collections is not None
             self.module.set_default_parameters(collections)
 

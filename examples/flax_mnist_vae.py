@@ -88,10 +88,10 @@ class VAE(nn.Module):
     output_shape: tp.Sequence[int] = MNIST_IMAGE_SHAPE
 
     @nn.compact
-    def __call__(self, x, rng: elegy.RNGSeq):
+    def __call__(self, x, states: elegy.States):
         z, mean, stddev = Encoder(
             hidden_size=self.hidden_size, latent_size=self.latent_size
-        )(x, rng)
+        )(x, states.rng)
         logits = Decoder(hidden_size=self.hidden_size, output_shape=self.output_shape)(
             z
         )

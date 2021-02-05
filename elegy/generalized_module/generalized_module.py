@@ -62,8 +62,8 @@ class CallableModule(GeneralizedModule):
             else:
                 return types.OutputStates(
                     preds=output,
-                    params=types.UNINITIALIZED,
-                    states=types.UNINITIALIZED,
+                    params=None,
+                    states=None,
                 )
 
         return lambda_
@@ -84,8 +84,8 @@ class CallableModule(GeneralizedModule):
             else:
                 return types.OutputStates(
                     preds=output,
-                    params=types.UNINITIALIZED,
-                    states=types.UNINITIALIZED,
+                    params=None,
+                    states=None,
                 )
 
         return lambda_

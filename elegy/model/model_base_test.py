@@ -7,13 +7,13 @@ import unittest
 class TestModelBase(unittest.TestCase):
     def test_predict(self):
         class Model(elegy.model.model_base.ModelBase):
-            def pred_step(self, x, net_states, initializing):
+            def pred_step(self, x, initializing, states):
                 if initializing:
                     states = elegy.States(net_states=0)
                 else:
-                    states = elegy.States(net_states=net_states + 1)
+                    states = elegy.States(net_states=states.net_states + 1)
 
-                return elegy.PredStep.simple(x + 1.0, states)
+                return elegy.PredStep(x + 1.0, states)
 
         model = Model()
 
@@ -26,11 +26,11 @@ class TestModelBase(unittest.TestCase):
 
     def test_evaluate(self):
         class Model(elegy.model.model_base.ModelBase):
-            def test_step(self, x, metrics_states, initializing):
+            def test_step(self, x, initializing, states):
                 if initializing:
                     states = elegy.States(metrics_states=0)
                 else:
-                    states = elegy.States(metrics_states=metrics_states + 1)
+                    states = elegy.States(metrics_states=states.metrics_states + 1)
 
                 return elegy.TestStep(
                     loss=0.1,
@@ -55,11 +55,11 @@ class TestModelBase(unittest.TestCase):
 
     def test_fit(self):
         class Model(elegy.model.model_base.ModelBase):
-            def train_step(self, x, optimizer_states, initializing):
+            def train_step(self, x, states, initializing):
                 if initializing:
                     states = elegy.States(optimizer_states=0)
                 else:
-                    states = elegy.States(optimizer_states=optimizer_states + 1)
+                    states = elegy.States(optimizer_states=states.optimizer_states + 1)
 
                 return elegy.TrainStep(
                     logs=dict(loss=jnp.sum(x)),

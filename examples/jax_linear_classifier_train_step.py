@@ -17,19 +17,14 @@ class Model(elegy.Model):
 
     # request parameters by name via depending injection.
     # possible: initializing, net_params, x, y_true, net_states, metrics_states, optimizer_states, sample_weight, class_weight, rng
-    def train_step(self, x, y_true, net_params, optimizer_states, initializing, rng):
+    def train_step(self, x, y_true, initializing, states: elegy.States):
         def loss_fn(net_params, x, y_true):
+            assert isinstance(states.rng, elegy.RNGSeq)
+
             # flatten + scale
             x = jnp.reshape(x, (x.shape[0], -1)) / 255
 
             # model
-            if initializing:
-                w = jax.random.uniform(
-                    rng.next(), shape=[np.prod(x.shape[1:]), 10], minval=-1, maxval=1
-                )
-                b = jax.random.uniform(rng.next(), shape=[1], minval=-1, maxval=1)
-                net_params = (w, b)
-
             w, b = net_params
             logits = jnp.dot(x, w) + b
 
@@ -44,24 +39,32 @@ class Model(elegy.Model):
                 loss=loss,
             )
 
-            return loss, (logs, net_params)
+            return loss, logs
+
+        if initializing:
+            w = jax.random.uniform(
+                states.rng.next(), shape=[np.prod(x.shape[1:]), 10], minval=-1, maxval=1
+            )
+            b = jax.random.uniform(states.rng.next(), shape=[1], minval=-1, maxval=1)
+            states = states.update(net_params=(w, b))
 
         # train
-        (loss, (logs, net_params)), grads = jax.value_and_grad(loss_fn, has_aux=True)(
-            net_params,  # gradients target
+        (loss, logs), grads = jax.value_and_grad(loss_fn, has_aux=True)(
+            states.net_params,  # gradients target
             x,
             y_true,
         )
 
         if initializing:
-            optimizer_states = self.optim.init(net_params)
+            optimizer_states = self.optim.init(states.net_params)
+            net_params = states.net_params
         else:
             grads, optimizer_states = self.optim.update(
-                grads, optimizer_states, net_params
+                grads, states.optimizer_states, states.net_params
             )
-            net_params = optax.apply_updates(net_params, grads)
+            net_params = optax.apply_updates(states.net_params, grads)
 
-        return logs, elegy.States(
+        return logs, states.update(
             net_params=net_params,
             optimizer_states=optimizer_states,
         )
