@@ -110,7 +110,7 @@ class LinearClassifier(elegy.Model):
             accuracy=accuracy,
             loss=loss,
         )
-        return loss, logs, states.update(rng=rng, net_params=(w, b))
+        return loss, logs, states.update(net_params=(w, b))
 ```
 
 **2.** Instantiate our `LinearClassifier` with an optimizer:
@@ -159,7 +159,7 @@ class LinearClassifier(elegy.Model):
         accuracy = jnp.mean(jnp.argmax(logits, axis=-1) == y_true)
 
         logs = dict(accuracy=accuracy, loss=loss)
-        return loss, logs, states.update(rng=rng, net_params=net_params, net_states=net_states)
+        return loss, logs, states.update(net_params=net_params, net_states=net_states)
 ```
 
 ## More Info
