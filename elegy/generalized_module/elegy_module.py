@@ -14,34 +14,16 @@ class ElegyModule(GeneralizedModule):
     def init(self, rng: types.RNGSeq) -> tp.Callable[..., types.OutputStates]:
         def _lambda(*args, **kwargs):
 
-            y_pred, collections = utils.inject_dependencies(self.module.init(rng=rng))(
+            y_pred, parameters, collections = utils.inject_dependencies(
+                self.module.init(rng=rng)
+            )(
                 *args,
                 **kwargs,
             )
-            assert isinstance(collections, dict)
 
-            net_params = collections.pop("parameters", {})
-            net_states = collections
-
-            return types.OutputStates(y_pred, net_params, net_states)
+            return types.OutputStates(y_pred, parameters, collections)
 
         return _lambda
-
-    def update(
-        self,
-        params: tp.Optional[types.ModuleParams],
-        states: tp.Optional[types.ModuleStates],
-    ) -> tp.Tuple[tp.Optional[types.ModuleParams], tp.Optional[types.ModuleStates]]:
-
-        collections = states
-
-        if params is not None:
-            collections = collections.copy() if collections is not None else {}
-            collections["parameters"] = params
-
-        if collections is not None:
-            assert collections is not None
-            self.module.set_default_parameters(collections)
 
         return params, states
 
@@ -53,24 +35,25 @@ class ElegyModule(GeneralizedModule):
         rng: types.RNGSeq,
     ) -> tp.Callable[..., types.OutputStates]:
         def _lambda(*args, **kwargs):
-            collections = states.copy() if states is not None else {}
-            if params is not None:
-                collections["parameters"] = params
 
-            y_pred, collections = utils.inject_dependencies(
-                self.module.apply(collections, training=training, rng=rng),
+            y_pred, net_params, net_states = utils.inject_dependencies(
+                self.module.apply(params, states, training=training, rng=rng),
             )(
                 *args,
                 **kwargs,
             )
-            assert isinstance(collections, dict)
-
-            net_params = collections.pop("parameters", {})
-            net_states = collections
 
             return types.OutputStates(y_pred, net_params, net_states)
 
         return _lambda
+
+    def update(
+        self,
+        params: tp.Optional[types.ModuleParams],
+        states: tp.Optional[types.ModuleStates],
+    ):
+        if states is not None:
+            self.module.set_default_parameters(params, states)
 
     def get_summary_params(
         self,

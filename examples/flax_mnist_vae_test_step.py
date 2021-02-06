@@ -177,9 +177,9 @@ class VariationalAutoEncoder(elegy.Model):
         if initializing:
             loss_metrics_fn = self.loss_metrics.init(rng=rng)
         else:
-            loss_metrics_fn = self.loss_metrics.apply(states.metrics_states)
+            loss_metrics_fn = self.loss_metrics.apply(None, states.metrics_states)
 
-        logs, metrics_states = loss_metrics_fn(logs)
+        logs, _, metrics_states = loss_metrics_fn(logs)
 
         states = states.update(metrics_states=metrics_states)
 

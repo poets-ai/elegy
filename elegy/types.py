@@ -206,7 +206,9 @@ class Initializer(Protocol):
 
 
 class JitCallable(Protocol):
-    def __call__(self, *args) -> tp.Tuple[tp.Any, ParameterCollection]:
+    def __call__(
+        self, *args
+    ) -> tp.Tuple[tp.Any, tp.Optional[Parameters], ParameterCollection]:
         ...
 
 
@@ -223,6 +225,7 @@ class InitJit(Protocol):
 class ApplyJit(Protocol):
     def __call__(
         self,
+        params: tp.Optional[Parameters],
         collections: ParameterCollection,
         *,
         training: bool = True,

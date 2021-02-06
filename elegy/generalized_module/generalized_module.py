@@ -44,8 +44,8 @@ class GeneralizedModule(ABC):
         self,
         params: tp.Optional[types.ModuleParams],
         states: tp.Optional[types.ModuleStates],
-    ) -> tp.Tuple[tp.Optional[types.ModuleParams], tp.Optional[types.ModuleStates]]:
-        return params, states
+    ):
+        pass
 
 
 class CallableModule(GeneralizedModule):

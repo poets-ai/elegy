@@ -196,12 +196,9 @@ class Model(ModelBase):
 
     def update_modules(self):
         if self.api_module is not None:
-            net_params, net_states = self.api_module.update(
+            self.api_module.update(
                 params=self.states.net_params,
                 states=self.states.net_states,
-            )
-            self.states = self.states.update(
-                net_params=net_params, net_states=net_states
             )
 
     def summary_step(
@@ -799,7 +796,7 @@ class Losses:
                 for name, value in logs.items()
             }
 
-            logs, states = self.loss_metrics.init(rng=rng)(logs)
+            logs, _, states = self.loss_metrics.init(rng=rng)(logs)
 
             return loss, logs, states
 
@@ -826,7 +823,8 @@ class Losses:
                 for name, value in logs.items()
             }
 
-            logs, states_ = self.loss_metrics.apply(states)(logs)
+            parameters = None
+            logs, _, states_ = self.loss_metrics.apply(parameters, states)(logs)
 
             return loss, logs, states_
 
@@ -836,8 +834,12 @@ class Losses:
 class LossMetrics(module.Module):
     def call(self, logs):
 
-        count = self.add_parameter("count", lambda: jnp.array(0, dtype=jnp.int32))
-        total = self.add_parameter("total", lambda: jax.tree_map(jnp.zeros_like, logs))
+        count = self.add_parameter(
+            "count", lambda: jnp.array(0, dtype=jnp.int32), trainable=False
+        )
+        total = self.add_parameter(
+            "total", lambda: jax.tree_map(jnp.zeros_like, logs), trainable=False
+        )
 
         count = count + 1
         total = jax.tree_multimap(lambda a, b: a + b, total, logs)
