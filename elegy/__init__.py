@@ -15,6 +15,7 @@ from . import (
     nn,
     regularizers,
     utils,
+    data,
 )
 from .losses import Loss
 from .metrics import Metric
@@ -65,6 +66,7 @@ __all__ = [
     "TestStep",
     "TrainStep",
     "callbacks",
+    "data",
     "flax_summarize",
     "flax_summary",
     "hooks",

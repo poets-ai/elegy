@@ -19,6 +19,7 @@ def main(
     logdir: str = "runs",
     steps_per_epoch: int = 200,
     epochs: int = 100,
+    batch_size: int = 64,
 ):
 
     if debug:
