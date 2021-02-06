@@ -140,7 +140,7 @@ class EMAParamsTree(module.Module):
     >>> import elegy
     >>> x = jnp.ones([1, 1])
     >>> linear = elegy.nn.Linear(10)
-    >>> y, params = linear.init(rng=elegy.RNGSeq(42))(x)
+    >>> y, params, collections = linear.init(rng=elegy.RNGSeq(42))(x)
 
     ```
 
@@ -148,8 +148,8 @@ class EMAParamsTree(module.Module):
 
     ```python
     >>> ema = elegy.nn.EMAParamsTree(0.2)
-    >>> _, ema_state = ema.init()(params)
-    >>> ema_params, ema_state = ema.apply(ema_state)(params)
+    >>> _, _, ema_state = ema.init()(dict(params=params, collections=collections))
+    >>> ema_values, _, ema_state = ema.apply(None, ema_state)(dict(params=params, collections=collections))
 
     ```
 

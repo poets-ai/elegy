@@ -40,6 +40,7 @@ def main(
     logdir: str = "runs",
     steps_per_epoch: int = 200,
     epochs: int = 100,
+    batch_size: int = 64,
 ):
 
     if debug:
@@ -54,8 +55,12 @@ def main(
 
     train_dataset = MNIST(training=True)
     test_dataset = MNIST(training=False)
-    train_loader = elegy.data.DataLoader(train_dataset, batch_size=64, shuffle=True)
-    test_loader = elegy.data.DataLoader(test_dataset, batch_size=64, shuffle=True)
+    train_loader = elegy.data.DataLoader(
+        train_dataset, batch_size=batch_size, shuffle=True
+    )
+    test_loader = elegy.data.DataLoader(
+        test_dataset, batch_size=batch_size, shuffle=True
+    )
 
     print("X_train:", train_dataset.x.shape, train_dataset.x.dtype)
     print("y_train:", train_dataset.y.shape, train_dataset.y.dtype)

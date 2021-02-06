@@ -19,11 +19,11 @@ else:
 EPSILON = 1e-7
 
 
-class Mode(str, Enum):
-    pred = "pred"
-    test = "test"
-    train = "train"
-    summary = "summary"
+class Mode(int, Enum):
+    none = 0
+    pred = 1
+    test = 2
+    train = 3
 
 
 class TrivialPytree:
@@ -40,19 +40,6 @@ class Empty:
 
 
 EMPTY = Empty()
-
-
-@jax.tree_util.register_pytree_node_class
-class Uninitialized:
-    def tree_flatten(self):
-        return ((), None)
-
-    @classmethod
-    def tree_unflatten(cls, aux_data, children):
-        return cls()
-
-
-UNINITIALIZED = Uninitialized()
 
 
 @jax.tree_util.register_pytree_node_class
@@ -135,91 +122,128 @@ class Summary(tp.NamedTuple):
 Summaries = tp.List[Summary]
 
 
+@jax.tree_util.register_pytree_node_class
+class SummaryTableEntry(tp.NamedTuple):
+    path: str
+    module_type_name: str
+    output_value: Pytree
+    trainable_params_count: int
+    trainable_params_size: int
+    non_trainable_params_count: int
+    non_trainable_params_size: int
+
+    @classmethod
+    def totals_entry(
+        cls,
+        trainable_params_count: int,
+        trainable_params_size: int,
+        non_trainable_params_count: int,
+        non_trainable_params_size: int,
+    ):
+        return cls(
+            path="",
+            module_type_name="",
+            output_value=None,
+            trainable_params_count=trainable_params_count,
+            trainable_params_size=trainable_params_size,
+            non_trainable_params_count=non_trainable_params_count,
+            non_trainable_params_size=non_trainable_params_size,
+        )
+
+    def tree_flatten(self):
+        return (
+            (self.output_value,),
+            (
+                self.path,
+                self.module_type_name,
+                self.trainable_params_count,
+                self.trainable_params_size,
+                self.non_trainable_params_count,
+                self.non_trainable_params_size,
+            ),
+        )
+
+    @classmethod
+    def tree_unflatten(cls, aux_data, children):
+        (
+            path,
+            module_type_name,
+            trainable_params_count,
+            trainable_params_size,
+            non_trainable_params_count,
+            non_trainable_params_size,
+        ) = aux_data
+        (output_value,) = children
+
+        return cls(
+            path=path,
+            module_type_name=module_type_name,
+            output_value=output_value,
+            trainable_params_count=trainable_params_count,
+            trainable_params_size=trainable_params_size,
+            non_trainable_params_count=non_trainable_params_count,
+            non_trainable_params_size=non_trainable_params_size,
+        )
+
+
 class OutputStates(tp.NamedTuple):
     preds: tp.Any
     params: tp.Any
     states: tp.Any
 
 
-class States(tp.NamedTuple):
-    net_params: tp.Any = UNINITIALIZED
-    net_states: tp.Any = UNINITIALIZED
-    metrics_states: tp.Any = UNINITIALIZED
-    optimizer_states: tp.Any = UNINITIALIZED
-    rng: tp.Union[RNG, tp.Any] = UNINITIALIZED
+@jax.tree_util.register_pytree_node_class
+class States(tp.Mapping):
+    def __init__(self, _data=None, **kwargs):
+        self._data = dict(_data, **kwargs) if _data is not None else dict(**kwargs)
 
-    def update(
-        self,
-        net_params: tp.Any = UNINITIALIZED,
-        net_states: tp.Any = UNINITIALIZED,
-        metrics_states: tp.Any = UNINITIALIZED,
-        optimizer_states: tp.Any = UNINITIALIZED,
-        rng: tp.Union[RNG, Uninitialized] = UNINITIALIZED,
-    ) -> "States":
+    def __len__(self) -> int:
+        return len(self._data)
 
-        updates = {}
+    def __getitem__(self, key):
+        return self._data[key]
 
-        if not isinstance(net_params, Uninitialized):
-            updates["net_params"] = net_params
-        if not isinstance(net_states, Uninitialized):
-            updates["net_states"] = net_states
-        if not isinstance(metrics_states, Uninitialized):
-            updates["metrics_states"] = metrics_states
-        if not isinstance(optimizer_states, Uninitialized):
-            updates["optimizer_states"] = optimizer_states
-        if not isinstance(rng, Uninitialized):
-            updates["rng"] = rng
+    def __iter__(self):
+        return iter(self._data)
 
-        kwargs = {field: getattr(self, field) for field in self._fields}
-        kwargs.update(**updates)
+    def __getattr__(self, key):
+        if key not in self._data:
+            raise AttributeError(
+                f"'{self.__class__.__name__}' object has no attribute '{key}'"
+            )
 
-        return States(**kwargs)
+        return self._data[key]
 
-    def merge_new(self, other: "States") -> "States":
+    def __setstate__(self, d):
+        self._data = d
 
-        updates = {}
+    def __getstate__(self):
+        return self._data
 
-        if isinstance(self.net_params, Uninitialized) and not isinstance(
-            other.net_params, Uninitialized
-        ):
-            updates["net_params"] = other.net_params
+    def update(self, **kwargs) -> "States":
+        data = self._data.copy()
+        data.update(kwargs)
+        return States(data)
 
-        if isinstance(self.net_states, Uninitialized) and not isinstance(
-            other.net_states, Uninitialized
-        ):
-            updates["net_states"] = other.net_states
+    def maybe_update(self, **kwargs) -> "States":
 
-        if isinstance(self.metrics_states, Uninitialized) and not isinstance(
-            other.metrics_states, Uninitialized
-        ):
-            updates["metrics_states"] = other.metrics_states
+        kwargs = {
+            key: value
+            for key, value in kwargs.items()
+            if key not in self._data or (self._data[key] is None and value is not None)
+        }
 
-        if isinstance(self.optimizer_states, Uninitialized) and not isinstance(
-            other.optimizer_states, Uninitialized
-        ):
-            updates["optimizer_states"] = other.optimizer_states
-
-        if isinstance(self.rng, Uninitialized) and not isinstance(
-            other.rng, Uninitialized
-        ):
-            updates["rng"] = other.rng
-
-        kwargs = {field: getattr(self, field) for field in self._fields}
-        kwargs.update(**updates)
-
-        return States(**kwargs)
-
-    def merge(self, other: "States") -> "States":
-        return other.update(*other)
+        return self.update(**kwargs)
 
     def copy(self) -> "States":
-        return States(
-            net_params=self.net_params,
-            net_states=self.net_states,
-            metrics_states=self.metrics_states,
-            optimizer_states=self.optimizer_states,
-            rng=copy(self.rng),
-        )
+        return jax.tree_map(lambda x: x, self)
+
+    def tree_flatten(self):
+        return (tuple(self._data.values()), tuple(self._data.keys()))
+
+    @classmethod
+    def tree_unflatten(cls, aux_data, children):
+        return cls(zip(aux_data, children))
 
 
 @dataclass
@@ -246,7 +270,9 @@ class Initializer(Protocol):
 
 
 class JitCallable(Protocol):
-    def __call__(self, *args) -> tp.Tuple[tp.Any, ParameterCollection]:
+    def __call__(
+        self, *args
+    ) -> tp.Tuple[tp.Any, tp.Optional[Parameters], ParameterCollection]:
         ...
 
 
@@ -263,6 +289,7 @@ class InitJit(Protocol):
 class ApplyJit(Protocol):
     def __call__(
         self,
+        params: tp.Optional[Parameters],
         collections: ParameterCollection,
         *,
         training: bool = True,

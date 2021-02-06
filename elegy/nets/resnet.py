@@ -141,22 +141,31 @@ class ResNet(module.Module):
 
         if weights is not None:
             if weights.endswith(".pkl"):
-                parameters = pickle.load(open(weights, "rb"))
+                collections = pickle.load(open(weights, "rb"))
             elif weights == "imagenet":
                 clsname = self.__class__.__name__
                 urldict = PRETRAINED_URLS.get(clsname, None)
                 if urldict is None:
                     raise ValueError(f"No pretrained weights for {clsname} available")
                 fname = utils.download_file(urldict["url"], sha256=urldict["sha256"])
-                parameters = pickle.load(open(fname, "rb"))
+                collections = pickle.load(open(fname, "rb"))
             else:
                 raise ValueError("Unknown weights value: ", weights)
+
+            if isinstance(collections, tuple):
+                parameters, collections = collections
+            elif "parameters" in collections:
+                parameters = collections.pop("parameters")
+            else:
+                raise ValueError(
+                    "Unknown parameters structure, expected either tuple (parameters, collections) or a collections dict with a 'parameters' field."
+                )
 
             x = np.empty([0, 224, 224, 3], dtype=self.dtype)
             # quick but dirty module initialization
             jax.eval_shape(self.init(rng=types.RNGSeq(42)), x)
 
-            self.set_default_parameters(parameters)
+            self.set_default_parameters(parameters, collections)
 
     def call(self, x: jnp.ndarray):
         x = nn.Conv2D(

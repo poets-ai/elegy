@@ -20,6 +20,7 @@ def main(
     eager: bool = False,
     logdir: str = "runs",
     steps_per_epoch: int = 200,
+    batch_size: int = 64,
     epochs: int = 100,
 ):
 
@@ -80,7 +81,7 @@ def main(
         y=y_train,
         epochs=epochs,
         steps_per_epoch=steps_per_epoch,
-        batch_size=64,
+        batch_size=batch_size,
         validation_data=(X_test, y_test),
         shuffle=True,
         callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],

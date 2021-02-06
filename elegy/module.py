@@ -213,11 +213,14 @@ class Module(metaclass=ModuleMeta):
     ) -> tp.Callable[..., tp.Any]:
         def call_with_defaults_wrapper(*args, **kwargs):
             if not self.initialized:
-                _, collections = self.init(rng=rng, set_defaults=True)(*args, **kwargs)
+                _, parameters, collections = self.init(rng=rng, set_defaults=True)(
+                    *args, **kwargs
+                )
             else:
-                collections = self.get_default_parameters()
+                parameters, collections = self.get_default_parameters()
 
-            y, _ = self.apply(
+            y, _, _ = self.apply(
+                parameters,
                 collections,
                 training=training,
                 rng=rng,
@@ -237,17 +240,18 @@ class Module(metaclass=ModuleMeta):
         def call_with_defaults_jit_wrapper(*args):
 
             if not self.initialized:
-                _, collections = self.init_jit(rng=rng)(*args)
+                _, parameters, collections = self.init_jit(rng=rng)(*args)
             else:
-                collections = self.get_default_parameters()
+                parameters, collections = self.get_default_parameters()
 
-            y, collections = self.apply_jit(
+            y, parameters, collections = self.apply_jit(
+                parameters,
                 collections,
                 training=training,
                 rng=rng,
             )(*args)
 
-            self.set_default_parameters(collections)
+            self.set_default_parameters(parameters, collections)
 
             return y
 
@@ -268,14 +272,16 @@ class Module(metaclass=ModuleMeta):
         ) -> types.JitCallable:
             def init_jit_callable(
                 *args,
-            ) -> tp.Tuple[tp.Any, types.ParameterCollection]:
+            ) -> tp.Tuple[
+                tp.Any, tp.Optional[types.Parameters], types.ParameterCollection
+            ]:
 
-                y, collections = init_jit(rng, *args)
+                y, parameters, collections = init_jit(rng, *args)
 
                 if set_defaults:
-                    self.set_default_parameters(collections)
+                    self.set_default_parameters(parameters, collections)
 
-                return y, collections
+                return y, parameters, collections
 
             init_jit_callable._signature_f = self.call
 
@@ -285,17 +291,23 @@ class Module(metaclass=ModuleMeta):
         # apply
         # ------------------------------
         def apply_jit_raw(
-            parameters, training: bool, rng: tp.Optional[types.RNGSeq], *args
+            parameters: tp.Optional[types.Parameters],
+            collections: types.ParameterCollection,
+            training: bool,
+            rng: tp.Optional[types.RNGSeq],
+            *args,
         ):
             return self.apply(
-                collections=parameters,
+                parameters=parameters,
+                collections=collections,
                 training=training,
                 rng=rng,
             )(*args)
 
-        apply_jit = hooks.jit(apply_jit_raw, static_argnums=[1])
+        apply_jit = hooks.jit(apply_jit_raw, static_argnums=[2])
 
         def apply_jit_wrapper(
+            parameters: tp.Optional[types.Parameters],
             collections: types.ParameterCollection,
             *,
             training: bool = True,
@@ -304,14 +316,18 @@ class Module(metaclass=ModuleMeta):
         ) -> types.JitCallable:
             def apply_jit_callable(
                 *args,
-            ) -> tp.Tuple[tp.Any, types.ParameterCollection]:
+            ) -> tp.Tuple[
+                tp.Any, tp.Optional[types.Parameters], types.ParameterCollection
+            ]:
 
-                y, collections_ = apply_jit(collections, training, rng, *args)
+                y, parameters_, collections_ = apply_jit(
+                    parameters, collections, training, rng, *args
+                )
 
                 if set_defaults:
-                    self.set_default_parameters(collections_)
+                    self.set_default_parameters(parameters_, collections_)
 
-                return y, collections_
+                return y, parameters_, collections_
 
             apply_jit_callable._signature_f = self.call
 
@@ -371,27 +387,29 @@ class Module(metaclass=ModuleMeta):
         *,
         rng: tp.Optional[types.RNGSeq] = None,
         set_defaults: bool = False,
-    ) -> tp.Callable[..., tp.Tuple[tp.Any, types.ParameterCollection]]:
+    ) -> tp.Callable[
+        ..., tp.Tuple[tp.Any, tp.Optional[types.Parameters], types.ParameterCollection]
+    ]:
         """
         Initializes the module,
         """
 
         def init_callable(
             *args, **kwargs
-        ) -> tp.Tuple[tp.Any, types.ParameterCollection]:
+        ) -> tp.Tuple[tp.Any, tp.Optional[types.Parameters], types.ParameterCollection]:
 
             with module_context(
                 module=self, collections=None, initializing=True, training=True, rng=rng
             ):
                 y = self(*args, **kwargs)
-                collections = self.get_parameters_internal()
+                parameters, collections = self.get_parameters_internal()
 
             self._mark_initialized_recursive()
 
             if set_defaults:
-                self.set_default_parameters(collections)
+                self.set_default_parameters(parameters, collections)
 
-            return y, collections
+            return y, parameters, collections
 
         init_callable._signature_f = self.call
 
@@ -399,21 +417,30 @@ class Module(metaclass=ModuleMeta):
 
     def apply(
         self,
+        parameters: tp.Optional[types.Parameters],
         collections: types.ParameterCollection,
         *,
         training: bool = True,
         rng: tp.Optional[types.RNGSeq] = None,
         set_defaults: bool = False,
     ) -> tp.Callable[
-        ..., tp.Union[tp.Any, tp.Tuple[tp.Any, types.ParameterCollection]]
+        ...,
+        tp.Union[
+            tp.Any,
+            tp.Tuple[tp.Any, tp.Optional[types.Parameters], types.ParameterCollection],
+        ],
     ]:
         """
         Call the module.
         """
 
+        if parameters is not None:
+            collections = collections.copy()
+            collections["parameters"] = parameters
+
         def apply_callable(
             *args, **kwargs
-        ) -> tp.Tuple[tp.Any, types.ParameterCollection]:
+        ) -> tp.Tuple[tp.Any, tp.Optional[types.Parameters], types.ParameterCollection]:
 
             with module_context(
                 module=self,
@@ -423,12 +450,12 @@ class Module(metaclass=ModuleMeta):
                 rng=rng,
             ):
                 y = self(*args, **kwargs)
-                collections_ = self.get_parameters_internal()
+                parameters_, collections_ = self.get_parameters_internal()
 
             if set_defaults:
-                self.set_default_parameters(collections_)
+                self.set_default_parameters(parameters_, collections_)
 
-            return y, collections_
+            return y, parameters_, collections_
 
         apply_callable._signature_f = self.call
 
@@ -624,32 +651,40 @@ class Module(metaclass=ModuleMeta):
 
     def set_default_parameters(
         self,
+        parameters: tp.Optional[types.Parameters],
         collections: types.ParameterCollection,
     ):
-        self._set_parameters_internal(
-            collections=collections,
-            set_default_params=True,
-        )
+
+        if parameters is not None:
+            collections = collections.copy()
+            collections["parameters"] = parameters
+
+        old_colletions = self._get_parameters(defaults=True)
+        old_colletions = utils.split_into_collections(old_colletions)
+
+        try:
+            self._set_parameters_internal(
+                collections=collections,
+                set_default_params=True,
+            )
+        except:
+            self._set_parameters_internal(
+                collections=old_colletions,
+                set_default_params=True,
+            )
+            raise
 
     def _set_parameters_internal(
         self,
         collections: types.ParameterCollection,
         set_default_params: bool = False,
     ):
-        old_colletions = self.get_default_parameters()
         collections = jax.tree_map(jnp.asarray, collections)
 
-        try:
-            self._set_parameters(
-                collections=collections,
-                set_default_params=set_default_params,
-            )
-        except:
-            self._set_parameters(
-                collections=old_colletions,
-                set_default_params=set_default_params,
-            )
-            raise
+        self._set_parameters(
+            collections=collections,
+            set_default_params=set_default_params,
+        )
 
     def _validate_parameters(self, collections: types.ParameterCollection):
         # define sets
@@ -728,15 +763,21 @@ class Module(metaclass=ModuleMeta):
                 set_default_params=set_default_params,
             )
 
-    def get_default_parameters(self) -> types.ParameterCollection:
-        parameters = self._get_parameters(defaults=True)
-        return utils.split_into_collections(parameters)
+    def get_default_parameters(
+        self,
+    ) -> tp.Tuple[tp.Optional[types.Parameters], types.ParameterCollection]:
+        param_tree = self._get_parameters(defaults=True)
+        collections = utils.split_into_collections(param_tree)
+        parameters = collections.pop("parameters", None)
+        return parameters, collections
 
     def get_parameters_internal(
         self, defaults: bool = False
-    ) -> types.ParameterCollection:
-        parameters = self._get_parameters(defaults=defaults)
-        return utils.split_into_collections(parameters)
+    ) -> tp.Tuple[tp.Optional[types.Parameters], types.ParameterCollection]:
+        param_tree = self._get_parameters(defaults=defaults)
+        collections = utils.split_into_collections(param_tree)
+        parameters = collections.pop("parameters", None)
+        return parameters, collections
 
     def _get_parameters(self, defaults: bool) -> tp.Dict[str, tp.Any]:
         # if (self._params is None and not defaults) or (

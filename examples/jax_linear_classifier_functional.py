@@ -17,6 +17,7 @@ def main(
     logdir: str = "runs",
     steps_per_epoch: int = 200,
     epochs: int = 100,
+    batch_size: int = 64,
 ):
 
     if debug:
@@ -44,20 +45,20 @@ def main(
     def accuracy(y_true, y_pred):
         return jnp.mean(jnp.argmax(y_pred, axis=-1) == y_true)
 
-    def linear_classifier(
-        x: jnp.ndarray, net_params, rng, initializing
-    ) -> elegy.OutputStates:
+    def linear_classifier(x: jnp.ndarray, states, initializing) -> elegy.OutputStates:
         x = x.reshape((x.shape[0], -1)) / 255
 
         if initializing:
-            w = jax.random.uniform(rng.next(), shape=[x.shape[-1], 10])
-            b = jax.random.uniform(rng.next(), shape=[10])
+            w = jax.random.uniform(states.rng.next(), shape=[x.shape[-1], 10])
+            b = jax.random.uniform(states.rng.next(), shape=[10])
             net_params = (w, b)
+        else:
+            net_params = states.net_params
+            w, b = net_params
 
-        w, b = net_params
         y_pred = jnp.dot(x, w) + b
 
-        return elegy.OutputStates(y_pred, net_params, None)
+        return elegy.OutputStates(preds=y_pred, params=net_params, states=None)
 
     model = elegy.Model(
         module=linear_classifier,
@@ -72,7 +73,7 @@ def main(
         y=y_train,
         epochs=epochs,
         steps_per_epoch=steps_per_epoch,
-        batch_size=64,
+        batch_size=batch_size,
         validation_data=(X_test, y_test),
         shuffle=True,
         callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],

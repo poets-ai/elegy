@@ -18,23 +18,23 @@ class Model(elegy.Model):
         self,
         x,
         y_true,
-        net_params,
         states: elegy.States,
         initializing: bool,
-        rng: elegy.RNGSeq,
     ):
+        assert isinstance(states.rng, elegy.RNGSeq)
+
         # flatten + scale
         x = jnp.reshape(x, (x.shape[0], -1)) / 255
 
         # model
         if initializing:
             w = jax.random.uniform(
-                rng.next(), shape=[np.prod(x.shape[1:]), 10], minval=-1, maxval=1
+                states.rng.next(), shape=[np.prod(x.shape[1:]), 10], minval=-1, maxval=1
             )
-            b = jax.random.uniform(rng.next(), shape=[1], minval=-1, maxval=1)
-            net_params = (w, b)
+            b = jax.random.uniform(states.rng.next(), shape=[1], minval=-1, maxval=1)
+        else:
+            w, b = states.net_params
 
-        w, b = net_params
         logits = jnp.dot(x, w) + b
 
         # crossentropy loss
@@ -47,7 +47,7 @@ class Model(elegy.Model):
             loss=loss,
         )
 
-        return loss, logs, states.update(net_params=net_params)
+        return loss, logs, states.update(net_params=(w, b))
 
 
 def main(
@@ -55,6 +55,7 @@ def main(
     eager: bool = False,
     logdir: str = "runs",
     steps_per_epoch: int = 200,
+    batch_size: int = 64,
     epochs: int = 100,
 ):
 
@@ -75,14 +76,14 @@ def main(
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
 
-    model = Model(optimizer=optax.adam(1e-3), run_eagerly=True)
+    model = Model(optimizer=optax.adam(1e-3), run_eagerly=eager)
 
     history = model.fit(
         x=X_train,
         y=y_train,
         epochs=epochs,
         steps_per_epoch=steps_per_epoch,
-        batch_size=64,
+        batch_size=batch_size,
         validation_data=(X_test, y_test),
         shuffle=True,
         callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],

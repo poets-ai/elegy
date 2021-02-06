@@ -80,7 +80,7 @@ In Elegy's low-level API lets you define exactly what goes on during training, t
 ```python
 class LinearClassifier(elegy.Model):
     # request parameters by name via depending injection.
-    # possible: net_params, x, y_true, net_states, metrics_states, sample_weight, class_weight, rng, states, initializing
+    # names: x, y_true, sample_weight, class_weight, states, initializing
     def test_step(
         self,
         x, # inputs
@@ -88,14 +88,15 @@ class LinearClassifier(elegy.Model):
         states: elegy.States, # model state
         initializing: bool, # if True we should initialize our parameters
     ):  
+        rng: elegy.RNGSeq = states.rng
         # flatten + scale
         x = jnp.reshape(x, (x.shape[0], -1)) / 255
         # initialize or use existing parameters
         if initializing:
             w = jax.random.uniform(
-                jax.random.PRNGKey(42), shape=[np.prod(x.shape[1:]), 10]
+                rng.next(), shape=[np.prod(x.shape[1:]), 10]
             )
-            b = jax.random.uniform(jax.random.PRNGKey(69), shape=[1])
+            b = jax.random.uniform(rng.next(), shape=[1])
         else:
             w, b = states.net_params
         # model
@@ -109,7 +110,7 @@ class LinearClassifier(elegy.Model):
             accuracy=accuracy,
             loss=loss,
         )
-        return loss, logs, states.update(rng=rng, net_params=(w, b))
+        return loss, logs, states.update(net_params=(w, b))
 ```
 
 **2.** Instantiate our `LinearClassifier` with an optimizer:
@@ -138,8 +139,9 @@ low-level API:
 ```python
 class LinearClassifier(elegy.Model):
     def test_step(
-        self, x, y_true, states: elegy.States, initializing: bool, rng: elegy.RNGSeq
+        self, x, y_true, states: elegy.States, initializing: bool
     ):
+        rng: elegy.RNGSeq = states.rng
         x = jnp.reshape(x, (x.shape[0], -1)) / 255
         if initializing:
             logits, variables = self.module.init_with_output(
@@ -157,7 +159,7 @@ class LinearClassifier(elegy.Model):
         accuracy = jnp.mean(jnp.argmax(logits, axis=-1) == y_true)
 
         logs = dict(accuracy=accuracy, loss=loss)
-        return loss, logs, states.update(rng=rng, net_params=net_params, net_states=net_states)
+        return loss, logs, states.update(net_params=net_params, net_states=net_states)
 ```
 
 ## More Info

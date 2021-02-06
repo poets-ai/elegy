@@ -21,6 +21,7 @@ def main(
     logdir: str = "runs",
     steps_per_epoch: int = 200,
     epochs: int = 100,
+    batch_size: int = 64,
 ):
 
     if debug:
@@ -80,9 +81,9 @@ def main(
     model.summary(X_train[:64])
 
     train_dataset = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
-    train_dataloader = DataLoader(train_dataset, batch_size=64, shuffle=True)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     test_dataset = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
-    test_dataloader = DataLoader(test_dataset, batch_size=64)
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
 
     history = model.fit(
         train_dataloader,
