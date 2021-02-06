@@ -89,7 +89,6 @@ class LinenModule(GeneralizedModule):
         path: types.Path,
         module: tp.Any,
         value: tp.Any,
-        include_submodules: bool,
         net_params: types.NetParams,
         net_states: types.NetStates,
     ) -> tp.Tuple[tp.Optional[types.Pytree], tp.Optional[types.Pytree]]:
@@ -98,8 +97,8 @@ class LinenModule(GeneralizedModule):
             params_tree = None
         else:
             params_tree = utils.get_path_params(path, net_params)
-            # filter only params
-            if not include_submodules and params_tree is not None:
+            # filter out submodules
+            if params_tree is not None:
                 assert isinstance(module, linen.Module)
                 params_tree = {
                     name: value
@@ -114,19 +113,17 @@ class LinenModule(GeneralizedModule):
                 collection: utils.get_path_params(path, states)
                 for collection, states in net_states.items()
             }
-            # filter only params
-            if not include_submodules:
-
-                states_tree = {
-                    collection: {
-                        name: value
-                        for name, value in states.items()
-                        if assert_id(isinstance(module, linen.Module))
-                        and not name[0].isupper()
-                    }
-                    for collection, states in states_tree.items()
-                    if states is not None
+            # filter out submodules
+            states_tree = {
+                collection: {
+                    name: value
+                    for name, value in states.items()
+                    if assert_id(isinstance(module, linen.Module))
+                    and not name[0].isupper()
                 }
+                for collection, states in states_tree.items()
+                if states is not None
+            }
 
         return params_tree, states_tree
 

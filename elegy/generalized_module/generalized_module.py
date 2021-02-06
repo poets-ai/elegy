@@ -34,7 +34,6 @@ class GeneralizedModule(ABC):
         path: types.Path,
         module: tp.Any,
         value: tp.Any,
-        include_submodules: bool,
         net_params: types.NetParams,
         net_states: types.NetStates,
     ) -> tp.Tuple[tp.Optional[types.Pytree], tp.Optional[types.Pytree]]:
