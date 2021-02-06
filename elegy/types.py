@@ -218,7 +218,7 @@ class States(tp.Mapping):
         return self.update(**kwargs)
 
     def copy(self) -> "States":
-        return States({key: copy(value) for key, value in self._data.items()})
+        return jax.tree_map(lambda x: x, self)
 
     def tree_flatten(self):
         return (tuple(self._data.values()), tuple(self._data.keys()))

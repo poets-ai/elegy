@@ -202,7 +202,13 @@ class Model(ModelBase):
     # implement low-level API methods
     # ----------------------------------------------------------------
     def base_states(self) -> types.States:
-        return types.States(rng=types.RNGSeq(self.seed))
+        return types.States(
+            rng=types.RNGSeq(self.seed),
+            net_params=None,
+            net_states=None,
+            metrics_states=None,
+            optimizer_states=None,
+        )
 
     def summary_step(
         self,
@@ -321,11 +327,9 @@ class Model(ModelBase):
             aux_losses = hooks.get_losses()
             aux_metrics = hooks.get_metrics()
 
-        assert hasattr(states, "rng")
         assert isinstance(states.rng, types.RNGSeq)
 
         if initializing:
-            metrics_states, loss_states = None, None
             metrics_fn = self.api_metrics.init(aux_metrics, states.rng)
             losses_fn = self.api_loss.init(aux_losses, states.rng)
         else:
@@ -337,7 +341,7 @@ class Model(ModelBase):
             )
             losses_fn = self.api_loss.apply(aux_losses, loss_states)
 
-        # [DI]
+        # [DI]metrics_states
         metrics_logs, metrics_states = metrics_fn(
             x=x,
             y_true=y_true,

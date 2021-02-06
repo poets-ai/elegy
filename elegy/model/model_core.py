@@ -292,8 +292,14 @@ class ModelCore:
         self.maybe_initialize(mode=mode, x=x)
 
         method = self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
+        states = self.states.copy() if self.run_eagerly else self.states
 
-        y_pred, self.states = method(x, self.states, initializing, training)
+        y_pred, self.states = method(
+            x,
+            states,
+            initializing,
+            training,
+        )
 
         return y_pred
 
@@ -341,9 +347,16 @@ class ModelCore:
         )
 
         method = self.call_test_step if self.run_eagerly else self.call_test_step_jit
+        states = self.states.copy() if self.run_eagerly else self.states
 
         loss, logs, self.states = method(
-            x, y, sample_weight, class_weight, self.states, initializing, training
+            x,
+            y,
+            sample_weight,
+            class_weight,
+            states,
+            initializing,
+            training,
         )
 
         return logs
@@ -398,13 +411,14 @@ class ModelCore:
         )
 
         method = self.call_train_step if self.run_eagerly else self.call_train_step_jit
+        states = self.states.copy() if self.run_eagerly else self.states
 
         logs, self.states = method(
             x,
             y,
             sample_weight,
             class_weight,
-            self.states,
+            states,
             initializing,
             training,
         )
@@ -443,10 +457,11 @@ class ModelCore:
         method = (
             self.call_summary_step if self.run_eagerly else self.call_summary_step_jit
         )
+        states = self.states.copy() if self.run_eagerly else self.states
 
         entries = method(
             x,
-            self.states,
+            states,
             initializing,
             training,
         )
@@ -699,10 +714,11 @@ class ModelCore:
             method = (
                 self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
             )
+            states = self.states.copy() if self.run_eagerly else self.states
 
             _, state_updates = method(
                 x,
-                self.states,
+                states,
                 initializing,
                 training,
             )
@@ -710,13 +726,14 @@ class ModelCore:
             method = (
                 self.call_test_step if self.run_eagerly else self.call_test_step_jit
             )
+            states = self.states.copy() if self.run_eagerly else self.states
 
             _, _, state_updates = method(
                 x,
                 y_true,
                 sample_weight,
                 class_weight,
-                self.states,
+                states,
                 initializing,
                 training,
             )
@@ -724,13 +741,14 @@ class ModelCore:
             method = (
                 self.call_train_step if self.run_eagerly else self.call_train_step_jit
             )
+            states = self.states.copy() if self.run_eagerly else self.states
 
             _, state_updates = method(
                 x,
                 y_true,
                 sample_weight,
                 class_weight,
-                self.states,
+                states,
                 initializing,
                 training,
             )
