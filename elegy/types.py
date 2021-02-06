@@ -132,6 +132,24 @@ class SummaryTableEntry(tp.NamedTuple):
     non_trainable_params_count: int
     non_trainable_params_size: int
 
+    @classmethod
+    def totals_entry(
+        cls,
+        trainable_params_count: int,
+        trainable_params_size: int,
+        non_trainable_params_count: int,
+        non_trainable_params_size: int,
+    ):
+        return cls(
+            path="",
+            module_type_name="",
+            output_value=None,
+            trainable_params_count=trainable_params_count,
+            trainable_params_size=trainable_params_size,
+            non_trainable_params_count=non_trainable_params_count,
+            non_trainable_params_size=non_trainable_params_size,
+        )
+
     def tree_flatten(self):
         return (
             (self.output_value,),

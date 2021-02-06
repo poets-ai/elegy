@@ -263,6 +263,15 @@ class Model(ModelBase):
                 )
             )
 
+        entries.append(
+            types.SummaryTableEntry.totals_entry(
+                trainable_params_count=utils.parameters_count(states.net_params),
+                trainable_params_size=utils.parameters_bytes(states.net_params),
+                non_trainable_params_count=utils.parameters_count(states.net_states),
+                non_trainable_params_size=utils.parameters_bytes(states.net_states),
+            )
+        )
+
         return entries
 
     def pred_step(

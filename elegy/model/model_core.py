@@ -465,6 +465,8 @@ class ModelCore:
             initializing,
             training,
         )
+        total_entry = entries[-1]
+        entries = entries[:-1]
 
         depth_groups: tp.Dict[str, tp.List[types.SummaryTableEntry]] = toolz.groupby(
             lambda entry: "/".join(entry.path.split("/")[:depth]), entries
@@ -557,10 +559,10 @@ class ModelCore:
                 )
 
         # global summaries
-        params_count = sum(e.trainable_params_count for e in entries)
-        params_size = sum(e.trainable_params_size for e in entries)
-        states_count = sum(e.non_trainable_params_count for e in entries)
-        states_size = sum(e.non_trainable_params_size for e in entries)
+        params_count = total_entry.trainable_params_count
+        params_size = total_entry.trainable_params_size
+        states_count = total_entry.non_trainable_params_count
+        states_size = total_entry.non_trainable_params_size
         total_count = params_count + states_count
         total_size = params_size + states_size
 
