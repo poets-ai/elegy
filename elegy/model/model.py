@@ -160,7 +160,7 @@ class Model(ModelBase):
                 f"rng must be one of the following types: int, types.RNGSeq. Got {kwargs['rng']}"
             )
 
-        super().__init__(rng=types.RNGSeq(seed), **kwargs)
+        super().__init__(**kwargs)
 
         self.module = module
         self.loss = loss
@@ -193,26 +193,94 @@ class Model(ModelBase):
 
     def update_modules(self):
         if self.api_module is not None:
-            net_params, net_states = self.api_module.update(
+            self.api_module.update(
                 params=self.states.net_params,
                 states=self.states.net_states,
             )
-            self.states = self.states.update(
-                net_params=net_params, net_states=net_states
+
+    # ----------------------------------------------------------------
+    # implement low-level API methods
+    # ----------------------------------------------------------------
+    def base_states(self) -> types.States:
+        return types.States(
+            rng=types.RNGSeq(self.seed),
+            net_params=None,
+            net_states=None,
+            metrics_states=None,
+            optimizer_states=None,
+        )
+
+    def summary_step(
+        self,
+        x: tp.Any,
+        states: types.States,
+        initializing: bool,
+        training: bool,
+    ) -> tp.List[types.SummaryTableEntry]:
+        with hooks.context(summaries=True):
+            self.call_pred_step(x, states, initializing, training)
+            summaries = hooks.get_summaries()
+
+        entries: tp.List[types.SummaryTableEntry] = []
+
+        for path, module, value in summaries:
+
+            module_params, module_states = self.api_module.get_summary_params(
+                path=path,
+                module=module,
+                value=value,
+                net_params=self.states.net_params,
+                net_states=self.states.net_states,
             )
+
+            entries.append(
+                types.SummaryTableEntry(
+                    path=("/".join(map(str, path)) if path else "*"),
+                    module_type_name=(
+                        module.__class__.__name__ if is_generalizable(module) else ""
+                    ),
+                    output_value=value,
+                    trainable_params_count=(
+                        utils.parameters_count(module_params)
+                        if module_params is not None
+                        else 0
+                    ),
+                    trainable_params_size=(
+                        utils.parameters_bytes(module_params)
+                        if module_params is not None
+                        else 0
+                    ),
+                    non_trainable_params_count=(
+                        utils.parameters_count(module_states)
+                        if module_states is not None
+                        else 0
+                    ),
+                    non_trainable_params_size=(
+                        utils.parameters_bytes(module_states)
+                        if module_states is not None
+                        else 0
+                    ),
+                )
+            )
+
+        entries.append(
+            types.SummaryTableEntry.totals_entry(
+                trainable_params_count=utils.parameters_count(states.net_params),
+                trainable_params_size=utils.parameters_bytes(states.net_params),
+                non_trainable_params_count=utils.parameters_count(states.net_states),
+                non_trainable_params_size=utils.parameters_bytes(states.net_states),
+            )
+        )
+
+        return entries
 
     def pred_step(
         self,
-        # net_params: tp.Any,
         x: tp.Any,
-        # net_states: tp.Any,
-        # rng: types.RNG,
-        mode: types.Mode,
-        initializing: bool,
         states: types.States,
+        initializing: bool,
+        training: bool,
     ) -> model_core.PredStep:
-
-        training = mode == types.Mode.train
 
         if self.module is None:
             raise types.MissingModule(
@@ -224,7 +292,7 @@ class Model(ModelBase):
             x,
             states=states,
             initializing=initializing,
-            mode=mode,
+            training=training,
         )
 
         assert isinstance(states.rng, types.RNGSeq)
@@ -244,35 +312,33 @@ class Model(ModelBase):
         return model_core.PredStep(
             y_pred=y_pred,
             states=states.update(net_states=net_states, net_params=net_params),
-            aux_losses=hooks.get_losses(),
-            aux_metrics=hooks.get_metrics(),
-            summaries=hooks.get_summaries(),
         )
 
     def test_step(
         self,
-        mode: types.Mode,
-        # net_params: tp.Any,
         x: tp.Any,
         y_true: tp.Any,
-        # net_states: tp.Any,
-        # metrics_states: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        # rng: types.RNG,
-        initializing: bool,
         states: types.States,
+        initializing: bool,
+        training: bool,
     ) -> model_core.TestStep:
-        y_pred, states, aux_losses, aux_metrics, _ = self.call_pred_step(
-            x=x,
-            mode=mode,
-            states=states,
-            initializing=initializing,
-        )
+
+        with hooks.context(losses=True, summaries=True):
+            y_pred, states = self.call_pred_step(
+                x=x,
+                states=states,
+                initializing=initializing,
+                training=training,
+            )
+
+            aux_losses = hooks.get_losses()
+            aux_metrics = hooks.get_metrics()
+
         assert isinstance(states.rng, types.RNGSeq)
 
         if initializing:
-            metrics_states, loss_states = None, None
             metrics_fn = self.api_metrics.init(aux_metrics, states.rng)
             losses_fn = self.api_loss.init(aux_losses, states.rng)
         else:
@@ -284,21 +350,16 @@ class Model(ModelBase):
             )
             losses_fn = self.api_loss.apply(aux_losses, loss_states)
 
-        # [DI]
+        # [DI]metrics_states
         metrics_logs, metrics_states = metrics_fn(
             x=x,
             y_true=y_true,
             y_pred=y_pred,
-            net_params=states.net_params,
-            net_states=states.net_states,
-            metrics_states=states.metrics_states,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            rng=states.rng,
             initializing=initializing,
             states=states,
-            mode=mode,
-            training=(mode == types.Mode.train),
+            training=training,
         )
 
         # [DI]
@@ -306,16 +367,11 @@ class Model(ModelBase):
             x=x,
             y_true=y_true,
             y_pred=y_pred,
-            net_params=states.net_params,
-            net_states=states.net_states,
-            metrics_states=states.metrics_states,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            rng=states.rng,
             initializing=initializing,
             states=states,
-            mode=mode,
-            training=(mode == types.Mode.train),
+            training=training,
         )
 
         logs = utils.merge_with_unique_names(metrics_logs, loss_logs)
@@ -327,11 +383,11 @@ class Model(ModelBase):
         self,
         x: tp.Any,
         y_true: tp.Any,
-        mode: types.Mode,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         states: types.States,
         initializing: bool,
+        training: bool,
     ) -> model_core.GradStep:
         def loss_fn(
             net_params: tp.Any,
@@ -345,11 +401,11 @@ class Model(ModelBase):
             loss, logs, states = self.call_test_step(
                 x=x,
                 y_true=y_true,
-                mode=mode,
                 states=states,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 initializing=initializing,
+                training=training,
             )
 
             return loss, (logs, states)
@@ -369,27 +425,22 @@ class Model(ModelBase):
         self,
         x: tp.Any,
         y_true: tp.Any,
-        mode: types.Mode,
-        # net_params: tp.Any,
-        # net_states: tp.Any,
-        # metrics_states: tp.Any,
-        # optimizer_states: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        # rng: types.RNG,
         states: types.States,
         initializing: bool,
+        training: bool,
     ) -> model_core.TrainStep:
 
         if initializing:
             loss, logs, states = self.call_test_step(
                 x=x,
                 y_true=y_true,
-                mode=mode,
                 states=states,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 initializing=initializing,
+                training=training,
             )
             grads = None
 
@@ -397,11 +448,11 @@ class Model(ModelBase):
             loss, logs, states, grads = self.call_grad_step(
                 x=x,
                 y_true=y_true,
-                mode=mode,
                 states=states,
                 sample_weight=sample_weight,
                 class_weight=class_weight,
                 initializing=initializing,
+                training=training,
             )
 
         if self.optimizer is None:
@@ -417,13 +468,9 @@ class Model(ModelBase):
             optimizer_states = self.api_optimizer.init(states.rng, states.net_params)
             net_params = states.net_params
         else:
-            if isinstance(self.states.optimizer_states, types.Uninitialized):
-                raise ValueError(
-                    f"Trying to run default `train_step` with an optimizer "
-                    "but `optimizer_states` was not initialized on `init`. Please initialize optimizer."
-                )
             assert grads is not None
 
+            # TODO: add current_lr this to GeneralizedOptimizer and do this generically
             if isinstance(self.optimizer, Optimizer):
                 lr = self.optimizer.current_lr(self.states.optimizer_states)
 
@@ -444,189 +491,9 @@ class Model(ModelBase):
 
         return model_core.TrainStep(logs, states)
 
-    def summary(
-        self,
-        x,
-        depth: int = 2,
-        tablefmt: str = "fancy_grid",
-        return_repr: bool = False,
-        **tablulate_kwargs,
-    ) -> tp.Optional[str]:
-        """
-        Prints a summary of the network.
-        Arguments:
-            x: A sample of inputs to the network.
-            depth: The level number of nested level which will be showed.
-                Information about summaries from modules deeper than `depth`
-                will be aggregated together.
-            tablefmt: A string representing the style of the table generated by
-                `tabulate`. See
-                [python-tabulate](https://github.com/astanin/python-tabulate)
-                for more options.
-            tablulate_kwargs: Additional keyword arguments passed to `tabulate`.
-                See [python-tabulate](https://github.com/astanin/python-tabulate)
-                for more options.
-        """
-        mode = types.Mode.summary
-        initializing = False
-
-        self.maybe_initialize(mode, x=x)
-
-        method = self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
-
-        _, _, _, _, summaries = method(
-            x,
-            mode,
-            self.states,
-            initializing,
-        )
-
-        assert summaries is not None
-
-        def format_output(outputs) -> str:
-            file = StringIO()
-            outputs = jax.tree_map(lambda x: f"{x.shape}{{pad}}  {x.dtype}", outputs)
-            yaml.safe_dump(
-                outputs, file, default_flow_style=False, indent=2, explicit_end=False
-            )
-            return file.getvalue().replace("\n...", "")
-
-        def format_size(size):
-            return (
-                f"{size / 1e9 :,.1f} GB"
-                if size > 1e9
-                else f"{size / 1e6 :,.1f} MB"
-                if size > 1e6
-                else f"{size / 1e3 :,.1f} KB"
-                if size > 1e3
-                else f"{size:,} B"
-            )
-
-        table: tp.List = [["Inputs", format_output(x), "", ""]]
-
-        for path, module, value in summaries:
-
-            module_depth = len(path)
-
-            if module_depth > depth:
-                continue
-
-            include_submodules = module_depth == depth
-
-            module_params, module_states = self.api_module.get_summary_params(
-                path=path,
-                module=module,
-                value=value,
-                include_submodules=include_submodules,
-                net_params=self.states.net_params,
-                net_states=self.states.net_states,
-            )
-
-            params_count = (
-                utils.parameters_count(module_params)
-                if module_params is not None
-                else 0
-            )
-            params_size = (
-                utils.parameters_bytes(module_params)
-                if module_params is not None
-                else 0
-            )
-            states_count = (
-                utils.parameters_count(module_states)
-                if module_states is not None
-                else 0
-            )
-            states_size = (
-                utils.parameters_bytes(module_states)
-                if module_states is not None
-                else 0
-            )
-            base_name = "/".join(map(str, path))
-
-            if not base_name:
-                base_name = "*"
-
-            class_name = module.__class__.__name__ if is_generalizable(module) else ""
-
-            table.append(
-                [
-                    f"{base_name}{{pad}}  {class_name}",
-                    format_output(value),
-                    f"{params_count:,}{{pad}}    {format_size(params_size)}"
-                    if params_count > 0
-                    else "",
-                    f"{states_count:,}{{pad}}    {format_size(states_size)}"
-                    if states_count > 0
-                    else "",
-                ]
-            )
-
-        # add padding
-        for col in range(4):
-            max_length = max(
-                len(line.split("{pad}")[0])
-                for row in table
-                for line in row[col].split("\n")
-            )
-
-            for row in table:
-                row[col] = "\n".join(
-                    line.format(
-                        pad=" " * (max_length - len(line.rstrip().split("{pad}")[0]))
-                    )
-                    for line in row[col].rstrip().split("\n")
-                )
-
-        # global summaries
-        params_count = utils.parameters_count(self.states.net_params)
-        params_size = utils.parameters_bytes(self.states.net_params)
-        states_count = utils.parameters_count(self.states.net_states)
-        states_size = utils.parameters_bytes(self.states.net_states)
-        total_count = params_count + states_count
-        total_size = params_size + states_size
-
-        summary = (
-            "\n"
-            + tabulate(
-                table,
-                headers=[
-                    "Layer",
-                    "Outputs Shape",
-                    "Trainable\nParameters",
-                    "Non-trainable\nParameters",
-                ],
-                tablefmt=tablefmt,
-                **tablulate_kwargs,
-            )
-            + "\n"
-            + tabulate(
-                [
-                    [
-                        f"Total Parameters:",
-                        f"{total_count:,}",
-                        f"{format_size(total_size)}" if total_count > 0 else "",
-                    ],
-                    [
-                        f"Trainable Parameters:",
-                        f"{params_count:,}",
-                        f"{format_size(params_size)}" if params_count > 0 else "",
-                    ],
-                    [
-                        f"Non-trainable Parameters:",
-                        f"{states_count:,}",
-                        f"{format_size(states_size)}" if states_count > 0 else "",
-                    ],
-                ],
-                tablefmt="plain",
-            )
-            + "\n"
-        )
-
-        print(summary)
-
-        if return_repr:
-            return summary
+    # ----------------------------------------------------------------
+    # Model-only methods
+    # ----------------------------------------------------------------
 
 
 class Metrics:
@@ -720,7 +587,7 @@ class AvgMetric(GeneralizedModule):
             total = jax.tree_map(lambda x: jnp.zeros_like(x), preds)
             return types.OutputStates(
                 preds=preds,
-                params=types.UNINITIALIZED,
+                params=None,
                 states=(n, total),
             )
 
@@ -746,7 +613,7 @@ class AvgMetric(GeneralizedModule):
             preds = jax.tree_map(lambda total: total / n, total)
             return types.OutputStates(
                 preds=preds,
-                params=types.UNINITIALIZED,
+                params=None,
                 states=(n, total),
             )
 
@@ -806,7 +673,7 @@ class Losses:
                 for name, value in logs.items()
             }
 
-            logs, states = self.loss_metrics.init(rng=rng)(logs)
+            logs, _, states = self.loss_metrics.init(rng=rng)(logs)
 
             return loss, logs, states
 
@@ -833,7 +700,8 @@ class Losses:
                 for name, value in logs.items()
             }
 
-            logs, states_ = self.loss_metrics.apply(states)(logs)
+            parameters = None
+            logs, _, states_ = self.loss_metrics.apply(parameters, states)(logs)
 
             return loss, logs, states_
 
@@ -843,8 +711,12 @@ class Losses:
 class LossMetrics(module.Module):
     def call(self, logs):
 
-        count = self.add_parameter("count", lambda: jnp.array(0, dtype=jnp.int32))
-        total = self.add_parameter("total", lambda: jax.tree_map(jnp.zeros_like, logs))
+        count = self.add_parameter(
+            "count", lambda: jnp.array(0, dtype=jnp.int32), trainable=False
+        )
+        total = self.add_parameter(
+            "total", lambda: jax.tree_map(jnp.zeros_like, logs), trainable=False
+        )
 
         count = count + 1
         total = jax.tree_multimap(lambda a, b: a + b, total, logs)

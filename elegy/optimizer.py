@@ -88,9 +88,6 @@ class Optimizer(GeneralizedOptimizer):
     ) -> tp.Optional[jnp.ndarray]:
         """Returns the learning rate scaled by schedule(s) that will be used for the next training step"""
 
-        if (
-            not isinstance(optimizer_states, types.Uninitialized)
-            and self.lr_schedule is not None
-        ):
+        if self.lr_schedule is not None:
             step = optimizer_states[-1].count
             return self.lr_schedule(step)

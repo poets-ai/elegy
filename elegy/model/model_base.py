@@ -48,7 +48,7 @@ class ModelBase(ModelCore):
     >>> mlp = MLP()
     >>> x = jnp.ones(shape=[10, 2])
 
-    >>> y_pred, collections = mlp.init(rng=elegy.RNGSeq(42))(x)
+    >>> y_pred, parameters, collections = mlp.init(rng=elegy.RNGSeq(42))(x)
     >>> y_pred.shape
     (10, 2)
 
