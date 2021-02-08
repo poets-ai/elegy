@@ -195,33 +195,27 @@ class OutputStates(tp.NamedTuple):
 @jax.tree_util.register_pytree_node_class
 class States(tp.Mapping):
     def __init__(self, _data=None, **kwargs):
-        self._data = dict(_data, **kwargs) if _data is not None else dict(**kwargs)
+        self.__dict__.update(
+            dict(_data, **kwargs) if _data is not None else dict(**kwargs)
+        )
 
     def __len__(self) -> int:
-        return len(self._data)
+        return len(self.__dict__)
 
     def __getitem__(self, key):
-        return self._data[key]
+        return self.__dict__[key]
 
     def __iter__(self):
-        return iter(self._data)
+        return iter(self.__dict__)
 
     def __getattr__(self, key):
-        if key not in self._data:
-            raise AttributeError(
-                f"'{self.__class__.__name__}' object has no attribute '{key}'"
-            )
+        return object.__getattr__(self, key)
 
-        return self._data[key]
-
-    def __setstate__(self, d):
-        self._data = d
-
-    def __getstate__(self):
-        return self._data
+    def __setattr__(self, key, value):
+        raise AttributeError("can't set attribute")
 
     def update(self, **kwargs) -> "States":
-        data = self._data.copy()
+        data = self.__dict__.copy()
         data.update(kwargs)
         return States(data)
 
@@ -230,7 +224,8 @@ class States(tp.Mapping):
         kwargs = {
             key: value
             for key, value in kwargs.items()
-            if key not in self._data or (self._data[key] is None and value is not None)
+            if key not in self.__dict__
+            or (self.__dict__[key] is None and value is not None)
         }
 
         return self.update(**kwargs)
@@ -239,7 +234,7 @@ class States(tp.Mapping):
         return jax.tree_map(lambda x: x, self)
 
     def tree_flatten(self):
-        return (tuple(self._data.values()), tuple(self._data.keys()))
+        return (tuple(self.__dict__.values()), tuple(self.__dict__.keys()))
 
     @classmethod
     def tree_unflatten(cls, aux_data, children):
