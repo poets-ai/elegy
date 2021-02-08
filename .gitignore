@@ -149,3 +149,4 @@ cython_debug/
 /models
 /TODO
 .git
+.python-version

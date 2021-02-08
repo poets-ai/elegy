@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased](https://github.com/poets-ai/elegy/tree/HEAD)
+
+[Full Changelog](https://github.com/poets-ai/elegy/compare/0.4.1...HEAD)
+
+**Merged pull requests:**
+
+- Improve States: uses \_\_dict\_\_ so States works with vars [\#159](https://github.com/poets-ai/elegy/pull/159) ([cgarciae](https://github.com/cgarciae))
+- Simplify API: Cleans-up some API details around Model and Module [\#158](https://github.com/poets-ai/elegy/pull/158) ([cgarciae](https://github.com/cgarciae))
+
 ## [0.4.1](https://github.com/poets-ai/elegy/tree/0.4.1) (2021-02-03)
 
 [Full Changelog](https://github.com/poets-ai/elegy/compare/0.4.0...0.4.1)

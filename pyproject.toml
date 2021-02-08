@@ -17,7 +17,7 @@ url = "https://vxlabs.com/pypi/"
 secondary = true
 
 [tool.poetry.dependencies]
-python = "^3.6.1"
+python = ">=3.6.1,<3.9" # we cant support 3.9 until dm-tree (used by optax) supports 3.9.
 numpy = "^1.0.0"
 jax = "^0.2.9"
 jaxlib = "^0.1.59"
