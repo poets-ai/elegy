@@ -1,8 +1,8 @@
 # Changelog
 
-## [Unreleased](https://github.com/poets-ai/elegy/tree/HEAD)
+## [0.5.0](https://github.com/poets-ai/elegy/tree/0.5.0) (2021-02-08)
 
-[Full Changelog](https://github.com/poets-ai/elegy/compare/0.4.1...HEAD)
+[Full Changelog](https://github.com/poets-ai/elegy/compare/0.4.1...0.5.0)
 
 **Merged pull requests:**
 
@@ -44,6 +44,7 @@
 - Make Models Pickleable Again [\#133](https://github.com/poets-ai/elegy/pull/133) ([alexander-g](https://github.com/alexander-g))
 - SCCE fix for bug in Jax\<0.2.7 [\#130](https://github.com/poets-ai/elegy/pull/130) ([alexander-g](https://github.com/alexander-g))
 - table progress [\#127](https://github.com/poets-ai/elegy/pull/127) ([alexander-g](https://github.com/alexander-g))
+- `sparse\_categorical\_crossentropy` should check bounds [\#123](https://github.com/poets-ai/elegy/pull/123) ([alexander-g](https://github.com/alexander-g))
 
 ## [0.3.0](https://github.com/poets-ai/elegy/tree/0.3.0) (2020-12-17)
 
@@ -70,7 +71,6 @@
 
 **Merged pull requests:**
 
-- `sparse\_categorical\_crossentropy` should check bounds [\#123](https://github.com/poets-ai/elegy/pull/123) ([alexander-g](https://github.com/alexander-g))
 - float sample\_weight for precision/recall metrics [\#122](https://github.com/poets-ai/elegy/pull/122) ([alexander-g](https://github.com/alexander-g))
 - Added Huber loss [\#121](https://github.com/poets-ai/elegy/pull/121) ([abhinavsp0730](https://github.com/abhinavsp0730))
 - ResNet Docs + CIFAR10 Example [\#119](https://github.com/poets-ai/elegy/pull/119) ([alexander-g](https://github.com/alexander-g))
