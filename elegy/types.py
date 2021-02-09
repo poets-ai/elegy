@@ -49,7 +49,9 @@ class RNGSeq(TrivialPytree):
 
     def __init__(self, key: tp.Union[int, jnp.ndarray]):
         self.key = (
-            jax.random.PRNGKey(key) if isinstance(key, int) or key.shape == () else key
+            jax.random.PRNGKey(key)
+            if isinstance(key, int) or (hasattr(key, "shape") and key.shape == ())
+            else key
         )
 
     def next(self) -> jnp.ndarray:

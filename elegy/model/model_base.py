@@ -343,6 +343,7 @@ class ModelBase(ModelCore):
         callbacks.on_train_begin()
         # data_handler._initial_epoch = (  # pylint: disable=protected-access
         #     self._maybe_load_initial_epoch_from_ckpt(initial_epoch))
+        epoch_logs = {}
 
         for epoch, iterator in data_handler.enumerate_epochs():
             self.reset_metrics()
@@ -350,10 +351,19 @@ class ModelBase(ModelCore):
             logs = {}
             with data_handler.catch_stop_iteration():
                 for step in data_handler.steps():
-                    callbacks.on_train_batch_begin(step)
                     batch = next(iterator)
                     # sample_weight = batch[2] if len(batch) == 3 else None
                     x_batch, y_batch, sample_weight = unpack_x_y_sample_weight(batch)
+
+                    self.maybe_initialize(
+                        mode=types.Mode.train,
+                        x=x_batch,
+                        y_true=y_batch,
+                        sample_weight=sample_weight,
+                        class_weight=class_weight,
+                    )
+
+                    callbacks.on_train_batch_begin(step)
 
                     tmp_logs = self.train_on_batch(
                         x=x_batch,
@@ -367,11 +377,18 @@ class ModelBase(ModelCore):
                     logs = tmp_logs
                     callbacks.on_train_batch_end(step, logs)
 
+                    if self.stop_training:
+                        break
+
             epoch_logs = copy(logs)
             epoch_logs.update({"size": data_handler.batch_size})
 
             # Run validation.
-            if validation_data and self._should_eval(epoch, validation_freq):
+            if (
+                validation_data
+                and self._should_eval(epoch, validation_freq)
+                and not self.stop_training
+            ):
                 val_x, val_y, val_sample_weight = unpack_x_y_sample_weight(
                     validation_data
                 )
@@ -392,14 +409,11 @@ class ModelBase(ModelCore):
                     pass
 
             callbacks.on_epoch_end(epoch, epoch_logs)
-            # print(
-            #     f"epoch: {epoch} - "
-            #     + " - ".join(f"{key}: {value:.3f}" for key, value in epoch_logs.items())
-            # )
+
             if self.stop_training:
                 break
 
-        callbacks.on_train_end()
+        callbacks.on_train_end(epoch_logs)
 
         return self.history
 
@@ -506,14 +520,23 @@ class ModelBase(ModelCore):
             self.reset_metrics()
             with data_handler.catch_stop_iteration():
                 for step in data_handler.steps():
-                    callbacks.on_test_batch_begin(step)
                     batch = next(iterator)
                     x_batch, y_batch, sample_weight = unpack_x_y_sample_weight(batch)
+
+                    self.maybe_initialize(
+                        mode=types.Mode.test,
+                        x=x_batch,
+                        y_true=y_batch,
+                        sample_weight=sample_weight,
+                        class_weight=None,
+                    )
+                    callbacks.on_test_batch_begin(step)
 
                     tmp_logs = self.test_on_batch(
                         x=x_batch,
                         y=y_batch,
                         sample_weight=sample_weight,
+                        class_weight=None,
                     )
                     tmp_logs.update({"size": data_handler.batch_size})
                     logs = tmp_logs
@@ -608,8 +631,14 @@ class ModelBase(ModelCore):
             self.reset_metrics()
             with data_handler.catch_stop_iteration():
                 for step in data_handler.steps():
-                    callbacks.on_predict_batch_begin(step)
                     batch = next(iterator)
+
+                    self.maybe_initialize(
+                        mode=types.Mode.pred,
+                        x=batch[0],
+                    )
+                    callbacks.on_predict_batch_begin(step)
+
                     tmp_batch_outputs = self.predict_on_batch(x=batch[0])
                     batch_outputs = tmp_batch_outputs
 

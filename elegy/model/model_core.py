@@ -159,7 +159,6 @@ class ModelCore:
         initializing: bool,
         training: bool,
     ) -> PredStep:
-
         return utils.inject_dependencies(self.pred_step)(
             x=x,
             states=states,
@@ -210,26 +209,6 @@ class ModelCore:
         training: bool,
     ) -> GradStep:
         raise NotImplementedError()
-
-    def call_grad_step(
-        self,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-        states: types.States,
-        initializing: bool,
-        training: bool,
-    ) -> GradStep:
-        return utils.inject_dependencies(self.grad_step)(
-            x=x,
-            y_true=y_true,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            states=states,
-            initializing=initializing,
-            training=training,
-        )
 
     def train_step(
         self,
@@ -366,7 +345,7 @@ class ModelCore:
         x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         y: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
         sample_weight: tp.Optional[np.ndarray] = None,
-        class_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[tp.Any] = None,
     ) -> types.Logs:
         """
         Runs a single gradient update on a single batch of data.
@@ -702,7 +681,7 @@ class ModelCore:
         x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple] = (),
         y_true: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
         sample_weight: tp.Optional[np.ndarray] = None,
-        class_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[tp.Any] = None,
     ):
 
         if mode <= self.init_stage:
