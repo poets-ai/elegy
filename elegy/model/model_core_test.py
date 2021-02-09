@@ -15,13 +15,13 @@ class ModelCoreTest(unittest.TestCase):
                 nonlocal N
                 N = N + 1
 
-                return elegy.PredStep.simple(
+                return elegy.PredStep(
                     y_pred=None,
                     states=elegy.States(net_params=1, net_states=2),
                 )
 
             def test_step(self):
-                _, states, _, _, _ = self.pred_step()
+                _, states = self.pred_step()
                 return elegy.TestStep(0, {}, states.update(metrics_states=3))
 
             def train_step(self):
@@ -31,10 +31,10 @@ class ModelCoreTest(unittest.TestCase):
         model = Model()
 
         assert N == 0
-        assert model.states.net_params != 1
-        assert model.states.net_states != 2
-        assert model.states.metrics_states != 3
-        assert model.states.optimizer_states != 4
+        assert not hasattr(model.states, "net_params")
+        assert not hasattr(model.states, "net_states")
+        assert not hasattr(model.states, "metrics_states")
+        assert not hasattr(model.states, "optimizer_states")
 
         model.maybe_initialize(elegy.types.Mode.pred)
 
@@ -66,13 +66,13 @@ class ModelCoreTest(unittest.TestCase):
 
     def test_pred_step(self):
         class Model(elegy.model.model_core.ModelCore):
-            def pred_step(self, x, net_states, initializing):
+            def pred_step(self, x, states, initializing):
                 if initializing:
                     states = elegy.States(net_states=0)
                 else:
-                    states = elegy.States(net_states=net_states + 1)
+                    states = elegy.States(net_states=states.net_states + 1)
 
-                return elegy.PredStep.simple(
+                return elegy.PredStep(
                     y_pred=1,
                     states=states,
                 )
@@ -84,12 +84,12 @@ class ModelCoreTest(unittest.TestCase):
                 ...
 
         model = Model()
-        assert isinstance(model.states.net_states, elegy.types.Uninitialized)
+        assert not hasattr(model.states, "net_states")
 
         preds = model.predict_on_batch(x=(np.array(1.0)))
         assert preds == 1
         assert model.states.net_states == 1
-        assert isinstance(model.states.net_params, elegy.types.Uninitialized)
+        assert not hasattr(model.states, "net_params")
 
         model.run_eagerly = False
 
@@ -99,25 +99,25 @@ class ModelCoreTest(unittest.TestCase):
 
     def test_test_step(self):
         class Model(elegy.model.model_core.ModelCore):
-            def test_step(self, metrics_states, initializing):
+            def test_step(self, states, initializing):
                 return elegy.TestStep(
                     loss=0.1,
                     logs=dict(loss=1.0),
                     states=elegy.States(metrics_states=0)
                     if initializing
-                    else elegy.States(metrics_states=metrics_states + 1),
+                    else elegy.States(metrics_states=states.metrics_states + 1),
                 )
 
             def train_step(self):
                 ...
 
         model = Model()
-        assert isinstance(model.states.metrics_states, elegy.types.Uninitialized)
+        assert not hasattr(model.states, "metrics_states")
 
         logs = model.test_on_batch(x=(np.array(1.0)), y=(1.0,))
         assert logs["loss"] == 1
         assert model.states.metrics_states == 1
-        assert isinstance(model.states.net_params, elegy.types.Uninitialized)
+        assert not hasattr(model.states, "net_params")
 
         model.run_eagerly = False
 
@@ -127,21 +127,21 @@ class ModelCoreTest(unittest.TestCase):
 
     def test_train_step(self):
         class Model(elegy.model.model_core.ModelCore):
-            def train_step(self, optimizer_states, initializing):
+            def train_step(self, states, initializing):
                 return elegy.TrainStep(
                     logs=dict(loss=2.0),
                     states=elegy.States(optimizer_states=0)
                     if initializing
-                    else elegy.States(optimizer_states=optimizer_states + 1),
+                    else elegy.States(optimizer_states=states.optimizer_states + 1),
                 )
 
         model = Model()
-        assert isinstance(model.states.optimizer_states, elegy.types.Uninitialized)
+        assert not hasattr(model.states, "optimizer_states")
 
         logs = model.train_on_batch(x=(np.array(1.0)), y=(1.0,))
         assert logs["loss"] == 2
         assert model.states.optimizer_states == 1
-        assert isinstance(model.states.net_params, elegy.types.Uninitialized)
+        assert not hasattr(model.states, "net_params")
 
         model.run_eagerly = False
 

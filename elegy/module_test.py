@@ -20,18 +20,20 @@ class NewModuleTest(TestCase):
         m = M()
         m.init()(2.0)
 
-        collections = {"parameters": {"m": 1, "n": 10}}
-        m.set_default_parameters(collections)
+        parameters = {"m": 1, "n": 10}
+        collections = {}
+
+        m.set_default_parameters(parameters, collections)
 
         assert m.m == 1
         assert m.n == 10
 
         with pytest.raises(ValueError):
+            parameters = {"m": 100}
             collections = {
-                "parameters": {"m": 100},
                 "xyz": {"n": 100},
             }
-            m.set_default_parameters(collections)
+            m.set_default_parameters(parameters, collections)
 
         assert m.m == 1
         assert m.n == 10
@@ -47,12 +49,14 @@ class NewModuleTest(TestCase):
         m.init()(2.0)
 
         collections = {"parameters": {"m": 1, "n": 10}}
+        paramters = collections.pop("parameters")
 
-        m.set_default_parameters(collections)
+        m.set_default_parameters(paramters, collections)
 
-        collections = m.get_default_parameters()
+        parameters, collections = m.get_default_parameters()
 
-        assert collections == {"parameters": {"m": 1, "n": 10}}
+        assert parameters == {"m": 1, "n": 10}
+        assert collections == {}
 
     def test_basic(self):
         class M(elegy.Module):
@@ -62,9 +66,10 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        y, collections = m.init()(2.0)
+        y, parameters, collections = m.init()(2.0)
 
-        assert collections == {"parameters": {"n": 1}}
+        assert parameters == {"n": 1}
+        assert collections == {}
         assert y == 3
 
     def test_basic_call_error(self):
@@ -87,18 +92,20 @@ class NewModuleTest(TestCase):
         m = M()
 
         y = m.call_with_defaults()(2.0)
-        collections = m.get_default_parameters()
+        parameters, collections = m.get_default_parameters()
 
         assert y == 3
-        assert collections == {"parameters": {"n": 1}}
+        assert parameters == {"n": 1}
+        assert collections == {}
 
         # update params
-        m.set_default_parameters({"parameters": {"n": 20}})
+        m.set_default_parameters({"n": 20}, {})
         y = m.call_with_defaults()(2.0)
-        collections = m.get_default_parameters()
+        parameters, collections = m.get_default_parameters()
 
         assert y == 22
-        assert collections == {"parameters": {"n": 20}}
+        assert parameters == {"n": 20}
+        assert collections == {}
 
     def test_basic_apply(self):
         class M(elegy.Module):
@@ -111,23 +118,26 @@ class NewModuleTest(TestCase):
         with pytest.raises(ValueError):
             m.get_default_parameters()
 
-        y, collections = m.init()(2.0)
+        y, parameters, collections = m.init()(2.0)
 
         assert y == 3
-        assert collections == {"parameters": {"n": 1}}
+        assert parameters == {"n": 1}
+        assert collections == {}
 
         # set default parameters
-        m.set_default_parameters(collections)
+        m.set_default_parameters(parameters, collections)
 
         # run with new params
-        y, collections = m.apply({"parameters": {"n": 5}})(2.0)
+        y, parameters, collections = m.apply({"n": 5}, {})(2.0)
 
         assert y == 7
-        assert collections == {"parameters": {"n": 5}}
+        assert parameters == {"n": 5}
+        assert collections == {}
 
         # check defaults are not modify by apply.
-        default_params = m.get_default_parameters()
-        assert default_params == {"parameters": {"n": 1}}
+        default_params, default_collections = m.get_default_parameters()
+        assert default_params == {"n": 1}
+        assert default_collections == {}
 
     def test_basic_compose(self):
         class A(elegy.Module):
@@ -137,16 +147,17 @@ class NewModuleTest(TestCase):
 
         class M(elegy.Module):
             def call(self, x):
-                n = self.add_parameter("n", lambda: 1)
+                n = self.add_parameter("n", lambda: 1, trainable=False)
                 x = A()(x)
                 return n + x
 
         m = M()
 
-        y, collections = m.init()(2.0)
+        y, parameters, collections = m.init()(2.0)
 
         assert y == 13
-        assert collections == {"parameters": {"n": 1, "a": {"b": 10}}}
+        assert parameters == {"a": {"b": 10}}
+        assert collections == {"states": {"n": 1, "a": {}}}
 
     def test_basic_list_submodules(self):
         class A(elegy.Module):
@@ -167,7 +178,7 @@ class NewModuleTest(TestCase):
         m = M()
 
         with elegy.hooks.context(set_all=True):
-            y, collections = m.init()(2.0)
+            y, parameters, collections = m.init()(2.0)
             summaries = elegy.hooks.get_summaries()
 
         assert summaries == [
@@ -182,13 +193,12 @@ class NewModuleTest(TestCase):
                 13,
             ),
         ]
-        assert collections == {
-            "parameters": {
-                "n": 1,
-                "ais/0": {},
-                "ais/1": {"b": 10},
-            },
+        assert parameters == {
+            "n": 1,
+            "ais/0": {},
+            "ais/1": {"b": 10},
         }
+        assert collections == {}
         assert y == 13
 
     def test_basic_dynamic_submodules(self):
@@ -210,7 +220,7 @@ class NewModuleTest(TestCase):
         m = M()
 
         with elegy.hooks.context(set_all=True):
-            y, params = m.init()(2.0)
+            y, params, collections = m.init()(2.0)
             summaries = elegy.hooks.get_summaries()
 
         assert summaries == [
@@ -226,14 +236,13 @@ class NewModuleTest(TestCase):
             ),
         ]
         assert params == {
-            "parameters": {
-                "n": 1,
-                "a": {},
-                "a_1": {
-                    "b": 10,
-                },
+            "n": 1,
+            "a": {},
+            "a_1": {
+                "b": 10,
             },
         }
+        assert collections == {}
         assert y == 13
 
     def test_basic_update(self):
@@ -245,24 +254,25 @@ class NewModuleTest(TestCase):
 
         m = M()
 
-        y, collections = m.init()(2.0)
+        y, parameters, collections = m.init()(2.0)
 
         assert y == 3
-        assert collections == {"parameters": {"n": 1}}
+        assert parameters == {"n": 1}
+        assert collections == {}
 
-        y, collections = m.apply(collections)(2.0)
+        y, parameters, collections = m.apply(parameters, collections)(2.0)
         assert y == 3
 
-        y, collections = m.apply(collections)(2.0)
+        y, parameters, collections = m.apply(parameters, collections)(2.0)
         assert y == 4
 
         # jit has to use functional API
-        y, collections = m.apply_jit(collections)(2.0)
+        y, parameters, collections = m.apply_jit(parameters, collections)(2.0)
         assert y == 5
 
         # error is raised if no parameters are given
         with pytest.raises(TypeError):
-            y, collections = m.apply_jit()(2.0)
+            y, parameters, collections = m.apply_jit()(2.0)
 
 
 class ModuleTest(TestCase):
@@ -311,12 +321,9 @@ class ModuleTest(TestCase):
 
         m = ModuleTest.MyModule()
 
-        y, collections = m.init()(x)
+        y, parameters, collections = m.init()(x)
 
-        parameters, states = (
-            collections["parameters"],
-            collections["states"],
-        )
+        states = collections["states"]
 
         assert "bias" in parameters
         assert "linear" in parameters
@@ -327,7 +334,7 @@ class ModuleTest(TestCase):
         assert "linear1" in parameters
 
         with elegy.hooks.context(set_all=True):
-            y, collections = m.apply(collections)(x)
+            y, parameters, collections = m.apply(parameters, collections)(x)
             # y2: jnp.ndarray = m.call_jit(x)
 
             losses = elegy.hooks.get_losses()
@@ -338,10 +345,7 @@ class ModuleTest(TestCase):
         assert metrics
         assert summaries
 
-        parameters, states = (
-            collections["parameters"],
-            collections["states"],
-        )
+        states = collections["states"]
 
         assert y.shape == (4, 7)
         assert "bias" in parameters
@@ -362,36 +366,37 @@ class ModuleTest(TestCase):
         assert summaries[2][:2] == ((), m)
         assert summaries[2][2].shape == (4, 7)
 
-        m.set_default_parameters(jax.tree_map(lambda x: -x, collections))
-
-        collections = m.get_default_parameters()
-        parameters, states = (
-            collections["parameters"],
-            collections["states"],
+        m.set_default_parameters(
+            jax.tree_map(lambda x: -x, parameters),
+            jax.tree_map(lambda x: -x, collections),
         )
 
-        assert parameters["bias"][0] == -1
-        assert m.linear.get_default_parameters()["parameters"]["w"][0, 0] == -1
-        assert m.linear.get_default_parameters()["parameters"]["b"][0] == -1
-        assert m.linear1.get_default_parameters()["parameters"]["w"][0, 0] == -1
-        assert m.linear1.get_default_parameters()["parameters"]["b"][0] == -1
+        parameters, collections = m.get_default_parameters()
+        states = collections["states"]
 
-        current_collection = m.get_default_parameters()
+        assert parameters["bias"][0] == -1
+        assert m.linear.get_default_parameters()[0]["w"][0, 0] == -1
+        assert m.linear.get_default_parameters()[0]["b"][0] == -1
+        assert m.linear1.get_default_parameters()[0]["w"][0, 0] == -1
+        assert m.linear1.get_default_parameters()[0]["b"][0] == -1
+
+        current_parameters, current_collection = m.get_default_parameters()
 
         m.clear_default_parameters()
 
-        collections = m.get_default_parameters()
+        parameters, collections = m.get_default_parameters()
 
+        assert parameters is None
         assert jax.tree_leaves(collections) == []
         assert elegy.utils.parameters_count(collections) == 0
 
-        m.set_default_parameters(current_collection)
+        m.set_default_parameters(current_parameters, current_collection)
 
-        assert m.get_default_parameters()["parameters"]["bias"][0] == -1
-        assert m.linear.get_default_parameters()["parameters"]["w"][0, 0] == -1
-        assert m.linear.get_default_parameters()["parameters"]["b"][0] == -1
-        assert m.linear1.get_default_parameters()["parameters"]["w"][0, 0] == -1
-        assert m.linear1.get_default_parameters()["parameters"]["b"][0] == -1
+        assert m.get_default_parameters()[0]["bias"][0] == -1
+        assert m.linear.get_default_parameters()[0]["w"][0, 0] == -1
+        assert m.linear.get_default_parameters()[0]["b"][0] == -1
+        assert m.linear1.get_default_parameters()[0]["w"][0, 0] == -1
+        assert m.linear1.get_default_parameters()[0]["b"][0] == -1
 
     def test_set_parameters_shape_check(self):
         x = np.random.uniform(-1, 1, size=(4, 5))
@@ -399,48 +404,51 @@ class ModuleTest(TestCase):
 
         m.init(set_defaults=True)(x)
 
-        params0 = m.get_default_parameters()
+        params0, collections0 = m.get_default_parameters()
         # new random params
         params1 = jax.tree_map(lambda x: np.random.random(x.shape), params0)
+        collections1 = jax.tree_map(lambda x: np.random.random(x.shape), collections0)
         # set a parameter with incorrect shape
-        params1["parameters"]["linear1"]["w"] = np.zeros([10, 10])
+        params1["linear1"]["w"] = np.zeros([10, 10])
 
         # should raise error when trying to set the incorrect params
         with pytest.raises(ValueError):
-            m.set_default_parameters(params1)
+            m.set_default_parameters(params1, collections1)
 
         # the parameters should not have changed despite the error
         assert np.all(
             jax.tree_leaves(
                 jax.tree_multimap(
-                    lambda x, y: np.allclose(x, y), params0, m.get_default_parameters()
+                    lambda x, y: np.allclose(x, y),
+                    params0,
+                    m.get_default_parameters()[0],
                 )
             )
         )
 
         # should not raise an error
         with pytest.raises(ValueError):
-            m.set_default_parameters(params1)
+            m.set_default_parameters(params1, collections1)
 
         # linear1.w should not change
         assert np.allclose(
-            m.get_default_parameters()["parameters"]["linear1"]["w"],
-            params0["parameters"]["linear1"]["w"],
+            m.get_default_parameters()[0]["linear1"]["w"],
+            params0["linear1"]["w"],
         )
         # but all others
         assert np.all(
             jax.tree_multimap(
                 lambda x, y: np.allclose(x, y) if x.shape == y.shape else True,
                 params1,
-                m.get_default_parameters(),
+                m.get_default_parameters()[0],
             )
         )
 
         # remove a parameter
-        params1["parameters"]["linear1"].pop("w")
+        params1["linear1"].pop("w")
         # should raise with check_missing=True
         with pytest.raises(ValueError):
-            m.set_default_parameters(params1)
+            m.set_default_parameters(params1, collections1)
 
 
 class ModuleDynamicTest(TestCase):
@@ -490,30 +498,25 @@ class ModuleDynamicTest(TestCase):
 
         m.init_jit(set_defaults=True)(x)
 
-        collections = m.get_default_parameters()
-        parameters, states = (
-            collections["parameters"],
-            collections["states"],
-        )
+        parameters, collections = m.get_default_parameters()
+        states = collections["states"]
 
         assert "bias" in parameters
         assert "linear" in parameters
         assert "w" in parameters["linear"]
         assert "b" in parameters["linear"]
-        assert m.linear.get_default_parameters()["states"]["n"] == 0
+        assert m.linear.get_default_parameters()[1]["states"]["n"] == 0
         assert states["linear"]["n"] == 0
         assert "linear_1" in parameters
 
         with elegy.hooks.context(set_all=True):
             # y: jnp.ndarray = m.call_with_defaults()(x)
-            collections = m.get_default_parameters()
+            parameters, collections = m.get_default_parameters()
             y: jnp.ndarray
-            y, collections = m.apply_jit(collections)(x)
-            m.set_default_parameters(collections)
-            parameters, states = (
-                collections["parameters"],
-                collections["states"],
-            )
+            y, parameters, collections = m.apply_jit(parameters, collections)(x)
+            m.set_default_parameters(parameters, collections)
+
+            states = collections["states"]
 
             losses = elegy.hooks.get_losses()
             metrics = elegy.hooks.get_metrics()
@@ -528,7 +531,7 @@ class ModuleDynamicTest(TestCase):
         assert "linear" in parameters
         assert "w" in parameters["linear"]
         assert "b" in parameters["linear"]
-        assert m.linear.get_default_parameters()["states"]["n"] == 1
+        assert m.linear.get_default_parameters()[1]["states"]["n"] == 1
         assert states["linear"]["n"] == 1
         assert "linear_1" in parameters
 
@@ -543,34 +546,35 @@ class ModuleDynamicTest(TestCase):
         assert summaries[2][:2] == ((), m)
         assert summaries[2][2].shape == (4, 7)
 
-        m.set_default_parameters(jax.tree_map(lambda x: -x, m.get_default_parameters()))
-
-        collections = m.get_default_parameters()
-        parameters, states = (
-            collections["parameters"],
-            collections["states"],
+        m.set_default_parameters(
+            jax.tree_map(lambda x: -x, m.get_default_parameters()[0]),
+            jax.tree_map(lambda x: -x, m.get_default_parameters()[1]),
         )
 
-        assert parameters["bias"][0] == -1
-        assert m.linear.get_default_parameters()["parameters"]["w"][0, 0] == -1
-        assert m.linear.get_default_parameters()["parameters"]["b"][0] == -1
-        assert m.linear_1.get_default_parameters()["parameters"]["w"][0, 0] == -1
-        assert m.linear_1.get_default_parameters()["parameters"]["b"][0] == -1
+        parameters, collections = m.get_default_parameters()
+        states = collections["states"]
 
-        current_parameters = m.get_default_parameters()
+        assert parameters["bias"][0] == -1
+        assert m.linear.get_default_parameters()[0]["w"][0, 0] == -1
+        assert m.linear.get_default_parameters()[0]["b"][0] == -1
+        assert m.linear_1.get_default_parameters()[0]["w"][0, 0] == -1
+        assert m.linear_1.get_default_parameters()[0]["b"][0] == -1
+
+        current_parameters, current_collections = m.get_default_parameters()
 
         m.clear_default_parameters()
 
-        assert jax.tree_leaves(m.get_default_parameters()) == []
-        assert elegy.utils.parameters_count(m.get_default_parameters()) == 0
+        assert m.get_default_parameters()[0] is None
+        assert jax.tree_leaves(m.get_default_parameters()[1]) == []
+        assert elegy.utils.parameters_count(m.get_default_parameters()[1]) == 0
 
-        m.set_default_parameters(current_parameters)
+        m.set_default_parameters(current_parameters, current_collections)
 
-        assert m.get_default_parameters()["parameters"]["bias"][0] == -1
-        assert m.linear.get_default_parameters()["parameters"]["w"][0, 0] == -1
-        assert m.linear.get_default_parameters()["parameters"]["b"][0] == -1
-        assert m.linear_1.get_default_parameters()["parameters"]["w"][0, 0] == -1
-        assert m.linear_1.get_default_parameters()["parameters"]["b"][0] == -1
+        assert m.get_default_parameters()[0]["bias"][0] == -1
+        assert m.linear.get_default_parameters()[0]["w"][0, 0] == -1
+        assert m.linear.get_default_parameters()[0]["b"][0] == -1
+        assert m.linear_1.get_default_parameters()[0]["w"][0, 0] == -1
+        assert m.linear_1.get_default_parameters()[0]["b"][0] == -1
 
     def test_auto_init(self):
         x = np.random.uniform(-1, 1, size=(4, 5))
@@ -579,14 +583,14 @@ class ModuleDynamicTest(TestCase):
         m.call_with_defaults()(x)
 
         # THESE:
-        assert m.linear.get_default_parameters()["states"]["n"] == 1
-        assert m.get_default_parameters()["states"]["linear"]["n"] == 1
+        assert m.linear.get_default_parameters()[1]["states"]["n"] == 1
+        assert m.get_default_parameters()[1]["states"]["linear"]["n"] == 1
 
-        assert "bias" in m.get_default_parameters()["parameters"]
-        assert "linear" in m.get_default_parameters()["parameters"]
-        assert "w" in m.get_default_parameters()["parameters"]["linear"]
-        assert "b" in m.get_default_parameters()["parameters"]["linear"]
-        assert "linear_1" in m.get_default_parameters()["parameters"]
+        assert "bias" in m.get_default_parameters()[0]
+        assert "linear" in m.get_default_parameters()[0]
+        assert "w" in m.get_default_parameters()[0]["linear"]
+        assert "b" in m.get_default_parameters()[0]["linear"]
+        assert "linear_1" in m.get_default_parameters()[0]
 
 
 class TestTransforms(TestCase):
@@ -642,28 +646,30 @@ class TestTransforms(TestCase):
         m = SomeModule()
 
         @jax.jit
-        def f(params, x):
+        def f(params, collections, x):
 
-            m.set_default_parameters(params)
+            m.set_default_parameters(params, collections)
 
             outputs = m.call_with_defaults()(x)
 
-            return m.get_default_parameters(), outputs
+            params, collections = m.get_default_parameters()
+
+            return params, collections, outputs
 
         assert total_called == 0
 
-        _, collections = m.init(set_defaults=True)(1)
+        _, parameters, collections = m.init(set_defaults=True)(1)
         assert total_called == 1
 
-        collections, outputs = f(collections, 1)
-        m.set_default_parameters(collections)
+        parameters, collections, outputs = f(parameters, collections, 1)
+        m.set_default_parameters(parameters, collections)
 
         assert total_called == 2
 
-        collections = m.get_default_parameters()
+        parameters, collections = m.get_default_parameters()
         print(collections)
-        collections, outputs = f(collections, 1)
-        m.set_default_parameters(collections)
+        parameters, collections, outputs = f(parameters, collections, 1)
+        m.set_default_parameters(parameters, collections)
 
         assert total_called == 2
 
@@ -690,23 +696,23 @@ class TestTransforms(TestCase):
         m = SomeModule()
 
         @jax.jit
-        def f(collections, x):
+        def f(parameters, collections, x):
 
-            y, collections = m.apply(collections)(x)
+            y, parameters, collections = m.apply(parameters, collections)(x)
 
-            return collections, y
+            return parameters, collections, y
 
         assert total_called == 0
 
-        y, collections = m.init()(1)
+        y, parameters, collections = m.init()(1)
 
         assert total_called == 1
 
-        collections, y = f(collections, 1)
+        parameters, collections, y = f(parameters, collections, 1)
 
         assert total_called == 2
 
-        collections, y = f(collections, 1)
+        parameters, collections, y = f(parameters, collections, 1)
 
         assert total_called == 2
 
@@ -853,29 +859,27 @@ class TestOthers(TestCase):
                 x = Linear(1)(x)
                 return x
 
-        def loss_fn(parameters, x, y):
-            y_pred, _ = mlp.apply(dict(parameters=parameters))(x)
+        def loss_fn(parameters, collections, x, y):
+            y_pred, _, collections = mlp.apply(parameters, collections)(x)
             return jnp.mean(jnp.square(y - y_pred))
 
-        def update(parameters, x, y):
-            loss, gradients = jax.value_and_grad(loss_fn)(parameters, x, y)
+        def update(parameters, collections, x, y):
+            loss, gradients = jax.value_and_grad(loss_fn)(parameters, collections, x, y)
             parameters = jax.tree_multimap(
                 lambda p, g: p - 0.01 * g, parameters, gradients
             )
 
-            return loss, parameters
+            return parameters
 
         x = np.random.uniform(size=(15, 3))
         y = np.random.uniform(size=(15, 1))
         mlp = MLP()
 
-        y_pred, collections = mlp.init(rng=elegy.RNGSeq(42))(x)
-
-        parameters = collections["parameters"]
+        y_pred, parameters, collections = mlp.init(rng=elegy.RNGSeq(42))(x)
 
         update_jit = jax.jit(update)
 
         for step in range(1):
-            loss, parameters = update_jit(parameters, x, y)
+            parameters = update_jit(parameters, collections, x, y)
 
-        mlp.set_default_parameters(dict(parameters=parameters))
+        mlp.set_default_parameters(parameters, collections)

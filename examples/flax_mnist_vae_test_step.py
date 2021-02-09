@@ -106,7 +106,8 @@ class VariationalAutoEncoder(elegy.Model):
 
     # request parameters by name via depending injection.
     # possible: x, y_true, sample_weight, class_weight, initializing
-    def pred_step(self, x, rng, net_states, net_params, states, initializing):
+    def pred_step(self, x, states, initializing):
+        rng: elegy.RNGSeq = states.rng
 
         if initializing:
             (z, mean, stddev), enc_variables = self.encoder.init_with_output(
@@ -114,8 +115,8 @@ class VariationalAutoEncoder(elegy.Model):
             )
             logits, dec_variables = self.decoder.init_with_output(rng.next(), z)
         else:
-            (enc_states, dec_states) = net_states
-            (enc_params, dec_params) = net_params
+            (enc_states, dec_states) = states.net_states
+            (enc_params, dec_params) = states.net_params
             enc_variables = dict(params=enc_params, **enc_states)
             (z, mean, stddev), enc_variables = self.encoder.apply(
                 enc_variables, x, rng, rngs={"params": rng.next()}, mutable=True
@@ -125,7 +126,7 @@ class VariationalAutoEncoder(elegy.Model):
                 dec_variables, z, rngs={"params": rng.next()}, mutable=True
             )
 
-        aux_losses = dict(kl_divergence_loss=2e-1 * kl_divergence(mean, stddev))
+        elegy.hooks.add_loss("kl_divergence_loss", 2e-1 * kl_divergence(mean, stddev))
 
         enc_states, enc_params = enc_variables.pop("params")
         dec_states, dec_params = dec_variables.pop("params")
@@ -139,9 +140,6 @@ class VariationalAutoEncoder(elegy.Model):
                 net_states=nets_states,
                 rng=rng,
             ),
-            aux_losses=aux_losses,
-            aux_metrics={},
-            summaries=[],
         )
 
     # request parameters by name via depending injection.
@@ -149,21 +147,20 @@ class VariationalAutoEncoder(elegy.Model):
     def test_step(
         self,
         x,
-        net_params,
         states: elegy.States,
-        net_states,
-        rng,
-        metrics_states,
         training,
         initializing,
-        mode,
     ):
-        logits, states, aux_losses, _, _ = self.call_pred_step(
-            x=x,
-            mode=mode,
-            states=states,
-            initializing=initializing,
-        )
+        with elegy.hooks.context(losses=True):
+            logits, states = self.call_pred_step(
+                x=x,
+                states=states,
+                initializing=initializing,
+                training=training,
+            )
+            aux_losses = elegy.hooks.get_losses()
+
+        rng: elegy.RNGSeq = states.rng
 
         # crossentropy loss + kl
         kl_loss = aux_losses["kl_divergence_loss"]
@@ -180,9 +177,9 @@ class VariationalAutoEncoder(elegy.Model):
         if initializing:
             loss_metrics_fn = self.loss_metrics.init(rng=rng)
         else:
-            loss_metrics_fn = self.loss_metrics.apply(metrics_states)
+            loss_metrics_fn = self.loss_metrics.apply(None, states.metrics_states)
 
-        logs, metrics_states = loss_metrics_fn(logs)
+        logs, _, metrics_states = loss_metrics_fn(logs)
 
         states = states.update(metrics_states=metrics_states)
 
@@ -191,6 +188,7 @@ class VariationalAutoEncoder(elegy.Model):
 
 def main(
     steps_per_epoch: int = 200,
+    batch_size: int = 64,
     epochs: int = 50,
     debug: bool = False,
     eager: bool = False,
@@ -225,7 +223,7 @@ def main(
     history = model.fit(
         x=X_train,
         epochs=epochs,
-        batch_size=64,
+        batch_size=batch_size,
         steps_per_epoch=steps_per_epoch,
         validation_data=(X_test,),
         shuffle=True,
@@ -262,8 +260,10 @@ def main(
     # sample
     model_decoder = elegy.Model(
         model.decoder,
-        net_params=model.states.net_params[1],
-        net_states=model.states.net_states[1],
+        states=elegy.States(
+            net_params=model.states.net_params[1],
+            net_states=model.states.net_states[1],
+        ),
     )
 
     z_samples = np.random.normal(size=(12, LATENT_SIZE))

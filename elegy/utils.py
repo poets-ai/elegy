@@ -92,7 +92,7 @@ def get_input_args(
     *,
     states: types.States,
     initializing: bool,
-    mode: types.Mode,
+    training: bool,
 ) -> tp.Tuple[tp.Tuple, tp.Dict[str, tp.Any]]:
 
     if isinstance(x, tp.Tuple):
@@ -106,13 +106,9 @@ def get_input_args(
         kwargs = {}
 
     apply_kwargs = dict(
-        initializing=initializing,
-        net_params=states.net_params,
-        net_states=states.net_states,
-        rng=states.rng,
         states=states,
-        mode=mode,
-        training=(mode == types.Mode.train),
+        initializing=initializing,
+        training=training,
     )
     apply_kwargs.update(kwargs)
 
@@ -289,10 +285,6 @@ def get_path_params(path: types.Path, params: tp.Any) -> tp.Any:
             return None
 
     return params
-
-
-def none_or_uninitialized(x: tp.Any) -> bool:
-    return x is None or isinstance(x, types.Uninitialized)
 
 
 # def merge_collections(collections: types.ParameterCollection) -> tp.Dict[str, tp.Any]:

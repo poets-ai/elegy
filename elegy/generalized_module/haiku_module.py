@@ -85,23 +85,14 @@ class HaikuModule(GeneralizedModule):
         path: tp.Tuple[str, ...],
         module: tp.Any,
         value: tp.Any,
-        include_submodules: bool,
         net_params: types.NetParams,
         net_states: types.NetStates,
     ) -> tp.Tuple[tp.Optional[types.Pytree], tp.Optional[types.Pytree]]:
 
         path_str = "/".join(path)
 
-        if include_submodules:
-            params_tree = {
-                name: value for name, value in net_params.items() if path_str in name
-            }
-            states_tree = {
-                name: value for name, value in net_states.items() if path_str in name
-            }
-        else:
-            params_tree = net_params[path_str] if path_str in net_params else None
-            states_tree = net_states[path_str] if path_str in net_states else None
+        params_tree = net_params[path_str] if path_str in net_params else None
+        states_tree = net_states[path_str] if path_str in net_states else None
 
         return params_tree, states_tree
 

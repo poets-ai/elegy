@@ -88,10 +88,10 @@ class VAE(nn.Module):
     output_shape: tp.Sequence[int] = MNIST_IMAGE_SHAPE
 
     @nn.compact
-    def __call__(self, x, rng: elegy.RNGSeq):
+    def __call__(self, x, states: elegy.States):
         z, mean, stddev = Encoder(
             hidden_size=self.hidden_size, latent_size=self.latent_size
-        )(x, rng)
+        )(x, states.rng)
         logits = Decoder(hidden_size=self.hidden_size, output_shape=self.output_shape)(
             z
         )
@@ -103,6 +103,7 @@ class VAE(nn.Module):
 
 def main(
     steps_per_epoch: int = 200,
+    batch_size: int = 64,
     epochs: int = 50,
     debug: bool = False,
     eager: bool = False,
@@ -148,7 +149,7 @@ def main(
     history = model.fit(
         x=X_train,
         epochs=epochs,
-        batch_size=64,
+        batch_size=batch_size,
         steps_per_epoch=steps_per_epoch,
         validation_data=(X_test,),
         shuffle=True,

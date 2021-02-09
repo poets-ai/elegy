@@ -34,7 +34,6 @@ class GeneralizedModule(ABC):
         path: types.Path,
         module: tp.Any,
         value: tp.Any,
-        include_submodules: bool,
         net_params: types.NetParams,
         net_states: types.NetStates,
     ) -> tp.Tuple[tp.Optional[types.Pytree], tp.Optional[types.Pytree]]:
@@ -44,8 +43,8 @@ class GeneralizedModule(ABC):
         self,
         params: tp.Optional[types.ModuleParams],
         states: tp.Optional[types.ModuleStates],
-    ) -> tp.Tuple[tp.Optional[types.ModuleParams], tp.Optional[types.ModuleStates]]:
-        return params, states
+    ):
+        pass
 
 
 class CallableModule(GeneralizedModule):
@@ -62,8 +61,8 @@ class CallableModule(GeneralizedModule):
             else:
                 return types.OutputStates(
                     preds=output,
-                    params=types.UNINITIALIZED,
-                    states=types.UNINITIALIZED,
+                    params=None,
+                    states=None,
                 )
 
         return lambda_
@@ -84,8 +83,8 @@ class CallableModule(GeneralizedModule):
             else:
                 return types.OutputStates(
                     preds=output,
-                    params=types.UNINITIALIZED,
-                    states=types.UNINITIALIZED,
+                    params=None,
+                    states=None,
                 )
 
         return lambda_
