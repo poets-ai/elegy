@@ -19,6 +19,7 @@ from elegy.data import (
 )
 from elegy.model.model_core import ModelCore, PredStep, TestStep
 from tabulate import tabulate
+from elegy.data import utils as data_utils
 
 # from elegy.module import Module
 
@@ -155,6 +156,7 @@ class ModelBase(ModelCore):
         validation_steps: tp.Optional[int] = None,
         validation_batch_size: tp.Optional[int] = None,
         validation_freq: int = 1,
+        drop_remaining: bool = True,
     ) -> History:
         """
         Trains the model for a fixed number of epochs (iterations on a dataset).
@@ -351,19 +353,16 @@ class ModelBase(ModelCore):
             logs = {}
             with data_handler.catch_stop_iteration():
                 for step in data_handler.steps():
+                    callbacks.on_train_batch_begin(step)
                     batch = next(iterator)
                     # sample_weight = batch[2] if len(batch) == 3 else None
                     x_batch, y_batch, sample_weight = unpack_x_y_sample_weight(batch)
 
-                    self.maybe_initialize(
-                        mode=types.Mode.train,
-                        x=x_batch,
-                        y_true=y_batch,
-                        sample_weight=sample_weight,
-                        class_weight=class_weight,
-                    )
-
-                    callbacks.on_train_batch_begin(step)
+                    if drop_remaining and not data_utils.has_batch_size(
+                        batch, data_handler.batch_size
+                    ):
+                        print("\n\ndropping\n\n")
+                        continue
 
                     tmp_logs = self.train_on_batch(
                         x=x_batch,
@@ -401,6 +400,7 @@ class ModelBase(ModelCore):
                         steps=validation_steps,
                         callbacks=callbacks,
                         # return_dict=True,
+                        drop_remaining=drop_remaining,
                     )
 
                     val_logs = {"val_" + name: val for name, val in val_logs.items()}
@@ -437,6 +437,7 @@ class ModelBase(ModelCore):
         sample_weight: tp.Optional[np.ndarray] = None,
         steps: tp.Optional[int] = None,
         callbacks: tp.Union[tp.List[Callback], CallbackList, None] = None,
+        drop_remaining: bool = False,
     ) -> types.Logs:
         """Returns the loss value & metrics values for the model in test mode.
         Computation is done in batches.
@@ -520,17 +521,14 @@ class ModelBase(ModelCore):
             self.reset_metrics()
             with data_handler.catch_stop_iteration():
                 for step in data_handler.steps():
+                    callbacks.on_test_batch_begin(step)
                     batch = next(iterator)
                     x_batch, y_batch, sample_weight = unpack_x_y_sample_weight(batch)
 
-                    self.maybe_initialize(
-                        mode=types.Mode.test,
-                        x=x_batch,
-                        y_true=y_batch,
-                        sample_weight=sample_weight,
-                        class_weight=None,
-                    )
-                    callbacks.on_test_batch_begin(step)
+                    if drop_remaining and not data_utils.has_batch_size(
+                        batch, data_handler.batch_size
+                    ):
+                        continue
 
                     tmp_logs = self.test_on_batch(
                         x=x_batch,
@@ -558,6 +556,7 @@ class ModelBase(ModelCore):
         batch_size: tp.Optional[int] = None,
         steps: tp.Optional[int] = None,
         callbacks: tp.Union[tp.List[Callback], CallbackList, None] = None,
+        drop_remaining: bool = False,
     ) -> tp.Any:
         """Generates output predictions for the input samples.
         Computation is done in batches.
@@ -631,13 +630,13 @@ class ModelBase(ModelCore):
             self.reset_metrics()
             with data_handler.catch_stop_iteration():
                 for step in data_handler.steps():
+                    callbacks.on_predict_batch_begin(step)
                     batch = next(iterator)
 
-                    self.maybe_initialize(
-                        mode=types.Mode.pred,
-                        x=batch[0],
-                    )
-                    callbacks.on_predict_batch_begin(step)
+                    if drop_remaining and not data_utils.has_batch_size(
+                        batch, data_handler.batch_size
+                    ):
+                        continue
 
                     tmp_batch_outputs = self.predict_on_batch(x=batch[0])
                     batch_outputs = tmp_batch_outputs
