@@ -1,29 +1,32 @@
 # Low-level API
-Elegy's low-level API gives you more power and flexibility by allowing you to specify the core computation that methods like `fit`, `predict`, and `evaluate` perform. To use the low-level API instead of just passing a couple of arguments to `Model` you actually create your own subclass of it and override some methods. 
+Elegy's low-level API allows you to override some core methods in `Model` that specify what happens during training, inference, etc. This approach is perfect when you want to do things that are hard or simply not possible with the high-level API as it gives you the flexibility to do anything inside these methods as long as you return the expected types. 
 
 
 ### Methods
 This is the list of all the overrideable methods:
 
-| Method       | Task                                                       | Callers                                  | Default Calls |
-| :----------- | :--------------------------------------------------------- | :--------------------------------------- | ------------- |
-| `pred_step`  | Calculate the predictions of the model.                    | `predict`, `summary`, `predict_on_batch` |               |
-| `test_step`  | Calculate the losses en metrics.                           | `evaluate`, `test_on_batch`              | `pred_step`   |
-| `grad_step`  | Calculate the gradient for the network's parameters.       |                                          | `test_step`   |
-| `train_step` | Update the parameters of the model based on the gradients. | `fit`, `train_on_batch`                  | `grad_step`   |
+| Caller Methods                       | Overridable Method |
+| :----------------------------------- | :----------------- |
+| - `predict` <br>- `predict_on_batch` | `pred_step`        |
+| - `evaluate`<br>- `test_on_batch`    | `test_step`        |
+|                                      | `grad_step`        |
+| - `fit`<br>- `train_on_batch`        | `train_step`       |
+| - `summary`                          | `summary_step`     |
 
-For each method you should be aware of its "Callers" -methods from `Model` class that directly calls it- and the "Default Calls" -a dependent method it calls on the default implementation. The default implementation has this simple dependency graph:
+Each overrideable method has a default implementation which is what gives rise to the high-level API, the default implementation almost always implements a method in term of another in this manner:
+
 ```
 pred_step ⬅ test_step ⬅ grad_step ⬅ train_step
+pred_step ⬅ summary_step
 ```
-which makes it such that e.g. even if you just override `test_step` to define how the loss is calculated you can still use `fit` because the default implementation of `train_step` would call your custom implementation of `test_step` via `grad_step`.
+This allows you to e.g. override `test_step` and still be able to use use `fit` since `train_step` (called by `fit`) will call your `test_step` via `grad_step`. It also means that e.g. if you implement `test_step` but not `pred_step` there is a high chance both `predict` and `summary` will not work as expected since both depend on `pred_step`. 
 
 ### Example
-Lets see a simple example of a linear classifier using `test_step`:
+Each overrideable methods takes some input + state, performs some `jax` operations + updates the state, and returns some outputs + the new state. Lets see a simple example of a linear classifier using `test_step`:
 
 ```python
 class LinearClassifier(elegy.Model):
-    def test_step(self, x,  y_true,  states, initializing):  
+    def test_step(self, x,  y_true,  states, initializing) -> elegy.TestStep:  
         x = jnp.reshape(x, (x.shape[0], -1)) / 255
 
         # initialize or use existing parameters
@@ -46,12 +49,11 @@ class LinearClassifier(elegy.Model):
         # metrics
         logs = dict(accuracy=accuracy, loss=loss)
 
-        return loss, logs, states.update(rng=rng, net_params=(w, b))
-```
+        # update states
+        states = states.update(net_params=(w, b))
 
-As you see here we perform everything from parameter initialization, modeling, calculating the main loss, and logging some metrics. To actually use this just have to define an instance and after that you can use it as always, e.g:
+        return loss, logs, states
 
-```python
 model = LinearClassifier(
     optimizer=optax.adam(1e-3)
 )
@@ -64,7 +66,9 @@ model.fit(
 )
 ```
 
-#### States
-The low-level API provides a simple immutable / functional state management system via the `states: elegy.States` parameter passed all methods. `elegy.States` is a `NamedTuple` that contains all the states needed in `Model`, each method accepts the current state and returns the next. As you can see in the last line of the example, the `States.update` method gives you a simple way of updating the states tuple without having to manually copy all its other parameters.
+As you see here we perform everything from parameter initialization, modeling, calculating the main loss, and logging some metrics. Notes:
 
-### Composing Methods
+* The `states` argument of type `elegy.States` is an immutable Mapping which you add / update fields via its `update` method.
+* `net_params` is one of the names used by the default implementation, check the [States](./states.md) guid for more information.
+* `initializing` tells you whether you to initialize your parameters or fetch them from `states`, if you are using a Module framework this usually tells you whether to call `init` or `apply`.
+* `test_step` returns 3 specific outputs, you should check the docs for each method to know what to return.

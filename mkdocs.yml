@@ -29,7 +29,8 @@ nav:
   - Serialization: na.md
 - Low Level API:
   - Basics: low-level-api/basics.md
-  - pred_step: na.md
+  - States: low-level-api/states.md
+  - pred_step: low-level-api/pred_step.md
   - test_step: na.md
   - grad_step: na.md
   - train_step: na.md
@@ -56,7 +57,6 @@ nav:
     States: api/States.md
     TestStep: api/TestStep.md
     TrainStep: api/TrainStep.md
-    Uninitialized: api/Uninitialized.md
     callbacks:
       CSVLogger: api/callbacks/CSVLogger.md
       Callback: api/callbacks/Callback.md
@@ -68,6 +68,9 @@ nav:
       RemoteMonitor: api/callbacks/RemoteMonitor.md
       TensorBoard: api/callbacks/TensorBoard.md
       TerminateOnNaN: api/callbacks/TerminateOnNaN.md
+    data:
+      DataLoader: api/data/DataLoader.md
+      Dataset: api/data/Dataset.md
     flax_summarize: api/flax_summarize.md
     flax_summary: api/flax_summary.md
     hooks:
@@ -193,11 +196,16 @@ theme:
     logo: fontawesome/solid/infinity
     repo: octicons/mark-github-16
 markdown_extensions:
-- admonition
-- codehilite
 - pymdownx.arithmatex
+- admonition
+- codehilite:
+    guess_lang: false
+    use_pygments: true
+    noclasses: true
+    pygments_style: default
 plugins:
 - search
 - mkdocs-jupyter
+- mkdocstrings
 extra_javascript:
 - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML
