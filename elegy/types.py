@@ -17,6 +17,7 @@ else:
     from typing_extensions import Protocol, runtime_checkable
 
 EPSILON = 1e-7
+F = tp.TypeVar("F", bound=tp.Callable)
 
 
 class Mode(int, Enum):
@@ -224,8 +225,7 @@ class States(tp.Mapping):
         kwargs = {
             key: value
             for key, value in kwargs.items()
-            if key not in self.__dict__
-            or (self.__dict__[key] is None and value is not None)
+            if key not in self.__dict__ or self.__dict__[key] is None
         }
 
         return self.update(**kwargs)

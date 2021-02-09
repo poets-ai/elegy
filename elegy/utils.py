@@ -47,6 +47,21 @@ def get_signature_f_recursive(f: tp.Callable) -> tp.Callable:
         return f
 
 
+@tp.overload
+def inject_dependencies(
+    f: types.F,
+) -> types.F:
+    ...
+
+
+@tp.overload
+def inject_dependencies(
+    f: tp.Callable,
+    signature_f: types.F,
+) -> types.F:
+    ...
+
+
 def inject_dependencies(
     f: tp.Callable,
     signature_f: tp.Optional[tp.Callable] = None,
