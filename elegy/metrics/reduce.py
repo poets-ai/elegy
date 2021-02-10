@@ -77,10 +77,8 @@ def reduce(
 class Reduce(Metric):
     """Encapsulates metrics that perform a reduce operation on the values."""
 
-    def __init__(
-        self, reduction: Reduction, on: tp.Optional[types.IndexLike] = None, **kwargs
-    ):
-        super().__init__(on=on, **kwargs)
+    def __init__(self, reduction: Reduction, **kwargs):
+        super().__init__(**kwargs)
 
         self._reduction = reduction
 
@@ -108,13 +106,11 @@ class Reduce(Metric):
             sample_weight: Optional weighting of each example. Defaults to 1.
 
         Returns:
-            Array with the cummulative reduce.
+            Array with the cumulative reduce.
         """
         total = self.add_parameter(
             "total",
-            shape=[],
-            dtype=self.dtype,
-            initializer=initializers.Constant(0),
+            lambda: jnp.array(0, dtype=jnp.int32),
             trainable=False,
         )
 
@@ -124,9 +120,7 @@ class Reduce(Metric):
         ):
             count = self.add_parameter(
                 "count",
-                shape=[],
-                dtype=jnp.int32,
-                initializer=initializers.Constant(0),
+                lambda: jnp.array(0, dtype=jnp.int32),
                 trainable=False,
             )
         else:

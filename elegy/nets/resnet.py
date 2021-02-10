@@ -1,11 +1,12 @@
 # adapted from the flax library https://github.com/google/flax
 
-import jax, jax.numpy as jnp
-from elegy import module, nn, random, utils
-import typing as tp
 import pickle
-import numpy as np
+import typing as tp
 
+import jax
+import jax.numpy as jnp
+import numpy as np
+from elegy import hooks, module, nn, types, utils
 
 __all__ = [
     "ResNet",
@@ -20,12 +21,12 @@ __all__ = [
 
 PRETRAINED_URLS = {
     "ResNet18": {
-        "url": "https://github.com/poets-ai/elegy-assets/releases/download/resnet18_rev0/ResNet18_ImageNet.pkl",
-        "sha256": "4397cd02b56a29825243341204710daa1de9f3d6ad776558e61b34690896aaaa",
+        "url": "https://github.com/poets-ai/elegy-assets/releases/download/resnet18_rev1/ResNet18_ImageNet_rev1.pkl",
+        "sha256": "02824ae2f29563add46feff14f40c362ae5f9af3f01ea2edc0812e5ca06ca9ae",
     },
     "ResNet50": {
-        "url": "https://github.com/poets-ai/elegy-assets/releases/download/resnet50_rev0/ResNet50_ImageNet.pkl",
-        "sha256": "aadeb068ee6b5e114bc1902159e592c5170a27a661fb3a3d7c463607b25f1381",
+        "url": "https://github.com/poets-ai/elegy-assets/releases/download/resnet50_rev1/ResNet50_ImageNet_rev1.pkl",
+        "sha256": "c69086813ccff6b67b2452daabdf64772f8a7f5c04591e1962185129e18989fc",
     },
 }
 
@@ -113,10 +114,10 @@ class ResNet(module.Module):
     def __init__(
         self,
         stages: tp.List[int],
-        block_type: tp.Union[ResNetBlock, BottleneckResNetBlock],
-        lowres: tp.Optional[bool] = False,
-        weights: tp.Optional[tp.Union[str, None]] = None,
-        dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
+        block_type: tp.Union[tp.Type[ResNetBlock], tp.Type[BottleneckResNetBlock]],
+        lowres: bool = False,
+        weights: tp.Optional[str] = None,
+        dtype: tp.Optional[tp.Any] = jnp.float32,
         *args,
         **kwargs,
     ):
@@ -140,24 +141,31 @@ class ResNet(module.Module):
 
         if weights is not None:
             if weights.endswith(".pkl"):
-                parameters = pickle.load(open(weights, "rb"))
+                collections = pickle.load(open(weights, "rb"))
             elif weights == "imagenet":
                 clsname = self.__class__.__name__
                 urldict = PRETRAINED_URLS.get(clsname, None)
                 if urldict is None:
                     raise ValueError(f"No pretrained weights for {clsname} available")
                 fname = utils.download_file(urldict["url"], sha256=urldict["sha256"])
-                parameters = pickle.load(open(fname, "rb"))
+                collections = pickle.load(open(fname, "rb"))
             else:
                 raise ValueError("Unknown weights value: ", weights)
 
+            if isinstance(collections, tuple):
+                parameters, collections = collections
+            elif "parameters" in collections:
+                parameters = collections.pop("parameters")
+            else:
+                raise ValueError(
+                    "Unknown parameters structure, expected either tuple (parameters, collections) or a collections dict with a 'parameters' field."
+                )
+
             x = np.empty([0, 224, 224, 3], dtype=self.dtype)
             # quick but dirty module initialization
-            with module.rng_context(random.RNG(0)):
-                jax.eval_shape(self.init, x)
-            self.set_parameters(
-                parameters, check_missing=True, check_shapes=True, ignore_on_error=False
-            )
+            jax.eval_shape(self.init(rng=types.RNGSeq(42)), x)
+
+            self.set_default_parameters(parameters, collections)
 
     def call(self, x: jnp.ndarray):
         x = nn.Conv2D(
@@ -190,9 +198,9 @@ class ResNet(module.Module):
 class ResNet18(ResNet):
     def __init__(
         self,
-        lowres: tp.Optional[bool] = False,
-        weights: tp.Optional[tp.Union[str, None]] = None,
-        dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
+        lowres: bool = False,
+        weights: tp.Optional[str] = None,
+        dtype: tp.Optional[tp.Any] = jnp.float32,
         *args,
         **kwargs,
     ):
@@ -210,9 +218,9 @@ class ResNet18(ResNet):
 class ResNet34(ResNet):
     def __init__(
         self,
-        lowres: tp.Optional[bool] = False,
-        weights: tp.Optional[tp.Union[str, None]] = None,
-        dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
+        lowres: bool = False,
+        weights: tp.Optional[str] = None,
+        dtype: tp.Optional[tp.Any] = jnp.float32,
         *args,
         **kwargs,
     ):
@@ -230,9 +238,9 @@ class ResNet34(ResNet):
 class ResNet50(ResNet):
     def __init__(
         self,
-        lowres: tp.Optional[bool] = False,
-        weights: tp.Optional[tp.Union[str, None]] = None,
-        dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
+        lowres: bool = False,
+        weights: tp.Optional[str] = None,
+        dtype: tp.Optional[tp.Any] = jnp.float32,
         *args,
         **kwargs,
     ):
@@ -250,9 +258,9 @@ class ResNet50(ResNet):
 class ResNet101(ResNet):
     def __init__(
         self,
-        lowres: tp.Optional[bool] = False,
-        weights: tp.Optional[tp.Union[str, None]] = None,
-        dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
+        lowres: bool = False,
+        weights: tp.Optional[str] = None,
+        dtype: tp.Optional[tp.Any] = jnp.float32,
         *args,
         **kwargs,
     ):
@@ -270,9 +278,9 @@ class ResNet101(ResNet):
 class ResNet152(ResNet):
     def __init__(
         self,
-        lowres: tp.Optional[bool] = False,
-        weights: tp.Optional[tp.Union[str, None]] = None,
-        dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
+        lowres: bool = False,
+        weights: tp.Optional[str] = None,
+        dtype: tp.Optional[tp.Any] = jnp.float32,
         *args,
         **kwargs,
     ):
@@ -290,9 +298,9 @@ class ResNet152(ResNet):
 class ResNet200(ResNet):
     def __init__(
         self,
-        lowres: tp.Optional[bool] = False,
-        weights: tp.Optional[tp.Union[str, None]] = None,
-        dtype: tp.Optional[tp.Union["float16", "float32"]] = "float32",
+        lowres: bool = False,
+        weights: tp.Optional[str] = None,
+        dtype: tp.Optional[tp.Any] = jnp.float32,
         *args,
         **kwargs,
     ):

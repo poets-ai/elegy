@@ -158,6 +158,23 @@ class DataLoaderTestCase(TestCase):
         batches = list(loader)
         assert len(loader) == len(batches)
 
+    def test_custom_batch_fn(self):
+        ds = DS_custom_batch_fn()
+        loader = elegy.data.DataLoader(ds, batch_size=3)
+        batches = list(loader)
+        assert len(loader) == len(batches)
+        assert batches[0]["a"].shape == (3, 10)
+        assert batches[0]["b"].shape == (3,)
+        assert batches[0]["c"] == "banana"
+        assert np.all(batches[0]["b"] == np.array([0, 1, 2]))
+
+    def test_loader_from_array(self):
+        pseudo_ds = np.arange(65)
+        loader = elegy.data.DataLoader(pseudo_ds, batch_size=10)
+        batches = list(loader)
+        assert len(batches) == 7
+        assert np.all(batches[1] == np.arange(10, 20))
+
 
 class DS0(elegy.data.Dataset):
     def __len__(self):
@@ -165,3 +182,16 @@ class DS0(elegy.data.Dataset):
 
     def __getitem__(self, i):
         return np.zeros([100, 200, 3]), np.arange(20)[i]
+
+
+class DS_custom_batch_fn(elegy.data.Dataset):
+    def __len__(self):
+        return 11
+
+    def __getitem__(self, i):
+        return dict(a=np.random.random(size=10), b=i)
+
+    def batch_fn(self, list_of_samples):
+        x = super().batch_fn(list_of_samples)
+        x.update(c="banana")
+        return x

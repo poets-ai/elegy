@@ -1,22 +1,17 @@
-from elegy.frozen_dict import FrozenDict
 import functools
 import threading
 import typing as tp
 from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass
-from io import StringIO
-import copy
+from copy import deepcopy
 
-import haiku as hk
 import jax
 import jax.numpy as jnp
 import numpy as np
 
-
-from elegy import types, utils
-from elegy.random import RNG
-from elegy.utils import EMPTY, Empty, Mode, ModuleOrderError
+from elegy import hooks, utils
+from elegy import types
 
 # placeholder for module module_slicing.py
 # injected from inside the module because of a circular dependency
@@ -29,191 +24,108 @@ __all__ = [
     "add_loss",
     "add_metric",
     "add_summary",
-    "next_rng_key",
+    "next_key",
 ]
 
 T = tp.TypeVar("T")
 
 
-class DynamicContext(tp.NamedTuple):
-    rng: RNG
-
-
-class StaticContext(tp.NamedTuple):
-    training: bool
-    initializing: bool
-    can_update: bool
-    losses: tp.Optional[FrozenDict[str, tp.Any]]
-    metrics: tp.Optional[FrozenDict[str, tp.Any]]
-    summaries: tp.Optional[
-        tp.Tuple[tp.Tuple[tp.Optional["Module"], str, np.ndarray], ...]
-    ]
-    names: tp.Optional[tp.Tuple[str, ...]]
-    level_names: tp.Optional[tp.Tuple[str, ...]]
-    module: tp.Optional["Module"]
+class LocalContext(types.Protocol):
+    parent: tp.Optional["Module"]
+    module_path: tp.Optional[tp.Dict["Module", types.Path]]
     inside_call: tp.Optional[bool]
     module_index: tp.Optional[int]
-
-
-class LocalContext(utils.Protocol):
-    rng: RNG
-    training: bool
-    initializing: bool
-    can_update: bool
-    losses: tp.Optional[tp.Dict[str, tp.Any]]
-    metrics: tp.Optional[tp.Dict[str, tp.Any]]
-    summaries: tp.Optional[tp.List[tp.Tuple[tp.Optional["Module"], str, np.ndarray]]]
-    names: tp.Optional[tp.List[str]]
-    level_names: tp.Optional[tp.List[str]]
-    module: tp.Optional["Module"]
-    inside_call: tp.Optional[bool]
-    module_index: tp.Optional[int]
-
-    def dynamic_context(self) -> "DynamicContext":
-        ...
-
-    def static_context(self) -> "StaticContext":
-        ...
-
-    def set_from(self, statics: "StaticContext", dynamics: "DynamicContext"):
-        ...
+    rng: tp.Optional[types.RNGSeq]
+    training: tp.Optional[bool]
+    initializing: tp.Optional[bool]
 
 
 @dataclass
 class _LocalContext(threading.local):
-    rng: RNG
-    training: bool
-    initializing: bool
-    can_update: bool
-    losses: tp.Optional[tp.Dict[str, tp.Any]]
-    metrics: tp.Optional[tp.Dict[str, tp.Any]]
-    summaries: tp.Optional[tp.List[tp.Tuple[tp.Optional["Module"], str, np.ndarray]]]
-    names: tp.Optional[tp.List[str]]
-    level_names: tp.Optional[tp.List[str]]
-    module: tp.Optional["Module"]
+    parent: tp.Optional["Module"]
+    module_path: tp.Optional[tp.Dict["Module", types.Path]]
     inside_call: tp.Optional[bool]
     module_index: tp.Optional[int]
-
-    def dynamic_context(self) -> "DynamicContext":
-        return DynamicContext(rng=self.rng)
-
-    def static_context(self) -> "StaticContext":
-        return StaticContext(
-            training=self.training,
-            initializing=self.initializing,
-            can_update=self.can_update,
-            losses=FrozenDict(self.losses) if self.losses is not None else None,
-            metrics=FrozenDict(self.metrics) if self.metrics is not None else None,
-            summaries=tuple(self.summaries) if self.summaries is not None else None,
-            names=tuple(self.names) if self.names is not None else None,
-            level_names=tuple(self.level_names)
-            if self.level_names is not None
-            else None,
-            module=self.module,
-            inside_call=self.inside_call,
-            module_index=self.module_index,
-        )
-
-    def set_from(self, static: "StaticContext", dynamic: "DynamicContext"):
-        # dynamic
-        self.rng = dynamic.rng
-
-        # static
-        self.training = static.training
-        self.initializing = static.initializing
-        self.can_update = static.can_update
-        self.losses = static.losses.unfreeze() if static.losses is not None else None
-        self.metrics = static.metrics.unfreeze() if static.metrics is not None else None
-        self.summaries = (
-            list(static.summaries) if static.summaries is not None else None
-        )
-        self.names = list(static.names) if static.names is not None else None
-        self.level_names = (
-            list(static.level_names) if static.level_names is not None else None
-        )
-        self.module = static.module
-        self.inside_call = static.inside_call
-        self.module_index = static.module_index
+    rng: tp.Optional[types.RNGSeq]
+    training: tp.Optional[bool]
+    initializing: tp.Optional[bool]
 
 
 LOCAL: LocalContext = _LocalContext(
-    rng=RNG(42),
-    training=True,
-    initializing=False,
-    can_update=True,
-    losses=None,
-    metrics=None,
-    summaries=None,
-    names=None,
-    level_names=None,
-    module=None,
+    parent=None,
+    module_path=None,
     inside_call=None,
     module_index=None,
+    rng=None,
+    training=None,
+    initializing=None,
 )
 
 
 def construct_module(cls, *args, **kwargs) -> "Module":
+    # call constructor
     module: Module = cls.__new__(cls, *args, **kwargs)
     with instantiation_context(module):
         cls.__init__(module, *args, **kwargs)
 
     assert module is not None
 
-    if (
-        not hasattr(module, "name")
-        or not hasattr(module, "_params")
-        or not hasattr(module, "_states")
-        or not hasattr(module, "_submodules")
-    ):
+    if not hasattr(module, "_submodules"):
         raise ValueError(
             "Constructing a Module without calling the super constructor "
             "is not supported."
         )
 
+    # register submodules created in __init__
     for key, value in vars(module).items():
         if not key.startswith("_") and leaf_isinstance(value, Module):
-            module._submodules.append(key)
+
+            for path, submodule in utils.leaf_paths(value):
+                if isinstance(submodule, Module):
+                    path = (key,) + path
+                    name = "/".join(map(str, path))
+                    module._submodules[name] = submodule
+                    module._submodule_name[submodule] = name
 
     return module
 
 
 class ModuleMeta(ABCMeta):
-    def __call__(cls: tp.Type[T], *args, **kwargs) -> "Module":
+    def __call__(cls: tp.Type, *args, **kwargs) -> "Module":
 
         # Set unique on parent when using inside `call`
         if LOCAL.inside_call:
             assert LOCAL.module_index is not None
-            assert LOCAL.module
+            assert LOCAL.parent
 
             index = LOCAL.module_index
-            parent = LOCAL.module
+            parent = LOCAL.parent
 
             if len(parent._dynamic_submodules) > index:
-                module = getattr(
-                    parent,
-                    parent._dynamic_submodules[index],
-                )
+                module = parent._dynamic_submodules[index]
+
                 assert isinstance(module, Module)
 
                 # if not isinstance(module, cls):
                 if module.__class__.__name__ != cls.__name__:
-                    raise ModuleOrderError(
+                    raise types.ModuleOrderError(
                         f"Error retrieving module, expected type {cls.__name__}, got {module.__class__.__name__}. "
                         "This is probably due to control flow, you must guarantee that the same amount "
                         "of submodules will be created every time and that their order is the same."
                     )
             else:
-                if not LOCAL.initializing:
-                    raise ValueError(
-                        f"Trying to create module of type'{cls.__name__}' outside of `init`."
-                    )
+                # if not LOCAL.initializing:
+                #     raise ValueError(
+                #         f"Trying to create module of type'{cls.__name__}' outside of `init`."
+                #     )
 
                 module = construct_module(cls, *args, **kwargs)
 
-                name = get_unique_name(set(vars(parent)), module.name)
-                setattr(parent, name, module)
-                parent._submodules.append(name)
-                parent._dynamic_submodules.append(name)
+                name = utils.get_unique_name(set(parent._submodules), module.name)
+
+                parent._submodules[name] = module
+                parent._submodule_name[module] = name
+                parent._dynamic_submodules.append(module)
 
             LOCAL.module_index += 1
 
@@ -227,19 +139,21 @@ class Module(metaclass=ModuleMeta):
     Basic Elegy Module.
 
     For more information check out the [Module System guide](https://poets-ai.github.io/elegy/guides/module-system/).
-
-    Attributes:
-        initialized: Whether or not the module is initialized.
     """
 
     name: str
     dtype: np.dtype
-    _initialized: bool
-    _params: tp.Dict[str, bool]
     _states_initial: tp.List[str]
-    _submodules: tp.List[str]
-    _dynamic_submodules: tp.List[str]
-    _trainable: bool
+    _submodules: tp.Dict[str, "Module"]
+    _submodule_name: tp.Dict["Module", str]
+    _dynamic_submodules: tp.List["Module"]
+    _default_params: tp.Dict[str, types.Parameter]
+    _scope_params: tp.Optional[tp.Dict[str, types.Parameter]]
+    _spec: tp.Dict[str, types.ParameterSpec]
+    _initialized: bool = False
+
+    init_jit: types.InitJit
+    apply_jit: types.ApplyJit
 
     __all__ = [
         "__init__",
@@ -249,11 +163,10 @@ class Module(metaclass=ModuleMeta):
         "set_parameters",
         "reset",
         "init",
-        "initialized",
         "slice",
     ]
 
-    def __init__(self, name: tp.Optional[str] = None, dtype: np.dtype = jnp.float32):
+    def __init__(self, name: tp.Optional[str] = None, dtype: tp.Any = jnp.float32):
         """
         Initializes the current module with the given name.
 
@@ -261,34 +174,176 @@ class Module(metaclass=ModuleMeta):
         variables such that those modules are named correctly.
 
         Arguments:
-            name: An optional string name for the class. Must be a valid elsePython
-                identifier. If ``name`` is not provided then the class name for the
+            name: An optional string name for the class. If ``name`` is not provided then the class name for the
                 current instance is converted to ``lower_snake_case`` and used instead.
         """
         self.name = name if name else utils.lower_snake_case(self.__class__.__name__)
         self.dtype = dtype
-        self._params = {}
-        self._states = []
-        self._submodules = []
+        self._submodules = {}
+        self._submodule_name = {}
         self._dynamic_submodules = []
+        self._default_params = {}
+        self._scope_params = None
+        self._spec = {}
         self._initialized = False
-        self._trainable = True
 
-        _init = self.init
-
-        def init(*args, **kwargs):
-            return _init(*args, **kwargs)
-
-        self.init = init
-
-        utils.wraps(self.call)(self.init)
-        utils.wraps(self.call)(self)
+        self._signature_f = self.call
 
         self._jit_functions()
 
+    @property
+    def initialized(self):
+        return self._initialized
+
+    def _mark_initialized_recursive(self):
+        self._initialized = True
+        for submodule in self._submodules.values():
+            submodule._mark_initialized_recursive()
+
+    def _register_parameter(self, name: str, parameter: types.Parameter):
+        param_info = jax.tree_map(
+            lambda x: types.Info(shape=x.shape, dtype=x.dtype),
+            parameter.value,
+        )
+        self._spec[name] = types.ParameterSpec(
+            collection=parameter.collection, info=param_info
+        )
+        # commenting this out makes Module.init stateful by default
+        # self._default_params[name] = parameter
+
+    def call_with_defaults(
+        self,
+        *,
+        rng: tp.Optional[types.RNGSeq] = None,
+        training: bool = False,
+    ) -> tp.Callable[..., tp.Any]:
+        def call_with_defaults_wrapper(*args, **kwargs):
+            if not self.initialized:
+                _, parameters, collections = self.init(rng=rng, set_defaults=True)(
+                    *args, **kwargs
+                )
+            else:
+                parameters, collections = self.get_default_parameters()
+
+            y, _, _ = self.apply(
+                parameters,
+                collections,
+                training=training,
+                rng=rng,
+                set_defaults=True,
+            )(*args, **kwargs)
+
+            return y
+
+        return call_with_defaults_wrapper
+
+    def call_with_defaults_jit(
+        self,
+        *,
+        rng: tp.Optional[types.RNGSeq] = None,
+        training: bool = False,
+    ) -> tp.Callable[..., tp.Any]:
+        def call_with_defaults_jit_wrapper(*args):
+
+            if not self.initialized:
+                _, parameters, collections = self.init_jit(rng=rng)(*args)
+            else:
+                parameters, collections = self.get_default_parameters()
+
+            y, parameters, collections = self.apply_jit(
+                parameters,
+                collections,
+                training=training,
+                rng=rng,
+            )(*args)
+
+            self.set_default_parameters(parameters, collections)
+
+            return y
+
+        return call_with_defaults_jit_wrapper
+
     def _jit_functions(self):
-        self.jit = jit(self)
-        self.init_jit = jit(self.init, modules=self)
+        # ------------------------------
+        # init
+        # ------------------------------
+        def init_jit_raw(rng: tp.Optional[types.RNGSeq], *args):
+            return self.init(rng=rng)(*args)
+
+        init_jit: types.JitCallable = hooks.jit(init_jit_raw)
+
+        def init_jit_wrapper(
+            rng: tp.Optional[types.RNGSeq] = None,
+            set_defaults: bool = False,
+        ) -> types.JitCallable:
+            def init_jit_callable(
+                *args,
+            ) -> tp.Tuple[
+                tp.Any, tp.Optional[types.Parameters], types.ParameterCollection
+            ]:
+
+                y, parameters, collections = init_jit(rng, *args)
+
+                if set_defaults:
+                    self.set_default_parameters(parameters, collections)
+
+                return y, parameters, collections
+
+            init_jit_callable._signature_f = self.call
+
+            return init_jit_callable
+
+        # ------------------------------
+        # apply
+        # ------------------------------
+        def apply_jit_raw(
+            parameters: tp.Optional[types.Parameters],
+            collections: types.ParameterCollection,
+            training: bool,
+            rng: tp.Optional[types.RNGSeq],
+            *args,
+        ):
+            return self.apply(
+                parameters=parameters,
+                collections=collections,
+                training=training,
+                rng=rng,
+            )(*args)
+
+        apply_jit = hooks.jit(apply_jit_raw, static_argnums=[2])
+
+        def apply_jit_wrapper(
+            parameters: tp.Optional[types.Parameters],
+            collections: types.ParameterCollection,
+            *,
+            training: bool = True,
+            rng: tp.Optional[types.RNGSeq] = None,
+            set_defaults: bool = False,
+        ) -> types.JitCallable:
+            def apply_jit_callable(
+                *args,
+            ) -> tp.Tuple[
+                tp.Any, tp.Optional[types.Parameters], types.ParameterCollection
+            ]:
+
+                y, parameters_, collections_ = apply_jit(
+                    parameters, collections, training, rng, *args
+                )
+
+                if set_defaults:
+                    self.set_default_parameters(parameters_, collections_)
+
+                return y, parameters_, collections_
+
+            apply_jit_callable._signature_f = self.call
+
+            return apply_jit_callable
+
+        # ------------------------------
+        # assign functions
+        # ------------------------------
+        self.init_jit = init_jit_wrapper
+        self.apply_jit = apply_jit_wrapper
 
     def __setstate__(self, d):
         self.__dict__ = d
@@ -296,354 +351,209 @@ class Module(metaclass=ModuleMeta):
 
     def __getstate__(self):
         d = dict(self.__dict__)
-        del d["jit"]
+        del d["apply_jit"]
         del d["init_jit"]
+
+        d["_default_params"] = {}
+        d["_scope_params"] = None
+
         return d
-
-    @property
-    def initialized(self) -> bool:
-        return self._initialized
-
-    @initialized.setter
-    def initialized(self, value: bool):
-        tree_exec(lambda module: self._set_initialized(module, value), self)
-
-    @staticmethod
-    def _set_initialized(module: "Module", value: bool):
-        module._initialized = value
-
-    @property
-    def trainable(self) -> bool:
-        return self._trainable
-
-    @trainable.setter
-    def trainable(self, value: bool):
-        tree_exec(lambda module: self._set_trainable(module, value), self)
-
-    @staticmethod
-    def _set_trainable(module: "Module", value: bool):
-        module._trainable = value
 
     def __call__(self, *args, **kwargs) -> tp.Any:
         """
         Forwards all input arguments to the Module's `call` method and calls
-        `elegy.add_summary` on the outputs.
+        `elegy.hooks.add_summary` on the outputs.
         """
-        should_initialize = (
-            LOCAL.inside_call is None
-            and not LOCAL.initializing
-            and not self.initialized
-        )
+
+        # this marks initialization
 
         with call_context(self):
 
-            if should_initialize:
-                with init_context(can_update=True):
-                    outputs = self.call(*args, **kwargs)
+            outputs = self.call(*args, **kwargs)
 
-                self.initialized = True
-            else:
-                outputs = self.call(*args, **kwargs)
-
-            add_summary(self, outputs, (args, kwargs))
+            if hooks.summaries_active():
+                path = get_module_path(self)
+                assert path is not None
+                hooks.add_summary(path, self, outputs)
 
             return outputs
-
-    # def __init_subclass__(cls, *args, **kwargs):
-    #     super().__init_subclass__(*args, **kwargs)
-    #     utils.wraps(cls.call)(cls.init)
 
     @abstractmethod
     def call(self, *args, **kwargs):
         ...
 
-    @property
-    def submodules(self) -> tp.Dict[str, tp.Any]:
-        """
-        A dictionary with all submodules contained in this Module.
-        """
-        return {name: getattr(self, name) for name in self._submodules}
+    def add_summary(self, name: str, f: tp.Any, value: tp.Any):
+        if hooks.summaries_active():
+            path = get_module_path(self) + (name,)
+            assert path is not None
+            hooks.add_summary(path, f, value)
 
-    def init(self, *args, **kwargs) -> None:
+    def init(
+        self,
+        *,
+        rng: tp.Optional[types.RNGSeq] = None,
+        set_defaults: bool = False,
+    ) -> tp.Callable[
+        ..., tp.Tuple[tp.Any, tp.Optional[types.Parameters], types.ParameterCollection]
+    ]:
         """
         Initializes the module,
         """
 
-        with init_context(can_update=False):
-            self(*args, **kwargs)
+        def init_callable(
+            *args, **kwargs
+        ) -> tp.Tuple[tp.Any, tp.Optional[types.Parameters], types.ParameterCollection]:
 
-        self.initialized = True
+            with module_context(
+                module=self, collections=None, initializing=True, training=True, rng=rng
+            ):
+                y = self(*args, **kwargs)
+                parameters, collections = self.get_parameters_internal()
+
+            self._mark_initialized_recursive()
+
+            if set_defaults:
+                self.set_default_parameters(parameters, collections)
+
+            return y, parameters, collections
+
+        init_callable._signature_f = self.call
+
+        return init_callable
+
+    def apply(
+        self,
+        parameters: tp.Optional[types.Parameters],
+        collections: types.ParameterCollection,
+        *,
+        training: bool = True,
+        rng: tp.Optional[types.RNGSeq] = None,
+        set_defaults: bool = False,
+    ) -> tp.Callable[
+        ...,
+        tp.Union[
+            tp.Any,
+            tp.Tuple[tp.Any, tp.Optional[types.Parameters], types.ParameterCollection],
+        ],
+    ]:
+        """
+        Call the module.
+        """
+
+        if parameters is not None:
+            collections = collections.copy()
+            collections["parameters"] = parameters
+
+        def apply_callable(
+            *args, **kwargs
+        ) -> tp.Tuple[tp.Any, tp.Optional[types.Parameters], types.ParameterCollection]:
+
+            with module_context(
+                module=self,
+                collections=collections,
+                initializing=False,
+                training=training,
+                rng=rng,
+            ):
+                y = self(*args, **kwargs)
+                parameters_, collections_ = self.get_parameters_internal()
+
+            if set_defaults:
+                self.set_default_parameters(parameters_, collections_)
+
+            return y, parameters_, collections_
+
+        apply_callable._signature_f = self.call
+
+        return apply_callable
+
+    def __getattr__(self, name: str) -> tp.Any:
+
+        if name in self._submodules:
+            return self._submodules[name]
+
+        if self._scope_params is not None and name in self._scope_params:
+            return self._scope_params[name].value
+
+        if not has_scope() and self.initialized and name in self._default_params:
+            return self._default_params[name].value
+
+        raise AttributeError(
+            f"'{self.__class__.__name__}' object has no attribute '{name}'"
+        )
 
     def add_parameter(
         self,
         name: str,
-        shape: tp.Sequence[int] = (),
-        dtype: tp.Optional[np.dtype] = None,
-        initializer: tp.Union[
-            tp.Callable[[tp.Sequence[int], tp.Any], tp.Any], tp.Any
-        ] = jnp.zeros,
+        initializer: tp.Callable[[], tp.Any],
+        collection: tp.Optional[str] = None,
         trainable: bool = True,
-    ) -> np.ndarray:
+        regularizer: tp.Optional[tp.Callable[[tp.Any], jnp.ndarray]] = None,
+        constraint: tp.Optional[tp.Callable[[tp.Any], tp.Any]] = None,
+    ) -> tp.Any:
         """
-        A hook that lets you add a parameter to the current module. The parameter will only be created once
-        during `init` and will reused afterwards.
+        Adds a parameter to the current module. The parameter will only be initialized once and
+        will reused afterwards.
 
         Arguments:
             name: The name of the parameter. It must be unique and no other field/property/method
                 of the instance can have that name.
-            shape: The shape of the parameter.
-            dtype: The type of the parameter.
-            initializer: A callable that takes in a shape and dtype and returns the initial value.
+            initializer: A callable that takes not arguments returns the initial value.
+            collection: Optional name of the parameter collection, if not defined it will be se to
+                `"parameters"` if `trainable=True` else it will be set to `"states"`.
+            trainable: Specify whether this parameter should be added to the default trainable `"parameters"`
+                collection or to the default non-trainable `"states"` collection. If collection is
+                passed this parameter will ignored.
+            regularizer: Regularizer instance (callable).
+            constraint: Constraint instance (callable).
 
         Returns:
             The value of the parameter.
         """
 
-        if not hasattr(self, name):
-            if not is_initializing():
-                raise ValueError(f"Trying to initialize '{name}' outside of `init`.")
+        if collection is None:
+            collection = "parameters" if trainable else "states"
 
-            self._params[name] = trainable
+        if self._scope_params is None:
+            self._scope_params = {}
 
-            if dtype is None:
-                dtype = self.dtype
+        if name not in self._scope_params:
 
-            initial_value = (
-                initializer(shape, dtype)
-                if isinstance(initializer, tp.Callable)
-                else initializer
-            )
+            if not self.is_initializing():
+                raise ValueError(f"Cannot add parameter {name} outside `init`")
 
-            setattr(self, name, initial_value)
+            if name in self._default_params:
+                parameter = self._default_params[name]
+                assert collection == parameter.collection
+                initial_value = parameter.value
 
-        elif name not in self._params:
+            else:
+                initial_value = initializer()
+                initial_value = jax.tree_map(jnp.asarray, initial_value)
+                parameter = types.Parameter(collection, initial_value)
+                self._register_parameter(name, parameter)
+
+            self._scope_params[name] = parameter
+
+        parameter = self._scope_params[name]
+
+        if parameter.collection != collection:
             raise ValueError(
-                f"Class already contained a property named '{name}', "
-                "please use a unique name for the parameter."
+                f"types.Parameter {name} previously found in collection {parameter.collection} "
+                f"but currently being added for collection {collection}"
             )
 
-        value = getattr(self, name)
+        value = parameter.value
 
+        if constraint is not None:
+            value = constraint(value)
+
+        if regularizer is not None:
+            hooks.add_loss(
+                name=utils.get_name(regularizer),
+                value=regularizer(value),
+            )
         return value
-
-    def update_parameter(self, name: str, value: tp.Any) -> None:
-        """
-        A hook that lets you update a state of the current module, if the state does not
-        exist it will be created.
-
-        Arguments:
-            name: The name of the state. It must be unique and no other field/property/method
-                of the instance can have that name.
-            value: The updated value of the state.
-        """
-
-        if hasattr(self, name):
-            if not can_update():
-                return
-
-            setattr(self, name, value)
-        else:
-            raise ValueError(f"Parameter {name} not found in {self}.")
-
-    def get_parameters(
-        self,
-        trainable: tp.Optional[bool] = None,
-    ) -> types.Parameters:
-        """
-        Recursively collects a dictionary with the parameters of this module
-        and all submodules within it.
-
-        Arguments:
-            trainable: If True returns only trainable weights.
-                       If False returns only non-trainable parameters.
-                       If None (Default) returns all parameters.
-
-        Returns: A nested dictionary of parametername:parameters pairs
-        """
-
-        params = module_tree_map(
-            lambda module: {
-                key: getattr(module, key)
-                for key, param_is_trainable in module._params.items()
-                if hasattr(module, key)
-                and (
-                    trainable is None
-                    or trainable == (param_is_trainable and module.trainable)
-                )
-            },
-            self,
-        )
-        assert isinstance(params, tp.Dict)
-        return params
-
-    def set_parameters(
-        self,
-        values: types.Parameters,
-        check_missing: tp.Optional[bool] = False,
-        check_shapes: tp.Optional[bool] = True,
-        ignore_on_error: tp.Optional[tp.Union[bool, "silent"]] = False,
-    ) -> None:
-        """
-        Recursively sets the parameters of this module
-        and all submodules within it given a dictionary with a corresponding
-        structure.
-
-        Arguments:
-            values: A nested dictionary as returned by get_parameters()
-            check_missing: If True will check if the new set of parameters is complete. Default: False
-            check_shapes: If True (Default) will check if the new parameters have the same shape as the old ones
-            ignore_on_error: If True will set only parameters that have a matching shape, ignoring mismatches and missing parameters.
-                             If "silent" will not even print a warning.
-                             If False (Default) will raise a ValueError on shape mismatch or missing parameter.
-        """
-
-        def check_shapes_f(module: Module, values: tp.Dict[str, tp.Any]):
-            for key, value in list(values.items()):
-                if key in module._params:
-                    if not hasattr(module, key):
-                        # key in _params but not in module
-                        # this can happen after a .reset()
-                        # ignore
-                        continue
-                    prevshape = np.shape(getattr(module, key))
-                    newshape = np.shape(value)
-                    if prevshape != newshape:
-                        errormsg = f"Shape mismatch on parameter {key} in module {module.name}: {prevshape} (old) vs {newshape} (new)."
-                        if ignore_on_error:
-                            if not ignore_on_error == "silent":
-                                print(errormsg + " Ignoring")
-                            # ignore by removing from new parameters
-                            del values[key]
-                        else:
-                            raise ValueError(errormsg)
-                elif key not in module._submodules and not ignore_on_error == "silent":
-                    print(f"Parameter {key} not found in module {module.name}")
-
-            if check_missing:
-                missing = [
-                    param
-                    for param in list(module._params.keys()) + module._submodules
-                    if param not in values
-                ]
-                if len(missing):
-                    errormsg = f"Miissing parameters in module {module.name}: {missing}"
-                    if ignore_on_error == True:
-                        print(errormsg)
-                    else:
-                        raise ValueError(errormsg)
-
-        # first perform the check to avoid setting some parameters then encountering invalid ones
-        if check_shapes or check_missing:
-            # shape check modifies values, make a copy to keep the original ones untouched
-            values = copy.deepcopy(values)
-            tree_apply(check_shapes_f, self, values)
-
-        def f(module: Module, values: tp.Dict[str, tp.Any]):
-            for key, value in values.items():
-                if key in module._params:
-                    setattr(module, key, value)
-
-        tree_apply(f, self, values)
-
-    def _get_module_states(self) -> tp.Dict[str, tp.Any]:
-        """
-        Recursively collects a dictionary with the static (non-array) states of this module
-        and all submodules within it.
-
-        Returns:
-        """
-
-        params = module_tree_map(
-            lambda module: dict(
-                trainable=module._trainable,
-            ),
-            self,
-        )
-        assert isinstance(params, tp.Dict)
-        return params
-
-    def _set_module_states(self, values: tp.Dict[str, tp.Any]) -> None:
-        """
-        Recursively sets the states (non-arrays) of this module
-        and all submodules within it given a dictionary with a corresponding
-        structure.
-        """
-
-        def f(module: Module, states):
-            module._trainable = states["trainable"]
-
-        tree_apply(f, self, values)
-
-    def reset(self):
-        """
-        Recursively deletes the parameters and states of this module
-        and all submodules within it.
-        """
-
-        def clear_module(module: Module):
-
-            for name in module._params:
-                delattr(module, name)
-
-            for name in module._states:
-                delattr(module, name)
-
-            # module._params = set()
-            # module._states = set()
-
-        tree_exec(clear_module, self)
-
-    def parameters_size(self, include_submodules: bool = True):
-        if include_submodules:
-            return sum(x.size for x in jax.tree_leaves(self.get_parameters()))
-        else:
-            return sum(
-                x.size
-                for x in jax.tree_leaves(
-                    [getattr(self, key) for key in self._params if hasattr(self, key)]
-                )
-            )
-
-    def states_size(self, include_submodules: bool = True):
-        if include_submodules:
-            return sum(
-                x.size for x in jax.tree_leaves(self.get_parameters(trainable=False))
-            )
-        else:
-            return sum(
-                x.size
-                for x in jax.tree_leaves(
-                    [getattr(self, key) for key in self._states if hasattr(self, key)]
-                )
-            )
-
-    def parameters_bytes(self, include_submodules: bool = True):
-        if include_submodules:
-            return sum(
-                x.size * x.dtype.itemsize
-                for x in jax.tree_leaves(self.get_parameters())
-            )
-        else:
-            return sum(
-                x.size * x.dtype.itemsize
-                for x in jax.tree_leaves(
-                    [getattr(self, key) for key in self._params if hasattr(self, key)]
-                )
-            )
-
-    def states_bytes(self, include_submodules: bool = True):
-        if include_submodules:
-            return sum(
-                x.size * x.dtype.itemsize
-                for x in jax.tree_leaves(self.get_parameters(trainable=False))
-            )
-        else:
-            return sum(
-                x.size * x.dtype.itemsize
-                for x in jax.tree_leaves(
-                    [getattr(self, key) for key in self._states if hasattr(self, key)]
-                )
-            )
 
     def slice(
         self,
@@ -692,154 +602,294 @@ class Module(metaclass=ModuleMeta):
         )
 
 
+    def update_parameter(self, name: str, value: tp.Any) -> None:
+        """
+        Update a parameter of the current module.
+
+        !!! Note
+            types.Parameters are not updated when `Module.init` is called.
+
+        Arguments:
+            name: The name of the parameter to be updated. It must be unique and no other field/property/method
+                of the instance can have that name.
+            value: The updated value of the state.
+
+        Raises:
+            `ValueError` if parameter is not present in current module.
+        """
+
+        assert self._scope_params is not None
+
+        if name not in self._scope_params:
+            raise ValueError(f"types.Parameter {name} not found in {self}.")
+
+        if self.is_initializing():
+            return
+
+        parameter = self._scope_params[name]
+        assert isinstance(parameter, types.Parameter)
+        parameter.value = value
+
+    def add_or_update_parameter(
+        self,
+        name: str,
+        value: tp.Callable[[], tp.Any],
+        collection: tp.Optional[str] = None,
+        trainable: bool = True,
+    ):
+        """
+        Add a parameter to the current module or update it if it already exists.
+
+        !!! Note
+            types.Parameters are not updated when `Module.init` is called.
+
+        Arguments:
+            name: The name of the state. It must be unique and no other field/property/method
+                of the instance can have that name.
+            value: The updated value of the state.
+            collection: Optional name of the parameter collection, if not defined it will be se to
+                `"parameters"` if `trainable=True` else it will be set to `"states"`.
+            trainable: Specify whether this parameter should be added to the default trainable `"parameters"`
+                collection or to the default non-trainable `"states"` collection. If collection is
+                passed this parameter will ignored.
+
+        Raises:
+            `ValueError` if parameter is not present in current module.
+        """
+        assert self._scope_params is not None
+
+        if name not in self._scope_params:
+            self.add_parameter(
+                name, lambda: value, trainable=trainable, collection=collection
+            )
+        else:
+            self.update_parameter(name, value)
+
+    def next_key(self) -> jnp.ndarray:
+        if LOCAL.rng is None:
+            raise types.NoContext(
+                f"Trying to call `next_key` from module {self} outside `init` or `apply`."
+            )
+
+        return LOCAL.rng.next()
+
+    def is_training(self) -> bool:
+        if LOCAL.training is None:
+            raise types.NoContext(
+                f"Trying to call `is_training` from module '{self}' outside `init` or `apply`."
+            )
+        return LOCAL.training
+
+    def is_initializing(self) -> bool:
+        if LOCAL.initializing is None:
+            raise types.NoContext(
+                f"Trying to call `is_initializing` from module '{self}' outside `init` or `apply`."
+            )
+
+        return LOCAL.initializing
+
+    def clear_default_parameters(self):
+        self._clear_parameters(default_params=True)
+
+    def _clear_parameters(self, default_params: bool = False):
+
+        self._scope_params = None
+
+        if default_params:
+            self._default_params.clear()
+
+        for submodule in self._submodules.values():
+            submodule._clear_parameters(default_params=default_params)
+
+    def set_default_parameters(
+        self,
+        parameters: tp.Optional[types.Parameters],
+        collections: types.ParameterCollection,
+    ):
+
+        if parameters is not None:
+            collections = collections.copy()
+            collections["parameters"] = parameters
+
+        old_colletions = self._get_parameters(defaults=True)
+        old_colletions = utils.split_into_collections(old_colletions)
+
+        try:
+            self._set_parameters_internal(
+                collections=collections,
+                set_default_params=True,
+            )
+        except:
+            self._set_parameters_internal(
+                collections=old_colletions,
+                set_default_params=True,
+            )
+            raise
+
+    def _set_parameters_internal(
+        self,
+        collections: types.ParameterCollection,
+        set_default_params: bool = False,
+    ):
+        collections = jax.tree_map(jnp.asarray, collections)
+
+        self._set_parameters(
+            collections=collections,
+            set_default_params=set_default_params,
+        )
+
+    def _validate_parameters(self, collections: types.ParameterCollection):
+        # define sets
+        incoming_names = set(
+            name for parameters in collections.values() for name in parameters
+        )
+        expected_submodule_names = set(self._submodules)
+        expected_parameter_names = set(self._spec)
+
+        # check missing parameters
+        missing_parameters = expected_parameter_names - incoming_names
+        if missing_parameters:
+            raise ValueError(
+                f"Missing parameters {missing_parameters} for module {self.name}"
+            )
+
+        # check unkown names
+        unknown_parameters = (
+            incoming_names - expected_submodule_names - expected_parameter_names
+        )
+        if unknown_parameters:
+            raise ValueError(
+                f"Got unknown parameters {unknown_parameters} on module {self.name}"
+            )
+
+        for name, param_spec in self._spec.items():
+            parameter = utils.get_parameter(collections, name)
+
+            if parameter.collection != param_spec.collection:
+                raise ValueError(
+                    f"types.Parameter {name} on module {self.name} was expected to be on collection {param_spec.collection} "
+                    f"but was found on collection {parameter.collection}"
+                )
+
+            def validate_value(value: jnp.ndarray, info: types.Info):
+                if value.shape != info.shape:
+                    incoming_shapes = jax.tree_map(lambda x: x.shape, parameter.value)
+                    expected_shape = jax.tree_map(lambda x: x.shape, param_spec.info)
+
+                    raise ValueError(
+                        f"Shape mismatch in parameter {name} on module {self.name}.\n"
+                        f"Got: {incoming_shapes}\n"
+                        f"Expected: {expected_shape}"
+                    )
+
+            jax.tree_multimap(validate_value, parameter.value, param_spec.info)
+
+    def _set_parameters(
+        self,
+        collections: types.ParameterCollection,
+        check_shapes: bool = False,
+        set_default_params: bool = False,
+    ):
+        if not self.initialized:
+            raise ValueError(f"Cannot set parameters for uninitialized module {self}")
+        assert self._spec is not None
+
+        self._validate_parameters(collections)
+
+        # build new parameters
+        new_params = {
+            name: utils.get_parameter(collections, name) for name in self._spec
+        }
+
+        # set module parameters
+        if set_default_params:
+            self._default_params = new_params
+        else:
+            self._scope_params = new_params
+
+        # set submodule parameters
+        for name, submodule in self._submodules.items():
+            submodule._set_parameters(
+                collections=utils.get_submodule_colletions(collections, name),
+                check_shapes=check_shapes,
+                set_default_params=set_default_params,
+            )
+
+    def get_default_parameters(
+        self,
+    ) -> tp.Tuple[tp.Optional[types.Parameters], types.ParameterCollection]:
+        param_tree = self._get_parameters(defaults=True)
+        collections = utils.split_into_collections(param_tree)
+        parameters = collections.pop("parameters", None)
+        return parameters, collections
+
+    def get_parameters_internal(
+        self, defaults: bool = False
+    ) -> tp.Tuple[tp.Optional[types.Parameters], types.ParameterCollection]:
+        param_tree = self._get_parameters(defaults=defaults)
+        collections = utils.split_into_collections(param_tree)
+        parameters = collections.pop("parameters", None)
+        return parameters, collections
+
+    def _get_parameters(self, defaults: bool) -> tp.Dict[str, tp.Any]:
+        # if (self._params is None and not defaults) or (
+        #     not self.initialized and defaults
+        # ):
+        #     return {}
+
+        parameters: tp.Dict[str, tp.Any]
+
+        if defaults:
+            if self.initialized:
+                parameters = self._default_params.copy()
+            else:
+                raise ValueError(
+                    f"Cannot get default parameters from uninitialized Module {self.name}"
+                )
+        else:
+            if self._scope_params is not None:
+                parameters = self._scope_params.copy()
+            else:
+                parameters = {}
+
+        for name, submodule in self._submodules.items():
+            parameters[name] = submodule._get_parameters(defaults=defaults)
+
+        return parameters
+
+    def has_parameter(self, name: str) -> bool:
+        return hasattr(self, name)
+
+
 # -------------------------------------------------------------
 # hooks
 # -------------------------------------------------------------
 
 
-def add_summary(
-    module_or_name: tp.Union[Module, str],
-    value: np.ndarray,
-    input_values: tp.Optional[tp.Tuple[tp.Tuple, tp.Dict]] = None,
-) -> None:
-    """
-    A hook that lets you define a summary in the current module. Its primary
-    use is to keep track of certain values as they flow through the network
-    so [`Model.summary`][elegy.model.model.Model.summary] can show a representation of architecture
-    and to get the graph structure to slice modules.
+def next_key() -> jnp.ndarray:
+    if LOCAL.rng is None:
+        raise ValueError(f"No rng present in context, please set it in `context`.")
 
-    ```python
-    def call(self, x):
-        ...
-        y = jax.nn.relu(x)
-        elegy.add_summary("relu", y, ((x,), {}))
-        ...
-    ```
-
-    Arguments:
-        module_or_name: The name of the summary or alternatively the module that this summary will represent.
-            If a summary with the same name already exists a unique identifier will be generated.
-        value: The value for the summary.
-        input_values: Input arguments (args, kwargs) as used to call the module (required for slicing).
-    """
-
-    if LOCAL.summaries is None:
-        return
-
-    name = base_name()
-
-    if isinstance(module_or_name, str):
-        name = f"{name}/{module_or_name}" if name else module_or_name
-        name = get_unique_name({t[1] for t in LOCAL.summaries}, name)
-        module = None
-    else:
-        module = module_or_name
-
-    LOCAL.summaries.append((module, name, value, input_values))
+    return LOCAL.rng.next()
 
 
-def add_loss(name: str, value: np.ndarray) -> None:
-    """
-    A hook that lets you define a loss within a [`module`][elegy.module.Module].
+def get_module_path(module: tp.Optional[Module] = None) -> tp.Optional[types.Path]:
+    if module is None:
+        module = LOCAL.parent
 
-    ```python
-    w = self.add_parameter("w", [3, 5], initializer=jnp.ones)
-
-    # L2 regularization penalty
-    elegy.add_loss("l2_regularization", 0.01 * jnp.mean(w ** 2))
-    ```
-
-    Arguments:
-        name: The name of the loss. If a `name` is repeated on
-            different calls values will be added together.
-        value: The value for the loss.
-    """
-    if LOCAL.losses is None:
-        return
-
-    if not name.endswith("loss"):
-        name += "_loss"
-
-    if name in LOCAL.losses:
-        LOCAL.losses[name] += value
-    else:
-        LOCAL.losses[name] = value
+    return LOCAL.module_path[module] if module is not None and has_scope() else None
 
 
-def add_metric(name: str, value: np.ndarray) -> None:
-    """
-    A hook that lets you define a metric within a [`module`][elegy.module.Module].
-
-    ```python
-    y = jax.nn.relu(x)
-    elegy.add_metric("activation_mean", jnp.mean(y))
-    ```
-
-    Arguments:
-        name: The name of the loss. If a metric with the same
-            `name` already exists a unique identifier will be generated.
-        value: The value for the metric.
-    """
-    if LOCAL.metrics is None:
-        return
-
-    name = f"{base_name()}/{name}"
-    name = get_unique_name(set(LOCAL.metrics), name)
-    LOCAL.metrics[name] = value
+def get_module_path_str(module: Module) -> tp.Optional[str]:
+    return (
+        "/".join(map(str, LOCAL.module_path[module]))
+        if module is not None and has_scope()
+        else None
+    )
 
 
-def get_module() -> tp.Optional[Module]:
-    return LOCAL.module
-
-
-def get_rng() -> RNG:
-    """"""
-    return LOCAL.rng
-
-
-def set_rng(rng: RNG) -> None:
-    LOCAL.rng = rng
-
-
-def next_rng_key() -> jnp.ndarray:
-    """
-    Returns a key usable with `jax.random.*` functions.
-    """
-    return LOCAL.rng()
-
-
-def is_initializing() -> bool:
-    return LOCAL.initializing
-
-
-def can_update() -> bool:
-    return LOCAL.can_update
-
-
-def set_training(training: bool) -> None:
-    LOCAL.training = training
-
-
-def is_training() -> bool:
-    return LOCAL.training
-
-
-def get_losses() -> tp.Optional[tp.Dict[str, tp.Any]]:
-    return LOCAL.losses
-
-
-def get_metrics() -> tp.Optional[tp.Dict[str, tp.Any]]:
-    return LOCAL.metrics
-
-
-def get_summaries() -> tp.Optional[
-    tp.List[tp.Tuple[tp.Optional["Module"], str, np.ndarray]]
-]:
-    return LOCAL.summaries
-
-
-def base_name() -> str:
-    return "/".join(LOCAL.names) if LOCAL.names is not None else ""
+def has_scope() -> bool:
+    return LOCAL.module_path is not None
 
 
 # -----------------------------------------------------------------------------
@@ -847,98 +897,51 @@ def base_name() -> str:
 # -----------------------------------------------------------------------------
 
 
-def hooks_context(
-    summaries: bool = False,
+def module_context(
+    module: Module,
+    collections: tp.Optional[types.ParameterCollection],
+    initializing: bool,
+    training: bool,
+    rng: tp.Optional[types.RNGSeq],
 ) -> tp.ContextManager[None]:
-    return _hooks_context(summaries=summaries)
+    return _scope_context(
+        module=module,
+        collections=collections,
+        initializing=initializing,
+        training=training,
+        rng=rng,
+    )
 
 
 @contextmanager
-def _hooks_context(
-    summaries: bool = False,
-) -> tp.Iterator[None]:
+def _scope_context(
+    module: Module,
+    collections: tp.Optional[types.ParameterCollection],
+    initializing: bool,
+    training: bool,
+    rng: tp.Optional[types.RNGSeq],
+):
+    prev_module_path = LOCAL.module_path
+    prev_initializing = LOCAL.initializing
+    prev_training = LOCAL.training
+    prev_rng = LOCAL.rng
 
-    prev_losses = LOCAL.losses
-    prev_metrics = LOCAL.metrics
-    prev_summaries = LOCAL.summaries
-    prev_names = LOCAL.names
-    prev_level_names = LOCAL.level_names
-
-    LOCAL.losses = {}
-    LOCAL.metrics = {}
-    LOCAL.summaries = [] if summaries else LOCAL.summaries
-    LOCAL.names = []
-    LOCAL.level_names = []
-
-    try:
-        yield
-    finally:
-        # # clean
-        # if LOCAL.level_names is not None:
-        #     LOCAL.level_names.clear()
-
-        # revert
-        LOCAL.losses = prev_losses
-        LOCAL.metrics = prev_metrics
-        LOCAL.summaries = prev_summaries
-        LOCAL.names = prev_names
-        LOCAL.level_names = prev_level_names
-
-
-def rng_context(rng: RNG) -> tp.ContextManager[None]:
-    return _rng_context(rng)
-
-
-@contextmanager
-def _rng_context(rng: RNG):
-    current_rng = LOCAL.rng
+    LOCAL.module_path = {}
+    LOCAL.initializing = initializing
+    LOCAL.training = training
     LOCAL.rng = rng
 
     try:
+        if collections is not None:
+            module._set_parameters_internal(collections)
+
         yield
     finally:
-        LOCAL.rng = current_rng
-
-
-def training_context(training: bool) -> tp.ContextManager[None]:
-    return _training_context(training)
-
-
-@contextmanager
-def _training_context(training: bool):
-    current_training = LOCAL.training
-    LOCAL.training = training
-
-    try:
-        yield
-    finally:
-        LOCAL.training = current_training
-
-
-def name_context(name: str) -> tp.ContextManager[str]:
-    return _name_context(name)
-
-
-@contextmanager
-def _name_context(name: str) -> tp.Iterator[str]:
-
-    if LOCAL.names is None or LOCAL.level_names is None:
-        yield ""
-        return
-
-    current_level_names = LOCAL.level_names
-
-    name = get_unique_name(set(current_level_names), name)
-
-    current_level_names.append(name)  # add name to current level
-    LOCAL.names.append(name)
-    LOCAL.level_names = []  # create new level for children
-
-    try:
-        yield name
-    finally:
-        LOCAL.names.pop()
-        LOCAL.level_names = current_level_names
+        module._clear_parameters()
+        LOCAL.module_path = prev_module_path
+        LOCAL.initializing = prev_initializing
+        LOCAL.training = prev_training
+        LOCAL.rng = prev_rng
 
 
 def call_context(module: Module) -> tp.ContextManager[None]:
@@ -948,22 +951,46 @@ def call_context(module: Module) -> tp.ContextManager[None]:
 @contextmanager
 def _call_context(module: Module):
 
-    prev_module = LOCAL.module
+    prev_parent = LOCAL.parent
     prev_inside_call = LOCAL.inside_call
     prev_module_index = LOCAL.module_index
 
-    LOCAL.module = module
+    LOCAL.parent = module
     LOCAL.inside_call = True
     LOCAL.module_index = 0
 
-    with name_context(module.name):
+    try:
 
-        try:
-            yield
-        finally:
-            LOCAL.module = prev_module
-            LOCAL.inside_call = prev_inside_call
-            LOCAL.module_index = prev_module_index
+        if not has_scope():
+            raise types.NoContext(
+                f"Trying to call top-level module '{module}' directly, use `apply` instead."
+            )
+
+        elif prev_parent is not None and module not in prev_parent._submodule_name:
+            raise types.SubmoduleNotRegistered(
+                f"Submodule {utils.get_name(module)} not registered in {utils.get_name(prev_parent)}, "
+                f"this is probably due to some of the following reasons:\n"
+                f"- The submodule is being captured by closure and not registered to any field.\n"
+                f"- The submodule was set to a field of the parent but "
+                f"its contained inside a more complex type which elegy cannot "
+                f"inspect, elegy only looks structures of (possibly nested) list, tuple, or dict.\n"
+                f"- The submodule was set to a field of the parent by mutating such field after __init__\n\n"
+                f"- If non of the previous is true consider this a bug."
+                f"Submodule: {module}\n"
+                f"Module: {prev_parent}\n"
+            )
+
+        if prev_parent is None:
+            LOCAL.module_path[module] = ()
+        else:
+            parent_path = LOCAL.module_path[prev_parent]
+            child_name = prev_parent._submodule_name[module]
+            LOCAL.module_path[module] = parent_path + (child_name,)
+        yield
+    finally:
+        LOCAL.parent = prev_parent
+        LOCAL.inside_call = prev_inside_call
+        LOCAL.module_index = prev_module_index
 
 
 def instantiation_context(module: Module) -> tp.ContextManager[None]:
@@ -973,222 +1000,17 @@ def instantiation_context(module: Module) -> tp.ContextManager[None]:
 @contextmanager
 def _instantiation_context(module: Module):
 
-    prev_module = LOCAL.module
     prev_inside_call = LOCAL.inside_call
+    prev_module_path = LOCAL.module_path
 
     LOCAL.inside_call = False
+    LOCAL.module_path = None
 
     try:
         yield
     finally:
-        LOCAL.module = prev_module
         LOCAL.inside_call = prev_inside_call
-
-
-def init_context(can_update: bool = True) -> tp.ContextManager[None]:
-    return _init_context(can_update=can_update)
-
-
-@contextmanager
-def _init_context(can_update: bool = True) -> tp.Iterator[None]:
-    prev_initializing = LOCAL.initializing
-    prev_accept_updates = LOCAL.can_update
-
-    LOCAL.initializing = True
-    LOCAL.can_update = can_update
-
-    try:
-        yield
-    finally:
-        LOCAL.initializing = prev_initializing
-        LOCAL.can_update = prev_accept_updates
-
-
-def get_dynamic_context() -> "DynamicContext":
-    return LOCAL.dynamic_context()
-
-
-def get_static_context() -> "StaticContext":
-    return LOCAL.static_context()
-
-
-def set_context(static: "StaticContext", dynamic: "DynamicContext"):
-    LOCAL.set_from(static, dynamic)
-
-    def _grad_fn(parameters_tuple: tp.Tuple[tp.Dict, ...], *args, **kwargs):
-        assert isinstance(parameters_tuple, tuple)
-        assert isinstance(modules, list)
-
-
-# -------------------------------------------------------------
-# transforms
-# -------------------------------------------------------------
-
-
-def jit(
-    f: tp.Union[tp.Callable, Module],
-    modules: tp.Optional[tp.Union[Module, tp.List[Module]]] = None,
-    **kwargs,
-):
-    static_argnums = tuple(kwargs.pop("static_argnums", ()))
-
-    if modules is None:
-        modules = []
-    elif isinstance(modules, Module):
-        modules = [modules]
-
-    if isinstance(f, Module):
-
-        if modules is not None and f not in modules:
-            modules.append(f)
-        elif modules is None:
-            modules = [f]
-
-    if len(modules) < 1:
-        raise ValueError("No module specified")
-
-    static_argnums = (0, 1) + tuple(i + 4 for i in static_argnums)
-
-    def _jit_fn(
-        states_tuple: tp.Tuple[FrozenDict[str, tp.Any], ...],
-        statics: StaticContext,
-        dynamics: DynamicContext,
-        parameters_tuple: tp.Tuple[tp.Dict, ...],
-        *args,
-    ) -> tp.Tuple[tp.Any, DynamicContext, tp.Tuple]:
-        assert isinstance(modules, list)
-
-        # states_tuple is not set because its static, therefore no need to propagate down
-
-        # set global state
-        set_context(statics, dynamics)
-
-        # set params to modules
-        for module, parameters in zip(modules, parameters_tuple):
-            module.set_parameters(parameters, check_missing=False, check_shapes=False)
-
-        outputs = f(*args)
-
-        parameters_tuple = tuple(module.get_parameters() for module in modules)
-
-        return (
-            outputs,
-            get_dynamic_context(),
-            parameters_tuple,
-        )
-
-    jit_fn = jax.jit(_jit_fn, static_argnums, **kwargs)
-
-    @functools.wraps(f)
-    def wrapper(*args):
-        assert isinstance(modules, list)
-
-        states_tuple = utils.to_static(
-            tuple(FrozenDict(module._get_module_states()) for module in modules)
-        )
-        statics = get_static_context()
-        dynamics = get_dynamic_context()
-        parameters_tuple = tuple(module.get_parameters() for module in modules)
-        # static_argnums
-
-        outputs, dynamics, parameters_tuple = jit_fn(
-            states_tuple,
-            statics,
-            dynamics,
-            parameters_tuple,
-            *args,
-        )
-
-        statics = get_static_context()
-        # set global state
-        set_context(statics, dynamics)
-
-        # set params to modules
-        for module, parameters in zip(modules, parameters_tuple):
-            module.set_parameters(parameters, check_missing=False, check_shapes=False)
-
-        return outputs
-
-    return wrapper
-
-
-def get_trainable_parameters(modules: tp.List[Module]) -> tp.List[tp.Any]:
-    return [module.get_parameters(trainable=True) for module in modules]
-
-
-def value_and_grad(
-    f: tp.Union[tp.Callable, Module],
-    modules: tp.Optional[tp.Union[Module, tp.List[Module]]] = None,
-    parameters_fn: tp.Callable[
-        [tp.List[Module]], tp.List[tp.Any]
-    ] = get_trainable_parameters,
-    **kwargs,
-):
-    is_list = isinstance(modules, tp.List)
-
-    if modules is None:
-        modules = []
-    elif isinstance(modules, Module):
-        modules = [modules]
-
-    if isinstance(f, Module):
-
-        if modules is not None and f not in modules:
-            modules.append(f)
-        elif modules is None:
-            modules = [f]
-
-    assert len(modules) > 0
-
-    def _grad_fn(parameters_tuple: tp.Tuple[tp.Dict, ...], *args, **kwargs):
-        assert isinstance(parameters_tuple, tuple)
-        assert isinstance(modules, list)
-
-        # set traced parameters
-        for module, parameters in zip(modules, parameters_tuple):
-            module.set_parameters(parameters, check_missing=False, check_shapes=False)
-
-        outputs = f(*args, **kwargs)
-
-        loss = outputs[0] if isinstance(outputs, tuple) else outputs
-
-        parameters_tuple = tuple(module.get_parameters() for module in modules)
-
-        return loss, (
-            outputs,
-            get_static_context(),
-            get_dynamic_context(),
-            parameters_tuple,
-        )
-
-    kwargs["has_aux"] = True
-    grad_fn = jax.value_and_grad(_grad_fn, **kwargs)
-
-    @functools.wraps(f)
-    def wrapper(*args, **kwargs):
-        assert isinstance(modules, list)
-
-        parameters_tuple = tuple(parameters_fn(modules))
-
-        (_loss, (outputs, statics, dynamics, parameters_tuple)), grads = grad_fn(
-            parameters_tuple, *args, **kwargs
-        )
-
-        parameters_tuple
-
-        # set global state
-        set_context(statics, dynamics)
-
-        # set original untraced parameters
-        for module, parameters in zip(modules, parameters_tuple):
-            module.set_parameters(parameters, check_missing=False, check_shapes=False)
-
-        if not is_list:
-            grads = grads[0]
-
-        return outputs, grads
-
-    return wrapper
+        LOCAL.module_path = prev_module_path
 
 
 # ------------------------------------------------------------------------
@@ -1196,93 +1018,7 @@ def value_and_grad(
 # ------------------------------------------------------------------------
 
 
-def module_tree_map(
-    f: tp.Callable[[Module], tp.Dict[str, tp.Any]],
-    module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict],
-) -> tp.Union[tp.List, tp.Tuple, tp.Dict]:
-
-    if isinstance(module, tp.List):
-        return [module_tree_map(f, module) for module in module]
-    elif isinstance(module, tp.Tuple):
-        return tuple(module_tree_map(f, module) for module in module)
-    elif isinstance(module, tp.Dict):
-        return {key: module_tree_map(f, module) for key, module in module.items()}
-    elif isinstance(module, Module):
-
-        node = f(module)
-
-        for submodule in module._submodules:
-            value = module_tree_map(f, getattr(module, submodule))
-            # if value:  # drop if empty
-            node[submodule] = value
-
-        return node
-    else:
-        return ()
-
-
-def tree_apply(
-    f: tp.Callable[[Module, tp.Dict[str, tp.Any]], None],
-    module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict],
-    values: tp.Union[tp.List, tp.Tuple, tp.Dict],
-):
-
-    if isinstance(module, tp.List):
-        assert isinstance(values, tp.List)
-
-        for module, value in zip(module, values):
-            tree_apply(f, module, value)
-
-    elif isinstance(module, tp.Tuple):
-        assert isinstance(values, tp.Tuple)
-
-        for module, value in zip(module, values):
-            tree_apply(f, module, value)
-
-    elif isinstance(module, tp.Dict):
-        assert isinstance(values, tp.Dict)
-
-        for key, value in values.items():
-            tree_apply(f, module[key], value)
-
-    elif isinstance(module, Module):
-        assert isinstance(values, tp.Dict)
-
-        f(module, values)
-
-        for key, value in values.items():
-            if key in module._submodules:
-                tree_apply(f, getattr(module, key), value)
-
-
-def tree_exec(
-    f: tp.Callable[[Module], tp.Any],
-    module: tp.Union[Module, tp.List, tp.Tuple, tp.Dict],
-):
-
-    if isinstance(module, tp.List):
-
-        for module in module:
-            tree_exec(f, module)
-
-    elif isinstance(module, tp.Tuple):
-
-        for module in module:
-            tree_exec(f, module)
-
-    elif isinstance(module, tp.Dict):
-
-        for key, value in module.items():
-            tree_exec(f, module[key])
-
-    elif isinstance(module, Module):
-        f(module)
-
-        for key in module._submodules:
-            tree_exec(f, getattr(module, key))
-
-
-def leaf_isinstance(obj: tp.Any, types) -> tp.Type:
+def leaf_isinstance(obj: tp.Any, types) -> bool:
 
     if isinstance(obj, (tp.List, tp.Tuple)) and obj:
         return any(leaf_isinstance(elem, types) for elem in obj)
@@ -1292,36 +1028,18 @@ def leaf_isinstance(obj: tp.Any, types) -> tp.Type:
         return isinstance(obj, types)
 
 
-def get_unique_name(
-    names: tp.Set[str],
-    name: str,
-):
-
-    if name not in names:
-        return name
-
-    i = 1
-    while f"{name}_{i}" in names:
-        i += 1
-
-    return f"{name}_{i}"
-
-
 def to_module(f):
     class ToModule(Module):
         def __init__(self, name: tp.Optional[str] = None):
             super().__init__(
                 name=utils.lower_snake_case(f.__name__) if name is None else name
             )
-            self.call = f
+            self._signature_f = f
+            self.f = f
 
         def call(self, *args, **kwargs):
-            ...
+            return self.f(*args, **kwargs)
 
     ToModule.__name__ = f.__name__
 
     return ToModule
-
-
-def as_initial(name):
-    return f"{name}__initial__"

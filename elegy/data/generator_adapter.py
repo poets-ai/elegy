@@ -1,15 +1,13 @@
 import itertools
 import typing as tp
 
-import numpy as np
-
 from .data_adapter import DataAdapter
 from .utils import (
     assert_not_namedtuple,
+    flatten,
     is_none_or_empty,
     pack_x_y_sample_weight,
     unpack_x_y_sample_weight,
-    flatten,
 )
 
 

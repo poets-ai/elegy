@@ -1,83 +1,82 @@
-__version__ = "0.3.0"
+__version__ = "0.5.0"
 
 
+from elegy import types
+from elegy.utils import inject_dependencies
+
+from . import losses  # module,
 from . import (
     callbacks,
+    hooks,
     initializers,
-    losses,
     metrics,
     model,
-    module,
     nets,
     nn,
     regularizers,
+    utils,
     data,
 )
 from .losses import Loss
 from .metrics import Metric
-from .model import Model, Optimizer
-from .module import (
-    RNG,
-    LocalContext,
-    Module,
-    add_loss,
-    add_metric,
-    add_summary,
-    get_dynamic_context,
-    get_losses,
-    get_metrics,
-    get_rng,
-    get_static_context,
-    get_summaries,
-    hooks_context,
-    is_training,
-    jit,
-    name_context,
-    next_rng_key,
-    set_context,
-    set_rng,
-    set_training,
-    to_module,
-    training_context,
-    value_and_grad,
+from .model.model import Metrics, Model, Losses
+from .model.model_core import PredStep, TestStep, GradStep, TrainStep
+from .model.model_base import ModelBase, load
+from .module import Module, to_module
+from .optimizer import Optimizer
+from .types import (
+    RNGSeq,
+    States,
+    OutputStates,
 )
 from . import module_slicing
+from .generalized_module.generalized_module import GeneralizedModule
+from .generalized_optimizer.generalized_optimizer import GeneralizedOptimizer
+
+try:
+    from .generalized_module.linen_module import flax_summarize, flax_summary
+except types.DependencyUnavailable as e:
+    pass
+try:
+    from .generalized_module.haiku_module import (
+        HaikuModule,
+        haiku_summarize,
+        haiku_summary,
+    )
+except types.DependencyUnavailable as e:
+    pass
+
 
 __all__ = [
+    "GeneralizedModule",
+    "GeneralizedOptimizer",
+    "GradStep",
+    "HaikuModule",
     "Loss",
+    "Losses",
     "Metric",
+    "Metrics",
     "Model",
+    "ModelBase",
     "Module",
     "Optimizer",
-    "RNG",
-    "add_loss",
-    "add_metric",
-    "add_summary",
+    "OutputStates",
+    "PredStep",
+    "RNGSeq",
+    "States",
+    "TestStep",
+    "TrainStep",
     "callbacks",
     "data",
-    "get_dynamic_context",
-    "get_losses",
-    "get_metrics",
-    "get_rng",
-    "get_static_context",
-    "get_summaries",
-    "hooks_context",
+    "flax_summarize",
+    "flax_summary",
+    "hooks",
     "initializers",
-    "is_training",
-    "jit",
+    "inject_dependencies",
     "losses",
     "metrics",
-    "model",
-    "module",
-    "name_context",
     "nets",
-    "next_rng_key",
     "nn",
     "regularizers",
-    "set_context",
-    "set_rng",
-    "set_training",
     "to_module",
-    "training_context",
-    "value_and_grad",
 ]

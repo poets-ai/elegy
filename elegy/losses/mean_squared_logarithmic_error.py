@@ -29,8 +29,8 @@ def mean_squared_logarithmic_error(
 
     assert loss.shape == (2,)
 
-    first_log = jnp.log(jnp.maximum(y_true, utils.EPSILON) + 1.0)
-    second_log = jnp.log(jnp.maximum(y_pred, utils.EPSILON) + 1.0)
+    first_log = jnp.log(jnp.maximum(y_true, types.EPSILON) + 1.0)
+    second_log = jnp.log(jnp.maximum(y_pred, types.EPSILON) + 1.0)
     assert jnp.array_equal(loss, jnp.mean(jnp.square(first_log - second_log), axis=-1))
     ```
 
@@ -43,8 +43,8 @@ def mean_squared_logarithmic_error(
     """
 
     y_true = y_true.astype(y_pred.dtype)
-    first_log = jnp.log(jnp.maximum(y_true, utils.EPSILON) + 1.0)
-    second_log = jnp.log(jnp.maximum(y_pred, utils.EPSILON) + 1.0)
+    first_log = jnp.log(jnp.maximum(y_true, types.EPSILON) + 1.0)
+    second_log = jnp.log(jnp.maximum(y_pred, types.EPSILON) + 1.0)
 
     return jnp.mean(jnp.square(first_log - second_log), axis=-1)
 

@@ -30,9 +30,9 @@ class TransformerEncoderLayer(Module):
         activation: the activation function of intermediate layer, relu or gelu (default=relu).
 
     Examples::
-        >>> encoder_layer = nn.TransformerEncoderLayer(head_size=512, num_heads=8)
-        >>> src = torch.rand(10, 32, 512)
-        >>> out = encoder_layer(src)
+        >>> # encoder_layer = nn.TransformerEncoderLayer(head_size=512, num_heads=8)
+        >>> # src = torch.rand(10, 32, 512)
+        >>> # out = encoder_layer(src)
     """
 
     def __init__(
@@ -101,12 +101,12 @@ class TransformerEncoder(Module):
         norm: the layer normalization component (optional).
 
     Examples::
-        >>> transformer_encoder = elegy.nn.TransformerEncoder(
+        >>> # transformer_encoder = elegy.nn.TransformerEncoder(
                 lambda: elegy.nn.TransformerEncoderLayer(head_size=512, num_heads=8),
                 num_layers=6,
             )
-        >>> src = torch.rand(10, 32, 512)
-        >>> out = transformer_encoder(src)
+        >>> # src = torch.rand(10, 32, 512)
+        >>> # out = transformer_encoder(src)
     """
 
     def __init__(
@@ -164,10 +164,10 @@ class TransformerDecoderLayer(Module):
         activation: the activation function of intermediate layer, relu or gelu (default=relu).
 
     Examples::
-        >>> decoder_layer = nn.TransformerDecoderLayer(head_size=512, num_heads=8)
-        >>> memory = torch.rand(10, 32, 512)
-        >>> tgt = torch.rand(20, 32, 512)
-        >>> out = decoder_layer(tgt, memory)
+        >>> # decoder_layer = nn.TransformerDecoderLayer(head_size=512, num_heads=8)
+        >>> # memory = torch.rand(10, 32, 512)
+        >>> # tgt = torch.rand(20, 32, 512)
+        >>> # out = decoder_layer(tgt, memory)
     """
 
     def __init__(
@@ -241,11 +241,11 @@ class TransformerDecoder(Module):
         norm: the layer normalization component (optional).
 
     Examples::
-        >>> decoder_layer = nn.TransformerDecoderLayer(head_size=512, num_heads=8)
-        >>> transformer_decoder = nn.TransformerDecoder(decoder_layer, num_layers=6)
-        >>> memory = torch.rand(10, 32, 512)
-        >>> tgt = torch.rand(20, 32, 512)
-        >>> out = transformer_decoder(tgt, memory)
+        >>> # decoder_layer = nn.TransformerDecoderLayer(head_size=512, num_heads=8)
+        >>> # transformer_decoder = nn.TransformerDecoder(decoder_layer, num_layers=6)
+        >>> # memory = torch.rand(10, 32, 512)
+        >>> # tgt = torch.rand(20, 32, 512)
+        >>> # out = transformer_decoder(tgt, memory)
     """
 
     def __init__(
@@ -319,10 +319,10 @@ class Transformer(Module):
         custom_decoder: custom decoder (default=None).
 
     Examples::
-        >>> transformer_model = nn.Transformer(num_heads=16, num_encoder_layers=12)
-        >>> src = torch.rand((10, 32, 512))
-        >>> tgt = torch.rand((20, 32, 512))
-        >>> out = transformer_model(src, tgt)
+        >>> # transformer_model = nn.Transformer(num_heads=16, num_encoder_layers=12)
+        >>> # src = torch.rand((10, 32, 512))
+        >>> # tgt = torch.rand((20, 32, 512))
+        >>> # out = transformer_model(src, tgt)
 
     Note: A full example to apply nn.Transformer module for the word language model is available in
     https://github.com/pytorch/examples/tree/master/word_language_model
@@ -405,7 +405,7 @@ class Transformer(Module):
             batch size, E is the feature number
 
         Examples:
-            >>> output = transformer_model(src, tgt, src_mask=src_mask, tgt_mask=tgt_mask)
+            >>> # output = transformer_model(src, tgt, src_mask=src_mask, tgt_mask=tgt_mask)
         """
 
         if src.shape[0] != tgt.shape[0]:

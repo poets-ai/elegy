@@ -4,11 +4,11 @@
 
 import math
 import typing as tp
+from operator import itemgetter
 
 import jax.numpy as jnp
 import numpy as np
-
-from elegy.types import ArrayHolder, ArrayLike
+from elegy import types
 
 from .data_adapter import DataAdapter
 from .utils import flatten, map_structure, pack_x_y_sample_weight
@@ -38,8 +38,8 @@ class ArrayDataAdapter(DataAdapter):
 
     def __init__(
         self,
-        x: ArrayHolder,
-        y: tp.Union[ArrayHolder, None] = None,
+        x: types.ArrayHolder,
+        y: tp.Union[types.ArrayHolder, None] = None,
         sample_weights: tp.Union[jnp.ndarray, np.ndarray, None] = None,
         batch_size: tp.Optional[int] = None,
         epochs: int = 1,
@@ -103,9 +103,9 @@ class ArrayDataAdapter(DataAdapter):
 
                     # # Drop last batch
                     # if drop_remainder and len(indices) < batch_size:
-                    #     print("Droping!")
+                    #     print("Dropping!")
                     #     continue
-                    inputs_slices = map_structure(lambda x: x[indices], inputs)
+                    inputs_slices = map_structure(itemgetter(indices), inputs)
 
                     yield inputs_slices
 

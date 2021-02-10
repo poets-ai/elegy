@@ -70,3 +70,8 @@ def test_compatibility():
     assert jnp.all(
         jnp.isclose(bce_elegy(y_true, y_pred), bce_tfk(y_true, y_pred), rtol=0.0001)
     )
+
+    # BCE with label smoothing
+    bce_elegy = elegy.losses.BinaryCrossentropy(label_smoothing=0.9)
+    bce_tfk = tfk.losses.BinaryCrossentropy(label_smoothing=0.9)
+    assert jnp.isclose(bce_elegy(y_true, y_pred), bce_tfk(y_true, y_pred), rtol=0.0001)

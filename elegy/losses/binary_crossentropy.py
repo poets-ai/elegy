@@ -2,21 +2,27 @@ from elegy import types
 import typing as tp
 import jax
 import jax.numpy as jnp
-from elegy import utils
+from elegy import utils, types
 from elegy.losses.loss import Loss, Reduction
 
 
 def binary_crossentropy(
-    y_true: jnp.ndarray, y_pred: jnp.ndarray, from_logits: bool = False
+    y_true: jnp.ndarray,
+    y_pred: jnp.ndarray,
+    from_logits: bool = False,
+    label_smoothing: float = 0,
 ) -> jnp.ndarray:
     assert abs(y_pred.ndim - y_true.ndim) <= 1
 
     y_true, y_pred = utils.maybe_expand_dims(y_true, y_pred)
 
+    if label_smoothing:
+        y_true = y_true * (1.0 - label_smoothing) + 0.5 * label_smoothing
+
     if from_logits:
         return -jnp.mean(y_true * y_pred - jnp.logaddexp(0.0, y_pred), axis=-1)
 
-    y_pred = jnp.clip(y_pred, utils.EPSILON, 1.0 - utils.EPSILON)
+    y_pred = jnp.clip(y_pred, types.EPSILON, 1.0 - types.EPSILON)
     return -jnp.mean(
         y_true * jnp.log(y_pred) + (1 - y_true) * jnp.log(1 - y_pred), axis=-1
     )
@@ -135,4 +141,9 @@ class BinaryCrossentropy(Loss):
             Loss values per sample.
         """
 
-        return binary_crossentropy(y_true, y_pred, from_logits=self._from_logits)
+        return binary_crossentropy(
+            y_true,
+            y_pred,
+            from_logits=self._from_logits,
+            label_smoothing=self._label_smoothing,
+        )

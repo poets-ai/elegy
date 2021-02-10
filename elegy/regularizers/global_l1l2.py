@@ -6,6 +6,7 @@ import jax.numpy as jnp
 
 from elegy import utils
 from elegy.losses.loss import Loss, Reduction
+from elegy import types
 
 
 class GlobalL1L2(Loss):
@@ -54,14 +55,14 @@ class GlobalL1L2(Loss):
         self.l1 = l1
         self.l2 = l2
 
-    def call(self, parameters: hk.Params) -> jnp.ndarray:
+    def call(self, states: types.States) -> jnp.ndarray:
         """
         Computes the L1 and L2 regularization penalty simultaneously.
 
         Arguments:
-            parameters: A structure with all the parameters of the model.
+            net_params: A structure with all the parameters of the model.
         """
-
+        net_params = states.net_params
         regularization: jnp.ndarray = jnp.array(0.0)
 
         if not self.l1 and not self.l2:
@@ -69,12 +70,12 @@ class GlobalL1L2(Loss):
 
         if self.l1:
             regularization += self.l1 * sum(
-                jnp.sum(jnp.abs(p)) for p in jax.tree_leaves(parameters)
+                jnp.sum(jnp.abs(p)) for p in jax.tree_leaves(net_params)
             )
 
         if self.l2:
             regularization += self.l2 * sum(
-                jnp.sum(jnp.square(p)) for p in jax.tree_leaves(parameters)
+                jnp.sum(jnp.square(p)) for p in jax.tree_leaves(net_params)
             )
 
         return regularization

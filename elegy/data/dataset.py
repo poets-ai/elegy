@@ -1,5 +1,5 @@
 import numpy as np
-import jax.numpy as jnp
+import jax, jax.numpy as jnp
 import multiprocessing.pool
 import typing as tp
 from .data_adapter import DataAdapter
@@ -42,12 +42,20 @@ class Dataset:
         """Abstract method. In a subclass this should return the number of data samples in the dataset."""
         raise NotImplementedError
 
+    def batch_fn(
+        self, list_of_samples: tp.List[tp.Any]
+    ) -> tp.Union[jnp.ndarray, tp.Tuple[jnp.ndarray]]:
+        """Used by DataLoader to group a list of individual samples into a batch.
+        By default tries to stack elements in the samples according to their positiion.
+        Can be overridden for more complex use cases.
+        """
+        return default_batch_fn(list_of_samples)
+
 
 class DataLoader:
     """Loads samples from a dataset and combines them into batches. Can be directly passed to `Model.fit()`"""  # +_example_usage_docstring
 
     # TODO: __getitem__  incl slicing e.g. [:5]
-    # TODO: custom batch_fn parameter
     # TODO: n_workers='auto'
     # TODO: timeout parameter
 
@@ -126,18 +134,13 @@ def default_batch_fn(
 ) -> tp.Union[jnp.ndarray, tp.Tuple[jnp.ndarray]]:
     """Batches individual data samples."""
     assert len(list_of_samples) > 0
-    first_sample = list_of_samples[0]
-    if hasattr(first_sample, "__array__"):
-        return jnp.asarray(list_of_samples)
-    elif isinstance(first_sample, (tp.Tuple, tp.List)):
-        sample_len = len(first_sample)
-        batched_lists = [
-            [sample[i] for sample in list_of_samples] for i in range(sample_len)
-        ]
-        batched_stacks = [jnp.asarray(batch) for batch in batched_lists]
-        return tuple(batched_stacks)
-    else:
-        return tuple(list_of_samples)
+    return jax.tree_multimap(lambda *x: jnp.asarray(x), *list_of_samples)
+
+
+def get_batch_fn(ds: tp.Any) -> tp.Callable:
+    """Returns either the batch_fn of the argument if it has one, otherwise `default_batch_fn`
+    to allow arrays or datasets that don't inherit from elegy.data.Dataset"""
+    return getattr(ds, "batch_fn", default_batch_fn)
 
 
 def mainthread_data_iterator(
@@ -146,12 +149,7 @@ def mainthread_data_iterator(
     """Generator that loads datasamples from the data set in the main thread"""
     for batch_of_indices in batched_indices:
         samples = list(map(ds.__getitem__, batch_of_indices))
-        yield default_batch_fn(samples)
-
-
-def data_transfer_fn(async_map_result, timeout=10):
-    samples = async_map_result.get(timeout)
-    return default_batch_fn(samples)
+        yield get_batch_fn(ds)(samples)
 
 
 class WorkerContext:
@@ -229,20 +227,29 @@ class MultiProcessIterator:
 
     def dispatch_tasks(self, batch_of_indices):
         async_x = self.worker_pool.map_async(WorkerContext.get_sample, batch_of_indices)
-        async_x = self.data_transfer_worker.apply_async(data_transfer_fn, (async_x,))
+        async_x = self.data_transfer_worker.apply_async(
+            self.data_transfer_fn, (async_x,)
+        )
         self.async_results_queue.append(async_x)
 
     def shutdown(self):
         self.worker_pool.close()
-        for aresult in self.async_results_queue:
+        for a_result in self.async_results_queue:
             # wait for remaining tasks to finish
             # process workers will hang otherwise
-            aresult.wait(timeout=self.timeout)
+            a_result.wait(timeout=self.timeout)
         self.worker_pool.terminate()
         self.worker_pool.join()
 
     def __del__(self):
         self.shutdown()
+
+    def data_transfer_fn(self, async_map_result, timeout=10):
+        samples = async_map_result.get(timeout)
+        batch = get_batch_fn(self.ds)(samples)
+        # make sure the batch is transferred to the device
+        batch = jax.tree_map(jnp.asarray, batch)
+        return batch
 
 
 class DataLoaderAdapter(DataAdapter):

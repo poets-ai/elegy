@@ -20,8 +20,9 @@ import re
 import jax
 import jax.numpy as jnp
 from haiku._src import data_structures
+import numpy as np
 
-from elegy import initializers, module
+from elegy import initializers, module, types
 
 
 class ExponentialMovingAverage(module.Module):
@@ -30,6 +31,10 @@ class ExponentialMovingAverage(module.Module):
     This uses the Adam debiasing procedure.
     See https://arxiv.org/pdf/1412.6980.pdf for details.
     """
+
+    counter: np.ndarray
+    hidden: np.ndarray
+    average: np.ndarray
 
     def __init__(self, decay, zero_debias=True, warmup_length=0, **kwargs):
         """Initializes an ExponentialMovingAverage module.
@@ -67,13 +72,13 @@ class ExponentialMovingAverage(module.Module):
     def initialize(self, value):
         """If uninitialized sets the average to ``zeros_like`` the given value."""
         self.add_parameter(
-            "hidden", value.shape, jnp.float32, initializer=jnp.zeros, trainable=False
+            "hidden", lambda: jnp.zeros(value.shape, jnp.float32), trainable=False
         )
         self.add_parameter(
-            "average", value.shape, jnp.float32, initializer=jnp.zeros, trainable=False
+            "average", lambda: jnp.zeros(value.shape, jnp.float32), trainable=False
         )
 
-    def call(self, value, update_stats=True):
+    def call(self, value: jnp.ndarray, update_stats=True):
         """Updates the EMA and returns the new value.
 
         Args:
@@ -91,9 +96,7 @@ class ExponentialMovingAverage(module.Module):
 
         counter = self.add_parameter(
             "counter",
-            (),
-            jnp.int32,
-            initializer=initializers.Constant(-self._warmup_length),
+            lambda: jnp.broadcast_to(-self._warmup_length, ()).astype(jnp.int32),
             trainable=False,
         )
         counter += 1
@@ -104,7 +107,9 @@ class ExponentialMovingAverage(module.Module):
 
         one = jnp.ones([], value.dtype)
         hidden = self.add_parameter(
-            "hidden", value.shape, jnp.float32, initializer=jnp.zeros, trainable=False
+            "hidden",
+            lambda: jnp.zeros(value.shape, jnp.float32),
+            trainable=False,
         )
         hidden = hidden * decay + value * (one - decay)
 
@@ -112,7 +117,7 @@ class ExponentialMovingAverage(module.Module):
         if self._zero_debias:
             average /= one - jnp.power(decay, counter)
 
-        self.add_parameter("average", initializer=average, trainable=False)
+        self.add_or_update_parameter("average", average, trainable=False)
 
         if update_stats:
             self.update_parameter("counter", counter)
@@ -131,15 +136,22 @@ class EMAParamsTree(module.Module):
 
     Given a set of parameters for some network:
 
-    >>> network_fn = lambda x: hk.Linear(10)(x)
+    ```python
+    >>> import elegy
     >>> x = jnp.ones([1, 1])
-    >>> params = hk.transform(network_fn).init(jax.random.PRNGKey(428), x)
+    >>> linear = elegy.nn.Linear(10)
+    >>> y, params, collections = linear.init(rng=elegy.RNGSeq(42))(x)
+
+    ```
 
     You might use the EMAParamsTree like follows:
 
-    >>> ema_fn = hk.transform_with_state(lambda x: hk.EMAParamsTree(0.2)(x))
-    >>> _, ema_state = ema_fn.init(None, params)
-    >>> ema_params, ema_state = ema_fn.apply(None, ema_state, None, params)
+    ```python
+    >>> ema = elegy.nn.EMAParamsTree(0.2)
+    >>> _, _, ema_state = ema.init()(dict(params=params, collections=collections))
+    >>> ema_values, _, ema_state = ema.apply(None, ema_state)(dict(params=params, collections=collections))
+
+    ```
 
     Here, we are transforming a Haiku function and constructing its parameters via
     an init_fn as normal, but are creating a second transformed function which

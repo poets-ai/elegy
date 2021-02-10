@@ -18,12 +18,14 @@ class PrecisionTest(TestCase):
 
         assert np.allclose(
             tfk.metrics.Precision()(y_true, y_pred),
-            elegy.metrics.Precision()(jnp.asarray(y_true), jnp.asarray(y_pred)),
+            elegy.metrics.Precision().call_with_defaults()(
+                jnp.asarray(y_true), jnp.asarray(y_pred)
+            ),
         )
 
         assert np.allclose(
             tfk.metrics.Precision(thresholds=0.3)(y_true, y_pred),
-            elegy.metrics.Precision(threshold=0.3)(
+            elegy.metrics.Precision(threshold=0.3).call_with_defaults()(
                 jnp.asarray(y_true), jnp.asarray(y_pred)
             ),
         )
@@ -32,7 +34,7 @@ class PrecisionTest(TestCase):
             tfk.metrics.Precision(thresholds=0.3)(
                 y_true, y_pred, sample_weight=sample_weight
             ),
-            elegy.metrics.Precision(threshold=0.3)(
+            elegy.metrics.Precision(threshold=0.3).call_with_defaults()(
                 jnp.asarray(y_true),
                 jnp.asarray(y_pred),
                 sample_weight=jnp.asarray(sample_weight),
@@ -43,7 +45,7 @@ class PrecisionTest(TestCase):
             tfk.metrics.Precision(thresholds=0.3)(
                 y_true, y_pred, sample_weight=sample_weight
             ),
-            elegy.metrics.Precision(threshold=0.3)(
+            elegy.metrics.Precision(threshold=0.3).call_with_defaults()(
                 jnp.asarray(y_true),
                 jnp.asarray(y_pred),
                 sample_weight=jnp.asarray(sample_weight),
@@ -55,7 +57,7 @@ class PrecisionTest(TestCase):
             tfk.metrics.Precision(thresholds=0.3)(
                 y_true, y_pred, sample_weight=float_sample_weight
             ),
-            elegy.metrics.Precision(threshold=0.3)(
+            elegy.metrics.Precision(threshold=0.3).call_with_defaults()(
                 y_true,
                 y_pred,
                 sample_weight=float_sample_weight,
@@ -63,7 +65,7 @@ class PrecisionTest(TestCase):
         )
 
     #
-    def test_cummulative(self):
+    def test_cumulative(self):
         tm = tfk.metrics.Precision(thresholds=0.3)
         em = elegy.metrics.Precision(threshold=0.3)
 
@@ -76,7 +78,7 @@ class PrecisionTest(TestCase):
 
         assert np.allclose(
             tm(y_true, y_pred, sample_weight=sample_weight),
-            em(
+            em.call_with_defaults()(
                 jnp.asarray(y_true),
                 jnp.asarray(y_pred),
                 sample_weight=jnp.asarray(sample_weight),
@@ -92,7 +94,7 @@ class PrecisionTest(TestCase):
 
         assert np.allclose(
             tm(y_true, y_pred, sample_weight=sample_weight),
-            em(
+            em.call_with_defaults()(
                 jnp.asarray(y_true),
                 jnp.asarray(y_pred),
                 sample_weight=jnp.asarray(sample_weight),

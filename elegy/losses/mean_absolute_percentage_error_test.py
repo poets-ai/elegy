@@ -4,7 +4,7 @@ import tensorflow.keras as tfk
 from unittest import TestCase
 
 import elegy
-from elegy import utils
+from elegy import utils, types
 
 
 class MeanAbsolutePercentageErrorTest(TestCase):
@@ -94,7 +94,7 @@ class MeanAbsolutePercentageErrorTest(TestCase):
             100
             * jnp.mean(
                 jnp.abs(
-                    (y_pred - y_true) / jnp.maximum(jnp.abs(y_true), utils.EPSILON)
+                    (y_pred - y_true) / jnp.maximum(jnp.abs(y_true), types.EPSILON)
                 ),
                 axis=-1,
             ),

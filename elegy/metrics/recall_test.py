@@ -18,12 +18,14 @@ class RecallTest(TestCase):
 
         assert np.allclose(
             tfk.metrics.Recall()(y_true, y_pred),
-            elegy.metrics.Recall()(jnp.asarray(y_true), jnp.asarray(y_pred)),
+            elegy.metrics.Recall().call_with_defaults()(
+                jnp.asarray(y_true), jnp.asarray(y_pred)
+            ),
         )
 
         assert np.allclose(
             tfk.metrics.Recall(thresholds=0.3)(y_true, y_pred),
-            elegy.metrics.Recall(threshold=0.3)(
+            elegy.metrics.Recall(threshold=0.3).call_with_defaults()(
                 jnp.asarray(y_true), jnp.asarray(y_pred)
             ),
         )
@@ -32,7 +34,7 @@ class RecallTest(TestCase):
             tfk.metrics.Recall(thresholds=0.3)(
                 y_true, y_pred, sample_weight=sample_weight
             ),
-            elegy.metrics.Recall(threshold=0.3)(
+            elegy.metrics.Recall(threshold=0.3).call_with_defaults()(
                 jnp.asarray(y_true),
                 jnp.asarray(y_pred),
                 sample_weight=jnp.asarray(sample_weight),
@@ -44,12 +46,12 @@ class RecallTest(TestCase):
             tfk.metrics.Recall(thresholds=0.3)(
                 y_true, y_pred, sample_weight=float_sample_weight
             ),
-            elegy.metrics.Recall(threshold=0.3)(
+            elegy.metrics.Recall(threshold=0.3).call_with_defaults()(
                 y_true, y_pred, sample_weight=float_sample_weight
             ),
         )
 
-    def test_cummulative(self):
+    def test_cumulative(self):
         tm = tfk.metrics.Recall(thresholds=0.3)
         em = elegy.metrics.Recall(threshold=0.3)
 
@@ -62,7 +64,7 @@ class RecallTest(TestCase):
 
         assert np.allclose(
             tm(y_true, y_pred, sample_weight=sample_weight),
-            em(
+            em.call_with_defaults()(
                 jnp.asarray(y_true),
                 jnp.asarray(y_pred),
                 sample_weight=jnp.asarray(sample_weight),
@@ -78,7 +80,7 @@ class RecallTest(TestCase):
 
         assert np.allclose(
             tm(y_true, y_pred, sample_weight=sample_weight),
-            em(
+            em.call_with_defaults()(
                 jnp.asarray(y_true),
                 jnp.asarray(y_pred),
                 sample_weight=jnp.asarray(sample_weight),

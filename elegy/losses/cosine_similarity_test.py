@@ -1,7 +1,7 @@
 import elegy
 
 
-from elegy import utils
+from elegy import utils, types
 import jax.numpy as jnp
 import jax
 import tensorflow.keras as tfk
@@ -52,10 +52,10 @@ def test_function():
     assert loss.shape == (2,)
 
     y_true = y_true / jnp.maximum(
-        jnp.linalg.norm(y_true, axis=1, keepdims=True), jnp.sqrt(utils.EPSILON)
+        jnp.linalg.norm(y_true, axis=1, keepdims=True), jnp.sqrt(types.EPSILON)
     )
     y_pred = y_pred / jnp.maximum(
-        jnp.linalg.norm(y_pred, axis=1, keepdims=True), jnp.sqrt(utils.EPSILON)
+        jnp.linalg.norm(y_pred, axis=1, keepdims=True), jnp.sqrt(types.EPSILON)
     )
     assert jnp.array_equal(loss, -jnp.sum(y_true * y_pred, axis=1))
 
