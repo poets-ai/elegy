@@ -67,6 +67,8 @@ class DistributedModel(elegy.Model):
         )
         self.call_train_step_jit = self.call_train_step
 
+        self.jitted_members |= {"call_train_step_pmap"}
+
     def grad_step(self, *args, **kwargs):
         loss, logs, states, grads = super().grad_step(*args, **kwargs)
 

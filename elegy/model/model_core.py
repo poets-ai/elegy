@@ -70,6 +70,7 @@ class ModelCore:
         self.run_eagerly = run_eagerly
         self.history = {}
         self.init_stage = init_stage
+        self.jitted_members: tp.Set[str] = set()
 
         self._jit_functions()
 
@@ -91,6 +92,13 @@ class ModelCore:
             static_argnums=[5, 6],
         )
 
+        self.jitted_members |= {
+            "call_summary_step_jit",
+            "call_pred_step_jit",
+            "call_test_step_jit",
+            "call_train_step_jit",
+        }
+
     def __setstate__(self, d):
         self.__dict__ = d
         self._jit_functions()
@@ -103,10 +111,9 @@ class ModelCore:
         del d["initial_states"]
 
         # remove jitted functions
-        del d["call_summary_step_jit"]
-        del d["call_pred_step_jit"]
-        del d["call_test_step_jit"]
-        del d["call_train_step_jit"]
+        for member in self.jitted_members:
+            if member in d:
+                del d[member]
 
         return d
 
@@ -629,15 +636,8 @@ class ModelCore:
         with open(path / "initial_states.pkl", "wb") as f:
             cloudpickle.dump(self.initial_states, f)
 
-        path = path / "model.pkl"
-
-        with open(path, "wb") as f:
-            try:
-                cloudpickle.dump(self, f)
-            except BaseException as e:
-                print(
-                    f"Error occurred saving the model object at {path}\nContinuing...."
-                )
+        with open(path / "model.pkl", "wb") as f:
+            cloudpickle.dump(self, f)
 
     def load(
         self,
