@@ -361,7 +361,6 @@ class ModelBase(ModelCore):
                     if drop_remaining and not data_utils.has_batch_size(
                         batch, data_handler.batch_size
                     ):
-                        print("\n\ndropping\n\n")
                         continue
 
                     tmp_logs = self.train_on_batch(

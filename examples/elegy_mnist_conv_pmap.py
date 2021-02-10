@@ -28,96 +28,49 @@ class DistributedCallbacks(elegy.callbacks.Callback):
     def __init__(self):
         self.training = False
 
-    def on_train_batch_begin(self, *args, **kwargs):
+    def on_train_begin(self, *args, **kwargs):
         if not self.training:
-            self.model.states = replicate(self.model.states)
-            self.model.initial_states = replicate(self.model.initial_states)
+            self.replicate()
             self.training = True
 
     def on_train_end(self, *args, **kwargs):
+        self.dereplicate()
+        self.training = False
+
+    def on_test_begin(self, *args, **kwargs):
+        if self.training:
+            self.dereplicate()
+
+    def on_test_end(self, *args, **kwargs):
+        if self.training:
+            self.replicate()
+
+    def replicate(self):
+        self.model.states = replicate(self.model.states)
+        self.model.initial_states = replicate(self.model.initial_states)
+
+    def dereplicate(self):
         self.model.states = jax.tree_map(lambda x: x[0], self.model.states)
         self.model.initial_states = jax.tree_map(
             lambda x: x[0], self.model.initial_states
         )
-        self.training = False
 
 
 class DistributedModel(elegy.Model):
-    def call_test_step(
-        self,
-        x,
-        y_true,
-        sample_weight,
-        class_weight,
-        states,
-        initializing,
-        training,
-    ):
-        x = jax.tree_map(
-            lambda a: einops.rearrange(
-                a, "(device batch) ... -> device batch ...", device=jax.device_count()
-            ),
-            x,
+    def _jit_functions(self):
+        super()._jit_functions()
+
+        self.call_train_step_pmap = jax.pmap(
+            super().call_train_step,
+            static_broadcasted_argnums=[5, 6],
+            axis_name="device",
         )
-        y_true = jax.tree_map(
-            lambda a: einops.rearrange(
-                a, "(device batch) ... -> device batch ...", device=jax.device_count()
-            ),
-            y_true,
-        )
+        self.call_train_step_jit = self.call_train_step
 
-        if initializing:
-            x = jax.tree_map(lambda a: a[0], x)
-            y_true = jax.tree_map(lambda a: a[0], y_true)
+    def grad_step(self, *args, **kwargs):
+        loss, logs, states, grads = super().grad_step(*args, **kwargs)
 
-            loss, logs, states = utils.inject_dependencies(self.test_step)(
-                x=x,
-                y_true=y_true,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                states=states,
-                initializing=initializing,
-                training=training,
-            )
-        else:
-
-            def f(x, y_true, states):
-                return utils.inject_dependencies(self.test_step)(
-                    x=x,
-                    y_true=y_true,
-                    sample_weight=sample_weight,
-                    class_weight=class_weight,
-                    states=states,
-                    initializing=initializing,
-                    training=training,
-                )
-
-            loss, logs, states = jax.pmap(f, axis_name="device")(x, y_true, states)
-
-        return loss, logs, states
-
-    def grad_step(
-        self,
-        x,
-        y_true,
-        sample_weight,
-        class_weight,
-        states,
-        initializing,
-        training,
-    ):
-        loss, logs, states, grads = super().grad_step(
-            x,
-            y_true,
-            sample_weight,
-            class_weight,
-            states,
-            initializing,
-            training,
-        )
-
-        if not initializing:
-            grads = jax.tree_map(lambda a: jax.lax.pmean(a, axis_name="device"), grads)
+        grads = jax.lax.psum(grads, axis_name="device")
 
         return loss, logs, states, grads
 
@@ -144,34 +97,17 @@ class DistributedModel(elegy.Model):
             y_true,
         )
 
-        if initializing:
-            x = jax.tree_map(lambda a: a[0], x)
-            y_true = jax.tree_map(lambda a: a[0], y_true)
+        logs, states = self.call_train_step_pmap(
+            x,
+            y_true,
+            sample_weight,
+            class_weight,
+            states,
+            initializing,
+            training,
+        )
 
-            logs, states = utils.inject_dependencies(self.train_step)(
-                x=x,
-                y_true=y_true,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                states=states,
-                initializing=initializing,
-                training=training,
-            )
-        else:
-
-            def f(x, y_true, states):
-                print("PMAP....")
-                return utils.inject_dependencies(self.train_step)(
-                    x=x,
-                    y_true=y_true,
-                    sample_weight=sample_weight,
-                    class_weight=class_weight,
-                    states=states,
-                    initializing=initializing,
-                    training=training,
-                )
-
-            logs, states = jax.pmap(f, axis_name="device")(x, y_true, states)
+        logs = {name: value[0] for name, value in logs.items()}
 
         return logs, states
 
@@ -198,6 +134,7 @@ def main(
         jax.tools.colab_tpu.setup_tpu()
 
     batch_size *= jax.device_count()
+    lr = 1e-3 * jax.device_count()
 
     current_time = datetime.now().strftime("%b%d_%H-%M-%S")
     logdir = os.path.join(logdir, current_time)
@@ -212,6 +149,7 @@ def main(
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
     print("Batch size:", batch_size)
+    print("Learning Rate:", lr)
 
     class CNN(elegy.Module):
         def call(self, image: jnp.ndarray, training: bool):
@@ -242,7 +180,7 @@ def main(
         module=CNN(),
         loss=elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
         metrics=elegy.metrics.SparseCategoricalAccuracy(),
-        optimizer=optax.adam(1e-3),
+        optimizer=optax.adam(lr),
         run_eagerly=eager,
     )
 
@@ -263,10 +201,7 @@ def main(
     elegy.utils.plot_history(history)
 
     model.save("models/conv")
-
     model = elegy.load("models/conv")
-
-    print(model.evaluate(x=X_test, y=y_test))
 
     # get random samples
     idxs = np.random.randint(0, 10000, size=(9,))
