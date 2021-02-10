@@ -1,3 +1,12 @@
+"""
+In this simple example we just explore distributed training. Evaluation and inference are done on a single device
+but the strategy used can be applied to these other scenarious as well with the following modifications:
+
+If `train_step`, `test_step`, `pred_step` were to use `pmap`, then `pmap` would be called more than once for training or evaluation,
+to get around this issue the idea would be to override `call_train_step`, `call_test_step` and `call_pred_step` instead since they behave like
+entrypoints and don't depend each other.
+"""
+
 import os
 from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
@@ -24,25 +33,25 @@ def replicate(x):
     )
 
 
-class DistributedCallbacks(elegy.callbacks.Callback):
+class ReplicateStates(elegy.callbacks.Callback):
     def __init__(self):
-        self.training = False
+        self.replicated = False
 
     def on_train_begin(self, *args, **kwargs):
-        if not self.training:
+        if not self.replicated:
             self.replicate()
-            self.training = True
+            self.replicated = True
 
     def on_train_end(self, *args, **kwargs):
         self.dereplicate()
-        self.training = False
+        self.replicated = False
 
     def on_test_begin(self, *args, **kwargs):
-        if self.training:
+        if self.replicated:
             self.dereplicate()
 
     def on_test_end(self, *args, **kwargs):
-        if self.training:
+        if self.replicated:
             self.replicate()
 
     def replicate(self):
@@ -60,14 +69,14 @@ class DistributedModel(elegy.Model):
     def _jit_functions(self):
         super()._jit_functions()
 
-        self.call_train_step_pmap = jax.pmap(
-            super().call_train_step,
+        self.train_step_pmap = jax.pmap(
+            super().train_step,
             static_broadcasted_argnums=[5, 6],
             axis_name="device",
         )
-        self.call_train_step_jit = self.call_train_step
+        self.call_train_step_jit = self.train_step
 
-        self.jitted_members |= {"call_train_step_pmap"}
+        self.jitted_members |= {"train_step_pmap"}
 
     def grad_step(self, *args, **kwargs):
         loss, logs, states, grads = super().grad_step(*args, **kwargs)
@@ -76,7 +85,8 @@ class DistributedModel(elegy.Model):
 
         return loss, logs, states, grads
 
-    def call_train_step(
+    # here we override train_step instead of train_step
+    def train_step(
         self,
         x,
         y_true,
@@ -99,7 +109,7 @@ class DistributedModel(elegy.Model):
             y_true,
         )
 
-        logs, states = self.call_train_step_pmap(
+        logs, states = self.train_step_pmap(
             x,
             y_true,
             sample_weight,
@@ -197,7 +207,7 @@ def main(
         batch_size=batch_size,
         validation_data=(X_test, y_test),
         shuffle=True,
-        callbacks=[TensorBoard(logdir=logdir), DistributedCallbacks()],
+        callbacks=[TensorBoard(logdir=logdir), ReplicateStates()],
     )
 
     elegy.utils.plot_history(history)
@@ -213,16 +223,14 @@ def main(
     y_pred = model.predict(x=x_sample)
 
     # plot results
-    with SummaryWriter(os.path.join(logdir, "val")) as tbwriter:
-        figure = plt.figure(figsize=(12, 12))
-        for i in range(3):
-            for j in range(3):
-                k = 3 * i + j
-                plt.subplot(3, 3, k + 1)
+    figure = plt.figure(figsize=(12, 12))
+    for i in range(3):
+        for j in range(3):
+            k = 3 * i + j
+            plt.subplot(3, 3, k + 1)
 
-                plt.title(f"{np.argmax(y_pred[k])}")
-                plt.imshow(x_sample[k], cmap="gray")
-        # tbwriter.add_figure("Conv classifier", figure, 100)
+            plt.title(f"{np.argmax(y_pred[k])}")
+            plt.imshow(x_sample[k], cmap="gray")
 
     plt.show()
 
