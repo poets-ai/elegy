@@ -14,7 +14,7 @@ _Elegy is a framework-agnostic Trainer interface for the Jax ecosystem._
 #### Main Features
 * **Easy-to-use**: Elegy provides a Keras-like high-level API that makes it very easy to do common tasks.
 * **Flexible**: Elegy provides a functional Pytorch Lightning-like low-level API that provides maximal flexibility when needed.
-* **Agnostic**: Elegy provides support a variety of frameworks including Flax, Haiku, and Optax on the high-level API, and it is 100% framework-agnostic on the low-level API.
+* **Agnostic**: Elegy supports a variety of frameworks including Flax, Haiku, and Optax on the high-level API, and it is 100% framework-agnostic on the low-level API.
 * **Compatible**: Elegy can consume a wide variety of common data sources including TensorFlow Datasets, Pytorch DataLoaders, Python generators, and Numpy pytrees.
 
 For more information take a look at the [Documentation](https://poets-ai.github.io/elegy).
@@ -80,7 +80,7 @@ In Elegy's low-level API lets you define exactly what goes on during training, t
 ```python
 class LinearClassifier(elegy.Model):
     # request parameters by name via depending injection.
-    # possible: net_params, x, y_true, net_states, metrics_states, sample_weight, class_weight, rng, states, initializing
+    # names: x, y_true, sample_weight, class_weight, states, initializing
     def test_step(
         self,
         x, # inputs
@@ -88,14 +88,15 @@ class LinearClassifier(elegy.Model):
         states: elegy.States, # model state
         initializing: bool, # if True we should initialize our parameters
     ):  
+        rng: elegy.RNGSeq = states.rng
         # flatten + scale
         x = jnp.reshape(x, (x.shape[0], -1)) / 255
         # initialize or use existing parameters
         if initializing:
             w = jax.random.uniform(
-                jax.random.PRNGKey(42), shape=[np.prod(x.shape[1:]), 10]
+                rng.next(), shape=[np.prod(x.shape[1:]), 10]
             )
-            b = jax.random.uniform(jax.random.PRNGKey(69), shape=[1])
+            b = jax.random.uniform(rng.next(), shape=[1])
         else:
             w, b = states.net_params
         # model
@@ -109,7 +110,7 @@ class LinearClassifier(elegy.Model):
             accuracy=accuracy,
             loss=loss,
         )
-        return loss, logs, states.update(rng=rng, net_params=(w, b))
+        return loss, logs, states.update(net_params=(w, b))
 ```
 
 **2.** Instantiate our `LinearClassifier` with an optimizer:
@@ -131,6 +132,35 @@ model.fit(
     callbacks=[elegy.callbacks.TensorBoard("summaries")]
 )
 ```
+#### Using Jax Frameworks
+It is straightforward to integrate other functional JAX libraries with this 
+low-level API:
+
+```python
+class LinearClassifier(elegy.Model):
+    def test_step(
+        self, x, y_true, states: elegy.States, initializing: bool
+    ):
+        rng: elegy.RNGSeq = states.rng
+        x = jnp.reshape(x, (x.shape[0], -1)) / 255
+        if initializing:
+            logits, variables = self.module.init_with_output(
+                {"params": rng.next(), "dropout": rng.next()}, x
+            )
+        else:
+            variables = dict(params=states.net_params, **states.net_states)
+            logits, variables = self.module.apply(
+                variables, x, rngs={"dropout": rng.next()}, mutable=True
+            )
+        net_states, net_params = variables.pop("params")
+        
+        labels = jax.nn.one_hot(y_true, 10)
+        loss = jnp.mean(-jnp.sum(labels * jax.nn.log_softmax(logits), axis=-1))
+        accuracy = jnp.mean(jnp.argmax(logits, axis=-1) == y_true)
+
+        logs = dict(accuracy=accuracy, loss=loss)
+        return loss, logs, states.update(net_params=net_params, net_states=net_states)
+```
 
 ## More Info
 * [Getting Started: High-level API](https://poets-ai.github.io/elegy/getting-started-high-level-api/) tutorial.
@@ -138,6 +168,16 @@ model.fit(
 * Elegy's [Documentation](https://poets-ai.github.io/elegy).
 * The [examples](https://github.com/poets-ai/elegy/tree/master/examples) directory.
 * [What is Jax?](https://github.com/google/jax#what-is-jax)
+
+### Examples
+To run the examples first install some required packages:
+```
+pip install -r examples/requirements.txt
+```
+Now run the example:
+```
+python examples/flax_mnist_vae.py 
+```
 
 ## Contributing
 Deep Learning is evolving at an incredible pace, there is so much to do and so few hands. If you wish to contribute anything from a loss or metric to a new awesome feature for Elegy just open an issue or send a PR! For more information check out our [Contributing Guide](https://poets-ai.github.io/elegy/guides/contributing).

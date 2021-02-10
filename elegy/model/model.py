@@ -218,7 +218,7 @@ class Model(ModelBase):
         training: bool,
     ) -> tp.List[types.SummaryTableEntry]:
         with hooks.context(summaries=True):
-            self.call_pred_step(x, states, initializing, training)
+            utils.inject_dependencies(self.pred_step)(x, states, initializing, training)
             summaries = hooks.get_summaries()
 
         entries: tp.List[types.SummaryTableEntry] = []
@@ -326,7 +326,7 @@ class Model(ModelBase):
     ) -> model_core.TestStep:
 
         with hooks.context(losses=True, summaries=True):
-            y_pred, states = self.call_pred_step(
+            y_pred, states = utils.inject_dependencies(self.pred_step)(
                 x=x,
                 states=states,
                 initializing=initializing,
@@ -398,7 +398,7 @@ class Model(ModelBase):
             class_weight: tp.Optional[np.ndarray],
         ):
             states = states.update(net_params=net_params)
-            loss, logs, states = self.call_test_step(
+            loss, logs, states = utils.inject_dependencies(self.test_step)(
                 x=x,
                 y_true=y_true,
                 states=states,
@@ -433,7 +433,7 @@ class Model(ModelBase):
     ) -> model_core.TrainStep:
 
         if initializing:
-            loss, logs, states = self.call_test_step(
+            loss, logs, states = utils.inject_dependencies(self.test_step)(
                 x=x,
                 y_true=y_true,
                 states=states,
@@ -445,7 +445,7 @@ class Model(ModelBase):
             grads = None
 
         else:
-            loss, logs, states, grads = self.call_grad_step(
+            loss, logs, states, grads = utils.inject_dependencies(self.grad_step)(
                 x=x,
                 y_true=y_true,
                 states=states,

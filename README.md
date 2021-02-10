@@ -169,6 +169,16 @@ class LinearClassifier(elegy.Model):
 * The [examples](https://github.com/poets-ai/elegy/tree/master/examples) directory.
 * [What is Jax?](https://github.com/google/jax#what-is-jax)
 
+### Examples
+To run the examples first install some required packages:
+```
+pip install -r examples/requirements.txt
+```
+Now run the example:
+```
+python examples/flax_mnist_vae.py 
+```
+
 ## Contributing
 Deep Learning is evolving at an incredible pace, there is so much to do and so few hands. If you wish to contribute anything from a loss or metric to a new awesome feature for Elegy just open an issue or send a PR! For more information check out our [Contributing Guide](https://poets-ai.github.io/elegy/guides/contributing).
 

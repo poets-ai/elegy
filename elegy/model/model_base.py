@@ -19,6 +19,7 @@ from elegy.data import (
 )
 from elegy.model.model_core import ModelCore, PredStep, TestStep
 from tabulate import tabulate
+from elegy.data import utils as data_utils
 
 # from elegy.module import Module
 
@@ -155,6 +156,7 @@ class ModelBase(ModelCore):
         validation_steps: tp.Optional[int] = None,
         validation_batch_size: tp.Optional[int] = None,
         validation_freq: int = 1,
+        drop_remaining: bool = True,
     ) -> History:
         """
         Trains the model for a fixed number of epochs (iterations on a dataset).
@@ -343,6 +345,7 @@ class ModelBase(ModelCore):
         callbacks.on_train_begin()
         # data_handler._initial_epoch = (  # pylint: disable=protected-access
         #     self._maybe_load_initial_epoch_from_ckpt(initial_epoch))
+        epoch_logs = {}
 
         for epoch, iterator in data_handler.enumerate_epochs():
             self.reset_metrics()
@@ -354,6 +357,11 @@ class ModelBase(ModelCore):
                     batch = next(iterator)
                     # sample_weight = batch[2] if len(batch) == 3 else None
                     x_batch, y_batch, sample_weight = unpack_x_y_sample_weight(batch)
+
+                    if drop_remaining and not data_utils.has_batch_size(
+                        batch, data_handler.batch_size
+                    ):
+                        continue
 
                     tmp_logs = self.train_on_batch(
                         x=x_batch,
@@ -367,11 +375,18 @@ class ModelBase(ModelCore):
                     logs = tmp_logs
                     callbacks.on_train_batch_end(step, logs)
 
+                    if self.stop_training:
+                        break
+
             epoch_logs = copy(logs)
             epoch_logs.update({"size": data_handler.batch_size})
 
             # Run validation.
-            if validation_data and self._should_eval(epoch, validation_freq):
+            if (
+                validation_data
+                and self._should_eval(epoch, validation_freq)
+                and not self.stop_training
+            ):
                 val_x, val_y, val_sample_weight = unpack_x_y_sample_weight(
                     validation_data
                 )
@@ -384,6 +399,7 @@ class ModelBase(ModelCore):
                         steps=validation_steps,
                         callbacks=callbacks,
                         # return_dict=True,
+                        drop_remaining=drop_remaining,
                     )
 
                     val_logs = {"val_" + name: val for name, val in val_logs.items()}
@@ -392,14 +408,11 @@ class ModelBase(ModelCore):
                     pass
 
             callbacks.on_epoch_end(epoch, epoch_logs)
-            # print(
-            #     f"epoch: {epoch} - "
-            #     + " - ".join(f"{key}: {value:.3f}" for key, value in epoch_logs.items())
-            # )
+
             if self.stop_training:
                 break
 
-        callbacks.on_train_end()
+        callbacks.on_train_end(epoch_logs)
 
         return self.history
 
@@ -423,6 +436,7 @@ class ModelBase(ModelCore):
         sample_weight: tp.Optional[np.ndarray] = None,
         steps: tp.Optional[int] = None,
         callbacks: tp.Union[tp.List[Callback], CallbackList, None] = None,
+        drop_remaining: bool = False,
     ) -> types.Logs:
         """Returns the loss value & metrics values for the model in test mode.
         Computation is done in batches.
@@ -510,10 +524,16 @@ class ModelBase(ModelCore):
                     batch = next(iterator)
                     x_batch, y_batch, sample_weight = unpack_x_y_sample_weight(batch)
 
+                    if drop_remaining and not data_utils.has_batch_size(
+                        batch, data_handler.batch_size
+                    ):
+                        continue
+
                     tmp_logs = self.test_on_batch(
                         x=x_batch,
                         y=y_batch,
                         sample_weight=sample_weight,
+                        class_weight=None,
                     )
                     tmp_logs.update({"size": data_handler.batch_size})
                     logs = tmp_logs
@@ -535,6 +555,7 @@ class ModelBase(ModelCore):
         batch_size: tp.Optional[int] = None,
         steps: tp.Optional[int] = None,
         callbacks: tp.Union[tp.List[Callback], CallbackList, None] = None,
+        drop_remaining: bool = False,
     ) -> tp.Any:
         """Generates output predictions for the input samples.
         Computation is done in batches.
@@ -610,6 +631,12 @@ class ModelBase(ModelCore):
                 for step in data_handler.steps():
                     callbacks.on_predict_batch_begin(step)
                     batch = next(iterator)
+
+                    if drop_remaining and not data_utils.has_batch_size(
+                        batch, data_handler.batch_size
+                    ):
+                        continue
+
                     tmp_batch_outputs = self.predict_on_batch(x=batch[0])
                     batch_outputs = tmp_batch_outputs
 

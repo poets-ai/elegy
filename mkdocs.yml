@@ -5,8 +5,8 @@ site_url: https://poets-ai.github.io/elegy
 nav:
 - Introduction: index.md
 - Getting Started:
-  - High Level API: getting-started-high-level-api.ipynb
-  - Low Level API: getting-started-low-level-api.ipynb
+  - High Level API: getting-started/high-level-api.ipynb
+  - Low Level API: getting-started/low-level-api.ipynb
 - High Level API:
   - Intro: basic-api/modules-losses-metrics.md
   - Data Sources: na.md
@@ -28,11 +28,12 @@ nav:
   - Callbacks: na.md
   - Serialization: na.md
 - Low Level API:
-  - Intro: na.md
-  - Custom pred_step: na.md
-  - Custom test_step: na.md
-  - Custom grad_step: na.md
-  - Custom train_step: na.md
+  - Basics: low-level-api/basics.md
+  - States: low-level-api/states.md
+  - pred_step: low-level-api/pred_step.md
+  - test_step: na.md
+  - grad_step: na.md
+  - train_step: na.md
   - Supporting the High Level API: low-level-api/supporting-the-high-level-api.md
   - Implementing a Model from Scratch: na.md
 - Elegy Module: module-system.md
@@ -56,7 +57,6 @@ nav:
     States: api/States.md
     TestStep: api/TestStep.md
     TrainStep: api/TrainStep.md
-    Uninitialized: api/Uninitialized.md
     callbacks:
       CSVLogger: api/callbacks/CSVLogger.md
       Callback: api/callbacks/Callback.md
@@ -68,6 +68,9 @@ nav:
       RemoteMonitor: api/callbacks/RemoteMonitor.md
       TensorBoard: api/callbacks/TensorBoard.md
       TerminateOnNaN: api/callbacks/TerminateOnNaN.md
+    data:
+      DataLoader: api/data/DataLoader.md
+      Dataset: api/data/Dataset.md
     flax_summarize: api/flax_summarize.md
     flax_summary: api/flax_summary.md
     hooks:
@@ -193,9 +196,13 @@ theme:
     logo: fontawesome/solid/infinity
     repo: octicons/mark-github-16
 markdown_extensions:
-- admonition
-- codehilite
 - pymdownx.arithmatex
+- admonition
+- codehilite:
+    guess_lang: false
+    use_pygments: true
+    noclasses: true
+    pygments_style: default
 plugins:
 - search
 - mkdocs-jupyter
