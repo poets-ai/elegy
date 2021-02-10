@@ -54,17 +54,6 @@ class SaveImagesCallback(elegy.callbacks.Callback):
         img.save(os.path.join(self.path, f"epoch-{epoch:04d}.png"))
 
 
-class SaveStatesCallback(elegy.callbacks.Callback):
-    def __init__(self, model, path):
-        self.model = model
-        self.path = path
-
-    def on_epoch_end(self, *args, **kwargs):
-        open(os.path.join(self.path, "modelstates.pkl"), "wb").write(
-            pickle.dumps(self.model.states)
-        )
-
-
 def main(argv):
     assert (
         len(argv) == 1
@@ -81,7 +70,7 @@ def main(argv):
     )
 
     wgan = WGAN_GP()
-    wgan.states = wgan.init(np.zeros([8, 128]))
+    wgan.init(np.zeros([8, 128]))
 
     wgan.fit(
         loader,
@@ -89,7 +78,7 @@ def main(argv):
         verbose=4,
         callbacks=[
             SaveImagesCallback(wgan, FLAGS.output_dir),
-            SaveStatesCallback(wgan, FLAGS.output_dir),
+            elegy.callbacks.ModelCheckpoint(FLAGS.output_dir),
         ],
     )
 
