@@ -320,7 +320,7 @@ class ModelCore:
     # high-level methods
     # ----------------------------------------------------------------
 
-    def init(
+    def init_on_batch(
         self,
         x: tp.Any = (),
         y_true: tp.Any = None,
@@ -782,6 +782,8 @@ class ModelCore:
             mode = types.Mode.train
             state_updates = output
 
-        self.init_stage = mode
+        if mode > self.init_stage:
+            self.init_stage = mode
+
         self.states = self.states.maybe_update(**state_updates)
         self.initial_states = self.initial_states.maybe_update(**state_updates)
