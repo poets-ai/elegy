@@ -80,11 +80,12 @@ class WGAN_GP(elegy.Model):
 
     def train_step(self, x, states):
         # training the discriminator on every iteration
-        d_loss, gp, states = self.discriminator_step_jit(x, states)
+        d_loss, gp, states = self.discriminator_step(x, states)
 
+        # training the generator only every 5 iterations as recommended in the original WGAN paper
         step = states.step + 1
         no_update = lambda args: (0.0, args[1])
-        do_update = lambda args: self.generator_step_jit(len(args[0]), args[1])
+        do_update = lambda args: self.generator_step(len(args[0]), args[1])
         g_loss, states = jax.lax.cond(step % 5 == 0, do_update, no_update, (x, states))
 
         return {"d_loss": d_loss, "g_loss": g_loss, "gp": gp}, states.update(step=step)
