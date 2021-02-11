@@ -66,8 +66,8 @@ class ReplicateStates(elegy.callbacks.Callback):
 
 
 class DistributedModel(elegy.Model):
-    def _jit_functions(self):
-        super()._jit_functions()
+    def jit_step(self):
+        super().jit_step()
 
         self.train_step_pmap = jax.pmap(
             super().train_step,

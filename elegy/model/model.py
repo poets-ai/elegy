@@ -201,8 +201,9 @@ class Model(ModelBase):
     # ----------------------------------------------------------------
     # implement low-level API methods
     # ----------------------------------------------------------------
-    def base_states(self) -> types.States:
-        return types.States(
+    def states_step(self) -> types.States:
+        states = super().states_step()
+        return states.update(
             rng=types.RNGSeq(self.seed),
             net_params=None,
             net_states=None,
