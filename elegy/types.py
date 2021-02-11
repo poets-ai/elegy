@@ -209,7 +209,12 @@ class States(tp.Mapping):
         return iter(self.__dict__)
 
     def __getattr__(self, key):
-        return object.__getattr__(self, key)
+        try:
+            return object.__getattr__(self, key)
+        except AttributeError:
+            raise AttributeError(
+                f"'{self.__class__.__name__}' has not attribute '{key}'"
+            )
 
     def __setattr__(self, key, value):
         raise AttributeError("can't set attribute")
