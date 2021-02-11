@@ -101,10 +101,6 @@ class WGAN_GP(elegy.Model):
             y_fake, d_params, d_states = self.discriminator.apply(d_params, d_states)(
                 x_fake
             )
-            y_pred = jnp.concatenate([y_real, y_fake], axis=0)
-            y_true = jnp.concatenate(
-                [jnp.ones(len(x_real)), jnp.zeros(len(x_fake))], axis=0
-            )
             loss = -y_real.mean() + y_fake.mean()
             gp = gradient_penalty(
                 x_real,
