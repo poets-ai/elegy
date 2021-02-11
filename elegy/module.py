@@ -183,7 +183,7 @@ class Module(metaclass=ModuleMeta):
 
         self._signature_f = self.call
 
-        self._jit_functions()
+        self.jit_step()
 
     @property
     def initialized(self):
@@ -257,7 +257,7 @@ class Module(metaclass=ModuleMeta):
 
         return call_with_defaults_jit_wrapper
 
-    def _jit_functions(self):
+    def jit_step(self):
         # ------------------------------
         # init
         # ------------------------------
@@ -341,7 +341,7 @@ class Module(metaclass=ModuleMeta):
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self._jit_functions()
+        self.jit_step()
 
     def __getstate__(self):
         d = dict(self.__dict__)
@@ -425,10 +425,7 @@ class Module(metaclass=ModuleMeta):
         set_defaults: bool = False,
     ) -> tp.Callable[
         ...,
-        tp.Union[
-            tp.Any,
-            tp.Tuple[tp.Any, tp.Optional[types.Parameters], types.ParameterCollection],
-        ],
+        tp.Tuple[tp.Any, tp.Optional[types.Parameters], types.ParameterCollection],
     ]:
         """
         Call the module.
@@ -460,6 +457,31 @@ class Module(metaclass=ModuleMeta):
         apply_callable._signature_f = self.call
 
         return apply_callable
+
+    def init_or_apply(
+        self,
+        parameters: tp.Optional[types.Parameters],
+        collections: tp.Optional[types.ParameterCollection],
+        *,
+        training: bool = True,
+        rng: tp.Optional[types.RNGSeq] = None,
+        set_defaults: bool = False,
+    ) -> tp.Callable[
+        ...,
+        tp.Tuple[tp.Any, tp.Optional[types.Parameters], types.ParameterCollection],
+    ]:
+        if collections is None:
+            f = self.init(rng=rng, set_defaults=set_defaults)
+        else:
+            f = self.apply(
+                parameters,
+                collections,
+                training=training,
+                rng=rng,
+                set_defaults=set_defaults,
+            )
+
+        return f
 
     def __getattr__(self, name: str) -> tp.Any:
 
