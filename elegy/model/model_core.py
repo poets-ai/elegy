@@ -70,6 +70,7 @@ class ModelCore:
         self.run_eagerly = run_eagerly
         self.history = {}
         self.init_stage = init_stage
+        self.jitted_members: tp.Set[str] = set()
 
         self._jit_functions()
 
@@ -91,6 +92,13 @@ class ModelCore:
             static_argnums=[5, 6],
         )
 
+        self.jitted_members |= {
+            "call_summary_step_jit",
+            "call_pred_step_jit",
+            "call_test_step_jit",
+            "call_train_step_jit",
+        }
+
     def __setstate__(self, d):
         self.__dict__ = d
         self._jit_functions()
@@ -103,10 +111,9 @@ class ModelCore:
         del d["initial_states"]
 
         # remove jitted functions
-        del d["call_summary_step_jit"]
-        del d["call_pred_step_jit"]
-        del d["call_test_step_jit"]
-        del d["call_train_step_jit"]
+        for member in self.jitted_members:
+            if member in d:
+                del d[member]
 
         return d
 
@@ -159,7 +166,6 @@ class ModelCore:
         initializing: bool,
         training: bool,
     ) -> PredStep:
-
         return utils.inject_dependencies(self.pred_step)(
             x=x,
             states=states,
@@ -210,26 +216,6 @@ class ModelCore:
         training: bool,
     ) -> GradStep:
         raise NotImplementedError()
-
-    def call_grad_step(
-        self,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-        states: types.States,
-        initializing: bool,
-        training: bool,
-    ) -> GradStep:
-        return utils.inject_dependencies(self.grad_step)(
-            x=x,
-            y_true=y_true,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            states=states,
-            initializing=initializing,
-            training=training,
-        )
 
     def train_step(
         self,
@@ -366,7 +352,7 @@ class ModelCore:
         x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
         y: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
         sample_weight: tp.Optional[np.ndarray] = None,
-        class_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[tp.Any] = None,
     ) -> types.Logs:
         """
         Runs a single gradient update on a single batch of data.
@@ -650,15 +636,8 @@ class ModelCore:
         with open(path / "initial_states.pkl", "wb") as f:
             cloudpickle.dump(self.initial_states, f)
 
-        path = path / "model.pkl"
-
-        with open(path, "wb") as f:
-            try:
-                cloudpickle.dump(self, f)
-            except BaseException as e:
-                print(
-                    f"Error occurred saving the model object at {path}\nContinuing...."
-                )
+        with open(path / "model.pkl", "wb") as f:
+            cloudpickle.dump(self, f)
 
     def load(
         self,
@@ -702,7 +681,7 @@ class ModelCore:
         x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple] = (),
         y_true: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
         sample_weight: tp.Optional[np.ndarray] = None,
-        class_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[tp.Any] = None,
     ):
 
         if mode <= self.init_stage:
