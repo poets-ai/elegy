@@ -10,6 +10,34 @@ import elegy
 
 
 class NewModuleTest(TestCase):
+    def test_init_or_apply(self):
+        class M(elegy.Module):
+            def call(self, x):
+                m = self.add_parameter("m", lambda: 1)
+                n = self.add_parameter("n", lambda: 2)
+
+                self.update_parameter("m", m + 1)
+                self.update_parameter("n", n + 1)
+                return x + 1
+
+        parameters = None
+        collections = None
+
+        m = M()
+        y_pred, parameters, collections = m.init_or_apply(parameters, collections)(2.0)
+
+        assert y_pred == 3
+        assert parameters == {"m": 1, "n": 2}
+        assert collections == {}
+
+        y_pred, parameters, collections = m.init_or_apply(parameters, collections)(
+            y_pred
+        )
+
+        assert y_pred == 4
+        assert parameters == {"m": 2, "n": 3}
+        assert collections == {}
+
     def test_set_parameters(self):
         class M(elegy.Module):
             def call(self, x):

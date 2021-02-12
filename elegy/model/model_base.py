@@ -127,6 +127,51 @@ class ModelBase(ModelCore):
     def train_step(self, *args, **kwargs):
         raise types.MissingMethod()
 
+    def init(
+        self,
+        x: tp.Union[
+            np.ndarray,
+            tp.Mapping[str, np.ndarray],
+            tp.Tuple[np.ndarray],
+            tp.Iterable,
+            None,
+        ] = None,
+        y: tp.Union[
+            np.ndarray,
+            tp.Mapping[str, np.ndarray],
+            tp.Tuple[np.ndarray],
+            None,
+        ] = None,
+        batch_size: tp.Optional[int] = None,
+        class_weight: tp.Optional[tp.Mapping[str, float]] = None,
+        sample_weight: tp.Optional[np.ndarray] = None,
+    ) -> None:
+
+        if self.init_stage == types.Mode.train:
+            return
+
+        if x is None:
+            x = {}
+
+        data_handler = DataHandler(
+            x=x,
+            y=y,
+            sample_weight=sample_weight,
+            batch_size=batch_size,
+            class_weight=class_weight,
+        )
+
+        epoch, iterator = next(data_handler.enumerate_epochs())
+        batch = next(iterator)
+        x_batch, y_batch, sample_weight = unpack_x_y_sample_weight(batch)
+
+        self.init_on_batch(
+            x=x_batch,
+            y_true=y_batch,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+        )
+
     def fit(
         self,
         x: tp.Union[

@@ -58,7 +58,7 @@ class ModelCore:
         init_stage: types.Mode = types.Mode.none,
     ):
 
-        base_states = self.base_states()
+        base_states = self.states_step()
 
         if states is None:
             states = types.States()
@@ -72,9 +72,9 @@ class ModelCore:
         self.init_stage = init_stage
         self.jitted_members: tp.Set[str] = set()
 
-        self._jit_functions()
+        self.jit_step()
 
-    def _jit_functions(self):
+    def jit_step(self):
         self.call_summary_step_jit = jax.jit(
             self.call_summary_step,
             static_argnums=[2, 3],
@@ -91,17 +91,22 @@ class ModelCore:
             self.call_train_step,
             static_argnums=[5, 6],
         )
+        self.call_init_step_jit = jax.jit(
+            self.call_init_step,
+            static_argnums=[0],
+        )
 
         self.jitted_members |= {
             "call_summary_step_jit",
             "call_pred_step_jit",
             "call_test_step_jit",
             "call_train_step_jit",
+            "call_init_step_jit",
         }
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self._jit_functions()
+        self.jit_step()
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -124,8 +129,70 @@ class ModelCore:
     def update_modules(self):
         pass
 
-    def base_states(self) -> types.States:
+    def states_step(self) -> types.States:
         return types.States()
+
+    def init_step(
+        self,
+        mode: types.Mode,
+        x: tp.Any,
+        y_true: tp.Any,
+        sample_weight: tp.Optional[np.ndarray],
+        class_weight: tp.Optional[np.ndarray],
+        states: types.States,
+    ) -> tp.Union[tp.Tuple[types.Mode, types.States], types.States]:
+        training = True
+        initializing = True
+
+        if mode == types.Mode.pred:
+            _, states = utils.inject_dependencies(self.pred_step)(
+                x=x,
+                states=states,
+                initializing=initializing,
+                training=training,
+            )
+        elif mode == types.Mode.test:
+            _, _, states = utils.inject_dependencies(self.test_step)(
+                x=x,
+                y_true=y_true,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+                states=states,
+                initializing=initializing,
+                training=training,
+            )
+        elif mode == types.Mode.train:
+            _, states = utils.inject_dependencies(self.train_step)(
+                x=x,
+                y_true=y_true,
+                sample_weight=sample_weight,
+                class_weight=class_weight,
+                states=states,
+                initializing=initializing,
+                training=training,
+            )
+        else:
+            raise ValueError(f"Invalid mode '{mode}'")
+
+        return mode, states
+
+    def call_init_step(
+        self,
+        mode: types.Mode,
+        x: tp.Any,
+        y_true: tp.Any,
+        sample_weight: tp.Optional[np.ndarray],
+        class_weight: tp.Optional[np.ndarray],
+        states: types.States,
+    ) -> tp.Union[tp.Tuple[types.Mode, types.States], types.States]:
+        return utils.inject_dependencies(self.init_step)(
+            mode=mode,
+            x=x,
+            y_true=y_true,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            states=states,
+        )
 
     def summary_step(
         self,
@@ -253,9 +320,17 @@ class ModelCore:
     # high-level methods
     # ----------------------------------------------------------------
 
-    def predict_on_batch(
-        self, x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]
-    ) -> tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple]:
+    def init_on_batch(
+        self,
+        x: tp.Any = (),
+        y_true: tp.Any = None,
+        sample_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[tp.Any] = None,
+    ):
+        mode = types.Mode.train
+        self.maybe_initialize(mode, x, y_true, sample_weight, class_weight)
+
+    def predict_on_batch(self, x: tp.Any) -> tp.Any:
         """
         Returns predictions for a single batch of samples.
 
@@ -291,7 +366,7 @@ class ModelCore:
 
     def test_on_batch(
         self,
-        x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        x: tp.Any,
         y: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
         sample_weight: tp.Optional[np.ndarray] = None,
         class_weight: tp.Optional[np.ndarray] = None,
@@ -349,7 +424,7 @@ class ModelCore:
 
     def train_on_batch(
         self,
-        x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple],
+        x: tp.Any,
         y: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
         sample_weight: tp.Optional[np.ndarray] = None,
         class_weight: tp.Optional[tp.Any] = None,
@@ -678,8 +753,8 @@ class ModelCore:
     def maybe_initialize(
         self,
         mode: types.Mode,
-        x: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple] = (),
-        y_true: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
+        x: tp.Any = (),
+        y_true: tp.Any = None,
         sample_weight: tp.Optional[np.ndarray] = None,
         class_weight: tp.Optional[tp.Any] = None,
     ):
@@ -687,55 +762,28 @@ class ModelCore:
         if mode <= self.init_stage:
             return
 
-        initializing = True
-        training = True
         state_updates: types.States
 
-        if mode == types.Mode.pred:
-            method = (
-                self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
-            )
-            states = self.states.copy() if self.run_eagerly else self.states
+        method = self.call_init_step if self.run_eagerly else self.call_init_step_jit
+        states = self.states.copy() if self.run_eagerly else self.states
 
-            _, state_updates = method(
-                x,
-                states,
-                initializing,
-                training,
-            )
-        elif mode == types.Mode.test:
-            method = (
-                self.call_test_step if self.run_eagerly else self.call_test_step_jit
-            )
-            states = self.states.copy() if self.run_eagerly else self.states
+        output = method(
+            mode,
+            x,
+            y_true,
+            sample_weight,
+            class_weight,
+            states,
+        )
 
-            _, _, state_updates = method(
-                x,
-                y_true,
-                sample_weight,
-                class_weight,
-                states,
-                initializing,
-                training,
-            )
-        elif mode == types.Mode.train:
-            method = (
-                self.call_train_step if self.run_eagerly else self.call_train_step_jit
-            )
-            states = self.states.copy() if self.run_eagerly else self.states
-
-            _, state_updates = method(
-                x,
-                y_true,
-                sample_weight,
-                class_weight,
-                states,
-                initializing,
-                training,
-            )
+        if isinstance(output, tuple):
+            mode, state_updates = output
         else:
-            raise ValueError(f"Invalid mode '{mode}'")
+            mode = types.Mode.train
+            state_updates = output
 
-        self.init_stage = mode
+        if mode > self.init_stage:
+            self.init_stage = mode
+
         self.states = self.states.maybe_update(**state_updates)
         self.initial_states = self.initial_states.maybe_update(**state_updates)
