@@ -246,13 +246,13 @@ class States(tp.Mapping):
 
         return self.update(**kwargs)
 
-    def safe_update(*self, **kwargs) -> "States":
+    def update_known(*self, **kwargs) -> "States":
         """Returns a new States object, updating attributes that are already present.
-        e.g: states.safe_update(**locals())"""
+        e.g: states.update_known(**locals())"""
         # NOTE: first argument is *self to allow the **locals() syntax inside bound methods
         # which have their own self inside locals()
         # otherwise will get a "got multiple values for argument 'self'" error"
-        assert len(self) == 1, "States.safe_update() called with positional arguments"
+        assert len(self) == 1, "States.update_known() called with positional arguments"
         self = self[0]
 
         kwargs = {key: value for key, value in kwargs.items() if key in self.__dict__}

@@ -90,14 +90,14 @@ class WGAN_GP(elegy.Model):
 
         return {"d_loss": d_loss, "g_loss": g_loss, "gp": gp}, states.update(step=step)
 
-    def discriminator_step(self, x_real: jnp.ndarray, S: elegy.States):
-        z = jax.random.normal(S.rng.next(), (len(x_real), 128))
-        x_fake = self.generator.apply(S.g_params, S.g_states)(z)[0]
+    def discriminator_step(self, x_real: jnp.ndarray, states: elegy.States):
+        z = jax.random.normal(states.rng.next(), (len(x_real), 128))
+        x_fake = self.generator.apply(states.g_params, states.g_states)(z)[0]
 
-        def d_loss_fn(d_params, S, x_real, x_fake):
-            y_real, d_params, d_states = self.discriminator.apply(d_params, S.d_states)(
-                x_real
-            )
+        def d_loss_fn(d_params, states, x_real, x_fake):
+            y_real, d_params, d_states = self.discriminator.apply(
+                d_params, states.d_states
+            )(x_real)
             y_fake, d_params, d_states = self.discriminator.apply(d_params, d_states)(
                 x_fake
             )
@@ -106,37 +106,41 @@ class WGAN_GP(elegy.Model):
                 x_real,
                 x_fake,
                 self.discriminator.apply(d_params, d_states),
-                S.rng.next(),
+                states.rng.next(),
             )
             loss = loss + gp
-            return loss, (gp, S.safe_update(**locals()))
+            return loss, (gp, states.update_known(**locals()))
 
-        (d_loss, (gp, S)), d_grads = jax.value_and_grad(d_loss_fn, has_aux=True)(
-            S.d_params, S, x_real, x_fake
+        (d_loss, (gp, states)), d_grads = jax.value_and_grad(d_loss_fn, has_aux=True)(
+            states.d_params, states, x_real, x_fake
         )
         d_grads, d_opt_states = self.d_optimizer.update(
-            d_grads, S.d_opt_states, S.d_params
+            d_grads, states.d_opt_states, states.d_params
         )
-        d_params = optax.apply_updates(S.d_params, d_grads)
+        d_params = optax.apply_updates(states.d_params, d_grads)
 
-        return d_loss, gp, S.safe_update(**locals())
+        return d_loss, gp, states.update_known(**locals())
 
-    def generator_step(self, batch_size: int, S: elegy.States):
-        z = jax.random.normal(S.rng.next(), (batch_size, 128))
+    def generator_step(self, batch_size: int, states: elegy.States):
+        z = jax.random.normal(states.rng.next(), (batch_size, 128))
 
-        def g_loss_fn(g_params, S, z):
-            x_fake, g_params, g_states = self.generator.apply(g_params, S.g_states)(z)
-            y_fake_scores = self.discriminator.apply(S.d_params, S.d_states)(x_fake)[0]
+        def g_loss_fn(g_params, states, z):
+            x_fake, g_params, g_states = self.generator.apply(
+                g_params, states.g_states
+            )(z)
+            y_fake_scores = self.discriminator.apply(states.d_params, states.d_states)(
+                x_fake
+            )[0]
             y_fake_true = jnp.ones(len(z))
             loss = -y_fake_scores.mean()
-            return loss, S.safe_update(**locals())
+            return loss, states.update_known(**locals())
 
-        (g_loss, S), g_grads = jax.value_and_grad(g_loss_fn, has_aux=True)(
-            S.g_params, S, z
+        (g_loss, states), g_grads = jax.value_and_grad(g_loss_fn, has_aux=True)(
+            states.g_params, states, z
         )
         g_grads, g_opt_states = self.g_optimizer.update(
-            g_grads, S.g_opt_states, S.g_params
+            g_grads, states.g_opt_states, states.g_params
         )
-        g_params = optax.apply_updates(S.g_params, g_grads)
+        g_params = optax.apply_updates(states.g_params, g_grads)
 
-        return g_loss, S.safe_update(**locals())
+        return g_loss, states.update_known(**locals())
