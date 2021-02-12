@@ -53,7 +53,7 @@ class WGAN_GP(elegy.Model):
         self.g_optimizer = optax.adam(2e-4, b1=0.5)
         self.d_optimizer = optax.adam(2e-4, b1=0.5)
 
-    def init(self, x):
+    def init_step(self, x):
         rng = elegy.RNGSeq(0)
         gx, g_params, g_states = self.generator.init(rng=rng)(x)
         dx, d_params, d_states = self.discriminator.init(rng=rng)(gx)
@@ -61,7 +61,7 @@ class WGAN_GP(elegy.Model):
         g_optimizer_states = self.g_optimizer.init(g_params)
         d_optimizer_states = self.d_optimizer.init(d_params)
 
-        self.states = elegy.States(
+        return elegy.States(
             g_states=g_states,
             d_states=d_states,
             g_params=g_params,
@@ -71,7 +71,6 @@ class WGAN_GP(elegy.Model):
             rng=rng,
             step=0,
         )
-        self.initial_states = self.states.copy()
 
     def pred_step(self, x, states):
         z = x
