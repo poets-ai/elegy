@@ -84,9 +84,9 @@ class WGAN_GP(elegy.Model):
 
         # training the generator only every 5 iterations as recommended in the original WGAN paper
         step = states.step + 1
-        no_update = lambda args: (0.0, args[1])
-        do_update = lambda args: self.generator_step(len(args[0]), args[1])
-        g_loss, states = jax.lax.cond(step % 5 == 0, do_update, no_update, (x, states))
+        no_update = lambda states: (0.0, states)
+        do_update = lambda states: self.generator_step(len(x), states)
+        g_loss, states = jax.lax.cond(step % 5 == 0, do_update, no_update, states)
 
         return {"d_loss": d_loss, "g_loss": g_loss, "gp": gp}, states.update(step=step)
 
