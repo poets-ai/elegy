@@ -77,6 +77,7 @@ The reason is that the default implementation has the following call structure:
 summary_step ➡️ pred_step ⬅ test_step ⬅ grad_step ⬅ train_step
 ```
 So what happened was this:
+
 * `fit` called `train_step` to perform the optimization step
 * `train_step` called `grad_step` to get the gradients needed for the optimizer
 * `grad_step` called `test_step` to get the loss needed to compute the gradients
