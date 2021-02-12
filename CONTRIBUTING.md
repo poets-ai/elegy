@@ -12,13 +12,10 @@ poetry install
 In order for Jax to recognize your GPU, you will probably have to install it again using the command below.
 
 ```bash
-PYTHON_VERSION=cp38  
-CUDA_VERSION=cuda101  # alternatives: cuda100, cuda101, cuda102, cuda110, check your cuda version
-PLATFORM=manylinux2010_x86_64  # alternatives: manylinux2010_x86_64
-BASE_URL='https://storage.googleapis.com/jax-releases'
-pip install --upgrade $BASE_URL/$CUDA_VERSION/jaxlib-0.1.55-$PYTHON_VERSION-none-$PLATFORM.whl
-pip install --upgrade jax  
+CUDA_VERSION=101
+pip install --upgrade jax jaxlib==0.1.60+cuda$CUDA_VERSION -f https://storage.googleapis.com/jax-releases/jax_releases.html
 ```
+Figure out the appropriate `CUDA_VERSION` you have installed.
 
 #### Gitpod
 An alternative way to contribute is using [gitpod](https://gitpod.io/) which creates a vscode-based cloud development enviroment.
