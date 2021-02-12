@@ -88,6 +88,70 @@ So in the end we directly supported `evaludate` but we also got `fit` for free ð
 
 This is not bad per-se but we also didn't provide a `module` to the `LinearClassifier`'s constructor so if you called `predict` or `summary` you will infact get an error telling you this. This means that you should be aware of what methods you are actually supporting using the low-level API.
 
+### Attributes
+The default implementation of `Model` comes with a couple of attributes you can use get some functionality for free or if you want to support some of the features that the default implementation provides like e.g. providing summaries for the `module` argument or creating logs for the `metrics` argument. Here is the complete list of attributes:
+
+| Raw Attribute | API Attribute   |
+| ------------- | --------------- |
+| `module`      | `api_module`    |
+| `metrics`     | `api_metrics`   |
+| `loss`        | `api_loss`      |
+| `optimizer`   | `api_optimizer` |
+| `seed`        |                 |
+
+The raw attributes are the values exactly as they are passed by the user to the `Model` constructor, and the `api_*` attributes are "generalized" versions of the previous they expose a consisten API for a variaty of supported types. For example, if you want to let the user pass any supported Module to the `module` argument you can use the `api_module` object that elegy build for you, `api_module` is of type `GeneralizedModule` which wraps around the specific Module type and exposes some simple `init` and `apply` methods.
+
+```python hl_lines="7 9"
+class LinearClassifier(elegy.Model):
+    def test_step(self, x,  y_true,  states, initializing) -> elegy.TestStep:  
+        x = jnp.reshape(x, (x.shape[0], -1)) / 255
+
+        # initialize or use existing parameters
+        if initializing:
+            model_fn = self.api_module.init(states.rng)
+        else:
+            model_fn = self.api_module.apply(
+                params=states.net_params,
+                states=states.net_states,
+                training=True,
+                rng=states.rng,
+            )
+
+        # model
+        logits, net_params, net_states = model_fn(x)
+
+        # categorical crossentropy loss
+        labels = jax.nn.one_hot(y_true, 10)
+        loss = jnp.mean(-jnp.sum(labels * jax.nn.log_softmax(logits), axis=-1))
+        accuracy=jnp.mean(jnp.argmax(logits, axis=-1) == y_true)
+
+        # metrics
+        logs = dict(accuracy=accuracy, loss=loss)
+
+        # update states
+        states = states.update(net_params=net_params, net_states=net_states)
+
+        return loss, logs, states
+```
+Now the `api_module` handles all the states and computation for you, you only need to update you own `states` accordingly. To use it you juse instantiate as usual but provide a `module` argument:
+
+```python hl_lines="4"
+from flax import linen
+
+model = LinearClassifier(
+    module=linen.Dense(10),
+    optimizer=optax.adam(1e-3)
+)
+
+model.fit(
+    x=X_train,
+    y=y_train,
+    epochs=100,
+    batch_size=64,
+)
+```
+Here we are using Flax but since your code is generalized you could have used Haiku, Elegy, or any Module system we support in the future.
+
 ### Implementation Details
 Lets review some of the details in the example so you can get a better sense of how on you own. We will just mention some of the Elegy-specific things and leave the modeling details out.
 
