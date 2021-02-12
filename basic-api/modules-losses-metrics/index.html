@@ -16,7 +16,7 @@
     
     
       
-        <title>Intro - Elegy</title>
+        <title>Modules, Losses, and Metrics - Elegy</title>
       
     
     
@@ -92,7 +92,7 @@
         <div class="md-header-nav__topic">
           <span class="md-ellipsis">
             
-              Intro
+              Modules, Losses, and Metrics
             
           </span>
         </div>
@@ -235,7 +235,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started-high-level-api/" class="md-nav__link">
+      <a href="../../getting-started/high-level-api/" class="md-nav__link">
         High Level API
       </a>
     </li>
@@ -247,7 +247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started-low-level-api/" class="md-nav__link">
+      <a href="../../getting-started/low-level-api/" class="md-nav__link">
         Low Level API
       </a>
     </li>
@@ -266,405 +266,19 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
       
       <label class="md-nav__link" for="nav-3">
-        High Level API
-        <span class="md-nav__icon md-icon"></span>
-      </label>
-      <nav class="md-nav" aria-label="High Level API" data-md-level="1">
-        <label class="md-nav__title" for="nav-3">
-          <span class="md-nav__icon md-icon"></span>
-          High Level API
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-          
-            
-  
-  
-    
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Intro
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        Intro
-      </a>
-      
-        
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#keras-limitations" class="md-nav__link">
-    Keras Limitations
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dependency-injection" class="md-nav__link">
-    Dependency Injection
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#modules" class="md-nav__link">
-    Modules
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#losses" class="md-nav__link">
-    Losses
-  </a>
-  
-    <nav class="md-nav" aria-label="Losses">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#partitioning-a-loss" class="md-nav__link">
-    Partitioning a loss
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#multiple-outputs-labels" class="md-nav__link">
-    Multiple Outputs + Labels
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#keras-like-behavior" class="md-nav__link">
-    Keras-like behavior
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#metrics" class="md-nav__link">
-    Metrics
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Data Sources
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-      
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-3" type="checkbox" id="nav-3-3" >
-      
-      <label class="md-nav__link" for="nav-3-3">
-        Module
-        <span class="md-nav__icon md-icon"></span>
-      </label>
-      <nav class="md-nav" aria-label="Module" data-md-level="2">
-        <label class="md-nav__title" for="nav-3-3">
-          <span class="md-nav__icon md-icon"></span>
-          Module
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Flax
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Haiku
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Elegy
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Pure Jax
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Supporting Other Modules
-      </a>
-    </li>
-  
-
-          
-        </ul>
-      </nav>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Losses
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Metrics
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Dependency Injection
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Hooks
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-      
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-8" type="checkbox" id="nav-3-8" >
-      
-      <label class="md-nav__link" for="nav-3-8">
-        Optimizer
-        <span class="md-nav__icon md-icon"></span>
-      </label>
-      <nav class="md-nav" aria-label="Optimizer" data-md-level="2">
-        <label class="md-nav__title" for="nav-3-8">
-          <span class="md-nav__icon md-icon"></span>
-          Optimizer
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Optax Optimizer
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Elegy Optimizer
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Monitoring Learning Rate
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Supporting Other Optimizers
-      </a>
-    </li>
-  
-
-          
-        </ul>
-      </nav>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Callbacks
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Serialization
-      </a>
-    </li>
-  
-
-          
-        </ul>
-      </nav>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-      
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4" >
-      
-      <label class="md-nav__link" for="nav-4">
         Low Level API
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Low Level API" data-md-level="1">
-        <label class="md-nav__title" for="nav-4">
+        <label class="md-nav__title" for="nav-3">
           <span class="md-nav__icon md-icon"></span>
           Low Level API
         </label>
@@ -676,8 +290,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Intro
+      <a href="../../low-level-api/basics/" class="md-nav__link">
+        Basics
       </a>
     </li>
   
@@ -688,8 +302,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Custom pred_step
+      <a href="../../low-level-api/states/" class="md-nav__link">
+        States
       </a>
     </li>
   
@@ -700,56 +314,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Custom test_step
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Custom grad_step
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Custom train_step
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../low-level-api/supporting-the-high-level-api/" class="md-nav__link">
-        Supporting the High Level API
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../na/" class="md-nav__link">
-        Implementing a Model from Scratch
+      <a href="../../low-level-api/pred_step/" class="md-nav__link">
+        pred_step
       </a>
     </li>
   
@@ -757,21 +323,6 @@
           
         </ul>
       </nav>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../module-system.md" class="md-nav__link">
-        Elegy Module
-      </a>
     </li>
   
 
@@ -802,14 +353,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-7" type="checkbox" id="nav-7" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5" >
       
-      <label class="md-nav__link" for="nav-7">
+      <label class="md-nav__link" for="nav-5">
         API Reference
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="API Reference" data-md-level="1">
-        <label class="md-nav__title" for="nav-7">
+        <label class="md-nav__title" for="nav-5">
           <span class="md-nav__icon md-icon"></span>
           API Reference
         </label>
@@ -1036,30 +587,18 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../api/Uninitialized/" class="md-nav__link">
-        Uninitialized
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
     
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-7-20" type="checkbox" id="nav-7-20" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5-19" type="checkbox" id="nav-5-19" >
       
-      <label class="md-nav__link" for="nav-7-20">
+      <label class="md-nav__link" for="nav-5-19">
         callbacks
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="callbacks" data-md-level="2">
-        <label class="md-nav__title" for="nav-7-20">
+        <label class="md-nav__title" for="nav-5-19">
           <span class="md-nav__icon md-icon"></span>
           callbacks
         </label>
@@ -1196,6 +735,58 @@
   
   
   
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5-20" type="checkbox" id="nav-5-20" >
+      
+      <label class="md-nav__link" for="nav-5-20">
+        data
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="data" data-md-level="2">
+        <label class="md-nav__title" for="nav-5-20">
+          <span class="md-nav__icon md-icon"></span>
+          data
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/data/DataLoader/" class="md-nav__link">
+        DataLoader
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/data/Dataset/" class="md-nav__link">
+        Dataset
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+            
+  
+  
+  
     <li class="md-nav__item">
       <a href="../../api/flax_summarize/" class="md-nav__link">
         flax_summarize
@@ -1224,14 +815,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-7-23" type="checkbox" id="nav-7-23" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5-23" type="checkbox" id="nav-5-23" >
       
-      <label class="md-nav__link" for="nav-7-23">
+      <label class="md-nav__link" for="nav-5-23">
         hooks
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="hooks" data-md-level="2">
-        <label class="md-nav__title" for="nav-7-23">
+        <label class="md-nav__title" for="nav-5-23">
           <span class="md-nav__icon md-icon"></span>
           hooks
         </label>
@@ -1384,14 +975,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-7-24" type="checkbox" id="nav-7-24" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5-24" type="checkbox" id="nav-5-24" >
       
-      <label class="md-nav__link" for="nav-7-24">
+      <label class="md-nav__link" for="nav-5-24">
         initializers
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="initializers" data-md-level="2">
-        <label class="md-nav__title" for="nav-7-24">
+        <label class="md-nav__title" for="nav-5-24">
           <span class="md-nav__icon md-icon"></span>
           initializers
         </label>
@@ -1508,14 +1099,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-7-26" type="checkbox" id="nav-7-26" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5-26" type="checkbox" id="nav-5-26" >
       
-      <label class="md-nav__link" for="nav-7-26">
+      <label class="md-nav__link" for="nav-5-26">
         losses
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="losses" data-md-level="2">
-        <label class="md-nav__title" for="nav-7-26">
+        <label class="md-nav__title" for="nav-5-26">
           <span class="md-nav__icon md-icon"></span>
           losses
         </label>
@@ -1764,14 +1355,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-7-27" type="checkbox" id="nav-7-27" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5-27" type="checkbox" id="nav-5-27" >
       
-      <label class="md-nav__link" for="nav-7-27">
+      <label class="md-nav__link" for="nav-5-27">
         metrics
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="metrics" data-md-level="2">
-        <label class="md-nav__title" for="nav-7-27">
+        <label class="md-nav__title" for="nav-5-27">
           <span class="md-nav__icon md-icon"></span>
           metrics
         </label>
@@ -2128,14 +1719,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-7-28" type="checkbox" id="nav-7-28" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5-28" type="checkbox" id="nav-5-28" >
       
-      <label class="md-nav__link" for="nav-7-28">
+      <label class="md-nav__link" for="nav-5-28">
         nets
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="nets" data-md-level="2">
-        <label class="md-nav__title" for="nav-7-28">
+        <label class="md-nav__title" for="nav-5-28">
           <span class="md-nav__icon md-icon"></span>
           nets
         </label>
@@ -2240,14 +1831,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-7-29" type="checkbox" id="nav-7-29" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5-29" type="checkbox" id="nav-5-29" >
       
-      <label class="md-nav__link" for="nav-7-29">
+      <label class="md-nav__link" for="nav-5-29">
         nn
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="nn" data-md-level="2">
-        <label class="md-nav__title" for="nav-7-29">
+        <label class="md-nav__title" for="nav-5-29">
           <span class="md-nav__icon md-icon"></span>
           nn
         </label>
@@ -2484,14 +2075,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-7-30" type="checkbox" id="nav-7-30" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5-30" type="checkbox" id="nav-5-30" >
       
-      <label class="md-nav__link" for="nav-7-30">
+      <label class="md-nav__link" for="nav-5-30">
         regularizers
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="regularizers" data-md-level="2">
-        <label class="md-nav__title" for="nav-7-30">
+        <label class="md-nav__title" for="nav-5-30">
           <span class="md-nav__icon md-icon"></span>
           regularizers
         </label>
@@ -2665,17 +2256,17 @@
 <p>This guide goes into depth on how modules, losses and metrics work in Elegy when used with an <code>elegy.Model</code>. For more in-depth explanation on how they work internally check out the <a href="../module-system">Module System</a> guide.</p>
 <h2 id="keras-limitations">Keras Limitations</h2>
 <p>One of our goals with Elegy was to solve Keras restrictions around the type of losses and metrics you can define. When creating a complex model with multiple outputs in Keras, say <code>output_a</code> and <code>output_b</code>, you are forced to define losses and metrics per-output only:</p>
-<div class="codehilite"><pre><span></span><code><span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-    <span class="n">loss</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;output_a&quot;</span><span class="p">:</span> <span class="n">keras</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">BinaryCrossentropy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="s2">&quot;output_b&quot;</span><span class="p">:</span> <span class="n">keras</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">CategoricalCrossentropy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-    <span class="p">},</span>
-    <span class="n">metrics</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;output_a&quot;</span><span class="p">:</span> <span class="n">keras</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">BinaryAccuracy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="s2">&quot;output_b&quot;</span><span class="p">:</span> <span class="n">keras</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">CategoricalAccuracy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-    <span class="p">},</span>
-    <span class="o">...</span>
-<span class="p">)</span>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>model<span style="color: #666666">.</span>compile(
+    loss<span style="color: #666666">=</span>{
+        <span style="color: #BA2121">&quot;output_a&quot;</span>: keras<span style="color: #666666">.</span>losses<span style="color: #666666">.</span>BinaryCrossentropy(from_logits<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">True</span>),
+        <span style="color: #BA2121">&quot;output_b&quot;</span>: keras<span style="color: #666666">.</span>losses<span style="color: #666666">.</span>CategoricalCrossentropy(from_logits<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">True</span>),
+    },
+    metrics<span style="color: #666666">=</span>{
+        <span style="color: #BA2121">&quot;output_a&quot;</span>: keras<span style="color: #666666">.</span>losses<span style="color: #666666">.</span>BinaryAccuracy(from_logits<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">True</span>),
+        <span style="color: #BA2121">&quot;output_b&quot;</span>: keras<span style="color: #666666">.</span>losses<span style="color: #666666">.</span>CategoricalAccuracy(from_logits<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">True</span>),
+    },
+    <span style="color: #666666">...</span>
+)
 </code></pre></div>
 
 <p>This is very restrictive, in particular it doesn't allow the following:</p>
@@ -2769,83 +2360,83 @@
 <h2 id="modules">Modules</h2>
 <p>Modules define the architecture of the network, their primary task (in Elegy terms) is transforming the inputs <code>x</code> into outputs <code>y_pred</code>. To make it easy to consume the content of <code>x</code>, Elegy has some special but very simple rules on how the signature of any <code>Module</code> can be structured:</p>
 <p><strong>1.</strong> If <code>x</code> is simply an array it will be passed directly:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">SomeModule</span><span class="p">:</span>
-<span class="hll">    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">):</span>
-</span>        <span class="o">...</span>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">SomeModule</span>:
+<span style="background-color: #ffffcc">    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">call</span>(<span style="color: #008000">self</span>, m):
+</span>        <span style="color: #666666">...</span>
 
-<span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">SomeModule</span><span class="p">(),</span> <span class="o">...</span><span class="p">)</span>
+model <span style="color: #666666">=</span> elegy<span style="color: #666666">.</span>Model(SomeModule(), <span style="color: #666666">...</span>)
 
-<span class="n">a</span> <span class="o">=</span> <span class="n">get_inputs</span><span class="p">()</span>
+a <span style="color: #666666">=</span> get_inputs()
 
-<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
-<span class="hll">    <span class="n">x</span><span class="o">=</span><span class="n">a</span><span class="p">,</span>
-</span>    <span class="o">...</span>
-<span class="p">)</span>
+model<span style="color: #666666">.</span>fit(
+<span style="background-color: #ffffcc">    x<span style="color: #666666">=</span>a,
+</span>    <span style="color: #666666">...</span>
+)
 </code></pre></div>
 
 <p>In this case <code>a</code> is passed as <code>m</code>.</p>
 <p><strong>2.</strong> If <code>x</code> is a <code>tuple</code>, then <code>x</code> will be expanded positional arguments a.k.a. <code>*args</code>, this means that the module will have define <strong>exactly</strong> as many arguments as there are inputs. For example:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">SomeModule</span><span class="p">:</span>
-<span class="hll">    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
-</span>        <span class="o">...</span>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">SomeModule</span>:
+<span style="background-color: #ffffcc">    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">call</span>(<span style="color: #008000">self</span>, m, n):
+</span>        <span style="color: #666666">...</span>
 
-<span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">SomeModule</span><span class="p">(),</span> <span class="o">...</span><span class="p">)</span>
+model <span style="color: #666666">=</span> elegy<span style="color: #666666">.</span>Model(SomeModule(), <span style="color: #666666">...</span>)
 
-<span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">get_inputs</span><span class="p">()</span>
+a, b <span style="color: #666666">=</span> get_inputs()
 
-<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
-<span class="hll">    <span class="n">x</span><span class="o">=</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span>
-</span>    <span class="o">...</span>
-<span class="p">)</span>
+model<span style="color: #666666">.</span>fit(
+<span style="background-color: #ffffcc">    x<span style="color: #666666">=</span>(a, b),
+</span>    <span style="color: #666666">...</span>
+)
 </code></pre></div>
 
 <p>In this case <code>a</code> is passed as <code>m</code> and <code>b</code> is passed as <code>n</code>.</p>
 <p><strong>3.</strong> If <code>x</code> is a <code>dict</code>, then <code>x</code> will be expanded as keyword arguments a.k.a. <code>**kwargs</code>, in this case the module can optionally request any key defined in <code>x</code> as an argument. For example:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">SomeModule</span><span class="p">:</span>
-<span class="hll">    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
-</span>        <span class="o">...</span>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">SomeModule</span>:
+<span style="background-color: #ffffcc">    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">call</span>(<span style="color: #008000">self</span>, n, o):
+</span>        <span style="color: #666666">...</span>
 
-<span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">SomeModule</span><span class="p">(),</span> <span class="o">...</span><span class="p">)</span>
+model <span style="color: #666666">=</span> elegy<span style="color: #666666">.</span>Model(SomeModule(), <span style="color: #666666">...</span>)
 
-<span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">get_inputs</span><span class="p">()</span>
+a, b, c <span style="color: #666666">=</span> get_inputs()
 
-<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
-<span class="hll">    <span class="n">x</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;m&quot;</span><span class="p">:</span> <span class="n">a</span><span class="p">,</span> <span class="s2">&quot;n&quot;</span><span class="p">:</span> <span class="n">b</span><span class="p">,</span> <span class="s2">&quot;o&quot;</span><span class="p">:</span> <span class="n">c</span><span class="p">},</span>
-</span>    <span class="o">...</span>
-<span class="p">)</span>
+model<span style="color: #666666">.</span>fit(
+<span style="background-color: #ffffcc">    x<span style="color: #666666">=</span>{<span style="color: #BA2121">&quot;m&quot;</span>: a, <span style="color: #BA2121">&quot;n&quot;</span>: b, <span style="color: #BA2121">&quot;o&quot;</span>: c},
+</span>    <span style="color: #666666">...</span>
+)
 </code></pre></div>
 
 <p>Here only <code>n</code> and <code>o</code> are requested by name, and you get as input its values <code>b</code> and <code>c</code>, the variable <code>m</code> with the content of <code>a</code> is safely ignored. If you want to request all the available inputs you can use <code>**kwargs</code>.</p>
 <h2 id="losses">Losses</h2>
 <p>Losses can request all the available parameters that Elegy provides for dependency injection. A typical loss will request the <code>y_true</code> and <code>y_pred</code> values (as its common / enforced in Keras). The Mean Squared Error loss for example is easily defined in these terms:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">MSE</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Loss</span><span class="p">):</span> 
-<span class="hll">    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
-</span>        <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">y_true</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">MSE</span>(elegy<span style="color: #666666">.</span>Loss): 
+<span style="background-color: #ffffcc">    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">call</span>(<span style="color: #008000">self</span>, y_true, y_pred):
+</span>        <span style="color: #008000; font-weight: bold">return</span> jnp<span style="color: #666666">.</span>mean(jnp<span style="color: #666666">.</span>square(y_true <span style="color: #666666">-</span> y_pred), axis<span style="color: #666666">=-1</span>)
 
-<span class="o">...</span>
+<span style="color: #666666">...</span>
 
-<span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">=</span> <span class="n">get_inputs</span><span class="p">()</span>
+X_train, y_train <span style="color: #666666">=</span> get_inputs()
 
-<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
-    <span class="n">x</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span>
-    <span class="n">y</span><span class="o">=</span><span class="n">y_train</span><span class="p">,</span>
-    <span class="n">loss</span><span class="o">=</span><span class="n">MSE</span><span class="p">(),</span>
-<span class="p">)</span>
+model<span style="color: #666666">.</span>fit(
+    x<span style="color: #666666">=</span>X_train,
+    y<span style="color: #666666">=</span>y_train,
+    loss<span style="color: #666666">=</span>MSE(),
+)
 </code></pre></div>
 
 <p>Here the input <code>y</code> is passed as <code>y_true</code> to <code>MSE</code>. For an auto-encoder however, it makes perfect sense to define the loss only in terms of <code>x</code> (according to the math) and Elegy lets you do exactly that:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">AutoEncoderLoss</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Loss</span><span class="p">):</span> 
-<span class="hll">    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
-</span>        <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">jnp</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">AutoEncoderLoss</span>(elegy<span style="color: #666666">.</span>Loss): 
+<span style="background-color: #ffffcc">    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">call</span>(<span style="color: #008000">self</span>, x, y_pred):
+</span>        <span style="color: #008000; font-weight: bold">return</span> jnp<span style="color: #666666">.</span>mean(jnp<span style="color: #666666">.</span>square(x <span style="color: #666666">-</span> y_pred), axis<span style="color: #666666">=-1</span>)
 
-<span class="o">...</span>
+<span style="color: #666666">...</span>
 
-<span class="n">X_train</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_inputs</span><span class="p">()</span>
+X_train, _ <span style="color: #666666">=</span> get_inputs()
 
-<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
-    <span class="n">x</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span>
-    <span class="n">loss</span><span class="o">=</span><span class="n">AutoEncoderLoss</span><span class="p">(),</span>
-<span class="p">)</span>
+model<span style="color: #666666">.</span>fit(
+    x<span style="color: #666666">=</span>X_train,
+    loss<span style="color: #666666">=</span>AutoEncoderLoss(),
+)
 </code></pre></div>
 
 <p>Notice thanks to this we didn't have to define <code>y</code> on the <code>fit</code> method.</p>
@@ -2855,21 +2446,21 @@
 </div>
 <h3 id="partitioning-a-loss">Partitioning a loss</h3>
 <p>If you have a complex loss function that is just a sum of different parts that have to be compute together you might define something like this:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">SomeComplexFunction</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Loss</span><span class="p">):</span> 
-    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="o">...</span><span class="p">):</span>
-        <span class="o">...</span>
-        <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="n">c</span>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">SomeComplexFunction</span>(elegy<span style="color: #666666">.</span>Loss): 
+    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">call</span>(<span style="color: #008000">self</span>, x, y_true, y_pred, parameters, <span style="color: #666666">...</span>):
+        <span style="color: #666666">...</span>
+        <span style="color: #008000; font-weight: bold">return</span> a <span style="color: #666666">+</span> b <span style="color: #666666">+</span> c
 </code></pre></div>
 
 <p>Elegy lets you return a <code>dict</code> specifying the name of each part:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">SomeComplexFunction</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Loss</span><span class="p">):</span> 
-    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="o">...</span><span class="p">):</span>
-        <span class="o">...</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="n">a</span><span class="p">,</span>
-            <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="n">b</span><span class="p">,</span>
-            <span class="s2">&quot;c&quot;</span><span class="p">:</span> <span class="n">c</span><span class="p">,</span>
-        <span class="p">}</span>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">SomeComplexFunction</span>(elegy<span style="color: #666666">.</span>Loss): 
+    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">call</span>(<span style="color: #008000">self</span>, x, y_true, y_pred, parameters, <span style="color: #666666">...</span>):
+        <span style="color: #666666">...</span>
+        <span style="color: #008000; font-weight: bold">return</span> {
+            <span style="color: #BA2121">&quot;a&quot;</span>: a,
+            <span style="color: #BA2121">&quot;b&quot;</span>: b,
+            <span style="color: #BA2121">&quot;c&quot;</span>: c,
+        }
 </code></pre></div>
 
 <p>Elegy will use this information to show you each loss separate in the logs / Tensorboard / History with the names:</p>
@@ -2889,86 +2480,86 @@
 </ul>
 </div>
 <p>This means there are no restrictions on how you structure the loss function. According to this rule Keras and Elegy behave the same when there is only one output and one label because there is no structure. Both frameworks will allow you to define something like: </p>
-<div class="codehilite"><pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span>
-    <span class="o">...</span>
-    <span class="n">loss</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">CategoricalCrossentropy</span><span class="p">(</span><span class="n">from_logits</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="p">)</span>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>model <span style="color: #666666">=</span> Model(
+    <span style="color: #666666">...</span>
+    loss<span style="color: #666666">=</span>elegy<span style="color: #666666">.</span>losses<span style="color: #666666">.</span>CategoricalCrossentropy(from_logits<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">True</span>)
+)
 </code></pre></div>
 
 <p>However, if you have many outputs and many labels, Elegy will just pass their structures to your loss and you will be able to do whatever you want by e.g. indexing these structures:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">MyLoss</span><span class="p">(</span><span class="n">Elegy</span><span class="o">.</span><span class="n">Loss</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">some_function</span><span class="p">(</span>
-            <span class="n">y_true</span><span class="p">[</span><span class="s2">&quot;label_a&quot;</span><span class="p">],</span> <span class="n">y_pred</span><span class="p">[</span><span class="s2">&quot;output_a&quot;</span><span class="p">],</span> <span class="n">y_true</span><span class="p">[</span><span class="s2">&quot;label_b&quot;</span><span class="p">]</span>
-        <span class="p">)</span>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">MyLoss</span>(Elegy<span style="color: #666666">.</span>Loss):
+    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">call</span>(<span style="color: #008000">self</span>, y_true, y_pred):
+        <span style="color: #008000; font-weight: bold">return</span> some_function(
+            y_true[<span style="color: #BA2121">&quot;label_a&quot;</span>], y_pred[<span style="color: #BA2121">&quot;output_a&quot;</span>], y_true[<span style="color: #BA2121">&quot;label_b&quot;</span>]
+        )
 
-<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span>
-    <span class="o">...</span>
-    <span class="n">loss</span><span class="o">=</span><span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MyLoss</span><span class="p">()</span>
-<span class="p">)</span>
+model <span style="color: #666666">=</span> Model(
+    <span style="color: #666666">...</span>
+    loss<span style="color: #666666">=</span>elegy<span style="color: #666666">.</span>losses<span style="color: #666666">.</span>MyLoss()
+)
 </code></pre></div>
 
 <p>This example assumes the <code>y_true</code> and <code>y_pred</code> are dictionaries but they can also be tuples or nested structures. This strategy gives you maximal flexibility but come with the additional cost of having to implement your own loss function. </p>
 <h3 id="keras-like-behavior">Keras-like behavior</h3>
 <p>While having this flexibility is good, there is a common scenario that Keras covers really well: what if you really just need one loss per (label, output) pair? In other words, how can we achieve equivalent behaviour of the following Keras code?</p>
-<div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="o">...</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;key_a&quot;</span><span class="p">:</span> <span class="n">key_a</span><span class="p">,</span>
-            <span class="s2">&quot;key_b&quot;</span><span class="p">:</span> <span class="n">key_b</span><span class="p">,</span>
-            <span class="o">...</span>
-        <span class="p">}</span>
-<span class="o">...</span>
-<span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-    <span class="n">loss</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;key_a&quot;</span><span class="p">:</span> <span class="n">keras</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">BinaryCrossentropy</span><span class="p">(),</span>
-        <span class="s2">&quot;key_b&quot;</span><span class="p">:</span> <span class="n">keras</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">(),</span>
-        <span class="o">...</span>
-    <span class="p">},</span>
-    <span class="n">loss_weights</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;key_a&quot;</span><span class="p">:</span> <span class="mf">10.0</span><span class="p">,</span>
-        <span class="s2">&quot;key_b&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
-        <span class="o">...</span>
-    <span class="p">},</span>
-<span class="p">)</span>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">MyModel</span>(keras<span style="color: #666666">.</span>Model):
+    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">call</span>(<span style="color: #008000">self</span>, x):
+        <span style="color: #666666">...</span>
+        <span style="color: #008000; font-weight: bold">return</span> {
+            <span style="color: #BA2121">&quot;key_a&quot;</span>: key_a,
+            <span style="color: #BA2121">&quot;key_b&quot;</span>: key_b,
+            <span style="color: #666666">...</span>
+        }
+<span style="color: #666666">...</span>
+model<span style="color: #666666">.</span>compile(
+    loss<span style="color: #666666">=</span>{
+        <span style="color: #BA2121">&quot;key_a&quot;</span>: keras<span style="color: #666666">.</span>losses<span style="color: #666666">.</span>BinaryCrossentropy(),
+        <span style="color: #BA2121">&quot;key_b&quot;</span>: keras<span style="color: #666666">.</span>losses<span style="color: #666666">.</span>MeanSquaredError(),
+        <span style="color: #666666">...</span>
+    },
+    loss_weights<span style="color: #666666">=</span>{
+        <span style="color: #BA2121">&quot;key_a&quot;</span>: <span style="color: #666666">10.0</span>,
+        <span style="color: #BA2121">&quot;key_b&quot;</span>: <span style="color: #666666">1.0</span>,
+        <span style="color: #666666">...</span>
+    },
+)
 </code></pre></div>
 
 <p>To do this Elegy lets each <code>Loss</code> optionally filter / index the <code>y_true</code> and <code>y_pred</code> arguments based on a string key (for <code>dict</code>s) or integer key (for <code>tuple</code>s) in the constructor's <code>on</code> parameter:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">MyModule</span><span class="p">:</span>
-    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="o">...</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;key_a&quot;</span><span class="p">:</span> <span class="n">key_a</span><span class="p">,</span>
-            <span class="s2">&quot;key_b&quot;</span><span class="p">:</span> <span class="n">key_b</span><span class="p">,</span>
-            <span class="o">...</span>
-        <span class="p">}</span>
-<span class="o">...</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
-    <span class="n">module</span><span class="o">=</span><span class="n">MyModule</span><span class="p">(),</span>
-    <span class="n">loss</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">BinaryCrossentropy</span><span class="p">(</span><span class="n">on</span><span class="o">=</span><span class="s2">&quot;key_a&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">10.0</span><span class="p">),</span>
-        <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">(</span><span class="n">on</span><span class="o">=</span><span class="s2">&quot;key_b&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">1.0</span><span class="p">),</span>
-        <span class="o">...</span>
-    <span class="p">]</span>
-<span class="p">)</span>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">MyModule</span>:
+    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">call</span>(<span style="color: #008000">self</span>, x):
+        <span style="color: #666666">...</span>
+        <span style="color: #008000; font-weight: bold">return</span> {
+            <span style="color: #BA2121">&quot;key_a&quot;</span>: key_a,
+            <span style="color: #BA2121">&quot;key_b&quot;</span>: key_b,
+            <span style="color: #666666">...</span>
+        }
+<span style="color: #666666">...</span>
+model <span style="color: #666666">=</span> elegy<span style="color: #666666">.</span>Model(
+    module<span style="color: #666666">=</span>MyModule(),
+    loss<span style="color: #666666">=</span>[
+        elegy<span style="color: #666666">.</span>losses<span style="color: #666666">.</span>BinaryCrossentropy(on<span style="color: #666666">=</span><span style="color: #BA2121">&quot;key_a&quot;</span>, weight<span style="color: #666666">=10.0</span>),
+        elegy<span style="color: #666666">.</span>losses<span style="color: #666666">.</span>MeanSquaredError(on<span style="color: #666666">=</span><span style="color: #BA2121">&quot;key_b&quot;</span>, weight<span style="color: #666666">=1.0</span>),
+        <span style="color: #666666">...</span>
+    ]
+)
 </code></pre></div>
 
 <p>This is almost exactly how Keras behaves except each loss is explicitly aware of which part of the output / label its supposed to attend to. The previous is roughly equivalent to manually indexing <code>y_true</code> and <code>y_pred</code> and passing the resulting value to the loss in question like this:</p>
-<div class="codehilite"><pre><span></span><code><span class="n">model</span> <span class="o">=</span> <span class="n">elegy</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
-    <span class="n">module</span><span class="o">=</span><span class="n">MyModule</span><span class="p">(),</span>
-    <span class="n">loss</span><span class="o">=</span><span class="p">[</span>
-        <span class="k">lambda</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">:</span> <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">BinaryCrossentropy</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="mf">10.0</span><span class="p">)(</span>
-            <span class="n">y_true</span><span class="o">=</span><span class="n">y_true</span><span class="p">[</span><span class="s2">&quot;key_a&quot;</span><span class="p">],</span>
-            <span class="n">y_pred</span><span class="o">=</span><span class="n">y_pred</span><span class="p">[</span><span class="s2">&quot;key_a&quot;</span><span class="p">],</span>
-        <span class="p">),</span>
-        <span class="k">lambda</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">:</span> <span class="n">elegy</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)(</span>
-            <span class="n">y_true</span><span class="o">=</span><span class="n">y_true</span><span class="p">[</span><span class="s2">&quot;key_b&quot;</span><span class="p">],</span>
-            <span class="n">y_pred</span><span class="o">=</span><span class="n">y_pred</span><span class="p">[</span><span class="s2">&quot;key_b&quot;</span><span class="p">],</span>
-        <span class="p">),</span>
-        <span class="o">...</span>
-    <span class="p">]</span>
-<span class="p">)</span>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>model <span style="color: #666666">=</span> elegy<span style="color: #666666">.</span>Model(
+    module<span style="color: #666666">=</span>MyModule(),
+    loss<span style="color: #666666">=</span>[
+        <span style="color: #008000; font-weight: bold">lambda</span> y_true, y_pred: elegy<span style="color: #666666">.</span>losses<span style="color: #666666">.</span>BinaryCrossentropy(weight<span style="color: #666666">=10.0</span>)(
+            y_true<span style="color: #666666">=</span>y_true[<span style="color: #BA2121">&quot;key_a&quot;</span>],
+            y_pred<span style="color: #666666">=</span>y_pred[<span style="color: #BA2121">&quot;key_a&quot;</span>],
+        ),
+        <span style="color: #008000; font-weight: bold">lambda</span> y_true, y_pred: elegy<span style="color: #666666">.</span>losses<span style="color: #666666">.</span>MeanSquaredError(weight<span style="color: #666666">=1.0</span>)(
+            y_true<span style="color: #666666">=</span>y_true[<span style="color: #BA2121">&quot;key_b&quot;</span>],
+            y_pred<span style="color: #666666">=</span>y_pred[<span style="color: #BA2121">&quot;key_b&quot;</span>],
+        ),
+        <span style="color: #666666">...</span>
+    ]
+)
 </code></pre></div>
 
 <div class="admonition note">
@@ -2983,19 +2574,19 @@
 </div>
 <p>As in Keras, Elegy metrics are cumulative so they update their internal state on every step. From a user's perspective this means that you should use the <code>self.add_parameter</code> and <code>self.update_parameter</code> hooks when implementing your own metrics.</p>
 <p>Here is an example of a simple cumulative implementation of <code>Accuracy</code> which uses state hooks:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">class</span> <span class="nc">Accuracy</span><span class="p">(</span><span class="n">elegy</span><span class="o">.</span><span class="n">Metric</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">Accuracy</span>(elegy<span style="color: #666666">.</span>Metric):
+    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">call</span>(<span style="color: #008000">self</span>, y_true, y_pred):
 
-        <span class="n">total</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s2">&quot;total&quot;</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s2">&quot;count&quot;</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        total <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>add_parameter(<span style="color: #BA2121">&quot;total&quot;</span>, initializer<span style="color: #666666">=0</span>, trainable<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>)
+        count <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>add_parameter(<span style="color: #BA2121">&quot;count&quot;</span>, initializer<span style="color: #666666">=0</span>, trainable<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">False</span>)
 
-        <span class="n">total</span> <span class="o">+=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_true</span> <span class="o">==</span> <span class="n">y_pred</span><span class="p">)</span>
-        <span class="n">count</span> <span class="o">+=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">y_true</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        total <span style="color: #666666">+=</span> jnp<span style="color: #666666">.</span>sum(y_true <span style="color: #666666">==</span> y_pred)
+        count <span style="color: #666666">+=</span> jnp<span style="color: #666666">.</span>prod(y_true<span style="color: #666666">.</span>shape)
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">update_parameter</span><span class="p">(</span><span class="s2">&quot;total&quot;</span><span class="p">,</span> <span class="n">total</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">update_parameter</span><span class="p">(</span><span class="s2">&quot;count&quot;</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+        <span style="color: #008000">self</span><span style="color: #666666">.</span>update_parameter(<span style="color: #BA2121">&quot;total&quot;</span>, total)
+        <span style="color: #008000">self</span><span style="color: #666666">.</span>update_parameter(<span style="color: #BA2121">&quot;count&quot;</span>, count)
 
-        <span class="k">return</span> <span class="n">total</span> <span class="o">/</span> <span class="n">count</span>
+        <span style="color: #008000; font-weight: bold">return</span> total <span style="color: #666666">/</span> count
 </code></pre></div>
 
 <p>For a more in-depth description of how Elegy's hook system works check out the <a href="../module-system">Module System</a> guide.</p>
@@ -3013,41 +2604,6 @@
       
         
 <footer class="md-footer">
-  
-    <div class="md-footer-nav">
-      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
-        
-          <a href="../../getting-started-low-level-api/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
-            <div class="md-footer-nav__button md-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-            </div>
-            <div class="md-footer-nav__title">
-              <div class="md-ellipsis">
-                <span class="md-footer-nav__direction">
-                  Previous
-                </span>
-                Low Level API
-              </div>
-            </div>
-          </a>
-        
-        
-          <a href="../../na/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
-            <div class="md-footer-nav__title">
-              <div class="md-ellipsis">
-                <span class="md-footer-nav__direction">
-                  Next
-                </span>
-                Data Sources
-              </div>
-            </div>
-            <div class="md-footer-nav__button md-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
-            </div>
-          </a>
-        
-      </nav>
-    </div>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">

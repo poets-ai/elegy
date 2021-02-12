@@ -1,0 +1,2663 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="canonical" href="https://poets-ai.github.io/elegy/low-level-api/basics/">
+      
+      <link rel="shortcut icon" href="../../images/favicon.png">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.7">
+    
+    
+      
+        <title>Basics - Elegy</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.cb6bc1d0.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.39b8e14a.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
+      
+    
+    
+    
+    
+      
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+      
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#low-level-api" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid" aria-label="Header">
+    <a href="https://poets-ai.github.io/elegy" title="Elegy" class="md-header-nav__button md-logo" aria-label="Elegy">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M471.1 96C405 96 353.3 137.3 320 174.6 286.7 137.3 235 96 168.9 96 75.8 96 0 167.8 0 256s75.8 160 168.9 160c66.1 0 117.8-41.3 151.1-78.6 33.3 37.3 85 78.6 151.1 78.6 93.1 0 168.9-71.8 168.9-160S564.2 96 471.1 96zM168.9 320c-40.2 0-72.9-28.7-72.9-64s32.7-64 72.9-64c38.2 0 73.4 36.1 94 64-20.4 27.6-55.9 64-94 64zm302.2 0c-38.2 0-73.4-36.1-94-64 20.4-27.6 55.9-64 94-64 40.2 0 72.9 28.7 72.9 64s-32.7 64-72.9 64z"/></svg>
+
+    </a>
+    <label class="md-header-nav__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header-nav__title" data-md-component="header-title">
+      <div class="md-header-nav__ellipsis">
+        <div class="md-header-nav__topic">
+          <span class="md-ellipsis">
+            Elegy
+          </span>
+        </div>
+        <div class="md-header-nav__topic">
+          <span class="md-ellipsis">
+            
+              Basics
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <label class="md-header-nav__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header-nav__source">
+        
+<a href="https://github.com/poets-ai/elegy/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    poets-ai/elegy
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="https://poets-ai.github.io/elegy" title="Elegy" class="md-nav__button md-logo" aria-label="Elegy">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M471.1 96C405 96 353.3 137.3 320 174.6 286.7 137.3 235 96 168.9 96 75.8 96 0 167.8 0 256s75.8 160 168.9 160c66.1 0 117.8-41.3 151.1-78.6 33.3 37.3 85 78.6 151.1 78.6 93.1 0 168.9-71.8 168.9-160S564.2 96 471.1 96zM168.9 320c-40.2 0-72.9-28.7-72.9-64s32.7-64 72.9-64c38.2 0 73.4 36.1 94 64-20.4 27.6-55.9 64-94 64zm302.2 0c-38.2 0-73.4-36.1-94-64 20.4-27.6 55.9-64 94-64 40.2 0 72.9 28.7 72.9 64s-32.7 64-72.9 64z"/></svg>
+
+    </a>
+    Elegy
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/poets-ai/elegy/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    poets-ai/elegy
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2" >
+      
+      <label class="md-nav__link" for="nav-2">
+        Getting Started
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Getting Started" data-md-level="1">
+        <label class="md-nav__title" for="nav-2">
+          <span class="md-nav__icon md-icon"></span>
+          Getting Started
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/high-level-api/" class="md-nav__link">
+        High Level API
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/low-level-api/" class="md-nav__link">
+        Low Level API
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" checked>
+      
+      <label class="md-nav__link" for="nav-3">
+        Low Level API
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Low Level API" data-md-level="1">
+        <label class="md-nav__title" for="nav-3">
+          <span class="md-nav__icon md-icon"></span>
+          Low Level API
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Basics
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Basics
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#attributes" class="md-nav__link">
+    Attributes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-details" class="md-nav__link">
+    Implementation Details
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../states/" class="md-nav__link">
+        States
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pred_step/" class="md-nav__link">
+        pred_step
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        Contributing
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5" >
+      
+      <label class="md-nav__link" for="nav-5">
+        API Reference
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="API Reference" data-md-level="1">
+        <label class="md-nav__title" for="nav-5">
+          <span class="md-nav__icon md-icon"></span>
+          API Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/GeneralizedModule/" class="md-nav__link">
+        GeneralizedModule
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/GeneralizedOptimizer/" class="md-nav__link">
+        GeneralizedOptimizer
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/GradStep/" class="md-nav__link">
+        GradStep
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/HaikuModule/" class="md-nav__link">
+        HaikuModule
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/Loss/" class="md-nav__link">
+        Loss
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/Losses/" class="md-nav__link">
+        Losses
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/Metric/" class="md-nav__link">
+        Metric
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/Metrics/" class="md-nav__link">
+        Metrics
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/Model/" class="md-nav__link">
+        Model
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/ModelBase/" class="md-nav__link">
+        ModelBase
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/Module/" class="md-nav__link">
+        Module
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/Optimizer/" class="md-nav__link">
+        Optimizer
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/OutputStates/" class="md-nav__link">
+        OutputStates
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/PredStep/" class="md-nav__link">
+        PredStep
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/RNGSeq/" class="md-nav__link">
+        RNGSeq
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/States/" class="md-nav__link">
+        States
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/TestStep/" class="md-nav__link">
+        TestStep
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/TrainStep/" class="md-nav__link">
+        TrainStep
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5-19" type="checkbox" id="nav-5-19" >
+      
+      <label class="md-nav__link" for="nav-5-19">
+        callbacks
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="callbacks" data-md-level="2">
+        <label class="md-nav__title" for="nav-5-19">
+          <span class="md-nav__icon md-icon"></span>
+          callbacks
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/callbacks/CSVLogger/" class="md-nav__link">
+        CSVLogger
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/callbacks/Callback/" class="md-nav__link">
+        Callback
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/callbacks/CallbackList/" class="md-nav__link">
+        CallbackList
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/callbacks/EarlyStopping/" class="md-nav__link">
+        EarlyStopping
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/callbacks/History/" class="md-nav__link">
+        History
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/callbacks/LambdaCallback/" class="md-nav__link">
+        LambdaCallback
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/callbacks/ModelCheckpoint/" class="md-nav__link">
+        ModelCheckpoint
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/callbacks/RemoteMonitor/" class="md-nav__link">
+        RemoteMonitor
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/callbacks/TensorBoard/" class="md-nav__link">
+        TensorBoard
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/callbacks/TerminateOnNaN/" class="md-nav__link">
+        TerminateOnNaN
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5-20" type="checkbox" id="nav-5-20" >
+      
+      <label class="md-nav__link" for="nav-5-20">
+        data
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="data" data-md-level="2">
+        <label class="md-nav__title" for="nav-5-20">
+          <span class="md-nav__icon md-icon"></span>
+          data
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/data/DataLoader/" class="md-nav__link">
+        DataLoader
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/data/Dataset/" class="md-nav__link">
+        Dataset
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/flax_summarize/" class="md-nav__link">
+        flax_summarize
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/flax_summary/" class="md-nav__link">
+        flax_summary
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5-23" type="checkbox" id="nav-5-23" >
+      
+      <label class="md-nav__link" for="nav-5-23">
+        hooks
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="hooks" data-md-level="2">
+        <label class="md-nav__title" for="nav-5-23">
+          <span class="md-nav__icon md-icon"></span>
+          hooks
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/hooks/add_loss/" class="md-nav__link">
+        add_loss
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/hooks/add_metric/" class="md-nav__link">
+        add_metric
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/hooks/add_summary/" class="md-nav__link">
+        add_summary
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/hooks/context/" class="md-nav__link">
+        context
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/hooks/get_losses/" class="md-nav__link">
+        get_losses
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/hooks/get_metrics/" class="md-nav__link">
+        get_metrics
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/hooks/get_summaries/" class="md-nav__link">
+        get_summaries
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/hooks/jit/" class="md-nav__link">
+        jit
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/hooks/losses_active/" class="md-nav__link">
+        losses_active
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/hooks/metrics_active/" class="md-nav__link">
+        metrics_active
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/hooks/summaries_active/" class="md-nav__link">
+        summaries_active
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5-24" type="checkbox" id="nav-5-24" >
+      
+      <label class="md-nav__link" for="nav-5-24">
+        initializers
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="initializers" data-md-level="2">
+        <label class="md-nav__title" for="nav-5-24">
+          <span class="md-nav__icon md-icon"></span>
+          initializers
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/initializers/Constant/" class="md-nav__link">
+        Constant
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/initializers/Orthogonal/" class="md-nav__link">
+        Orthogonal
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/initializers/RandomNormal/" class="md-nav__link">
+        RandomNormal
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/initializers/RandomUniform/" class="md-nav__link">
+        RandomUniform
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/initializers/TruncatedNormal/" class="md-nav__link">
+        TruncatedNormal
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/initializers/UniformScaling/" class="md-nav__link">
+        UniformScaling
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/initializers/VarianceScaling/" class="md-nav__link">
+        VarianceScaling
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/inject_dependencies/" class="md-nav__link">
+        inject_dependencies
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5-26" type="checkbox" id="nav-5-26" >
+      
+      <label class="md-nav__link" for="nav-5-26">
+        losses
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="losses" data-md-level="2">
+        <label class="md-nav__title" for="nav-5-26">
+          <span class="md-nav__icon md-icon"></span>
+          losses
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/losses/BinaryCrossentropy/" class="md-nav__link">
+        BinaryCrossentropy
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/losses/CategoricalCrossentropy/" class="md-nav__link">
+        CategoricalCrossentropy
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/losses/CosineSimilarity/" class="md-nav__link">
+        CosineSimilarity
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/losses/Huber/" class="md-nav__link">
+        Huber
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/losses/Loss/" class="md-nav__link">
+        Loss
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/losses/MeanAbsoluteError/" class="md-nav__link">
+        MeanAbsoluteError
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/losses/MeanAbsolutePercentageError/" class="md-nav__link">
+        MeanAbsolutePercentageError
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/losses/MeanSquaredError/" class="md-nav__link">
+        MeanSquaredError
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/losses/MeanSquaredLogarithmicError/" class="md-nav__link">
+        MeanSquaredLogarithmicError
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/losses/Reduction/" class="md-nav__link">
+        Reduction
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/losses/SparseCategoricalCrossentropy/" class="md-nav__link">
+        SparseCategoricalCrossentropy
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/losses/binary_crossentropy/" class="md-nav__link">
+        binary_crossentropy
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/losses/cosine_similarity/" class="md-nav__link">
+        cosine_similarity
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/losses/huber/" class="md-nav__link">
+        huber
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/losses/mean_absolute_error/" class="md-nav__link">
+        mean_absolute_error
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/losses/mean_absolute_percentage_error/" class="md-nav__link">
+        mean_absolute_percentage_error
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/losses/mean_squared_error/" class="md-nav__link">
+        mean_squared_error
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/losses/mean_squared_logarithmic_error/" class="md-nav__link">
+        mean_squared_logarithmic_error
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/losses/sparse_categorical_crossentropy/" class="md-nav__link">
+        sparse_categorical_crossentropy
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5-27" type="checkbox" id="nav-5-27" >
+      
+      <label class="md-nav__link" for="nav-5-27">
+        metrics
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="metrics" data-md-level="2">
+        <label class="md-nav__title" for="nav-5-27">
+          <span class="md-nav__icon md-icon"></span>
+          metrics
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/Accuracy/" class="md-nav__link">
+        Accuracy
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/BinaryAccuracy/" class="md-nav__link">
+        BinaryAccuracy
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/BinaryCrossentropy/" class="md-nav__link">
+        BinaryCrossentropy
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/CategoricalAccuracy/" class="md-nav__link">
+        CategoricalAccuracy
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/F1/" class="md-nav__link">
+        F1
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/Mean/" class="md-nav__link">
+        Mean
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/MeanAbsoluteError/" class="md-nav__link">
+        MeanAbsoluteError
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/MeanAbsolutePercentageError/" class="md-nav__link">
+        MeanAbsolutePercentageError
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/MeanSquaredError/" class="md-nav__link">
+        MeanSquaredError
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/Metric/" class="md-nav__link">
+        Metric
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/Precision/" class="md-nav__link">
+        Precision
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/Recall/" class="md-nav__link">
+        Recall
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/Reduce/" class="md-nav__link">
+        Reduce
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/Reduction/" class="md-nav__link">
+        Reduction
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/SparseCategoricalAccuracy/" class="md-nav__link">
+        SparseCategoricalAccuracy
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/Sum/" class="md-nav__link">
+        Sum
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/accuracy/" class="md-nav__link">
+        accuracy
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/binary_accuracy/" class="md-nav__link">
+        binary_accuracy
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/binary_crossentropy/" class="md-nav__link">
+        binary_crossentropy
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/categorical_accuracy/" class="md-nav__link">
+        categorical_accuracy
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/f1/" class="md-nav__link">
+        f1
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/mean_absolute_error/" class="md-nav__link">
+        mean_absolute_error
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/mean_absolute_percentage_error/" class="md-nav__link">
+        mean_absolute_percentage_error
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/mean_squared_error/" class="md-nav__link">
+        mean_squared_error
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/precision/" class="md-nav__link">
+        precision
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/recall/" class="md-nav__link">
+        recall
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/reduce/" class="md-nav__link">
+        reduce
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/metrics/sparse_categorical_accuracy/" class="md-nav__link">
+        sparse_categorical_accuracy
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5-28" type="checkbox" id="nav-5-28" >
+      
+      <label class="md-nav__link" for="nav-5-28">
+        nets
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="nets" data-md-level="2">
+        <label class="md-nav__title" for="nav-5-28">
+          <span class="md-nav__icon md-icon"></span>
+          nets
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nets/ResNet/" class="md-nav__link">
+        ResNet
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nets/ResNet101/" class="md-nav__link">
+        ResNet101
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nets/ResNet152/" class="md-nav__link">
+        ResNet152
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nets/ResNet18/" class="md-nav__link">
+        ResNet18
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nets/ResNet200/" class="md-nav__link">
+        ResNet200
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nets/ResNet34/" class="md-nav__link">
+        ResNet34
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nets/ResNet50/" class="md-nav__link">
+        ResNet50
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5-29" type="checkbox" id="nav-5-29" >
+      
+      <label class="md-nav__link" for="nav-5-29">
+        nn
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="nn" data-md-level="2">
+        <label class="md-nav__title" for="nav-5-29">
+          <span class="md-nav__icon md-icon"></span>
+          nn
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nn/AvgPool/" class="md-nav__link">
+        AvgPool
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nn/BatchNormalization/" class="md-nav__link">
+        BatchNormalization
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nn/Conv1D/" class="md-nav__link">
+        Conv1D
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nn/Conv2D/" class="md-nav__link">
+        Conv2D
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nn/Conv3D/" class="md-nav__link">
+        Conv3D
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nn/ConvND/" class="md-nav__link">
+        ConvND
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nn/Dropout/" class="md-nav__link">
+        Dropout
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nn/EMAParamsTree/" class="md-nav__link">
+        EMAParamsTree
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nn/EmbedLookupStyle/" class="md-nav__link">
+        EmbedLookupStyle
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nn/Embedding/" class="md-nav__link">
+        Embedding
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nn/Flatten/" class="md-nav__link">
+        Flatten
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nn/InstanceNormalization/" class="md-nav__link">
+        InstanceNormalization
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nn/LayerNormalization/" class="md-nav__link">
+        LayerNormalization
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nn/Linear/" class="md-nav__link">
+        Linear
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nn/MaxPool/" class="md-nav__link">
+        MaxPool
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nn/Reshape/" class="md-nav__link">
+        Reshape
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nn/Sequential/" class="md-nav__link">
+        Sequential
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/nn/sequential/" class="md-nav__link">
+        sequential
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5-30" type="checkbox" id="nav-5-30" >
+      
+      <label class="md-nav__link" for="nav-5-30">
+        regularizers
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="regularizers" data-md-level="2">
+        <label class="md-nav__title" for="nav-5-30">
+          <span class="md-nav__icon md-icon"></span>
+          regularizers
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/regularizers/GlobalL1/" class="md-nav__link">
+        GlobalL1
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/regularizers/GlobalL1L2/" class="md-nav__link">
+        GlobalL1L2
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/regularizers/GlobalL2/" class="md-nav__link">
+        GlobalL2
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/to_module/" class="md-nav__link">
+        to_module
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#attributes" class="md-nav__link">
+    Attributes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-details" class="md-nav__link">
+    Implementation Details
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/poets-ai/elegy/edit/master/docs/low-level-api/basics.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                <h1 id="low-level-api">Low-level API</h1>
+<p>Elegy's low-level API allows you to override some core methods in <code>Model</code> that specify what happens during training, inference, etc. This approach is perfect when you want to do things that are hard or simply not possible with the high-level API as it gives you the flexibility to do anything inside these methods with few restrictions. Most overrideable method do the following: </p>
+<ol>
+<li>Takes some inputs and state</li>
+<li>Performs some <code>jax</code> operations and updates the state</li>
+<li>Returns some outputs and the new state. </li>
+</ol>
+<p>Lets see a simple example of this API by creating a linear classifier by overrding <code>test_step</code>:</p>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">LinearClassifier</span>(elegy<span style="color: #666666">.</span>Model):
+    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">test_step</span>(<span style="color: #008000">self</span>, x,  y_true,  states, initializing) <span style="color: #666666">-&gt;</span> elegy<span style="color: #666666">.</span>TestStep:  
+        x <span style="color: #666666">=</span> jnp<span style="color: #666666">.</span>reshape(x, (x<span style="color: #666666">.</span>shape[<span style="color: #666666">0</span>], <span style="color: #666666">-1</span>)) <span style="color: #666666">/</span> <span style="color: #666666">255</span>
+
+        <span style="color: #408080; font-style: italic"># initialize or use existing parameters</span>
+        <span style="color: #008000; font-weight: bold">if</span> initializing:
+            w <span style="color: #666666">=</span> jax<span style="color: #666666">.</span>random<span style="color: #666666">.</span>uniform(
+                jax<span style="color: #666666">.</span>random<span style="color: #666666">.</span>PRNGKey(<span style="color: #666666">42</span>), shape<span style="color: #666666">=</span>[np<span style="color: #666666">.</span>prod(x<span style="color: #666666">.</span>shape[<span style="color: #666666">1</span>:]), <span style="color: #666666">10</span>]
+            )
+            b <span style="color: #666666">=</span> jax<span style="color: #666666">.</span>random<span style="color: #666666">.</span>uniform(jax<span style="color: #666666">.</span>random<span style="color: #666666">.</span>PRNGKey(<span style="color: #666666">69</span>), shape<span style="color: #666666">=</span>[<span style="color: #666666">1</span>])
+        <span style="color: #008000; font-weight: bold">else</span>:
+            w, b <span style="color: #666666">=</span> states<span style="color: #666666">.</span>net_params
+
+        <span style="color: #408080; font-style: italic"># model</span>
+        logits <span style="color: #666666">=</span> jnp<span style="color: #666666">.</span>dot(x, w) <span style="color: #666666">+</span> b
+
+        <span style="color: #408080; font-style: italic"># categorical crossentropy loss</span>
+        labels <span style="color: #666666">=</span> jax<span style="color: #666666">.</span>nn<span style="color: #666666">.</span>one_hot(y_true, <span style="color: #666666">10</span>)
+        loss <span style="color: #666666">=</span> jnp<span style="color: #666666">.</span>mean(<span style="color: #666666">-</span>jnp<span style="color: #666666">.</span>sum(labels <span style="color: #666666">*</span> jax<span style="color: #666666">.</span>nn<span style="color: #666666">.</span>log_softmax(logits), axis<span style="color: #666666">=-1</span>))
+        accuracy<span style="color: #666666">=</span>jnp<span style="color: #666666">.</span>mean(jnp<span style="color: #666666">.</span>argmax(logits, axis<span style="color: #666666">=-1</span>) <span style="color: #666666">==</span> y_true)
+
+        <span style="color: #408080; font-style: italic"># metrics</span>
+        logs <span style="color: #666666">=</span> <span style="color: #008000">dict</span>(accuracy<span style="color: #666666">=</span>accuracy, loss<span style="color: #666666">=</span>loss)
+
+        <span style="color: #408080; font-style: italic"># update states</span>
+        states <span style="color: #666666">=</span> states<span style="color: #666666">.</span>update(net_params<span style="color: #666666">=</span>(w, b))
+
+        <span style="color: #008000; font-weight: bold">return</span> loss, logs, states
+</code></pre></div>
+
+<p>There is a lot happening here we will explain later but as you see we performing everything from parameter initialization, modeling, calculating the main loss, and logging some metrics. To actually use it just create an instance and call the Model API as you normally would:</p>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>model <span style="color: #666666">=</span> LinearClassifier(
+    optimizer<span style="color: #666666">=</span>optax<span style="color: #666666">.</span>adam(<span style="color: #666666">1e-3</span>)
+)
+
+model<span style="color: #666666">.</span>fit(
+    x<span style="color: #666666">=</span>X_train,
+    y<span style="color: #666666">=</span>y_train,
+    epochs<span style="color: #666666">=100</span>,
+    batch_size<span style="color: #666666">=64</span>,
+)
+</code></pre></div>
+
+<h3 id="methods">Methods</h3>
+<p>Most high-level API methods have an associated low-level API method they call internally that you can override, here is the list of methods:</p>
+<table>
+<thead>
+<tr>
+<th align="left">High Level</th>
+<th align="left">Low Level</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>predict</code></td>
+<td align="left"><code>pred_step</code></td>
+</tr>
+<tr>
+<td align="left"><code>evaluate</code></td>
+<td align="left"><code>test_step</code></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"><code>grad_step</code></td>
+</tr>
+<tr>
+<td align="left"><code>fit</code></td>
+<td align="left"><code>train_step</code></td>
+</tr>
+<tr>
+<td align="left"><code>summary</code></td>
+<td align="left"><code>summary_step</code></td>
+</tr>
+<tr>
+<td align="left"><code>init</code></td>
+<td align="left"><code>init_step</code></td>
+</tr>
+</tbody>
+</table>
+<p>For example if you wanted to customize what happens during <code>fit</code> you could override the <code>train_step</code> method. However you might be wondering:</p>
+<div class="admonition question">
+<p class="admonition-title">Question</p>
+<p>Why did we override <code>test_step</code> in the example if we wanted to call <code>fit</code>?</p>
+</div>
+<p>The reason is that the default implementation has the following call structure:</p>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code> summary        predict     evaluate                   fit
+    ⬇️              ⬇️           ⬇️                        ⬇️
+summary_step ➡️ pred_step ⬅ test_step ⬅ grad_step ⬅ train_step
+</code></pre></div>
+
+<p>So what happened was this:</p>
+<ul>
+<li><code>fit</code> called <code>train_step</code> to perform the optimization step</li>
+<li><code>train_step</code> called <code>grad_step</code> to get the gradients needed for the optimizer</li>
+<li><code>grad_step</code> called <code>test_step</code> to get the loss needed to compute the gradients</li>
+</ul>
+<p>So in the end we directly supported <code>evaludate</code> but we also got <code>fit</code> for free 🥳. You could have also notice the following:</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>We didn't implement <code>pred_step</code>.</p>
+</div>
+<p>This is not bad per-se but we also didn't provide a <code>module</code> to the <code>LinearClassifier</code>'s constructor so if you called <code>predict</code> or <code>summary</code> you will infact get an error telling you this. This means that you should be aware of what methods you are actually supporting using the low-level API.</p>
+<h3 id="attributes">Attributes</h3>
+<p>The default implementation of <code>Model</code> comes with a couple of attributes you can use get some functionality for free or if you want to support some of the features that the default implementation provides like e.g. providing summaries for the <code>module</code> argument or creating logs for the <code>metrics</code> argument. Here is the complete list of attributes:</p>
+<table>
+<thead>
+<tr>
+<th>Raw Attribute</th>
+<th>API Attribute</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>module</code></td>
+<td><code>api_module</code></td>
+</tr>
+<tr>
+<td><code>metrics</code></td>
+<td><code>api_metrics</code></td>
+</tr>
+<tr>
+<td><code>loss</code></td>
+<td><code>api_loss</code></td>
+</tr>
+<tr>
+<td><code>optimizer</code></td>
+<td><code>api_optimizer</code></td>
+</tr>
+<tr>
+<td><code>seed</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The raw attributes are the values exactly as they are passed by the user to the <code>Model</code> constructor, and the <code>api_*</code> attributes are "generalized" versions of the previous they expose a consisten API for a variaty of supported types. For example, if you want to let the user pass any supported Module to the <code>module</code> argument you can use the <code>api_module</code> object that elegy build for you, <code>api_module</code> is of type <code>GeneralizedModule</code> which wraps around the specific Module type and exposes some simple <code>init</code> and <code>apply</code> methods.</p>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">LinearClassifier</span>(elegy<span style="color: #666666">.</span>Model):
+    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">test_step</span>(<span style="color: #008000">self</span>, x,  y_true,  states, initializing) <span style="color: #666666">-&gt;</span> elegy<span style="color: #666666">.</span>TestStep:  
+        x <span style="color: #666666">=</span> jnp<span style="color: #666666">.</span>reshape(x, (x<span style="color: #666666">.</span>shape[<span style="color: #666666">0</span>], <span style="color: #666666">-1</span>)) <span style="color: #666666">/</span> <span style="color: #666666">255</span>
+
+        <span style="color: #408080; font-style: italic"># initialize or use existing parameters</span>
+        <span style="color: #008000; font-weight: bold">if</span> initializing:
+<span style="background-color: #ffffcc">            model_fn <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>api_module<span style="color: #666666">.</span>init(states<span style="color: #666666">.</span>rng)
+</span>        <span style="color: #008000; font-weight: bold">else</span>:
+<span style="background-color: #ffffcc">            model_fn <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>api_module<span style="color: #666666">.</span>apply(
+</span>                params<span style="color: #666666">=</span>states<span style="color: #666666">.</span>net_params,
+                states<span style="color: #666666">=</span>states<span style="color: #666666">.</span>net_states,
+                training<span style="color: #666666">=</span><span style="color: #008000; font-weight: bold">True</span>,
+                rng<span style="color: #666666">=</span>states<span style="color: #666666">.</span>rng,
+            )
+
+        <span style="color: #408080; font-style: italic"># model</span>
+        logits, net_params, net_states <span style="color: #666666">=</span> model_fn(x)
+
+        <span style="color: #408080; font-style: italic"># categorical crossentropy loss</span>
+        labels <span style="color: #666666">=</span> jax<span style="color: #666666">.</span>nn<span style="color: #666666">.</span>one_hot(y_true, <span style="color: #666666">10</span>)
+        loss <span style="color: #666666">=</span> jnp<span style="color: #666666">.</span>mean(<span style="color: #666666">-</span>jnp<span style="color: #666666">.</span>sum(labels <span style="color: #666666">*</span> jax<span style="color: #666666">.</span>nn<span style="color: #666666">.</span>log_softmax(logits), axis<span style="color: #666666">=-1</span>))
+        accuracy<span style="color: #666666">=</span>jnp<span style="color: #666666">.</span>mean(jnp<span style="color: #666666">.</span>argmax(logits, axis<span style="color: #666666">=-1</span>) <span style="color: #666666">==</span> y_true)
+
+        <span style="color: #408080; font-style: italic"># metrics</span>
+        logs <span style="color: #666666">=</span> <span style="color: #008000">dict</span>(accuracy<span style="color: #666666">=</span>accuracy, loss<span style="color: #666666">=</span>loss)
+
+        <span style="color: #408080; font-style: italic"># update states</span>
+        states <span style="color: #666666">=</span> states<span style="color: #666666">.</span>update(net_params<span style="color: #666666">=</span>net_params, net_states<span style="color: #666666">=</span>net_states)
+
+        <span style="color: #008000; font-weight: bold">return</span> loss, logs, states
+</code></pre></div>
+
+<p>Now the <code>api_module</code> handles all the states and computation for you, you only need to update you own <code>states</code> accordingly. To use it you juse instantiate as usual but provide a <code>module</code> argument:</p>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">flax</span> <span style="color: #008000; font-weight: bold">import</span> linen
+
+model <span style="color: #666666">=</span> LinearClassifier(
+<span style="background-color: #ffffcc">    module<span style="color: #666666">=</span>linen<span style="color: #666666">.</span>Dense(<span style="color: #666666">10</span>),
+</span>    optimizer<span style="color: #666666">=</span>optax<span style="color: #666666">.</span>adam(<span style="color: #666666">1e-3</span>)
+)
+
+model<span style="color: #666666">.</span>fit(
+    x<span style="color: #666666">=</span>X_train,
+    y<span style="color: #666666">=</span>y_train,
+    epochs<span style="color: #666666">=100</span>,
+    batch_size<span style="color: #666666">=64</span>,
+)
+</code></pre></div>
+
+<p>Here we are using Flax but since your code is generalized you could have used Haiku, Elegy, or any Module system we support in the future.</p>
+<h3 id="implementation-details">Implementation Details</h3>
+<p>Lets review some of the details in the example so you can get a better sense of how on you own. We will just mention some of the Elegy-specific things and leave the modeling details out.</p>
+<p>The first thing to note is that the <code>states</code> argument of type <code>elegy.States</code> is an immutable <code>Mapping</code> to which carries all the states you need including the parameters of the network, optimizer states, rng states, etc.</p>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">LinearClassifier</span>(elegy<span style="color: #666666">.</span>Model):
+<span style="background-color: #ffffcc">    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">test_step</span>(<span style="color: #008000">self</span>, x,  y_true,  states, initializing) <span style="color: #666666">-&gt;</span> elegy<span style="color: #666666">.</span>TestStep:  
+</span>        x <span style="color: #666666">=</span> jnp<span style="color: #666666">.</span>reshape(x, (x<span style="color: #666666">.</span>shape[<span style="color: #666666">0</span>], <span style="color: #666666">-1</span>)) <span style="color: #666666">/</span> <span style="color: #666666">255</span>
+
+        <span style="color: #408080; font-style: italic"># initialize or use existing parameters</span>
+        <span style="color: #008000; font-weight: bold">if</span> initializing:
+            w <span style="color: #666666">=</span> jax<span style="color: #666666">.</span>random<span style="color: #666666">.</span>uniform(
+                jax<span style="color: #666666">.</span>random<span style="color: #666666">.</span>PRNGKey(<span style="color: #666666">42</span>), shape<span style="color: #666666">=</span>[np<span style="color: #666666">.</span>prod(x<span style="color: #666666">.</span>shape[<span style="color: #666666">1</span>:]), <span style="color: #666666">10</span>]
+            )
+            b <span style="color: #666666">=</span> jax<span style="color: #666666">.</span>random<span style="color: #666666">.</span>uniform(jax<span style="color: #666666">.</span>random<span style="color: #666666">.</span>PRNGKey(<span style="color: #666666">69</span>), shape<span style="color: #666666">=</span>[<span style="color: #666666">1</span>])
+</code></pre></div>
+
+<p>The <code>initializing</code> argument tells you whether you to should initialize your parameters or rather fetch them from <code>states</code>:</p>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>x <span style="color: #666666">=</span> jnp<span style="color: #666666">.</span>reshape(x, (x<span style="color: #666666">.</span>shape[<span style="color: #666666">0</span>], <span style="color: #666666">-1</span>)) <span style="color: #666666">/</span> <span style="color: #666666">255</span>
+
+<span style="color: #408080; font-style: italic"># initialize or use existing parameters</span>
+<span style="background-color: #ffffcc"><span style="color: #008000; font-weight: bold">if</span> initializing:
+</span>    w <span style="color: #666666">=</span> jax<span style="color: #666666">.</span>random<span style="color: #666666">.</span>uniform(
+        jax<span style="color: #666666">.</span>random<span style="color: #666666">.</span>PRNGKey(<span style="color: #666666">42</span>), shape<span style="color: #666666">=</span>[np<span style="color: #666666">.</span>prod(x<span style="color: #666666">.</span>shape[<span style="color: #666666">1</span>:]), <span style="color: #666666">10</span>]
+    )
+    b <span style="color: #666666">=</span> jax<span style="color: #666666">.</span>random<span style="color: #666666">.</span>uniform(jax<span style="color: #666666">.</span>random<span style="color: #666666">.</span>PRNGKey(<span style="color: #666666">69</span>), shape<span style="color: #666666">=</span>[<span style="color: #666666">1</span>])
+<span style="color: #008000; font-weight: bold">else</span>:
+    w, b <span style="color: #666666">=</span> states<span style="color: #666666">.</span>net_params
+
+<span style="color: #408080; font-style: italic"># model</span>
+logits <span style="color: #666666">=</span> jnp<span style="color: #666666">.</span>dot(x, w) <span style="color: #666666">+</span> b
+</code></pre></div>
+
+<p>If you are using a Module framework (Flax, Haiku, or <code>elegy.Module</code>) this usually tells you whether to should call <code>init</code> vs <code>apply</code>. The <code>net_params</code> is one of the names used by the default implementation, while its not necessary to use the same names its mandatory if you want to reuse certain default methods that expect specific names. </p>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">if</span> initializing:
+    w <span style="color: #666666">=</span> jax<span style="color: #666666">.</span>random<span style="color: #666666">.</span>uniform(
+        jax<span style="color: #666666">.</span>random<span style="color: #666666">.</span>PRNGKey(<span style="color: #666666">42</span>), shape<span style="color: #666666">=</span>[np<span style="color: #666666">.</span>prod(x<span style="color: #666666">.</span>shape[<span style="color: #666666">1</span>:]), <span style="color: #666666">10</span>]
+    )
+    b <span style="color: #666666">=</span> jax<span style="color: #666666">.</span>random<span style="color: #666666">.</span>uniform(jax<span style="color: #666666">.</span>random<span style="color: #666666">.</span>PRNGKey(<span style="color: #666666">69</span>), shape<span style="color: #666666">=</span>[<span style="color: #666666">1</span>])
+<span style="color: #008000; font-weight: bold">else</span>:
+<span style="background-color: #ffffcc">    w, b <span style="color: #666666">=</span> states<span style="color: #666666">.</span>net_params
+</span>
+<span style="color: #408080; font-style: italic"># model</span>
+logits <span style="color: #666666">=</span> jnp<span style="color: #666666">.</span>dot(x, w) <span style="color: #666666">+</span> b
+
+<span style="color: #408080; font-style: italic"># categorical crossentropy loss</span>
+labels <span style="color: #666666">=</span> jax<span style="color: #666666">.</span>nn<span style="color: #666666">.</span>one_hot(y_true, <span style="color: #666666">10</span>)
+loss <span style="color: #666666">=</span> jnp<span style="color: #666666">.</span>mean(<span style="color: #666666">-</span>jnp<span style="color: #666666">.</span>sum(labels <span style="color: #666666">*</span> jax<span style="color: #666666">.</span>nn<span style="color: #666666">.</span>log_softmax(logits), axis<span style="color: #666666">=-1</span>))
+accuracy<span style="color: #666666">=</span>jnp<span style="color: #666666">.</span>mean(jnp<span style="color: #666666">.</span>argmax(logits, axis<span style="color: #666666">=-1</span>) <span style="color: #666666">==</span> y_true)
+
+<span style="color: #408080; font-style: italic"># metrics</span>
+logs <span style="color: #666666">=</span> <span style="color: #008000">dict</span>(accuracy<span style="color: #666666">=</span>accuracy, loss<span style="color: #666666">=</span>loss)
+
+<span style="color: #408080; font-style: italic"># update states</span>
+<span style="background-color: #ffffcc">states <span style="color: #666666">=</span> states<span style="color: #666666">.</span>update(net_params<span style="color: #666666">=</span>(w, b))
+</span></code></pre></div>
+
+<p>Check the <a href="../states/">States</a> guide for more information. Finally notice that <code>test_step</code> returns a tuple with 3 specific outputs:</p>
+<div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #408080; font-style: italic"># categorical crossentropy loss</span>
+labels <span style="color: #666666">=</span> jax<span style="color: #666666">.</span>nn<span style="color: #666666">.</span>one_hot(y_true, <span style="color: #666666">10</span>)
+loss <span style="color: #666666">=</span> jnp<span style="color: #666666">.</span>mean(<span style="color: #666666">-</span>jnp<span style="color: #666666">.</span>sum(labels <span style="color: #666666">*</span> jax<span style="color: #666666">.</span>nn<span style="color: #666666">.</span>log_softmax(logits), axis<span style="color: #666666">=-1</span>))
+accuracy<span style="color: #666666">=</span>jnp<span style="color: #666666">.</span>mean(jnp<span style="color: #666666">.</span>argmax(logits, axis<span style="color: #666666">=-1</span>) <span style="color: #666666">==</span> y_true)
+
+<span style="color: #408080; font-style: italic"># metrics</span>
+logs <span style="color: #666666">=</span> <span style="color: #008000">dict</span>(accuracy<span style="color: #666666">=</span>accuracy, loss<span style="color: #666666">=</span>loss)
+
+<span style="color: #408080; font-style: italic"># update states</span>
+states <span style="color: #666666">=</span> states<span style="color: #666666">.</span>update(net_params<span style="color: #666666">=</span>(w, b))
+
+<span style="background-color: #ffffcc"><span style="color: #008000; font-weight: bold">return</span> loss, logs, states
+</span></code></pre></div>
+
+<p>All methods returns <code>states</code> as last element but each methods has a different set of outputs, you should check the docs for each method to know what is expected.</p>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
+        
+          <a href="../../getting-started/low-level-api/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+            </div>
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                Low Level API
+              </div>
+            </div>
+          </a>
+        
+        
+          <a href="../states/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                States
+              </div>
+            </div>
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+      </div>
+      
+  <div class="md-footer-social">
+    
+      
+      
+        
+        
+      
+      <a href="https://github.com/cgarciae" target="_blank" rel="noopener" title="github.com" class="md-footer-social__link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      </a>
+    
+      
+      
+        
+        
+      
+      <a href="https://github.com/charlielito" target="_blank" rel="noopener" title="github.com" class="md-footer-social__link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      </a>
+    
+      
+      
+        
+        
+      
+      <a href="https://twitter.com/cgarciae88" target="_blank" rel="noopener" title="twitter.com" class="md-footer-social__link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"/></svg>
+      </a>
+    
+      
+      
+        
+        
+      
+      <a href="https://www.linkedin.com/in/cgarciae" target="_blank" rel="noopener" title="www.linkedin.com" class="md-footer-social__link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"/></svg>
+      </a>
+    
+      
+      
+        
+        
+      
+      <a href="https://www.linkedin.com/in/calvarez92" target="_blank" rel="noopener" title="www.linkedin.com" class="md-footer-social__link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"/></svg>
+      </a>
+    
+  </div>
+
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../../assets/javascripts/vendor.53cc9318.min.js"></script>
+      <script src="../../assets/javascripts/bundle.e9c9f54f.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
+      
+      <script>
+        app = initialize({
+          base: "../..",
+          features: [],
+          search: Object.assign({
+            worker: "../../assets/javascripts/worker/search.9c0e82ba.min.js"
+          }, typeof search !== "undefined" && search)
+        })
+      </script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+      
+    
+  </body>
+</html>
