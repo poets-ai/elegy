@@ -1,7 +1,11 @@
+import unittest
+
 import elegy
 import jax.numpy as jnp
 import numpy as np
-import unittest
+import torch
+from elegy.types import Mode
+from torch.utils.data import DataLoader, TensorDataset
 
 
 class TestModelBase(unittest.TestCase):
@@ -77,3 +81,68 @@ class TestModelBase(unittest.TestCase):
         history = model.fit(x, batch_size=50, shuffle=False)
         assert np.allclose(history.history["loss"], np.sum(x[50:]))
         assert model.states.optimizer_states == 3
+
+    def test_init(self):
+        class Model(elegy.model.model_base.ModelBase):
+            def init_step(self, x, y_true, states: elegy.States):
+                return states.update(a=x.shape, b=y_true.shape)
+
+        model = Model()
+
+        x = np.random.uniform(size=(10, 1))
+        y = np.random.uniform(size=(10, 3))
+
+        model.init(x=x, y=y, batch_size=2)
+
+        assert model.states.a == (2, 1)
+        assert model.states.b == (2, 3)
+        assert model.init_stage == elegy.Mode.train
+
+    def test_init_dataloader(self):
+        class Model(elegy.model.model_base.ModelBase):
+            def init_step(self, x, y_true, states: elegy.States):
+                return states.update(a=x.shape, b=y_true.shape)
+
+            def pred_step(self, x, states):
+                states = states.update(c=3)
+                return x + 1, states
+
+        model = Model()
+
+        x = np.random.uniform(size=(10, 1))
+        y = np.random.uniform(size=(10, 3))
+
+        dataset = TensorDataset(torch.from_numpy(x), torch.from_numpy(y))
+        dataloader = DataLoader(dataset, batch_size=2)
+
+        model.init(x=dataloader, batch_size=2)
+
+        assert model.states.a == (2, 1)
+        assert model.states.b == (2, 3)
+        assert model.init_stage == elegy.Mode.train
+
+        y_pred = model.predict(x=dataloader)
+        assert jnp.allclose(y_pred, x + 1)
+        y_pred = model.predict(x=dataloader)
+        assert jnp.allclose(y_pred, x + 1)
+        y_pred
+
+    def test_init_progressive(self):
+        class Model(elegy.model.model_base.ModelBase):
+            def init_step(self, x, mode, states: elegy.States):
+                return mode, states.update(a=x.shape)
+
+            def pred_step(self, x, states):
+                states = states.update(c=3)
+                return x + 1, states
+
+        model = Model()
+
+        x = np.random.uniform(size=(10, 1))
+
+        y_pred = model.predict(x=x, batch_size=2)
+
+        assert jnp.allclose(y_pred, x + 1)
+        assert model.states.a == (2, 1)
+        assert model.states.c == 3
+        assert model.init_stage == elegy.Mode.pred
