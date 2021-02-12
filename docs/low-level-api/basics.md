@@ -37,7 +37,7 @@ class LinearClassifier(elegy.Model):
 
         return loss, logs, states
 ```
-There is a lot happening here we will explain later but as you see here we perform everything from parameter initialization, modeling, calculating the main loss, and logging some metrics. To actually use it you just create an instance and use the Model API as you normally would:
+There is a lot happening here we will explain later but as you see we performing everything from parameter initialization, modeling, calculating the main loss, and logging some metrics. To actually use it just create an instance and call the Model API as you normally would:
 
 ```python
 model = LinearClassifier(
@@ -52,9 +52,8 @@ model.fit(
 )
 ```
 
-
 ### Methods
-Most high-level API methods have an associated low-level API method it calls internally that you can override, here is the list of methods:
+Most high-level API methods have an associated low-level API method they call internally that you can override, here is the list of methods:
 
 | High Level | Low Level      |
 | :--------- | :------------- |
@@ -65,10 +64,10 @@ Most high-level API methods have an associated low-level API method it calls int
 | `summary`  | `summary_step` |
 | `init`     | `init_step`    |
 
-So for example if you wanted to customize what happens during `fit` you can customize the `train_step` method. Given this you might be wondering 
+For example if you wanted to customize what happens during `fit` you could override the `train_step` method. However you might be wondering:
 
 !!! question
-    Why did we override `test_step` in the example if we called `fit`?
+    Why did we override `test_step` in the example if we wanted to call `fit`?
 
 The reason is that the default implementation has the following call structure:
 
@@ -82,12 +81,12 @@ So what happened was this:
 * `train_step` called `grad_step` to get the gradients needed for the optimizer
 * `grad_step` called `test_step` to get the loss needed to compute the gradients
 
-So in the end our code was called and we got the `fit` for free 🥳. However you could have also notice the following:
+So in the end we directly supported `evaludate` but we also got `fit` for free 🥳. You could have also notice the following:
 
 !!! warning
     We didn't implement `pred_step`.
 
-This is not bad per-se but we also didn't provide a `module` to the `LinearClassifier`'s constructor (because we bypassed this) so if you call `predict` or `summary` you will infact get an error telling you this. This means that you should be aware of what methods you are actually supporting using the low-level API.
+This is not bad per-se but we also didn't provide a `module` to the `LinearClassifier`'s constructor so if you called `predict` or `summary` you will infact get an error telling you this. This means that you should be aware of what methods you are actually supporting using the low-level API.
 
 ### Implementation Details
 Lets review some of the details in the example so you can get a better sense of how on you own. We will just mention some of the Elegy-specific things and leave the modeling details out.
