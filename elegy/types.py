@@ -231,18 +231,31 @@ class States(tp.Mapping):
         raise AttributeError("can't set attribute")
 
     def update(self, **kwargs) -> "States":
+        """Returns a new States object, updating all attributes from kwargs."""
         data = self.__dict__.copy()
         data.update(kwargs)
         return States(data)
 
     def maybe_update(self, **kwargs) -> "States":
-
+        """Returns a new States object, updating attributes that are not yet present."""
         kwargs = {
             key: value
             for key, value in kwargs.items()
             if key not in self.__dict__ or self.__dict__[key] is None
         }
 
+        return self.update(**kwargs)
+
+    def update_known(*self, **kwargs) -> "States":
+        """Returns a new States object, updating attributes that are already present.
+        e.g: states.update_known(**locals())"""
+        # NOTE: first argument is *self to allow the **locals() syntax inside bound methods
+        # which have their own self inside locals()
+        # otherwise will get a "got multiple values for argument 'self'" error"
+        assert len(self) == 1, "States.update_known() called with positional arguments"
+        self = self[0]
+
+        kwargs = {key: value for key, value in kwargs.items() if key in self.__dict__}
         return self.update(**kwargs)
 
     def copy(self) -> "States":
