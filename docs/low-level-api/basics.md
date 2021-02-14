@@ -104,7 +104,7 @@ The raw attributes are the values exactly as they are passed by the user to the 
 
 ```python hl_lines="7 9"
 class LinearClassifier(elegy.Model):
-    def test_step(self, x,  y_true,  states, initializing) -> elegy.TestStep:  
+    def test_step(self, x,  y_true,  states, initializing, training) -> elegy.TestStep:  
         x = jnp.reshape(x, (x.shape[0], -1)) / 255
 
         # initialize or use existing parameters
@@ -114,7 +114,7 @@ class LinearClassifier(elegy.Model):
             model_fn = self.api_module.apply(
                 params=states.net_params,
                 states=states.net_states,
-                training=True,
+                training=training,
                 rng=states.rng,
             )
 

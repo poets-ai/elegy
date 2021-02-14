@@ -1,5 +1,5 @@
 # pred_step
-This method is tasked with taking the input data and calculatin the predictions. Implementing this 
+This method is tasked with taking the input data and calculatin the predictions. Implementing this lets you 
 
 #### Example
 
@@ -62,6 +62,41 @@ Thanks to Dependency Injection you can request only the arguments you need by na
 | `test_step`        | unless overwritten |
 | `summary_step`     | unless overwritten |
 
+### Supporting the Default Implementation
 
+If want to optionally support some of the behavior from the default implementation you can do the following:
 
-### Default Implementation
+* Use the `api_module` attribute to support the `module` passed by the user, `api_module` is a `GeneralizedModule` which contains an `init` and `apply` methods:
+
+```python
+class MyModel(elegy.Model):
+    def pred_step(self, x,  states, initializing, training) -> elegy.TestStep:  
+        x = jnp.reshape(x, (x.shape[0], -1)) / 255
+
+        if initializing:
+            model_fn = self.api_module.init(states.rng)
+        else:
+            model_fn = self.api_module.apply(
+                params=states.net_params,
+                states=states.net_states,
+                training=training,
+                rng=states.rng,
+            )
+
+        # model
+        logits, net_params, net_states = model_fn(x)
+
+        # update states
+        states = states.update(net_params=(w, b))
+
+        return logits, states
+
+model = LinearClassifier(
+    module=linen.Dense(10),
+    optimizer=optax.adam(1e-3)
+)
+
+model.init(x=X_train, y=y_train)
+
+preds = model.predict(x=X_train, batch_size=32)
+```
