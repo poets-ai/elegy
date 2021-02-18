@@ -160,6 +160,8 @@ def main(
         run_eagerly=eager,
     )
 
+    model.init(X_train)
+
     model.summary(X_train[:64])
 
     # Fit with datasets in memory
@@ -203,7 +205,7 @@ def main(
     model_decoder = elegy.Model(vae.decoder)
 
     z_samples = np.random.normal(size=(12, LATENT_SIZE))
-    samples = model_decoder.predict(z_samples)
+    samples = model_decoder.predict(z_samples, initialize=True)
     samples = jax.nn.sigmoid(samples)
 
     # plot and save results

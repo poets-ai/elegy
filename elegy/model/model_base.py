@@ -133,19 +133,8 @@ class ModelBase(ModelCore):
 
     def init(
         self,
-        x: tp.Union[
-            np.ndarray,
-            tp.Mapping[str, np.ndarray],
-            tp.Tuple[np.ndarray],
-            tp.Iterable,
-            None,
-        ] = None,
-        y: tp.Union[
-            np.ndarray,
-            tp.Mapping[str, np.ndarray],
-            tp.Tuple[np.ndarray],
-            None,
-        ] = None,
+        x: tp.Optional[tp.Any] = None,
+        y: tp.Optional[tp.Any] = None,
         batch_size: tp.Optional[int] = None,
         class_weight: tp.Optional[tp.Mapping[str, float]] = None,
         sample_weight: tp.Optional[np.ndarray] = None,
@@ -182,7 +171,7 @@ class ModelBase(ModelCore):
         depth: int = 2,
         tablefmt: str = "fancy_grid",
         return_repr: bool = False,
-        init: bool = False,
+        initialize: bool = False,
         **tablulate_kwargs,
     ) -> tp.Optional[str]:
         """
@@ -201,7 +190,7 @@ class ModelBase(ModelCore):
                 for more options.
         """
         if not self.initialized:
-            if init:
+            if initialize:
                 self.init(x=x)
             else:
                 raise types.ModelNotInitialized(
@@ -369,19 +358,8 @@ class ModelBase(ModelCore):
 
     def fit(
         self,
-        x: tp.Union[
-            np.ndarray,
-            tp.Mapping[str, np.ndarray],
-            tp.Tuple[np.ndarray],
-            tp.Iterable,
-            None,
-        ] = None,
-        y: tp.Union[
-            np.ndarray,
-            tp.Mapping[str, np.ndarray],
-            tp.Tuple[np.ndarray],
-            None,
-        ] = None,
+        x: tp.Optional[tp.Any] = None,
+        y: tp.Optional[tp.Any] = None,
         batch_size: tp.Optional[int] = None,
         epochs: int = 1,
         verbose: int = 1,
@@ -796,7 +774,7 @@ class ModelBase(ModelCore):
         steps: tp.Optional[int] = None,
         callbacks: tp.Union[tp.List[Callback], CallbackList, None] = None,
         drop_remaining: bool = False,
-        init: bool = False,
+        initialize: bool = False,
     ) -> tp.Any:
         """Generates output predictions for the input samples.
         Computation is done in batches.
@@ -842,7 +820,7 @@ class ModelBase(ModelCore):
         """
 
         if not self.initialized:
-            if init:
+            if initialize:
                 self.init(x=x, batch_size=batch_size)
             else:
                 raise types.ModelNotInitialized(

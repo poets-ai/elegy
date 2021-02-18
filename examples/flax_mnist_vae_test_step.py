@@ -264,6 +264,7 @@ def main(
             net_params=model.states.net_params[1],
             net_states=model.states.net_states[1],
         ),
+        initialized=True,
     )
 
     z_samples = np.random.normal(size=(12, LATENT_SIZE))

@@ -21,5 +21,5 @@ class LinearTest(TestCase):
 
         x = np.ones([3, 5])
 
-        y_pred = model.predict(x, init=True)
+        y_pred = model.predict(x, initialize=True)
         logs = model.evaluate(x)

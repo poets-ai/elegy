@@ -74,6 +74,8 @@ def main(
         run_eagerly=eager,
     )
 
+    model.init(X_train)
+
     model.summary(X_train[:64])
 
     # Notice we are not passing `y`
