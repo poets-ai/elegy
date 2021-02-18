@@ -20,21 +20,6 @@ EPSILON = 1e-7
 F = tp.TypeVar("F", bound=tp.Callable)
 
 
-@jax.tree_util.register_pytree_node_class
-class Mode(int, Enum):
-    none = 0
-    pred = 1
-    test = 2
-    train = 3
-
-    def tree_flatten(self):
-        return tuple(), self.value
-
-    @classmethod
-    def tree_unflatten(cls, _aux_data, children):
-        return cls(_aux_data)
-
-
 class TrivialPytree:
     def tree_flatten(self):
         return tuple(vars(self).values()), None
@@ -356,6 +341,7 @@ class ModuleOrderError(Exception):
 
 class SubmoduleNotRegistered(Exception):
     pass
+
 
 class ModelNotInitialized(Exception):
     pass

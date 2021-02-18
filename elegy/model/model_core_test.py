@@ -63,6 +63,10 @@ class ModelCoreTest(unittest.TestCase):
 
     def test_pred_step(self):
         class Model(elegy.model.model_core.ModelCore):
+            def init_step(self, x, states):
+                _, states = self.pred_step(x, states, True)
+                return states
+
             def pred_step(self, x, states, initializing):
                 if initializing:
                     states = elegy.States(net_states=0)
@@ -74,15 +78,10 @@ class ModelCoreTest(unittest.TestCase):
                     states=states,
                 )
 
-            def test_step(self):
-                ...
-
-            def train_step(self):
-                ...
-
         model = Model()
         assert not hasattr(model.states, "net_states")
 
+        model.init_on_batch(x=(np.array(1.0)))
         preds = model.predict_on_batch(x=(np.array(1.0)))
         assert preds == 1
         assert model.states.net_states == 1
@@ -96,6 +95,10 @@ class ModelCoreTest(unittest.TestCase):
 
     def test_test_step(self):
         class Model(elegy.model.model_core.ModelCore):
+            def init_step(self, states):
+                _, _, states = self.test_step(states, True)
+                return states
+
             def test_step(self, states, initializing):
                 return elegy.TestStep(
                     loss=0.1,
@@ -124,6 +127,10 @@ class ModelCoreTest(unittest.TestCase):
 
     def test_train_step(self):
         class Model(elegy.model.model_core.ModelCore):
+            def init_step(self, states):
+                _, states = self.train_step(states, True)
+                return states
+
             def train_step(self, states, initializing):
                 return elegy.TrainStep(
                     logs=dict(loss=2.0),

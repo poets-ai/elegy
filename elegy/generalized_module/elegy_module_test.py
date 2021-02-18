@@ -75,6 +75,8 @@ class ElegyModuleTest(TestCase):
 
         model = elegy.Model(ModuleA())
 
+        model.init(x=jnp.ones([10, 2]))
+
         summary_text = model.summary(x=jnp.ones([10, 2]), depth=1, return_repr=True)
         assert summary_text is not None
 

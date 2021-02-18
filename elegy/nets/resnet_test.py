@@ -18,6 +18,8 @@ class ResNetTest(TestCase):
         assert isinstance(model.module, elegy.Module)
 
         x = np.random.random((2, 224, 224, 3)).astype(np.float32)
+
+        model.init(x)
         y = model.predict(x)
 
         # update_modules results in a call to `set_default_parameters` for elegy Modules
@@ -34,7 +36,7 @@ class ResNetTest(TestCase):
             )
 
             new_r18 = elegy.nets.resnet.ResNet18(weights=pklpath)
-            y2 = elegy.Model(new_r18, run_eagerly=True).predict(x)
+            y2 = elegy.Model(new_r18, run_eagerly=True).predict(x, init=True)
 
         assert np.allclose(y, y2, rtol=0.001)
 
@@ -46,7 +48,7 @@ class ResNetTest(TestCase):
 
         r18 = elegy.nets.resnet.ResNet18(weights="imagenet")
         with jax.disable_jit():
-            assert elegy.Model(r18).predict(im[np.newaxis]).argmax() == 245
+            assert elegy.Model(r18).predict(im[np.newaxis], init=True).argmax() == 245
 
     def test_autodownload_pretrained_r50(self):
         fname, _ = urllib.request.urlretrieve(
@@ -56,4 +58,4 @@ class ResNetTest(TestCase):
 
         r50 = elegy.nets.resnet.ResNet50(weights="imagenet")
         with jax.disable_jit():
-            assert elegy.Model(r50).predict(im[np.newaxis]).argmax() == 245
+            assert elegy.Model(r50).predict(im[np.newaxis], init=True).argmax() == 245

@@ -4,13 +4,16 @@ import elegy
 import jax.numpy as jnp
 import numpy as np
 import torch
-from elegy.types import Mode
 from torch.utils.data import DataLoader, TensorDataset
 
 
 class TestModelBase(unittest.TestCase):
     def test_predict(self):
         class Model(elegy.model.model_base.ModelBase):
+            def init_step(self, x, states):
+                _, states = self.pred_step(x, True, states)
+                return states
+
             def pred_step(self, x, initializing, states):
                 if initializing:
                     states = elegy.States(net_states=0)
@@ -22,6 +25,7 @@ class TestModelBase(unittest.TestCase):
         model = Model()
 
         x = np.random.uniform(size=(100, 1))
+        model.init(x, batch_size=50)
         y = model.predict(x, batch_size=50)
 
         assert np.allclose(y, x + 1.0)
@@ -30,6 +34,10 @@ class TestModelBase(unittest.TestCase):
 
     def test_evaluate(self):
         class Model(elegy.model.model_base.ModelBase):
+            def init_step(self, x, states):
+                _, _, states = self.test_step(x, True, states)
+                return states
+
             def test_step(self, x, initializing, states):
                 if initializing:
                     states = elegy.States(metrics_states=0)
@@ -59,6 +67,10 @@ class TestModelBase(unittest.TestCase):
 
     def test_fit(self):
         class Model(elegy.model.model_base.ModelBase):
+            def init_step(self, x, states):
+                _, states = self.train_step(x, states, True)
+                return states
+
             def train_step(self, x, states, initializing):
                 if initializing:
                     states = elegy.States(optimizer_states=0)
@@ -96,7 +108,7 @@ class TestModelBase(unittest.TestCase):
 
         assert model.states.a == (2, 1)
         assert model.states.b == (2, 3)
-        assert model.init_stage == elegy.Mode.train
+        assert model.initialized
 
     def test_init_dataloader(self):
         class Model(elegy.model.model_base.ModelBase):
@@ -119,7 +131,7 @@ class TestModelBase(unittest.TestCase):
 
         assert model.states.a == (2, 1)
         assert model.states.b == (2, 3)
-        assert model.init_stage == elegy.Mode.train
+        assert model.initialized
 
         y_pred = model.predict(x=dataloader)
         assert jnp.allclose(y_pred, x + 1)
@@ -127,10 +139,10 @@ class TestModelBase(unittest.TestCase):
         assert jnp.allclose(y_pred, x + 1)
         y_pred
 
-    def test_init_progressive(self):
+    def test_init_predict(self):
         class Model(elegy.model.model_base.ModelBase):
-            def init_step(self, x, mode, states: elegy.States):
-                return mode, states.update(a=x.shape)
+            def init_step(self, x, states: elegy.States):
+                return states.update(a=x.shape)
 
             def pred_step(self, x, states):
                 states = states.update(c=3)
@@ -140,9 +152,10 @@ class TestModelBase(unittest.TestCase):
 
         x = np.random.uniform(size=(10, 1))
 
+        model.init(x=x, batch_size=2)
         y_pred = model.predict(x=x, batch_size=2)
 
         assert jnp.allclose(y_pred, x + 1)
         assert model.states.a == (2, 1)
         assert model.states.c == 3
-        assert model.init_stage == elegy.Mode.pred
+        assert model.initialized

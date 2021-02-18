@@ -481,7 +481,9 @@ class Model(ModelBase):
                 training=training,
             )
 
-        if self.optimizer is None:
+        if initializing and self.optimizer is None:
+            return model_core.TrainStep(logs, states)
+        elif self.optimizer is None:
             raise types.MissingOptimizer(
                 "Trying to run `train_step` without an optimizer, "
                 "please provide an optimizer to the Model(...) constructor or "

@@ -21,5 +21,5 @@ class BatchNormalizationTest(TestCase):
 
         x = jnp.ones([3, 5])
 
-        y_pred = model.predict(x)
+        y_pred = model.predict(x, init=True)
         logs = model.evaluate(x)
