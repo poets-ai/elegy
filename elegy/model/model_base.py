@@ -147,7 +147,7 @@ class ModelBase(ModelCore):
         sample_weight: tp.Optional[np.ndarray] = None,
     ) -> None:
 
-        if self.init_stage == types.Mode.train:
+        if self.initialized:
             return
 
         if x is None:
@@ -644,6 +644,11 @@ class ModelBase(ModelCore):
                 or in case a stateful model receives a number of samples
                 that is not a multiple of the batch size.
         """
+
+        if not self.initialized:
+            raise types.ModelNotInitialized(
+                f"Model not initialized, please execute `init` or `init_on_batch` before running this method."
+            )
 
         outputs = None
 

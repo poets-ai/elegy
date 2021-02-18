@@ -49,27 +49,23 @@ class ModelCore:
     initial_states: types.States
     history: tp.Dict[str, tp.Any]
     run_eagerly: bool = False
-    init_stage: types.Mode = types.Mode.none
+    initialized: bool = False
 
     def __init__(
         self,
         states: tp.Optional[types.States] = None,
         run_eagerly: bool = False,
-        init_stage: types.Mode = types.Mode.none,
+        initialized: bool = False,
     ):
-
-        base_states = self.states_step()
 
         if states is None:
             states = types.States()
-
-        states = states.maybe_update(**base_states)
 
         self.initial_states = states
         self.states = states.copy()  # explicity do this to copy RNGSeq
         self.run_eagerly = run_eagerly
         self.history = {}
-        self.init_stage = init_stage
+        self.initialized = initialized
         self.jitted_members: tp.Set[str] = set()
 
         self.jit_step()
@@ -134,59 +130,23 @@ class ModelCore:
 
     def init_step(
         self,
-        mode: types.Mode,
         x: tp.Any,
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         states: types.States,
-    ) -> tp.Union[tp.Tuple[types.Mode, types.States], types.States]:
-        training = True
-        initializing = True
-
-        if mode == types.Mode.pred:
-            _, states = utils.inject_dependencies(self.pred_step)(
-                x=x,
-                states=states,
-                initializing=initializing,
-                training=training,
-            )
-        elif mode == types.Mode.test:
-            _, _, states = utils.inject_dependencies(self.test_step)(
-                x=x,
-                y_true=y_true,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                states=states,
-                initializing=initializing,
-                training=training,
-            )
-        elif mode == types.Mode.train:
-            _, states = utils.inject_dependencies(self.train_step)(
-                x=x,
-                y_true=y_true,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                states=states,
-                initializing=initializing,
-                training=training,
-            )
-        else:
-            raise ValueError(f"Invalid mode '{mode}'")
-
-        return mode, states
+    ) -> types.States:
+        raise NotImplementedError()
 
     def call_init_step(
         self,
-        mode: types.Mode,
         x: tp.Any,
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         states: types.States,
-    ) -> tp.Union[tp.Tuple[types.Mode, types.States], types.States]:
+    ) -> types.States:
         return utils.inject_dependencies(self.init_step)(
-            mode=mode,
             x=x,
             y_true=y_true,
             sample_weight=sample_weight,
@@ -327,8 +287,24 @@ class ModelCore:
         sample_weight: tp.Optional[np.ndarray] = None,
         class_weight: tp.Optional[tp.Any] = None,
     ):
-        mode = types.Mode.train
-        self.maybe_initialize(mode, x, y_true, sample_weight, class_weight)
+
+        if self.initialized:
+            return
+
+        method = self.call_init_step if self.run_eagerly else self.call_init_step_jit
+        states = self.states.copy() if self.run_eagerly else self.states
+
+        state_updates = method(
+            x,
+            y_true,
+            sample_weight,
+            class_weight,
+            states,
+        )
+
+        self.states = self.states.maybe_update(**state_updates)
+        self.initial_states = self.initial_states.maybe_update(**state_updates)
+        self.initialized = True
 
     def predict_on_batch(self, x: tp.Any) -> tp.Any:
         """
@@ -346,11 +322,12 @@ class ModelCore:
             ValueError: In case of mismatch between given number of inputs and
                 expectations of the model.
         """
-        mode = types.Mode.pred
+        if not self.initialized:
+            raise types.ModelNotInitialized(
+                f"Model not initialized, please execute `init` or `init_on_batch` before running this method."
+            )
         initializing = False
         training = False
-
-        self.maybe_initialize(mode=mode, x=x)
 
         method = self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
         states = self.states.copy() if self.run_eagerly else self.states
@@ -399,8 +376,7 @@ class ModelCore:
         initializing = False
         training = False
 
-        self.maybe_initialize(
-            mode,
+        self.init_on_batch(
             x=x,
             y_true=y,
             sample_weight=sample_weight,
@@ -463,8 +439,7 @@ class ModelCore:
         initializing = False
         training = True
 
-        self.maybe_initialize(
-            mode=mode,
+        self.init_on_batch(
             x=x,
             y_true=y,
             sample_weight=sample_weight,
@@ -509,11 +484,13 @@ class ModelCore:
                 See [python-tabulate](https://github.com/astanin/python-tabulate)
                 for more options.
         """
-        mode = types.Mode.pred
+        if not self.initialized:
+            raise types.ModelNotInitialized(
+                f"Model not initialized, please execute `init` or `init_on_batch` before running this method."
+            )
+
         initializing = False
         training = False
-
-        self.maybe_initialize(mode, x=x)
 
         method = (
             self.call_summary_step if self.run_eagerly else self.call_summary_step_jit
@@ -749,41 +726,3 @@ class ModelCore:
     # ----------------------------------------------------------------
     # other methods
     # ----------------------------------------------------------------
-
-    def maybe_initialize(
-        self,
-        mode: types.Mode,
-        x: tp.Any = (),
-        y_true: tp.Any = None,
-        sample_weight: tp.Optional[np.ndarray] = None,
-        class_weight: tp.Optional[tp.Any] = None,
-    ):
-
-        if mode <= self.init_stage:
-            return
-
-        state_updates: types.States
-
-        method = self.call_init_step if self.run_eagerly else self.call_init_step_jit
-        states = self.states.copy() if self.run_eagerly else self.states
-
-        output = method(
-            mode,
-            x,
-            y_true,
-            sample_weight,
-            class_weight,
-            states,
-        )
-
-        if isinstance(output, tuple):
-            mode, state_updates = output
-        else:
-            mode = types.Mode.train
-            state_updates = output
-
-        if mode > self.init_stage:
-            self.init_stage = mode
-
-        self.states = self.states.maybe_update(**state_updates)
-        self.initial_states = self.initial_states.maybe_update(**state_updates)

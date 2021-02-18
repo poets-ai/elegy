@@ -356,3 +356,6 @@ class ModuleOrderError(Exception):
 
 class SubmoduleNotRegistered(Exception):
     pass
+
+class ModelNotInitialized(Exception):
+    pass

@@ -211,6 +211,31 @@ class Model(ModelBase):
             optimizer_states=None,
         )
 
+    def init_step(
+        self,
+        x: tp.Any,
+        y_true: tp.Any,
+        sample_weight: tp.Optional[np.ndarray],
+        class_weight: tp.Optional[np.ndarray],
+        states: types.States,
+    ) -> types.States:
+
+        states = states.maybe_update(**self.states_step())
+        training = True
+        initializing = True
+
+        _, states = utils.inject_dependencies(self.train_step)(
+            x=x,
+            y_true=y_true,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            states=states,
+            initializing=initializing,
+            training=training,
+        )
+
+        return states
+
     def summary_step(
         self,
         x: tp.Any,
