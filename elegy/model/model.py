@@ -162,6 +162,12 @@ class Model(ModelBase):
 
         super().__init__(**kwargs)
 
+        # maybe add rng if initialized
+        if self.initialized and (
+            not hasattr(self.states, "rng") or self.states.rng is None
+        ):
+            self.states = self.states.update(rng=types.RNGSeq(seed))
+
         self.module = module
         self.loss = loss
         self.metrics = metrics
