@@ -102,9 +102,9 @@ class TransformerEncoder(Module):
 
     Examples::
         >>> # transformer_encoder = elegy.nn.TransformerEncoder(
-                lambda: elegy.nn.TransformerEncoderLayer(head_size=512, num_heads=8),
-                num_layers=6,
-            )
+        ... #   lambda: elegy.nn.TransformerEncoderLayer(head_size=512, num_heads=8),
+        ... #   num_layers=6,
+        ... # )
         >>> # src = torch.rand(10, 32, 512)
         >>> # out = transformer_encoder(src)
     """
