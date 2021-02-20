@@ -195,7 +195,7 @@ class ModelBase(ModelCore):
             else:
                 raise types.ModelNotInitialized(
                     f"Model not initialized, please execute `model.init` or `model.init_on_batch` "
-                    "before running this method, or pass `init=True` to initialize with the available data "
+                    "before running this method, or pass `initialize=True` to initialize with the available data "
                     "(this might not initialize the optimizer)."
                 )
 
@@ -825,7 +825,7 @@ class ModelBase(ModelCore):
             else:
                 raise types.ModelNotInitialized(
                     f"Model not initialized, please execute `model.init` or `model.init_on_batch` "
-                    "before running this method, or pass `init=True` to initialize with the available data "
+                    "before running this method, or pass `initialize=True` to initialize with the available data "
                     "(this might not initialize the optimizer)."
                 )
 
