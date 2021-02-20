@@ -25,7 +25,7 @@ class ModuleSlicingTest(TestCase):
             submodule = basicmodule.slice(start, end, x)
             submodel = elegy.Model(submodule)
             basicmodule.init(rng=elegy.RNGSeq(0), set_defaults=True)(x)
-            #submodel.summary(x)
+            # submodel.summary(x)
             assert submodel.predict(x).shape == (32, 10)
             assert jnp.all(submodel.predict(x) == basicmodule.test_call(x))
 

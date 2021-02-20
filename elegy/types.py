@@ -121,11 +121,11 @@ class Summary(tp.NamedTuple):
     input_values: tp.Union[tp.Tuple[tp.Tuple, tp.Dict], None] = None
 
     def tree_flatten(self):
-        return ((self.value,self.input_values), (self.path, self.module))
+        return ((self.value, self.input_values), (self.path, self.module))
 
     @classmethod
     def tree_unflatten(cls, aux_data, children):
-        (value,input_values) = children
+        (value, input_values) = children
         path, module = aux_data
 
         return cls(path, module, value, input_values)
@@ -168,7 +168,7 @@ class SummaryTableEntry(tp.NamedTuple):
 
     def tree_flatten(self):
         return (
-            (self.output_value,self.input_value),
+            (self.output_value, self.input_value),
             (
                 self.path,
                 self.module_type_name,
@@ -191,7 +191,7 @@ class SummaryTableEntry(tp.NamedTuple):
             non_trainable_params_count,
             non_trainable_params_size,
         ) = aux_data
-        (output_value,input_value) = children
+        (output_value, input_value) = children
 
         return cls(
             path=path,

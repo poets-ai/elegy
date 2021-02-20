@@ -382,7 +382,13 @@ class Module(metaclass=ModuleMeta):
     def call(self, *args, **kwargs):
         ...
 
-    def add_summary(self, name: str, f: tp.Any, value: tp.Any, input_values: tp.Optional[tp.Tuple[tp.Tuple, tp.Dict]] = None):
+    def add_summary(
+        self,
+        name: str,
+        f: tp.Any,
+        value: tp.Any,
+        input_values: tp.Optional[tp.Tuple[tp.Tuple, tp.Dict]] = None,
+    ):
         if hooks.summaries_active():
             path = get_module_path(self) + (name,)
             assert path is not None
@@ -622,7 +628,6 @@ class Module(metaclass=ModuleMeta):
         return module_slicing.slice_module_from_to(
             self, start_module, end_module, sample_input
         )
-
 
     def update_parameter(self, name: str, value: tp.Any) -> None:
         """

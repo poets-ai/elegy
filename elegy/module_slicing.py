@@ -52,7 +52,7 @@ class Edge:
     def __init__(self, summary: elegy.types.SummaryTableEntry):
         self.module = summary.module
         # standardize paths with a leading '/'
-        self.modulename = '/'+summary.path
+        self.modulename = "/" + summary.path
         # convert the output and input arrays in the summary to unique IDs as returned by id()
         self.output_ids = jax.tree_leaves(jax.tree_map(id, summary.output_value))
         self.input_ids = jax.tree_map(id, summary.input_value)
