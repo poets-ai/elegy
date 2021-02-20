@@ -332,22 +332,22 @@ class ModelBase(ModelCore):
                 [
                     [
                         f"Total Parameters:",
-                        f"{total_count:,}",
+                        f"<TOKEN>{total_count:,}",
                         f"{format_size(total_size)}" if total_count > 0 else "",
                     ],
                     [
                         f"Trainable Parameters:",
-                        f"{params_count:,}",
+                        f"<TOKEN>{params_count:,}",
                         f"{format_size(params_size)}" if params_count > 0 else "",
                     ],
                     [
                         f"Non-trainable Parameters:",
-                        f"{states_count:,}",
+                        f"<TOKEN>{states_count:,}",
                         f"{format_size(states_size)}" if states_count > 0 else "",
                     ],
                 ],
                 tablefmt="plain",
-            )
+            ).replace("<TOKEN>", "")
             + "\n"
         )
 
