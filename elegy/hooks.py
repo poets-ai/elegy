@@ -422,6 +422,6 @@ def hooks_aware(transform):
 
 
 # NOTE: these can work but require special handling of the axis dimension
-vmap = hooks_aware(jax.vmap)
-pmap = hooks_aware(jax.pmap)
+# vmap = hooks_aware(jax.vmap)
+# pmap = hooks_aware(jax.pmap)
 # soft_pmap = hooks_aware(jax.soft_pmap)

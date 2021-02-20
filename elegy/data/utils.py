@@ -7,6 +7,7 @@ import functools
 import math
 import typing as tp
 
+import jax
 import jax.numpy as jnp
 import numpy as np
 import six
@@ -41,6 +42,7 @@ def map_structure(
         return None
 
 
+# TODO: this is exactly jax.tree_leaves???
 def flatten(inputs: types.ArrayHolder) -> tp.Iterable[types.np.ndarray]:
 
     if isinstance(inputs, (jnp.ndarray, np.ndarray)):
@@ -186,3 +188,21 @@ def train_validation_split(arrays, validation_split, shuffle=True) -> tp.Tuple:
     )
     val_arrays = map_structure(functools.partial(_split, indices=val_indices), arrays)
     return train_arrays, val_arrays
+
+
+def has_batch_size(
+    batch_elems: tp.Tuple[tp.Any, tp.Any, tp.Any], batch_size: int
+) -> bool:
+
+    sizes: tp.Set[int] = set(x.shape[0] for x in jax.tree_leaves(batch_elems))
+
+    if len(sizes) == 0:
+        return True
+    elif len(sizes) > 1:
+        raise ValueError(
+            f"Data cardinality is ambiguous, got multiple batch dimension: {sizes}"
+        )
+
+    current_batch_size = sizes.pop()
+
+    return current_batch_size == batch_size

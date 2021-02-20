@@ -17,6 +17,9 @@ import toolz
 
 from elegy import types
 
+F = tp.TypeVar("F", bound=tp.Callable)
+T = tp.TypeVar("T")
+
 
 def maybe_expand_dims(a: np.ndarray, b: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
     assert np.prod(a.shape) == np.prod(b.shape)
@@ -47,11 +50,28 @@ def get_signature_f_recursive(f: tp.Callable) -> tp.Callable:
         return f
 
 
+@tp.overload
 def inject_dependencies(
-    f: tp.Callable,
+    f: F,
+    rename: tp.Optional[tp.Dict[str, str]] = None,
+) -> F:
+    ...
+
+
+@tp.overload
+def inject_dependencies(
+    f: tp.Callable[..., T],
+    signature_f: tp.Callable,
+    rename: tp.Optional[tp.Dict[str, str]] = None,
+) -> tp.Callable[..., T]:
+    ...
+
+
+def inject_dependencies(
+    f: F,
     signature_f: tp.Optional[tp.Callable] = None,
     rename: tp.Optional[tp.Dict[str, str]] = None,
-):
+) -> F:
     if signature_f is None:
         signature_f = f
 

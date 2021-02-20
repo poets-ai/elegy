@@ -152,7 +152,7 @@ class VariationalAutoEncoder(elegy.Model):
         initializing,
     ):
         with elegy.hooks.context(losses=True):
-            logits, states = self.call_pred_step(
+            logits, states = elegy.inject_dependencies(self.pred_step)(
                 x=x,
                 states=states,
                 initializing=initializing,

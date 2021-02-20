@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.6.0](https://github.com/poets-ai/elegy/tree/0.6.0) (2021-02-14)
+
+[Full Changelog](https://github.com/poets-ai/elegy/compare/0.5.0...0.6.0)
+
+**Fixed bugs:**
+
+- \[Bug\] Classifier with BinaryCrossentropy loss not learning [\#160](https://github.com/poets-ai/elegy/issues/160)
+
+**Merged pull requests:**
+
+- More Steps: adds additional \*\_step methods [\#163](https://github.com/poets-ai/elegy/pull/163) ([cgarciae](https://github.com/cgarciae))
+- Better error message on elegy.States attribute access miss [\#162](https://github.com/poets-ai/elegy/pull/162) ([alexander-g](https://github.com/alexander-g))
+- WGAN-GP low-level API example [\#157](https://github.com/poets-ai/elegy/pull/157) ([alexander-g](https://github.com/alexander-g))
+- Improve Docs: adds more docs + an example using pmap to distribute trianing [\#156](https://github.com/poets-ai/elegy/pull/156) ([cgarciae](https://github.com/cgarciae))
+
 ## [0.5.0](https://github.com/poets-ai/elegy/tree/0.5.0) (2021-02-08)
 
 [Full Changelog](https://github.com/poets-ai/elegy/compare/0.4.1...0.5.0)
@@ -44,7 +59,6 @@
 - Make Models Pickleable Again [\#133](https://github.com/poets-ai/elegy/pull/133) ([alexander-g](https://github.com/alexander-g))
 - SCCE fix for bug in Jax\<0.2.7 [\#130](https://github.com/poets-ai/elegy/pull/130) ([alexander-g](https://github.com/alexander-g))
 - table progress [\#127](https://github.com/poets-ai/elegy/pull/127) ([alexander-g](https://github.com/alexander-g))
-- `sparse\_categorical\_crossentropy` should check bounds [\#123](https://github.com/poets-ai/elegy/pull/123) ([alexander-g](https://github.com/alexander-g))
 
 ## [0.3.0](https://github.com/poets-ai/elegy/tree/0.3.0) (2020-12-17)
 
@@ -71,6 +85,7 @@
 
 **Merged pull requests:**
 
+- `sparse\_categorical\_crossentropy` should check bounds [\#123](https://github.com/poets-ai/elegy/pull/123) ([alexander-g](https://github.com/alexander-g))
 - float sample\_weight for precision/recall metrics [\#122](https://github.com/poets-ai/elegy/pull/122) ([alexander-g](https://github.com/alexander-g))
 - Added Huber loss [\#121](https://github.com/poets-ai/elegy/pull/121) ([abhinavsp0730](https://github.com/abhinavsp0730))
 - ResNet Docs + CIFAR10 Example [\#119](https://github.com/poets-ai/elegy/pull/119) ([alexander-g](https://github.com/alexander-g))
