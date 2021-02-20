@@ -201,6 +201,10 @@ def main(
 
     plt.show()
 
+    # call update_modules to enable parameter transfer
+    # for now only Elegy Modules support this
+    model.update_modules()
+
     # sample
     model_decoder = elegy.Model(vae.decoder)
 
