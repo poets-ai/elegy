@@ -23,10 +23,8 @@ def slice_module_from_to(
     ), "Multiple inputs not yet supported"
 
     # get info about the module structure via summaries
-    model = elegy.Model(module)
-    with elegy.hooks_context(summaries=True):
-        model.predict_fn(sample_input)
-        summaries = elegy.get_summaries()
+    model = elegy.Model(module, run_eagerly=True)
+    summaries = model.summary(sample_input, return_raw_entries=True)
 
     edges = [Edge(summ) for summ in summaries]
     if start_module in ["/input", "input"]:
@@ -51,15 +49,13 @@ def slice_module_from_to(
 class Edge:
     """A struct to hold edge data"""
 
-    def __init__(self, summary: tp.Tuple[Module, str, np.ndarray, tp.Any]):
-        self.module = summary[0]
-        # remove the full module name, leave the leading '/'
-        self.modulename = (
-            summary[1][summary[1].find("/") :] if "/" in summary[1] else "/"
-        )
+    def __init__(self, summary: elegy.types.SummaryTableEntry):
+        self.module = summary.module
+        # standardize paths with a leading '/'
+        self.modulename = '/'+summary.path
         # convert the output and input arrays in the summary to unique IDs as returned by id()
-        self.output_ids = jax.tree_leaves(jax.tree_map(id, summary[2]))
-        self.input_ids = jax.tree_map(id, summary[3])
+        self.output_ids = jax.tree_leaves(jax.tree_map(id, summary.output_value))
+        self.input_ids = jax.tree_map(id, summary.input_value)
 
 
 def search_edges(

@@ -107,16 +107,17 @@ class Summary(tp.NamedTuple):
     path: Path
     module: tp.Optional[SummaryModule]
     value: SummaryValue
+    input_values: tp.Union[tp.Tuple[tp.Tuple, tp.Dict], None] = None
 
     def tree_flatten(self):
-        return ((self.value,), (self.path, self.module))
+        return ((self.value,self.input_values), (self.path, self.module))
 
     @classmethod
     def tree_unflatten(cls, aux_data, children):
-        (value,) = children
+        (value,input_values) = children
         path, module = aux_data
 
-        return cls(path, module, value)
+        return cls(path, module, value, input_values)
 
 
 Summaries = tp.List[Summary]
@@ -126,7 +127,9 @@ Summaries = tp.List[Summary]
 class SummaryTableEntry(tp.NamedTuple):
     path: str
     module_type_name: str
+    module: tp.Any
     output_value: Pytree
+    input_value: Pytree
     trainable_params_count: int
     trainable_params_size: int
     non_trainable_params_count: int
@@ -143,7 +146,9 @@ class SummaryTableEntry(tp.NamedTuple):
         return cls(
             path="",
             module_type_name="",
+            module=None,
             output_value=None,
+            input_value=None,
             trainable_params_count=trainable_params_count,
             trainable_params_size=trainable_params_size,
             non_trainable_params_count=non_trainable_params_count,
@@ -152,10 +157,11 @@ class SummaryTableEntry(tp.NamedTuple):
 
     def tree_flatten(self):
         return (
-            (self.output_value,),
+            (self.output_value,self.input_value),
             (
                 self.path,
                 self.module_type_name,
+                self.module,
                 self.trainable_params_count,
                 self.trainable_params_size,
                 self.non_trainable_params_count,
@@ -168,17 +174,20 @@ class SummaryTableEntry(tp.NamedTuple):
         (
             path,
             module_type_name,
+            module,
             trainable_params_count,
             trainable_params_size,
             non_trainable_params_count,
             non_trainable_params_size,
         ) = aux_data
-        (output_value,) = children
+        (output_value,input_value) = children
 
         return cls(
             path=path,
             module_type_name=module_type_name,
+            module=module,
             output_value=output_value,
+            input_value=input_value,
             trainable_params_count=trainable_params_count,
             trainable_params_size=trainable_params_size,
             non_trainable_params_count=non_trainable_params_count,

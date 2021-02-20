@@ -9,7 +9,7 @@ class ModuleSlicingTest(TestCase):
     def test_basic_slice_by_ref(self):
         x = jnp.zeros((32, 100))
         basicmodule = BasicModule0()
-        basicmodule(x)  # trigger creation of weights and submodules
+        basicmodule.init(rng=elegy.RNGSeq(0), set_defaults=True)(x)
         submodule = basicmodule.slice(basicmodule.linear0, basicmodule.linear1, x)
         submodel = elegy.Model(submodule)
         submodel.summary(x)
@@ -24,13 +24,15 @@ class ModuleSlicingTest(TestCase):
             basicmodule = BasicModule0()
             submodule = basicmodule.slice(start, end, x)
             submodel = elegy.Model(submodule)
-            submodel.summary(x)
+            basicmodule.init(rng=elegy.RNGSeq(0), set_defaults=True)(x)
+            #submodel.summary(x)
             assert submodel.predict(x).shape == (32, 10)
             assert jnp.all(submodel.predict(x) == basicmodule.test_call(x))
 
     def test_slice_return_input(self):
         x = jnp.zeros((32, 100))
         basicmodule = BasicModule0()
+        basicmodule.init(rng=elegy.RNGSeq(0), set_defaults=True)(x)
         submodule = basicmodule.slice("input", ["/linear1", "input"], x)
         submodel = elegy.Model(submodule)
         submodel.summary(x)
@@ -42,6 +44,7 @@ class ModuleSlicingTest(TestCase):
     def test_resnet_multi_out(self):
         x = jnp.zeros((2, 224, 224, 3))
         resnet = elegy.nets.resnet.ResNet18()
+        resnet.init(rng=elegy.RNGSeq(0), set_defaults=True)(x)
         submodule = resnet.slice(
             start_module=None,
             end_module=[
@@ -64,14 +67,12 @@ class ModuleSlicingTest(TestCase):
         assert outputs[3].shape == (2, 7, 7, 512)
         assert outputs[4].shape == (2, 7, 7, 512)
 
-        print(jax.tree_map(jnp.shape, resnet.get_parameters()))
-        print(jax.tree_map(jnp.shape, submodel.get_parameters()))
-
     def test_retrain(self):
         x = jnp.ones((32, 100))
         y = jnp.zeros((32, 10))
 
         basicmodule = BasicModule0()
+        basicmodule.init(rng=elegy.RNGSeq(0), set_defaults=True)(x)
         submodule = basicmodule.slice("linear0", "linear1", x)
         submodel = elegy.Model(
             submodule,
@@ -84,9 +85,6 @@ class ModuleSlicingTest(TestCase):
         submodel.fit(x, y, epochs=3, verbose=2)
 
         y2 = submodel.predict(x)
-        y3 = basicmodule.test_call(x)
-
-        assert jnp.all(y2 == y3)
         # output after training should be closer to zero because targets are zero
         assert jnp.abs(y2.mean()) < jnp.abs(y0.mean())
 
@@ -105,13 +103,13 @@ class ModuleSlicingTest(TestCase):
         x = jnp.ones((32, 100))
 
         module = ContainsMultiInputModule()
+        module.init(rng=elegy.RNGSeq(0), set_defaults=True)(x)
         model = elegy.Model(module)
         model.summary(x)
 
         submodule = module.slice(None, "/multi_input_module", x)
         submodel = elegy.Model(submodule)
         submodel.summary(x)
-        print(submodule.get_parameters())
 
         y = submodel.predict(x)
         print(y.shape)
@@ -179,8 +177,8 @@ class BasicModule0(elegy.Module):
         return x
 
     def test_call(self, x):
-        x = self.linear0(x)
-        x = self.linear1(x)
+        x = self.linear0.call_with_defaults()(x)
+        x = self.linear1.call_with_defaults()(x)
         return x
 
 
@@ -197,6 +195,6 @@ class ContainsMultiInputModule(elegy.Module):
         return x
 
     def test_call(self, x):
-        x0 = self.linear0(x)
-        x = self.multi_input_module(x, x0)
+        x0 = self.linear0.call_with_defaults()(x)
+        x = self.multi_input_module.call_with_defaults()(x, x0)
         return x

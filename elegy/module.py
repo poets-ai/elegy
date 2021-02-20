@@ -374,7 +374,7 @@ class Module(metaclass=ModuleMeta):
             if hooks.summaries_active():
                 path = get_module_path(self)
                 assert path is not None
-                hooks.add_summary(path, self, outputs)
+                hooks.add_summary(path, self, outputs, (args, kwargs))
 
             return outputs
 
@@ -382,11 +382,11 @@ class Module(metaclass=ModuleMeta):
     def call(self, *args, **kwargs):
         ...
 
-    def add_summary(self, name: str, f: tp.Any, value: tp.Any):
+    def add_summary(self, name: str, f: tp.Any, value: tp.Any, input_values: tp.Optional[tp.Tuple[tp.Tuple, tp.Dict]] = None):
         if hooks.summaries_active():
             path = get_module_path(self) + (name,)
             assert path is not None
-            hooks.add_summary(path, f, value)
+            hooks.add_summary(path, f, value, input_values)
 
     def init(
         self,

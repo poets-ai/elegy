@@ -105,6 +105,7 @@ def add_summary(
     path: types.Path,
     module: tp.Any,
     value: tp.Any,
+    input_values: tp.Optional[tp.Tuple[tp.Tuple, tp.Dict]] = None,
 ) -> None:
     """
     A hook that lets you define a summary in the current module. Its primary
@@ -127,8 +128,7 @@ def add_summary(
 
     if not summaries_active():
         return
-
-    LOCAL.summaries.append(types.Summary(path, module, value))
+    LOCAL.summaries.append(types.Summary(path, module, value, input_values))
 
 
 def get_losses() -> types.Logs:
