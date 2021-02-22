@@ -362,8 +362,11 @@ class Module(metaclass=ModuleMeta):
         # this marks initialization
 
         with call_context(self):
+            method_fn = self.call
+            if hooks.named_call_active():
+                method_fn = jax.named_call(method_fn, name=get_module_path(self))
 
-            outputs = self.call(*args, **kwargs)
+            outputs = method_fn(*args, **kwargs)
 
             if hooks.summaries_active():
                 path = get_module_path(self)

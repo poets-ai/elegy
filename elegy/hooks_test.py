@@ -66,3 +66,26 @@ class TestHooks(unittest.TestCase):
         assert losses["x_loss"] == 6
         assert metrics["x"] == 7
         assert summaries[0] == (("a", 0, "b"), jax.nn.relu, 8)
+
+    def test_named_call(self):
+        class Module0(elegy.Module):
+            def call(self,x):
+                x = elegy.nn.Linear(5)(x)
+                x = elegy.nn.Linear(7)(x)
+                return x
+
+        m = elegy.Model(Module0())
+        m.predict(jnp.ones(4)) # init
+        
+        with elegy.hooks.context(named_call=True):
+            jaxpr=jax.make_jaxpr(lambda x,states: m.pred_step(x, states, False, False) )(jnp.ones([4]), m.states)
+            print(jaxpr)
+
+            assert jaxpr.jaxpr.eqns[0].params['name'] == ()
+            assert jaxpr.jaxpr.eqns[0].params['call_jaxpr'].eqns[0].params['name'] == ('linear',)
+            assert jaxpr.jaxpr.eqns[0].params['call_jaxpr'].eqns[1].params['name'] == ('linear_1',)
+
+        #no named call without hook
+        jaxpr=jax.make_jaxpr(lambda x,states: m.pred_step(x, states, False, False) )(jnp.ones([4]), m.states)
+        assert jaxpr.jaxpr.eqns[0].primitive.name != 'named_call'
+

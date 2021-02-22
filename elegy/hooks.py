@@ -30,6 +30,7 @@ class HooksContext(types.Protocol):
     losses: tp.Optional[types.Logs]
     metrics: tp.Optional[types.Logs]
     summaries: tp.Optional[types.Summaries]
+    named_call: tp.Optional[bool]
 
 
 @dataclass
@@ -37,12 +38,14 @@ class _HooksContext(threading.local):
     losses: tp.Optional[types.Logs]
     metrics: tp.Optional[types.Logs]
     summaries: tp.Optional[types.Summaries]
+    named_call: tp.Optional[bool]
 
 
 LOCAL: HooksContext = _HooksContext(
     losses=None,
     metrics=None,
     summaries=None,
+    named_call=None,
 )
 
 
@@ -163,6 +166,9 @@ def get_summaries() -> types.Summaries:
 def summaries_active() -> bool:
     return LOCAL.summaries is not None
 
+def named_call_active() -> bool:
+    return bool(LOCAL.named_call)
+
 
 # ----------------------------------------------------------------
 # contexts
@@ -174,6 +180,7 @@ def context(
     losses: tp.Union[types.Logs, bool, None] = None,
     metrics: tp.Union[types.Logs, bool, None] = None,
     summaries: tp.Union[types.Summaries, bool, None] = None,
+    named_call: tp.Union[str, None] = None,
     set_all: bool = False,
 ) -> tp.ContextManager[None]:
 
@@ -184,6 +191,8 @@ def context(
             metrics = True
         if summaries is None:
             summaries = True
+        if named_call is None:
+            named_call = False
 
     if isinstance(losses, bool):
         losses = {} if losses else None
@@ -193,11 +202,14 @@ def context(
 
     if isinstance(summaries, bool):
         summaries = [] if summaries else None
+    
+    named_call = bool(named_call)
 
     return _context(
         losses=losses,
         metrics=metrics,
         summaries=summaries,
+        named_call=named_call,
     )
 
 
@@ -206,15 +218,18 @@ def _context(
     losses: tp.Optional[types.Logs],
     metrics: tp.Optional[types.Logs],
     summaries: tp.Optional[types.Summaries],
+    named_call: tp.Optional[str],
 ) -> tp.Iterator[None]:
 
     prev_losses = LOCAL.losses
     prev_metrics = LOCAL.metrics
     prev_summaries = LOCAL.summaries
+    prev_named_call = LOCAL.named_call
 
     LOCAL.losses = losses
     LOCAL.metrics = metrics
     LOCAL.summaries = summaries
+    LOCAL.named_call = named_call
 
     try:
         yield
@@ -222,6 +237,7 @@ def _context(
         LOCAL.losses = prev_losses
         LOCAL.metrics = prev_metrics
         LOCAL.summaries = prev_summaries
+        LOCAL.named_call = prev_named_call
 
 
 # -------------------------------------------------------------
