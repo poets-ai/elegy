@@ -86,7 +86,6 @@ class TestHaikuModule(unittest.TestCase):
             return ModuleA()(x)
 
         model = elegy.Model(elegy.HaikuModule(f))
-        model.init(x=jnp.ones([10, 2]))
 
         summary_text = model.summary(x=jnp.ones([10, 2]), depth=2, return_repr=True)
         assert summary_text is not None

@@ -158,8 +158,6 @@ class ModelCore:
         self,
         x: tp.Any,
         states: types.States,
-        initializing: bool,
-        training: bool,
     ) -> tp.List[types.SummaryTableEntry]:
         raise NotImplementedError()
 
@@ -167,14 +165,10 @@ class ModelCore:
         self,
         x: tp.Any,
         states: types.States,
-        initializing: bool,
-        training: bool,
     ) -> tp.List[types.SummaryTableEntry]:
         return utils.inject_dependencies(self.summary_step)(
             x=x,
             states=states,
-            initializing=initializing,
-            training=training,
         )
 
     def pred_step(

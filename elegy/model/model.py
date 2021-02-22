@@ -246,11 +246,16 @@ class Model(ModelBase):
         self,
         x: tp.Any,
         states: types.States,
-        initializing: bool,
-        training: bool,
     ) -> tp.List[types.SummaryTableEntry]:
+        initializing = True
+        training = True
+
+        states = states.maybe_update(**self.states_step())
+
         with hooks.context(summaries=True):
-            utils.inject_dependencies(self.pred_step)(x, states, initializing, training)
+            _, states = utils.inject_dependencies(self.pred_step)(
+                x, states, initializing, training
+            )
             summaries = hooks.get_summaries()
 
         entries: tp.List[types.SummaryTableEntry] = []
@@ -261,8 +266,8 @@ class Model(ModelBase):
                 path=path,
                 module=module,
                 value=value,
-                net_params=self.states.net_params,
-                net_states=self.states.net_states,
+                net_params=states.net_params,
+                net_states=states.net_states,
             )
 
             entries.append(

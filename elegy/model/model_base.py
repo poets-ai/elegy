@@ -172,6 +172,7 @@ class ModelBase(ModelCore):
         tablefmt: str = "fancy_grid",
         return_repr: bool = False,
         initialize: bool = False,
+        eval_shape: bool = True,
         **tablulate_kwargs,
     ) -> tp.Optional[str]:
         """
@@ -189,30 +190,19 @@ class ModelBase(ModelCore):
                 See [python-tabulate](https://github.com/astanin/python-tabulate)
                 for more options.
         """
-        if not self.initialized:
-            if initialize:
-                self.init(x=x)
-            else:
-                raise types.ModelNotInitialized(
-                    f"Model not initialized, please execute `model.init` or `model.init_on_batch` "
-                    "before running this method, or pass `initialize=True` to initialize with the available data "
-                    "(this might not initialize the optimizer)."
-                )
 
-        initializing = False
-        training = False
+        entries: tp.List[types.SummaryTableEntry]
+        states = self.states.copy() if self.run_eagerly else self.states
 
         method = (
             self.call_summary_step if self.run_eagerly else self.call_summary_step_jit
         )
-        states = self.states.copy() if self.run_eagerly else self.states
 
-        entries = method(
-            x,
-            states,
-            initializing,
-            training,
-        )
+        if eval_shape:
+            entries = jax.eval_shape(self.call_summary_step, x, states)
+        else:
+            entries = method(x, states)
+
         total_entry = entries[-1]
         entries = entries[:-1]
 
