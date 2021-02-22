@@ -1,22 +1,64 @@
 import functools
 import typing as tp
 
-from haiku._src.base import current_bundle_name
-
+import jax
+import jax.numpy as jnp
+import toolz
 from elegy import hooks, types, utils
 
 from .generalized_module import GeneralizedModule, register_module_for
-import toolz
 
 try:
     import haiku
+    from haiku._src.base import current_bundle_name, new_context
+    from haiku._src.transform import (
+        APPLY_RNG_ERROR,
+        APPLY_RNG_STATE_ERROR,
+        INIT_RNG_ERROR,
+        check_mapping,
+        to_prng_sequence,
+    )
 except ImportError:
-    raise types.DependencyUnavailable("Flax is not available")
+    raise types.DependencyUnavailable("'haiku' is not available")
 
 
 @register_module_for(haiku.Module)
 class DummyHaikuModule(GeneralizedModule):
     pass
+
+
+class TransformWithStateAndOutput(tp.NamedTuple):
+    f: tp.Callable
+
+    def init(
+        self,
+        rng: tp.Optional[tp.Union[jnp.ndarray, int]],
+        *args,
+        **kwargs,
+    ) -> tp.Tuple[tp.Any, haiku.Params, haiku.State]:
+        """Initializes your function collecting parameters and state."""
+        rng = to_prng_sequence(rng, err_msg=INIT_RNG_ERROR)
+        with new_context(rng=rng) as ctx:
+            output = self.f(*args, **kwargs)
+        return output, ctx.collect_params(), ctx.collect_initial_state()
+
+    def apply(
+        self,
+        params: tp.Optional[haiku.Params],
+        state: tp.Optional[haiku.State],
+        rng: tp.Optional[tp.Union[jnp.ndarray, int]],
+        *args,
+        **kwargs,
+    ) -> tp.Tuple[tp.Any, haiku.State]:
+        """Applies your function injecting parameters and state."""
+        params = check_mapping("params", params)
+        state = check_mapping("state", state)
+        rng = to_prng_sequence(
+            rng, err_msg=(APPLY_RNG_STATE_ERROR if state else APPLY_RNG_ERROR)
+        )
+        with new_context(params=params, state=state, rng=rng) as ctx:
+            out = self.f(*args, **kwargs)
+        return out, ctx.collect_state()
 
 
 class HaikuModule(GeneralizedModule):
@@ -30,15 +72,14 @@ class HaikuModule(GeneralizedModule):
             return f(*args, **kwargs)
 
         self.f = wrapper
-        self.module = haiku.transform_with_state(wrapper)
+        self.module = TransformWithStateAndOutput(wrapper)
 
     def init(self, rng: types.RNGSeq) -> tp.Callable[..., types.OutputStates]:
         def _lambda(*args, **kwargs):
             def init_fn(*args, **kwargs) -> types.OutputStates:
                 kwargs = {f"__{name}": value for name, value in kwargs.items()}
                 key = rng.next()
-                params, states = self.module.init(key, *args, **kwargs)
-                y_pred, _ = self.module.apply(params, states, key, *args, **kwargs)
+                y_pred, params, states = self.module.init(key, *args, **kwargs)
                 return types.OutputStates(y_pred, params, states)
 
             y_pred, params, states = utils.inject_dependencies(

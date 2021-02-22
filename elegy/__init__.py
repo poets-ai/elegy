@@ -28,7 +28,6 @@ from .types import (
     RNGSeq,
     States,
     OutputStates,
-    Mode,
 )
 from .generalized_module.generalized_module import GeneralizedModule
 from .generalized_optimizer.generalized_optimizer import GeneralizedOptimizer

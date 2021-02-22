@@ -162,6 +162,12 @@ class Model(ModelBase):
 
         super().__init__(**kwargs)
 
+        # maybe add rng if initialized
+        if self.initialized and (
+            not hasattr(self.states, "rng") or self.states.rng is None
+        ):
+            self.states = self.states.update(rng=types.RNGSeq(seed))
+
         self.module = module
         self.loss = loss
         self.metrics = metrics
@@ -211,15 +217,45 @@ class Model(ModelBase):
             optimizer_states=None,
         )
 
+    def init_step(
+        self,
+        x: tp.Any,
+        y_true: tp.Any,
+        sample_weight: tp.Optional[np.ndarray],
+        class_weight: tp.Optional[np.ndarray],
+        states: types.States,
+    ) -> types.States:
+
+        states = states.maybe_update(**self.states_step())
+        training = True
+        initializing = True
+
+        _, states = utils.inject_dependencies(self.train_step)(
+            x=x,
+            y_true=y_true,
+            sample_weight=sample_weight,
+            class_weight=class_weight,
+            states=states,
+            initializing=initializing,
+            training=training,
+        )
+
+        return states
+
     def summary_step(
         self,
         x: tp.Any,
         states: types.States,
-        initializing: bool,
-        training: bool,
     ) -> tp.List[types.SummaryTableEntry]:
+        initializing = True
+        training = True
+
+        states = states.maybe_update(**self.states_step())
+
         with hooks.context(summaries=True):
-            utils.inject_dependencies(self.pred_step)(x, states, initializing, training)
+            _, states = utils.inject_dependencies(self.pred_step)(
+                x, states, initializing, training
+            )
             summaries = hooks.get_summaries()
 
         entries: tp.List[types.SummaryTableEntry] = []
@@ -230,8 +266,8 @@ class Model(ModelBase):
                 path=path,
                 module=module,
                 value=value,
-                net_params=self.states.net_params,
-                net_states=self.states.net_states,
+                net_params=states.net_params,
+                net_states=states.net_states,
             )
 
             entries.append(
@@ -456,7 +492,9 @@ class Model(ModelBase):
                 training=training,
             )
 
-        if self.optimizer is None:
+        if initializing and self.optimizer is None:
+            return model_core.TrainStep(logs, states)
+        elif self.optimizer is None:
             raise types.MissingOptimizer(
                 "Trying to run `train_step` without an optimizer, "
                 "please provide an optimizer to the Model(...) constructor or "

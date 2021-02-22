@@ -101,12 +101,14 @@ class TransformerEncoder(Module):
         norm: the layer normalization component (optional).
 
     Examples::
-        >>> # transformer_encoder = elegy.nn.TransformerEncoder(
-                lambda: elegy.nn.TransformerEncoderLayer(head_size=512, num_heads=8),
-                num_layers=6,
-            )
-        >>> # src = torch.rand(10, 32, 512)
-        >>> # out = transformer_encoder(src)
+        >>> import elegy
+        >>> transformer_encoder = elegy.nn.transformers.TransformerEncoder(
+        ...     lambda: elegy.nn.transformers.TransformerEncoderLayer(head_size=512, num_heads=8),
+        ...     num_layers=6,
+        ... )
+
+        >>> src = np.random.uniform(size=(10, 32, 512))
+        >>> out, params, collections = transformer_encoder.init(rng=elegy.RNGSeq(42))(src)
     """
 
     def __init__(

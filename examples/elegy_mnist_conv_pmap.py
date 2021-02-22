@@ -74,7 +74,7 @@ class DistributedModel(elegy.Model):
             static_broadcasted_argnums=[5, 6],
             axis_name="device",
         )
-        self.call_train_step_jit = self.train_step
+        self.call_train_step_jit = self.call_train_step
 
         self.jitted_members |= {"train_step_pmap"}
 
@@ -86,7 +86,7 @@ class DistributedModel(elegy.Model):
         return loss, logs, states, grads
 
     # here we override train_step instead of train_step
-    def train_step(
+    def call_train_step(
         self,
         x,
         y_true,

@@ -9,6 +9,7 @@ from .layer_normalization import LayerNormalization, InstanceNormalization
 from .embedding import Embedding, EmbedLookupStyle
 from .pool import MaxPool, AvgPool
 from .moving_averages import EMAParamsTree
+from . import transformers
 
 __all__ = [
     "EMAParamsTree",

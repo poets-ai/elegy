@@ -43,6 +43,7 @@ class ModelBasicTest(unittest.TestCase):
         X = np.random.uniform(size=(5, 10))
         y = np.random.randint(10, size=(5, 1))
 
+        model.init(x=X, y=y)
         y_pred = model.predict(x=X)
 
         assert y_pred.shape == (5, 1)
@@ -191,7 +192,9 @@ class ModelTest(unittest.TestCase):
         )
 
         X = np.random.uniform(size=(5, 7, 7))
+        y = np.random.randint(10, size=(5,))
 
+        model.init(X, y)
         y0 = model.predict(X)
 
         model_pkl = cloudpickle.dumps(model)

@@ -49,27 +49,23 @@ class ModelCore:
     initial_states: types.States
     history: tp.Dict[str, tp.Any]
     run_eagerly: bool = False
-    init_stage: types.Mode = types.Mode.none
+    initialized: bool = False
 
     def __init__(
         self,
         states: tp.Optional[types.States] = None,
         run_eagerly: bool = False,
-        init_stage: types.Mode = types.Mode.none,
+        initialized: bool = False,
     ):
-
-        base_states = self.states_step()
 
         if states is None:
             states = types.States()
-
-        states = states.maybe_update(**base_states)
 
         self.initial_states = states
         self.states = states.copy()  # explicity do this to copy RNGSeq
         self.run_eagerly = run_eagerly
         self.history = {}
-        self.init_stage = init_stage
+        self.initialized = initialized
         self.jitted_members: tp.Set[str] = set()
 
         self.jit_step()
@@ -93,7 +89,7 @@ class ModelCore:
         )
         self.call_init_step_jit = jax.jit(
             self.call_init_step,
-            static_argnums=[0],
+            static_argnums=[],
         )
 
         self.jitted_members |= {
@@ -134,59 +130,23 @@ class ModelCore:
 
     def init_step(
         self,
-        mode: types.Mode,
         x: tp.Any,
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         states: types.States,
-    ) -> tp.Union[tp.Tuple[types.Mode, types.States], types.States]:
-        training = True
-        initializing = True
-
-        if mode == types.Mode.pred:
-            _, states = utils.inject_dependencies(self.pred_step)(
-                x=x,
-                states=states,
-                initializing=initializing,
-                training=training,
-            )
-        elif mode == types.Mode.test:
-            _, _, states = utils.inject_dependencies(self.test_step)(
-                x=x,
-                y_true=y_true,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                states=states,
-                initializing=initializing,
-                training=training,
-            )
-        elif mode == types.Mode.train:
-            _, states = utils.inject_dependencies(self.train_step)(
-                x=x,
-                y_true=y_true,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                states=states,
-                initializing=initializing,
-                training=training,
-            )
-        else:
-            raise ValueError(f"Invalid mode '{mode}'")
-
-        return mode, states
+    ) -> types.States:
+        raise types.MissingMethod()
 
     def call_init_step(
         self,
-        mode: types.Mode,
         x: tp.Any,
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         states: types.States,
-    ) -> tp.Union[tp.Tuple[types.Mode, types.States], types.States]:
+    ) -> types.States:
         return utils.inject_dependencies(self.init_step)(
-            mode=mode,
             x=x,
             y_true=y_true,
             sample_weight=sample_weight,
@@ -198,23 +158,17 @@ class ModelCore:
         self,
         x: tp.Any,
         states: types.States,
-        initializing: bool,
-        training: bool,
     ) -> tp.List[types.SummaryTableEntry]:
-        raise NotImplementedError()
+        raise types.MissingMethod()
 
     def call_summary_step(
         self,
         x: tp.Any,
         states: types.States,
-        initializing: bool,
-        training: bool,
     ) -> tp.List[types.SummaryTableEntry]:
         return utils.inject_dependencies(self.summary_step)(
             x=x,
             states=states,
-            initializing=initializing,
-            training=training,
         )
 
     def pred_step(
@@ -224,7 +178,7 @@ class ModelCore:
         initializing: bool,
         training: bool,
     ) -> PredStep:
-        raise NotImplementedError()
+        raise types.MissingMethod()
 
     def call_pred_step(
         self,
@@ -250,7 +204,7 @@ class ModelCore:
         initializing: bool,
         training: bool,
     ) -> TestStep:
-        raise NotImplementedError()
+        raise types.MissingMethod()
 
     def call_test_step(
         self,
@@ -282,7 +236,7 @@ class ModelCore:
         initializing: bool,
         training: bool,
     ) -> GradStep:
-        raise NotImplementedError()
+        raise types.MissingMethod()
 
     def train_step(
         self,
@@ -294,7 +248,7 @@ class ModelCore:
         initializing: bool,
         training: bool,
     ) -> TrainStep:
-        raise NotImplementedError()
+        raise types.MissingMethod()
 
     def call_train_step(
         self,
@@ -327,8 +281,24 @@ class ModelCore:
         sample_weight: tp.Optional[np.ndarray] = None,
         class_weight: tp.Optional[tp.Any] = None,
     ):
-        mode = types.Mode.train
-        self.maybe_initialize(mode, x, y_true, sample_weight, class_weight)
+
+        if self.initialized:
+            return
+
+        method = self.call_init_step if self.run_eagerly else self.call_init_step_jit
+        states = self.states.copy() if self.run_eagerly else self.states
+
+        state_updates = method(
+            x,
+            y_true,
+            sample_weight,
+            class_weight,
+            states,
+        )
+
+        self.states = self.states.maybe_update(**state_updates)
+        self.initial_states = self.initial_states.maybe_update(**state_updates)
+        self.initialized = True
 
     def predict_on_batch(self, x: tp.Any) -> tp.Any:
         """
@@ -346,11 +316,12 @@ class ModelCore:
             ValueError: In case of mismatch between given number of inputs and
                 expectations of the model.
         """
-        mode = types.Mode.pred
+        if not self.initialized:
+            raise types.ModelNotInitialized(
+                f"Model not initialized, please execute `init` or `init_on_batch` before running this method."
+            )
         initializing = False
         training = False
-
-        self.maybe_initialize(mode=mode, x=x)
 
         method = self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
         states = self.states.copy() if self.run_eagerly else self.states
@@ -395,17 +366,15 @@ class ModelCore:
         Raises:
             ValueError: In case of invalid user-provided arguments.
         """
-        mode = types.Mode.test
-        initializing = False
-        training = False
-
-        self.maybe_initialize(
-            mode,
+        self.init_on_batch(
             x=x,
             y_true=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
         )
+
+        initializing = False
+        training = False
 
         method = self.call_test_step if self.run_eagerly else self.call_test_step_jit
         states = self.states.copy() if self.run_eagerly else self.states
@@ -459,17 +428,15 @@ class ModelCore:
         Raises:
             ValueError: In case of invalid user-provided arguments.
         """
-        mode = types.Mode.train
-        initializing = False
-        training = True
-
-        self.maybe_initialize(
-            mode=mode,
+        self.init_on_batch(
             x=x,
             y_true=y,
             sample_weight=sample_weight,
             class_weight=class_weight,
         )
+
+        initializing = False
+        training = True
 
         method = self.call_train_step if self.run_eagerly else self.call_train_step_jit
         states = self.states.copy() if self.run_eagerly else self.states
@@ -485,189 +452,6 @@ class ModelCore:
         )
 
         return logs
-
-    def summary(
-        self,
-        x,
-        depth: int = 2,
-        tablefmt: str = "fancy_grid",
-        return_repr: bool = False,
-        **tablulate_kwargs,
-    ) -> tp.Optional[str]:
-        """
-        Prints a summary of the network.
-        Arguments:
-            x: A sample of inputs to the network.
-            depth: The level number of nested level which will be showed.
-                Information about summaries from modules deeper than `depth`
-                will be aggregated together.
-            tablefmt: A string representing the style of the table generated by
-                `tabulate`. See
-                [python-tabulate](https://github.com/astanin/python-tabulate)
-                for more options.
-            tablulate_kwargs: Additional keyword arguments passed to `tabulate`.
-                See [python-tabulate](https://github.com/astanin/python-tabulate)
-                for more options.
-        """
-        mode = types.Mode.pred
-        initializing = False
-        training = False
-
-        self.maybe_initialize(mode, x=x)
-
-        method = (
-            self.call_summary_step if self.run_eagerly else self.call_summary_step_jit
-        )
-        states = self.states.copy() if self.run_eagerly else self.states
-
-        entries = method(
-            x,
-            states,
-            initializing,
-            training,
-        )
-        total_entry = entries[-1]
-        entries = entries[:-1]
-
-        depth_groups: tp.Dict[str, tp.List[types.SummaryTableEntry]] = toolz.groupby(
-            lambda entry: "/".join(entry.path.split("/")[:depth]), entries
-        )
-
-        def get_grouped_entry(
-            entry: types.SummaryTableEntry,
-        ) -> types.SummaryTableEntry:
-            group = depth_groups[entry.path]
-
-            return types.SummaryTableEntry(
-                path=entry.path,
-                module_type_name=entry.module_type_name,
-                output_value=entry.output_value,
-                trainable_params_count=sum(
-                    entry_.trainable_params_count for entry_ in group
-                ),
-                trainable_params_size=sum(
-                    entry_.trainable_params_size for entry_ in group
-                ),
-                non_trainable_params_count=sum(
-                    entry_.non_trainable_params_count for entry_ in group
-                ),
-                non_trainable_params_size=sum(
-                    entry_.non_trainable_params_size for entry_ in group
-                ),
-            )
-
-        entries = [
-            get_grouped_entry(entry) for entry in entries if entry.path in depth_groups
-        ]
-
-        def format_output(value) -> str:
-            file = StringIO()
-            outputs = jax.tree_map(lambda x: f"{x.shape}{{pad}}  {x.dtype}", value)
-            yaml.safe_dump(
-                outputs, file, default_flow_style=False, indent=2, explicit_end=False
-            )
-            return file.getvalue().replace("\n...", "")
-
-        def format_size(size):
-            return (
-                f"{size / 1e9 :,.1f} GB"
-                if size > 1e9
-                else f"{size / 1e6 :,.1f} MB"
-                if size > 1e6
-                else f"{size / 1e3 :,.1f} KB"
-                if size > 1e3
-                else f"{size:,} B"
-            )
-
-        table: tp.List = [
-            [
-                "Inputs",
-                format_output(x),
-                "",
-                "",
-            ]
-        ]
-
-        for entry in entries:
-
-            table.append(
-                [
-                    f"{entry.path}{{pad}}  {entry.module_type_name}",
-                    format_output(entry.output_value),
-                    f"{entry.trainable_params_count:,}{{pad}}    {format_size(entry.trainable_params_size)}"
-                    if entry.trainable_params_count > 0
-                    else "",
-                    f"{entry.non_trainable_params_count:,}{{pad}}    {format_size(entry.non_trainable_params_size)}"
-                    if entry.non_trainable_params_count > 0
-                    else "",
-                ]
-            )
-
-        # add padding
-        for col in range(4):
-            max_length = max(
-                len(line.split("{pad}")[0])
-                for row in table
-                for line in row[col].split("\n")
-            )
-
-            for row in table:
-                row[col] = "\n".join(
-                    line.format(
-                        pad=" " * (max_length - len(line.rstrip().split("{pad}")[0]))
-                    )
-                    for line in row[col].rstrip().split("\n")
-                )
-
-        # global summaries
-        params_count = total_entry.trainable_params_count
-        params_size = total_entry.trainable_params_size
-        states_count = total_entry.non_trainable_params_count
-        states_size = total_entry.non_trainable_params_size
-        total_count = params_count + states_count
-        total_size = params_size + states_size
-
-        summary = (
-            "\n"
-            + tabulate(
-                table,
-                headers=[
-                    "Layer",
-                    "Outputs Shape",
-                    "Trainable\nParameters",
-                    "Non-trainable\nParameters",
-                ],
-                tablefmt=tablefmt,
-                **tablulate_kwargs,
-            )
-            + "\n"
-            + tabulate(
-                [
-                    [
-                        f"Total Parameters:",
-                        f"{total_count:,}",
-                        f"{format_size(total_size)}" if total_count > 0 else "",
-                    ],
-                    [
-                        f"Trainable Parameters:",
-                        f"{params_count:,}",
-                        f"{format_size(params_size)}" if params_count > 0 else "",
-                    ],
-                    [
-                        f"Non-trainable Parameters:",
-                        f"{states_count:,}",
-                        f"{format_size(states_size)}" if states_count > 0 else "",
-                    ],
-                ],
-                tablefmt="plain",
-            )
-            + "\n"
-        )
-
-        print(summary)
-
-        if return_repr:
-            return summary
 
     def save(
         self,
@@ -749,41 +533,3 @@ class ModelCore:
     # ----------------------------------------------------------------
     # other methods
     # ----------------------------------------------------------------
-
-    def maybe_initialize(
-        self,
-        mode: types.Mode,
-        x: tp.Any = (),
-        y_true: tp.Any = None,
-        sample_weight: tp.Optional[np.ndarray] = None,
-        class_weight: tp.Optional[tp.Any] = None,
-    ):
-
-        if mode <= self.init_stage:
-            return
-
-        state_updates: types.States
-
-        method = self.call_init_step if self.run_eagerly else self.call_init_step_jit
-        states = self.states.copy() if self.run_eagerly else self.states
-
-        output = method(
-            mode,
-            x,
-            y_true,
-            sample_weight,
-            class_weight,
-            states,
-        )
-
-        if isinstance(output, tuple):
-            mode, state_updates = output
-        else:
-            mode = types.Mode.train
-            state_updates = output
-
-        if mode > self.init_stage:
-            self.init_stage = mode
-
-        self.states = self.states.maybe_update(**state_updates)
-        self.initial_states = self.initial_states.maybe_update(**state_updates)
