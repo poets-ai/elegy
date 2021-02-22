@@ -30,6 +30,7 @@ from .types import (
     OutputStates,
     Mode,
 )
+from . import module_slicing
 from .generalized_module.generalized_module import GeneralizedModule
 from .generalized_optimizer.generalized_optimizer import GeneralizedOptimizer
 

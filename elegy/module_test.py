@@ -214,11 +214,13 @@ class NewModuleTest(TestCase):
                 ("ais/1",),
                 m.ais[1],
                 12,
+                ((2.0,), {}),
             ),
             (
                 (),
                 m,
                 13,
+                ((2.0,), {}),
             ),
         ]
         assert parameters == {
@@ -256,11 +258,13 @@ class NewModuleTest(TestCase):
                 ("a_1",),
                 m.a_1,
                 12,
+                ((2.0,), {}),
             ),
             (
                 (),
                 m,
                 13,
+                ((2.0,), {}),
             ),
         ]
         assert params == {

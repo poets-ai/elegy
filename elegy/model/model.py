@@ -224,7 +224,7 @@ class Model(ModelBase):
 
         entries: tp.List[types.SummaryTableEntry] = []
 
-        for path, module, value in summaries:
+        for path, module, value, input_values in summaries:
 
             module_params, module_states = self.api_module.get_summary_params(
                 path=path,
@@ -240,7 +240,9 @@ class Model(ModelBase):
                     module_type_name=(
                         module.__class__.__name__ if is_generalizable(module) else ""
                     ),
+                    module=module,
                     output_value=value,
+                    input_value=input_values,
                     trainable_params_count=(
                         utils.parameters_count(module_params)
                         if module_params is not None

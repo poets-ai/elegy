@@ -492,6 +492,7 @@ class ModelCore:
         depth: int = 2,
         tablefmt: str = "fancy_grid",
         return_repr: bool = False,
+        return_raw_entries: bool = False,
         **tablulate_kwargs,
     ) -> tp.Optional[str]:
         """
@@ -529,6 +530,9 @@ class ModelCore:
         total_entry = entries[-1]
         entries = entries[:-1]
 
+        if return_raw_entries:
+            return entries
+
         depth_groups: tp.Dict[str, tp.List[types.SummaryTableEntry]] = toolz.groupby(
             lambda entry: "/".join(entry.path.split("/")[:depth]), entries
         )
@@ -541,7 +545,9 @@ class ModelCore:
             return types.SummaryTableEntry(
                 path=entry.path,
                 module_type_name=entry.module_type_name,
+                module=entry.module,
                 output_value=entry.output_value,
+                input_value=entry.input_value,
                 trainable_params_count=sum(
                     entry_.trainable_params_count for entry_ in group
                 ),

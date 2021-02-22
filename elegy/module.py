@@ -13,6 +13,11 @@ import numpy as np
 from elegy import hooks, utils
 from elegy import types
 
+# placeholder for module module_slicing.py
+# injected from inside the module because of a circular dependency
+module_slicing = None
+
+
 __all__ = [
     "Module",
     "to_module",
@@ -158,6 +163,7 @@ class Module(metaclass=ModuleMeta):
         "set_parameters",
         "reset",
         "init",
+        "slice",
     ]
 
     def __init__(self, name: tp.Optional[str] = None, dtype: tp.Any = jnp.float32):
@@ -368,7 +374,7 @@ class Module(metaclass=ModuleMeta):
             if hooks.summaries_active():
                 path = get_module_path(self)
                 assert path is not None
-                hooks.add_summary(path, self, outputs)
+                hooks.add_summary(path, self, outputs, (args, kwargs))
 
             return outputs
 
@@ -376,11 +382,17 @@ class Module(metaclass=ModuleMeta):
     def call(self, *args, **kwargs):
         ...
 
-    def add_summary(self, name: str, f: tp.Any, value: tp.Any):
+    def add_summary(
+        self,
+        name: str,
+        f: tp.Any,
+        value: tp.Any,
+        input_values: tp.Optional[tp.Tuple[tp.Tuple, tp.Dict]] = None,
+    ):
         if hooks.summaries_active():
             path = get_module_path(self) + (name,)
             assert path is not None
-            hooks.add_summary(path, f, value)
+            hooks.add_summary(path, f, value, input_values)
 
     def init(
         self,
@@ -569,8 +581,53 @@ class Module(metaclass=ModuleMeta):
                 name=utils.get_name(regularizer),
                 value=regularizer(value),
             )
-
         return value
+
+    def slice(
+        self,
+        start_module: tp.Union["Module", str, None],
+        end_module: tp.Union[
+            "Module", str, None, tp.List[tp.Union["Module", str, None]]
+        ],
+        sample_input: np.ndarray,
+    ) -> "Module":
+        """
+        Creates a new submodule starting from the input of `start_module` to the outputs of `end_module`.
+
+        Current limitations:
+
+        - all operations between `start_module` and `end_module` must be performed by modules
+            i.e. `jax.nn.relu()` or `x+1` is not allowed but can be converted by wrapping with `elegy.to_module()`
+        - only one `start_module` is supported
+        - all modules between `start_module` and `end_module` must have a single output
+
+
+        Example usage:
+        ```
+        x = jnp.zeros((2, 224, 224, 3))
+        resnet = elegy.nets.resnet.ResNet18()
+        submodule = resnet.slice(
+                        start_module=None,
+                        end_module=["/res_net_block_1", "/res_net_block_3", "/res_net_block_5", "/res_net_block_7" ],
+                        sample_input=x,
+        )
+        outputs = elegy.Model(submodule).predict(x)
+        assert outputs[0].shape == (2, 56, 56, 64)
+        assert outputs[1].shape == (2, 28, 28, 128)
+        assert outputs[2].shape == (2, 14, 14, 256)
+        assert outputs[3].shape == (2, 7, 7, 512)
+        ```
+
+        Arguments:
+            start_module: Child module or name of a child module which will be the input module of the resulting module.
+                          If `None`, the first module is used.
+            end_module: Child module, name of child module, `None` or a list thereof which will be the output module(s) of the resulting module.
+                         If `None`, the last module is used.
+            sample_input: An array representing a sample input to the parent module.
+        """
+        return module_slicing.slice_module_from_to(
+            self, start_module, end_module, sample_input
+        )
 
     def update_parameter(self, name: str, value: tp.Any) -> None:
         """

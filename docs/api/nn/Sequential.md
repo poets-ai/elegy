@@ -12,4 +12,5 @@
             - set_parameters
             - reset
             - init
+            - slice
         

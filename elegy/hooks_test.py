@@ -32,7 +32,7 @@ class TestHooks(unittest.TestCase):
             elegy.hooks.add_summary(("a", 0, "b"), None, 2.0)
             summaries = elegy.hooks.get_summaries()
 
-        assert summaries[0] == (("a", 0, "b"), None, 2.0)
+        assert summaries[0] == (("a", 0, "b"), None, 2.0, None)
 
     def test_no_summaries(self):
         assert not elegy.hooks.summaries_active()
@@ -65,4 +65,4 @@ class TestHooks(unittest.TestCase):
         assert x == 6
         assert losses["x_loss"] == 6
         assert metrics["x"] == 7
-        assert summaries[0] == (("a", 0, "b"), jax.nn.relu, 8)
+        assert summaries[0] == (("a", 0, "b"), jax.nn.relu, 8, None)
