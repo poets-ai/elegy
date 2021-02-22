@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.7.0](https://github.com/poets-ai/elegy/tree/0.7.0) (2021-02-22)
+
+[Full Changelog](https://github.com/poets-ai/elegy/compare/0.6.0...0.7.0)
+
+**Merged pull requests:**
+
+- Fix notebook [\#166](https://github.com/poets-ai/elegy/pull/166) ([cgarciae](https://github.com/cgarciae))
+- Single Initialization: Removes the current progressive initialization in favor of a single underlying call to init\_step. [\#165](https://github.com/poets-ai/elegy/pull/165) ([cgarciae](https://github.com/cgarciae))
+
 ## [0.6.0](https://github.com/poets-ai/elegy/tree/0.6.0) (2021-02-14)
 
 [Full Changelog](https://github.com/poets-ai/elegy/compare/0.5.0...0.6.0)
