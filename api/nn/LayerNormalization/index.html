@@ -3096,14 +3096,22 @@ inputs. This cannot be passed in if the module was constructed with
     <span class="n">param_shape</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">:]</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_scale</span><span class="p">:</span>
         <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span>
-            <span class="s2">"scale"</span><span class="p">,</span> <span class="n">param_shape</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_init</span>
+            <span class="s2">"scale"</span><span class="p">,</span>
+            <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_init</span><span class="p">(</span>
+                <span class="n">param_shape</span><span class="p">,</span>
+                <span class="n">jnp</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+            <span class="p">),</span>
         <span class="p">)</span>
     <span class="k">elif</span> <span class="n">scale</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_offset</span><span class="p">:</span>
         <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span>
-            <span class="s2">"offset"</span><span class="p">,</span> <span class="n">param_shape</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">offset_init</span>
+            <span class="s2">"offset"</span><span class="p">,</span>
+            <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset_init</span><span class="p">(</span>
+                <span class="n">param_shape</span><span class="p">,</span>
+                <span class="n">jnp</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+            <span class="p">),</span>
         <span class="p">)</span>
     <span class="k">elif</span> <span class="n">offset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>

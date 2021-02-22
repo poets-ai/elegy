@@ -2803,7 +2803,7 @@ at the end.</p>
 <div class="doc doc-object doc-method">
 <h2 class="doc doc-heading" id="elegy.model.model_base.ModelBase.evaluate">
 
-<code class="highlight language-python"><span class="n">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">drop_remaining</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">class_weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">drop_remaining</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
 
 
       </h2>
@@ -2823,7 +2823,7 @@ Computation is done in batches.</p>
 <tbody>
 <tr>
 <td><code>x</code></td>
-<td><code>Union[numpy.ndarray, Mapping[str, numpy.ndarray], Tuple[numpy.ndarray], Iterable]</code></td>
+<td><code>Optional[Any]</code></td>
 <td>
 <p>Input data. It could be:</p>
 <ul>
@@ -2839,11 +2839,11 @@ unpacking behavior for iterator types generator
 is given in the <code>Unpacking behavior for iterator-like inputs</code> section
 of <code>Model.fit</code>.</p>
 </td>
-<td><em>required</em></td>
+<td><code>None</code></td>
 </tr>
 <tr>
 <td><code>y</code></td>
-<td><code>Union[jax._src.numpy.lax_numpy.ndarray, numpy.ndarray, Mapping[str, numpy.ndarray], Tuple[numpy.ndarray]]</code></td>
+<td><code>Optional[Any]</code></td>
 <td>
 <p>Target data. Like the input data <code>x</code>,
 it could be either Numpy or Jax array(s).
@@ -2950,22 +2950,12 @@ List of callbacks to apply during training.</p>
           <div class="highlight">
 <pre><span></span><code><span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
-    <span class="n">x</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-        <span class="n">tp</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
-        <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
-        <span class="n">tp</span><span class="o">.</span><span class="n">Iterable</span><span class="p">,</span>
-    <span class="p">],</span>
-    <span class="n">y</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span>
-        <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-        <span class="n">tp</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
-        <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
-        <span class="kc">None</span><span class="p">,</span>
-    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">y</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="n">batch_size</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">sample_weight</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">class_weight</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">steps</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">callbacks</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">Callback</span><span class="p">],</span> <span class="n">CallbackList</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">drop_remaining</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -3020,6 +3010,18 @@ List of callbacks to apply during training.</p>
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError: in case of invalid arguments.</span>
 <span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">class_weight</span><span class="o">=</span><span class="n">class_weight</span><span class="p">,</span>
+            <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="n">data_handler</span> <span class="o">=</span> <span class="n">DataHandler</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
@@ -3101,7 +3103,7 @@ List of callbacks to apply during training.</p>
 <tbody>
 <tr>
 <td><code>x</code></td>
-<td><code>Union[numpy.ndarray, Mapping[str, numpy.ndarray], Tuple[numpy.ndarray], Iterable]</code></td>
+<td><code>Optional[Any]</code></td>
 <td>
 <p>Input data. It could be:</p>
 <ul>
@@ -3119,7 +3121,7 @@ is given below.</p>
 </tr>
 <tr>
 <td><code>y</code></td>
-<td><code>Union[numpy.ndarray, Mapping[str, numpy.ndarray], Tuple[numpy.ndarray]]</code></td>
+<td><code>Optional[Any]</code></td>
 <td>
 <p>Target data. Like the input data <code>x</code>,
 it could be either Numpy or Jax array(s).
@@ -3389,19 +3391,8 @@ and what the model expects.</p>
           <div class="highlight">
 <pre><span></span><code><span class="k">def</span> <span class="nf">fit</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
-    <span class="n">x</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-        <span class="n">tp</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
-        <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
-        <span class="n">tp</span><span class="o">.</span><span class="n">Iterable</span><span class="p">,</span>
-        <span class="kc">None</span><span class="p">,</span>
-    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">y</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-        <span class="n">tp</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
-        <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
-        <span class="kc">None</span><span class="p">,</span>
-    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">y</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">batch_size</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">epochs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
@@ -3570,6 +3561,15 @@ and what the model expects.</p>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">x</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">class_weight</span><span class="o">=</span><span class="n">class_weight</span><span class="p">,</span>
+            <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">validation_split</span><span class="p">:</span>
         <span class="c1"># Create the validation data using the training data. Only supported for</span>
@@ -3750,7 +3750,7 @@ new layers with weights will be initialized from scratch.</p>
 <div class="doc doc-object doc-method">
 <h2 class="doc doc-heading" id="elegy.model.model_base.ModelBase.predict">
 
-<code class="highlight language-python"><span class="n">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">drop_remaining</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">drop_remaining</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">initialize</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
 
 
       </h2>
@@ -3770,7 +3770,7 @@ Computation is done in batches.</p>
 <tbody>
 <tr>
 <td><code>x</code></td>
-<td><code>Union[numpy.ndarray, Mapping[str, numpy.ndarray], Tuple[numpy.ndarray], Iterable]</code></td>
+<td><code>Optional[Any]</code></td>
 <td>
 <p>Input data. It could be:</p>
 <ul>
@@ -3786,7 +3786,7 @@ unpacking behavior for iterator types generator
 is given in the <code>Unpacking behavior for iterator-like inputs</code> section
 of <code>Model.fit</code>.</p>
 </td>
-<td><em>required</em></td>
+<td><code>None</code></td>
 </tr>
 <tr>
 <td><code>batch_size</code></td>
@@ -3876,17 +3876,13 @@ that is not a multiple of the batch size.</p>
           <div class="highlight">
 <pre><span></span><code><span class="k">def</span> <span class="nf">predict</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
-    <span class="n">x</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-        <span class="n">tp</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
-        <span class="n">tp</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
-        <span class="n">tp</span><span class="o">.</span><span class="n">Iterable</span><span class="p">,</span>
-    <span class="p">],</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="n">batch_size</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">steps</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">callbacks</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">Callback</span><span class="p">],</span> <span class="n">CallbackList</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">drop_remaining</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">initialize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">:</span>
     <span class="sd">"""Generates output predictions for the input samples.</span>
 <span class="sd">    Computation is done in batches.</span>
@@ -3930,6 +3926,19 @@ that is not a multiple of the batch size.</p>
 <span class="sd">            or in case a stateful model receives a number of samples</span>
 <span class="sd">            that is not a multiple of the batch size.</span>
 <span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">initialize</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">types</span><span class="o">.</span><span class="n">ModelNotInitialized</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Model not initialized, please execute `model.init` or `model.init_on_batch` "</span>
+                <span class="s2">"before running this method, or pass `initialize=True` to initialize with the available data "</span>
+                <span class="s2">"(this might not initialize the optimizer)."</span>
+            <span class="p">)</span>
 
     <span class="n">outputs</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -4087,11 +4096,12 @@ expectations of the model.</p>
 <span class="sd">        ValueError: In case of mismatch between given number of inputs and</span>
 <span class="sd">            expectations of the model.</span>
 <span class="sd">    """</span>
-    <span class="n">mode</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">Mode</span><span class="o">.</span><span class="n">pred</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialized</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">types</span><span class="o">.</span><span class="n">ModelNotInitialized</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Model not initialized, please execute `init` or `init_on_batch` before running this method."</span>
+        <span class="p">)</span>
     <span class="n">initializing</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">training</span> <span class="o">=</span> <span class="kc">False</span>
-
-    <span class="bp">self</span><span class="o">.</span><span class="n">maybe_initialize</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
 
     <span class="n">method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_pred_step</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_eagerly</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_pred_step_jit</span>
     <span class="n">states</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_eagerly</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span>
@@ -4218,11 +4228,8 @@ model <span style="color: #666666">=</span> elegy<span style="color: #666666">.<
 <div class="doc doc-object doc-method">
 <h2 class="doc doc-heading" id="elegy.model.model_base.ModelBase.summary">
 
-<code class="highlight language-python"><span class="n">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">tablefmt</span><span class="o">=</span><span class="s1">'fancy_grid'</span><span class="p">,</span> <span class="n">return_repr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">tablulate_kwargs</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">tablefmt</span><span class="o">=</span><span class="s1">'fancy_grid'</span><span class="p">,</span> <span class="n">return_repr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">initialize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">eval_shape</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">tablulate_kwargs</span><span class="p">)</span></code>
 
-  <span class="doc doc-properties">
-      <small class="doc doc-property doc-property-inherited"><code>inherited</code></small>
-  </span>
 
       </h2>
 <div class="doc doc-contents ">
@@ -4240,11 +4247,11 @@ model <span style="color: #666666">=</span> elegy<span style="color: #666666">.<
 <tbody>
 <tr>
 <td><code>x</code></td>
-<td><code></code></td>
+<td><code>Optional[Any]</code></td>
 <td>
 <p>A sample of inputs to the network.</p>
 </td>
-<td><em>required</em></td>
+<td><code>None</code></td>
 </tr>
 <tr>
 <td><code>depth</code></td>
@@ -4284,10 +4291,12 @@ for more options.</p>
           <div class="highlight">
 <pre><span></span><code><span class="k">def</span> <span class="nf">summary</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
-    <span class="n">x</span><span class="p">,</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">tp</span><span class="o">.</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
     <span class="n">tablefmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"fancy_grid"</span><span class="p">,</span>
     <span class="n">return_repr</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">initialize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">eval_shape</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="o">**</span><span class="n">tablulate_kwargs</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
     <span class="sd">"""</span>
@@ -4305,23 +4314,22 @@ for more options.</p>
 <span class="sd">            See [python-tabulate](https://github.com/astanin/python-tabulate)</span>
 <span class="sd">            for more options.</span>
 <span class="sd">    """</span>
-    <span class="n">mode</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">Mode</span><span class="o">.</span><span class="n">pred</span>
-    <span class="n">initializing</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="n">training</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="bp">self</span><span class="o">.</span><span class="n">maybe_initialize</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">entries</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">SummaryTableEntry</span><span class="p">]</span>
+    <span class="n">states</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_eagerly</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span>
 
     <span class="n">method</span> <span class="o">=</span> <span class="p">(</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">call_summary_step</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_eagerly</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_summary_step_jit</span>
     <span class="p">)</span>
-    <span class="n">states</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_eagerly</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span>
 
-    <span class="n">entries</span> <span class="o">=</span> <span class="n">method</span><span class="p">(</span>
-        <span class="n">x</span><span class="p">,</span>
-        <span class="n">states</span><span class="p">,</span>
-        <span class="n">initializing</span><span class="p">,</span>
-        <span class="n">training</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">eval_shape</span><span class="p">:</span>
+        <span class="n">entries</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">eval_shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">call_summary_step</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">states</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">entries</span> <span class="o">=</span> <span class="n">method</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">states</span><span class="p">)</span>
+
     <span class="n">total_entry</span> <span class="o">=</span> <span class="n">entries</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">entries</span> <span class="o">=</span> <span class="n">entries</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
@@ -4441,22 +4449,22 @@ for more options.</p>
             <span class="p">[</span>
                 <span class="p">[</span>
                     <span class="sa">f</span><span class="s2">"Total Parameters:"</span><span class="p">,</span>
-                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">total_count</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"&lt;TOKEN&gt;</span><span class="si">{</span><span class="n">total_count</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
                     <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">format_size</span><span class="p">(</span><span class="n">total_size</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">total_count</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
                 <span class="p">],</span>
                 <span class="p">[</span>
                     <span class="sa">f</span><span class="s2">"Trainable Parameters:"</span><span class="p">,</span>
-                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">params_count</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"&lt;TOKEN&gt;</span><span class="si">{</span><span class="n">params_count</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
                     <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">format_size</span><span class="p">(</span><span class="n">params_size</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">params_count</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
                 <span class="p">],</span>
                 <span class="p">[</span>
                     <span class="sa">f</span><span class="s2">"Non-trainable Parameters:"</span><span class="p">,</span>
-                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">states_count</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"&lt;TOKEN&gt;</span><span class="si">{</span><span class="n">states_count</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
                     <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">format_size</span><span class="p">(</span><span class="n">states_size</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">states_count</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
                 <span class="p">],</span>
             <span class="p">],</span>
             <span class="n">tablefmt</span><span class="o">=</span><span class="s2">"plain"</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"&lt;TOKEN&gt;"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
         <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span>
     <span class="p">)</span>
 
@@ -4598,17 +4606,15 @@ other losses and metrics.</p>
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError: In case of invalid user-provided arguments.</span>
 <span class="sd">    """</span>
-    <span class="n">mode</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">Mode</span><span class="o">.</span><span class="n">test</span>
-    <span class="n">initializing</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="n">training</span> <span class="o">=</span> <span class="kc">False</span>
-
-    <span class="bp">self</span><span class="o">.</span><span class="n">maybe_initialize</span><span class="p">(</span>
-        <span class="n">mode</span><span class="p">,</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">init_on_batch</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
         <span class="n">y_true</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
         <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span>
         <span class="n">class_weight</span><span class="o">=</span><span class="n">class_weight</span><span class="p">,</span>
     <span class="p">)</span>
+
+    <span class="n">initializing</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">training</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="n">method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_test_step</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_eagerly</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_test_step_jit</span>
     <span class="n">states</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_eagerly</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span>
@@ -4776,17 +4782,15 @@ other losses and metrics.</p>
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError: In case of invalid user-provided arguments.</span>
 <span class="sd">    """</span>
-    <span class="n">mode</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">Mode</span><span class="o">.</span><span class="n">train</span>
-    <span class="n">initializing</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="n">training</span> <span class="o">=</span> <span class="kc">True</span>
-
-    <span class="bp">self</span><span class="o">.</span><span class="n">maybe_initialize</span><span class="p">(</span>
-        <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">init_on_batch</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
         <span class="n">y_true</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
         <span class="n">sample_weight</span><span class="o">=</span><span class="n">sample_weight</span><span class="p">,</span>
         <span class="n">class_weight</span><span class="o">=</span><span class="n">class_weight</span><span class="p">,</span>
     <span class="p">)</span>
+
+    <span class="n">initializing</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">training</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="n">method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_train_step</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_eagerly</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_train_step_jit</span>
     <span class="n">states</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_eagerly</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">states</span>
