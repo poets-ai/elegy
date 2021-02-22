@@ -100,8 +100,6 @@ def main(
         run_eagerly=eager,
     )
 
-    model.init(train_loader)
-
     x_sample, y_sample = next(iter(train_loader))
     model.summary(x_sample)
 

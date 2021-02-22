@@ -74,8 +74,6 @@ def main(
         run_eagerly=eager,
     )
 
-    model.init(X_train, y_train)
-
     model.summary(X_train[:64])
 
     history = model.fit(

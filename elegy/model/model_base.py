@@ -143,6 +143,7 @@ class ModelBase(ModelCore):
             sample_weight=sample_weight,
             batch_size=batch_size,
             class_weight=class_weight,
+            steps_per_epoch=1,
         )
 
         epoch, iterator = next(data_handler.enumerate_epochs())
