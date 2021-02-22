@@ -122,15 +122,6 @@ class ModelBase(ModelCore):
         "states",
     ]
 
-    def pred_step(self, *args, **kwargs):
-        raise types.MissingMethod()
-
-    def test_step(self, *args, **kwargs):
-        raise types.MissingMethod()
-
-    def train_step(self, *args, **kwargs):
-        raise types.MissingMethod()
-
     def init(
         self,
         x: tp.Optional[tp.Any] = None,
@@ -167,7 +158,7 @@ class ModelBase(ModelCore):
 
     def summary(
         self,
-        x,
+        x: tp.Optional[tp.Any] = None,
         depth: int = 2,
         tablefmt: str = "fancy_grid",
         return_repr: bool = False,
@@ -190,6 +181,9 @@ class ModelBase(ModelCore):
                 See [python-tabulate](https://github.com/astanin/python-tabulate)
                 for more options.
         """
+
+        if x is None:
+            x = {}
 
         entries: tp.List[types.SummaryTableEntry]
         states = self.states.copy() if self.run_eagerly else self.states
@@ -519,6 +513,15 @@ class ModelBase(ModelCore):
         if x is None:
             x = {}
 
+        if not self.initialized:
+            self.init(
+                x=x,
+                y=y,
+                batch_size=batch_size,
+                class_weight=class_weight,
+                sample_weight=sample_weight,
+            )
+
         if validation_split:
             # Create the validation data using the training data. Only supported for
             # `Jax Numpy` and `NumPy` input.
@@ -626,22 +629,12 @@ class ModelBase(ModelCore):
 
     def evaluate(
         self,
-        x: tp.Union[
-            np.ndarray,
-            tp.Mapping[str, np.ndarray],
-            tp.Tuple[np.ndarray],
-            tp.Iterable,
-        ],
-        y: tp.Union[
-            jnp.ndarray,
-            np.ndarray,
-            tp.Mapping[str, np.ndarray],
-            tp.Tuple[np.ndarray],
-            None,
-        ] = None,
+        x: tp.Optional[tp.Any] = None,
+        y: tp.Optional[tp.Any] = None,
         verbose: int = 1,
         batch_size: tp.Optional[int] = None,
         sample_weight: tp.Optional[np.ndarray] = None,
+        class_weight: tp.Optional[tp.Mapping[str, float]] = None,
         steps: tp.Optional[int] = None,
         callbacks: tp.Union[tp.List[Callback], CallbackList, None] = None,
         drop_remaining: bool = False,
@@ -696,6 +689,18 @@ class ModelBase(ModelCore):
         Raises:
             ValueError: in case of invalid arguments.
         """
+
+        if x is None:
+            x = {}
+
+        if not self.initialized:
+            self.init(
+                x=x,
+                y=y,
+                batch_size=batch_size,
+                class_weight=class_weight,
+                sample_weight=sample_weight,
+            )
 
         data_handler = DataHandler(
             x=x,
@@ -753,12 +758,7 @@ class ModelBase(ModelCore):
 
     def predict(
         self,
-        x: tp.Union[
-            np.ndarray,
-            tp.Mapping[str, np.ndarray],
-            tp.Tuple[np.ndarray],
-            tp.Iterable,
-        ],
+        x: tp.Optional[tp.Any] = None,
         verbose: int = 0,
         batch_size: tp.Optional[int] = None,
         steps: tp.Optional[int] = None,
@@ -808,6 +808,9 @@ class ModelBase(ModelCore):
                 or in case a stateful model receives a number of samples
                 that is not a multiple of the batch size.
         """
+
+        if x is None:
+            x = {}
 
         if not self.initialized:
             if initialize:

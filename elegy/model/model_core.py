@@ -136,7 +136,7 @@ class ModelCore:
         class_weight: tp.Optional[np.ndarray],
         states: types.States,
     ) -> types.States:
-        raise NotImplementedError()
+        raise types.MissingMethod()
 
     def call_init_step(
         self,
@@ -159,7 +159,7 @@ class ModelCore:
         x: tp.Any,
         states: types.States,
     ) -> tp.List[types.SummaryTableEntry]:
-        raise NotImplementedError()
+        raise types.MissingMethod()
 
     def call_summary_step(
         self,
@@ -178,7 +178,7 @@ class ModelCore:
         initializing: bool,
         training: bool,
     ) -> PredStep:
-        raise NotImplementedError()
+        raise types.MissingMethod()
 
     def call_pred_step(
         self,
@@ -204,7 +204,7 @@ class ModelCore:
         initializing: bool,
         training: bool,
     ) -> TestStep:
-        raise NotImplementedError()
+        raise types.MissingMethod()
 
     def call_test_step(
         self,
@@ -236,7 +236,7 @@ class ModelCore:
         initializing: bool,
         training: bool,
     ) -> GradStep:
-        raise NotImplementedError()
+        raise types.MissingMethod()
 
     def train_step(
         self,
@@ -248,7 +248,7 @@ class ModelCore:
         initializing: bool,
         training: bool,
     ) -> TrainStep:
-        raise NotImplementedError()
+        raise types.MissingMethod()
 
     def call_train_step(
         self,
