@@ -30,6 +30,7 @@ toolz = "^0.10.0"
 pyyaml = "^5.3.1"
 dm-haiku = "^0.0.2"
 optax = "^0.0.1"
+rich = "^9.11.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.4.3"

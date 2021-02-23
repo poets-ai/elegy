@@ -1,6 +1,7 @@
 # Implementation based on tf.keras.engine.training.py
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
+import io
 import pickle
 import typing as tp
 from copy import copy
@@ -10,9 +11,11 @@ from pathlib import Path
 import jax
 import jax.numpy as jnp
 import numpy as np
+import rich
+import rich.box
 import toolz
 import yaml
-from elegy import types
+from elegy import types, utils
 from elegy.callbacks import Callback, CallbackList, History
 from elegy.data import (
     DataHandler,
@@ -23,7 +26,7 @@ from elegy.data import (
 )
 from elegy.data import utils as data_utils
 from elegy.model.model_core import ModelCore, PredStep, TestStep
-from tabulate import tabulate
+from rich.table import Table
 
 # from elegy.module import Module
 
@@ -205,71 +208,37 @@ class ModelBase(ModelCore):
             lambda entry: "/".join(entry.path.split("/")[:depth]), entries
         )
 
-        def get_grouped_entry(
-            entry: types.SummaryTableEntry,
-        ) -> types.SummaryTableEntry:
-            group = depth_groups[entry.path]
-
-            return types.SummaryTableEntry(
-                path=entry.path,
-                module_type_name=entry.module_type_name,
-                output_value=entry.output_value,
-                trainable_params_count=sum(
-                    entry_.trainable_params_count for entry_ in group
-                ),
-                trainable_params_size=sum(
-                    entry_.trainable_params_size for entry_ in group
-                ),
-                non_trainable_params_count=sum(
-                    entry_.non_trainable_params_count for entry_ in group
-                ),
-                non_trainable_params_size=sum(
-                    entry_.non_trainable_params_size for entry_ in group
-                ),
-            )
-
         entries = [
-            get_grouped_entry(entry) for entry in entries if entry.path in depth_groups
+            utils.get_grouped_entry(entry, depth_groups)
+            for entry in entries
+            if entry.path in depth_groups
         ]
 
-        def format_output(value) -> str:
-            file = StringIO()
-            outputs = jax.tree_map(lambda x: f"{x.shape}{{pad}}  {x.dtype}", value)
-            yaml.safe_dump(
-                outputs, file, default_flow_style=False, indent=2, explicit_end=False
-            )
-            return file.getvalue().replace("\n...", "")
+        main_table = Table(show_header=True, show_lines=True)
 
-        def format_size(size):
-            return (
-                f"{size / 1e9 :,.1f} GB"
-                if size > 1e9
-                else f"{size / 1e6 :,.1f} MB"
-                if size > 1e6
-                else f"{size / 1e3 :,.1f} KB"
-                if size > 1e3
-                else f"{size:,} B"
-            )
+        main_table.add_column("Layer")
+        main_table.add_column("Outputs Shape")
+        main_table.add_column("[green]Trainable\nParameters[/]")
+        main_table.add_column("[green]Non-trainable\nParameters[/]")
 
-        table: tp.List = [
-            [
-                "Inputs",
-                format_output(x),
-                "",
-                "",
-            ]
-        ]
+        rows: tp.List[tp.List[str]] = []
+
+        rows.append(["Inputs", utils.format_output(x), "", ""])
 
         for entry in entries:
-
-            table.append(
+            rows.append(
                 [
-                    f"{entry.path}{{pad}}  {entry.module_type_name}",
-                    format_output(entry.output_value),
-                    f"{entry.trainable_params_count:,}{{pad}}    {format_size(entry.trainable_params_size)}"
+                    f"{entry.path}{{pad}}  "
+                    + (
+                        f"[dim]{entry.module_type_name}[/]"
+                        if entry.module_type_name
+                        else ""
+                    ),
+                    utils.format_output(entry.output_value),
+                    f"[green]{entry.trainable_params_count:,}[/]{{pad}}    {utils.format_size(entry.trainable_params_size)}"
                     if entry.trainable_params_count > 0
                     else "",
-                    f"{entry.non_trainable_params_count:,}{{pad}}    {format_size(entry.non_trainable_params_size)}"
+                    f"[green]{entry.non_trainable_params_count:,}[/]{{pad}}    {utils.format_size(entry.non_trainable_params_size)}"
                     if entry.non_trainable_params_count > 0
                     else "",
                 ]
@@ -279,17 +248,20 @@ class ModelBase(ModelCore):
         for col in range(4):
             max_length = max(
                 len(line.split("{pad}")[0])
-                for row in table
+                for row in rows
                 for line in row[col].split("\n")
             )
 
-            for row in table:
+            for row in rows:
                 row[col] = "\n".join(
                     line.format(
                         pad=" " * (max_length - len(line.rstrip().split("{pad}")[0]))
                     )
                     for line in row[col].rstrip().split("\n")
                 )
+
+        for row in rows:
+            main_table.add_row(*row)
 
         # global summaries
         params_count = total_entry.trainable_params_count
@@ -299,41 +271,30 @@ class ModelBase(ModelCore):
         total_count = params_count + states_count
         total_size = params_size + states_size
 
+        params_table = Table(
+            show_header=False, show_lines=False, show_edge=False, box=rich.box.SIMPLE
+        )
+
+        params_table.add_row(
+            f"Total Parameters",
+            f"[green]{total_count:,}[/]",
+            f"{utils.format_size(total_size)}" if total_count > 0 else "",
+        )
+        params_table.add_row(
+            f"Trainable Parameters",
+            f"[green]{params_count:,}[/]",
+            f"{utils.format_size(params_size)}" if params_count > 0 else "",
+        )
+        params_table.add_row(
+            f"Non-trainable Parameters",
+            f"[green]{states_count:,}[/]",
+            f"{utils.format_size(states_size)}" if states_count > 0 else "",
+        )
+
+        params_table.columns[0].justify = "right"
+
         summary = (
-            "\n"
-            + tabulate(
-                table,
-                headers=[
-                    "Layer",
-                    "Outputs Shape",
-                    "Trainable\nParameters",
-                    "Non-trainable\nParameters",
-                ],
-                tablefmt=tablefmt,
-                **tablulate_kwargs,
-            )
-            + "\n"
-            + tabulate(
-                [
-                    [
-                        f"Total Parameters:",
-                        f"<TOKEN>{total_count:,}",
-                        f"{format_size(total_size)}" if total_count > 0 else "",
-                    ],
-                    [
-                        f"Trainable Parameters:",
-                        f"<TOKEN>{params_count:,}",
-                        f"{format_size(params_size)}" if params_count > 0 else "",
-                    ],
-                    [
-                        f"Non-trainable Parameters:",
-                        f"<TOKEN>{states_count:,}",
-                        f"{format_size(states_size)}" if states_count > 0 else "",
-                    ],
-                ],
-                tablefmt="plain",
-            ).replace("<TOKEN>", "")
-            + "\n"
+            "\n" + utils.get_table_repr(main_table) + utils.get_table_repr(params_table)
         )
 
         print(summary)

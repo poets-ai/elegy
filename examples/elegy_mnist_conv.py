@@ -82,6 +82,8 @@ def main(
     # show summary
     model.summary(X_train[:64])
 
+    return
+
     history = model.fit(
         x=X_train,
         y=y_train,
