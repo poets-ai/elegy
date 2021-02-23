@@ -218,8 +218,8 @@ class ModelBase(ModelCore):
 
         main_table.add_column("Layer")
         main_table.add_column("Outputs Shape")
-        main_table.add_column("[green]Trainable\nParameters[/]")
-        main_table.add_column("[green]Non-trainable\nParameters[/]")
+        main_table.add_column("Trainable\nParameters")
+        main_table.add_column("Non-trainable\nParameters")
 
         rows: tp.List[tp.List[str]] = []
 
