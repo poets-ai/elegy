@@ -79,7 +79,7 @@ def main(
         run_eagerly=eager,
     )
 
-    # show summary
+    # show model summary
     model.summary(X_train[:64], depth=1)
 
     history = model.fit(
