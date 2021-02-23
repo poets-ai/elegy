@@ -27,6 +27,7 @@ from elegy.data import (
 from elegy.data import utils as data_utils
 from elegy.model.model_core import ModelCore, PredStep, TestStep
 from rich.table import Table
+from rich.text import Text
 
 # from elegy.module import Module
 
@@ -214,7 +215,12 @@ class ModelBase(ModelCore):
             if entry.path in depth_groups
         ]
 
-        main_table = Table(show_header=True, show_lines=True)
+        main_table = Table(
+            show_header=True,
+            show_lines=True,
+            show_footer=True,
+            # box=rich.box.HORIZONTALS,
+        )
 
         main_table.add_column("Layer")
         main_table.add_column("Outputs Shape")
@@ -244,6 +250,31 @@ class ModelBase(ModelCore):
                 ]
             )
 
+        # global summaries
+        params_count = total_entry.trainable_params_count
+        params_size = total_entry.trainable_params_size
+        states_count = total_entry.non_trainable_params_count
+        states_size = total_entry.non_trainable_params_size
+        total_count = params_count + states_count
+        total_size = params_size + states_size
+
+        rows.append(
+            [
+                "",
+                "Total",
+                (
+                    f"[green]{params_count:,}[/]{{pad}}    {utils.format_size(params_size)}"
+                    if params_count > 0
+                    else ""
+                ),
+                (
+                    f"[green]{states_count:,}[/]{{pad}}    {utils.format_size(states_size)}"
+                    if states_count > 0
+                    else ""
+                ),
+            ]
+        )
+
         # add padding
         for col in range(4):
             max_length = max(
@@ -260,42 +291,21 @@ class ModelBase(ModelCore):
                     for line in row[col].rstrip().split("\n")
                 )
 
-        for row in rows:
+        for row in rows[:-1]:
             main_table.add_row(*row)
 
-        # global summaries
-        params_count = total_entry.trainable_params_count
-        params_size = total_entry.trainable_params_size
-        states_count = total_entry.non_trainable_params_count
-        states_size = total_entry.non_trainable_params_size
-        total_count = params_count + states_count
-        total_size = params_size + states_size
-
-        params_table = Table(
-            show_header=False, show_lines=False, show_edge=False, box=rich.box.SIMPLE
+        main_table.columns[1].footer = Text.from_markup(rows[-1][1], justify="right")
+        main_table.columns[2].footer = rows[-1][2]
+        main_table.columns[3].footer = rows[-1][3]
+        main_table.caption_style = "bold"
+        main_table.caption = (
+            "\nTotal Parameters: "
+            + f"[green]{total_count:,}[/]   {utils.format_size(total_size)}"
+            if total_count > 0
+            else ""
         )
 
-        params_table.add_row(
-            f"Total Parameters",
-            f"[green]{total_count:,}[/]",
-            f"{utils.format_size(total_size)}" if total_count > 0 else "",
-        )
-        params_table.add_row(
-            f"Trainable Parameters",
-            f"[green]{params_count:,}[/]",
-            f"{utils.format_size(params_size)}" if params_count > 0 else "",
-        )
-        params_table.add_row(
-            f"Non-trainable Parameters",
-            f"[green]{states_count:,}[/]",
-            f"{utils.format_size(states_size)}" if states_count > 0 else "",
-        )
-
-        params_table.columns[0].justify = "right"
-
-        summary = (
-            "\n" + utils.get_table_repr(main_table) + utils.get_table_repr(params_table)
-        )
+        summary = "\n" + utils.get_table_repr(main_table)
 
         print(summary)
 

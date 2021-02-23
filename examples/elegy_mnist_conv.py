@@ -80,9 +80,7 @@ def main(
     )
 
     # show summary
-    model.summary(X_train[:64])
-
-    return
+    model.summary(X_train[:64], depth=1)
 
     history = model.fit(
         x=X_train,

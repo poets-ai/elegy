@@ -110,11 +110,11 @@ class TestLinenModule(unittest.TestCase):
         assert "2" in lines[11]
         assert "8 B" in lines[11]
 
-        assert "21" in lines[13]
-        assert "84 B" in lines[13]
+        assert "9" in lines[13]
+        assert "36 B" in lines[13]
 
-        assert "9" in lines[14]
-        assert "36 B" in lines[14]
+        assert "12" in lines[13]
+        assert "48 B" in lines[13]
 
-        assert "12" in lines[15]
-        assert "48 B" in lines[15]
+        assert "21" in lines[16]
+        assert "84 B" in lines[16]
