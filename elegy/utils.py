@@ -1,6 +1,7 @@
 import functools
 import hashlib
 import inspect
+import io
 import os
 import re
 import shutil
@@ -14,6 +15,8 @@ import jax.numpy as jnp
 import jax.tree_util
 import numpy as np
 import toolz
+import yaml
+from rich.console import Console
 
 from elegy import types
 
@@ -414,3 +417,57 @@ def plot_history(history):
         plt.title(title)
 
     plt.show()
+
+
+def get_grouped_entry(
+    entry: types.SummaryTableEntry,
+    depth_groups: tp.Dict[str, tp.List[types.SummaryTableEntry]],
+) -> types.SummaryTableEntry:
+    group = depth_groups[entry.path]
+
+    return types.SummaryTableEntry(
+        path=entry.path,
+        module_type_name=entry.module_type_name,
+        output_value=entry.output_value,
+        trainable_params_count=sum(entry_.trainable_params_count for entry_ in group),
+        trainable_params_size=sum(entry_.trainable_params_size for entry_ in group),
+        non_trainable_params_count=sum(
+            entry_.non_trainable_params_count for entry_ in group
+        ),
+        non_trainable_params_size=sum(
+            entry_.non_trainable_params_size for entry_ in group
+        ),
+    )
+
+
+def format_output(value) -> str:
+    file = io.StringIO()
+    outputs = jax.tree_map(
+        lambda x: f"{x.shape}" + f"{{pad}}  [dim]{x.dtype}[/]", value
+    )
+    yaml.safe_dump(
+        outputs, file, default_flow_style=False, indent=2, explicit_end=False
+    )
+    return file.getvalue().replace("\n...", "").replace("'", "")
+
+
+def format_size(size):
+    count, units = (
+        (f"{size / 1e9 :,.1f}", "GB")
+        if size > 1e9
+        else (f"{size / 1e6 :,.1f}", "MB")
+        if size > 1e6
+        else (f"{size / 1e3 :,.1f}", "KB")
+        if size > 1e3
+        else (f"{size:,}", "B")
+    )
+
+    return f"[dim]{count} {units}[/dim]"
+
+
+def get_table_repr(table):
+    f = io.StringIO()
+    console = Console(file=f, force_terminal=True)
+    console.print(table)
+
+    return f.getvalue()
