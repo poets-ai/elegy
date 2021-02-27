@@ -5,28 +5,25 @@ Elegy's low-level API allows you to override some core methods in `Model` that s
 ### Methods
 This is the list of all the overrideable methods:
 
-| Caller Methods                       | Overridable Method |
-| :----------------------------------- | :----------------- |
-| - `predict` <br>- `predict_on_batch` | `pred_step`        |
-| - `evaluate`<br>- `test_on_batch`    | `test_step`        |
-|                                      | `grad_step`        |
-| - `fit`<br>- `train_on_batch`        | `train_step`       |
-| - `summary`                          | `summary_step`     |
+| Caller     | Method         |
+| :--------- | :------------- |
+| `predict`  | `pred_step`    |
+| `evaluate` | `test_step`    |
+|            | `grad_step`    |
+| `fit`      | `train_step`   |
+| `init`     | `init_step`    |
+| `summary`  | `summary_step` |
+|            | `states_step`  |
+|            | `jit_step`     |
 
-Each overrideable method has a default implementation which is what gives rise to the high-level API, the default implementation almost always implements a method in term of another in this manner:
-
-```
-pred_step ⬅ test_step ⬅ grad_step ⬅ train_step
-pred_step ⬅ summary_step
-```
-This allows you to e.g. override `test_step` and still be able to use use `fit` since `train_step` (called by `fit`) will call your `test_step` via `grad_step`. It also means that e.g. if you implement `test_step` but not `pred_step` there is a high chance both `predict` and `summary` will not work as expected since both depend on `pred_step`. 
+Each method has a default implementation which is what gives rise to the high-level API.
 
 ### Example
-Each overrideable methods takes some input + state, performs some `jax` operations + updates the state, and returns some outputs + the new state. Lets see a simple example of a linear classifier using `test_step`:
+Most overrideable methods take some input & state, perform some `jax` operations & updates the state, and returns some outputs & the new state. Lets see a simple example of a linear classifier using `test_step`:
 
 ```python
 class LinearClassifier(elegy.Model):
-    def test_step(self, x,  y_true,  states, initializing) -> elegy.TestStep:  
+    def test_step(self, x, y_true, states, initializing):  
         x = jnp.reshape(x, (x.shape[0], -1)) / 255
 
         # initialize or use existing parameters
@@ -66,9 +63,9 @@ model.fit(
 )
 ```
 
-As you see here we perform everything from parameter initialization, modeling, calculating the main loss, and logging some metrics. Notes:
+As you see here we perform everything from parameter initialization, modeling, calculating the main loss, and logging some metrics. Some notes about the previous example:
 
 * The `states` argument of type `elegy.States` is an immutable Mapping which you add / update fields via its `update` method.
-* `net_params` is one of the names used by the default implementation, check the [States](./states.md) guid for more information.
-* `initializing` tells you whether you to initialize your parameters or fetch them from `states`, if you are using a Module framework this usually tells you whether to call `init` or `apply`.
-* `test_step` returns 3 specific outputs, you should check the docs for each method to know what to return.
+* `net_params` is one of the names used by the default implementation, check the [States](./states.md) guide for more information.
+* `initializing` tells you whether to initialize the parameters of the model or fetch the current ones from `states`, if you are using a Module framework this usually tells you whether to call `init` or `apply`.
+* `test_step` should returns 3 specific outputs (`loss`, `logs`, `states`), you should check the docs for each method to know what to return.
