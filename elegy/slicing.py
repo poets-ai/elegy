@@ -16,27 +16,46 @@ def slice_model(
     end_module: tp.Union[elegy.Module, str, None, tp.List[tp.Union[elegy.Module, str, None]]],
     sample_input: np.ndarray,
 ) -> elegy.Model:
-    if isinstance(end_module, list):
-        raise NotImplemented('Multiple end modules not yet supported')   #TODO
     
     model.maybe_initialize(elegy.types.Mode.pred, x=sample_input)
 
     with elegy.hooks.context(named_call=True), jax.disable_jit():
         jaxpr = jax.make_jaxpr(model.pred_step, static_argnums=[2,3] )(sample_input, model.states, False, False)
     
-    eq_path, input_vars, output_vars, unresolved_vars, env = analyze_jaxpr(jaxpr.jaxpr, start_module, end_module)
-    
     n_inputs            = len(jax.tree_leaves(sample_input))
     toplevel_input_vars = jaxpr.jaxpr.invars[:n_inputs]
-    state_vars          = jaxpr.jaxpr.invars[n_inputs:]
-    
-    #if any([ iv in toplevel_input_vars for iv in input_vars ]):       #TODO: incorrect
-    #    raise RuntimeError('Unresolved input')
 
-    states_leaves = jax.tree_leaves(model.states)
-    stateless_input_vars = [iv for iv in input_vars if not iv.intersection(state_vars)]
+    state_vars          = jaxpr.jaxpr.invars[n_inputs:]
+
+    if not isinstance(end_module, (list, tuple)):
+        end_module = [end_module]
+    full_eq_path = []
+    all_output_vars = []
+    all_input_vars = []
+    for end in end_module:
+        eq_path, input_vars, output_vars, unresolved_vars, env = analyze_jaxpr(jaxpr.jaxpr, start_module, end)
     
-    return SlicedModule(model.module, eq_path, stateless_input_vars)
+        #if any([ iv in toplevel_input_vars for iv in input_vars ]):       #TODO: incorrect
+        #    raise RuntimeError('Unresolved input')
+
+        stateless_input_vars = [iv for iv in input_vars if not iv.intersection(state_vars)]
+        full_eq_path = combine_eq_paths(full_eq_path, eq_path)
+        all_output_vars += output_vars
+        all_input_vars = list_union(all_input_vars, stateless_input_vars)
+    return SlicedModule(model.module, full_eq_path, all_input_vars, all_output_vars)
+
+def combine_eq_paths(eq_path0, eq_path1):
+    new_path = []
+    for eq in eq_path0:
+        if eq not in eq_path1:
+            new_path.append(eq)
+        else:
+            ix = eq_path1.index(eq)
+            new_path += eq_path1[:ix]
+            eq_path1  = eq_path1[ix+1:]
+            new_path.append(eq)
+    new_path += eq_path1
+    return new_path
 
 
 class Environment(dict):
@@ -101,6 +120,7 @@ def analyze_jaxpr(jaxpr: jax.core.Jaxpr, start_path, end_path):
             modulepath = path_to_str(eq.params['name'])
             if end_path.startswith(modulepath):
                 if end_path == modulepath:
+                    #list instead of set because jax literals are not hashable
                     unresolved_vars = list(eq.invars)
                     input_vars      = []
                     output_vars     = eq.outvars
@@ -137,11 +157,11 @@ def analyze_jaxpr(jaxpr: jax.core.Jaxpr, start_path, end_path):
                     if start_path == modulepath:
                         unresolved_vars = list_difference(unresolved_vars, eq.invars)
                         update_env(env, eq)
-                        #input_vars      = eq.invars
                         input_vars      = [env[v] for v in eq.invars]
                         break
                     else:
-                        analyze_jaxpr( eq.params['call_jaxpr'], start_path, end_path )   #not quite
+                        assert 0, NotImplemented
+                        #analyze_jaxpr( eq.params['call_jaxpr'], start_path, end_path )   #not quite
                         #break
         #else:
             #start path not found, can happen in nested calls
@@ -160,11 +180,12 @@ def get_module(parentmodule:elegy.Module, name:tp.Tuple[str]):
 
 
 class SlicedModule(elegy.Module):
-    def __init__(self, mainmodule:elegy.Module, equations:tp.List[jax.core.JaxprEqn], input_vars:tp.List[jax.core.Var]):
+    def __init__(self, mainmodule:elegy.Module, equations:tp.List[jax.core.JaxprEqn], input_vars:tp.List[jax.core.Var], output_vars):
         super().__init__()
         self.modules = dict([ (eq.params['name'], get_module(mainmodule, eq.params['name'])) for eq in equations if eq.primitive.name=='named_call'])
         self.equations = equations
         self.input_vars = input_vars
+        self.output_vars = output_vars
     
     def call(self, *args):
         if len(args)!=len(self.input_vars):
@@ -191,5 +212,8 @@ class SlicedModule(elegy.Module):
             for o,v in zip(outputs, eq.outvars):
                 environment[v] = o
         
-        return o
+        outputs = tuple(environment[v] for v in self.output_vars)
+        if len(outputs) == 1:
+            outputs = outputs[0]
+        return outputs
 
