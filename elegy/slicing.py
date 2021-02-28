@@ -31,7 +31,8 @@ def slice_model(
         end_module = [end_module]
     full_eq_path = []
     all_output_vars = []
-    all_input_vars = []
+    #all_input_vars  = []
+    all_input_vars  = Environment()
     for end in end_module:
         eq_path, input_vars, output_vars, unresolved_vars, env = analyze_jaxpr(jaxpr.jaxpr, start_module, end)
     
@@ -41,7 +42,13 @@ def slice_model(
         stateless_input_vars = [iv for iv in input_vars if not iv.intersection(state_vars)]
         full_eq_path = combine_eq_paths(full_eq_path, eq_path)
         all_output_vars += output_vars
-        all_input_vars = list_union(all_input_vars, stateless_input_vars)
+        #all_input_vars = list_union(all_input_vars, stateless_input_vars)
+        for equivar in stateless_input_vars:   #TODO: refactor into env method
+            for var in equivar:
+                if var not in all_input_vars:
+                    all_input_vars[var] = equivar
+    all_input_vars = all_input_vars.unique_values()
+    all_output_vars = [v for v in all_output_vars if not v in state_vars]
     return SlicedModule(model.module, full_eq_path, all_input_vars, all_output_vars)
 
 def combine_eq_paths(eq_path0, eq_path1):
@@ -68,7 +75,7 @@ class Environment(dict):
     
     def __setitem__(self, var, value):
         if isinstance(var, jax.core.Literal):
-            #ignore, literals are constant
+            #ignore, literals are constant and not hashable
             pass
         else:
             super().__setitem__(var, value)
@@ -78,6 +85,18 @@ class Environment(dict):
             return True
         else:
             return super().__contains__(var)
+    
+    def update_from_equation(self, eq: jax.core.JaxprEqn):
+        for v in eq.invars + eq.outvars:
+            if v not in self:
+                self[v] = EquivalentVars([v])
+    
+    def unique_values(self):
+        uniques = []
+        for v in self.values():
+            if v not in uniques:
+                uniques.append(v)
+        return uniques
 
 
 
@@ -87,12 +106,19 @@ class EquivalentVars(set):
 
 
 def path_to_str(path: tp.Tuple[str]) -> str:
-    return '/'+'/'.join(path)
+    pathstr  = '/'+'/'.join(path)
+    if len(path)>0:
+        pathstr += '/'
+    return pathstr
 
-def normalize_module_path(module_path: str) -> str:
-    if module_path is None:
+def normalize_module_path(module_path: tp.Union[str, None]) -> str:
+    if module_path in [None, 'input', '/input']:
         return '/'
-    return module_path if module_path.startswith('/') else '/'+module_path
+    if not module_path.startswith('/'):
+        module_path = '/'+module_path
+    if not module_path.endswith('/'):
+        module_path = module_path+'/'
+    return module_path
 
 def list_intersection(list0: tp.List[tp.Any], list1: tp.List[tp.Any]):
     return [x for x in list0 if x in list1]
@@ -103,12 +129,9 @@ def list_difference(list0: tp.List[tp.Any], list1: tp.List[tp.Any]):
 def list_union(list0: tp.List[tp.Any], list1: tp.List[tp.Any]):
     return list0 + list_difference(list1, list0)
 
-def update_env(env: tp.Dict[jax.core.Var, EquivalentVars], eq: jax.core.JaxprEqn):   #TODO: make immutable
-    for v in eq.invars + eq.outvars:
-        if v not in env:
-            env[v] = EquivalentVars([v])
 
 def analyze_jaxpr(jaxpr: jax.core.Jaxpr, start_path, end_path):
+    end_is_input = (end_path in ['input', '/input'])
     start_path = normalize_module_path(start_path)
     end_path   = normalize_module_path(end_path)
 
@@ -118,23 +141,22 @@ def analyze_jaxpr(jaxpr: jax.core.Jaxpr, start_path, end_path):
     for i, eq in enumerate(jaxpr.eqns):
         if eq.primitive.name == 'named_call':
             modulepath = path_to_str(eq.params['name'])
-            if end_path.startswith(modulepath):
-                if end_path == modulepath:
-                    #list instead of set because jax literals are not hashable
-                    unresolved_vars = list(eq.invars)
-                    input_vars      = []
-                    output_vars     = eq.outvars
-                    eq_path         = [eq]
-                    update_env(env, eq)
-                else:
-                    inner_jaxpr = eq.params['call_jaxpr']
-                    eq_path, input_vars, output_vars, unresolved_vars, inner_env = analyze_jaxpr( inner_jaxpr, start_path, end_path )
-                    env.update(inner_env)
-                    for outer_v, inner_v in zip(eq.invars, inner_jaxpr.invars):
-                        env[outer_v].add(inner_v)
-                        inner_env[inner_v].add(outer_v)
-                    unresolved_vars = [env[v] for v in unresolved_vars]
-                    #input_vars = [env[v] for v in input_vars]
+            if end_path == modulepath:
+                #using list instead of set because jax literals are not hashable
+                unresolved_vars = list(eq.invars)
+                input_vars      = []
+                output_vars     = eq.outvars if not end_is_input else eq.invars
+                eq_path         = [eq]
+                env.update_from_equation(eq)
+                break
+            elif end_path.startswith(modulepath):
+                inner_jaxpr = eq.params['call_jaxpr']
+                eq_path, input_vars, output_vars, unresolved_vars, inner_env = analyze_jaxpr( inner_jaxpr, start_path, end_path )
+                env.update(inner_env)
+                for outer_v, inner_v in zip(eq.invars, inner_jaxpr.invars):
+                    env[outer_v].add(inner_v)
+                    env[inner_v].add(outer_v)
+                unresolved_vars = [env[v] for v in unresolved_vars]
                 break
     else:
         #end_path not found
@@ -149,23 +171,21 @@ def analyze_jaxpr(jaxpr: jax.core.Jaxpr, start_path, end_path):
                 unresolved_vars = list_difference(unresolved_vars, common_vars)
                 unresolved_vars = list_union(unresolved_vars, eq.invars)
                 eq_path = [eq] + eq_path
-                update_env(env, eq)
+                env.update_from_equation(eq)
 
             if eq.primitive.name == 'named_call':
                 modulepath = path_to_str(eq.params['name'])
-                if start_path.startswith(modulepath):
-                    if start_path == modulepath:
-                        unresolved_vars = list_difference(unresolved_vars, eq.invars)
-                        update_env(env, eq)
-                        input_vars      = [env[v] for v in eq.invars]
-                        break
-                    else:
-                        assert 0, NotImplemented
-                        #analyze_jaxpr( eq.params['call_jaxpr'], start_path, end_path )   #not quite
-                        #break
+                if start_path == modulepath:
+                    unresolved_vars = list_difference(unresolved_vars, eq.invars)
+                    env.update_from_equation(eq)
+                    input_vars      = [env[v] for v in eq.invars]
+                    break
+                elif start_path.startswith(modulepath):
+                    assert 0, NotImplemented #TODO
+                    #analyze_jaxpr( eq.params['call_jaxpr'], start_path, end_path )   #not quite
+                    #break
         #else:
             #start path not found, can happen in nested calls
-    
     return eq_path, input_vars, output_vars, unresolved_vars, env
 
 

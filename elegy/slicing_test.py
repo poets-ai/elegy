@@ -8,7 +8,7 @@ from unittest import TestCase
 
 
 
-class ModuleSlicingTest(TestCase):
+class BasicModuleSlicingTest(TestCase):
     def setUp(self):
         self.x = np.random.random((32,100)).astype('float32')
         self.module = BasicModule0()
@@ -22,7 +22,6 @@ class ModuleSlicingTest(TestCase):
         assert submodel.predict(self.x).shape == (32, 10)
         assert jnp.all(submodel.predict(self.x) == self.module.test_call0(self.x))
 
-    
     def test_basic_slice_by_name1(self):
         start, end = (None, "linear1") #None means input
         submodule = elegy.slicing.slice_model(self.model, start, end, self.x)
@@ -42,9 +41,47 @@ class ModuleSlicingTest(TestCase):
         assert outputs[1].shape == true_outputs[1].shape
         assert jnp.allclose(outputs[0], true_outputs[0])
         assert jnp.allclose(outputs[1], true_outputs[1])
+    
+    def test_slice_return_input(self):
+        submodule = elegy.slicing.slice_model(self.model, "input", ["/linear1", "input"], self.x)
+        submodel = elegy.Model(submodule)
+        submodel.summary(self.x)
+        ypred = submodel.predict(self.x)
+        assert jnp.all(ypred[1] == self.x)
+        assert ypred[0].shape == (32, 10)
+        assert jnp.allclose(ypred[0], self.module.test_call1(self.x))
 
 
+class ResNetSlicingTest(TestCase):
+    def test_multi_out(self):
+        x = jnp.zeros((2, 224, 224, 3))
+        resnet = elegy.nets.resnet.ResNet18()
+        resnet.init(rng=elegy.RNGSeq(0), set_defaults=True)(x)
+        resnetmodel = elegy.Model(resnet, run_eagerly=True)
 
+        submodule = elegy.slicing.slice_model(
+            resnetmodel,
+            start_module=None,
+            end_module=[
+                "/res_net_block_1",
+                "/res_net_block_3",
+                "/res_net_block_5",
+                "/res_net_block_6",
+                "/res_net_block_7",
+            ],
+            sample_input=x,
+        )
+        submodel = elegy.Model(submodule)
+
+        # submodel.summary(x)
+        outputs = submodel.predict(x)
+        print(jax.tree_map(jnp.shape, outputs))
+        assert len(outputs) == 5
+        assert outputs[0].shape == (2, 56, 56, 64)
+        assert outputs[1].shape == (2, 28, 28, 128)
+        assert outputs[2].shape == (2, 14, 14, 256)
+        assert outputs[3].shape == (2, 7, 7, 512)
+        assert outputs[4].shape == (2, 7, 7, 512) 
 
 
 
