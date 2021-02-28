@@ -5,7 +5,8 @@ import elegy, elegy.slicing
 from unittest import TestCase
 
 
-
+#TODO: nested modules
+#TODO: ensure only necessary modules are executed and only once
 
 
 class BasicModuleSlicingTest(TestCase):
@@ -50,6 +51,17 @@ class BasicModuleSlicingTest(TestCase):
         assert jnp.all(ypred[1] == self.x)
         assert ypred[0].shape == (32, 10)
         assert jnp.allclose(ypred[0], self.module.test_call1(self.x))
+    
+    def test_no_path(self):
+        for start_module in ["linear2", "linear1"]:
+            try:
+                submodule = elegy.slicing.slice_model(self.model, start_module, "linear0", self.x)
+                submodel = elegy.Model(submodule)
+                submodel.summary(self.x)
+            except RuntimeError as e:
+                assert e.args[0].startswith(f"No path from {start_module} to linear0")
+            else:
+                assert False, "No error or wrong error raised"
 
 
 class ResNetSlicingTest(TestCase):
@@ -61,8 +73,8 @@ class ResNetSlicingTest(TestCase):
 
         submodule = elegy.slicing.slice_model(
             resnetmodel,
-            start_module=None,
-            end_module=[
+            start=None,
+            end=[
                 "/res_net_block_1",
                 "/res_net_block_3",
                 "/res_net_block_5",

@@ -1,7 +1,7 @@
 import typing as tp
 
 import numpy as np
-import jax
+import jax, jax.numpy as jnp
 import elegy
 
 
@@ -12,8 +12,8 @@ import elegy
 
 def slice_model(
     model: elegy.Model,
-    start_module: tp.Union[elegy.Module, str, None],
-    end_module: tp.Union[elegy.Module, str, None, tp.List[tp.Union[elegy.Module, str, None]]],
+    start: tp.Union[elegy.Module, str, None],
+    end: tp.Union[elegy.Module, str, None, tp.List[tp.Union[elegy.Module, str, None]]],
     sample_input: np.ndarray,
 ) -> elegy.Model:
     
@@ -24,44 +24,50 @@ def slice_model(
     
     n_inputs            = len(jax.tree_leaves(sample_input))
     toplevel_input_vars = jaxpr.jaxpr.invars[:n_inputs]
-
     state_vars          = jaxpr.jaxpr.invars[n_inputs:]
 
-    if not isinstance(end_module, (list, tuple)):
-        end_module = [end_module]
-    full_eq_path = []
+    ends = end if isinstance(end, (list, tuple)) else [end]
+    full_eq_sequence = []
     all_output_vars = []
-    #all_input_vars  = []
     all_input_vars  = Environment()
-    for end in end_module:
-        eq_path, input_vars, output_vars, unresolved_vars, env = analyze_jaxpr(jaxpr.jaxpr, start_module, end)
+    for end in ends:
+        eq_sequence, input_vars, output_vars, unresolved_vars, env = analyze_jaxpr(jaxpr.jaxpr, start, end)
     
-        #if any([ iv in toplevel_input_vars for iv in input_vars ]):       #TODO: incorrect
-        #    raise RuntimeError('Unresolved input')
+        if check_unresolved(unresolved_vars, env, jaxpr.jaxpr):
+            raise RuntimeError(f"No path from {start} to {end}")
 
         stateless_input_vars = [iv for iv in input_vars if not iv.intersection(state_vars)]
-        full_eq_path = combine_eq_paths(full_eq_path, eq_path)
+        full_eq_sequence = combine_eq_sequences(full_eq_sequence, eq_sequence)
         all_output_vars += output_vars
-        #all_input_vars = list_union(all_input_vars, stateless_input_vars)
+
         for equivar in stateless_input_vars:   #TODO: refactor into env method
             for var in equivar:
                 if var not in all_input_vars:
                     all_input_vars[var] = equivar
+
     all_input_vars = all_input_vars.unique_values()
     all_output_vars = [v for v in all_output_vars if not v in state_vars]
-    return SlicedModule(model.module, full_eq_path, all_input_vars, all_output_vars)
 
-def combine_eq_paths(eq_path0, eq_path1):
+    return SlicedModule(model.module, full_eq_sequence, all_input_vars, all_output_vars)
+
+
+def check_unresolved(unresolved_vars, env, jaxpr):
+    in_equivars = [env.get(v) for v in jaxpr.invars if v in env]
+    unresolved_vars = [unvar for unvar in unresolved_vars if not isinstance(unvar, jnp.ndarray)]
+    return any([unvar not in in_equivars for unvar in unresolved_vars])
+
+
+def combine_eq_sequences(eq_sequence0, eq_sequence1):
     new_path = []
-    for eq in eq_path0:
-        if eq not in eq_path1:
+    for eq in eq_sequence0:
+        if eq not in eq_sequence1:
             new_path.append(eq)
         else:
-            ix = eq_path1.index(eq)
-            new_path += eq_path1[:ix]
-            eq_path1  = eq_path1[ix+1:]
+            ix = eq_sequence1.index(eq)
+            new_path += eq_sequence1[:ix]
+            eq_sequence1  = eq_sequence1[ix+1:]
             new_path.append(eq)
-    new_path += eq_path1
+    new_path += eq_sequence1
     return new_path
 
 
@@ -146,12 +152,12 @@ def analyze_jaxpr(jaxpr: jax.core.Jaxpr, start_path, end_path):
                 unresolved_vars = list(eq.invars)
                 input_vars      = []
                 output_vars     = eq.outvars if not end_is_input else eq.invars
-                eq_path         = [eq]
+                eq_sequence     = [eq]
                 env.update_from_equation(eq)
                 break
             elif end_path.startswith(modulepath):
                 inner_jaxpr = eq.params['call_jaxpr']
-                eq_path, input_vars, output_vars, unresolved_vars, inner_env = analyze_jaxpr( inner_jaxpr, start_path, end_path )
+                eq_sequence, input_vars, output_vars, unresolved_vars, inner_env = analyze_jaxpr( inner_jaxpr, start_path, end_path )
                 env.update(inner_env)
                 for outer_v, inner_v in zip(eq.invars, inner_jaxpr.invars):
                     env[outer_v].add(inner_v)
@@ -162,18 +168,24 @@ def analyze_jaxpr(jaxpr: jax.core.Jaxpr, start_path, end_path):
         #end_path not found
         raise RuntimeError(f'End module {end_path} not found')
     
-
-    #search from end to start, collecting only required equations
     if len(input_vars)==0:
-        for eq in reversed(jaxpr.eqns[:i+1]):
-            common_vars = list_intersection(unresolved_vars, eq.outvars)
-            if len(common_vars):
-                unresolved_vars = list_difference(unresolved_vars, common_vars)
-                unresolved_vars = list_union(unresolved_vars, eq.invars)
-                eq_path = [eq] + eq_path
-                env.update_from_equation(eq)
+        inner_eq_sequence, input_vars, unresolved_vars = search_for_start(jaxpr, start_path, unresolved_vars, env)
+        eq_sequence = inner_eq_sequence + eq_sequence
+    return eq_sequence, input_vars, output_vars, unresolved_vars, env
 
-            if eq.primitive.name == 'named_call':
+
+def search_for_start(jaxpr, start_path, unresolved_vars, env):
+    eq_sequence = []
+    #search from end to start, collecting only required equations
+    for eq in reversed(jaxpr.eqns):
+        common_vars = list_intersection(unresolved_vars, eq.outvars)
+        if len(common_vars):
+            unresolved_vars = list_difference(unresolved_vars, common_vars)
+            unresolved_vars = list_union(unresolved_vars, eq.invars)
+            eq_sequence     = [eq] + eq_sequence
+            env.update_from_equation(eq)
+        
+        if eq.primitive.name == 'named_call':
                 modulepath = path_to_str(eq.params['name'])
                 if start_path == modulepath:
                     unresolved_vars = list_difference(unresolved_vars, eq.invars)
@@ -181,13 +193,13 @@ def analyze_jaxpr(jaxpr: jax.core.Jaxpr, start_path, end_path):
                     input_vars      = [env[v] for v in eq.invars]
                     break
                 elif start_path.startswith(modulepath):
-                    assert 0, NotImplemented #TODO
-                    #analyze_jaxpr( eq.params['call_jaxpr'], start_path, end_path )   #not quite
-                    #break
-        #else:
-            #start path not found, can happen in nested calls
-    return eq_path, input_vars, output_vars, unresolved_vars, env
-
+                    inner_eq_sequence, input_vars, unresolved_vars = search_for_start(eq.params['call_jaxpr'], start_path, unresolved_vars, env)
+                    eq_sequence     = inner_eq_sequence + eq_sequence
+                    break
+    else:
+        #start path not found, can happen in nested calls
+        input_vars = []
+    return eq_sequence, input_vars, unresolved_vars
 
 
 def get_module(parentmodule:elegy.Module, name:tp.Tuple[str]):
