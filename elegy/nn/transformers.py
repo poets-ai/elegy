@@ -47,7 +47,7 @@ class TransformerEncoderLayer(Module):
         super().__init__(**kwargs)
         self.head_size = head_size
         self.num_heads = num_heads
-        self.output_size = output_size
+        self.output_size = output_size if output_size is not None else head_size
         self.dropout = dropout
         self.activation = activation
 
@@ -176,14 +176,14 @@ class TransformerDecoderLayer(Module):
         self,
         head_size: int,
         num_heads: int,
-        output_size: int = 2048,
+        output_size: tp.Optional[int] = None,
         dropout: float = 0.1,
         activation: tp.Callable[[np.ndarray], np.ndarray] = jax.nn.relu,
     ):
         super().__init__()
         self.head_size = head_size
         self.num_heads = num_heads
-        self.output_size = output_size
+        self.output_size = output_size if output_size is not None else head_size
         self.dropout = dropout
         self.activation = activation
 
@@ -321,10 +321,21 @@ class Transformer(Module):
         custom_decoder: custom decoder (default=None).
 
     Examples::
-        >>> # transformer_model = nn.Transformer(num_heads=16, num_encoder_layers=12)
-        >>> # src = torch.rand((10, 32, 512))
-        >>> # tgt = torch.rand((20, 32, 512))
-        >>> # out = transformer_model(src, tgt)
+        >>> import elegy
+        >>> import numpy as np
+
+        >>> transformer_model = elegy.nn.Transformer(
+        ...     head_size=64,
+        ...     num_heads=4,
+        ...     num_encoder_layers=2,
+        ...     num_decoder_layers=2,
+        ... )
+
+        >>> src = np.random.uniform(size=(5, 32, 64))
+        >>> tgt = np.random.uniform(size=(5, 32, 64))
+
+        >>> _, params, collections = transformer_model.init(rng=elegy.RNGSeq(42))(src, tgt)
+        >>> out, params, collections = transformer_model.apply(params, collections, rng=elegy.RNGSeq(420))(src, tgt)
 
     Note: A full example to apply nn.Transformer module for the word language model is available in
     https://github.com/pytorch/examples/tree/master/word_language_model
@@ -336,7 +347,7 @@ class Transformer(Module):
         num_heads: int = 8,
         num_encoder_layers: int = 6,
         num_decoder_layers: int = 6,
-        output_size: int = 2048,
+        output_size: tp.Optional[int] = None,
         dropout: float = 0.1,
         activation: tp.Callable[[np.ndarray], np.ndarray] = jax.nn.relu,
         custom_encoder: tp.Optional[tp.Any] = None,

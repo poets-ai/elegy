@@ -1,19 +1,31 @@
 from .batch_normalization import BatchNormalization
 from .conv import Conv1D, Conv2D, Conv3D, ConvND
 from .dropout import Dropout
-from .flatten import Flatten, Reshape
-from .linear import Linear
-from .sequential_module import Sequential, sequential
-
-from .layer_normalization import LayerNormalization, InstanceNormalization
 from .embedding import Embedding, EmbedLookupStyle
-from .pool import MaxPool, AvgPool
+from .flatten import Flatten, Reshape
+from .layer_normalization import InstanceNormalization, LayerNormalization
+from .linear import Linear
 from .moving_averages import EMAParamsTree
-from . import transformers
+from .multi_head_attention import MultiHeadAttention
+from .pool import AvgPool, MaxPool
+from .sequential_module import Sequential, sequential
+from .transformers import (
+    Transformer,
+    TransformerDecoder,
+    TransformerDecoderLayer,
+    TransformerEncoder,
+    TransformerEncoderLayer,
+)
 
 __all__ = [
     "EMAParamsTree",
     "BatchNormalization",
+    "MultiHeadAttention",
+    "Transformer",
+    "TransformerDecoder",
+    "TransformerDecoderLayer",
+    "TransformerEncoder",
+    "TransformerEncoderLayer",
     "Conv1D",
     "Conv2D",
     "Conv3D",
