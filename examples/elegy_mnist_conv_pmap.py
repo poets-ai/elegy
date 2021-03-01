@@ -81,11 +81,11 @@ class DistributedModel(elegy.Model):
     def grad_step(self, *args, **kwargs):
         loss, logs, states, grads = super().grad_step(*args, **kwargs)
 
-        grads = jax.lax.psum(grads, axis_name="device")
+        grads = jax.lax.pmean(grads, axis_name="device")
 
         return loss, logs, states, grads
 
-    # here we override train_step instead of train_step
+    # here we override call_train_step instead of train_step
     def call_train_step(
         self,
         x,
