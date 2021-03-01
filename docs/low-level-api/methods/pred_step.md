@@ -68,4 +68,5 @@ Here we implement the same `LinearClassifier` from the [basics](./basics) sectio
 
 ### Default Implementation
 The default implementation of `pred_step` does the following:
+
 * Calls `api_module.init` or `api_module.apply` depending on state of `initializing`. `api_module` of type `GeneralizedModule` is a wrapper over the `module` object passed by the user to the `Model`s constructor.
