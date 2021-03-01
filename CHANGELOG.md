@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased](https://github.com/poets-ai/elegy/tree/HEAD)
+
+[Full Changelog](https://github.com/poets-ai/elegy/compare/0.7.0...HEAD)
+
+**Merged pull requests:**
+
+- More Docs: Expand documentation for the low-level API guides. [\#168](https://github.com/poets-ai/elegy/pull/168) ([cgarciae](https://github.com/cgarciae))
+- Rich Summary: uses rich to style the summary console output [\#167](https://github.com/poets-ai/elegy/pull/167) ([cgarciae](https://github.com/cgarciae))
+
 ## [0.7.0](https://github.com/poets-ai/elegy/tree/0.7.0) (2021-02-22)
 
 [Full Changelog](https://github.com/poets-ai/elegy/compare/0.6.0...0.7.0)
@@ -40,7 +49,6 @@
 **Merged pull requests:**
 
 - fix-maybe-initialize [\#155](https://github.com/poets-ai/elegy/pull/155) ([cgarciae](https://github.com/cgarciae))
-- Add simple Flax low-level API Model example to README.md [\#153](https://github.com/poets-ai/elegy/pull/153) ([sooheon](https://github.com/sooheon))
 
 ## [0.4.0](https://github.com/poets-ai/elegy/tree/0.4.0) (2021-02-01)
 
@@ -52,6 +60,7 @@
 
 **Merged pull requests:**
 
+- Add simple Flax low-level API Model example to README.md [\#153](https://github.com/poets-ai/elegy/pull/153) ([sooheon](https://github.com/sooheon))
 - Update Getting Started + README [\#152](https://github.com/poets-ai/elegy/pull/152) ([cgarciae](https://github.com/cgarciae))
 - Pretrained ResNet fix after \#139 [\#151](https://github.com/poets-ai/elegy/pull/151) ([alexander-g](https://github.com/alexander-g))
 - Dataset: better default batch\_fn and custom batch\_fn [\#148](https://github.com/poets-ai/elegy/pull/148) ([alexander-g](https://github.com/alexander-g))

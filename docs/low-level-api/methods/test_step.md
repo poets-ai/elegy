@@ -133,6 +133,7 @@ There are cases however where you might want to implement a forward pass inside 
 
 ### Default Implementation
 The default implementation of `pred_step` does the following:
+
 * Call `pred_step` to get `y_pred`. 
 * Calls `api_loss.init` or `api_loss.apply` depending on state of `initializing`. `api_loss` of type `Losses` computes the aggregated batch loss from the loss functions passed by the user through the `loss` argument in the `Model`s constructor, and also computes a running mean of each loss individually which is passed for reporting to `logs`.
 * Calls `api_metrics.init` or `api_metrics.apply` depending on state of `initializing`. `api_metrics` of type `Metrics` calculates the metrics passed by the user through the `metrics` argument in the `Model`s constructor and passes their values to `logs` for reporting.
