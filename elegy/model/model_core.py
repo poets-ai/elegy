@@ -20,6 +20,13 @@ from elegy.losses.loss import Loss
 from elegy.metrics.metric import Metric
 from tabulate import tabulate
 
+from . import utils as model_utils
+
+try:
+    import tensorflow as tf
+except ImportError:
+    tf = None
+
 
 class PredStep(tp.NamedTuple):
     y_pred: tp.Any
@@ -521,6 +528,44 @@ class ModelCore:
             (path / "initial_states.pkl").read_bytes()
         )
 
+    def saved_model(self, x: types.Pytree, path: tp.Union[str, pathlib.Path]):
+
+        if not self.initialized:
+            raise types.ModelNotInitialized(
+                f"Model not initialized, please execute `init` or `init_on_batch` before running this method."
+            )
+
+        if model_utils.convert_and_save_model is None:
+            raise ImportError(f"Could not import tensorflow.")
+
+        if isinstance(path, str):
+            path = pathlib.Path(path)
+
+        x = jax.tree_map(jnp.asarray, x)
+        input_signatures = [
+            jax.tree_map(
+                lambda p: tf.TensorSpec(shape=(None,) + p.shape[1:], dtype=p.dtype), x
+            )
+        ]
+
+        states = types.States(
+            {field: value for field, value in self.states.items() if value is not None}
+        )
+        flat_states, states_def = jax.tree_flatten(states)
+
+        def jax_fn(flat_states, inputs):
+            states = jax.tree_unflatten(states_def, flat_states)
+
+            y_pred, _ = self.pred_step(
+                inputs, states, initializing=False, training=False
+            )
+
+            return y_pred
+
+        model_utils.convert_and_save_model(
+            jax_fn, flat_states, "test_saved_model", input_signatures=input_signatures
+        )
+
     def reset(self):
         self.states = self.initial_states.copy()
 
@@ -529,7 +574,3 @@ class ModelCore:
             self.states = self.states.update(
                 metrics_states=self.initial_states.metrics_states
             )
-
-    # ----------------------------------------------------------------
-    # other methods
-    # ----------------------------------------------------------------
