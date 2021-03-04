@@ -532,7 +532,7 @@ class ModelCore:
         self,
         x: types.Pytree,
         path: tp.Union[str, pathlib.Path],
-        batch_sizes: tp.Optional[tp.Sequence[int]] = None,
+        batch_sizes: tp.Sequence[int],
     ):
 
         if not self.initialized:
@@ -550,28 +550,30 @@ class ModelCore:
 
         x = jax.tree_map(jnp.asarray, x)
 
-        if batch_sizes is None:
-            input_signatures = [
-                jax.tree_map(
-                    lambda p: tf.TensorSpec(shape=(None,) + p.shape[1:], dtype=p.dtype),
-                    x,
-                )
-            ]
-            shape_polymorphic_input_spec = jax.tree_map(
-                lambda p: "(" + ", ".join(["batch"] + ["_"] * (len(p.shape) - 1)) + ")",
+        # polymorphic batch size currently not supported by jax:
+        # -----------------------------------------
+        # if batch_sizes is None:
+        #     input_signatures = [
+        #         jax.tree_map(
+        #             lambda p: tf.TensorSpec(shape=(None,) + p.shape[1:], dtype=p.dtype),
+        #             x,
+        #         )
+        #     ]
+        #     shape_polymorphic_input_spec = jax.tree_map(
+        #         lambda p: "(" + ", ".join(["batch"] + ["_"] * (len(p.shape) - 1)) + ")",
+        #         x,
+        #     )
+        # else:
+        input_signatures = [
+            jax.tree_map(
+                lambda p: tf.TensorSpec(
+                    shape=(batch_size,) + p.shape[1:], dtype=p.dtype
+                ),
                 x,
             )
-        else:
-            input_signatures = [
-                jax.tree_map(
-                    lambda p: tf.TensorSpec(
-                        shape=(batch_size,) + p.shape[1:], dtype=p.dtype
-                    ),
-                    x,
-                )
-                for batch_size in batch_sizes
-            ]
-            shape_polymorphic_input_spec = None
+            for batch_size in batch_sizes
+        ]
+        shape_polymorphic_input_spec = None
 
         states = types.States(
             {field: value for field, value in self.states.items() if value is not None}
@@ -593,7 +595,10 @@ class ModelCore:
             str(path),
             input_signatures=input_signatures,
             shape_polymorphic_input_spec=shape_polymorphic_input_spec,
+            with_gradient=False,
+            enable_xla=True,
             compile_model=True,
+            save_model_options=None,
         )
 
     def reset(self):

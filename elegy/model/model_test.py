@@ -1,12 +1,17 @@
-from hashlib import new
 import unittest
+from hashlib import new
+from tempfile import TemporaryDirectory
+from pathlib import Path
 
+import cloudpickle
 import elegy
 import jax
 import jax.numpy as jnp
 import numpy as np
 import optax
-import cloudpickle
+import pytest
+import sh
+import tensorflow as tf
 
 
 class MLP(elegy.Module):
@@ -205,3 +210,26 @@ class ModelTest(unittest.TestCase):
 
         y1 = newmodel.predict(X)
         assert np.all(y0 == y1)
+
+    def test_saved_model(self):
+
+        with TemporaryDirectory() as model_dir:
+
+            model = elegy.Model(module=elegy.nn.Linear(4))
+
+            x = np.random.uniform(size=(5, 6))
+
+            with pytest.raises(elegy.types.ModelNotInitialized):
+                model.saved_model(x, model_dir, batch_sizes=[1, 2, 4, 8])
+
+            model.init(x)
+            model.saved_model(x, model_dir, batch_sizes=[1, 2, 4, 8])
+
+            output = str(sh.ls(model_dir))
+
+            assert "saved_model.pb" in output
+            assert "variables" in output
+
+            saved_model = tf.saved_model.load(model_dir)
+
+            saved_model
