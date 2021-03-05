@@ -151,5 +151,5 @@ cython_debug/
 /docs/saved-models/
 /docs/getting-started/saved-models/
 /TODO
-.git
+.git 
 .python-version 
