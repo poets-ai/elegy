@@ -20,6 +20,13 @@ from elegy.losses.loss import Loss
 from elegy.metrics.metric import Metric
 from tabulate import tabulate
 
+from . import utils as model_utils
+
+try:
+    import tensorflow as tf
+except ImportError:
+    tf = None
+
 
 class PredStep(tp.NamedTuple):
     y_pred: tp.Any
@@ -521,6 +528,98 @@ class ModelCore:
             (path / "initial_states.pkl").read_bytes()
         )
 
+    def saved_model(
+        self,
+        x: types.Pytree,
+        path: tp.Union[str, pathlib.Path],
+        batch_size: tp.Union[int, tp.Sequence[int]],
+    ):
+        """
+        Serializes the prediction function of the Model (`pred_step`) as a TensorFlow SavedModel via
+        `jax2tf`.
+
+        !!! Note
+            Due to a current limitation in JAX it is not possible to create dynamicly
+            shaped SavedModels so you must specify the `batch_size` argument to create
+            one or more statically shaped versions / signatures: [jax#5915](https://github.com/google/jax/issues/5915).
+
+        Arguments:
+            x: A sample input used to infer shapes.
+            path: The path where the SavedModel should be saved.
+            batch_size: An integer or sequence of integers specifying the size of the batch
+                dimension of each of the resulting SavedModel's signatures.
+
+        """
+
+        if not self.initialized:
+            raise types.ModelNotInitialized(
+                f"Model not initialized, please execute `init` or `init_on_batch` before running this method."
+            )
+
+        if model_utils.convert_and_save_model is None:
+            raise ImportError(f"Could not import tensorflow.")
+
+        if isinstance(batch_size, int):
+            batch_size = [batch_size]
+
+        if isinstance(path, str):
+            path = pathlib.Path(path)
+
+        path.mkdir(parents=True, exist_ok=True)
+
+        x = jax.tree_map(jnp.asarray, x)
+
+        # polymorphic batch size currently not supported by jax: https://github.com/google/jax/issues/5915
+        # -----------------------------------------
+        # if batch_size is None:
+        #     input_signatures = [
+        #         jax.tree_map(
+        #             lambda p: tf.TensorSpec(shape=(None,) + p.shape[1:], dtype=p.dtype),
+        #             x,
+        #         )
+        #     ]
+        #     shape_polymorphic_input_spec = jax.tree_map(
+        #         lambda p: "(" + ", ".join(["batch"] + ["_"] * (len(p.shape) - 1)) + ")",
+        #         x,
+        #     )
+        # else:
+        input_signatures = [
+            jax.tree_map(
+                lambda p: tf.TensorSpec(
+                    shape=(batch_size,) + p.shape[1:], dtype=p.dtype
+                ),
+                x,
+            )
+            for batch_size in batch_size
+        ]
+        shape_polymorphic_input_spec = None
+
+        states = types.States(
+            {field: value for field, value in self.states.items() if value is not None}
+        )
+        flat_states, states_def = jax.tree_flatten(states)
+
+        def jax_fn(flat_states, inputs):
+            states = jax.tree_unflatten(states_def, flat_states)
+
+            y_pred, _ = utils.inject_dependencies(self.pred_step)(
+                x=inputs, states=states, initializing=False, training=False
+            )
+
+            return y_pred
+
+        model_utils.convert_and_save_model(
+            jax_fn,
+            flat_states,
+            str(path),
+            input_signatures=input_signatures,
+            shape_polymorphic_input_spec=shape_polymorphic_input_spec,
+            with_gradient=False,
+            enable_xla=True,
+            compile_model=True,
+            save_model_options=None,
+        )
+
     def reset(self):
         self.states = self.initial_states.copy()
 
@@ -529,7 +628,3 @@ class ModelCore:
             self.states = self.states.update(
                 metrics_states=self.initial_states.metrics_states
             )
-
-    # ----------------------------------------------------------------
-    # other methods
-    # ----------------------------------------------------------------

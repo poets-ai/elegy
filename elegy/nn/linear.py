@@ -63,6 +63,7 @@ class Linear(module.Module):
 
         if self.with_bias:
             b = self.add_parameter("b", lambda: self.b_init([self.output_size], dtype))
+            b = jnp.expand_dims(b, axis=tuple(range(len(out.shape) - 1)))
             b = jnp.broadcast_to(b, out.shape)
             b = jnp.asarray(b, self.dtype)
             out = out + b
