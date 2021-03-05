@@ -532,8 +532,24 @@ class ModelCore:
         self,
         x: types.Pytree,
         path: tp.Union[str, pathlib.Path],
-        batch_sizes: tp.Sequence[int],
+        batch_size: tp.Union[int, tp.Sequence[int]],
     ):
+        """
+        Serializes the prediction function of the Model (`pred_step`) as a TensorFlow SavedModel via
+        `jax2tf`.
+
+        !!! Note
+            Due to a current limitation in JAX it is not possible to create dynamicly
+            shaped SavedModels so you must specify the `batch_size` argument to create
+            one or more statically shaped versions / signatures: [jax#5915](https://github.com/google/jax/issues/5915).
+
+        Arguments:
+            x: A sample input used to infer shapes.
+            path: The path where the SavedModel should be saved.
+            batch_size: An integer or sequence of integers specifying the size of the batch
+                dimension of each of the resulting SavedModel's signatures.
+
+        """
 
         if not self.initialized:
             raise types.ModelNotInitialized(
@@ -543,6 +559,9 @@ class ModelCore:
         if model_utils.convert_and_save_model is None:
             raise ImportError(f"Could not import tensorflow.")
 
+        if isinstance(batch_size, int):
+            batch_size = [batch_size]
+
         if isinstance(path, str):
             path = pathlib.Path(path)
 
@@ -550,9 +569,9 @@ class ModelCore:
 
         x = jax.tree_map(jnp.asarray, x)
 
-        # polymorphic batch size currently not supported by jax:
+        # polymorphic batch size currently not supported by jax: https://github.com/google/jax/issues/5915
         # -----------------------------------------
-        # if batch_sizes is None:
+        # if batch_size is None:
         #     input_signatures = [
         #         jax.tree_map(
         #             lambda p: tf.TensorSpec(shape=(None,) + p.shape[1:], dtype=p.dtype),
@@ -571,7 +590,7 @@ class ModelCore:
                 ),
                 x,
             )
-            for batch_size in batch_sizes
+            for batch_size in batch_size
         ]
         shape_polymorphic_input_spec = None
 
@@ -583,8 +602,8 @@ class ModelCore:
         def jax_fn(flat_states, inputs):
             states = jax.tree_unflatten(states_def, flat_states)
 
-            y_pred, _ = self.pred_step(
-                inputs, states, initializing=False, training=False
+            y_pred, _ = utils.inject_dependencies(self.pred_step)(
+                x=inputs, states=states, initializing=False, training=False
             )
 
             return y_pred

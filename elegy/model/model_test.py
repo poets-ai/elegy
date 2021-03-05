@@ -220,10 +220,10 @@ class ModelTest(unittest.TestCase):
             x = np.random.uniform(size=(5, 6))
 
             with pytest.raises(elegy.types.ModelNotInitialized):
-                model.saved_model(x, model_dir, batch_sizes=[1, 2, 4, 8])
+                model.saved_model(x, model_dir, batch_size=[1, 2, 4, 8])
 
             model.init(x)
-            model.saved_model(x, model_dir, batch_sizes=[1, 2, 4, 8])
+            model.saved_model(x, model_dir, batch_size=[1, 2, 4, 8])
 
             output = str(sh.ls(model_dir))
 

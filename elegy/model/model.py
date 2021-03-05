@@ -254,7 +254,10 @@ class Model(ModelBase):
 
         with hooks.context(summaries=True):
             _, states = utils.inject_dependencies(self.pred_step)(
-                x, states, initializing, training
+                x=x,
+                states=states,
+                initializing=initializing,
+                training=training,
             )
             summaries = hooks.get_summaries()
 
