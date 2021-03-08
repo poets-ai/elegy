@@ -1,4 +1,4 @@
-__version__ = "0.6.0"
+__version__ = "0.7.1"
 
 
 from elegy import types
@@ -28,7 +28,6 @@ from .types import (
     RNGSeq,
     States,
     OutputStates,
-    Mode,
 )
 from .generalized_module.generalized_module import GeneralizedModule
 from .generalized_optimizer.generalized_optimizer import GeneralizedOptimizer

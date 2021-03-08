@@ -21,7 +21,7 @@ class DropoutTest(TestCase):
 
         x = jnp.ones([3, 5])
 
-        y_pred = model.predict(x)
+        y_pred = model.predict(x, initialize=True)
         logs = model.evaluate(x)
 
         assert jnp.all(y_pred == x)

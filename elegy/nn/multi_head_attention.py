@@ -154,27 +154,27 @@ class MultiHeadAttention(module.Module):
         # get weights
         query_kernel = self.add_parameter(
             "query_kernel",
-            [self.num_heads, query.shape[-1], self.head_size],
-            jnp.float32,
-            initializer=self.kernel_initializer,
+            lambda: self.kernel_initializer(
+                [self.num_heads, query.shape[-1], self.head_size], jnp.float32
+            ),
         )
         key_kernel = self.add_parameter(
             "key_kernel",
-            [self.num_heads, key.shape[-1], self.head_size],
-            jnp.float32,
-            initializer=self.kernel_initializer,
+            lambda: self.kernel_initializer(
+                [self.num_heads, key.shape[-1], self.head_size], jnp.float32
+            ),
         )
         value_kernel = self.add_parameter(
             "value_kernel",
-            [self.num_heads, value.shape[-1], self.head_size],
-            jnp.float32,
-            initializer=self.kernel_initializer,
+            lambda: self.kernel_initializer(
+                [self.num_heads, value.shape[-1], self.head_size], jnp.float32
+            ),
         )
         projection_kernel = self.add_parameter(
             "projection_kernel",
-            [self.num_heads, self.head_size, output_size],
-            jnp.float32,
-            initializer=self.kernel_initializer,
+            lambda: self.kernel_initializer(
+                [self.num_heads, self.head_size, output_size], jnp.float32
+            ),
         )
 
         # Linear transformations
@@ -214,9 +214,7 @@ class MultiHeadAttention(module.Module):
         if self.use_projection_bias:
             output += self.add_parameter(
                 "projection_bias",
-                [output_size],
-                jnp.float32,
-                initializer=self.bias_initializer,
+                lambda: self.bias_initializer([output_size], jnp.float32),
             )
 
         if self.return_attn_coef:

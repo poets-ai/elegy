@@ -74,19 +74,19 @@ class DistributedModel(elegy.Model):
             static_broadcasted_argnums=[5, 6],
             axis_name="device",
         )
-        self.call_train_step_jit = self.train_step
+        self.call_train_step_jit = self.call_train_step
 
         self.jitted_members |= {"train_step_pmap"}
 
     def grad_step(self, *args, **kwargs):
         loss, logs, states, grads = super().grad_step(*args, **kwargs)
 
-        grads = jax.lax.psum(grads, axis_name="device")
+        grads = jax.lax.pmean(grads, axis_name="device")
 
         return loss, logs, states, grads
 
-    # here we override train_step instead of train_step
-    def train_step(
+    # here we override call_train_step instead of train_step
+    def call_train_step(
         self,
         x,
         y_true,

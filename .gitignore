@@ -144,9 +144,12 @@ cython_debug/
 /test.*
 /summaries
 /runs
-/docs/model/
-/docs/models/
 /models
+/docs/models/
+/docs/getting-started/models/
+/saved-models
+/docs/saved-models/
+/docs/getting-started/saved-models/
 /TODO
-.git
-.python-version
+.git 
+.python-version 

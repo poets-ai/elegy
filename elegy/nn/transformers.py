@@ -22,17 +22,13 @@ class TransformerEncoderLayer(Module):
     Neural Information Processing Systems, pages 6000-6010. Users may modify or implement
     in a different way during application.
 
-    Args:
+    Arguments:
         head_size: the number of expected features in the input (required).
         num_heads: the number of heads in the multiheadattention models (required).
         output_size: the dimension of the feedforward network model (default=2048).
         dropout: the dropout value (default=0.1).
         activation: the activation function of intermediate layer, relu or gelu (default=relu).
 
-    Examples::
-        >>> # encoder_layer = nn.TransformerEncoderLayer(head_size=512, num_heads=8)
-        >>> # src = torch.rand(10, 32, 512)
-        >>> # out = encoder_layer(src)
     """
 
     def __init__(
@@ -47,7 +43,7 @@ class TransformerEncoderLayer(Module):
         super().__init__(**kwargs)
         self.head_size = head_size
         self.num_heads = num_heads
-        self.output_size = output_size
+        self.output_size = output_size if output_size is not None else head_size
         self.dropout = dropout
         self.activation = activation
 
@@ -59,7 +55,7 @@ class TransformerEncoderLayer(Module):
     ) -> np.ndarray:
         r"""Pass the input through the encoder layer.
 
-        Args:
+        Arguments:
             src: the sequence to the encoder layer (required).
             mask: the mask for the src sequence (optional).
             src_key_padding_mask: the mask for the src keys per batch (optional).
@@ -95,18 +91,20 @@ class TransformerEncoder(Module):
     r"""
     TransformerEncoder is a stack of N encoder layers
 
-    Args:
+    Arguments:
         encoder_layer: an instance of the TransformerEncoderLayer() class (required).
         num_layers: the number of sub-encoder-layers in the encoder (required).
         norm: the layer normalization component (optional).
 
-    Examples::
-        >>> # transformer_encoder = elegy.nn.TransformerEncoder(
-                lambda: elegy.nn.TransformerEncoderLayer(head_size=512, num_heads=8),
-                num_layers=6,
-            )
-        >>> # src = torch.rand(10, 32, 512)
-        >>> # out = transformer_encoder(src)
+    Examples:
+        >>> import elegy
+        >>> transformer_encoder = elegy.nn.transformers.TransformerEncoder(
+        ...     lambda: elegy.nn.transformers.TransformerEncoderLayer(head_size=512, num_heads=8),
+        ...     num_layers=6,
+        ... )
+
+        >>> src = np.random.uniform(size=(10, 32, 512))
+        >>> out, params, collections = transformer_encoder.init(rng=elegy.RNGSeq(42))(src)
     """
 
     def __init__(
@@ -129,7 +127,7 @@ class TransformerEncoder(Module):
     ) -> np.ndarray:
         r"""Pass the input through the encoder layers in turn.
 
-        Args:
+        Arguments:
             src: the sequence to the encoder (required).
             mask: the mask for the src sequence (optional).
             src_key_padding_mask: the mask for the src keys per batch (optional).
@@ -156,32 +154,27 @@ class TransformerDecoderLayer(Module):
     Neural Information Processing Systems, pages 6000-6010. Users may modify or implement
     in a different way during application.
 
-    Args:
+    Arguments:
         head_size: the number of expected features in the input (required).
         num_heads: the number of heads in the multiheadattention models (required).
         output_size: the dimension of the feedforward network model (default=2048).
         dropout: the dropout value (default=0.1).
         activation: the activation function of intermediate layer, relu or gelu (default=relu).
 
-    Examples::
-        >>> # decoder_layer = nn.TransformerDecoderLayer(head_size=512, num_heads=8)
-        >>> # memory = torch.rand(10, 32, 512)
-        >>> # tgt = torch.rand(20, 32, 512)
-        >>> # out = decoder_layer(tgt, memory)
     """
 
     def __init__(
         self,
         head_size: int,
         num_heads: int,
-        output_size: int = 2048,
+        output_size: tp.Optional[int] = None,
         dropout: float = 0.1,
         activation: tp.Callable[[np.ndarray], np.ndarray] = jax.nn.relu,
     ):
         super().__init__()
         self.head_size = head_size
         self.num_heads = num_heads
-        self.output_size = output_size
+        self.output_size = output_size if output_size is not None else head_size
         self.dropout = dropout
         self.activation = activation
 
@@ -196,7 +189,7 @@ class TransformerDecoderLayer(Module):
     ) -> np.ndarray:
         r"""Pass the inputs (and mask) through the decoder layer.
 
-        Args:
+        Arguments:
             tgt: the sequence to the decoder layer (required).
             memory: the sequence from the last layer of the encoder (required).
             tgt_mask: the mask for the tgt sequence (optional).
@@ -235,17 +228,11 @@ class TransformerDecoderLayer(Module):
 class TransformerDecoder(Module):
     r"""TransformerDecoder is a stack of N decoder layers
 
-    Args:
+    Arguments:
         decoder_layer: an instance of the TransformerDecoderLayer() class (required).
         num_layers: the number of sub-decoder-layers in the decoder (required).
         norm: the layer normalization component (optional).
 
-    Examples::
-        >>> # decoder_layer = nn.TransformerDecoderLayer(head_size=512, num_heads=8)
-        >>> # transformer_decoder = nn.TransformerDecoder(decoder_layer, num_layers=6)
-        >>> # memory = torch.rand(10, 32, 512)
-        >>> # tgt = torch.rand(20, 32, 512)
-        >>> # out = transformer_decoder(tgt, memory)
     """
 
     def __init__(
@@ -270,7 +257,7 @@ class TransformerDecoder(Module):
     ) -> np.ndarray:
         r"""Pass the inputs (and mask) through the decoder layer in turn.
 
-        Args:
+        Arguments:
             tgt: the sequence to the decoder (required).
             memory: the sequence from the last layer of the encoder (required).
             tgt_mask: the mask for the tgt sequence (optional).
@@ -307,7 +294,7 @@ class Transformer(Module):
     Processing Systems, pages 6000-6010. Users can build the BERT(https://arxiv.org/abs/1810.04805)
     model with corresponding parameters.
 
-    Args:
+    Arguments:
         head_size: the number of expected features in the encoder/decoder inputs (default=512).
         num_heads: the number of heads in the multiheadattention models (default=8).
         num_encoder_layers: the number of sub-encoder-layers in the encoder (default=6).
@@ -318,14 +305,23 @@ class Transformer(Module):
         custom_encoder: custom encoder (default=None).
         custom_decoder: custom decoder (default=None).
 
-    Examples::
-        >>> # transformer_model = nn.Transformer(num_heads=16, num_encoder_layers=12)
-        >>> # src = torch.rand((10, 32, 512))
-        >>> # tgt = torch.rand((20, 32, 512))
-        >>> # out = transformer_model(src, tgt)
+    Examples:
+        >>> import elegy
+        >>> import numpy as np
 
-    Note: A full example to apply nn.Transformer module for the word language model is available in
-    https://github.com/pytorch/examples/tree/master/word_language_model
+        >>> transformer_model = elegy.nn.Transformer(
+        ...     head_size=64,
+        ...     num_heads=4,
+        ...     num_encoder_layers=2,
+        ...     num_decoder_layers=2,
+        ... )
+
+        >>> src = np.random.uniform(size=(5, 32, 64))
+        >>> tgt = np.random.uniform(size=(5, 32, 64))
+
+        >>> _, params, collections = transformer_model.init(rng=elegy.RNGSeq(42))(src, tgt)
+        >>> out, params, collections = transformer_model.apply(params, collections, rng=elegy.RNGSeq(420))(src, tgt)
+
     """
 
     def __init__(
@@ -334,7 +330,7 @@ class Transformer(Module):
         num_heads: int = 8,
         num_encoder_layers: int = 6,
         num_decoder_layers: int = 6,
-        output_size: int = 2048,
+        output_size: tp.Optional[int] = None,
         dropout: float = 0.1,
         activation: tp.Callable[[np.ndarray], np.ndarray] = jax.nn.relu,
         custom_encoder: tp.Optional[tp.Any] = None,
@@ -365,7 +361,7 @@ class Transformer(Module):
     ) -> np.ndarray:
         r"""Take in and process masked source/target sequences.
 
-        Args:
+        Arguments:
             src: the sequence to the encoder (required).
             tgt: the sequence to the decoder (required).
             src_mask: the additive mask for the src sequence (optional).
@@ -404,8 +400,6 @@ class Transformer(Module):
             where S is the source sequence length, T is the target sequence length, N is the
             batch size, E is the feature number
 
-        Examples:
-            >>> # output = transformer_model(src, tgt, src_mask=src_mask, tgt_mask=tgt_mask)
         """
 
         if src.shape[0] != tgt.shape[0]:
