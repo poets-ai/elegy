@@ -18,6 +18,7 @@ from elegy.generalized_optimizer.generalized_optimizer import (
 )
 from elegy.model.model_base import ModelBase
 from elegy.optimizer import Optimizer
+from elegy.slicing import slice_model
 from tabulate import tabulate
 
 
@@ -495,6 +496,13 @@ class Model(ModelBase):
     # ----------------------------------------------------------------
     # Model-only methods
     # ----------------------------------------------------------------
+
+    def slice(self, 
+              start: tp.Union[str, None],
+              end: tp.Union[str, None, tp.List[tp.Union[str, None]]],
+              sample_input: tp.Any):
+        return slice_model(self, start, end, sample_input)
+
 
 
 class Metrics:

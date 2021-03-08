@@ -2,10 +2,10 @@ import jax, jax.numpy as jnp
 import numpy as np
 
 import elegy, elegy.slicing
+import optax
 from unittest import TestCase
 
 
-#TODO: nested modules
 #TODO: ensure only necessary modules are executed and only once
 
 
@@ -18,21 +18,23 @@ class BasicModuleSlicingTest(TestCase):
 
     def test_basic_slice_by_name0(self):
         start, end = ("linear0", "linear1")
-        submodule = elegy.slicing.slice_model(self.model, start, end, self.x)
+        submodule = self.model.slice(start, end, self.x)
         submodel = elegy.Model(submodule)
         assert submodel.predict(self.x).shape == (32, 10)
         assert jnp.all(submodel.predict(self.x) == self.module.test_call0(self.x))
+        #different batch size
+        assert submodel.predict(self.x[:8]).shape == (8, 10)
 
     def test_basic_slice_by_name1(self):
         start, end = (None, "linear1") #None means input
-        submodule = elegy.slicing.slice_model(self.model, start, end, self.x)
+        submodule = self.model.slice(start, end, self.x)
         submodel = elegy.Model(submodule)
         assert submodel.predict(self.x).shape == (32, 10)
         assert jnp.allclose(submodel.predict(self.x), self.module.test_call1(self.x))
     
     def test_slice_multi_output(self):
-        start, end = None, ["linear1", "linear2"]
-        submodule = elegy.slicing.slice_model(self.model, start, end, self.x)
+        start, end = None, ["linear2", "linear1"]
+        submodule = self.model.slice(start, end, self.x)
         submodel = elegy.Model(submodule)
         
         outputs = submodel.predict(self.x)
@@ -44,24 +46,42 @@ class BasicModuleSlicingTest(TestCase):
         assert jnp.allclose(outputs[1], true_outputs[1])
     
     def test_slice_return_input(self):
-        submodule = elegy.slicing.slice_model(self.model, "input", ["/linear1", "input"], self.x)
+        submodule = self.model.slice("input", ["/linear1", "input"], self.x)
         submodel = elegy.Model(submodule)
         submodel.summary(self.x)
         ypred = submodel.predict(self.x)
         assert jnp.all(ypred[1] == self.x)
         assert ypred[0].shape == (32, 10)
         assert jnp.allclose(ypred[0], self.module.test_call1(self.x))
+        assert 'linear2' not in submodel.states['net_params'].keys()
     
     def test_no_path(self):
         for start_module in ["linear2", "linear1"]:
             try:
-                submodule = elegy.slicing.slice_model(self.model, start_module, "linear0", self.x)
+                submodule = self.model.slice(start_module, "linear0", self.x)
                 submodel = elegy.Model(submodule)
                 submodel.summary(self.x)
             except RuntimeError as e:
                 assert e.args[0].startswith(f"No path from {start_module} to linear0")
             else:
                 assert False, "No error or wrong error raised"
+    
+    def test_retrain(self):
+        y = jnp.zeros((32, 10))
+
+        submodule = self.model.slice("linear0", "linear1", self.x)
+        submodel = elegy.Model(
+            submodule,
+            loss=elegy.losses.MeanAbsoluteError(),
+            optimizer=optax.sgd(0.05),
+        )
+        y0 = submodel.predict(self.x)
+
+        submodel.fit(self.x, y, epochs=3, verbose=2)
+
+        y2 = submodel.predict(self.x)
+        # output after training should be closer to zero because targets are zero
+        assert jnp.abs(y2.mean()) < jnp.abs(y0.mean())
 
 
 class ResNetSlicingTest(TestCase):
@@ -71,8 +91,7 @@ class ResNetSlicingTest(TestCase):
         resnet.init(rng=elegy.RNGSeq(0), set_defaults=True)(x)
         resnetmodel = elegy.Model(resnet, run_eagerly=True)
 
-        submodule = elegy.slicing.slice_model(
-            resnetmodel,
+        submodule = resnetmodel.slice(
             start=None,
             end=[
                 "/res_net_block_1",
@@ -83,7 +102,7 @@ class ResNetSlicingTest(TestCase):
             ],
             sample_input=x,
         )
-        submodel = elegy.Model(submodule)
+        submodel = elegy.Model(submodule, run_eagerly=True)
 
         # submodel.summary(x)
         outputs = submodel.predict(x)
@@ -94,6 +113,25 @@ class ResNetSlicingTest(TestCase):
         assert outputs[2].shape == (2, 14, 14, 256)
         assert outputs[3].shape == (2, 7, 7, 512)
         assert outputs[4].shape == (2, 7, 7, 512) 
+
+class NestedSlicingTest(TestCase):
+    def test_basic_nested(self):
+        self.x = np.random.random((32,100)).astype('float32')
+        self.module = NestedModule0()
+        self.module.init(rng=elegy.RNGSeq(0), set_defaults=True)(self.x)
+        self.model  = elegy.Model(self.module)
+
+        #self.model.summary(self.x)
+        submodule = self.model.slice('/module0/linear1', '/module1/linear1', self.x)
+        submodel  = elegy.Model(submodule)
+
+        x_for_submodel = np.random.random([16,25])
+        submodel.summary(x_for_submodel)
+        
+        assert jnp.allclose(submodel.predict(x_for_submodel) , self.module.test_call0(x_for_submodel))
+        assert 'module0_linear1' in submodel.states['net_params'].keys()
+        assert 'module0_linear0' not in submodel.states['net_params'].keys()
+        assert 'module1_linear2' not in submodel.states['net_params'].keys()
 
 
 
@@ -127,4 +165,24 @@ class BasicModule0(elegy.Module):
         x = x0 = self.linear1.call_with_defaults()(x)
         x = jax.nn.relu(x)
         x = x1 = self.linear2.call_with_defaults()(x)
-        return x0, x1
+        return x1, x0
+
+
+class NestedModule0(elegy.Module):
+    def call(self, x):
+        x = BasicModule0(name='module0')(x)
+        x = x*255
+        x = BasicModule0(name='module1')(x)
+        return x
+    
+    def test_call0(self, x):
+        x = self.module0.linear1.call_with_defaults()(x)
+        x = jax.nn.relu(x)
+        x = self.module0.linear2.call_with_defaults()(x)
+        x = x*255
+        x = x/255.
+        x = self.module1.linear0.call_with_defaults()(x)
+        x = jax.nn.relu(x)
+        x = self.module1.linear1.call_with_defaults()(x)
+        return x
+
