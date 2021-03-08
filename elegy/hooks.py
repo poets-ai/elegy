@@ -166,6 +166,7 @@ def get_summaries() -> types.Summaries:
 def summaries_active() -> bool:
     return LOCAL.summaries is not None
 
+
 def named_call_active() -> bool:
     return bool(LOCAL.named_call)
 
@@ -202,7 +203,7 @@ def context(
 
     if isinstance(summaries, bool):
         summaries = [] if summaries else None
-    
+
     named_call = bool(named_call)
 
     return _context(
