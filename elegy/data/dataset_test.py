@@ -143,7 +143,7 @@ class DataLoaderTestCase(TestCase):
 
     def test_worker_type(self):
         ds = DS0()
-        for worker_type in ["thread", "process", "spawn", "fork", "forkserver"]:
+        for worker_type in ["thread", "process"]:
             loader = elegy.data.DataLoader(
                 ds, batch_size=4, n_workers=4, worker_type=worker_type
             )
