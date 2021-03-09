@@ -136,6 +136,19 @@ class NestedSlicingTest(TestCase):
         assert "module1_linear2" not in submodel.states["net_params"].keys()
 
 
+def test_no_default_parameters():
+    x = np.random.random((32, 100)).astype("float32")
+    module = BasicModule0()
+    model = elegy.Model(module, seed=np.random.randint(100, 100000))
+    model.init(x)
+
+    submodel = elegy.Model(model.slice("linear0", "linear1", x))
+    assert submodel.predict(x, initialize=True).shape == (32, 10)
+
+    model.update_modules()
+    assert jnp.allclose(submodel.predict(x), module.test_call0(x))
+
+
 class BasicModule0(elegy.Module):
     def call(self, x):
         x = x / 255.0

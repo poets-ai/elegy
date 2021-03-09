@@ -75,7 +75,7 @@ class TestHooks(unittest.TestCase):
                 return x
 
         m = elegy.Model(Module0())
-        m.predict(jnp.ones(4))  # init
+        m.init(jnp.ones(4))
 
         with elegy.hooks.context(named_call=True):
             jaxpr = jax.make_jaxpr(

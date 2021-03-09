@@ -18,6 +18,7 @@ def slice_model(
 
     if not model.initialized:
         model.predict(sample_input, initialize=True)
+    model.update_modules()
 
     with hooks.context(named_call=True), jax.disable_jit():
         jaxpr = jax.make_jaxpr(model.pred_step, static_argnums=[2, 3])(
@@ -62,7 +63,7 @@ def replace_named_call_vars(
     env: tp.Dict[jax.core.Var, jax.core.Var] = None,
     level: str = "",
 ) -> jax.core.Jaxpr:
-    """Replaces vars of inner jaxprs with vars from outer jaxprs if they are equivalent"""
+    """Replaces vars of inner jaxprs with vars from outer jaxprs if they are equivalent."""
     env = env or dict()
     for inv in jaxpr.invars:
         if inv not in env:
