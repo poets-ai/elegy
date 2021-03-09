@@ -2473,7 +2473,7 @@ model.fit(loader, epochs=10)
 <div class="doc doc-object doc-method">
 <h2 class="doc doc-heading" id="elegy.data.dataset.DataLoader.__init__">
 
-<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">n_workers</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">worker_type</span><span class="o">=</span><span class="s1">'thread'</span><span class="p">,</span> <span class="n">prefetch</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">n_workers</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">worker_type</span><span class="o">=</span><span class="s1">'thread'</span><span class="p">,</span> <span class="n">prefetch</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span></code>
 
   <span class="doc doc-properties">
       <small class="doc doc-property doc-property-special"><code>special</code></small>
@@ -2546,6 +2546,14 @@ model.fit(loader, epochs=10)
 </td>
 <td><code>1</code></td>
 </tr>
+<tr>
+<td><code>timeout</code></td>
+<td><code>int</code></td>
+<td>
+<p>Timeout in seconds for waiting for a batch of samples from worker threads.</p>
+</td>
+<td><code>10</code></td>
+</tr>
 </tbody>
 </table>
 <details class="quote">
@@ -2559,6 +2567,7 @@ model.fit(loader, epochs=10)
     <span class="n">shuffle</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">worker_type</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"thread"</span><span class="p">,</span>
     <span class="n">prefetch</span><span class="p">:</span> <span class="n">tp</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="sd">"""</span>
 <span class="sd">    Arguments:</span>
@@ -2574,6 +2583,7 @@ model.fit(loader, epochs=10)
 <span class="sd">                     'spawn', 'fork' and 'forkserver' can be used to select a specific process type.</span>
 <span class="sd">                     For more information consult the Python `multiprocessing` documentation.</span>
 <span class="sd">        prefetch: Number of batches to prefetch for pipelined execution (Default: 2)</span>
+<span class="sd">        timeout: Timeout in seconds for waiting for a batch of samples from worker threads.</span>
 <span class="sd">    """</span>
     <span class="k">assert</span> <span class="p">(</span>
         <span class="n">batch_size</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span> <span class="o">==</span> <span class="nb">int</span>
@@ -2589,6 +2599,7 @@ model.fit(loader, epochs=10)
     <span class="bp">self</span><span class="o">.</span><span class="n">shuffle</span> <span class="o">=</span> <span class="n">shuffle</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">worker_type</span> <span class="o">=</span> <span class="n">worker_type</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">prefetch</span> <span class="o">=</span> <span class="n">prefetch</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">timeout</span>
 </code></pre>
 </div>
 </details>
@@ -2629,6 +2640,7 @@ model.fit(loader, epochs=10)
             <span class="bp">self</span><span class="o">.</span><span class="n">n_workers</span><span class="p">,</span>
             <span class="n">prefetch</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prefetch</span><span class="p">,</span>
             <span class="n">worker_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">worker_type</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">,</span>
         <span class="p">)</span>
 </code></pre>
 </div>

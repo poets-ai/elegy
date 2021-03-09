@@ -1,575 +1,575 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url>
      <loc>https://poets-ai.github.io/elegy/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/getting-started/high-level-api/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/getting-started/low-level-api/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/basic-api/modules-losses-metrics/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/low-level-api/basics/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/low-level-api/states/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/low-level-api/methods/pred_step/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/low-level-api/methods/test_step/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/low-level-api/default-implementation/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/contributing/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/GeneralizedModule/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/GeneralizedOptimizer/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/GradStep/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/HaikuModule/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/Loss/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/Losses/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/Metric/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/Metrics/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/Model/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/ModelBase/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/Module/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/Optimizer/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/OutputStates/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/PredStep/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/RNGSeq/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/States/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/TestStep/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/TrainStep/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/callbacks/CSVLogger/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/callbacks/Callback/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/callbacks/CallbackList/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/callbacks/EarlyStopping/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/callbacks/History/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/callbacks/LambdaCallback/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/callbacks/ModelCheckpoint/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/callbacks/RemoteMonitor/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/callbacks/TensorBoard/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/callbacks/TerminateOnNaN/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/data/DataLoader/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/data/Dataset/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/flax_summarize/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/flax_summary/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/hooks/add_loss/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/hooks/add_metric/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/hooks/add_summary/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/hooks/context/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/hooks/get_losses/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/hooks/get_metrics/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/hooks/get_summaries/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/hooks/jit/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/hooks/losses_active/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/hooks/metrics_active/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/hooks/summaries_active/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/initializers/Constant/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/initializers/Orthogonal/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/initializers/RandomNormal/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/initializers/RandomUniform/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/initializers/TruncatedNormal/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/initializers/UniformScaling/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/initializers/VarianceScaling/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/inject_dependencies/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/BinaryCrossentropy/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/CategoricalCrossentropy/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/CosineSimilarity/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/Huber/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/Loss/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/MeanAbsoluteError/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/MeanAbsolutePercentageError/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/MeanSquaredError/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/MeanSquaredLogarithmicError/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/Reduction/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/SparseCategoricalCrossentropy/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/binary_crossentropy/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/cosine_similarity/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/huber/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/mean_absolute_error/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/mean_absolute_percentage_error/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/mean_squared_error/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/mean_squared_logarithmic_error/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/losses/sparse_categorical_crossentropy/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/Accuracy/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/BinaryAccuracy/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/BinaryCrossentropy/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/CategoricalAccuracy/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/F1/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/Mean/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/MeanAbsoluteError/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/MeanAbsolutePercentageError/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/MeanSquaredError/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/Metric/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/Precision/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/Recall/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/Reduce/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/Reduction/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/SparseCategoricalAccuracy/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/Sum/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/accuracy/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/binary_accuracy/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/binary_crossentropy/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/categorical_accuracy/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/f1/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/mean_absolute_error/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/mean_absolute_percentage_error/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/mean_squared_error/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/precision/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/recall/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/reduce/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/metrics/sparse_categorical_accuracy/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nets/ResNet/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nets/ResNet101/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nets/ResNet152/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nets/ResNet18/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nets/ResNet200/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nets/ResNet34/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nets/ResNet50/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/AvgPool/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/BatchNormalization/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/Conv1D/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/Conv2D/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/Conv3D/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/ConvND/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/Dropout/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/EMAParamsTree/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/EmbedLookupStyle/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/Embedding/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/Flatten/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/InstanceNormalization/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/LayerNormalization/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/Linear/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/MaxPool/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/MultiHeadAttention/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/Reshape/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/Sequential/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/Transformer/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/TransformerDecoder/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/TransformerDecoderLayer/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/TransformerEncoder/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/TransformerEncoderLayer/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/nn/sequential/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/regularizers/GlobalL1/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/regularizers/GlobalL1L2/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/regularizers/GlobalL2/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://poets-ai.github.io/elegy/api/to_module/</loc>
-     <lastmod>2021-03-01</lastmod>
+     <lastmod>2021-03-09</lastmod>
      <changefreq>daily</changefreq>
     </url>
 </urlset>
