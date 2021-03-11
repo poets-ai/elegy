@@ -20,6 +20,7 @@ def slice_model(
         model.predict(sample_input, initialize=True)
     model.update_modules()
 
+    # create a jaxpr, marking all modules with named_call
     with hooks.context(named_call=True), jax.disable_jit():
         jaxpr = jax.make_jaxpr(model.pred_step, static_argnums=[2, 3])(
             sample_input, model.states, False, False
@@ -28,7 +29,9 @@ def slice_model(
     jaxpr = replace_named_call_vars(jaxpr)
 
     n_inputs = len(jax.tree_leaves(sample_input))
+    # actual module inputs
     toplevel_input_vars = jaxpr.invars[:n_inputs]
+    # weights and biases
     state_vars = jaxpr.invars[n_inputs:]
 
     ends = end if isinstance(end, (list, tuple)) else [end]
@@ -132,7 +135,7 @@ def path_to_str(path: tp.Tuple[str]) -> str:
     return pathstr
 
 
-# constants
+# constants, variations of the string "input"
 INPUTS_STRINGS = ["input", "inputs"]
 INPUTS_STRINGS += ["/" + s for s in INPUTS_STRINGS]
 INPUTS_STRINGS += [s.upper() for s in INPUTS_STRINGS]
@@ -154,6 +157,7 @@ def analyze_jaxpr(
     end_paths: tp.List[tp.Union[None, str]],
     unresolved: tp.Set[jax.core.Var] = None,
 ):
+    """Analyze a jaxpr, collecting only the necessary equations from start_path to end_path"""
     start_path = normalize_module_path(start_path)
     normed_end_paths = [normalize_module_path(e) for e in end_paths]
 
@@ -161,15 +165,23 @@ def analyze_jaxpr(
     input_vars = []
     unresolved = unresolved or set()
     eqn_sequence = []
+
+    # iterate over equations in reverse order to make sure only necessary equations are collected
     for eq in reversed(jaxpr.eqns):
         if eq.primitive.name == "named_call":
+            # encountered an elegy.Module
+
             eq_module_name = path_to_str(eq.params["name"])
+            # check if it's one of the targets in end_paths
             for idx, end_path in enumerate(normed_end_paths):
                 if eq_module_name == end_path:
-
+                    # target found
                     if end_paths[idx] in INPUTS_STRINGS:
+                        # special case "/input" or similar
+                        # collect the input of the whole module
                         output_vars[idx] = eq.invars
                     else:
+                        # otherwise collect the output of the module
                         output_vars[idx] = eq.outvars
                         unresolved = unresolved.union(eq.outvars)
 
@@ -179,6 +191,9 @@ def analyze_jaxpr(
                     for p in normed_end_paths + [start_path]
                 ]
             ):
+                # module is not a target in end_paths but is a parent module
+                # e.g. "/module_A" when "/module_A/module_B" is in end_paths
+                # go inside the module: analyze the inner jaxpr
                 inner_jaxpr = eq.params["call_jaxpr"]
                 (
                     inner_invars,
@@ -193,12 +208,16 @@ def analyze_jaxpr(
                 unresolved = inner_unresolved
                 eqn_sequence = inner_eqns + eqn_sequence
 
+        # check whether the equation is necessary
+        # i.e. if some of its outputs are required by previously collected equations
         common_vars = unresolved.intersection(eq.outvars)
         if len(common_vars):
+            # yes it is required
             unresolved = unresolved.difference(eq.outvars)
             unresolved = unresolved.union(filter_literals(eq.invars))
             eqn_sequence = [eq] + eqn_sequence
 
+        # check if this equation is the specified start of slicing
         if eq.primitive.name == "named_call" and eq_module_name == start_path:
             input_vars = eq.invars
             unresolved = unresolved.difference(filter_literals(input_vars))
@@ -268,12 +287,17 @@ class SlicedModule(Module):
         for var, arg in zip(self.input_vars, args):
             environment[var] = arg
 
+        # execute all equations one by one
         for eq in self.equations:
             eq_inputs = [environment[v] for v in eq.invars if v in environment]
+
+            # if the equation is a module, execute the module instead
             if eq.primitive.name == "named_call":
+                # yes it is a module
                 module = getattr(self, "_".join(eq.params["name"]))
                 outputs = module(*eq_inputs)
             else:
+                # not a module, simple execute the primitive
                 if isinstance(eq.primitive.impl, functools.partial):
                     outputs = eq.primitive.bind(*eq_inputs, **eq.params)
                 else:
