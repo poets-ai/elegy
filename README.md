@@ -38,7 +38,7 @@ import jax
 
 class MLP(nn.Module):
     @nn.compact
-    def call(self, x):
+    def __call__(self, x):
         x = nn.Dense(300)(x)
         x = jax.nn.relu(x)
         x = nn.Dense(10)(x)
