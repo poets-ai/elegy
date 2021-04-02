@@ -45,6 +45,8 @@ try:
 except types.DependencyUnavailable as e:
     pass
 
+from .slicing import slice_module
+
 
 __all__ = [
     "GeneralizedModule",

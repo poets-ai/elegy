@@ -11,11 +11,10 @@ class BasicModuleSlicingTest(TestCase):
         self.x = np.random.random((32, 100)).astype("float32")
         self.module = BasicModule0()
         self.module.init(rng=elegy.RNGSeq(0), set_defaults=True)(self.x)
-        self.model = elegy.Model(self.module)
 
     def test_basic_slice_by_name0(self):
         start, end = ("linear0", "linear1")
-        submodule = self.model.slice(start, end, self.x)
+        submodule = self.module.slice(start, end, self.x)
         submodel = elegy.Model(submodule)
         assert submodel.predict(self.x, initialize=True).shape == (32, 10)
         assert jnp.all(submodel.predict(self.x) == self.module.test_call0(self.x))
@@ -24,14 +23,14 @@ class BasicModuleSlicingTest(TestCase):
 
     def test_basic_slice_by_name1(self):
         start, end = (None, "linear1")  # None means input
-        submodule = self.model.slice(start, end, self.x)
+        submodule = self.module.slice(start, end, self.x)
         submodel = elegy.Model(submodule)
         assert submodel.predict(self.x, initialize=True).shape == (32, 10)
         assert jnp.allclose(submodel.predict(self.x), self.module.test_call1(self.x))
 
     def test_slice_multi_output(self):
         start, end = None, ["linear2", "linear1"]
-        submodule = self.model.slice(start, end, self.x)
+        submodule = self.module.slice(start, end, self.x)
         submodel = elegy.Model(submodule)
 
         outputs = submodel.predict(self.x, initialize=True)
@@ -43,7 +42,7 @@ class BasicModuleSlicingTest(TestCase):
         assert jnp.allclose(outputs[1], true_outputs[1])
 
     def test_slice_return_input(self):
-        submodule = self.model.slice("input", ["/linear1", "input"], self.x)
+        submodule = self.module.slice("input", ["/linear1", "input"], self.x)
         submodel = elegy.Model(submodule)
         submodel.summary(self.x)
         ypred = submodel.predict(self.x, initialize=True)
@@ -55,7 +54,7 @@ class BasicModuleSlicingTest(TestCase):
     def test_no_path(self):
         for start_module in ["linear2", "linear1"]:
             try:
-                submodule = self.model.slice(start_module, "linear0", self.x)
+                submodule = self.module.slice(start_module, "linear0", self.x)
                 submodel = elegy.Model(submodule)
                 submodel.summary(self.x)
             except RuntimeError as e:
@@ -66,7 +65,7 @@ class BasicModuleSlicingTest(TestCase):
     def test_retrain(self):
         y = jnp.zeros((32, 10))
 
-        submodule = self.model.slice("linear0", "linear1", self.x)
+        submodule = self.module.slice("linear0", "linear1", self.x)
         submodel = elegy.Model(
             submodule,
             loss=elegy.losses.MeanAbsoluteError(),
@@ -87,9 +86,8 @@ class ResNetSlicingTest(TestCase):
         x = jnp.zeros((2, 224, 224, 3))
         resnet = elegy.nets.resnet.ResNet18()
         resnet.init(rng=elegy.RNGSeq(0), set_defaults=True)(x)
-        resnetmodel = elegy.Model(resnet, run_eagerly=True)
 
-        submodule = resnetmodel.slice(
+        submodule = resnet.slice(
             start=None,
             end=[
                 "/res_net_block_1",
@@ -118,10 +116,9 @@ class NestedSlicingTest(TestCase):
         self.x = np.random.random((32, 100)).astype("float32")
         self.module = NestedModule0()
         self.module.init(rng=elegy.RNGSeq(0), set_defaults=True)(self.x)
-        self.model = elegy.Model(self.module)
 
         # self.model.summary(self.x)
-        submodule = self.model.slice("/module0/linear1", "/module1/linear1", self.x)
+        submodule = self.module.slice("/module0/linear1", "/module1/linear1", self.x)
         submodel = elegy.Model(submodule)
 
         x_for_submodel = np.random.random([16, 25])
@@ -141,11 +138,11 @@ def test_no_default_parameters():
     module = BasicModule0()
     model = elegy.Model(module, seed=np.random.randint(100, 100000))
     model.init(x)
+    model.update_modules()
 
-    submodel = elegy.Model(model.slice("linear0", "linear1", x))
+    submodel = elegy.Model(model.module.slice("linear0", "linear1", x))
     assert submodel.predict(x, initialize=True).shape == (32, 10)
 
-    model.update_modules()
     assert jnp.allclose(submodel.predict(x), module.test_call0(x))
 
 

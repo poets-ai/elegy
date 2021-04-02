@@ -13,6 +13,11 @@ import numpy as np
 from elegy import hooks, utils
 from elegy import types
 
+
+# placeholder for elegy.slicing
+# injected from inside the module because of a circular dependency
+slicing = None
+
 __all__ = [
     "Module",
     "to_module",
@@ -832,6 +837,47 @@ class Module(metaclass=ModuleMeta):
 
     def has_parameter(self, name: str) -> bool:
         return hasattr(self, name)
+
+    def slice(
+        self,
+        start: tp.Union[str, None],
+        end: tp.Union[str, None, tp.List[tp.Union[str, None]]],
+        sample_input: tp.Any,
+    ) -> "Module":
+        """
+        Creates a new submodule starting from the input of `start` to the outputs of `end`.
+        Current limitations:
+        - Only elegy.Module can be specified as `start` or `end`
+        - Only one `start` is supported
+
+        Note: You might need to call model.update_modules() before slicing
+              to make sure the parameters are transferred to the new submodule.
+
+        Example usage:
+        ```
+        x = jnp.zeros((2, 224, 224, 3))
+        resnet = elegy.nets.resnet.ResNet18()
+        submodule = resnet.slice(
+            start = '/inputs',
+            end   = ["/res_net_block_1", "/res_net_block_3", "/res_net_block_5", "/res_net_block_7" ],
+            sample_input = x,
+        )
+        outputs = elegy.Model(submodule).predict(x, initialize=True)
+        assert outputs[0].shape == (2, 56, 56, 64)
+        assert outputs[1].shape == (2, 28, 28, 128)
+        assert outputs[2].shape == (2, 14, 14, 256)
+        assert outputs[3].shape == (2, 7, 7, 512)
+        ```
+        Arguments:
+            start: Name of a child module which will be the input module of the resulting module.
+                   If `None`, the first module is used.
+            end:   Name of child module, `None` or a list thereof which will be the output module(s) of the resulting module.
+                   If `None`, the last module is used.
+            sample_input: An example input to the model.
+
+        Returns: A new Module.
+        """
+        return slicing.slice_module(self, start, end, sample_input)
 
 
 # -------------------------------------------------------------

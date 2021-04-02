@@ -4,21 +4,26 @@ import functools
 import numpy as np
 import jax, jax.numpy as jnp
 import elegy
-from elegy.module import Module
+from elegy import Module, Model
 import elegy.hooks as hooks
 import elegy.types as types
 
+import sys
+from . import module
 
-def slice_model(
-    model: "elegy.Model",
+# injecting this module into elegy.module because of a circular dependency
+module.slicing = sys.modules[__name__]
+
+
+def slice_module(
+    module: Module,
     start: tp.Union[str, None],
     end: tp.Union[str, None, tp.List[tp.Union[str, None]]],
     sample_input: tp.Any,
 ) -> Module:
 
-    if not model.initialized:
-        model.predict(sample_input, initialize=True)
-    model.update_modules()
+    model = Model(module)
+    model.init(sample_input)
 
     # create a jaxpr, marking all modules with named_call
     with hooks.context(named_call=True), jax.disable_jit():
