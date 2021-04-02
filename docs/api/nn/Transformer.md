@@ -8,8 +8,8 @@
             - __init__
             - call
             - add_parameter
-            - get_parameters
-            - set_parameters
-            - reset
+            - get_default_parameters
+            - set_default_parameters
             - init
+            - slice
         

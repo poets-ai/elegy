@@ -159,10 +159,10 @@ class Module(metaclass=ModuleMeta):
         "__init__",
         "call",
         "add_parameter",
-        "get_parameters",
-        "set_parameters",
-        "reset",
+        "get_default_parameters",
+        "set_default_parameters",
         "init",
+        "slice",
     ]
 
     def __init__(self, name: tp.Optional[str] = None, dtype: tp.Any = jnp.float32):
@@ -846,12 +846,14 @@ class Module(metaclass=ModuleMeta):
     ) -> "Module":
         """
         Creates a new submodule starting from the input of `start` to the outputs of `end`.
+
         Current limitations:
+
         - Only elegy.Module can be specified as `start` or `end`
         - Only one `start` is supported
 
-        Note: You might need to call model.update_modules() before slicing
-              to make sure the parameters are transferred to the new submodule.
+        Note:
+        You might need to call `model.update_modules()` before slicing to make sure the parameters are transferred to the new submodule.
 
         Example usage:
         ```
