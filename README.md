@@ -38,7 +38,7 @@ import jax
 
 class MLP(nn.Module):
     @nn.compact
-    def call(self, x):
+    def __call__(self, x):
         x = nn.Dense(300)(x)
         x = jax.nn.relu(x)
         x = nn.Dense(10)(x)
@@ -199,7 +199,7 @@ To cite this project:
 author = {PoetsAI},
 title = {Elegy: A framework-agnostic Trainer interface for the Jax ecosystem},
 url = {https://github.com/poets-ai/elegy},
-version = {0.7.1},
+version = {0.7.2},
 year = {2020},
 }
 ```

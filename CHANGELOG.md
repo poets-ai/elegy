@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.7.2](https://github.com/poets-ai/elegy/tree/0.7.2) (2021-03-10)
+
+[Full Changelog](https://github.com/poets-ai/elegy/compare/0.7.1...0.7.2)
+
+**Merged pull requests:**
+
+- release-0.7.2 [\#173](https://github.com/poets-ai/elegy/pull/173) ([cgarciae](https://github.com/cgarciae))
+- DataLoader Timeout [\#172](https://github.com/poets-ai/elegy/pull/172) ([alexander-g](https://github.com/alexander-g))
+- Saved Model support: implements Model.saved\_model that enables the user to serialize pred\_step as a SavedModel  [\#171](https://github.com/poets-ai/elegy/pull/171) ([cgarciae](https://github.com/cgarciae))
+
 ## [0.7.1](https://github.com/poets-ai/elegy/tree/0.7.1) (2021-03-01)
 
 [Full Changelog](https://github.com/poets-ai/elegy/compare/0.7.0...0.7.1)
@@ -17,6 +27,7 @@
 **Merged pull requests:**
 
 - Fix notebook [\#166](https://github.com/poets-ai/elegy/pull/166) ([cgarciae](https://github.com/cgarciae))
+- Single Initialization: Removes the current progressive initialization in favor of a single underlying call to init\_step. [\#165](https://github.com/poets-ai/elegy/pull/165) ([cgarciae](https://github.com/cgarciae))
 
 ## [0.6.0](https://github.com/poets-ai/elegy/tree/0.6.0) (2021-02-14)
 
@@ -28,7 +39,6 @@
 
 **Merged pull requests:**
 
-- Single Initialization: Removes the current progressive initialization in favor of a single underlying call to init\_step. [\#165](https://github.com/poets-ai/elegy/pull/165) ([cgarciae](https://github.com/cgarciae))
 - More Steps: adds additional \*\_step methods [\#163](https://github.com/poets-ai/elegy/pull/163) ([cgarciae](https://github.com/cgarciae))
 - Better error message on elegy.States attribute access miss [\#162](https://github.com/poets-ai/elegy/pull/162) ([alexander-g](https://github.com/alexander-g))
 - WGAN-GP low-level API example [\#157](https://github.com/poets-ai/elegy/pull/157) ([alexander-g](https://github.com/alexander-g))
@@ -42,7 +52,6 @@
 
 - Improve States: uses \_\_dict\_\_ so States works with vars [\#159](https://github.com/poets-ai/elegy/pull/159) ([cgarciae](https://github.com/cgarciae))
 - Simplify API: Cleans-up some API details around Model and Module [\#158](https://github.com/poets-ai/elegy/pull/158) ([cgarciae](https://github.com/cgarciae))
-- fix-maybe-initialize [\#155](https://github.com/poets-ai/elegy/pull/155) ([cgarciae](https://github.com/cgarciae))
 
 ## [0.4.1](https://github.com/poets-ai/elegy/tree/0.4.1) (2021-02-03)
 
@@ -50,6 +59,7 @@
 
 **Merged pull requests:**
 
+- fix-maybe-initialize [\#155](https://github.com/poets-ai/elegy/pull/155) ([cgarciae](https://github.com/cgarciae))
 - Add simple Flax low-level API Model example to README.md [\#153](https://github.com/poets-ai/elegy/pull/153) ([sooheon](https://github.com/sooheon))
 
 ## [0.4.0](https://github.com/poets-ai/elegy/tree/0.4.0) (2021-02-01)

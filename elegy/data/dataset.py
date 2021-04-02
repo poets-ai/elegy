@@ -67,6 +67,7 @@ class DataLoader:
         shuffle: tp.Optional[bool] = False,
         worker_type: tp.Optional[str] = "thread",
         prefetch: tp.Optional[int] = 1,
+        timeout: int = 10,
     ):
         """
         Arguments:
@@ -82,6 +83,7 @@ class DataLoader:
                          'spawn', 'fork' and 'forkserver' can be used to select a specific process type.
                          For more information consult the Python `multiprocessing` documentation.
             prefetch: Number of batches to prefetch for pipelined execution (Default: 2)
+            timeout: Timeout in seconds for waiting for a batch of samples from worker threads.
         """
         assert (
             batch_size > 0 and type(batch_size) == int
@@ -97,6 +99,7 @@ class DataLoader:
         self.shuffle = shuffle
         self.worker_type = worker_type
         self.prefetch = prefetch
+        self.timeout = timeout
 
     def __len__(self) -> int:
         """Returns the number of batches per epoch"""
@@ -122,6 +125,7 @@ class DataLoader:
                 self.n_workers,
                 prefetch=self.prefetch,
                 worker_type=self.worker_type,
+                timeout=self.timeout,
             )
 
 
