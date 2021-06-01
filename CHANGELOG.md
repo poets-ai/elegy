@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.4](https://github.com/poets-ai/elegy/tree/0.7.4) (2021-06-01)
+
+[Full Changelog](https://github.com/poets-ai/elegy/compare/0.7.2...0.7.4)
+
+**Implemented enhancements:**
+
+- Relaxing/updating `optax` version requirement? [\#176](https://github.com/poets-ai/elegy/issues/176)
+- \[Feature Request\] Elegy SimCLR implementation [\#175](https://github.com/poets-ai/elegy/issues/175)
+
+**Merged pull requests:**
+
+- Update optax, jax, jaxlib [\#177](https://github.com/poets-ai/elegy/pull/177) ([cgarciae](https://github.com/cgarciae))
+- Fix readme [\#174](https://github.com/poets-ai/elegy/pull/174) ([cgarciae](https://github.com/cgarciae))
+
 ## [0.7.2](https://github.com/poets-ai/elegy/tree/0.7.2) (2021-03-10)
 
 [Full Changelog](https://github.com/poets-ai/elegy/compare/0.7.1...0.7.2)
