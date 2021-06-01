@@ -19,8 +19,8 @@ secondary = true
 [tool.poetry.dependencies]
 python = ">=3.6.1,<3.9" # we cant support 3.9 until dm-tree (used by optax) supports 3.9.
 numpy = "^1.0.0"
-jax = "^0.2.9"
-jaxlib = "^0.1.59"
+jax = "^0.2.13"
+jaxlib = "^0.1.67"
 typing_extensions = { version = "^3.7.4", python = "<3.8" }
 dataclasses =  { version = "^0.7", python = ">=3.6,<3.7" }
 cloudpickle = "^1.5.0"
@@ -29,7 +29,7 @@ tabulate = "^0.8.7"
 toolz = "^0.10.0"
 pyyaml = "^5.3.1"
 dm-haiku = "^0.0.2"
-optax = "^0.0.1"
+optax = "^0.0.6"
 rich = "^9.11.1"
 
 [tool.poetry.dev-dependencies]
