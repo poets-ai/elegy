@@ -1,7 +1,7 @@
 from .batch_normalization import BatchNormalization
 from .conv import Conv1D, Conv2D, Conv3D, ConvND
 from .dropout import Dropout
-from .embedding import Embedding, EmbedLookupStyle
+from .embedding import Embedding
 from .flatten import Flatten, Reshape
 from .layer_normalization import InstanceNormalization, LayerNormalization
 from .linear import Linear
