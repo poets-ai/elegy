@@ -29,22 +29,26 @@ class GeneralizedModule(ABC):
     ) -> tp.Callable[..., types.OutputStates]:
         ...
 
-    def get_summary_params(
-        self,
-        path: types.Path,
-        module: tp.Any,
-        value: tp.Any,
-        net_params: types.NetParams,
-        net_states: types.NetStates,
-    ) -> tp.Tuple[tp.Optional[types.Pytree], tp.Optional[types.Pytree]]:
-        return None, None
-
     def update(
         self,
         params: tp.Optional[types.ModuleParams],
         states: tp.Optional[types.ModuleStates],
     ):
-        pass
+        ...
+
+    def summary(
+        self,
+        x: tp.Any,
+        x_args: tp.Tuple,
+        x_kwargs: tp.Dict[str, tp.Any],
+        params: tp.Any,
+        states: tp.Any,
+        rng: types.RNGSeq,
+        depth: int,
+        run_eagerly: bool,
+        eval_shape: bool,
+    ) -> str:
+        ...
 
 
 class CallableModule(GeneralizedModule):

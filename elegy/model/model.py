@@ -125,7 +125,7 @@ class Model(ModelBase):
         seed: int = 42,
         **kwargs,
     ):
-        """[summary]
+        """
 
         Arguments:
             module: A `Module` instance.
@@ -242,78 +242,6 @@ class Model(ModelBase):
 
         return states
 
-    def summary_step(
-        self,
-        x: tp.Any,
-        states: types.States,
-    ) -> tp.List[types.SummaryTableEntry]:
-        initializing = True
-        training = True
-
-        states = states.maybe_update(**self.states_step())
-
-        with hooks.context(summaries=True):
-            _, states = utils.inject_dependencies(self.pred_step)(
-                x=x,
-                states=states,
-                initializing=initializing,
-                training=training,
-            )
-            summaries = hooks.get_summaries()
-
-        entries: tp.List[types.SummaryTableEntry] = []
-
-        for path, module, value in summaries:
-
-            module_params, module_states = self.api_module.get_summary_params(
-                path=path,
-                module=module,
-                value=value,
-                net_params=states.net_params,
-                net_states=states.net_states,
-            )
-
-            entries.append(
-                types.SummaryTableEntry(
-                    path=("/".join(map(str, path)) if path else "*"),
-                    module_type_name=(
-                        module.__class__.__name__ if is_generalizable(module) else ""
-                    ),
-                    output_value=value,
-                    trainable_params_count=(
-                        utils.parameters_count(module_params)
-                        if module_params is not None
-                        else 0
-                    ),
-                    trainable_params_size=(
-                        utils.parameters_bytes(module_params)
-                        if module_params is not None
-                        else 0
-                    ),
-                    non_trainable_params_count=(
-                        utils.parameters_count(module_states)
-                        if module_states is not None
-                        else 0
-                    ),
-                    non_trainable_params_size=(
-                        utils.parameters_bytes(module_states)
-                        if module_states is not None
-                        else 0
-                    ),
-                )
-            )
-
-        entries.append(
-            types.SummaryTableEntry.totals_entry(
-                trainable_params_count=utils.parameters_count(states.net_params),
-                trainable_params_size=utils.parameters_bytes(states.net_params),
-                non_trainable_params_count=utils.parameters_count(states.net_states),
-                non_trainable_params_size=utils.parameters_bytes(states.net_states),
-            )
-        )
-
-        return entries
-
     def pred_step(
         self,
         x: tp.Any,
@@ -321,6 +249,8 @@ class Model(ModelBase):
         initializing: bool,
         training: bool,
     ) -> model_core.PredStep:
+
+        assert self.api_module is not None
 
         if self.module is None:
             raise types.MissingModule(
@@ -536,6 +466,53 @@ class Model(ModelBase):
     # ----------------------------------------------------------------
     # Model-only methods
     # ----------------------------------------------------------------
+
+    def summary(
+        self,
+        x: tp.Optional[tp.Any] = None,
+        depth: int = 2,
+        return_repr: bool = False,
+        initialize: bool = False,
+        eval_shape: bool = True,
+    ) -> tp.Optional[str]:
+        """
+        Prints a summary of the network.
+        Arguments:
+            x: A sample of inputs to the network.
+            depth: The level number of nested level which will be showed.
+                Information about summaries from modules deeper than `depth`
+                will be aggregated together.
+        """
+
+        if self.api_module is None:
+            return
+
+        if x is None:
+            x = {}
+
+        x_args, x_kwargs = utils.get_input_args(
+            x,
+            states=self.states,
+            initializing=False,
+            training=False,
+        )
+
+        summary = self.api_module.summary(
+            x,
+            x_args=x_args,
+            x_kwargs=x_kwargs,
+            params=self.states.net_params,
+            states=self.states.net_states,
+            rng=self.states.rng,
+            depth=depth,
+            run_eagerly=self.run_eagerly,
+            eval_shape=eval_shape,
+        )
+
+        if return_repr:
+            return summary
+        else:
+            print(summary)
 
 
 class Metrics:
