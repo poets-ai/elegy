@@ -178,20 +178,7 @@ class ElegyModule(GeneralizedModule):
         )
 
         # add padding
-        for col in range(4):
-            max_length = max(
-                len(line.split("{pad}")[0])
-                for row in rows
-                for line in row[col].split("\n")
-            )
-
-            for row in rows:
-                row[col] = "\n".join(
-                    line.format(
-                        pad=" " * (max_length - len(line.rstrip().split("{pad}")[0]))
-                    )
-                    for line in row[col].rstrip().split("\n")
-                )
+        utils.add_padding(rows)
 
         for row in rows[:-1]:
             main_table.add_row(*row)

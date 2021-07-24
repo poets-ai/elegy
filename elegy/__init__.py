@@ -33,10 +33,6 @@ from .generalized_module.generalized_module import GeneralizedModule
 from .generalized_optimizer.generalized_optimizer import GeneralizedOptimizer
 
 try:
-    from .generalized_module.linen_module import flax_summarize, flax_summary
-except types.DependencyUnavailable as e:
-    pass
-try:
     from .generalized_module.haiku_module import (
         HaikuModule,
         haiku_summarize,
@@ -67,7 +63,6 @@ __all__ = [
     "TrainStep",
     "callbacks",
     "data",
-    "flax_summarize",
     "flax_summary",
     "hooks",
     "initializers",

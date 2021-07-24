@@ -1,7 +1,11 @@
 import functools
 import typing as tp
 
+import jax
 from elegy import hooks, types, utils
+from rich.table import Table
+from rich.text import Text
+from toolz.functoolz import apply
 
 from .generalized_module import GeneralizedModule, register_module_for
 
@@ -84,76 +88,70 @@ class LinenModule(GeneralizedModule):
 
         return _lambda
 
-    def get_summary_params(
+    def summary(
         self,
-        path: types.Path,
-        module: tp.Any,
-        value: tp.Any,
-        net_params: types.NetParams,
-        net_states: types.NetStates,
-    ) -> tp.Tuple[tp.Optional[types.Pytree], tp.Optional[types.Pytree]]:
+        x: tp.Any,
+        x_args: tp.Tuple,
+        x_kwargs: tp.Dict[str, tp.Any],
+        params: tp.Any,
+        states: tp.Any,
+        rng: types.RNGSeq,
+        depth: int,
+        run_eagerly: bool,
+        eval_shape: bool,
+    ) -> str:
 
-        if net_params is None:
-            params_tree = None
+        apply_fn = self.apply(
+            params=params,
+            states=states,
+            training=False,
+            rng=rng,
+        )
+
+        if eval_shape:
+            ouput_states: types.OutputStates = jax.eval_shape(
+                apply_fn,
+                *x_args,
+                **x_kwargs,
+            )
         else:
-            params_tree = utils.get_path_params(path, net_params)
-            # filter out submodules
-            if params_tree is not None:
-                assert isinstance(module, linen.Module)
-                params_tree = {
-                    name: value
-                    for name, value in params_tree.items()
-                    if not name[0].isupper()
-                }
+            ouput_states = apply_fn(
+                *x_args,
+                **x_kwargs,
+            )
 
-        if net_states is None:
-            states_tree = None
-        else:
-            states_tree = {
-                collection: utils.get_path_params(path, states)
-                for collection, states in net_states.items()
-            }
-            # filter out submodules
-            states_tree = {
-                collection: {
-                    name: value
-                    for name, value in states.items()
-                    if assert_id(isinstance(module, linen.Module))
-                    and not name[0].isupper()
-                }
-                for collection, states in states_tree.items()
-                if states is not None
-            }
+        # summary string
+        summary = "\n"
 
-        return params_tree, states_tree
+        # input / output shapes table
+        values_table = Table(
+            title="",
+            show_header=False,
+            show_lines=True,
+            # show_footer=True,
+            # box=rich.box.HORIZONTALS,
+        )
 
+        values_table.add_column("Layer")
+        values_table.add_column("Shape")
 
-def flax_summarize(f):
-    @functools.wraps(f)
-    def wrapper(self: linen.Module, *args, **kwargs):
+        values_rows = [
+            ["Inputs", utils.format_output(x)],
+            ["Outputs", utils.format_output(ouput_states.preds)],
+        ]
 
-        outputs = f(self, *args, **kwargs)
+        utils.add_padding(values_rows)
 
-        if hooks.summaries_active():
-            path = self.scope.path
-            hooks.add_summary(path, self, outputs)
+        for row in values_rows:
+            values_table.add_row(*row)
 
-        return outputs
+        summary += utils.get_table_repr(values_table) + "\n"
 
-    return wrapper
-
-
-def flax_summary(
-    flax_module: linen.Module,
-    name: str,
-    f: tp.Any,
-    value: types.Scalar,
-):
-    if hooks.summaries_active():
-        path = flax_module.scope.path + (name,)
-        hooks.add_summary(path, f, value)
-
-
-def assert_id(value):
-    assert value
-    return value
+        # params table
+        params_table = Table(
+            title="Parameters",
+            show_header=True,
+            show_lines=True,
+            # show_footer=True,
+            # box=rich.box.HORIZONTALS,
+        )

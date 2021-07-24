@@ -465,6 +465,23 @@ def format_size(size):
     return f"[dim]{count} {units}[/dim]"
 
 
+def add_padding(rows):
+    n_cols = len(rows[0])
+
+    for col in range(n_cols):
+        max_length = max(
+            len(line.split("{pad}")[0]) for row in rows for line in row[col].split("\n")
+        )
+
+        for row in rows:
+            row[col] = "\n".join(
+                line.format(
+                    pad=" " * (max_length - len(line.rstrip().split("{pad}")[0]))
+                )
+                for line in row[col].rstrip().split("\n")
+            )
+
+
 def get_table_repr(table):
     f = io.StringIO()
     console = Console(file=f, force_terminal=True)
