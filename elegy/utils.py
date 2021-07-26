@@ -451,6 +451,15 @@ def format_output(value) -> str:
     return file.getvalue().replace("\n...", "").replace("'", "")
 
 
+def format_count_and_size(params, add_padding: bool = True) -> str:
+
+    padding = r"{pad}" if add_padding else ""
+    count = parameters_count(params)
+    size = parameters_bytes(params)
+
+    return f"[green]{count:,}[/]{padding}    {format_size(size)}" if count > 0 else ""
+
+
 def format_size(size):
     count, units = (
         (f"{size / 1e9 :,.1f}", "GB")

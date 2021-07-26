@@ -54,6 +54,9 @@ class RNGSeq(TrivialPytree):
     def __repr__(self) -> str:
         return f"RNGSeq(key={self.key})"
 
+    def copy(self) -> "RNGSeq":
+        return RNGSeq(self.key)
+
 
 T = tp.TypeVar("T")
 Container = tp.Union[

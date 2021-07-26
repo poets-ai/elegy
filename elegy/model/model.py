@@ -503,7 +503,7 @@ class Model(ModelBase):
             x_kwargs=x_kwargs,
             params=self.states.net_params,
             states=self.states.net_states,
-            rng=self.states.rng,
+            rng=self.states.rng.copy(),
             depth=depth,
             run_eagerly=self.run_eagerly,
             eval_shape=eval_shape,
