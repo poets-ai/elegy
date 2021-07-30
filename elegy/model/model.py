@@ -490,20 +490,8 @@ class Model(ModelBase):
         if x is None:
             x = {}
 
-        x_args, x_kwargs = utils.get_input_args(
-            x,
-            states=self.states,
-            initializing=False,
-            training=False,
-        )
-
         summary = self.api_module.summary(
             x,
-            x_args=x_args,
-            x_kwargs=x_kwargs,
-            params=self.states.net_params,
-            states=self.states.net_states,
-            rng=self.states.rng.copy(),
             depth=depth,
             run_eagerly=self.run_eagerly,
             eval_shape=eval_shape,
@@ -637,6 +625,11 @@ class AvgMetric(GeneralizedModule):
             )
 
         return _lambda
+
+    def summary(
+        self, x: tp.Any, depth: int, run_eagerly: bool, eval_shape: bool
+    ) -> str:
+        raise NotImplementedError("AvgMetric has no summaries")
 
 
 class Losses:

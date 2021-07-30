@@ -63,11 +63,6 @@ class ElegyModule(GeneralizedModule):
     def summary(
         self,
         x: tp.Any,
-        x_args: tp.Tuple,
-        x_kwargs: tp.Dict[str, tp.Any],
-        params: tp.Any,
-        states: tp.Any,
-        rng: types.RNGSeq,
         depth: int,
         run_eagerly: bool,
         eval_shape: bool,
@@ -87,22 +82,9 @@ class ElegyModule(GeneralizedModule):
         method = self.summary_step if run_eagerly else jax.jit(self.summary_step)
 
         if eval_shape:
-            entries = jax.eval_shape(
-                self.summary_step,
-                x_args,
-                x_kwargs,
-                params,
-                states,
-                rng,
-            )
+            entries = jax.eval_shape(self.summary_step, x)
         else:
-            entries = method(
-                x_args,
-                x_kwargs,
-                params,
-                states,
-                rng,
-            )
+            entries = method(x)
 
         total_entry = entries[-1]
         entries = entries[:-1]
@@ -200,18 +182,20 @@ class ElegyModule(GeneralizedModule):
 
     def summary_step(
         self,
-        x_args: tp.Tuple,
-        x_kwargs: tp.Dict[str, tp.Any],
-        params: tp.Any,
-        states: tp.Any,
-        rng: types.RNGSeq,
+        x: tp.Any,
     ) -> tp.List[types.SummaryTableEntry]:
-        training = True
+
+        rng = types.RNGSeq(42)
+
+        x_args, x_kwargs = utils.get_input_args(
+            x,
+            states=types.States(rng=rng),
+            initializing=True,
+            training=True,
+        )
 
         with hooks.context(summaries=True):
-            _, params, states = self.apply(
-                params=params, states=states, training=training, rng=rng
-            )(*x_args, **x_kwargs)
+            _, params, states = self.init(rng=rng)(*x_args, **x_kwargs)
 
             summaries = hooks.get_summaries()
 

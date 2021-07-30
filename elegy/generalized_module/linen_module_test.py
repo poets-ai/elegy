@@ -7,6 +7,37 @@ from elegy.generalized_module.generalized_module import generalize
 from flax import linen
 
 
+class ModuleC(linen.Module):
+    @linen.compact
+    def __call__(self, x):
+        c1 = self.param("c1", lambda _: jnp.ones([5]))
+        c2 = self.variable("states", "c2", lambda: jnp.ones([6]))
+
+        return x
+
+
+class ModuleB(linen.Module):
+    @linen.compact
+    def __call__(self, x):
+        b1 = self.param("b1", lambda _: jnp.ones([3]))
+        b2 = self.variable("states", "b2", lambda: jnp.ones([4]))
+
+        x = ModuleC()(x)
+
+        return x
+
+
+class ModuleA(linen.Module):
+    @linen.compact
+    def __call__(self, x):
+        a1 = self.param("a1", lambda _: jnp.ones([1]))
+        a2 = self.variable("states", "a2", lambda: jnp.ones([2]))
+
+        x = ModuleB()(x)
+
+        return x
+
+
 class TestLinenModule(unittest.TestCase):
     def test_basic(self):
         class M(linen.Module):
@@ -43,36 +74,8 @@ class TestLinenModule(unittest.TestCase):
         assert states["batch_stats"]["n"] == 1
 
     def test_summaries(self):
-        class ModuleC(linen.Module):
-            @linen.compact
-            def __call__(self, x):
-                c1 = self.param("c1", lambda _: jnp.ones([5]))
-                c2 = self.variable("states", "c2", lambda: jnp.ones([6]))
-
-                return x
-
-        class ModuleB(linen.Module):
-            @linen.compact
-            def __call__(self, x):
-                b1 = self.param("b1", lambda _: jnp.ones([3]))
-                b2 = self.variable("states", "b2", lambda: jnp.ones([4]))
-
-                x = ModuleC()(x)
-
-                return x
-
-        class ModuleA(linen.Module):
-            @linen.compact
-            def __call__(self, x):
-                a1 = self.param("a1", lambda _: jnp.ones([1]))
-                a2 = self.variable("states", "a2", lambda: jnp.ones([2]))
-
-                x = ModuleB()(x)
-
-                return x
 
         model = elegy.Model(ModuleA())
-        model.init(x=jnp.ones([10, 2]))
 
         summary_text = model.summary(x=jnp.ones([10, 2]), depth=1, return_repr=True)
         assert summary_text is not None

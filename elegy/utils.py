@@ -244,12 +244,12 @@ def _merge_with_unique_names(
 
 
 def parameters_count(params: tp.Any) -> int:
-    leaves = (jnp.asarray(x) for x in jax.tree_leaves(params))
+    leaves = (x for x in jax.tree_leaves(params))
     return sum(x.size for x in leaves)
 
 
 def parameters_bytes(params: tp.Any) -> int:
-    leaves = (jnp.asarray(x) for x in jax.tree_leaves(params))
+    leaves = (x for x in jax.tree_leaves(params))
     return sum(x.size * x.dtype.itemsize for x in leaves)
 
 

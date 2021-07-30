@@ -35,8 +35,6 @@ from .generalized_optimizer.generalized_optimizer import GeneralizedOptimizer
 try:
     from .generalized_module.haiku_module import (
         HaikuModule,
-        haiku_summarize,
-        haiku_summary,
     )
 except types.DependencyUnavailable as e:
     pass

@@ -65,7 +65,7 @@ class LinenModule(GeneralizedModule):
                 return self.module.apply(
                     variables,
                     *args,
-                    rngs={"params": rng.next()},
+                    rngs={"params": rng.next(), "dropout": rng.next()},
                     mutable=True,
                     **kwargs,
                 )
@@ -91,34 +91,30 @@ class LinenModule(GeneralizedModule):
     def summary(
         self,
         x: tp.Any,
-        x_args: tp.Tuple,
-        x_kwargs: tp.Dict[str, tp.Any],
-        params: tp.Any,
-        states: tp.Any,
-        rng: types.RNGSeq,
         depth: int,
         run_eagerly: bool,
         eval_shape: bool,
     ) -> str:
-
-        apply_fn = self.apply(
-            params=params,
-            states=states,
-            training=False,
-            rng=rng,
-        )
+        def apply_fn(x) -> types.OutputStates:
+            rng = types.RNGSeq(42)
+            x_args, x_kwargs = utils.get_input_args(
+                x,
+                states=types.States(rng=rng),
+                initializing=True,
+                training=True,
+            )
+            return self.init(rng=rng)(*x_args, **x_kwargs)
 
         if eval_shape:
-            ouput_states: types.OutputStates = jax.eval_shape(
-                apply_fn,
-                *x_args,
-                **x_kwargs,
-            )
+            ouput_states: types.OutputStates = jax.eval_shape(apply_fn, x)
+        elif run_eagerly:
+            ouput_states = apply_fn(x)
         else:
-            ouput_states = apply_fn(
-                *x_args,
-                **x_kwargs,
-            )
+            # Not sure passing params and states as captures is the best way to do this
+            # however, since we are just using this function once it should be fine.
+            ouput_states = jax.jit(apply_fn)(x)
+
+        preds, params, states = ouput_states
 
         # summary string
         summary = "\n"
@@ -138,7 +134,7 @@ class LinenModule(GeneralizedModule):
 
         shapes_rows = [
             ["Input", utils.format_output(x)],
-            ["Output", utils.format_output(ouput_states.preds)],
+            ["Output", utils.format_output(preds)],
         ]
 
         utils.add_padding(shapes_rows)
