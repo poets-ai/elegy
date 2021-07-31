@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from pathlib import Path
 
 import dataget
 from flax import linen
@@ -14,7 +15,7 @@ import typer
 def main(
     debug: bool = False,
     eager: bool = False,
-    logdir: str = "runs",
+    logdir: Path = Path("runs"),
     steps_per_epoch: int = 200,
     epochs: int = 100,
     batch_size: int = 64,
@@ -28,7 +29,7 @@ def main(
         debugpy.wait_for_client()
 
     current_time = datetime.now().strftime("%b%d_%H-%M-%S")
-    logdir = os.path.join(logdir, current_time)
+    logdir = logdir / current_time
 
     X_train, y_train, X_test, y_test = dataget.image.mnist(global_cache=True).get()
 
@@ -71,7 +72,10 @@ def main(
         batch_size=batch_size,
         validation_data=(X_test, y_test),
         shuffle=True,
-        callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],
+        callbacks=[
+            elegy.callbacks.TensorBoard(logdir=str(logdir)),
+            elegy.callbacks.ModelCheckpoint(str(logdir / "model"), save_best_only=True),
+        ],
     )
 
     elegy.utils.plot_history(history)

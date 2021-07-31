@@ -391,7 +391,7 @@ python-versions = "*"
 
 [[package]]
 name = "flax"
-version = "0.3.0"
+version = "0.3.4"
 description = "Flax: A neural network library for JAX designed for flexibility"
 category = "dev"
 optional = false
@@ -399,13 +399,14 @@ python-versions = "*"
 
 [package.dependencies]
 dataclasses = {version = "*", markers = "python_version < \"3.7\""}
-jax = ">=0.2.6"
+jax = ">=0.2.13"
 matplotlib = "*"
 msgpack = "*"
 numpy = ">=1.12"
+optax = "*"
 
 [package.extras]
-testing = ["atari-py", "clu", "gym", "jaxlib", "ml-collections", "opencv-python", "pytest", "pytest-cov", "pytest-xdist (==1.34.0)", "pytype", "sentencepiece", "svn", "tensorflow", "tensorflow-text", "tensorflow-datasets"]
+testing = ["atari-py", "clu", "gym", "jaxlib", "ml-collections", "opencv-python", "pytest", "pytest-cov", "pytest-xdist (==1.34.0)", "pytype", "sentencepiece", "svn", "tensorflow-cpu (>=2.4.0)", "tensorflow-text (>=2.4.0)", "tensorflow-datasets", "tensorflow (==2.4.1)"]
 
 [[package]]
 name = "future"
@@ -2145,7 +2146,7 @@ testing = ["pytest (>=3.5,!=3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.6.1,<3.9" # we cant support 3.9 until dm-tree (used by optax) supports 3.9.
-content-hash = "8ea2009b1fcfb6758be69fabc212c03f901bfb65d3a48cab985e84ae72c543c9"
+content-hash = "1a653e706df8e8ea93953ab07ced2228cb7065d6e488b4d6bedc34c3ea3e24e3"
 
 [metadata.files]
 absl-py = [
@@ -2459,8 +2460,8 @@ flatbuffers = [
     {file = "flatbuffers-1.12.tar.gz", hash = "sha256:63bb9a722d5e373701913e226135b28a6f6ac200d5cc7b4d919fa38d73b44610"},
 ]
 flax = [
-    {file = "flax-0.3.0-py3-none-any.whl", hash = "sha256:0ab0269815069f763fd3e387e78d434ac2611fe5bf1cb9b78d64e6ccf44f7591"},
-    {file = "flax-0.3.0.tar.gz", hash = "sha256:f468d6db92c8a5a35ba66bf2744fe096566f7768a95f1a4e6a80ace0a01361ae"},
+    {file = "flax-0.3.4-py3-none-any.whl", hash = "sha256:7c3820d9a556c0fe6d2fcc1175025010d3238e5d2ac6acd8fcc4c27f526941b2"},
+    {file = "flax-0.3.4.tar.gz", hash = "sha256:9992d89d854fde26877fa17cdfcdc390c49dd4298f7d7336673aa7f42d114bd0"},
 ]
 future = [
     {file = "future-0.18.2.tar.gz", hash = "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"},

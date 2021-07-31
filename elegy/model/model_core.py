@@ -492,14 +492,16 @@ class ModelCore:
 
         path.mkdir(parents=True, exist_ok=True)
 
-        with open(path / "states.pkl", "wb") as f:
-            cloudpickle.dump(self.states, f)
+        (path / "states.pkl").write_bytes(cloudpickle.dumps(self.states))
 
-        with open(path / "initial_states.pkl", "wb") as f:
-            cloudpickle.dump(self.initial_states, f)
+        (path / "initial_states.pkl").write_bytes(
+            cloudpickle.dumps(self.initial_states)
+        )
 
-        with open(path / "model.pkl", "wb") as f:
-            cloudpickle.dump(self, f)
+        try:
+            (path / "model.pkl").write_bytes(pickle.dumps(self))
+        except:
+            (path / "model.pkl").write_bytes(cloudpickle.dumps(self))
 
     def load(
         self,

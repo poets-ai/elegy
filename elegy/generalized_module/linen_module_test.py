@@ -1,8 +1,14 @@
 import unittest
+from tempfile import TemporaryDirectory
 
 import elegy
 import jax
 import jax.numpy as jnp
+import numpy as np
+import optax
+import pytest
+import sh
+import tensorflow as tf
 from elegy.generalized_module.generalized_module import generalize
 from flax import linen
 
@@ -105,3 +111,88 @@ class TestLinenModule(unittest.TestCase):
 
         assert "21" in lines[21]
         assert "84 B" in lines[21]
+
+    def test_save_flax(self):
+        class MLP(linen.Module):
+            """Standard LeNet-300-100 MLP network."""
+
+            n1: int = 300
+            n2: int = 100
+
+            @linen.compact
+            def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
+                x = x.astype(jnp.float32) / 255.0
+
+                x = x.reshape(x.shape[0], -1)  # flatten
+                x = linen.Dense(self.n1)(x)
+                x = jax.nn.relu(x)
+                x = linen.Dense(self.n2)(x)
+                x = jax.nn.relu(x)
+                x = linen.Dense(10)(x)
+
+                return x
+
+        with TemporaryDirectory() as model_dir:
+
+            model = elegy.Model(
+                module=MLP(),
+                loss=[
+                    elegy.losses.MeanSquaredError(),
+                    # elegy.regularizers.GlobalL2(l=1e-4),
+                ],
+                metrics=elegy.metrics.MeanSquaredError(),
+                optimizer=optax.adam(1e-3),
+            )
+
+            x = np.random.uniform(size=(3000, 6))
+            y = np.random.uniform(size=(3000, 10))
+
+            history = model.fit(
+                x=x,
+                y=y,
+                epochs=2,
+                steps_per_epoch=3,
+                # batch_size=64,
+                # validation_data=(x, y),
+                # shuffle=True,
+                # callbacks=[
+                # elegy.callbacks.ModelCheckpoint(
+                #     f"{model_dir}_best", save_best_only=True
+                # )
+                # ],
+            )
+            model.save(model_dir)
+
+            output = str(sh.ls(model_dir))
+
+            assert "model.pkl" in output
+
+            model = elegy.load(model_dir)
+
+    def test_saved_model_flax(self):
+
+        with TemporaryDirectory() as model_dir:
+
+            model = elegy.Model(
+                linen.Dense(1),
+                loss=elegy.losses.MeanSquaredError(),
+                optimizer=optax.adam(1e-3),
+            )
+
+            x = np.random.uniform(size=(3000, 6))
+            y = np.random.uniform(size=(3000, 1))
+
+            with pytest.raises(elegy.types.ModelNotInitialized):
+                model.saved_model(x, model_dir, batch_size=[1, 2, 4, 8])
+
+            model.fit(x, y, epochs=10)
+            model.saved_model(x, model_dir, batch_size=[1, 2, 4, 8])
+
+            output = str(sh.ls(model_dir))
+
+            assert "saved_model.pb" in output
+            assert "variables" in output
+
+            saved_model = tf.saved_model.load(model_dir)
+
+            saved_model

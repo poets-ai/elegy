@@ -23,7 +23,7 @@ jax = "^0.2.13"
 jaxlib = "^0.1.67"
 typing_extensions = { version = "^3.7.4", python = "<3.8" }
 dataclasses =  { version = "^0.7", python = ">=3.6,<3.7" }
-cloudpickle = "^1.5.0"
+cloudpickle = "^1.6.0"
 tensorboardx = "^2.1"
 tabulate = "^0.8.7"
 toolz = "^0.10.0"
@@ -49,7 +49,7 @@ jupyter = { version = "^1.0.0", python = ">=3.7" }
 jupyterlab = { version = "^3.0.6", python = ">=3.7" }
 ipython = { version = "^7.20.0", python = ">=3.7" }
 tensorflow-addons = "^0.11.2"
-flax = "^0.3.0"
+flax = "^0.3.4"
 torch = "1.4.0+cpu"
 einops = "^0.3.0"
 sh = "^1.14.1"
