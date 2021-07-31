@@ -250,12 +250,12 @@ class Model(ModelBase):
         training: bool,
     ) -> model_core.PredStep:
 
-        assert self.api_module is not None
-
         if self.module is None:
             raise types.MissingModule(
                 "Trying run default `pred_step` on a Model with no `module`, try overriding `pred_step`."
             )
+
+        assert self.api_module is not None
 
         # [DI]
         x_args, x_kwargs = utils.get_input_args(

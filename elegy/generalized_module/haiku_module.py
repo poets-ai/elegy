@@ -142,7 +142,9 @@ class HaikuModule(GeneralizedModule):
         )
 
         summary = utils.inject_dependencies(
-            haiku.experimental.tabulate(summary_fn),
+            haiku.experimental.tabulate(
+                summary_fn, tabulate_kwargs={"tablefmt": "fancy_grid"}
+            ),
             signature_f=self.f,
         )(*x_args, **x_kwargs)
 

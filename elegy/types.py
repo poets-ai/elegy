@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import sys
 import typing as tp
 from copy import copy
@@ -248,6 +248,10 @@ class States(tp.Mapping):
 
     def copy(self) -> "States":
         return jax.tree_map(lambda x: x, self)
+
+    def __repr__(self) -> str:
+        fields = ", ".join(f"{k}={v}" for k, v in self.__dict__.items())
+        return f"States({fields})"
 
     def tree_flatten(self):
         return (tuple(self.__dict__.values()), tuple(self.__dict__.keys()))
