@@ -472,16 +472,21 @@ class Model(ModelBase):
         x: tp.Optional[tp.Any] = None,
         depth: int = 2,
         return_repr: bool = False,
-        initialize: bool = False,
         eval_shape: bool = True,
     ) -> tp.Optional[str]:
         """
-        Prints a summary of the network.
+        Prints a summary of the network. The representation is module dependent,
+        if a library provides a representation, it will be used, else elegy will
+        define its own.
+
         Arguments:
             x: A sample of inputs to the network.
             depth: The level number of nested level which will be showed.
                 Information about summaries from modules deeper than `depth`
                 will be aggregated together.
+            return_repr: If True, the summary will be returned as a string and will not be printed.
+            eval_shape: If True, jax.eval_shape is used to calculate all shapes, this avoids actually
+                running the computation as only shapes are calculated (turn off if trying to debug).
         """
 
         if self.api_module is None:
