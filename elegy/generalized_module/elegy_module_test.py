@@ -7,6 +7,43 @@ from elegy.generalized_module.generalized_module import generalize
 import jax.numpy as jnp
 
 
+class ModuleC(elegy.Module):
+    def call(self, x):
+        c1 = self.add_parameter("c1", lambda: jnp.ones([5]))
+        c2 = self.add_parameter("c2", lambda: jnp.ones([6]), trainable=False)
+
+        x = jax.nn.relu(x)
+        self.add_summary("relu", jax.nn.relu, x)
+
+        return x
+
+
+class ModuleB(elegy.Module):
+    def call(self, x):
+        b1 = self.add_parameter("b1", lambda: jnp.ones([3]))
+        b2 = self.add_parameter("b2", lambda: jnp.ones([4]), trainable=False)
+
+        x = ModuleC()(x)
+
+        x = jax.nn.relu(x)
+        self.add_summary("relu", jax.nn.relu, x)
+
+        return x
+
+
+class ModuleA(elegy.Module):
+    def call(self, x):
+        a1 = self.add_parameter("a1", lambda: jnp.ones([1]))
+        a2 = self.add_parameter("a2", lambda: jnp.ones([2]), trainable=False)
+
+        x = ModuleB()(x)
+
+        x = jax.nn.relu(x)
+        self.add_summary("relu", jax.nn.relu, x)
+
+        return x
+
+
 class ElegyModuleTest(TestCase):
     def test_basic(self):
         class M(elegy.Module):
@@ -39,43 +76,14 @@ class ElegyModuleTest(TestCase):
         assert states["states"]["n"] == 1
 
     def test_summaries(self):
-        class ModuleC(elegy.Module):
-            def call(self, x):
-                c1 = self.add_parameter("c1", lambda: jnp.ones([5]))
-                c2 = self.add_parameter("c2", lambda: jnp.ones([6]), trainable=False)
-
-                x = jax.nn.relu(x)
-                self.add_summary("relu", jax.nn.relu, x)
-
-                return x
-
-        class ModuleB(elegy.Module):
-            def call(self, x):
-                b1 = self.add_parameter("b1", lambda: jnp.ones([3]))
-                b2 = self.add_parameter("b2", lambda: jnp.ones([4]), trainable=False)
-
-                x = ModuleC()(x)
-
-                x = jax.nn.relu(x)
-                self.add_summary("relu", jax.nn.relu, x)
-
-                return x
-
-        class ModuleA(elegy.Module):
-            def call(self, x):
-                a1 = self.add_parameter("a1", lambda: jnp.ones([1]))
-                a2 = self.add_parameter("a2", lambda: jnp.ones([2]), trainable=False)
-
-                x = ModuleB()(x)
-
-                x = jax.nn.relu(x)
-                self.add_summary("relu", jax.nn.relu, x)
-
-                return x
 
         model = elegy.Model(ModuleA())
 
-        summary_text = model.summary(x=jnp.ones([10, 2]), depth=1, return_repr=True)
+        x = jnp.ones([10, 2])
+
+        # model.init(x=x)
+
+        summary_text = model.summary(x, depth=1, return_repr=True)
         assert summary_text is not None
 
         lines = summary_text.split("\n")

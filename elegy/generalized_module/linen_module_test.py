@@ -7,6 +7,37 @@ from elegy.generalized_module.generalized_module import generalize
 from flax import linen
 
 
+class ModuleC(linen.Module):
+    @linen.compact
+    def __call__(self, x):
+        c1 = self.param("c1", lambda _: jnp.ones([5]))
+        c2 = self.variable("states", "c2", lambda: jnp.ones([6]))
+
+        return x
+
+
+class ModuleB(linen.Module):
+    @linen.compact
+    def __call__(self, x):
+        b1 = self.param("b1", lambda _: jnp.ones([3]))
+        b2 = self.variable("states", "b2", lambda: jnp.ones([4]))
+
+        x = ModuleC()(x)
+
+        return x
+
+
+class ModuleA(linen.Module):
+    @linen.compact
+    def __call__(self, x):
+        a1 = self.param("a1", lambda _: jnp.ones([1]))
+        a2 = self.variable("states", "a2", lambda: jnp.ones([2]))
+
+        x = ModuleB()(x)
+
+        return x
+
+
 class TestLinenModule(unittest.TestCase):
     def test_basic(self):
         class M(linen.Module):
@@ -43,78 +74,34 @@ class TestLinenModule(unittest.TestCase):
         assert states["batch_stats"]["n"] == 1
 
     def test_summaries(self):
-        class ModuleC(linen.Module):
-            @linen.compact
-            @elegy.flax_summarize
-            def __call__(self, x):
-                c1 = self.param("c1", lambda _: jnp.ones([5]))
-                c2 = self.variable("states", "c2", lambda: jnp.ones([6]))
-
-                x = jax.nn.relu(x)
-                elegy.flax_summary(self, "relu", jax.nn.relu, x)
-
-                return x
-
-        class ModuleB(linen.Module):
-            @linen.compact
-            @elegy.flax_summarize
-            def __call__(self, x):
-                b1 = self.param("b1", lambda _: jnp.ones([3]))
-                b2 = self.variable("states", "b2", lambda: jnp.ones([4]))
-
-                x = ModuleC()(x)
-
-                x = jax.nn.relu(x)
-                elegy.flax_summary(self, "relu", jax.nn.relu, x)
-
-                return x
-
-        class ModuleA(linen.Module):
-            @linen.compact
-            @elegy.flax_summarize
-            def __call__(self, x):
-                a1 = self.param("a1", lambda _: jnp.ones([1]))
-                a2 = self.variable("states", "a2", lambda: jnp.ones([2]))
-
-                x = ModuleB()(x)
-
-                x = jax.nn.relu(x)
-                elegy.flax_summary(self, "relu", jax.nn.relu, x)
-
-                return x
 
         model = elegy.Model(ModuleA())
-        model.init(x=jnp.ones([10, 2]))
 
         summary_text = model.summary(x=jnp.ones([10, 2]), depth=1, return_repr=True)
         assert summary_text is not None
 
         lines = summary_text.split("\n")
+        assert "(10, 2)" in lines[3]
+        assert "(10, 2)" in lines[5]
 
-        assert "ModuleB_0" in lines[7]
-        assert "ModuleB" in lines[7]
-        assert "(10, 2)" in lines[7]
-        assert "8" in lines[7]
-        assert "32 B" in lines[7]
-        assert "10" in lines[7]
-        assert "40 B" in lines[7]
+        assert "ModuleB_0" in lines[12]
+        assert "8" in lines[12]
+        assert "32 B" in lines[12]
+        assert "10" in lines[12]
+        assert "40 B" in lines[12]
 
-        assert "relu" in lines[9]
-        assert "(10, 2)" in lines[9]
+        assert "a1" in lines[14]
+        assert "1" in lines[14]
+        assert "4 B" in lines[14]
 
-        assert "*" in lines[11]
-        assert "ModuleA" in lines[11]
-        assert "(10, 2)" in lines[11]
-        assert "1" in lines[11]
-        assert "4 B" in lines[11]
-        assert "2" in lines[11]
-        assert "8 B" in lines[11]
+        assert "a2" in lines[16]
+        assert "2" in lines[16]
+        assert "8 B" in lines[16]
 
-        assert "9" in lines[13]
-        assert "36 B" in lines[13]
+        assert "9" in lines[18]
+        assert "36 B" in lines[18]
+        assert "12" in lines[18]
+        assert "48 B" in lines[18]
 
-        assert "12" in lines[13]
-        assert "48 B" in lines[13]
-
-        assert "21" in lines[16]
-        assert "84 B" in lines[16]
+        assert "21" in lines[21]
+        assert "84 B" in lines[21]

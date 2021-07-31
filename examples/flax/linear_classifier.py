@@ -60,6 +60,9 @@ def main(
         run_eagerly=eager,
     )
 
+    model.init(X_train[:batch_size], y_train[:batch_size])
+    model.summary(X_train[:batch_size])
+
     history = model.fit(
         x=X_train,
         y=y_train,

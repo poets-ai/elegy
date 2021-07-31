@@ -244,12 +244,12 @@ def _merge_with_unique_names(
 
 
 def parameters_count(params: tp.Any) -> int:
-    leaves = (jnp.asarray(x) for x in jax.tree_leaves(params))
+    leaves = (x for x in jax.tree_leaves(params))
     return sum(x.size for x in leaves)
 
 
 def parameters_bytes(params: tp.Any) -> int:
-    leaves = (jnp.asarray(x) for x in jax.tree_leaves(params))
+    leaves = (x for x in jax.tree_leaves(params))
     return sum(x.size * x.dtype.itemsize for x in leaves)
 
 
@@ -451,6 +451,15 @@ def format_output(value) -> str:
     return file.getvalue().replace("\n...", "").replace("'", "")
 
 
+def format_count_and_size(params, add_padding: bool = True) -> str:
+
+    padding = r"{pad}" if add_padding else ""
+    count = parameters_count(params)
+    size = parameters_bytes(params)
+
+    return f"[green]{count:,}[/]{padding}    {format_size(size)}" if count > 0 else ""
+
+
 def format_size(size):
     count, units = (
         (f"{size / 1e9 :,.1f}", "GB")
@@ -463,6 +472,23 @@ def format_size(size):
     )
 
     return f"[dim]{count} {units}[/dim]"
+
+
+def add_padding(rows):
+    n_cols = len(rows[0])
+
+    for col in range(n_cols):
+        max_length = max(
+            len(line.split("{pad}")[0]) for row in rows for line in row[col].split("\n")
+        )
+
+        for row in rows:
+            row[col] = "\n".join(
+                line.format(
+                    pad=" " * (max_length - len(line.rstrip().split("{pad}")[0]))
+                )
+                for line in row[col].rstrip().split("\n")
+            )
 
 
 def get_table_repr(table):

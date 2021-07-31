@@ -338,7 +338,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "dm-haiku"
-version = "0.0.2"
+version = "0.0.4"
 description = "Haiku is a library for building neural networks in JAX."
 category = "main"
 optional = false
@@ -347,6 +347,8 @@ python-versions = "*"
 [package.dependencies]
 absl-py = ">=0.7.1"
 numpy = ">=1.18.0"
+tabulate = ">=0.8.9"
+typing-extensions = {version = "*", markers = "python_version < \"3.8\""}
 
 [package.extras]
 jax = ["jax (>=0.1.71)"]
@@ -1821,7 +1823,7 @@ contextvars = {version = ">=2.1", markers = "python_version < \"3.7\""}
 
 [[package]]
 name = "tabulate"
-version = "0.8.7"
+version = "0.8.9"
 description = "Pretty-print tabular data"
 category = "main"
 optional = false
@@ -2143,7 +2145,7 @@ testing = ["pytest (>=3.5,!=3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.6.1,<3.9" # we cant support 3.9 until dm-tree (used by optax) supports 3.9.
-content-hash = "2eb0198ff2e6e4a3a85103bbceefbd0b70454ef780d22f6729a98bcd0cc449e8"
+content-hash = "8ea2009b1fcfb6758be69fabc212c03f901bfb65d3a48cab985e84ae72c543c9"
 
 [metadata.files]
 absl-py = [
@@ -2423,8 +2425,8 @@ defusedxml = [
     {file = "defusedxml-0.6.0.tar.gz", hash = "sha256:f684034d135af4c6cbb949b8a4d2ed61634515257a67299e5f940fbaa34377f5"},
 ]
 dm-haiku = [
-    {file = "dm-haiku-0.0.2.tar.gz", hash = "sha256:235f71ab023202e5d21209dd7c5d831512cb3b5cbf3794ab5a657b217c77e862"},
-    {file = "dm_haiku-0.0.2-py3-none-any.whl", hash = "sha256:2fc60a3625d7557b975a0bf9a92637dd748f169562abd9c69df125ae7a450d0c"},
+    {file = "dm-haiku-0.0.4.tar.gz", hash = "sha256:5faa387ad6b522516283cbe45adbc4c46bedcf501c82db2f9174945f3ec2ea7d"},
+    {file = "dm_haiku-0.0.4-py3-none-any.whl", hash = "sha256:9dab941b18ba0bcd7851d12e0a3125ea111a50a86685bd3eb4390ca6e04725a2"},
 ]
 dm-tree = [
     {file = "dm-tree-0.1.5.tar.gz", hash = "sha256:a951d2239111dfcc468071bc8ff792c7b1e3192cab5a3c94d33a8b2bda3127fa"},
@@ -3356,8 +3358,8 @@ sniffio = [
     {file = "sniffio-1.2.0.tar.gz", hash = "sha256:c4666eecec1d3f50960c6bdf61ab7bc350648da6c126e3cf6898d8cd4ddcd3de"},
 ]
 tabulate = [
-    {file = "tabulate-0.8.7-py3-none-any.whl", hash = "sha256:ac64cb76d53b1231d364babcd72abbb16855adac7de6665122f97b593f1eb2ba"},
-    {file = "tabulate-0.8.7.tar.gz", hash = "sha256:db2723a20d04bcda8522165c73eea7c300eda74e0ce852d9022e0159d7895007"},
+    {file = "tabulate-0.8.9-py3-none-any.whl", hash = "sha256:d7c013fe7abbc5e491394e10fa845f8f32fe54f8dc60c6622c6cf482d25d47e4"},
+    {file = "tabulate-0.8.9.tar.gz", hash = "sha256:eb1d13f25760052e8931f2ef80aaf6045a6cceb47514db8beab24cded16f13a7"},
 ]
 tensorboard = [
     {file = "tensorboard-2.4.1-py3-none-any.whl", hash = "sha256:7b8c53c396069b618f6f276ec94fc45d17e3282d668979216e5d30be472115e4"},

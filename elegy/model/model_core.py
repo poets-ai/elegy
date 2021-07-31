@@ -78,10 +78,6 @@ class ModelCore:
         self.jit_step()
 
     def jit_step(self):
-        self.call_summary_step_jit = jax.jit(
-            self.call_summary_step,
-            static_argnums=[2, 3],
-        )
         self.call_pred_step_jit = jax.jit(
             self.call_pred_step,
             static_argnums=[2, 3],
@@ -100,7 +96,6 @@ class ModelCore:
         )
 
         self.jitted_members |= {
-            "call_summary_step_jit",
             "call_pred_step_jit",
             "call_test_step_jit",
             "call_train_step_jit",
@@ -158,23 +153,6 @@ class ModelCore:
             y_true=y_true,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            states=states,
-        )
-
-    def summary_step(
-        self,
-        x: tp.Any,
-        states: types.States,
-    ) -> tp.List[types.SummaryTableEntry]:
-        raise types.MissingMethod()
-
-    def call_summary_step(
-        self,
-        x: tp.Any,
-        states: types.States,
-    ) -> tp.List[types.SummaryTableEntry]:
-        return utils.inject_dependencies(self.summary_step)(
-            x=x,
             states=states,
         )
 
@@ -459,6 +437,24 @@ class ModelCore:
         )
 
         return logs
+
+    def summary(
+        self,
+        x: tp.Optional[tp.Any] = None,
+        depth: int = 2,
+        return_repr: bool = False,
+        initialize: bool = False,
+        eval_shape: bool = True,
+    ) -> tp.Optional[str]:
+        """
+        Prints a summary of the network.
+        Arguments:
+            x: A sample of inputs to the network.
+            depth: The level number of nested level which will be showed.
+                Information about summaries from modules deeper than `depth`
+                will be aggregated together.
+        """
+        raise NotImplementedError()
 
     def save(
         self,

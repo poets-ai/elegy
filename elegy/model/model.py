@@ -125,7 +125,7 @@ class Model(ModelBase):
         seed: int = 42,
         **kwargs,
     ):
-        """[summary]
+        """
 
         Arguments:
             module: A `Module` instance.
@@ -242,78 +242,6 @@ class Model(ModelBase):
 
         return states
 
-    def summary_step(
-        self,
-        x: tp.Any,
-        states: types.States,
-    ) -> tp.List[types.SummaryTableEntry]:
-        initializing = True
-        training = True
-
-        states = states.maybe_update(**self.states_step())
-
-        with hooks.context(summaries=True):
-            _, states = utils.inject_dependencies(self.pred_step)(
-                x=x,
-                states=states,
-                initializing=initializing,
-                training=training,
-            )
-            summaries = hooks.get_summaries()
-
-        entries: tp.List[types.SummaryTableEntry] = []
-
-        for path, module, value in summaries:
-
-            module_params, module_states = self.api_module.get_summary_params(
-                path=path,
-                module=module,
-                value=value,
-                net_params=states.net_params,
-                net_states=states.net_states,
-            )
-
-            entries.append(
-                types.SummaryTableEntry(
-                    path=("/".join(map(str, path)) if path else "*"),
-                    module_type_name=(
-                        module.__class__.__name__ if is_generalizable(module) else ""
-                    ),
-                    output_value=value,
-                    trainable_params_count=(
-                        utils.parameters_count(module_params)
-                        if module_params is not None
-                        else 0
-                    ),
-                    trainable_params_size=(
-                        utils.parameters_bytes(module_params)
-                        if module_params is not None
-                        else 0
-                    ),
-                    non_trainable_params_count=(
-                        utils.parameters_count(module_states)
-                        if module_states is not None
-                        else 0
-                    ),
-                    non_trainable_params_size=(
-                        utils.parameters_bytes(module_states)
-                        if module_states is not None
-                        else 0
-                    ),
-                )
-            )
-
-        entries.append(
-            types.SummaryTableEntry.totals_entry(
-                trainable_params_count=utils.parameters_count(states.net_params),
-                trainable_params_size=utils.parameters_bytes(states.net_params),
-                non_trainable_params_count=utils.parameters_count(states.net_states),
-                non_trainable_params_size=utils.parameters_bytes(states.net_states),
-            )
-        )
-
-        return entries
-
     def pred_step(
         self,
         x: tp.Any,
@@ -326,6 +254,8 @@ class Model(ModelBase):
             raise types.MissingModule(
                 "Trying run default `pred_step` on a Model with no `module`, try overriding `pred_step`."
             )
+
+        assert self.api_module is not None
 
         # [DI]
         x_args, x_kwargs = utils.get_input_args(
@@ -504,6 +434,7 @@ class Model(ModelBase):
                 "override `train_step`."
             )
         assert isinstance(states.rng, types.RNGSeq)
+        assert self.api_optimizer is not None
 
         # calculate current lr before update
         if initializing:
@@ -536,6 +467,46 @@ class Model(ModelBase):
     # ----------------------------------------------------------------
     # Model-only methods
     # ----------------------------------------------------------------
+
+    def summary(
+        self,
+        x: tp.Optional[tp.Any] = None,
+        depth: int = 2,
+        return_repr: bool = False,
+        eval_shape: bool = True,
+    ) -> tp.Optional[str]:
+        """
+        Prints a summary of the network. The representation is module dependent,
+        if a library provides a representation, it will be used, else elegy will
+        define its own.
+
+        Arguments:
+            x: A sample of inputs to the network.
+            depth: The level number of nested level which will be showed.
+                Information about summaries from modules deeper than `depth`
+                will be aggregated together.
+            return_repr: If True, the summary will be returned as a string and will not be printed.
+            eval_shape: If True, jax.eval_shape is used to calculate all shapes, this avoids actually
+                running the computation as only shapes are calculated (turn off if trying to debug).
+        """
+
+        if self.api_module is None:
+            return
+
+        if x is None:
+            x = {}
+
+        summary = self.api_module.summary(
+            x,
+            depth=depth,
+            run_eagerly=self.run_eagerly,
+            eval_shape=eval_shape,
+        )
+
+        if return_repr:
+            return summary
+        else:
+            print(summary)
 
 
 class Metrics:
@@ -660,6 +631,11 @@ class AvgMetric(GeneralizedModule):
             )
 
         return _lambda
+
+    def summary(
+        self, x: tp.Any, depth: int, run_eagerly: bool, eval_shape: bool
+    ) -> str:
+        raise NotImplementedError("AvgMetric has no summaries")
 
 
 class Losses:

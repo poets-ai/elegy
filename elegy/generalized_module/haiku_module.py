@@ -5,6 +5,8 @@ import jax
 import jax.numpy as jnp
 import toolz
 from elegy import hooks, types, utils
+from rich.table import Table
+from rich.text import Text
 
 from .generalized_module import GeneralizedModule, register_module_for
 
@@ -121,48 +123,29 @@ class HaikuModule(GeneralizedModule):
 
         return _lambda
 
-    def get_summary_params(
+    def summary(
         self,
-        path: tp.Tuple[str, ...],
-        module: tp.Any,
-        value: tp.Any,
-        net_params: types.NetParams,
-        net_states: types.NetStates,
-    ) -> tp.Tuple[tp.Optional[types.Pytree], tp.Optional[types.Pytree]]:
+        x: tp.Any,
+        depth: int,
+        run_eagerly: bool,
+        eval_shape: bool,
+    ) -> str:
+        def summary_fn(*args, **kwargs):
+            kwargs = {f"__{name}": value for name, value in kwargs.items()}
+            return self.f(*args, **kwargs)
 
-        path_str = "/".join(path)
+        x_args, x_kwargs = utils.get_input_args(
+            x,
+            states=types.States(rng=types.RNGSeq(42)),
+            initializing=True,
+            training=True,
+        )
 
-        params_tree = net_params[path_str] if path_str in net_params else None
-        states_tree = net_states[path_str] if path_str in net_states else None
+        summary = utils.inject_dependencies(
+            haiku.experimental.tabulate(
+                summary_fn, tabulate_kwargs={"tablefmt": "fancy_grid"}
+            ),
+            signature_f=self.f,
+        )(*x_args, **x_kwargs)
 
-        return params_tree, states_tree
-
-
-def haiku_summarize(f):
-    @functools.wraps(f)
-    def wrapper(self: haiku.Module, *args, **kwargs):
-
-        outputs = f(self, *args, **kwargs)
-
-        if hooks.summaries_active():
-            path = current_bundle_name().split("/")
-            hooks.add_summary(tuple(path), self, outputs)
-
-        return outputs
-
-    return wrapper
-
-
-def haiku_summary(
-    name: str,
-    f: tp.Any,
-    value: types.Scalar,
-):
-    if hooks.summaries_active():
-        path = tuple(current_bundle_name().split("/")) + (name,)
-        hooks.add_summary(path, f, value)
-
-
-def assert_id(value):
-    assert value
-    return value
+        return summary
