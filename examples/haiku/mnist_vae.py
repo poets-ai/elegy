@@ -51,7 +51,9 @@ class Encoder(hk.Module):
         self.hidden_size = hidden_size
         self.latent_size = latent_size
 
-    def __call__(self, x: np.ndarray, rng: elegy.RNGSeq) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def __call__(
+        self, x: np.ndarray, rng: elegy.RNGSeq
+    ) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
         x = x.reshape((x.shape[0], -1))  # flatten
         x = hk.Linear(self.hidden_size)(x)
         x = jax.nn.relu(x)

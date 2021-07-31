@@ -434,6 +434,7 @@ class Model(ModelBase):
                 "override `train_step`."
             )
         assert isinstance(states.rng, types.RNGSeq)
+        assert self.api_optimizer is not None
 
         # calculate current lr before update
         if initializing:
