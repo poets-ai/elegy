@@ -498,10 +498,7 @@ class ModelCore:
             cloudpickle.dumps(self.initial_states)
         )
 
-        try:
-            (path / "model.pkl").write_bytes(cloudpickle.dumps(self))
-        except (TypeError, pickle.PicklingError) as e:
-            pass
+        (path / "model.pkl").write_bytes(cloudpickle.dumps(self))
 
     def load(
         self,
