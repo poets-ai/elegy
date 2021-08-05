@@ -1,6 +1,6 @@
 # adapted from the flax library https://github.com/google/flax
 
-import pickle
+import cloudpickle
 import typing as tp
 
 import jax
@@ -141,14 +141,14 @@ class ResNet(module.Module):
 
         if weights is not None:
             if weights.endswith(".pkl"):
-                collections = pickle.load(open(weights, "rb"))
+                collections = cloudpickle.load(open(weights, "rb"))
             elif weights == "imagenet":
                 clsname = self.__class__.__name__
                 urldict = PRETRAINED_URLS.get(clsname, None)
                 if urldict is None:
                     raise ValueError(f"No pretrained weights for {clsname} available")
                 fname = utils.download_file(urldict["url"], sha256=urldict["sha256"])
-                collections = pickle.load(open(fname, "rb"))
+                collections = cloudpickle.load(open(fname, "rb"))
             else:
                 raise ValueError("Unknown weights value: ", weights)
 

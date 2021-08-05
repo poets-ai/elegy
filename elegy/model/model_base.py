@@ -2,7 +2,7 @@
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
 import io
-import pickle
+import cloudpickle
 import typing as tp
 from copy import copy
 from io import StringIO
@@ -752,7 +752,7 @@ def load(path: tp.Union[str, Path]) -> ModelBase:
     except BaseException as e:
         raise OSError(f"Could not load the model. Got exception: {e}")
 
-    model: ModelBase = pickle.loads(model_bytes)
+    model: ModelBase = cloudpickle.loads(model_bytes)
     model.load(path)
 
     return model

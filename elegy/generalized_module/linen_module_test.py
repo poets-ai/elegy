@@ -138,7 +138,7 @@ class TestLinenModule(unittest.TestCase):
                 module=MLP(),
                 loss=[
                     elegy.losses.MeanSquaredError(),
-                    # elegy.regularizers.GlobalL2(l=1e-4),
+                    elegy.regularizers.GlobalL2(l=1e-4),
                 ],
                 metrics=elegy.metrics.MeanSquaredError(),
                 optimizer=optax.adam(1e-3),
@@ -152,14 +152,14 @@ class TestLinenModule(unittest.TestCase):
                 y=y,
                 epochs=2,
                 steps_per_epoch=3,
-                # batch_size=64,
-                # validation_data=(x, y),
-                # shuffle=True,
-                # callbacks=[
-                # elegy.callbacks.ModelCheckpoint(
-                #     f"{model_dir}_best", save_best_only=True
-                # )
-                # ],
+                batch_size=64,
+                validation_data=(x, y),
+                shuffle=True,
+                callbacks=[
+                    elegy.callbacks.ModelCheckpoint(
+                        f"{model_dir}_best", save_best_only=True
+                    )
+                ],
             )
             model.save(model_dir)
 
