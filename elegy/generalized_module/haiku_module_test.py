@@ -1,11 +1,14 @@
 import unittest
+from tempfile import TemporaryDirectory
 
 import elegy
+import haiku
 import jax
 import jax.numpy as jnp
-from elegy.generalized_module.generalized_module import generalize
-import haiku
 import numpy as np
+import optax
+import sh
+from elegy.generalized_module.generalized_module import generalize
 
 
 class ModuleC(haiku.Module):
@@ -86,3 +89,54 @@ class TestHaikuModule(unittest.TestCase):
 
         summary_text = model.summary(x=jnp.ones([10, 2]), depth=2, return_repr=True)
         assert summary_text is not None
+
+    def test_save(self):
+        class MLP(haiku.Module):
+            def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
+                x = x.astype(jnp.float32) / 255.0
+
+                x = x.reshape(x.shape[0], -1)  # flatten
+                x = haiku.Linear(10)(x)
+                x = jax.nn.relu(x)
+                x = haiku.Linear(10)(x)
+                x = jax.nn.relu(x)
+                x = haiku.Linear(10)(x)
+
+                return x
+
+        with TemporaryDirectory() as model_dir:
+
+            model = elegy.Model(
+                module=elegy.HaikuModule(lambda x: MLP()(x)),
+                loss=[
+                    elegy.losses.MeanSquaredError(),
+                    elegy.regularizers.GlobalL2(l=1e-4),
+                ],
+                metrics=elegy.metrics.MeanSquaredError(),
+                optimizer=optax.adam(1e-3),
+            )
+
+            x = np.random.uniform(size=(3000, 6))
+            y = np.random.uniform(size=(3000, 10))
+
+            history = model.fit(
+                x=x,
+                y=y,
+                epochs=2,
+                steps_per_epoch=3,
+                batch_size=64,
+                validation_data=(x, y),
+                shuffle=True,
+                callbacks=[
+                    elegy.callbacks.ModelCheckpoint(
+                        f"{model_dir}_best", save_best_only=True
+                    )
+                ],
+            )
+            model.save(model_dir)
+
+            output = str(sh.ls(model_dir))
+
+            assert "model.pkl" in output
+
+            model = elegy.load(model_dir)

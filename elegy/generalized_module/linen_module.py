@@ -1,25 +1,23 @@
-import functools
 import typing as tp
 
 import jax
 import toolz
-from elegy import hooks, types, utils
+from elegy import types, utils
 from rich.table import Table
 from rich.text import Text
 
 from .generalized_module import GeneralizedModule, register_module_for
 
 try:
-    import flax.linen as nn
     from flax import linen
-    from flax.core import FrozenDict, freeze, unfreeze
+    from flax.core import FrozenDict
 except ImportError:
     raise types.DependencyUnavailable("Flax is not available")
 
 
-@register_module_for(nn.Module)
+@register_module_for(linen.Module)
 class LinenModule(GeneralizedModule):
-    def __init__(self, module: nn.Module):
+    def __init__(self, module: linen.Module):
         self.module = module
 
     def init(self, rng: types.RNGSeq) -> tp.Callable[..., types.OutputStates]:

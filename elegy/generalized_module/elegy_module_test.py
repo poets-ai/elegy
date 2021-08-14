@@ -1,10 +1,13 @@
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 
-import jax
-
 import elegy
-from elegy.generalized_module.generalized_module import generalize
+import jax
 import jax.numpy as jnp
+import numpy as np
+import optax
+import sh
+from elegy.generalized_module.generalized_module import generalize
 
 
 class ModuleC(elegy.Module):
@@ -115,3 +118,54 @@ class ElegyModuleTest(TestCase):
 
         assert "21" in lines[16]
         assert "84 B" in lines[16]
+
+    def test_save(self):
+        class MLP(elegy.Module):
+            def call(self, x: jnp.ndarray) -> jnp.ndarray:
+                x = x.astype(jnp.float32) / 255.0
+
+                x = x.reshape(x.shape[0], -1)  # flatten
+                x = elegy.nn.Linear(10)(x)
+                x = jax.nn.relu(x)
+                x = elegy.nn.Linear(10)(x)
+                x = jax.nn.relu(x)
+                x = elegy.nn.Linear(10)(x)
+
+                return x
+
+        with TemporaryDirectory() as model_dir:
+
+            model = elegy.Model(
+                module=MLP(),
+                loss=[
+                    elegy.losses.MeanSquaredError(),
+                    elegy.regularizers.GlobalL2(l=1e-4),
+                ],
+                metrics=elegy.metrics.MeanSquaredError(),
+                optimizer=optax.adam(1e-3),
+            )
+
+            x = np.random.uniform(size=(3000, 6))
+            y = np.random.uniform(size=(3000, 10))
+
+            history = model.fit(
+                x=x,
+                y=y,
+                epochs=2,
+                steps_per_epoch=3,
+                batch_size=64,
+                validation_data=(x, y),
+                shuffle=True,
+                callbacks=[
+                    elegy.callbacks.ModelCheckpoint(
+                        f"{model_dir}_best", save_best_only=True
+                    )
+                ],
+            )
+            model.save(model_dir)
+
+            output = str(sh.ls(model_dir))
+
+            assert "model.pkl" in output
+
+            model = elegy.load(model_dir)

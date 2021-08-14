@@ -1,4 +1,4 @@
-import os, glob, pickle
+import os, glob, cloudpickle
 import numpy as np
 from absl import flags, app
 import PIL.Image

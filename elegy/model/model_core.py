@@ -465,10 +465,10 @@ class ModelCore:
 
         It creates a directory that includes:
 
-        - `{path}/model.pkl`: The `Model` object instance serialized with `pickle`,
+        - `{path}/model.pkl`: The `Model` object instance serialized with `cloudpickle`,
             this allows you to re-instantiate the model later.
-        - `{path}/states.pkl`: The `Model.states` serialized with `pickle`.
-        - `{path}/initial_states.pkl`: The `Model.initial_states` serialized with `pickle`.
+        - `{path}/states.pkl`: The `Model.states` serialized with `cloudpickle`.
+        - `{path}/initial_states.pkl`: The `Model.initial_states` serialized with `cloudpickle`.
 
         This allows you to save the entirety of the states of a model
         in a directory structure which can be fully restored via
@@ -492,14 +492,13 @@ class ModelCore:
 
         path.mkdir(parents=True, exist_ok=True)
 
-        with open(path / "states.pkl", "wb") as f:
-            cloudpickle.dump(self.states, f)
+        (path / "states.pkl").write_bytes(cloudpickle.dumps(self.states))
 
-        with open(path / "initial_states.pkl", "wb") as f:
-            cloudpickle.dump(self.initial_states, f)
+        (path / "initial_states.pkl").write_bytes(
+            cloudpickle.dumps(self.initial_states)
+        )
 
-        with open(path / "model.pkl", "wb") as f:
-            cloudpickle.dump(self, f)
+        (path / "model.pkl").write_bytes(cloudpickle.dumps(self))
 
     def load(
         self,

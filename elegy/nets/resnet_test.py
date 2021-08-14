@@ -3,7 +3,7 @@ from elegy import utils
 import jax, jax.numpy as jnp
 import numpy as np
 from unittest import TestCase
-import tempfile, os, pickle
+import tempfile, os, cloudpickle
 import PIL, urllib
 
 import elegy
@@ -32,7 +32,7 @@ class ResNetTest(TestCase):
         with tempfile.TemporaryDirectory() as tempdir:
             pklpath = os.path.join(tempdir, "delete_me.pkl")
             open(pklpath, "wb").write(
-                pickle.dumps(model.module.get_default_parameters())
+                cloudpickle.dumps(model.module.get_default_parameters())
             )
 
             new_r18 = elegy.nets.resnet.ResNet18(weights=pklpath)
