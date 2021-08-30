@@ -1,7 +1,7 @@
-from dataclasses import dataclass, field
 import sys
 import typing as tp
 from copy import copy
+from dataclasses import dataclass, field
 from enum import Enum
 from functools import total_ordering
 
@@ -9,7 +9,7 @@ import jax
 import jax.numpy as jnp
 import jax.tree_util
 import numpy as np
-
+import treex as tx
 
 if sys.version_info >= (3, 8):
     from typing import Protocol, runtime_checkable
@@ -36,26 +36,16 @@ class Empty:
 EMPTY = Empty()
 
 
-@jax.tree_util.register_pytree_node_class
-class RNGSeq(TrivialPytree):
-    key: jnp.ndarray
+class RNGSeq(tx.Module):
+    key: tx.Rng
 
-    def __init__(self, key: tp.Union[int, jnp.ndarray]):
-        self.key = (
-            jax.random.PRNGKey(key)
-            if isinstance(key, int) or (hasattr(key, "shape") and key.shape == ())
-            else key
-        )
+    def __init__(self):
+        self.key = tx.Initializer(lambda key: key)
 
     def next(self) -> jnp.ndarray:
-        self.key = jax.random.split(self.key, 1)[0]
-        return self.key
-
-    def __repr__(self) -> str:
-        return f"RNGSeq(key={self.key})"
-
-    def copy(self) -> "RNGSeq":
-        return RNGSeq(self.key)
+        assert isinstance(self.key, jnp.ndarray)
+        key, self.key = jax.random.split(self.key)
+        return key
 
 
 T = tp.TypeVar("T")
@@ -191,74 +181,74 @@ class OutputStates(tp.NamedTuple):
     states: tp.Any
 
 
-@jax.tree_util.register_pytree_node_class
-class States(tp.Mapping):
-    def __init__(self, _data=None, **kwargs):
-        self.__dict__.update(
-            dict(_data, **kwargs) if _data is not None else dict(**kwargs)
-        )
+# @jax.tree_util.register_pytree_node_class
+# class States(tp.Mapping):
+#     def __init__(self, _data=None, **kwargs):
+#         self.__dict__.update(
+#             dict(_data, **kwargs) if _data is not None else dict(**kwargs)
+#         )
 
-    def __len__(self) -> int:
-        return len(self.__dict__)
+#     def __len__(self) -> int:
+#         return len(self.__dict__)
 
-    def __getitem__(self, key):
-        return self.__dict__[key]
+#     def __getitem__(self, key):
+#         return self.__dict__[key]
 
-    def __iter__(self):
-        return iter(self.__dict__)
+#     def __iter__(self):
+#         return iter(self.__dict__)
 
-    def __getattr__(self, key):
-        try:
-            return object.__getattr__(self, key)
-        except AttributeError:
-            raise AttributeError(
-                f"'{self.__class__.__name__}' has not attribute '{key}'"
-            )
+#     def __getattr__(self, key):
+#         try:
+#             return object.__getattr__(self, key)
+#         except AttributeError:
+#             raise AttributeError(
+#                 f"'{self.__class__.__name__}' has not attribute '{key}'"
+#             )
 
-    def __setattr__(self, key, value):
-        raise AttributeError("can't set attribute")
+#     def __setattr__(self, key, value):
+#         raise AttributeError("can't set attribute")
 
-    def update(self, **kwargs) -> "States":
-        """Returns a new States object, updating all attributes from kwargs."""
-        data = self.__dict__.copy()
-        data.update(kwargs)
-        return States(data)
+#     def update(self, **kwargs) -> "States":
+#         """Returns a new States object, updating all attributes from kwargs."""
+#         data = self.__dict__.copy()
+#         data.update(kwargs)
+#         return States(data)
 
-    def maybe_update(self, **kwargs) -> "States":
-        """Returns a new States object, updating attributes that are not yet present."""
-        kwargs = {
-            key: value
-            for key, value in kwargs.items()
-            if key not in self.__dict__ or self.__dict__[key] is None
-        }
+#     def maybe_update(self, **kwargs) -> "States":
+#         """Returns a new States object, updating attributes that are not yet present."""
+#         kwargs = {
+#             key: value
+#             for key, value in kwargs.items()
+#             if key not in self.__dict__ or self.__dict__[key] is None
+#         }
 
-        return self.update(**kwargs)
+#         return self.update(**kwargs)
 
-    def update_known(*self, **kwargs) -> "States":
-        """Returns a new States object, updating attributes that are already present.
-        e.g: states.update_known(**locals())"""
-        # NOTE: first argument is *self to allow the **locals() syntax inside bound methods
-        # which have their own self inside locals()
-        # otherwise will get a "got multiple values for argument 'self'" error"
-        assert len(self) == 1, "States.update_known() called with positional arguments"
-        self = self[0]
+#     def update_known(*self, **kwargs) -> "States":
+#         """Returns a new States object, updating attributes that are already present.
+#         e.g: states.update_known(**locals())"""
+#         # NOTE: first argument is *self to allow the **locals() syntax inside bound methods
+#         # which have their own self inside locals()
+#         # otherwise will get a "got multiple values for argument 'self'" error"
+#         assert len(self) == 1, "States.update_known() called with positional arguments"
+#         self = self[0]
 
-        kwargs = {key: value for key, value in kwargs.items() if key in self.__dict__}
-        return self.update(**kwargs)
+#         kwargs = {key: value for key, value in kwargs.items() if key in self.__dict__}
+#         return self.update(**kwargs)
 
-    def copy(self) -> "States":
-        return jax.tree_map(lambda x: x, self)
+#     def copy(self) -> "States":
+#         return jax.tree_map(lambda x: x, self)
 
-    def __repr__(self) -> str:
-        fields = ", ".join(f"{k}={v}" for k, v in self.__dict__.items())
-        return f"States({fields})"
+#     def __repr__(self) -> str:
+#         fields = ", ".join(f"{k}={v}" for k, v in self.__dict__.items())
+#         return f"States({fields})"
 
-    def tree_flatten(self):
-        return (tuple(self.__dict__.values()), tuple(self.__dict__.keys()))
+#     def tree_flatten(self):
+#         return (tuple(self.__dict__.values()), tuple(self.__dict__.keys()))
 
-    @classmethod
-    def tree_unflatten(cls, aux_data, children):
-        return cls(zip(aux_data, children))
+#     @classmethod
+#     def tree_unflatten(cls, aux_data, children):
+#         return cls(zip(aux_data, children))
 
 
 @dataclass

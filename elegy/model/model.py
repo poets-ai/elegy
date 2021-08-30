@@ -18,7 +18,8 @@ from elegy.generalized_optimizer.generalized_optimizer import (
 )
 from elegy.model.model_base import ModelBase
 from elegy.optimizer import Optimizer
-from tabulate import tabulate
+
+T = tp.TypeVar("T", bound="Model")
 
 
 class Model(ModelBase):
@@ -105,16 +106,19 @@ class Model(ModelBase):
 
     """
 
+    # pytree
+    rng: types.RNGSeq
+    api_module: tp.Optional[GeneralizedModule]
+    api_loss: "Losses"
+    api_metrics: "Metrics"
+    api_optimizer: tp.Optional[GeneralizedOptimizer]
+
+    # static
     module: tp.Any = None
     loss: tp.Any = None
     metrics: tp.Any = None
     optimizer: tp.Any = None
     seed: int = 42
-
-    api_module: tp.Optional[GeneralizedModule]
-    api_loss: "Losses"
-    api_metrics: "Metrics"
-    api_optimizer: tp.Optional[GeneralizedOptimizer]
 
     def __init__(
         self,
@@ -218,13 +222,10 @@ class Model(ModelBase):
         )
 
     def init_step(
-        self,
+        self: T,
+        key: jnp.ndarray,
         x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-        states: types.States,
-    ) -> types.States:
+    ) -> T:
 
         states = states.maybe_update(**self.states_step())
         training = True
@@ -239,6 +240,8 @@ class Model(ModelBase):
             initializing=initializing,
             training=training,
         )
+        assert self.api_module is not None
+        self.api_module.init(key)
 
         return states
 
@@ -281,7 +284,7 @@ class Model(ModelBase):
 
         return model_core.PredStep(
             y_pred=y_pred,
-            states=states.update(net_states=net_states, net_params=net_params),
+            model=states.update(net_states=net_states, net_params=net_params),
         )
 
     def test_step(

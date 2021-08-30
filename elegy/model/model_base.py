@@ -126,40 +126,6 @@ class ModelBase(ModelCore):
         "states",
     ]
 
-    def init(
-        self,
-        x: tp.Optional[tp.Any] = None,
-        y: tp.Optional[tp.Any] = None,
-        batch_size: tp.Optional[int] = None,
-        class_weight: tp.Optional[tp.Mapping[str, float]] = None,
-        sample_weight: tp.Optional[np.ndarray] = None,
-    ) -> None:
-
-        if self.initialized:
-            return
-
-        if x is None:
-            x = {}
-
-        data_handler = DataHandler(
-            x=x,
-            y=y,
-            sample_weight=sample_weight,
-            batch_size=batch_size,
-            class_weight=class_weight,
-            steps_per_epoch=1,
-        )
-
-        epoch, iterator = next(data_handler.enumerate_epochs())
-        batch = next(iterator)
-        x_batch, y_batch, sample_weight = unpack_x_y_sample_weight(batch)
-
-        self.init_on_batch(
-            x=x_batch,
-            y_true=y_batch,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-        )
 
     def fit(
         self,
@@ -335,12 +301,8 @@ class ModelBase(ModelCore):
             x = {}
 
         if not self.initialized:
-            self.init(
-                x=x,
-                y=y,
-                batch_size=batch_size,
-                class_weight=class_weight,
-                sample_weight=sample_weight,
+            raise types.ModelNotInitialized(
+                f"Model not initialized, please execute `init` or `init_on_batch` before running this method."
             )
 
         if validation_split:
@@ -515,12 +477,8 @@ class ModelBase(ModelCore):
             x = {}
 
         if not self.initialized:
-            self.init(
-                x=x,
-                y=y,
-                batch_size=batch_size,
-                class_weight=class_weight,
-                sample_weight=sample_weight,
+            raise types.ModelNotInitialized(
+                f"Model not initialized, please execute `init` or `init_on_batch` before running this method."
             )
 
         data_handler = DataHandler(
@@ -585,7 +543,6 @@ class ModelBase(ModelCore):
         steps: tp.Optional[int] = None,
         callbacks: tp.Union[tp.List[Callback], CallbackList, None] = None,
         drop_remaining: bool = False,
-        initialize: bool = False,
     ) -> tp.Any:
         """Generates output predictions for the input samples.
         Computation is done in batches.
@@ -634,14 +591,9 @@ class ModelBase(ModelCore):
             x = {}
 
         if not self.initialized:
-            if initialize:
-                self.init(x=x, batch_size=batch_size)
-            else:
-                raise types.ModelNotInitialized(
-                    f"Model not initialized, please execute `model.init` or `model.init_on_batch` "
-                    "before running this method, or pass `initialize=True` to initialize with the available data "
-                    "(this might not initialize the optimizer)."
-                )
+            raise types.ModelNotInitialized(
+                f"Model not initialized, please execute `init` or `init_on_batch` before running this method."
+            )
 
         outputs = None
 

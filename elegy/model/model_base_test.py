@@ -47,7 +47,7 @@ class TestModelBase(unittest.TestCase):
                 return elegy.TestStep(
                     loss=0.1,
                     logs=dict(loss=jnp.sum(x)),
-                    states=states,
+                    model=states,
                 )
 
             def train_step(self):
@@ -79,7 +79,7 @@ class TestModelBase(unittest.TestCase):
 
                 return elegy.TrainStep(
                     logs=dict(loss=jnp.sum(x)),
-                    states=states,
+                    model=states,
                 )
 
         model = Model()

@@ -31,7 +31,7 @@ class ModelCoreTest(unittest.TestCase):
 
                 return elegy.PredStep(
                     y_pred=None,
-                    states=states.update(net_params=1, net_states=2),
+                    model=states.update(net_params=1, net_states=2),
                 )
 
             def test_step(self, states):
@@ -75,7 +75,7 @@ class ModelCoreTest(unittest.TestCase):
 
                 return elegy.PredStep(
                     y_pred=1,
-                    states=states,
+                    model=states,
                 )
 
         model = Model()
@@ -103,7 +103,7 @@ class ModelCoreTest(unittest.TestCase):
                 return elegy.TestStep(
                     loss=0.1,
                     logs=dict(loss=1.0),
-                    states=elegy.States(metrics_states=0)
+                    model=elegy.States(metrics_states=0)
                     if initializing
                     else elegy.States(metrics_states=states.metrics_states + 1),
                 )
@@ -134,7 +134,7 @@ class ModelCoreTest(unittest.TestCase):
             def train_step(self, states, initializing):
                 return elegy.TrainStep(
                     logs=dict(loss=2.0),
-                    states=elegy.States(optimizer_states=0)
+                    model=elegy.States(optimizer_states=0)
                     if initializing
                     else elegy.States(optimizer_states=states.optimizer_states + 1),
                 )

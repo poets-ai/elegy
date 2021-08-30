@@ -1,24 +1,13 @@
 import pathlib
-import pickle
-import threading
 import typing as tp
-from contextlib import contextmanager
-from copy import copy
-from dataclasses import dataclass
-from enum import Enum
-from io import StringIO
 
 import cloudpickle
 import jax
+from jax._src.numpy.lax_numpy import ndarray
 import jax.numpy as jnp
 import numpy as np
-import optax
-import toolz
-import yaml
-from elegy import hooks, module, types, utils
-from elegy.losses.loss import Loss
-from elegy.metrics.metric import Metric
-from tabulate import tabulate
+import treex as tx
+from elegy import types, utils
 
 from . import utils as model_utils
 
@@ -27,79 +16,78 @@ try:
 except ImportError:
     tf = None
 
+T = tp.TypeVar("T", bound="ModelCore")
+
 
 class PredStep(tp.NamedTuple):
     y_pred: tp.Any
-    states: types.States
+    model: "ModelCore"
 
 
 class TestStep(tp.NamedTuple):
     loss: types.Scalar
     logs: types.Logs
-    states: types.States
+    model: "ModelCore"
 
 
 class GradStep(tp.NamedTuple):
     loss: types.Scalar
     logs: types.Logs
-    states: types.States
     grads: types.Grads
+    model: "ModelCore"
 
 
 class TrainStep(tp.NamedTuple):
     logs: types.Logs
-    states: types.States
+    model: "ModelCore"
 
 
-class ModelCore:
-    states: types.States
-    initial_states: types.States
+class ModelCore(tx.Module):
+
     history: tp.Dict[str, tp.Any]
     run_eagerly: bool = False
-    initialized: bool = False
+    sample_x: tp.Optional[tp.Any]
+    seed: jnp.ndarray
 
     def __init__(
         self,
-        states: tp.Optional[types.States] = None,
         run_eagerly: bool = False,
-        initialized: bool = False,
+        sample_x: tp.Optional[tp.Any] = None,
+        seed: tp.Union[int, jnp.ndarray] = 42,
     ):
 
-        if states is None:
-            states = types.States()
-
-        self.initial_states = states
-        self.states = states.copy()  # explicity do this to copy RNGSeq
-        self.run_eagerly = run_eagerly
         self.history = {}
-        self.initialized = initialized
+        self.run_eagerly = run_eagerly
+        self.sample_x = sample_x
+        self.seed = seed if isinstance(seed, jnp.ndarray) else jax.random.PRNGKey(seed)
+
         self.jitted_members: tp.Set[str] = set()
 
         self.jit_step()
 
     def jit_step(self):
+        self.call_init_step_jit = jax.jit(
+            self.__class__.init,
+            static_argnums=[],
+        )
         self.call_pred_step_jit = jax.jit(
-            self.call_pred_step,
-            static_argnums=[2, 3],
+            self.__class__.call_pred_step,
+            static_argnums=[],
         )
         self.call_test_step_jit = jax.jit(
-            self.call_test_step,
-            static_argnums=[5, 6],
+            self.__class__.call_test_step,
+            static_argnums=[],
         )
         self.call_train_step_jit = jax.jit(
-            self.call_train_step,
-            static_argnums=[5, 6],
-        )
-        self.call_init_step_jit = jax.jit(
-            self.call_init_step,
+            self.__class__.call_train_step,
             static_argnums=[],
         )
 
         self.jitted_members |= {
+            "call_init_step_jit",
             "call_pred_step_jit",
             "call_test_step_jit",
             "call_train_step_jit",
-            "call_init_step_jit",
         }
 
     def __setstate__(self, d):
@@ -108,10 +96,6 @@ class ModelCore:
 
     def __getstate__(self):
         d = self.__dict__.copy()
-
-        # remove states
-        del d["states"]
-        del d["initial_states"]
 
         # remove jitted functions
         for member in self.jitted_members:
@@ -127,56 +111,24 @@ class ModelCore:
     def update_modules(self):
         pass
 
-    def states_step(self) -> types.States:
-        return types.States()
-
-    def init_step(
-        self,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-        states: types.States,
-    ) -> types.States:
-        raise types.MissingMethod()
-
     def call_init_step(
         self,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-        states: types.States,
-    ) -> types.States:
-        return utils.inject_dependencies(self.init_step)(
-            x=x,
-            y_true=y_true,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            states=states,
-        )
+        key: jnp.ndarray,
+    ) -> "ModelCore":
+        return self.init(key)
 
     def pred_step(
         self,
         x: tp.Any,
-        states: types.States,
-        initializing: bool,
-        training: bool,
     ) -> PredStep:
         raise types.MissingMethod()
 
     def call_pred_step(
         self,
         x: tp.Any,
-        states: types.States,
-        initializing: bool,
-        training: bool,
     ) -> PredStep:
         return utils.inject_dependencies(self.pred_step)(
             x=x,
-            states=states,
-            initializing=initializing,
-            training=training,
         )
 
     def test_step(
@@ -185,9 +137,6 @@ class ModelCore:
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        states: types.States,
-        initializing: bool,
-        training: bool,
     ) -> TestStep:
         raise types.MissingMethod()
 
@@ -197,18 +146,12 @@ class ModelCore:
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        states: types.States,
-        initializing: bool,
-        training: bool,
     ) -> TestStep:
         return utils.inject_dependencies(self.test_step)(
             x=x,
             y_true=y_true,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            states=states,
-            initializing=initializing,
-            training=training,
         )
 
     def grad_step(
@@ -217,8 +160,6 @@ class ModelCore:
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        states: types.States,
-        initializing: bool,
         training: bool,
     ) -> GradStep:
         raise types.MissingMethod()
@@ -229,9 +170,6 @@ class ModelCore:
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        states: types.States,
-        initializing: bool,
-        training: bool,
     ) -> TrainStep:
         raise types.MissingMethod()
 
@@ -241,18 +179,12 @@ class ModelCore:
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-        states: types.States,
-        initializing: bool,
-        training: bool,
     ) -> TrainStep:
         return utils.inject_dependencies(self.train_step)(
             x=x,
             y_true=y_true,
             sample_weight=sample_weight,
             class_weight=class_weight,
-            states=states,
-            initializing=initializing,
-            training=training,
         )
 
     # ----------------------------------------------------------------
@@ -261,29 +193,28 @@ class ModelCore:
 
     def init_on_batch(
         self,
-        x: tp.Any = (),
-        y_true: tp.Any = None,
-        sample_weight: tp.Optional[np.ndarray] = None,
-        class_weight: tp.Optional[tp.Any] = None,
+        key: jnp.ndarray,
     ):
+        if self.run_eagerly:
+            model = self.init(key)
+        else:
+            model = self.call_init_step_jit(self, key)
 
-        if self.initialized:
-            return
-
-        method = self.call_init_step if self.run_eagerly else self.call_init_step_jit
-        states = self.states.copy() if self.run_eagerly else self.states
-
-        state_updates = method(
-            x,
-            y_true,
-            sample_weight,
-            class_weight,
-            states,
-        )
-
-        self.states = self.states.maybe_update(**state_updates)
-        self.initial_states = self.initial_states.maybe_update(**state_updates)
+        self.update(model, inplace=True)
         self.initialized = True
+
+    def maybe_init_on_batch(
+        self,
+        x: tp.Optional[tp.Any],
+    ):
+        if not self.initialized:
+            old_sample_x = self.sample_x
+            self.sample_x = x
+
+            try:
+                self.init_on_batch(self.seed)
+            finally:
+                self.sample_x = old_sample_x
 
     def predict_on_batch(self, x: tp.Any) -> tp.Any:
         """
@@ -301,22 +232,16 @@ class ModelCore:
             ValueError: In case of mismatch between given number of inputs and
                 expectations of the model.
         """
-        if not self.initialized:
-            raise types.ModelNotInitialized(
-                f"Model not initialized, please execute `init` or `init_on_batch` before running this method."
-            )
-        initializing = False
-        training = False
+        self.maybe_init_on_batch(x)
 
-        method = self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
-        states = self.states.copy() if self.run_eagerly else self.states
+        self.eval(inplace=True)
 
-        y_pred, self.states = method(
-            x,
-            states,
-            initializing,
-            training,
-        )
+        if self.run_eagerly:
+            y_pred, model = self.call_pred_step(x)
+        else:
+            y_pred, model = self.call_pred_step_jit(self, x)
+
+        self.update(model, inplace=True)
 
         return y_pred
 
@@ -351,28 +276,27 @@ class ModelCore:
         Raises:
             ValueError: In case of invalid user-provided arguments.
         """
-        self.init_on_batch(
-            x=x,
-            y_true=y,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-        )
+        self.maybe_init_on_batch(x)
 
-        initializing = False
-        training = False
+        self.eval(inplace=True)
 
-        method = self.call_test_step if self.run_eagerly else self.call_test_step_jit
-        states = self.states.copy() if self.run_eagerly else self.states
+        if self.run_eagerly:
+            loss, logs, model = self.call_test_step(
+                x,
+                y,
+                sample_weight,
+                class_weight,
+            )
+        else:
+            loss, logs, model = self.call_test_step_jit(
+                self,
+                x,
+                y,
+                sample_weight,
+                class_weight,
+            )
 
-        loss, logs, self.states = method(
-            x,
-            y,
-            sample_weight,
-            class_weight,
-            states,
-            initializing,
-            training,
-        )
+        self.update(model, inplace=True)
 
         return logs
 
@@ -413,48 +337,27 @@ class ModelCore:
         Raises:
             ValueError: In case of invalid user-provided arguments.
         """
-        self.init_on_batch(
-            x=x,
-            y_true=y,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-        )
+        self.maybe_init_on_batch(x)
 
-        initializing = False
-        training = True
+        if self.run_eagerly:
+            logs, model = self.call_train_step(
+                x,
+                y,
+                sample_weight,
+                class_weight,
+            )
+        else:
+            logs, model = self.call_train_step_jit(
+                self,
+                x,
+                y,
+                sample_weight,
+                class_weight,
+            )
 
-        method = self.call_train_step if self.run_eagerly else self.call_train_step_jit
-        states = self.states.copy() if self.run_eagerly else self.states
-
-        logs, self.states = method(
-            x,
-            y,
-            sample_weight,
-            class_weight,
-            states,
-            initializing,
-            training,
-        )
+        self.update(model, inplace=True)
 
         return logs
-
-    def summary(
-        self,
-        x: tp.Optional[tp.Any] = None,
-        depth: int = 2,
-        return_repr: bool = False,
-        initialize: bool = False,
-        eval_shape: bool = True,
-    ) -> tp.Optional[str]:
-        """
-        Prints a summary of the network.
-        Arguments:
-            x: A sample of inputs to the network.
-            depth: The level number of nested level which will be showed.
-                Information about summaries from modules deeper than `depth`
-                will be aggregated together.
-        """
-        raise NotImplementedError()
 
     def save(
         self,
@@ -467,8 +370,6 @@ class ModelCore:
 
         - `{path}/model.pkl`: The `Model` object instance serialized with `pickle`,
             this allows you to re-instantiate the model later.
-        - `{path}/states.pkl`: The `Model.states` serialized with `pickle`.
-        - `{path}/initial_states.pkl`: The `Model.initial_states` serialized with `pickle`.
 
         This allows you to save the entirety of the states of a model
         in a directory structure which can be fully restored via
@@ -492,12 +393,6 @@ class ModelCore:
 
         path.mkdir(parents=True, exist_ok=True)
 
-        with open(path / "states.pkl", "wb") as f:
-            cloudpickle.dump(self.states, f)
-
-        with open(path / "initial_states.pkl", "wb") as f:
-            cloudpickle.dump(self.initial_states, f)
-
         with open(path / "model.pkl", "wb") as f:
             cloudpickle.dump(self, f)
 
@@ -516,13 +411,9 @@ class ModelCore:
         Arguments:
             path: path to a saved model's directory.
         """
+        raise NotImplementedError()
         if isinstance(path, str):
             path = pathlib.Path(path)
-
-        self.states = cloudpickle.loads((path / "states.pkl").read_bytes())
-        self.initial_states = cloudpickle.loads(
-            (path / "initial_states.pkl").read_bytes()
-        )
 
     def saved_model(
         self,
@@ -590,16 +481,13 @@ class ModelCore:
         ]
         shape_polymorphic_input_spec = None
 
-        states = types.States(
-            {field: value for field, value in self.states.items() if value is not None}
-        )
-        flat_states, states_def = jax.tree_flatten(states)
+        flat_states, states_def = jax.tree_flatten(self)
 
         def jax_fn(flat_states, inputs):
-            states = jax.tree_unflatten(states_def, flat_states)
+            model: ModelCore = jax.tree_unflatten(states_def, flat_states)
 
-            y_pred, _ = utils.inject_dependencies(self.pred_step)(
-                x=inputs, states=states, initializing=False, training=False
+            y_pred, _ = utils.inject_dependencies(model.pred_step)(
+                x=inputs, training=False
             )
 
             return y_pred
@@ -616,11 +504,5 @@ class ModelCore:
             save_model_options=None,
         )
 
-    def reset(self):
-        self.states = self.initial_states.copy()
-
     def reset_metrics(self):
-        if hasattr(self.initial_states, "metrics_states"):
-            self.states = self.states.update(
-                metrics_states=self.initial_states.metrics_states
-            )
+        raise NotImplementedError()
