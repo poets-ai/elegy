@@ -67,7 +67,7 @@ class ModelCore(tx.Module):
 
     def jit_step(self):
         self.call_init_step_jit = jax.jit(
-            self.__class__.init,
+            self.__class__.call_init_step,
             static_argnums=[],
         )
         self.call_pred_step_jit = jax.jit(
@@ -111,11 +111,17 @@ class ModelCore(tx.Module):
     def update_modules(self):
         pass
 
-    def call_init_step(
+    def init_step(
         self,
         key: jnp.ndarray,
     ) -> "ModelCore":
         return self.init(key)
+
+    def call_init_step(
+        self,
+        key: jnp.ndarray,
+    ) -> "ModelCore":
+        return self.init_step(key)
 
     def pred_step(
         self,
@@ -196,12 +202,19 @@ class ModelCore(tx.Module):
         key: jnp.ndarray,
     ):
         if self.run_eagerly:
-            model = self.init(key)
+            model = self.init_step(key)
         else:
             model = self.call_init_step_jit(self, key)
 
         self.update(model, inplace=True)
-        self.initialized = True
+
+        # update self.initialized
+        def initialize_inplace(module):
+            if isinstance(module, tx.Module):
+                module._initialized = True
+            return module
+
+        tx.module_map(initialize_inplace, self, inplace=True)
 
     def maybe_init_on_batch(
         self,

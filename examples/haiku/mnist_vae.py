@@ -52,7 +52,7 @@ class Encoder(hk.Module):
         self.latent_size = latent_size
 
     def __call__(
-        self, x: np.ndarray, rng: elegy.RNGSeq
+        self, x: np.ndarray, rng: elegy.RngSeq
     ) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
         x = x.reshape((x.shape[0], -1))  # flatten
         x = hk.Linear(self.hidden_size)(x)

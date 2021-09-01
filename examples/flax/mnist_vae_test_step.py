@@ -50,7 +50,7 @@ class Encoder(nn.Module):
     latent_size: int = 128
 
     @nn.compact
-    def __call__(self, x: np.ndarray, rng: elegy.RNGSeq) -> np.ndarray:
+    def __call__(self, x: np.ndarray, rng: elegy.RngSeq) -> np.ndarray:
         x = x.reshape((x.shape[0], -1))  # flatten
         x = nn.Dense(self.hidden_size)(x)
         x = jax.nn.relu(x)
@@ -107,7 +107,7 @@ class VariationalAutoEncoder(elegy.Model):
     # request parameters by name via depending injection.
     # possible: x, y_true, sample_weight, class_weight, initializing
     def pred_step(self, x, states, initializing):
-        rng: elegy.RNGSeq = states.rng
+        rng: elegy.RngSeq = states.rng
 
         if initializing:
             (z, mean, stddev), enc_variables = self.encoder.init_with_output(
@@ -160,7 +160,7 @@ class VariationalAutoEncoder(elegy.Model):
             )
             aux_losses = elegy.hooks.get_losses()
 
-        rng: elegy.RNGSeq = states.rng
+        rng: elegy.RngSeq = states.rng
 
         # crossentropy loss + kl
         kl_loss = aux_losses["kl_divergence_loss"]

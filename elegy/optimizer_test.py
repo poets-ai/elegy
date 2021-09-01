@@ -42,7 +42,7 @@ class OptimizerTest(unittest.TestCase):
 
         params = np.random.uniform((3, 4))
         grads = np.random.uniform((3, 4))
-        rng = elegy.RNGSeq(42)
+        rng = elegy.RngSeq(42)
 
         optimizer_states = optimizer.init(rng, params)
         assert jnp.allclose(optimizer.current_lr(optimizer_states), 0 / 3)
@@ -66,7 +66,7 @@ class OptimizerTest(unittest.TestCase):
 
         params = np.random.uniform((3, 4))
         grads = np.random.uniform((3, 4))
-        rng = elegy.RNGSeq(42)
+        rng = elegy.RngSeq(42)
 
         optimizer_states = optimizer.init(
             rng=rng,
@@ -94,7 +94,7 @@ class OptimizerTest(unittest.TestCase):
 
         params = np.zeros(shape=(3, 4))
         grads = np.ones(shape=(3, 4)) * 100_000
-        rng = elegy.RNGSeq(42)
+        rng = elegy.RngSeq(42)
 
         optimizer_states = optimizer.init(
             rng=rng,

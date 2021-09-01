@@ -76,7 +76,7 @@ class HaikuModule(GeneralizedModule):
         self.f = wrapper
         self.module = TransformWithStateAndOutput(wrapper)
 
-    def init(self, rng: types.RNGSeq) -> tp.Callable[..., types.OutputStates]:
+    def init(self, rng: types.RngSeq) -> tp.Callable[..., types.OutputStates]:
         def _lambda(*args, **kwargs):
             def init_fn(*args, **kwargs) -> types.OutputStates:
                 kwargs = {f"__{name}": value for name, value in kwargs.items()}
@@ -101,7 +101,7 @@ class HaikuModule(GeneralizedModule):
         params: tp.Any,
         states: tp.Any,
         training: bool,
-        rng: types.RNGSeq,
+        rng: types.RngSeq,
     ) -> tp.Callable[..., types.OutputStates]:
         if params is None:
             params = {}
@@ -136,7 +136,7 @@ class HaikuModule(GeneralizedModule):
 
         x_args, x_kwargs = utils.get_input_args(
             x,
-            states=types.States(rng=types.RNGSeq(42)),
+            states=types.States(rng=types.RngSeq(42)),
             initializing=True,
             training=True,
         )

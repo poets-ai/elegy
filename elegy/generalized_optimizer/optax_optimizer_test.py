@@ -8,7 +8,7 @@ def test_basic():
     w = 2.0
     grads = 1.5
     lr = 1.0
-    rng = elegy.RNGSeq(42)
+    rng = elegy.RngSeq(42)
 
     go = generalize_optimizer(optax.sgd(lr))
 

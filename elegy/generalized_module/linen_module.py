@@ -22,7 +22,7 @@ class LinenModule(GeneralizedModule):
     def __init__(self, module: nn.Module):
         self.module = module
 
-    def init(self, rng: types.RNGSeq) -> tp.Callable[..., types.OutputStates]:
+    def init(self, rng: types.RngSeq) -> tp.Callable[..., types.OutputStates]:
         def _lambda(*args, **kwargs):
             def init_fn(*args, **kwargs):
                 return self.module.init_with_output(rng.next(), *args, **kwargs)
@@ -51,7 +51,7 @@ class LinenModule(GeneralizedModule):
         params: tp.Any,
         states: tp.Any,
         training: bool,
-        rng: types.RNGSeq,
+        rng: types.RngSeq,
     ) -> tp.Callable[..., types.OutputStates]:
         if params is None:
             params = FrozenDict()
@@ -96,7 +96,7 @@ class LinenModule(GeneralizedModule):
         eval_shape: bool,
     ) -> str:
         def apply_fn(x) -> types.OutputStates:
-            rng = types.RNGSeq(42)
+            rng = types.RngSeq(42)
             x_args, x_kwargs = utils.get_input_args(
                 x,
                 states=types.States(rng=rng),

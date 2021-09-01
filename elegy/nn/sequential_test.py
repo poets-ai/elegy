@@ -17,7 +17,7 @@ class SequentialTest(TestCase):
                 jax.nn.relu,
                 elegy.nn.Linear(2),
             ]
-        ).call_with_defaults(rng=elegy.RNGSeq(42))(jnp.ones([10, 3]))
+        ).call_with_defaults(rng=elegy.RngSeq(42))(jnp.ones([10, 3]))
 
         assert y.shape == (10, 2)
 
@@ -28,7 +28,7 @@ class SequentialTest(TestCase):
                 jax.nn.relu,
                 elegy.nn.Linear(2),
             ]
-        ).call_with_defaults(rng=elegy.RNGSeq(42), training=False)(jnp.ones([10, 3]))
+        ).call_with_defaults(rng=elegy.RngSeq(42), training=False)(jnp.ones([10, 3]))
 
         assert y.shape == (10, 2)
 
@@ -42,7 +42,7 @@ class SequentialTest(TestCase):
         )
 
         y = elegy.inject_dependencies(
-            m.call_with_defaults(rng=elegy.RNGSeq(42), training=False), signature_f=m
+            m.call_with_defaults(rng=elegy.RngSeq(42), training=False), signature_f=m
         )(
             jnp.ones([5, 3]),
             a=1,

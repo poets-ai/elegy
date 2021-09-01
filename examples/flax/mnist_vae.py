@@ -50,7 +50,7 @@ class Encoder(nn.Module):
     latent_size: int = 128
 
     @nn.compact
-    def __call__(self, x: np.ndarray, rng: elegy.RNGSeq) -> np.ndarray:
+    def __call__(self, x: np.ndarray, rng: elegy.RngSeq) -> np.ndarray:
         x = x.reshape((x.shape[0], -1))  # flatten
         x = nn.Dense(self.hidden_size)(x)
         x = jax.nn.relu(x)

@@ -25,7 +25,7 @@ from .model.model_base import ModelBase, load
 from .module import Module, to_module
 from .optimizer import Optimizer
 from .types import (
-    RNGSeq,
+    RngSeq,
     States,
     OutputStates,
 )

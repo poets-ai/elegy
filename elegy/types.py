@@ -34,19 +34,7 @@ class Empty:
 
 
 EMPTY = Empty()
-
-
-class RNGSeq(tx.Module):
-    key: tx.Rng
-
-    def __init__(self):
-        self.key = tx.Initializer(lambda key: key)
-
-    def next(self) -> jnp.ndarray:
-        assert isinstance(self.key, jnp.ndarray)
-        key, self.key = jax.random.split(self.key)
-        return key
-
+RngSeq = tx.RngSeq
 
 T = tp.TypeVar("T")
 Container = tp.Union[
@@ -75,7 +63,7 @@ Logs = tp.Dict[str, tp.Union[np.ndarray, float]]
 Index = tp.Union[int, str]
 Path = tp.Tuple[Index, ...]
 Grads = tp.Any
-RNG = tp.Union[RNGSeq, np.ndarray]
+RNG = tp.Union[RngSeq, np.ndarray]
 Scalar = tp.Union[np.ndarray, float, int]
 SummaryModule = tp.Any
 SummaryValue = tp.Any
@@ -285,7 +273,7 @@ class InitJit(Protocol):
     def __call__(
         self,
         *,
-        rng: tp.Optional[RNGSeq] = None,
+        rng: tp.Optional[RngSeq] = None,
         set_defaults: bool = False,
     ) -> JitCallable:
         ...
@@ -298,7 +286,7 @@ class ApplyJit(Protocol):
         collections: ParameterCollection,
         *,
         training: bool = True,
-        rng: tp.Optional[RNGSeq] = None,
+        rng: tp.Optional[RngSeq] = None,
         set_defaults: bool = False,
     ) -> JitCallable:
         ...

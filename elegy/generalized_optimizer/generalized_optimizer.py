@@ -17,7 +17,7 @@ class GeneralizedOptimizer(ABC):
 
     @abstractmethod
     def init(
-        self, rng: types.RNGSeq, net_params: types.NetParams
+        self, rng: types.RngSeq, net_params: types.NetParams
     ) -> types.OptimizerStates:
         ...
 
@@ -27,7 +27,7 @@ class GeneralizedOptimizer(ABC):
         net_params: types.NetParams,
         grads: types.Grads,
         optimizer_states: types.OptimizerStates,
-        rng: types.RNGSeq,
+        rng: types.RngSeq,
     ) -> tp.Tuple[types.NetParams, types.OptimizerStates]:
         ...
 

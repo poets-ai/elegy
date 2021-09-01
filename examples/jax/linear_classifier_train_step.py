@@ -19,7 +19,7 @@ class Model(elegy.Model):
     # possible: initializing, net_params, x, y_true, net_states, metrics_states, optimizer_states, sample_weight, class_weight, rng
     def train_step(self, x, y_true, initializing, states: elegy.States):
         def loss_fn(net_params, x, y_true):
-            assert isinstance(states.rng, elegy.RNGSeq)
+            assert isinstance(states.rng, elegy.RngSeq)
 
             # flatten + scale
             x = jnp.reshape(x, (x.shape[0], -1)) / 255

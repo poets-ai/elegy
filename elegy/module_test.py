@@ -903,7 +903,7 @@ class TestOthers(TestCase):
         y = np.random.uniform(size=(15, 1))
         mlp = MLP()
 
-        y_pred, parameters, collections = mlp.init(rng=elegy.RNGSeq(42))(x)
+        y_pred, parameters, collections = mlp.init(rng=elegy.RngSeq(42))(x)
 
         update_jit = jax.jit(update)
 

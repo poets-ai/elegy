@@ -30,7 +30,7 @@ class LocalContext(types.Protocol):
     module_path: tp.Optional[tp.Dict["Module", types.Path]]
     inside_call: tp.Optional[bool]
     module_index: tp.Optional[int]
-    rng: tp.Optional[types.RNGSeq]
+    rng: tp.Optional[types.RngSeq]
     training: tp.Optional[bool]
     initializing: tp.Optional[bool]
 
@@ -41,7 +41,7 @@ class _LocalContext(threading.local):
     module_path: tp.Optional[tp.Dict["Module", types.Path]]
     inside_call: tp.Optional[bool]
     module_index: tp.Optional[int]
-    rng: tp.Optional[types.RNGSeq]
+    rng: tp.Optional[types.RngSeq]
     training: tp.Optional[bool]
     initializing: tp.Optional[bool]
 
@@ -208,7 +208,7 @@ class Module(metaclass=ModuleMeta):
     def call_with_defaults(
         self,
         *,
-        rng: tp.Optional[types.RNGSeq] = None,
+        rng: tp.Optional[types.RngSeq] = None,
         training: bool = False,
     ) -> tp.Callable[..., tp.Any]:
         def call_with_defaults_wrapper(*args, **kwargs):
@@ -234,7 +234,7 @@ class Module(metaclass=ModuleMeta):
     def call_with_defaults_jit(
         self,
         *,
-        rng: tp.Optional[types.RNGSeq] = None,
+        rng: tp.Optional[types.RngSeq] = None,
         training: bool = False,
     ) -> tp.Callable[..., tp.Any]:
         def call_with_defaults_jit_wrapper(*args):
@@ -261,13 +261,13 @@ class Module(metaclass=ModuleMeta):
         # ------------------------------
         # init
         # ------------------------------
-        def init_jit_raw(rng: tp.Optional[types.RNGSeq], *args):
+        def init_jit_raw(rng: tp.Optional[types.RngSeq], *args):
             return self.init(rng=rng)(*args)
 
         init_jit: types.JitCallable = hooks.jit(init_jit_raw)
 
         def init_jit_wrapper(
-            rng: tp.Optional[types.RNGSeq] = None,
+            rng: tp.Optional[types.RngSeq] = None,
             set_defaults: bool = False,
         ) -> types.JitCallable:
             def init_jit_callable(
@@ -294,7 +294,7 @@ class Module(metaclass=ModuleMeta):
             parameters: tp.Optional[types.Parameters],
             collections: types.ParameterCollection,
             training: bool,
-            rng: tp.Optional[types.RNGSeq],
+            rng: tp.Optional[types.RngSeq],
             *args,
         ):
             return self.apply(
@@ -311,7 +311,7 @@ class Module(metaclass=ModuleMeta):
             collections: types.ParameterCollection,
             *,
             training: bool = True,
-            rng: tp.Optional[types.RNGSeq] = None,
+            rng: tp.Optional[types.RngSeq] = None,
             set_defaults: bool = False,
         ) -> types.JitCallable:
             def apply_jit_callable(
@@ -385,7 +385,7 @@ class Module(metaclass=ModuleMeta):
     def init(
         self,
         *,
-        rng: tp.Optional[types.RNGSeq] = None,
+        rng: tp.Optional[types.RngSeq] = None,
         set_defaults: bool = False,
     ) -> tp.Callable[
         ..., tp.Tuple[tp.Any, tp.Optional[types.Parameters], types.ParameterCollection]
@@ -421,7 +421,7 @@ class Module(metaclass=ModuleMeta):
         collections: types.ParameterCollection,
         *,
         training: bool = True,
-        rng: tp.Optional[types.RNGSeq] = None,
+        rng: tp.Optional[types.RngSeq] = None,
         set_defaults: bool = False,
     ) -> tp.Callable[
         ...,
@@ -464,7 +464,7 @@ class Module(metaclass=ModuleMeta):
         collections: tp.Optional[types.ParameterCollection],
         *,
         training: bool = True,
-        rng: tp.Optional[types.RNGSeq] = None,
+        rng: tp.Optional[types.RngSeq] = None,
         set_defaults: bool = False,
     ) -> tp.Callable[
         ...,
@@ -872,7 +872,7 @@ def module_context(
     collections: tp.Optional[types.ParameterCollection],
     initializing: bool,
     training: bool,
-    rng: tp.Optional[types.RNGSeq],
+    rng: tp.Optional[types.RngSeq],
 ) -> tp.ContextManager[None]:
     return _scope_context(
         module=module,
@@ -889,7 +889,7 @@ def _scope_context(
     collections: tp.Optional[types.ParameterCollection],
     initializing: bool,
     training: bool,
-    rng: tp.Optional[types.RNGSeq],
+    rng: tp.Optional[types.RngSeq],
 ):
     prev_module_path = LOCAL.module_path
     prev_initializing = LOCAL.initializing

@@ -18,7 +18,7 @@ class TransformerTest(TestCase):
         src = np.random.uniform(size=(5, 32, 64))
         tgt = np.random.uniform(size=(5, 32, 64))
 
-        _, params, collections = transformer_model.init(rng=elegy.RNGSeq(42))(src, tgt)
+        _, params, collections = transformer_model.init(rng=elegy.RngSeq(42))(src, tgt)
         out, params, collections = transformer_model.apply(
-            params, collections, rng=elegy.RNGSeq(420)
+            params, collections, rng=elegy.RngSeq(420)
         )(src, tgt)

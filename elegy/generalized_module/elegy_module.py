@@ -16,7 +16,7 @@ class ElegyModule(GeneralizedModule):
     def __init__(self, module: Module):
         self.module = module
 
-    def init(self, rng: types.RNGSeq) -> tp.Callable[..., types.OutputStates]:
+    def init(self, rng: types.RngSeq) -> tp.Callable[..., types.OutputStates]:
         def _lambda(*args, **kwargs):
 
             y_pred, parameters, collections = utils.inject_dependencies(
@@ -37,7 +37,7 @@ class ElegyModule(GeneralizedModule):
         params: tp.Any,
         states: tp.Any,
         training: bool,
-        rng: types.RNGSeq,
+        rng: types.RngSeq,
     ) -> tp.Callable[..., types.OutputStates]:
         def _lambda(*args, **kwargs):
 
@@ -185,7 +185,7 @@ class ElegyModule(GeneralizedModule):
         x: tp.Any,
     ) -> tp.List[types.SummaryTableEntry]:
 
-        rng = types.RNGSeq(42)
+        rng = types.RngSeq(42)
 
         x_args, x_kwargs = utils.get_input_args(
             x,

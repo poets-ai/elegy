@@ -65,7 +65,7 @@ class Optimizer(GeneralizedOptimizer):
         self.lr_schedule = lr_schedule
 
     def init(
-        self, rng: types.RNGSeq, net_params: types.NetParams
+        self, rng: types.RngSeq, net_params: types.NetParams
     ) -> types.OptimizerStates:
         return self.optimizer.init(net_params)
 
@@ -74,7 +74,7 @@ class Optimizer(GeneralizedOptimizer):
         net_params: types.NetParams,
         grads: types.Grads,
         optimizer_states: types.OptimizerStates,
-        rng: types.RNGSeq,
+        rng: types.RngSeq,
     ) -> tp.Tuple[types.NetParams, types.OptimizerStates]:
         updates, optimizer_states = self.optimizer.update(
             grads, optimizer_states, net_params

@@ -107,7 +107,7 @@ class Model(ModelBase):
     """
 
     # pytree
-    rng: types.RNGSeq
+    rng: types.RngSeq
     api_module: tp.Optional[GeneralizedModule]
     api_loss: "Losses"
     api_metrics: "Metrics"
@@ -159,7 +159,7 @@ class Model(ModelBase):
                 using Jax's `jit` to. Your model might run slower, but it should become easier for you to debug
                 it by stepping into individual layer calls.
         """
-        if "rng" in kwargs and not isinstance(kwargs["rng"], (int, types.RNGSeq)):
+        if "rng" in kwargs and not isinstance(kwargs["rng"], (int, types.RngSeq)):
             raise ValueError(
                 f"rng must be one of the following types: int, types.RNGSeq. Got {kwargs['rng']}"
             )
@@ -170,7 +170,7 @@ class Model(ModelBase):
         if self.initialized and (
             not hasattr(self.states, "rng") or self.states.rng is None
         ):
-            self.states = self.states.update(rng=types.RNGSeq(seed))
+            self.states = self.states.update(rng=types.RngSeq(seed))
 
         self.module = module
         self.loss = loss
@@ -192,7 +192,7 @@ class Model(ModelBase):
         self.seed = seed
 
     def __call__(self, *args, **kwargs):
-        assert isinstance(self.states.rng, types.RNGSeq)
+        assert isinstance(self.states.rng, types.RngSeq)
         assert self.module is not None
 
         return self.module.apply(
@@ -214,7 +214,7 @@ class Model(ModelBase):
     def states_step(self) -> types.States:
         states = super().states_step()
         return states.update(
-            rng=types.RNGSeq(self.seed),
+            rng=types.RngSeq(self.seed),
             net_params=None,
             net_states=None,
             metrics_states=None,
@@ -268,7 +268,7 @@ class Model(ModelBase):
             training=training,
         )
 
-        assert isinstance(states.rng, types.RNGSeq)
+        assert isinstance(states.rng, types.RngSeq)
 
         if initializing:
             module_fn = self.api_module.init(states.rng)
@@ -309,7 +309,7 @@ class Model(ModelBase):
             aux_losses = hooks.get_losses()
             aux_metrics = hooks.get_metrics()
 
-        assert isinstance(states.rng, types.RNGSeq)
+        assert isinstance(states.rng, types.RngSeq)
 
         if initializing:
             metrics_fn = self.api_metrics.init(aux_metrics, states.rng)
@@ -436,7 +436,7 @@ class Model(ModelBase):
                 "please provide an optimizer to the Model(...) constructor or "
                 "override `train_step`."
             )
-        assert isinstance(states.rng, types.RNGSeq)
+        assert isinstance(states.rng, types.RngSeq)
         assert self.api_optimizer is not None
 
         # calculate current lr before update
@@ -553,7 +553,7 @@ class Metrics:
     def init(
         self,
         aux_metrics: types.Logs,
-        rng: types.RNGSeq,
+        rng: types.RngSeq,
     ) -> tp.Callable[..., tp.Tuple[types.Logs, tp.Any]]:
         def lambda_(*args, **kwargs):
             def callback(name, module):
@@ -568,7 +568,7 @@ class Metrics:
     def apply(
         self,
         aux_metrics: types.Logs,
-        rng: types.RNGSeq,
+        rng: types.RngSeq,
         states: tp.Any,
     ) -> tp.Callable[..., tp.Tuple[types.Logs, tp.Any]]:
         assert states is not None
@@ -591,7 +591,7 @@ class AvgMetric(GeneralizedModule):
     def __init__(self, f: tp.Callable):
         self.f = f
 
-    def init(self, rng: types.RNGSeq) -> tp.Callable[..., types.OutputStates]:
+    def init(self, rng: types.RngSeq) -> tp.Callable[..., types.OutputStates]:
         def _lambda(*args, **kwargs) -> types.OutputStates:
 
             preds = utils.inject_dependencies(self.f)(*args, **kwargs)
@@ -614,7 +614,7 @@ class AvgMetric(GeneralizedModule):
         params: tp.Any,
         states: tp.Any,
         training: bool,
-        rng: types.RNGSeq,
+        rng: types.RngSeq,
     ) -> tp.Callable[..., types.OutputStates]:
         def _lambda(*args, **kwargs) -> types.OutputStates:
 
@@ -676,7 +676,7 @@ class Losses:
     def init(
         self,
         aux_losses: types.Logs,
-        rng: types.RNGSeq,
+        rng: types.RngSeq,
     ) -> tp.Callable[..., tp.Tuple[types.Scalar, types.Logs, tp.Any]]:
         def _lambda(*args, **kwargs):
             module_logs = self.calculate_losses(*args, **kwargs)

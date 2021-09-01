@@ -19,7 +19,7 @@ class GeneralizedModule(ABC):
         ...
 
     @abstractmethod
-    def init(self, rng: types.RNGSeq) -> tp.Callable[..., types.OutputStates]:
+    def init(self, rng: types.RngSeq) -> tp.Callable[..., types.OutputStates]:
         ...
 
     @abstractmethod
@@ -28,7 +28,7 @@ class GeneralizedModule(ABC):
         params: tp.Any,
         states: tp.Any,
         training: bool,
-        rng: types.RNGSeq,
+        rng: types.RngSeq,
     ) -> tp.Callable[..., types.OutputStates]:
         ...
 
@@ -54,7 +54,7 @@ class CallableModule(GeneralizedModule):
     def __init__(self, f: tp.Callable):
         self.f = f
 
-    def init(self, rng: types.RNGSeq) -> tp.Callable[..., types.OutputStates]:
+    def init(self, rng: types.RngSeq) -> tp.Callable[..., types.OutputStates]:
         def lambda_(*args, **kwargs) -> types.OutputStates:
 
             output = utils.inject_dependencies(self.f)(*args, **kwargs)
@@ -75,7 +75,7 @@ class CallableModule(GeneralizedModule):
         params: tp.Any,
         states: tp.Any,
         training: bool,
-        rng: types.RNGSeq,
+        rng: types.RngSeq,
     ) -> tp.Callable[..., types.OutputStates]:
         def lambda_(*args, **kwargs) -> types.OutputStates:
 
@@ -99,10 +99,10 @@ class CallableModule(GeneralizedModule):
         run_eagerly: bool,
         eval_shape: bool,
     ) -> str:
-        rng = types.RNGSeq(42)
+        rng = types.RngSeq(42)
 
         def apply_fn(x) -> types.OutputStates:
-            rng = types.RNGSeq(42)
+            rng = types.RngSeq(42)
             x_args, x_kwargs = utils.get_input_args(
                 x,
                 states=types.States(rng=rng),

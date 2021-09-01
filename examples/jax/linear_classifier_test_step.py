@@ -21,7 +21,7 @@ class Model(elegy.Model):
         states: elegy.States,
         initializing: bool,
     ):
-        assert isinstance(states.rng, elegy.RNGSeq)
+        assert isinstance(states.rng, elegy.RngSeq)
 
         # flatten + scale
         x = jnp.reshape(x, (x.shape[0], -1)) / 255

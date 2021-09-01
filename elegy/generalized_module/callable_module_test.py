@@ -19,7 +19,7 @@ class ElegyModuleTest(TestCase):
             return elegy.OutputStates(x * params["w"], params, states)
 
         gm = generalize(M)
-        rng = elegy.RNGSeq(42)
+        rng = elegy.RngSeq(42)
 
         y_true, params, states = gm.init(rng)(
             x=3.0, y=1, initializing=True, params=None, states=None

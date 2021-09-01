@@ -54,7 +54,7 @@ class WGAN_GP(elegy.Model):
         self.d_optimizer = optax.adam(2e-4, b1=0.5)
 
     def init_step(self, x):
-        rng = elegy.RNGSeq(0)
+        rng = elegy.RngSeq(0)
         gx, g_params, g_states = self.generator.init(rng=rng)(x)
         dx, d_params, d_states = self.discriminator.init(rng=rng)(gx)
 
