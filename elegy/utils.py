@@ -15,6 +15,7 @@ import jax.numpy as jnp
 import jax.tree_util
 import numpy as np
 import toolz
+import treex as tx
 import yaml
 from rich.console import Console
 
@@ -113,7 +114,7 @@ def get_function_args(f) -> tp.List[inspect.Parameter]:
 def get_input_args(
     x: tp.Union[np.ndarray, jnp.ndarray, tp.Dict[str, tp.Any], tp.Tuple],
     *,
-    states: types.States,
+    model: tx.Module,
     initializing: bool,
     training: bool,
 ) -> tp.Tuple[tp.Tuple, tp.Dict[str, tp.Any]]:
@@ -129,7 +130,7 @@ def get_input_args(
         kwargs = {}
 
     apply_kwargs = dict(
-        states=states,
+        model=model,
         initializing=initializing,
         training=training,
     )

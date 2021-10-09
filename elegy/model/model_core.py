@@ -18,28 +18,19 @@ except ImportError:
 
 T = tp.TypeVar("T", bound="ModelCore")
 
+PredStep = tp.Tuple[tp.Any, T]
 
-class PredStep(tp.NamedTuple):
-    y_pred: tp.Any
-    model: "ModelCore"
+TestStep = tp.Tuple[types.Scalar, types.Logs, T]
 
-
-class TestStep(tp.NamedTuple):
-    loss: types.Scalar
-    logs: types.Logs
-    model: "ModelCore"
-
-
-class GradStep(tp.NamedTuple):
-    loss: types.Scalar
-    logs: types.Logs
-    grads: types.Grads
-    model: "ModelCore"
+GradStep = tp.Tuple[
+    types.Scalar,
+    types.Logs,
+    types.Grads,
+    T,
+]
 
 
-class TrainStep(tp.NamedTuple):
-    logs: types.Logs
-    model: "ModelCore"
+TrainStep = tp.Tuple[types.Logs, T]
 
 
 class ModelCore(tx.Module):
@@ -124,35 +115,35 @@ class ModelCore(tx.Module):
         return self.init_step(key)
 
     def pred_step(
-        self,
+        self: T,
         x: tp.Any,
-    ) -> PredStep:
+    ) -> PredStep[T]:
         raise types.MissingMethod()
 
     def call_pred_step(
-        self,
+        self: T,
         x: tp.Any,
-    ) -> PredStep:
+    ) -> PredStep[T]:
         return utils.inject_dependencies(self.pred_step)(
             x=x,
         )
 
     def test_step(
-        self,
+        self: T,
         x: tp.Any,
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-    ) -> TestStep:
+    ) -> TestStep[T]:
         raise types.MissingMethod()
 
     def call_test_step(
-        self,
+        self: T,
         x: tp.Any,
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-    ) -> TestStep:
+    ) -> TestStep[T]:
         return utils.inject_dependencies(self.test_step)(
             x=x,
             y_true=y_true,
@@ -161,31 +152,31 @@ class ModelCore(tx.Module):
         )
 
     def grad_step(
-        self,
+        self: T,
         x: tp.Any,
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
         training: bool,
-    ) -> GradStep:
+    ) -> GradStep[T]:
         raise types.MissingMethod()
 
     def train_step(
-        self,
+        self: T,
         x: tp.Any,
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-    ) -> TrainStep:
+    ) -> TrainStep[T]:
         raise types.MissingMethod()
 
     def call_train_step(
-        self,
+        self: T,
         x: tp.Any,
         y_true: tp.Any,
         sample_weight: tp.Optional[np.ndarray],
         class_weight: tp.Optional[np.ndarray],
-    ) -> TrainStep:
+    ) -> TrainStep[T]:
         return utils.inject_dependencies(self.train_step)(
             x=x,
             y_true=y_true,

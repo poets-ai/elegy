@@ -2,67 +2,69 @@ import typing as tp
 import unittest
 
 import elegy
+import jax
 import jax.numpy as jnp
 import numpy as np
+import treex as tx
+from elegy.model.model_core import ModelCore
 
 
 class ModelCoreTest(unittest.TestCase):
     def test_init(self):
         N = 0
 
-        class Model(elegy.model.model_core.ModelCore):
-            def states_step(self):
-                return elegy.States(
-                    net_params=None,
-                    net_states=None,
-                    metrics_states=None,
-                    optimizer_states=None,
-                )
+        class Model(ModelCore):
+            net_params: tx.Parameter[tp.Any]
+            net_states: tx.State[tp.Any]
+            metrics_states: tx.Metric[tp.Any]
+            optimizer_states: tx.OptState[tp.Any]
 
-            def init_step(self, states):
-                states = states.maybe_update(**self.states_step())
-                _, states = self.train_step(states)
+            def __init__(self):
+                super().__init__()
+                self.net_params = None
+                self.net_states = None
+                self.metrics_states = None
+                self.optimizer_states = None
 
-                return states
-
-            def pred_step(self, states):
+            def pred_step(self) -> elegy.PredStep["Model"]:
                 nonlocal N
                 N = N + 1
 
-                return elegy.PredStep(
-                    y_pred=None,
-                    model=states.update(net_params=1, net_states=2),
-                )
+                self.net_params = 1
+                self.net_states = 2
 
-            def test_step(self, states):
-                _, states = self.pred_step(states)
-                return elegy.TestStep(0, {}, states.update(metrics_states=3))
+                return None, self
 
-            def train_step(self, states):
-                _, logs, states = self.test_step(states)
-                return elegy.TrainStep(logs, states.update(optimizer_states=4))
+            def test_step(self) -> elegy.TestStep["Model"]:
+                _, model = self.pred_step()
+
+                model.metrics_states = 3
+
+                return 0, {}, model
+
+            def train_step(self) -> elegy.TrainStep["Model"]:
+                _, logs, model = self.test_step()
+
+                model.optimizer_states = 3
+
+                return logs, model
 
         model = Model()
 
         assert N == 0
-        assert not hasattr(model.states, "net_params")
-        assert not hasattr(model.states, "net_states")
-        assert not hasattr(model.states, "metrics_states")
-        assert not hasattr(model.states, "optimizer_states")
+        assert model.net_params is None
+        assert model.net_states is None
+        assert model.metrics_states is None
+        assert model.optimizer_states is None
 
-        model.init_on_batch()
-
+        model.init_on_batch(jax.random.PRNGKey(42))
         assert N == 1
-        assert model.states.net_params == 1
-        assert model.states.net_states == 2
-        assert model.states.metrics_states == 3
-        assert model.states.optimizer_states == 4
 
-        model.init_on_batch()
+        model.init_on_batch(jax.random.PRNGKey(42))
         assert N == 1
 
     def test_pred_step(self):
-        class Model(elegy.model.model_core.ModelCore):
+        class Model(ModelCore):
             def init_step(self, x, states):
                 _, states = self.pred_step(x, states, True)
                 return states
@@ -94,7 +96,7 @@ class ModelCoreTest(unittest.TestCase):
         assert model.states.net_states == 2
 
     def test_test_step(self):
-        class Model(elegy.model.model_core.ModelCore):
+        class Model(ModelCore):
             def init_step(self, states):
                 _, _, states = self.test_step(states, True)
                 return states
@@ -126,7 +128,7 @@ class ModelCoreTest(unittest.TestCase):
         assert model.states.metrics_states == 2
 
     def test_train_step(self):
-        class Model(elegy.model.model_core.ModelCore):
+        class Model(ModelCore):
             def init_step(self, states):
                 _, states = self.train_step(states, True)
                 return states
