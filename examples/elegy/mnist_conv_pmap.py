@@ -76,7 +76,7 @@ class DistributedModel(elegy.Model):
         )
         self.call_train_step_jit = self.call_train_step
 
-        self.jitted_members |= {"train_step_pmap"}
+        self._jitted_members |= {"train_step_pmap"}
 
     def grad_step(self, *args, **kwargs):
         loss, logs, states, grads = super().grad_step(*args, **kwargs)
@@ -200,7 +200,7 @@ def main(
     model.summary(X_train[:64])
 
     history = model.fit(
-        x=X_train,
+        inputs=X_train,
         y=y_train,
         epochs=epochs,
         steps_per_epoch=steps_per_epoch,

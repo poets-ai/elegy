@@ -15,24 +15,12 @@ import rich
 import rich.box
 import toolz
 import yaml
-from elegy import types, utils
+from elegy import data, types, utils
 from elegy.callbacks import Callback, CallbackList, History
-from elegy.data import (
-    DataHandler,
-    map_append,
-    map_structure,
-    train_validation_split,
-    unpack_x_y_sample_weight,
-)
 from elegy.data import utils as data_utils
 from elegy.model.model_core import ModelCore, PredStep, TestStep
-from rich.table import Table
-from rich.text import Text
 
-# from elegy.module import Module
-
-
-__all__ = ["Model", "load"]
+__all__ = ["ModelBase", "load"]
 
 
 class ModelBase(ModelCore):
@@ -126,11 +114,10 @@ class ModelBase(ModelCore):
         "states",
     ]
 
-
     def fit(
         self,
-        x: tp.Optional[tp.Any] = None,
-        y: tp.Optional[tp.Any] = None,
+        inputs: tp.Optional[tp.Any] = None,
+        labels: tp.Optional[tp.Any] = None,
         batch_size: tp.Optional[int] = None,
         epochs: int = 1,
         verbose: int = 1,
@@ -138,8 +125,6 @@ class ModelBase(ModelCore):
         validation_split: float = 0.0,
         validation_data: tp.Union[tp.Tuple, tp.Iterable, None] = None,
         shuffle: bool = True,
-        class_weight: tp.Optional[tp.Mapping[str, float]] = None,
-        sample_weight: tp.Optional[np.ndarray] = None,
         initial_epoch: int = 0,
         steps_per_epoch: tp.Optional[int] = None,
         validation_steps: tp.Optional[int] = None,
@@ -297,8 +282,8 @@ class ModelBase(ModelCore):
             ValueError: In case of mismatch between the provided input data
                 and what the model expects.
         """
-        if x is None:
-            x = {}
+        if inputs is None:
+            inputs = {}
 
         if not self.initialized:
             raise types.ModelNotInitialized(
@@ -308,14 +293,20 @@ class ModelBase(ModelCore):
         if validation_split:
             # Create the validation data using the training data. Only supported for
             # `Jax Numpy` and `NumPy` input.
-            (x, y, sample_weight), validation_data = train_validation_split(
-                (x, y, sample_weight), validation_split=validation_split, shuffle=False
+            (
+                inputs,
+                labels,
+                sample_weight,
+            ), validation_data = data.train_validation_split(
+                (inputs, labels, sample_weight),
+                validation_split=validation_split,
+                shuffle=False,
             )
 
         self.stop_training = False
-        data_handler = DataHandler(
-            x=x,
-            y=y,
+        data_handler = data.DataHandler(
+            x=inputs,
+            y=labels,
             sample_weight=sample_weight,
             batch_size=batch_size,
             steps_per_epoch=steps_per_epoch,
@@ -350,7 +341,9 @@ class ModelBase(ModelCore):
                     callbacks.on_train_batch_begin(step)
                     batch = next(iterator)
                     # sample_weight = batch[2] if len(batch) == 3 else None
-                    x_batch, y_batch, sample_weight = unpack_x_y_sample_weight(batch)
+                    x_batch, y_batch, sample_weight = data.unpack_x_y_sample_weight(
+                        batch
+                    )
 
                     if drop_remaining and not data_utils.has_batch_size(
                         batch, data_handler.batch_size
@@ -358,8 +351,8 @@ class ModelBase(ModelCore):
                         continue
 
                     tmp_logs = self.train_on_batch(
-                        x=x_batch,
-                        y=y_batch,
+                        inputs=x_batch,
+                        labels=y_batch,
                         sample_weight=sample_weight,
                         class_weight=class_weight,
                     )
@@ -381,7 +374,7 @@ class ModelBase(ModelCore):
                 and self._should_eval(epoch, validation_freq)
                 and not self.stop_training
             ):
-                val_x, val_y, val_sample_weight = unpack_x_y_sample_weight(
+                val_x, val_y, val_sample_weight = data.unpack_x_y_sample_weight(
                     validation_data
                 )
                 try:
@@ -481,7 +474,7 @@ class ModelBase(ModelCore):
                 f"Model not initialized, please execute `init` or `init_on_batch` before running this method."
             )
 
-        data_handler = DataHandler(
+        data_handler = data.DataHandler(
             x=x,
             y=y,
             sample_weight=sample_weight,
@@ -514,7 +507,9 @@ class ModelBase(ModelCore):
                 for step in data_handler.steps():
                     callbacks.on_test_batch_begin(step)
                     batch = next(iterator)
-                    x_batch, y_batch, sample_weight = unpack_x_y_sample_weight(batch)
+                    x_batch, y_batch, sample_weight = data.unpack_x_y_sample_weight(
+                        batch
+                    )
 
                     if drop_remaining and not data_utils.has_batch_size(
                         batch, data_handler.batch_size
@@ -522,8 +517,8 @@ class ModelBase(ModelCore):
                         continue
 
                     tmp_logs = self.test_on_batch(
-                        x=x_batch,
-                        y=y_batch,
+                        inputs=x_batch,
+                        labels=y_batch,
                         sample_weight=sample_weight,
                         class_weight=None,
                     )
@@ -597,7 +592,7 @@ class ModelBase(ModelCore):
 
         outputs = None
 
-        data_handler = DataHandler(
+        data_handler = data.DataHandler(
             x=x,
             batch_size=batch_size,
             steps_per_epoch=steps,
@@ -632,17 +627,17 @@ class ModelBase(ModelCore):
                     ):
                         continue
 
-                    tmp_batch_outputs = self.predict_on_batch(x=batch[0])
+                    tmp_batch_outputs = self.predict_on_batch(inputs=batch[0])
                     batch_outputs = tmp_batch_outputs
 
                     if outputs is None:
-                        outputs = map_structure(
+                        outputs = data.map_structure(
                             lambda batch_output: [batch_output], batch_outputs
                         )
                     else:
 
-                        outputs = map_structure(
-                            map_append,
+                        outputs = data.map_structure(
+                            data.map_append,
                             outputs,
                             batch_outputs,
                         )
@@ -654,7 +649,7 @@ class ModelBase(ModelCore):
 
         callbacks.on_predict_end()
 
-        all_outputs = map_structure(jnp.concatenate, outputs)
+        all_outputs = data.map_structure(jnp.concatenate, outputs)
 
         return all_outputs
 

@@ -21,7 +21,7 @@ class Model(elegy.Model):
         states: elegy.States,
         initializing: bool,
     ):
-        assert isinstance(states.rng, elegy.RngSeq)
+        assert isinstance(states.rng, elegy.KeySeq)
 
         # flatten + scale
         x = jnp.reshape(x, (x.shape[0], -1)) / 255
@@ -79,7 +79,7 @@ def main(
     model = Model(optimizer=optax.adam(1e-3), run_eagerly=eager)
 
     history = model.fit(
-        x=X_train,
+        inputs=X_train,
         y=y_train,
         epochs=epochs,
         steps_per_epoch=steps_per_epoch,

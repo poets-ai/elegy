@@ -86,7 +86,7 @@ class ModelBasicTest(unittest.TestCase):
 
         metrics = elegy.model.model.Metrics(dict(a=dict(b=[M(), M()], c=M())))
 
-        rng = elegy.RngSeq(42)
+        rng = elegy.KeySeq(42)
         x = np.random.uniform(size=(5, 7, 7))
 
         with elegy.hooks.context(metrics=True):
@@ -121,7 +121,7 @@ class ModelBasicTest(unittest.TestCase):
 
         losses = elegy.model.model.Losses(dict(a=dict(b=[loss_fn, loss_fn], c=loss_fn)))
 
-        rng = elegy.RngSeq(42)
+        rng = elegy.KeySeq(42)
         hooks_losses = dict(x=0.3, y=4.5)
 
         with elegy.hooks.context(losses=True):
@@ -167,7 +167,7 @@ class ModelTest(unittest.TestCase):
         y = np.random.randint(10, size=(5,))
 
         history = model.fit(
-            x=X,
+            inputs=X,
             y=y,
             epochs=1,
             steps_per_epoch=1,

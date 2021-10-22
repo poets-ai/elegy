@@ -84,14 +84,14 @@ class ModelCoreTest(unittest.TestCase):
         assert not hasattr(model.states, "net_states")
 
         model.init_on_batch(x=(np.array(1.0)))
-        preds = model.predict_on_batch(x=(np.array(1.0)))
+        preds = model.predict_on_batch(inputs=(np.array(1.0)))
         assert preds == 1
         assert model.states.net_states == 1
         assert not hasattr(model.states, "net_params")
 
-        model.run_eagerly = False
+        model.eager = False
 
-        preds = model.predict_on_batch(x=(np.array(1.0)))
+        preds = model.predict_on_batch(inputs=(np.array(1.0)))
         assert preds == 1
         assert model.states.net_states == 2
 
@@ -116,14 +116,14 @@ class ModelCoreTest(unittest.TestCase):
         model = Model()
         assert not hasattr(model.states, "metrics_states")
 
-        logs = model.test_on_batch(x=(np.array(1.0)), y=(1.0,))
+        logs = model.test_on_batch(inputs=(np.array(1.0)), labels=(1.0,))
         assert logs["loss"] == 1
         assert model.states.metrics_states == 1
         assert not hasattr(model.states, "net_params")
 
-        model.run_eagerly = False
+        model.eager = False
 
-        logs = model.test_on_batch(x=(np.array(1.0)), y=(1.0,))
+        logs = model.test_on_batch(inputs=(np.array(1.0)), labels=(1.0,))
         assert logs["loss"] == 1
         assert model.states.metrics_states == 2
 
@@ -144,13 +144,13 @@ class ModelCoreTest(unittest.TestCase):
         model = Model()
         assert not hasattr(model.states, "optimizer_states")
 
-        logs = model.train_on_batch(x=(np.array(1.0)), y=(1.0,))
+        logs = model.train_on_batch(inputs=(np.array(1.0)), labels=(1.0,))
         assert logs["loss"] == 2
         assert model.states.optimizer_states == 1
         assert not hasattr(model.states, "net_params")
 
-        model.run_eagerly = False
+        model.eager = False
 
-        logs = model.train_on_batch(x=(np.array(1.0)), y=(1.0,))
+        logs = model.train_on_batch(inputs=(np.array(1.0)), labels=(1.0,))
         assert logs["loss"] == 2
         assert model.states.optimizer_states == 2

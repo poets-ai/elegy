@@ -104,7 +104,7 @@ def main(
     model.summary(x_sample)
 
     history = model.fit(
-        x=train_loader,
+        inputs=train_loader,
         epochs=epochs,
         steps_per_epoch=steps_per_epoch,
         validation_data=test_loader,

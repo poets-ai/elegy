@@ -161,7 +161,7 @@ def main(argv):
 
     # training
     model.fit(
-        x=tfds2jax_generator(ds_train),
+        inputs=tfds2jax_generator(ds_train),
         validation_data=tfds2jax_generator(ds_valid),
         epochs=FLAGS.epochs,
         verbose=2,

@@ -1,13 +1,15 @@
+from abc import abstractmethod
 import pathlib
 import typing as tp
 
 import cloudpickle
 import jax
-from jax._src.numpy.lax_numpy import ndarray
 import jax.numpy as jnp
 import numpy as np
+import treeo as to
 import treex as tx
 from elegy import types, utils
+from jax._src.numpy.lax_numpy import ndarray
 
 from . import utils as model_utils
 
@@ -16,69 +18,62 @@ try:
 except ImportError:
     tf = None
 
-T = tp.TypeVar("T", bound="ModelCore")
+M = tp.TypeVar("M", bound="ModelCore")
 
-PredStep = tp.Tuple[tp.Any, T]
-
-TestStep = tp.Tuple[types.Scalar, types.Logs, T]
-
+PredStep = tp.Tuple[tp.Any, M]
+TestStep = tp.Tuple[types.Scalar, types.Logs, M]
 GradStep = tp.Tuple[
     types.Scalar,
     types.Logs,
     types.Grads,
-    T,
+    M,
 ]
 
 
-TrainStep = tp.Tuple[types.Logs, T]
+TrainStep = tp.Tuple[types.Logs, M]
 
 
-class ModelCore(tx.Module):
+class ModelMeta(to.TreeMeta):
+    def __call__(self, *args, **kwargs) -> "ModelCore":
+        model: ModelCore = super().__call__(*args, **kwargs)
 
-    history: tp.Dict[str, tp.Any]
-    run_eagerly: bool = False
-    sample_x: tp.Optional[tp.Any]
-    seed: jnp.ndarray
+        model.jit_step()
+
+        return model
+
+
+class ModelCore(tx.Treex, metaclass=ModelMeta):
+
+    seed: tp.Union[int, jnp.ndarray] = 42
+    eager: bool = False
+    _initialized: bool = False
 
     def __init__(
         self,
-        run_eagerly: bool = False,
-        sample_x: tp.Optional[tp.Any] = None,
+        eager: bool = False,
         seed: tp.Union[int, jnp.ndarray] = 42,
     ):
-
-        self.history = {}
-        self.run_eagerly = run_eagerly
-        self.sample_x = sample_x
+        self.eager = eager
         self.seed = seed if isinstance(seed, jnp.ndarray) else jax.random.PRNGKey(seed)
 
-        self.jitted_members: tp.Set[str] = set()
-
-        self.jit_step()
+    @property
+    def initialized(self) -> bool:
+        return self._initialized
 
     def jit_step(self):
-        self.call_init_step_jit = jax.jit(
-            self.__class__.call_init_step,
-            static_argnums=[],
-        )
-        self.call_pred_step_jit = jax.jit(
-            self.__class__.call_pred_step,
-            static_argnums=[],
-        )
-        self.call_test_step_jit = jax.jit(
-            self.__class__.call_test_step,
-            static_argnums=[],
-        )
-        self.call_train_step_jit = jax.jit(
-            self.__class__.call_train_step,
-            static_argnums=[],
-        )
+        cls = self.__class__
+        self._jitted_members: tp.Set[str] = set()
 
-        self.jitted_members |= {
-            "call_init_step_jit",
-            "call_pred_step_jit",
-            "call_test_step_jit",
-            "call_train_step_jit",
+        self.init_step_jit = jax.jit(cls.init_step)
+        self.pred_step_jit = jax.jit(cls.pred_step)
+        self.test_step_jit = jax.jit(cls.test_step)
+        self.train_step_jit = jax.jit(cls.train_step)
+
+        self._jitted_members |= {
+            "init_step_jit",
+            "pred_step_jit",
+            "test_step_jit",
+            "train_step_jit",
         }
 
     def __setstate__(self, d):
@@ -89,138 +84,72 @@ class ModelCore(tx.Module):
         d = self.__dict__.copy()
 
         # remove jitted functions
-        for member in self.jitted_members:
+        for member in self._jitted_members:
             if member in d:
                 del d[member]
 
         return d
 
+    def _update_from(self: M, other: M):
+        self.__dict__.update(other.__dict__)
+
     # ----------------------------------------------------------------
     # Abstract API
     # ----------------------------------------------------------------
 
-    def update_modules(self):
-        pass
-
     def init_step(
-        self,
+        self: M,
         key: jnp.ndarray,
-    ) -> "ModelCore":
-        return self.init(key)
-
-    def call_init_step(
-        self,
-        key: jnp.ndarray,
-    ) -> "ModelCore":
-        return self.init_step(key)
+    ) -> M:
+        raise types.MissingMethod()
 
     def pred_step(
-        self: T,
-        x: tp.Any,
-    ) -> PredStep[T]:
+        self: M,
+        inputs: tp.Any,
+    ) -> PredStep[M]:
         raise types.MissingMethod()
-
-    def call_pred_step(
-        self: T,
-        x: tp.Any,
-    ) -> PredStep[T]:
-        return utils.inject_dependencies(self.pred_step)(
-            x=x,
-        )
 
     def test_step(
-        self: T,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-    ) -> TestStep[T]:
+        self: M,
+        inputs: tp.Any,
+        labels: tp.Any,
+    ) -> TestStep[M]:
         raise types.MissingMethod()
 
-    def call_test_step(
-        self: T,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-    ) -> TestStep[T]:
-        return utils.inject_dependencies(self.test_step)(
-            x=x,
-            y_true=y_true,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-        )
-
     def grad_step(
-        self: T,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-        training: bool,
-    ) -> GradStep[T]:
+        self: M,
+        inputs: tp.Any,
+        labels: tp.Any,
+    ) -> GradStep[M]:
         raise types.MissingMethod()
 
     def train_step(
-        self: T,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-    ) -> TrainStep[T]:
+        self: M,
+        inputs: tp.Any,
+        labels: tp.Any,
+    ) -> TrainStep[M]:
         raise types.MissingMethod()
 
-    def call_train_step(
-        self: T,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-    ) -> TrainStep[T]:
-        return utils.inject_dependencies(self.train_step)(
-            x=x,
-            y_true=y_true,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-        )
+    @abstractmethod
+    def reset_metrics(self):
+        ...
 
     # ----------------------------------------------------------------
     # high-level methods
     # ----------------------------------------------------------------
 
-    def init_on_batch(
-        self,
-        key: jnp.ndarray,
-    ):
-        if self.run_eagerly:
+    def init_on_batch(self):
+        key = tx.Key(self.seed)
+
+        if self.eager:
             model = self.init_step(key)
         else:
-            model = self.call_init_step_jit(self, key)
+            model = self.init_step_jit(self, key)
 
-        self.update(model, inplace=True)
+        self._update_from(model)
+        self._initialized = True
 
-        # update self.initialized
-        def initialize_inplace(module):
-            if isinstance(module, tx.Module):
-                module._initialized = True
-            return module
-
-        tx.module_map(initialize_inplace, self, inplace=True)
-
-    def maybe_init_on_batch(
-        self,
-        x: tp.Optional[tp.Any],
-    ):
-        if not self.initialized:
-            old_sample_x = self.sample_x
-            self.sample_x = x
-
-            try:
-                self.init_on_batch(self.seed)
-            finally:
-                self.sample_x = old_sample_x
-
-    def predict_on_batch(self, x: tp.Any) -> tp.Any:
+    def predict_on_batch(self, inputs: tp.Any) -> tp.Any:
         """
         Returns predictions for a single batch of samples.
 
@@ -236,25 +165,24 @@ class ModelCore(tx.Module):
             ValueError: In case of mismatch between given number of inputs and
                 expectations of the model.
         """
-        self.maybe_init_on_batch(x)
+        if not self._initialized:
+            self.init_on_batch()
 
         self.eval(inplace=True)
 
-        if self.run_eagerly:
-            y_pred, model = self.call_pred_step(x)
+        if self.eager:
+            y_pred, model = self.pred_step(inputs)
         else:
-            y_pred, model = self.call_pred_step_jit(self, x)
+            y_pred, model = self.pred_step_jit(self, inputs)
 
-        self.update(model, inplace=True)
+        self._update_from(model)
 
         return y_pred
 
     def test_on_batch(
         self,
-        x: tp.Any,
-        y: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
-        sample_weight: tp.Optional[np.ndarray] = None,
-        class_weight: tp.Optional[np.ndarray] = None,
+        inputs: tp.Any,
+        labels: tp.Any,
     ) -> types.Logs:
         """
         Test the model on a single batch of samples.
@@ -280,36 +208,31 @@ class ModelCore(tx.Module):
         Raises:
             ValueError: In case of invalid user-provided arguments.
         """
-        self.maybe_init_on_batch(x)
+        if not self._initialized:
+            self.init_on_batch()
 
         self.eval(inplace=True)
 
-        if self.run_eagerly:
-            loss, logs, model = self.call_test_step(
-                x,
-                y,
-                sample_weight,
-                class_weight,
+        if self.eager:
+            loss, logs, model = self.test_step(
+                inputs,
+                labels,
             )
         else:
-            loss, logs, model = self.call_test_step_jit(
+            loss, logs, model = self.test_step_jit(
                 self,
-                x,
-                y,
-                sample_weight,
-                class_weight,
+                inputs,
+                labels,
             )
 
-        self.update(model, inplace=True)
+        self._update_from(model)
 
         return logs
 
     def train_on_batch(
         self,
-        x: tp.Any,
-        y: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
-        sample_weight: tp.Optional[np.ndarray] = None,
-        class_weight: tp.Optional[tp.Any] = None,
+        inputs: tp.Any,
+        labels: tp.Any,
     ) -> types.Logs:
         """
         Runs a single gradient update on a single batch of data.
@@ -341,25 +264,15 @@ class ModelCore(tx.Module):
         Raises:
             ValueError: In case of invalid user-provided arguments.
         """
-        self.maybe_init_on_batch(x)
+        if not self._initialized:
+            self.init_on_batch()
 
-        if self.run_eagerly:
-            logs, model = self.call_train_step(
-                x,
-                y,
-                sample_weight,
-                class_weight,
-            )
+        if self.eager:
+            logs, model = self.train_step(inputs, labels)
         else:
-            logs, model = self.call_train_step_jit(
-                self,
-                x,
-                y,
-                sample_weight,
-                class_weight,
-            )
+            logs, model = self.train_step_jit(self, inputs, labels)
 
-        self.update(model, inplace=True)
+        self._update_from(model)
 
         return logs
 
@@ -491,7 +404,7 @@ class ModelCore(tx.Module):
             model: ModelCore = jax.tree_unflatten(states_def, flat_states)
 
             y_pred, _ = utils.inject_dependencies(model.pred_step)(
-                x=inputs, training=False
+                inputs=inputs,
             )
 
             return y_pred
@@ -507,6 +420,3 @@ class ModelCore(tx.Module):
             compile_model=True,
             save_model_options=None,
         )
-
-    def reset_metrics(self):
-        raise NotImplementedError()

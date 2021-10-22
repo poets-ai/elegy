@@ -164,7 +164,7 @@ def main(
 
     # Fit with datasets in memory
     history = model.fit(
-        x=X_train,
+        inputs=X_train,
         epochs=epochs,
         batch_size=batch_size,
         steps_per_epoch=steps_per_epoch,

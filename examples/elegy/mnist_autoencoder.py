@@ -78,7 +78,7 @@ def main(
 
     # Notice we are not passing `y`
     history = model.fit(
-        x=X_train,
+        inputs=X_train,
         epochs=epochs,
         steps_per_epoch=steps_per_epoch,
         batch_size=batch_size,

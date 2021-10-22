@@ -83,7 +83,7 @@ def main(
     model.summary(X_train[:64], depth=1)
 
     history = model.fit(
-        x=X_train,
+        inputs=X_train,
         y=y_train,
         epochs=epochs,
         steps_per_epoch=steps_per_epoch,

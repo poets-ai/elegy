@@ -52,7 +52,7 @@ class Encoder(hk.Module):
         self.latent_size = latent_size
 
     def __call__(
-        self, x: np.ndarray, rng: elegy.RngSeq
+        self, x: np.ndarray, rng: elegy.KeySeq
     ) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
         x = x.reshape((x.shape[0], -1))  # flatten
         x = hk.Linear(self.hidden_size)(x)
@@ -165,7 +165,7 @@ def main(
 
     # Fit with datasets in memory
     history = model.fit(
-        x=X_train,
+        inputs=X_train,
         epochs=epochs,
         batch_size=batch_size,
         steps_per_epoch=steps_per_epoch,
