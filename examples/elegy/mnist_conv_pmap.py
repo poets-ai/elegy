@@ -201,7 +201,7 @@ def main(
 
     history = model.fit(
         inputs=X_train,
-        y=y_train,
+        labels=y_train,
         epochs=epochs,
         steps_per_epoch=steps_per_epoch,
         batch_size=batch_size,

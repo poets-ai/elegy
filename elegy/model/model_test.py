@@ -168,7 +168,7 @@ class ModelTest(unittest.TestCase):
 
         history = model.fit(
             inputs=X,
-            y=y,
+            labels=y,
             epochs=1,
             steps_per_epoch=1,
             batch_size=5,
