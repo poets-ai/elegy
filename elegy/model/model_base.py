@@ -1,20 +1,13 @@
 # Implementation based on tf.keras.engine.training.py
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
-import io
 import pickle
 import typing as tp
 from copy import copy
-from io import StringIO
 from pathlib import Path
 
-import jax
 import jax.numpy as jnp
 import numpy as np
-import rich
-import rich.box
-import toolz
-import yaml
 from elegy import data, types, utils
 from elegy.callbacks import Callback, CallbackList, History
 from elegy.data import utils as data_utils
@@ -283,7 +276,7 @@ class ModelBase(ModelCore):
                 and what the model expects.
         """
         if inputs is None:
-            inputs = {}
+            inputs = dict()
 
         if not self.initialized:
             raise types.ModelNotInitialized(
@@ -293,12 +286,8 @@ class ModelBase(ModelCore):
         if validation_split:
             # Create the validation data using the training data. Only supported for
             # `Jax Numpy` and `NumPy` input.
-            (
-                inputs,
-                labels,
-                sample_weight,
-            ), validation_data = data.train_validation_split(
-                (inputs, labels, sample_weight),
+            (inputs, labels,), validation_data = data.train_validation_split(
+                (inputs, labels),
                 validation_split=validation_split,
                 shuffle=False,
             )
@@ -307,13 +296,13 @@ class ModelBase(ModelCore):
         data_handler = data.DataHandler(
             x=inputs,
             y=labels,
-            sample_weight=sample_weight,
+            # sample_weight=sample_weight,
             batch_size=batch_size,
             steps_per_epoch=steps_per_epoch,
             initial_epoch=initial_epoch,
             epochs=epochs,
             shuffle=shuffle,
-            class_weight=class_weight,
+            # class_weight=class_weight,
         )
         # Container that configures and calls `tf.keras.Callback`s.
         if not isinstance(callbacks, CallbackList):
@@ -339,11 +328,11 @@ class ModelBase(ModelCore):
             with data_handler.catch_stop_iteration():
                 for step in data_handler.steps():
                     callbacks.on_train_batch_begin(step)
-                    batch = next(iterator)
+                    inputs, labels = batch = next(iterator)
                     # sample_weight = batch[2] if len(batch) == 3 else None
-                    x_batch, y_batch, sample_weight = data.unpack_x_y_sample_weight(
-                        batch
-                    )
+                    # x_batch, y_batch, sample_weight = data.unpack_x_y_sample_weight(
+                    #     batch
+                    # )
 
                     if drop_remaining and not data_utils.has_batch_size(
                         batch, data_handler.batch_size
@@ -351,10 +340,10 @@ class ModelBase(ModelCore):
                         continue
 
                     tmp_logs = self.train_on_batch(
-                        inputs=x_batch,
-                        labels=y_batch,
-                        sample_weight=sample_weight,
-                        class_weight=class_weight,
+                        inputs=inputs,
+                        labels=labels,
+                        # sample_weight=sample_weight,
+                        # class_weight=class_weight,
                     )
                     tmp_logs.update({"size": data_handler.batch_size})
                     # print(epoch, step, tmp_logs["accuracy"], batch[0].shape)
@@ -374,14 +363,14 @@ class ModelBase(ModelCore):
                 and self._should_eval(epoch, validation_freq)
                 and not self.stop_training
             ):
-                val_x, val_y, val_sample_weight = data.unpack_x_y_sample_weight(
-                    validation_data
-                )
+                # val_x, val_y, val_sample_weight = data.unpack_x_y_sample_weight(
+                #     validation_data
+                # )
+                val_inputs, val_lables = validation_data
                 try:
                     val_logs = self.evaluate(
-                        x=val_x,
-                        y=val_y,
-                        sample_weight=val_sample_weight,
+                        x=val_inputs,
+                        y=val_lables,
                         batch_size=validation_batch_size or batch_size,
                         steps=validation_steps,
                         callbacks=callbacks,

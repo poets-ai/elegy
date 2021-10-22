@@ -112,27 +112,26 @@ class ModelCore(tx.Treex, metaclass=ModelMeta):
     def test_step(
         self: M,
         inputs: tp.Any,
-        labels: tp.Any,
+        labels: tp.Mapping[str, tp.Any],
     ) -> TestStep[M]:
         raise types.MissingMethod()
 
     def grad_step(
         self: M,
         inputs: tp.Any,
-        labels: tp.Any,
+        labels: tp.Mapping[str, tp.Any],
     ) -> GradStep[M]:
         raise types.MissingMethod()
 
     def train_step(
         self: M,
         inputs: tp.Any,
-        labels: tp.Any,
+        labels: tp.Mapping[str, tp.Any],
     ) -> TrainStep[M]:
         raise types.MissingMethod()
 
-    @abstractmethod
     def reset_metrics(self):
-        ...
+        raise types.MissingMethod()
 
     # ----------------------------------------------------------------
     # high-level methods
@@ -266,6 +265,9 @@ class ModelCore(tx.Treex, metaclass=ModelMeta):
         """
         if not self._initialized:
             self.init_on_batch()
+
+        if not isinstance(labels, tp.Mapping):
+            labels = dict(target=labels)
 
         if self.eager:
             logs, model = self.train_step(inputs, labels)

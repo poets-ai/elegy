@@ -5,19 +5,9 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import yaml
-from elegy import hooks, module, types, utils
+from elegy import types, utils
 from elegy.model import model_core
-from elegy.generalized_module.generalized_module import (
-    GeneralizedModule,
-    generalize,
-    is_generalizable,
-)
-from elegy.generalized_optimizer.generalized_optimizer import (
-    GeneralizedOptimizer,
-    generalize_optimizer,
-)
 from elegy.model.model_base import ModelBase
-from elegy.optimizer import Optimizer
 
 T = tp.TypeVar("T", bound="Model")
 

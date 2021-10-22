@@ -1,12 +1,16 @@
-from elegy import utils
-
-import jax, jax.numpy as jnp
-import numpy as np
+import os
+import pickle
+import tempfile
+import urllib
 from unittest import TestCase
-import tempfile, os, pickle
-import PIL, urllib
 
 import elegy
+import jax
+import jax.numpy as jnp
+import numpy as np
+import PIL
+import pytest
+from elegy import utils
 
 
 class ResNetTest(TestCase):
