@@ -22,11 +22,10 @@ except ImportError:
 M = tp.TypeVar("M", bound="ModelCore")
 
 PredStep = tp.Tuple[tp.Any, M]
-TestStep = tp.Tuple[types.Scalar, types.Logs, M]
+TestStep = tp.Tuple[jnp.ndarray, types.Logs, M]
 GradStep = tp.Tuple[
-    types.Scalar,
+    M,
     types.Logs,
-    types.Grads,
     M,
 ]
 
@@ -43,7 +42,7 @@ class ModelMeta(to.TreeMeta):
         return model
 
 
-class ModelCore(tx.Treex, metaclass=ModelMeta):
+class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
 
     seed: tp.Union[int, jnp.ndarray] = 42
     eager: bool = False
@@ -210,6 +209,9 @@ class ModelCore(tx.Treex, metaclass=ModelMeta):
         """
         if not self._initialized:
             self.init_on_batch()
+
+        if not isinstance(labels, tp.Mapping):
+            labels = dict(target=labels)
 
         self.eval(inplace=True)
 

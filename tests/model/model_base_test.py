@@ -163,30 +163,30 @@ class TestModelBase(unittest.TestCase):
         assert N == 4
         assert model.a == 7
 
-    def test_init(self):
+    def test_dataloader(self):
+        N = 0
+
         class Model(eg.ModelBase):
-            def init_step(self, x, y_true, states: eg.States):
-                return states.update(a=x.shape, b=y_true.shape)
+            a: jnp.ndarray = eg.node()
 
-        model = Model()
+            def init_step(
+                self,
+                key: jnp.ndarray,
+            ) -> "Model":
+                self.a = jnp.array(0, dtype=jnp.int32)
+                return self
 
-        x = np.random.uniform(size=(10, 1))
-        y = np.random.uniform(size=(10, 3))
+            def pred_step(self, inputs):
+                nonlocal N
+                N += 1
 
-        model.init(x=x, y=y, batch_size=2)
+                preds = inputs + 1.0
+                self.a += 1
 
-        assert model.states.a == (2, 1)
-        assert model.states.b == (2, 3)
-        assert model.initialized
+                return preds, self
 
-    def test_init_dataloader(self):
-        class Model(eg.ModelBase):
-            def init_step(self, x, y_true, states: eg.States):
-                return states.update(a=x.shape, b=y_true.shape)
-
-            def pred_step(self, x, states):
-                states = states.update(c=3)
-                return x + 1, states
+            def reset_metrics(self):
+                pass
 
         model = Model()
 
@@ -196,38 +196,11 @@ class TestModelBase(unittest.TestCase):
         dataset = TensorDataset(torch.from_numpy(x), torch.from_numpy(y))
         dataloader = DataLoader(dataset, batch_size=2)
 
-        model.init(x=dataloader, batch_size=2)
-
-        assert model.states.a == (2, 1)
-        assert model.states.b == (2, 3)
-        assert model.initialized
-
         y_pred = model.predict(x=dataloader)
         assert jnp.allclose(y_pred, x + 1)
         y_pred = model.predict(x=dataloader)
         assert jnp.allclose(y_pred, x + 1)
         y_pred
-
-    def test_init_predict(self):
-        class Model(eg.ModelBase):
-            def init_step(self, x, states: eg.States):
-                return states.update(a=x.shape)
-
-            def pred_step(self, x, states):
-                states = states.update(c=3)
-                return x + 1, states
-
-        model = Model()
-
-        x = np.random.uniform(size=(10, 1))
-
-        model.init(x=x, batch_size=2)
-        y_pred = model.predict(x=x, batch_size=2)
-
-        assert jnp.allclose(y_pred, x + 1)
-        assert model.states.a == (2, 1)
-        assert model.states.c == 3
-        assert model.initialized
 
 
 if __name__ == "__main__":

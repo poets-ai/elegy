@@ -1,6 +1,7 @@
-from elegy import utils
-import pytest
 from unittest import TestCase
+
+import pytest
+from elegy import utils
 
 
 class DIFunctionTests(TestCase):
