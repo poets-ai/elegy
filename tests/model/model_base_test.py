@@ -1,86 +1,141 @@
 import unittest
 
-import elegy
+import elegy as eg
 import jax.numpy as jnp
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
+from tests.model.model_core_test import ModelCoreTest
+
 
 class TestModelBase(unittest.TestCase):
     def test_predict(self):
-        class Model(elegy.model.model_base.ModelBase):
-            def init_step(self, x, states):
-                _, states = self.pred_step(x, True, states)
-                return states
 
-            def pred_step(self, x, initializing, states):
-                if initializing:
-                    states = elegy.States(net_states=0)
-                else:
-                    states = elegy.States(net_states=states.net_states + 1)
+        N = 0
 
-                return elegy.PredStep(x + 1.0, states)
+        class Model(eg.ModelBase):
+            a: jnp.ndarray = eg.node()
+
+            def init_step(
+                self,
+                key: jnp.ndarray,
+            ) -> "Model":
+                self.a = jnp.array(0, dtype=jnp.int32)
+                return self
+
+            def pred_step(self, inputs):
+                nonlocal N
+                N += 1
+
+                preds = inputs + 1.0
+                self.a += 1
+
+                return preds, self
+
+            def reset_metrics(self):
+                pass
 
         model = Model()
 
         x = np.random.uniform(size=(100, 1))
-        model.init(x, batch_size=50)
         y = model.predict(x, batch_size=50)
 
         assert np.allclose(y, x + 1.0)
-        assert model.states.net_states == 2
-        assert model.initial_states.net_states == 0
+        assert model.a == 2
+        assert N == 1
+
+        y = model.predict(x, batch_size=50)
+        assert np.allclose(y, x + 1.0)
+        assert model.a == 4
+        assert N == 1
+
+        model.eager = True
+
+        y = model.predict(x, batch_size=50)
+        assert np.allclose(y, x + 1.0)
+        assert model.a == 6
+        assert N == 3
 
     def test_evaluate(self):
-        class Model(elegy.model.model_base.ModelBase):
-            def init_step(self, x, states):
-                _, _, states = self.test_step(x, True, states)
-                return states
+        N = 0
 
-            def test_step(self, x, initializing, states):
-                if initializing:
-                    states = elegy.States(metrics_states=0)
-                else:
-                    states = elegy.States(metrics_states=states.metrics_states + 1)
+        class Model(eg.ModelBase):
+            a: jnp.ndarray = eg.node()
 
-                return elegy.TestStep(
-                    loss=0.1,
-                    logs=dict(loss=jnp.sum(x)),
-                    model=states,
-                )
+            def init_step(
+                self,
+                key: jnp.ndarray,
+            ) -> "Model":
+                self.a = jnp.array(0, dtype=jnp.int32)
+                return self
 
-            def train_step(self):
-                ...
+            def test_step(self, inputs, labels):
+                nonlocal N
+                N += 1
 
-        model = Model(run_eagerly=True)
+                preds = inputs + 1.0
+                self.a += 1
+
+                loss = 0.1
+                logs = dict(loss=jnp.sum(inputs))
+
+                return loss, logs, self
+
+            def reset_metrics(self):
+                pass
+
+        model = Model()
 
         x = np.random.uniform(size=(100, 1))
 
         logs = model.evaluate(x, batch_size=100)
         assert np.allclose(logs["loss"], np.sum(x))
-        assert model.states.metrics_states == 1
+        assert N == 1
+        assert model.a == 1
 
         logs = model.evaluate(x, batch_size=50)
         assert np.allclose(logs["loss"], np.sum(x[50:]))
-        assert model.states.metrics_states == 2
+        assert N == 2
+        assert model.a == 3
+
+        logs = model.evaluate(x, batch_size=50)
+        assert np.allclose(logs["loss"], np.sum(x[50:]))
+        assert N == 2
+        assert model.a == 5
+
+        model.eager = True
+
+        logs = model.evaluate(x, batch_size=50)
+        assert np.allclose(logs["loss"], np.sum(x[50:]))
+        assert N == 4
+        assert model.a == 7
 
     def test_fit(self):
-        class Model(elegy.model.model_base.ModelBase):
-            def init_step(self, x, states):
-                _, states = self.train_step(x, states, True)
-                return states
+        N = 0
 
-            def train_step(self, x, states, initializing):
-                if initializing:
-                    states = elegy.States(optimizer_states=0)
-                else:
-                    states = elegy.States(optimizer_states=states.optimizer_states + 1)
+        class Model(eg.ModelBase):
+            a: jnp.ndarray = eg.node()
 
-                return elegy.TrainStep(
-                    logs=dict(loss=jnp.sum(x)),
-                    model=states,
-                )
+            def init_step(
+                self,
+                key: jnp.ndarray,
+            ) -> "Model":
+                self.a = jnp.array(0, dtype=jnp.int32)
+                return self
+
+            def train_step(self, inputs, labels):
+                nonlocal N
+                N += 1
+
+                self.a += 1
+
+                logs = dict(loss=jnp.sum(inputs))
+
+                return logs, self
+
+            def reset_metrics(self):
+                pass
 
         model = Model()
 
@@ -88,15 +143,29 @@ class TestModelBase(unittest.TestCase):
 
         history = model.fit(x, batch_size=100)
         assert np.allclose(history.history["loss"], np.sum(x))
-        assert model.states.optimizer_states == 1
+        assert N == 1
+        assert model.a == 1
+
+        history = model.fit(x, batch_size=50, shuffle=False)
+        assert np.allclose(history.history["loss"][0], np.sum(x[50:]))
+        assert N == 2
+        assert model.a == 3
 
         history = model.fit(x, batch_size=50, shuffle=False)
         assert np.allclose(history.history["loss"], np.sum(x[50:]))
-        assert model.states.optimizer_states == 3
+        assert N == 2
+        assert model.a == 5
+
+        model.eager = True
+
+        history = model.fit(x, batch_size=50, shuffle=False)
+        assert np.allclose(history.history["loss"], np.sum(x[50:]))
+        assert N == 4
+        assert model.a == 7
 
     def test_init(self):
-        class Model(elegy.model.model_base.ModelBase):
-            def init_step(self, x, y_true, states: elegy.States):
+        class Model(eg.ModelBase):
+            def init_step(self, x, y_true, states: eg.States):
                 return states.update(a=x.shape, b=y_true.shape)
 
         model = Model()
@@ -111,8 +180,8 @@ class TestModelBase(unittest.TestCase):
         assert model.initialized
 
     def test_init_dataloader(self):
-        class Model(elegy.model.model_base.ModelBase):
-            def init_step(self, x, y_true, states: elegy.States):
+        class Model(eg.ModelBase):
+            def init_step(self, x, y_true, states: eg.States):
                 return states.update(a=x.shape, b=y_true.shape)
 
             def pred_step(self, x, states):
@@ -140,8 +209,8 @@ class TestModelBase(unittest.TestCase):
         y_pred
 
     def test_init_predict(self):
-        class Model(elegy.model.model_base.ModelBase):
-            def init_step(self, x, states: elegy.States):
+        class Model(eg.ModelBase):
+            def init_step(self, x, states: eg.States):
                 return states.update(a=x.shape)
 
             def pred_step(self, x, states):
@@ -159,3 +228,7 @@ class TestModelBase(unittest.TestCase):
         assert model.states.a == (2, 1)
         assert model.states.c == 3
         assert model.initialized
+
+
+if __name__ == "__main__":
+    TestModelBase().test_fit()

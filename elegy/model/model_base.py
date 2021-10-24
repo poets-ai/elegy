@@ -1,19 +1,55 @@
 # Implementation based on tf.keras.engine.training.py
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
+from contextlib import contextmanager
+from dataclasses import dataclass
 import pickle
+import threading
 import typing as tp
 from copy import copy
 from pathlib import Path
 
 import jax.numpy as jnp
 import numpy as np
+import treex as tx
 from elegy import data, types, utils
-from elegy.callbacks import Callback, CallbackList, History
+from elegy.callbacks import Callback, CallbackList, History, history
 from elegy.data import utils as data_utils
 from elegy.model.model_core import ModelCore, PredStep, TestStep
 
 __all__ = ["ModelBase", "load"]
+
+
+@dataclass
+class _ModelContext(threading.local):
+    history: tp.Optional[History] = None
+    model: tp.Optional["ModelBase"] = None
+
+    def __enter__(self):
+        global _MODEL_CONTEXT
+        self._old_context = _MODEL_CONTEXT
+        _MODEL_CONTEXT = self
+
+    def __exit__(self, *args):
+        global _MODEL_CONTEXT
+        _MODEL_CONTEXT = self._old_context
+
+    @contextmanager
+    def update(self, **kwargs):
+        fields = vars(self).copy()
+        fields.pop("_old_context", None)
+        fields.update(kwargs)
+
+        with _ModelContext(**fields):
+            yield
+
+    @contextmanager
+    def callbacks_context(self, model: "ModelCore"):
+        with _MODEL_CONTEXT.update(model=model, history=None):
+            yield
+
+
+_MODEL_CONTEXT = _ModelContext()
 
 
 class ModelBase(ModelCore):
@@ -89,6 +125,20 @@ class ModelBase(ModelCore):
     be closer to the "actual" learning rate because we implement this feature by chaining an additional `optax.scale_by_schedule`
     at the end.
     """
+
+    @property
+    def history(self) -> tp.Optional[History]:
+        if _MODEL_CONTEXT.model is not self:
+            raise ValueError(f"Trying to get `.history` outside `callbacks_context`")
+
+        return _MODEL_CONTEXT.history
+
+    @history.setter
+    def history(self, value: History):
+        if _MODEL_CONTEXT.model is not self:
+            raise ValueError(f"Trying to set `.history` outside `callbacks_context`")
+
+        _MODEL_CONTEXT.history = value
 
     __all__ = [
         "evaluate",
@@ -275,122 +325,117 @@ class ModelBase(ModelCore):
             ValueError: In case of mismatch between the provided input data
                 and what the model expects.
         """
-        if inputs is None:
-            inputs = dict()
+        with _MODEL_CONTEXT.callbacks_context(self):
+            if inputs is None:
+                inputs = dict()
 
-        if not self.initialized:
-            raise types.ModelNotInitialized(
-                f"Model not initialized, please execute `init` or `init_on_batch` before running this method."
-            )
+            if validation_split:
+                # Create the validation data using the training data. Only supported for
+                # `Jax Numpy` and `NumPy` input.
+                (inputs, labels,), validation_data = data.train_validation_split(
+                    (inputs, labels),
+                    validation_split=validation_split,
+                    shuffle=False,
+                )
 
-        if validation_split:
-            # Create the validation data using the training data. Only supported for
-            # `Jax Numpy` and `NumPy` input.
-            (inputs, labels,), validation_data = data.train_validation_split(
-                (inputs, labels),
-                validation_split=validation_split,
-                shuffle=False,
-            )
-
-        self.stop_training = False
-        data_handler = data.DataHandler(
-            x=inputs,
-            y=labels,
-            # sample_weight=sample_weight,
-            batch_size=batch_size,
-            steps_per_epoch=steps_per_epoch,
-            initial_epoch=initial_epoch,
-            epochs=epochs,
-            shuffle=shuffle,
-            # class_weight=class_weight,
-        )
-        # Container that configures and calls `tf.keras.Callback`s.
-        if not isinstance(callbacks, CallbackList):
-            callbacks = CallbackList(
-                callbacks,
-                add_history=True,
-                add_progbar=verbose != 0,
-                model=self,
-                verbose=verbose,
+            self.stop_training = False
+            data_handler = data.DataHandler(
+                x=inputs,
+                y=labels,
+                # sample_weight=sample_weight,
+                batch_size=batch_size,
+                steps_per_epoch=steps_per_epoch,
+                initial_epoch=initial_epoch,
                 epochs=epochs,
-                steps=data_handler.inferred_steps,
+                shuffle=shuffle,
+                # class_weight=class_weight,
             )
+            # Container that configures and calls `tf.keras.Callback`s.
+            if not isinstance(callbacks, CallbackList):
+                callbacks = CallbackList(
+                    callbacks,
+                    add_history=True,
+                    add_progbar=verbose != 0,
+                    model=self,
+                    verbose=verbose,
+                    epochs=epochs,
+                    steps=data_handler.inferred_steps,
+                )
 
-        callbacks.on_train_begin()
-        # data_handler._initial_epoch = (  # pylint: disable=protected-access
-        #     self._maybe_load_initial_epoch_from_ckpt(initial_epoch))
-        epoch_logs = {}
+            callbacks.on_train_begin()
+            # data_handler._initial_epoch = (  # pylint: disable=protected-access
+            #     self._maybe_load_initial_epoch_from_ckpt(initial_epoch))
+            epoch_logs = {}
 
-        for epoch, iterator in data_handler.enumerate_epochs():
-            self.reset_metrics()
-            callbacks.on_epoch_begin(epoch)
-            logs = {}
-            with data_handler.catch_stop_iteration():
-                for step in data_handler.steps():
-                    callbacks.on_train_batch_begin(step)
-                    inputs, labels = batch = next(iterator)
-                    # sample_weight = batch[2] if len(batch) == 3 else None
-                    # x_batch, y_batch, sample_weight = data.unpack_x_y_sample_weight(
-                    #     batch
+            for epoch, iterator in data_handler.enumerate_epochs():
+                self.reset_metrics()
+                callbacks.on_epoch_begin(epoch)
+                logs = {}
+                with data_handler.catch_stop_iteration():
+                    for step in data_handler.steps():
+                        callbacks.on_train_batch_begin(step)
+                        batch = next(iterator)
+                        inputs, labels, _ = data.unpack_x_y_sample_weight(batch)
+
+                        if drop_remaining and not data_utils.has_batch_size(
+                            batch, data_handler.batch_size
+                        ):
+                            continue
+
+                        tmp_logs = self.train_on_batch(
+                            inputs=inputs,
+                            labels=labels,
+                        )
+                        tmp_logs.update({"size": data_handler.batch_size})
+                        # print(epoch, step, tmp_logs["accuracy"], batch[0].shape)
+
+                        logs = tmp_logs
+                        callbacks.on_train_batch_end(step, logs)
+
+                        if self.stop_training:
+                            break
+
+                epoch_logs = copy(logs)
+                epoch_logs.update({"size": data_handler.batch_size})
+
+                # Run validation.
+                if (
+                    validation_data
+                    and self._should_eval(epoch, validation_freq)
+                    and not self.stop_training
+                ):
+                    # val_x, val_y, val_sample_weight = data.unpack_x_y_sample_weight(
+                    #     validation_data
                     # )
+                    val_inputs, val_lables = validation_data
+                    try:
+                        val_logs = self.evaluate(
+                            x=val_inputs,
+                            y=val_lables,
+                            batch_size=validation_batch_size or batch_size,
+                            steps=validation_steps,
+                            callbacks=callbacks,
+                            # return_dict=True,
+                            drop_remaining=drop_remaining,
+                        )
 
-                    if drop_remaining and not data_utils.has_batch_size(
-                        batch, data_handler.batch_size
-                    ):
-                        continue
+                        val_logs = {
+                            "val_" + name: val for name, val in val_logs.items()
+                        }
+                        epoch_logs.update(val_logs)
+                    except (types.MissingMethod, types.MissingModule) as e:
+                        pass
 
-                    tmp_logs = self.train_on_batch(
-                        inputs=inputs,
-                        labels=labels,
-                        # sample_weight=sample_weight,
-                        # class_weight=class_weight,
-                    )
-                    tmp_logs.update({"size": data_handler.batch_size})
-                    # print(epoch, step, tmp_logs["accuracy"], batch[0].shape)
+                callbacks.on_epoch_end(epoch, epoch_logs)
 
-                    logs = tmp_logs
-                    callbacks.on_train_batch_end(step, logs)
+                if self.stop_training:
+                    break
 
-                    if self.stop_training:
-                        break
+            callbacks.on_train_end(epoch_logs)
 
-            epoch_logs = copy(logs)
-            epoch_logs.update({"size": data_handler.batch_size})
+            assert self.history is not None
 
-            # Run validation.
-            if (
-                validation_data
-                and self._should_eval(epoch, validation_freq)
-                and not self.stop_training
-            ):
-                # val_x, val_y, val_sample_weight = data.unpack_x_y_sample_weight(
-                #     validation_data
-                # )
-                val_inputs, val_lables = validation_data
-                try:
-                    val_logs = self.evaluate(
-                        x=val_inputs,
-                        y=val_lables,
-                        batch_size=validation_batch_size or batch_size,
-                        steps=validation_steps,
-                        callbacks=callbacks,
-                        # return_dict=True,
-                        drop_remaining=drop_remaining,
-                    )
-
-                    val_logs = {"val_" + name: val for name, val in val_logs.items()}
-                    epoch_logs.update(val_logs)
-                except (types.MissingMethod, types.MissingModule) as e:
-                    pass
-
-            callbacks.on_epoch_end(epoch, epoch_logs)
-
-            if self.stop_training:
-                break
-
-        callbacks.on_train_end(epoch_logs)
-
-        return self.history
+            return self.history
 
     def evaluate(
         self,
@@ -455,69 +500,61 @@ class ModelBase(ModelCore):
             ValueError: in case of invalid arguments.
         """
 
-        if x is None:
-            x = {}
+        with _MODEL_CONTEXT.callbacks_context(self):
+            if x is None:
+                x = {}
 
-        if not self.initialized:
-            raise types.ModelNotInitialized(
-                f"Model not initialized, please execute `init` or `init_on_batch` before running this method."
-            )
-
-        data_handler = data.DataHandler(
-            x=x,
-            y=y,
-            sample_weight=sample_weight,
-            batch_size=batch_size,
-            steps_per_epoch=steps,
-            initial_epoch=0,
-            epochs=1,
-            shuffle=False,
-            training=False,
-        )
-
-        # Container that configures and calls `tf.keras.Callback`s.
-        if not isinstance(callbacks, CallbackList):
-            callbacks = CallbackList(
-                callbacks,
-                add_history=True,
-                add_progbar=verbose != 0,
-                model=self,
-                verbose=verbose,
+            data_handler = data.DataHandler(
+                x=x,
+                y=y,
+                sample_weight=sample_weight,
+                batch_size=batch_size,
+                steps_per_epoch=steps,
+                initial_epoch=0,
                 epochs=1,
-                steps=data_handler.inferred_steps,
+                shuffle=False,
+                training=False,
             )
 
-        callbacks.on_test_begin()
+            # Container that configures and calls `tf.keras.Callback`s.
+            if not isinstance(callbacks, CallbackList):
+                callbacks = CallbackList(
+                    callbacks,
+                    add_history=True,
+                    add_progbar=verbose != 0,
+                    model=self,
+                    verbose=verbose,
+                    epochs=1,
+                    steps=data_handler.inferred_steps,
+                )
 
-        logs = {}
-        for _, iterator in data_handler.enumerate_epochs():
-            self.reset_metrics()
-            with data_handler.catch_stop_iteration():
-                for step in data_handler.steps():
-                    callbacks.on_test_batch_begin(step)
-                    batch = next(iterator)
-                    x_batch, y_batch, sample_weight = data.unpack_x_y_sample_weight(
-                        batch
-                    )
+            callbacks.on_test_begin()
 
-                    if drop_remaining and not data_utils.has_batch_size(
-                        batch, data_handler.batch_size
-                    ):
-                        continue
+            logs = {}
+            for _, iterator in data_handler.enumerate_epochs():
+                self.reset_metrics()
+                with data_handler.catch_stop_iteration():
+                    for step in data_handler.steps():
+                        callbacks.on_test_batch_begin(step)
+                        batch = next(iterator)
+                        inputs, labels, _ = data.unpack_x_y_sample_weight(batch)
 
-                    tmp_logs = self.test_on_batch(
-                        inputs=x_batch,
-                        labels=y_batch,
-                        sample_weight=sample_weight,
-                        class_weight=None,
-                    )
-                    tmp_logs.update({"size": data_handler.batch_size})
-                    logs = tmp_logs
-                    callbacks.on_test_batch_end(step, logs)
+                        if drop_remaining and not data_utils.has_batch_size(
+                            batch, data_handler.batch_size
+                        ):
+                            continue
 
-        callbacks.on_test_end()
+                        tmp_logs = self.test_on_batch(
+                            inputs=inputs,
+                            labels=labels,
+                        )
+                        tmp_logs.update({"size": data_handler.batch_size})
+                        logs = tmp_logs
+                        callbacks.on_test_batch_end(step, logs)
 
-        return logs
+            callbacks.on_test_end()
+
+            return logs
 
     def predict(
         self,
@@ -570,77 +607,72 @@ class ModelBase(ModelCore):
                 or in case a stateful model receives a number of samples
                 that is not a multiple of the batch size.
         """
+        with _MODEL_CONTEXT.callbacks_context(self):
+            if x is None:
+                x = {}
 
-        if x is None:
-            x = {}
+            outputs = None
 
-        if not self.initialized:
-            raise types.ModelNotInitialized(
-                f"Model not initialized, please execute `init` or `init_on_batch` before running this method."
-            )
-
-        outputs = None
-
-        data_handler = data.DataHandler(
-            x=x,
-            batch_size=batch_size,
-            steps_per_epoch=steps,
-            initial_epoch=0,
-            epochs=1,
-            shuffle=False,
-        )
-
-        # Container that configures and calls `tf.keras.Callback`s.
-        if not isinstance(callbacks, CallbackList):
-            callbacks = CallbackList(
-                callbacks,
-                add_history=True,
-                add_progbar=verbose != 0,
-                model=self,
-                verbose=verbose,
+            data_handler = data.DataHandler(
+                x=x,
+                batch_size=batch_size,
+                steps_per_epoch=steps,
+                initial_epoch=0,
                 epochs=1,
-                steps=data_handler.inferred_steps,
+                shuffle=False,
             )
 
-        callbacks.on_predict_begin()
+            # Container that configures and calls `tf.keras.Callback`s.
+            if not isinstance(callbacks, CallbackList):
+                callbacks = CallbackList(
+                    callbacks,
+                    add_history=True,
+                    add_progbar=verbose != 0,
+                    model=self,
+                    verbose=verbose,
+                    epochs=1,
+                    steps=data_handler.inferred_steps,
+                )
 
-        for _, iterator in data_handler.enumerate_epochs():
-            self.reset_metrics()
-            with data_handler.catch_stop_iteration():
-                for step in data_handler.steps():
-                    callbacks.on_predict_batch_begin(step)
-                    batch = next(iterator)
+            callbacks.on_predict_begin()
 
-                    if drop_remaining and not data_utils.has_batch_size(
-                        batch, data_handler.batch_size
-                    ):
-                        continue
+            for _, iterator in data_handler.enumerate_epochs():
+                self.reset_metrics()
+                with data_handler.catch_stop_iteration():
+                    for step in data_handler.steps():
+                        callbacks.on_predict_batch_begin(step)
+                        batch = next(iterator)
 
-                    tmp_batch_outputs = self.predict_on_batch(inputs=batch[0])
-                    batch_outputs = tmp_batch_outputs
+                        if drop_remaining and not data_utils.has_batch_size(
+                            batch, data_handler.batch_size
+                        ):
+                            continue
 
-                    if outputs is None:
-                        outputs = data.map_structure(
-                            lambda batch_output: [batch_output], batch_outputs
+                        tmp_batch_outputs = self.predict_on_batch(inputs=batch[0])
+                        batch_outputs = tmp_batch_outputs
+
+                        if outputs is None:
+                            outputs = data.map_structure(
+                                lambda batch_output: [batch_output], batch_outputs
+                            )
+                        else:
+
+                            outputs = data.map_structure(
+                                data.map_append,
+                                outputs,
+                                batch_outputs,
+                            )
+
+                        callbacks.on_predict_batch_end(
+                            step,
+                            {"outputs": batch_outputs, "size": data_handler.batch_size},
                         )
-                    else:
 
-                        outputs = data.map_structure(
-                            data.map_append,
-                            outputs,
-                            batch_outputs,
-                        )
+            callbacks.on_predict_end()
 
-                    callbacks.on_predict_batch_end(
-                        step,
-                        {"outputs": batch_outputs, "size": data_handler.batch_size},
-                    )
+            all_outputs = data.map_structure(jnp.concatenate, outputs)
 
-        callbacks.on_predict_end()
-
-        all_outputs = data.map_structure(jnp.concatenate, outputs)
-
-        return all_outputs
+            return all_outputs
 
     def _should_eval(self, epoch, validation_freq):
         epoch = epoch + 1  # one-index the user-facing epoch.

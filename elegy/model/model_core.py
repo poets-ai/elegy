@@ -7,6 +7,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import treeo as to
+from treeo.utils import Opaque
 import treex as tx
 from elegy import types, utils
 from jax._src.numpy.lax_numpy import ndarray
@@ -46,7 +47,7 @@ class ModelCore(tx.Treex, metaclass=ModelMeta):
 
     seed: tp.Union[int, jnp.ndarray] = 42
     eager: bool = False
-    _initialized: bool = False
+    _initialized: bool = tx.static(default=False)
 
     def __init__(
         self,
@@ -130,7 +131,7 @@ class ModelCore(tx.Treex, metaclass=ModelMeta):
     ) -> TrainStep[M]:
         raise types.MissingMethod()
 
-    def reset_metrics(self):
+    def reset_metrics(self) -> None:
         raise types.MissingMethod()
 
     # ----------------------------------------------------------------
