@@ -112,7 +112,7 @@ class Model(ModelBase):
         loss: tp.Any = None,
         metrics: tp.Any = None,
         optimizer: tp.Optional[tp.Union[tx.Optimizer, GradientTransformation]] = None,
-        seed: tp.Union[int, jnp.ndarray] = 42,
+        seed: int = 42,
         eager: bool = False,
     ):
         """
@@ -155,7 +155,7 @@ class Model(ModelBase):
         )
         self.loss_and_logs = None
 
-        self._losses_and_metrics = (
+        self._losses_and_metrics = lambda: (
             loss,
             metrics,
         )
@@ -181,7 +181,7 @@ class Model(ModelBase):
             params = self.parameters()
             self.optimizer = self.optimizer.init(params)
 
-        losses, metrics = self._losses_and_metrics
+        losses, metrics = self._losses_and_metrics()
         aux_losses = self.loss_logs()
         aux_metrics = self.metric_logs()
 
@@ -335,6 +335,9 @@ class Model(ModelBase):
                 running the computation as only shapes are calculated (turn off if trying to debug).
         """
         assert self.module is not None
+
+        if not self.initialized:
+            self.init_on_batch()
 
         summary = self.module.tabulate(
             inputs=inputs,

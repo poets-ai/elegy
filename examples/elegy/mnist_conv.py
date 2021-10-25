@@ -1,19 +1,18 @@
-from elegy import utils
 import os
 from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
 
 import dataget
-
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
-from tensorboardX.writer import SummaryWriter
-import typer
 import optax
+import typer
+from tensorboardX.writer import SummaryWriter
 
 import elegy
+from elegy import utils
 from elegy.callbacks.tensorboard import TensorBoard
 
 
@@ -46,37 +45,45 @@ def main(
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
 
-    class CNN(elegy.Module):
-        def call(self, image: jnp.ndarray, training: bool):
-            @elegy.to_module
-            def ConvBlock(x, units, kernel, stride=1):
-                x = elegy.nn.Conv2D(units, kernel, stride=stride, padding="same")(x)
-                x = elegy.nn.BatchNormalization()(x, training)
-                x = elegy.nn.Dropout(0.2)(x, training)
-                return jax.nn.relu(x)
+    def ConvBlock(din, units, kernel, stride=1):
+        return elegy.nn.Sequential(
+            elegy.nn.Conv(
+                features_in=din,
+                features_out=units,
+                kernel_size=kernel,
+                strides=[stride, stride],
+                padding="same",
+            ),
+            elegy.nn.BatchNorm(units),
+            elegy.nn.Dropout(0.2),
+            jax.nn.relu,
+        )
 
-            x: np.ndarray = image.astype(jnp.float32) / 255.0
+    def print_id(x):
+        print("JITTING")
+        return x
 
+    def CNN(din: int, dout: int):
+        return elegy.nn.Sequential(
+            print_id,
+            lambda x: x.astype(jnp.float32) / 255.0,
             # base
-            x = ConvBlock()(x, 32, [3, 3])
-            x = ConvBlock()(x, 64, [3, 3], stride=2)
-            x = ConvBlock()(x, 64, [3, 3], stride=2)
-            x = ConvBlock()(x, 128, [3, 3], stride=2)
-
+            ConvBlock(din, 32, [3, 3]),
+            ConvBlock(32, 64, [3, 3], stride=2),
+            ConvBlock(64, 64, [3, 3], stride=2),
+            ConvBlock(64, 128, [3, 3], stride=2),
             # GlobalAveragePooling2D
-            x = jnp.mean(x, axis=[1, 2])
-
+            lambda x: jnp.mean(x, axis=(1, 2)),
             # 1x1 Conv
-            x = elegy.nn.Linear(10)(x)
-
-            return x
+            elegy.nn.Linear(128, dout),
+        )
 
     model = elegy.Model(
-        module=CNN(),
+        module=CNN(1, 10),
         loss=elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics=elegy.metrics.SparseCategoricalAccuracy(),
+        metrics=elegy.metrics.Accuracy(),
         optimizer=optax.adam(1e-3),
-        run_eagerly=eager,
+        eager=eager,
     )
 
     # show model summary

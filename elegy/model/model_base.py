@@ -1,14 +1,15 @@
 # Implementation based on tf.keras.engine.training.py
 # https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/engine/training.py
 
-from contextlib import contextmanager
-from dataclasses import dataclass
 import pickle
 import threading
 import typing as tp
+from contextlib import contextmanager
 from copy import copy
+from dataclasses import dataclass
 from pathlib import Path
 
+import jax
 import jax.numpy as jnp
 import numpy as np
 import treex as tx
@@ -22,8 +23,9 @@ __all__ = ["ModelBase", "load"]
 
 @dataclass
 class _ModelContext(threading.local):
-    history: tp.Optional[History] = None
     model: tp.Optional["ModelBase"] = None
+    history: tp.Optional[History] = None
+    stop_training: bool = False
 
     def __enter__(self):
         global _MODEL_CONTEXT
@@ -45,7 +47,11 @@ class _ModelContext(threading.local):
 
     @contextmanager
     def callbacks_context(self, model: "ModelCore"):
-        with _MODEL_CONTEXT.update(model=model, history=None):
+        with _MODEL_CONTEXT.update(
+            model=model,
+            history=None,
+            stop_training=False,
+        ):
             yield
 
 
@@ -139,6 +145,20 @@ class ModelBase(ModelCore):
             raise ValueError(f"Trying to set `.history` outside `callbacks_context`")
 
         _MODEL_CONTEXT.history = value
+
+    @property
+    def stop_training(self) -> bool:
+        if _MODEL_CONTEXT.model is not self:
+            raise ValueError(f"Trying to get `.history` outside `callbacks_context`")
+
+        return _MODEL_CONTEXT.stop_training
+
+    @stop_training.setter
+    def stop_training(self, value: bool):
+        if _MODEL_CONTEXT.model is not self:
+            raise ValueError(f"Trying to set `.history` outside `callbacks_context`")
+
+        _MODEL_CONTEXT.stop_training = value
 
     __all__ = [
         "evaluate",
@@ -373,6 +393,8 @@ class ModelBase(ModelCore):
                 logs = {}
                 with data_handler.catch_stop_iteration():
                     for step in data_handler.steps():
+                        # prev_model = self.copy()
+
                         callbacks.on_train_batch_begin(step)
                         batch = next(iterator)
                         inputs, labels, _ = data.unpack_x_y_sample_weight(batch)
@@ -387,13 +409,17 @@ class ModelBase(ModelCore):
                             labels=labels,
                         )
                         tmp_logs.update({"size": data_handler.batch_size})
-                        # print(epoch, step, tmp_logs["accuracy"], batch[0].shape)
 
                         logs = tmp_logs
                         callbacks.on_train_batch_end(step, logs)
 
                         if self.stop_training:
                             break
+
+                        # utils._walk_treedef(
+                        #     jax.tree_flatten(prev_model)[1],
+                        #     jax.tree_flatten(self)[1],
+                        # )
 
                 epoch_logs = copy(logs)
                 epoch_logs.update({"size": data_handler.batch_size})

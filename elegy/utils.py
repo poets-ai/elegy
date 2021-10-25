@@ -323,3 +323,9 @@ def plot_history(history):
     plt.show()
 
 
+def _walk_treedef(a, b):
+    if a != b:
+        print("false")
+
+    for ca, cb in zip(a.children(), b.children()):
+        _walk_treedef(ca, cb)

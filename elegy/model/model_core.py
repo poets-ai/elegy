@@ -4,6 +4,7 @@ import typing as tp
 
 import cloudpickle
 import jax
+from jax._src.tree_util import tree_flatten
 import jax.numpy as jnp
 import numpy as np
 import treeo as to
@@ -32,6 +33,8 @@ GradStep = tp.Tuple[
 
 TrainStep = tp.Tuple[types.Logs, M]
 
+TMP_TREEDEF = None
+
 
 class ModelMeta(to.TreeMeta):
     def __call__(self, *args, **kwargs) -> "ModelCore":
@@ -51,10 +54,10 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
     def __init__(
         self,
         eager: bool = False,
-        seed: tp.Union[int, jnp.ndarray] = 42,
+        seed: int = 42,
     ):
         self.eager = eager
-        self.seed = seed if isinstance(seed, jnp.ndarray) else jax.random.PRNGKey(seed)
+        self.seed = seed
 
     @property
     def initialized(self) -> bool:
@@ -266,6 +269,13 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         Raises:
             ValueError: In case of invalid user-provided arguments.
         """
+        global TMP_TREEDEF
+
+        # if TMP_TREEDEF is None:
+        #     _, TMP_TREEDEF = jax.tree_flatten(self)
+        # else:
+        #     _, tree_def = jax.tree_flatten(self)
+
         if not self._initialized:
             self.init_on_batch()
 
@@ -361,9 +371,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         """
 
         if not self.initialized:
-            raise types.ModelNotInitialized(
-                f"Model not initialized, please execute `init` or `init_on_batch` before running this method."
-            )
+            self.init_on_batch()
 
         if model_utils.convert_and_save_model is None:
             raise ImportError(f"Could not import tensorflow.")
@@ -408,7 +416,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         def jax_fn(flat_states, inputs):
             model: ModelCore = jax.tree_unflatten(states_def, flat_states)
 
-            y_pred, _ = utils.inject_dependencies(model.pred_step)(
+            y_pred, _ = model.pred_step(
                 inputs=inputs,
             )
 
