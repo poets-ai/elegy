@@ -170,7 +170,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         if not self._initialized:
             self.init_on_batch()
 
-        self.eval(inplace=True)
+        self.train(inplace=True)
 
         if self.eager:
             y_pred, model = self.pred_step(inputs)
@@ -279,6 +279,8 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         if not self._initialized:
             self.init_on_batch()
 
+        self.train(inplace=True)
+
         if not isinstance(labels, tp.Mapping):
             labels = dict(target=labels)
 
@@ -343,9 +345,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         Arguments:
             path: path to a saved model's directory.
         """
-        raise NotImplementedError()
-        if isinstance(path, str):
-            path = pathlib.Path(path)
+        pass
 
     def saved_model(
         self,

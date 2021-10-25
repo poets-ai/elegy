@@ -11,9 +11,37 @@ import optax
 import typer
 from tensorboardX.writer import SummaryWriter
 
-import elegy
-from elegy import utils
-from elegy.callbacks.tensorboard import TensorBoard
+import elegy as eg
+
+
+def ConvBlock(din, units, kernel, stride=1):
+    return eg.nn.Sequential(
+        eg.nn.Conv(
+            features_in=din,
+            features_out=units,
+            kernel_size=kernel,
+            strides=[stride, stride],
+            padding="same",
+        ),
+        eg.nn.BatchNorm(units),
+        eg.nn.Dropout(0.2),
+        jax.nn.relu,
+    )
+
+
+def CNN(din: int, dout: int):
+    return eg.nn.Sequential(
+        lambda x: x.astype(jnp.float32) / 255.0,
+        # base
+        ConvBlock(din, 32, [3, 3]),
+        ConvBlock(32, 64, [3, 3], stride=2),
+        ConvBlock(64, 64, [3, 3], stride=2),
+        ConvBlock(64, 128, [3, 3], stride=2),
+        # GlobalAveragePooling2D
+        lambda x: jnp.mean(x, axis=(1, 2)),
+        # 1x1 Conv
+        eg.nn.Linear(128, dout),
+    )
 
 
 def main(
@@ -45,43 +73,10 @@ def main(
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
 
-    def ConvBlock(din, units, kernel, stride=1):
-        return elegy.nn.Sequential(
-            elegy.nn.Conv(
-                features_in=din,
-                features_out=units,
-                kernel_size=kernel,
-                strides=[stride, stride],
-                padding="same",
-            ),
-            elegy.nn.BatchNorm(units),
-            elegy.nn.Dropout(0.2),
-            jax.nn.relu,
-        )
-
-    def print_id(x):
-        print("JITTING")
-        return x
-
-    def CNN(din: int, dout: int):
-        return elegy.nn.Sequential(
-            print_id,
-            lambda x: x.astype(jnp.float32) / 255.0,
-            # base
-            ConvBlock(din, 32, [3, 3]),
-            ConvBlock(32, 64, [3, 3], stride=2),
-            ConvBlock(64, 64, [3, 3], stride=2),
-            ConvBlock(64, 128, [3, 3], stride=2),
-            # GlobalAveragePooling2D
-            lambda x: jnp.mean(x, axis=(1, 2)),
-            # 1x1 Conv
-            elegy.nn.Linear(128, dout),
-        )
-
-    model = elegy.Model(
+    model = eg.Model(
         module=CNN(1, 10),
-        loss=elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics=elegy.metrics.Accuracy(),
+        loss=eg.losses.SparseCategoricalCrossentropy(from_logits=True),
+        metrics=eg.metrics.Accuracy(),
         optimizer=optax.adam(1e-3),
         eager=eager,
     )
@@ -97,14 +92,14 @@ def main(
         batch_size=batch_size,
         validation_data=(X_test, y_test),
         shuffle=True,
-        callbacks=[TensorBoard(logdir=logdir)],
+        callbacks=[eg.callbacks.TensorBoard(logdir=logdir)],
     )
 
-    elegy.utils.plot_history(history)
+    eg.utils.plot_history(history)
 
     model.save("models/conv")
 
-    model = elegy.load("models/conv")
+    model = eg.load("models/conv")
 
     print(model.evaluate(x=X_test, y=y_test))
 
