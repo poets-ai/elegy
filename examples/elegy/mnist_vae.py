@@ -1,3 +1,4 @@
+import einops
 from elegy import utils
 from tensorboardX.writer import SummaryWriter
 from elegy.callbacks.tensorboard import TensorBoard
@@ -26,7 +27,7 @@ MNIST_IMAGE_SHAPE: tp.Sequence[int] = (28, 28)
 
 
 class KLDivergence(elegy.Loss):
-    def call(self, mean: jnp.ndarray, std: jnp.ndarray) -> np.ndarray:
+    def call(self, mean: jnp.ndarray, std: jnp.ndarray) -> jnp.ndarray:
         r"""Calculate KL divergence between given and standard gaussian distributions.
         KL(p, q) = H(p, q) - H(p) = -\int p(x)log(q(x))dx - -\int p(x)log(p(x))dx
                 = 0.5 * [log(|s2|/|s1|) - 1 + tr(s1/s2) + (m1-m2)^2/s2]
@@ -43,23 +44,24 @@ class KLDivergence(elegy.Loss):
 class Encoder(elegy.Module):
     """Encoder model."""
 
+    kl_loss: jnp.ndarray = elegy.LossLog.node()
+
     def __init__(self, hidden_size: int = 512, latent_size: int = 128):
-        super().__init__()
         self.hidden_size = hidden_size
         self.latent_size = latent_size
+        self.kl_loss = jnp.array(0.0, dtype=jnp.float32)
+        self.next_key = elegy.KeySeq()
 
-    def call(self, x: np.ndarray) -> np.ndarray:
-        x = elegy.nn.Flatten()(x)
+    def call(self, x: jnp.ndarray) -> jnp.ndarray:
+        x = einops.rearrange(x, "... d -> (...) d")
         x = elegy.nn.Linear(self.hidden_size)(x)
         x = jax.nn.relu(x)
-
-        self.add_summary("relu", jax.nn.relu, x)
 
         mean = elegy.nn.Linear(self.latent_size, name="linear_mean")(x)
         log_stddev = elegy.nn.Linear(self.latent_size, name="linear_std")(x)
         stddev = jnp.exp(log_stddev)
 
-        elegy.hooks.add_loss("kl_divergence", KLDivergence(weight=2e-1)(mean, stddev))
+        self.kl_loss = KLDivergence(weight=2e-1)(mean=mean, std=stddev)
 
         z = mean + stddev * jax.random.normal(self.next_key(), mean.shape)
 
@@ -78,11 +80,9 @@ class Decoder(elegy.Module):
         self.output_shape = output_shape
         self.hidden_size = hidden_size
 
-    def call(self, z: np.ndarray) -> np.ndarray:
+    def call(self, z: jnp.ndarray) -> np.ndarray:
         z = elegy.nn.Linear(self.hidden_size)(z)
         z = jax.nn.relu(z)
-
-        self.add_summary("relu", jax.nn.relu, z)
 
         logits = elegy.nn.Linear(np.prod(self.output_shape))(z)
         logits = jnp.reshape(logits, (-1, *self.output_shape))
@@ -95,6 +95,7 @@ class VariationalAutoEncoder(elegy.Module):
 
     encoder: Encoder
     decoder: Decoder
+    next_key: elegy.KeySeq
 
     def __init__(
         self,
@@ -102,10 +103,10 @@ class VariationalAutoEncoder(elegy.Module):
         latent_size: int = 32,
         output_shape: tp.Sequence[int] = MNIST_IMAGE_SHAPE,
     ):
-        super().__init__()
         self.hidden_size = hidden_size
         self.latent_size = latent_size
         self.output_shape = output_shape
+        self.next_key = elegy.KeySeq()
 
     def call(self, x: np.ndarray) -> dict:
         x = x.astype(jnp.float32)
@@ -120,8 +121,8 @@ class VariationalAutoEncoder(elegy.Module):
 
 
 class BinaryCrossEntropy(elegy.losses.BinaryCrossentropy):
-    def call(self, x: jnp.ndarray, y_pred: jnp.ndarray) -> np.ndarray:
-        return super().call(y_true=x, y_pred=y_pred)
+    def call(self, inputs: jnp.ndarray, preds: jnp.ndarray) -> jnp.ndarray:
+        return super().call(target=inputs, preds=preds)
 
 
 def main(

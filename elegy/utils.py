@@ -320,8 +320,6 @@ def plot_history(history):
         plt.ylabel(key)
         plt.title(title)
 
-    plt.show()
-
 
 def _walk_treedef(a, b):
     if a != b:

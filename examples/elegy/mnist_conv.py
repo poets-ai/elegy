@@ -1,5 +1,8 @@
+from dataclasses import dataclass
 import os
+import typing as tp
 from datetime import datetime
+from functools import partial
 from typing import Any, Generator, Mapping, Tuple
 
 import dataget
@@ -14,43 +17,53 @@ from tensorboardX.writer import SummaryWriter
 import elegy as eg
 
 
-def ConvBlock(din, units, kernel, stride=1):
-    return eg.nn.Sequential(
-        eg.nn.Conv(
-            features_in=din,
-            features_out=units,
-            kernel_size=kernel,
-            strides=[stride, stride],
+@dataclass(unsafe_hash=True)
+class ConvBlock(eg.Module):
+    units: int
+    kernel: tp.Tuple[int, int]
+    stride: int = 1
+
+    @eg.compact
+    def __call__(self, x):
+        x = eg.nn.Conv(
+            self.units,
+            self.kernel,
+            strides=[self.stride, self.stride],
             padding="same",
-        ),
-        eg.nn.BatchNorm(units),
-        eg.nn.Dropout(0.2),
-        jax.nn.relu,
-    )
+        )(x)
+        x = eg.nn.BatchNorm()(x)
+        x = eg.nn.Dropout(0.2)(x)
+        return jax.nn.relu(x)
 
 
-def CNN(din: int, dout: int):
-    return eg.nn.Sequential(
-        lambda x: x.astype(jnp.float32) / 255.0,
+class CNN(eg.Module):
+    @eg.compact
+    def __call__(self, image: jnp.ndarray):
+        # normalize
+        x: jnp.ndarray = image.astype(jnp.float32) / 255.0
+
         # base
-        ConvBlock(din, 32, [3, 3]),
-        ConvBlock(32, 64, [3, 3], stride=2),
-        ConvBlock(64, 64, [3, 3], stride=2),
-        ConvBlock(64, 128, [3, 3], stride=2),
+        x = ConvBlock(32, (3, 3))(x)
+        x = ConvBlock(64, (3, 3), stride=2)(x)
+        x = ConvBlock(64, (3, 3), stride=2)(x)
+        x = ConvBlock(128, (3, 3), stride=2)(x)
+
         # GlobalAveragePooling2D
-        lambda x: jnp.mean(x, axis=(1, 2)),
+        x = jnp.mean(x, axis=(1, 2))
+
         # 1x1 Conv
-        eg.nn.Linear(128, dout),
-    )
+        x = eg.nn.Linear(10)(x)
+
+        return x
 
 
 def main(
     debug: bool = False,
     eager: bool = False,
     logdir: str = "runs",
-    steps_per_epoch: int = 200,
+    steps_per_epoch: tp.Optional[int] = None,
     epochs: int = 100,
-    batch_size: int = 64,
+    batch_size: int = 32,
 ):
 
     if debug:
@@ -74,7 +87,7 @@ def main(
     print("y_test:", y_test.shape, y_test.dtype)
 
     model = eg.Model(
-        module=CNN(1, 10),
+        module=CNN(),
         loss=eg.losses.SparseCategoricalCrossentropy(from_logits=True),
         metrics=eg.metrics.Accuracy(),
         optimizer=optax.adam(1e-3),
