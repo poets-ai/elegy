@@ -209,8 +209,6 @@ class Model(tp.Generic[U], ModelBase):
                 "Trying to run default `pred_step` on a Model with no `module`, try overriding `pred_step` or set `module`"
             )
 
-        assert model.module is not None
-
         inputs_obj = tx.Inputs.from_value(inputs)
 
         preds = model.module(*inputs_obj.args, **inputs_obj.kwargs)
@@ -277,11 +275,10 @@ class Model(tp.Generic[U], ModelBase):
 
     @staticmethod
     def _is_trainable(field_info: tx.FieldInfo) -> bool:
-        return (
-            isinstance(field_info.module, tx.Module)
-            and not field_info.module.frozen
-            and field_info.module.training
-        )
+        if isinstance(field_info.module, tx.Module):
+            return not field_info.module.frozen and field_info.module.training
+        else:
+            return True
 
     def train_step(
         self: M,
