@@ -13,7 +13,24 @@ import optax
 import typer
 from tensorboardX.writer import SummaryWriter
 
-import elegy
+import elegy as eg
+
+
+class MLP(eg.Module):
+    def __init__(self, n1: int = 300, n2: int = 100):
+        self.n1 = n1
+        self.n2 = n2
+
+    @eg.compact
+    def __call__(self, x: jnp.ndarray):
+        x = x.astype(jnp.float32) / 255.0
+        x = einops.rearrange(x, "batch ... -> batch (...)")
+        x = eg.nn.Linear(self.n1)(x)
+        x = jax.nn.relu(x)
+        x = eg.nn.Linear(self.n2)(x)
+        x = jax.nn.relu(x)
+        x = eg.nn.Linear(10)(x)
+        return x
 
 
 def main(
@@ -42,34 +59,13 @@ def main(
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
 
-    class MLP(elegy.Module):
-        """Standard LeNet-300-100 MLP network."""
-
-        def __init__(self, n1: int = 300, n2: int = 100, **kwargs):
-            super().__init__(**kwargs)
-            self.n1 = n1
-            self.n2 = n2
-
-        @elegy.compact
-        def __call__(self, x: jnp.ndarray):
-            x = x.astype(jnp.float32) / 255.0
-            x = einops.rearrange(x, "batch ... -> batch (...)")
-
-            x = elegy.nn.Linear(self.n1)(x)
-            x = jax.nn.relu(x)
-            x = elegy.nn.Linear(self.n2)(x)
-            x = jax.nn.relu(x)
-            x = elegy.nn.Linear(10)(x)
-
-            return x
-
-    model = elegy.Model(
+    model = eg.Model(
         module=MLP(n1=300, n2=100),
         loss=[
-            elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-            elegy.regularizers.L2(l=1e-4),
+            eg.losses.SparseCategoricalCrossentropy(from_logits=True),
+            eg.regularizers.L2(l=1e-4),
         ],
-        metrics=elegy.metrics.Accuracy(),
+        metrics=eg.metrics.Accuracy(),
         optimizer=optax.adamw(1e-3),
         eager=eager,
     )
@@ -84,10 +80,10 @@ def main(
         batch_size=batch_size,
         validation_data=(X_test, y_test),
         shuffle=True,
-        callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],
+        callbacks=[eg.callbacks.TensorBoard(logdir=logdir)],
     )
 
-    elegy.utils.plot_history(history)
+    eg.utils.plot_history(history)
 
     # get random samples
     idxs = np.random.randint(0, 10000, size=(9,))

@@ -1,4 +1,5 @@
 import os
+import typing as tp
 from datetime import datetime
 
 import dataget
@@ -8,47 +9,77 @@ import numpy as np
 import optax
 import typer
 
-import elegy
+import elegy as eg
+
+M = tp.TypeVar("M", bound="Model")
 
 
-class Model(elegy.Model):
+class Model(eg.Model):
+    w: jnp.ndarray = eg.Parameter.node()
+    b: jnp.ndarray = eg.Parameter.node()
 
-    # request parameters by name via depending injection.
-    # possible: net_params, x, y_true, net_states, metrics_states, sample_weight, class_weight, rng, states, initializing
+    def __init__(
+        self,
+        features_out: int,
+        loss: tp.Any = None,
+        metrics: tp.Any = None,
+        optimizer=None,
+        seed: int = 42,
+        eager: bool = False,
+    ):
+        self.features_out = features_out
+        super().__init__(
+            loss=loss,
+            metrics=metrics,
+            optimizer=optimizer,
+            seed=seed,
+            eager=eager,
+        )
+
+    def init_step(self: M, key: jnp.ndarray, inputs: jnp.ndarray) -> M:
+        features_in = np.prod(inputs.shape[1:])
+
+        self.w = jax.random.uniform(
+            key,
+            shape=[
+                features_in,
+                self.features_out,
+            ],
+        )
+        self.b = jnp.zeros([self.features_out])
+
+        assert self.optimizer is not None
+        self.optimizer = self.optimizer.init(self)
+
+        return self
+
+    def pred_step(self: M, inputs: tp.Any) -> eg.PredStep[M]:
+        logits = jnp.dot(inputs, self.w) + self.b
+        return logits, self
+
     def test_step(
         self,
-        x,
-        y_true,
-        states: elegy.States,
-        initializing: bool,
+        inputs,
+        labels,
     ):
-        assert isinstance(states.rng, elegy.KeySeq)
-
+        model = self
         # flatten + scale
-        x = jnp.reshape(x, (x.shape[0], -1)) / 255
+        inputs = jnp.reshape(inputs, (inputs.shape[0], -1)) / 255
 
-        # model
-        if initializing:
-            w = jax.random.uniform(
-                states.rng.next(), shape=[np.prod(x.shape[1:]), 10], minval=-1, maxval=1
-            )
-            b = jax.random.uniform(states.rng.next(), shape=[1], minval=-1, maxval=1)
-        else:
-            w, b = states.net_params
-
-        logits = jnp.dot(x, w) + b
+        # forward
+        logits, model = model.pred_step(inputs)
 
         # crossentropy loss
-        labels = jax.nn.one_hot(y_true, 10)
-        loss = jnp.mean(-jnp.sum(labels * jax.nn.log_softmax(logits), axis=-1))
+        target = jax.nn.one_hot(labels["target"], self.features_out)
+        loss = jnp.mean(-jnp.sum(target * jax.nn.log_softmax(logits), axis=-1))
 
         # metrics
         logs = dict(
-            acc=jnp.mean(jnp.argmax(logits, axis=-1) == y_true),
+            acc=jnp.mean(jnp.argmax(logits, axis=-1) == labels["target"]),
             loss=loss,
         )
 
-        return loss, logs, states.update(net_params=(w, b))
+        return loss, logs, model
 
 
 def main(
@@ -77,7 +108,11 @@ def main(
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
 
-    model = Model(optimizer=optax.adam(1e-3), eager=eager)
+    model = Model(
+        features_out=10,
+        optimizer=optax.adam(1e-3),
+        eager=eager,
+    )
 
     history = model.fit(
         inputs=X_train,
@@ -87,10 +122,10 @@ def main(
         batch_size=batch_size,
         validation_data=(X_test, y_test),
         shuffle=True,
-        callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],
+        callbacks=[eg.callbacks.TensorBoard(logdir=logdir)],
     )
 
-    elegy.utils.plot_history(history)
+    eg.utils.plot_history(history)
 
 
 if __name__ == "__main__":
