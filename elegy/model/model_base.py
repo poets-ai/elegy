@@ -13,6 +13,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import treex as tx
+
 from elegy import data, types, utils
 from elegy.callbacks import Callback, CallbackList, History, history
 from elegy.data import utils as data_utils

@@ -5,6 +5,7 @@
 import os
 import typing as tp
 from typing import Any, Dict, Optional, Union
+
 from tensorboardX.writer import SummaryWriter
 
 from .callback import Callback

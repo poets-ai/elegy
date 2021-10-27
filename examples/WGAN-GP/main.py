@@ -1,11 +1,13 @@
-import os, glob, pickle
-import numpy as np
-from absl import flags, app
-import PIL.Image
+import glob
+import os
+import pickle
 
-import elegy
+import numpy as np
+import PIL.Image
+from absl import app, flags
 from model import WGAN_GP
 
+import elegy
 
 FLAGS = flags.FLAGS
 

@@ -1,24 +1,20 @@
-from tensorboardX.writer import SummaryWriter
-from elegy.callbacks.tensorboard import TensorBoard
 import os
-from datetime import datetime
 import typing as tp
+from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
 
 import dataget
-
 import haiku as hk
-
-
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
-import typer
 import optax
+import typer
+from tensorboardX.writer import SummaryWriter
 
 import elegy
-
+from elegy.callbacks.tensorboard import TensorBoard
 
 Batch = Mapping[str, np.ndarray]
 np.random.seed(42)

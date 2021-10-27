@@ -2,7 +2,6 @@ import os
 from datetime import datetime
 
 import dataget
-import elegy
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -10,9 +9,11 @@ import numpy as np
 import optax
 import torch
 import typer
-from elegy.callbacks.tensorboard import TensorBoard
 from tensorboardX.writer import SummaryWriter
 from torch.utils.data import DataLoader, TensorDataset
+
+import elegy
+from elegy.callbacks.tensorboard import TensorBoard
 
 
 def main(

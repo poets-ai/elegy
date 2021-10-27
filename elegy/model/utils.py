@@ -1,8 +1,8 @@
 import typing as tp
 
 try:
-    from jax.experimental import jax2tf  # type: ignore[import]
     import tensorflow as tf  # type: ignore[import]
+    from jax.experimental import jax2tf  # type: ignore[import]
 
     def convert_and_save_model(
         jax_fn: tp.Callable[[tp.Any, tp.Any], tp.Any],

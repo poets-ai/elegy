@@ -4,12 +4,13 @@ import tempfile
 import urllib
 from unittest import TestCase
 
-import elegy
 import jax
 import jax.numpy as jnp
 import numpy as np
 import PIL
 import pytest
+
+import elegy
 from elegy import utils
 
 

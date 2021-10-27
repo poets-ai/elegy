@@ -2,13 +2,14 @@ import os
 from datetime import datetime
 
 import dataget
-from flax import linen
-import elegy
 import jax
 import jax.numpy as jnp
 import numpy as np
 import optax
 import typer
+from flax import linen
+
+import elegy
 
 
 def main(

@@ -11,7 +11,6 @@ import jax.tree_util
 import numpy as np
 import treex as tx
 
-
 EPSILON = 1e-7
 F = tp.TypeVar("F", bound=tp.Callable)
 

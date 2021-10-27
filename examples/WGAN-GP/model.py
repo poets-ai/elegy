@@ -1,6 +1,9 @@
-import jax, jax.numpy as jnp
-import elegy
+import jax
+import jax.numpy as jnp
 import optax
+
+import elegy
+
 
 # the generator architecture adapted from DCGAN
 class Generator(elegy.Module):

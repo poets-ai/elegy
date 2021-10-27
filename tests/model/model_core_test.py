@@ -1,11 +1,12 @@
 import typing as tp
 import unittest
 
-import elegy
 import jax
 import jax.numpy as jnp
 import numpy as np
 import treex as tx
+
+import elegy
 from elegy.model.model_core import ModelCore
 
 

@@ -1,13 +1,14 @@
-from dataclasses import dataclass
-from pathlib import Path
 import shutil
 import typing as tp
-import yaml
+from dataclasses import dataclass
+from pathlib import Path
+from types import ModuleType
+
 import jax
 import jinja2
+import yaml
 
 import elegy
-from types import ModuleType
 
 
 @dataclass

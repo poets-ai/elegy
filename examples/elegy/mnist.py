@@ -1,18 +1,17 @@
-from functools import partial
 import os
 from datetime import datetime
+from functools import partial
 from typing import Any, Generator, Mapping, Tuple
 
 import dataget
-
+import einops
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
-from tensorboardX.writer import SummaryWriter
-import typer
 import optax
-import einops
+import typer
+from tensorboardX.writer import SummaryWriter
 
 import elegy
 

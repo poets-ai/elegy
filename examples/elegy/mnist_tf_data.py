@@ -1,7 +1,6 @@
 import os
 from datetime import datetime
 
-import elegy
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -9,8 +8,10 @@ import numpy as np
 import optax
 import tensorflow as tf
 import typer
-from elegy.callbacks.tensorboard import TensorBoard
 from tensorboardX.writer import SummaryWriter
+
+import elegy
+from elegy.callbacks.tensorboard import TensorBoard
 
 
 def main(

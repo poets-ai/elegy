@@ -1,10 +1,11 @@
 from unittest import TestCase
 
-import elegy
 import jax.numpy as jnp
 import numpy as np
 import optax
 import pytest
+
+import elegy
 
 
 class DataLoaderTestCase(TestCase):

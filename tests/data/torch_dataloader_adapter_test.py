@@ -3,8 +3,9 @@ from unittest import TestCase
 
 import numpy as np
 import torch
-from elegy.data.torch_dataloader_adapter import TorchDataLoaderAdapter
 from torch.utils.data import DataLoader, TensorDataset
+
+from elegy.data.torch_dataloader_adapter import TorchDataLoaderAdapter
 
 
 class ArrayDataAdapterTest(TestCase):

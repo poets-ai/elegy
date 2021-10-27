@@ -8,22 +8,12 @@ on:
       - master
   pull_request:
 jobs:
-  black-test:
-    if: ${{ !contains(github.event.pull_request.title, 'WIP') }}
-    name: Black Python code format
+  pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install "black~=20.8b1"
-      - name: Ensure contributor used ("black ./") before commit
-        run: black --check .
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+    - uses: pre-commit/action@v2.0.3
   test:
     if: ${{ !contains(github.event.pull_request.title, 'WIP') }}
     runs-on: ubuntu-latest

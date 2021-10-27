@@ -11,8 +11,9 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import six
-from elegy import types, utils
 import typing_extensions as tpe
+
+from elegy import types, utils
 
 
 class Multimap(tpe.Protocol):

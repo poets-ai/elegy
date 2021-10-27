@@ -1,17 +1,18 @@
-from abc import abstractmethod
 import pathlib
 import typing as tp
+from abc import abstractmethod
 
 import cloudpickle
 import jax
-from jax._src.tree_util import tree_flatten
 import jax.numpy as jnp
 import numpy as np
 import treeo as to
-from treeo.utils import Opaque
 import treex as tx
-from elegy import types, utils
 from jax._src.numpy.lax_numpy import ndarray
+from jax._src.tree_util import tree_flatten
+from treeo.utils import Opaque
+
+from elegy import types, utils
 
 from . import utils as model_utils
 

@@ -2,12 +2,13 @@ import os
 from datetime import datetime
 
 import dataget
-import elegy
 import jax
 import jax.numpy as jnp
 import numpy as np
 import optax
 import typer
+
+import elegy
 
 
 class Model(elegy.Model):
