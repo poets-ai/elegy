@@ -76,7 +76,7 @@ def main(
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
 
-    model = Model(optimizer=optax.adam(1e-3), run_eagerly=eager)
+    model = Model(optimizer=optax.adam(1e-3), eager=eager)
 
     history = model.fit(
         inputs=X_train,

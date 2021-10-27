@@ -1,3 +1,4 @@
+from functools import partial
 import os
 from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
@@ -11,6 +12,7 @@ import numpy as np
 from tensorboardX.writer import SummaryWriter
 import typer
 import optax
+import einops
 
 import elegy
 
@@ -49,29 +51,28 @@ def main(
             self.n1 = n1
             self.n2 = n2
 
-        def call(self, image: jnp.ndarray):
-            image = image.astype(jnp.float32) / 255.0
+        @elegy.compact
+        def __call__(self, x: jnp.ndarray):
+            x = x.astype(jnp.float32) / 255.0
+            x = einops.rearrange(x, "batch ... -> batch (...)")
 
-            mlp = elegy.nn.sequential(
-                elegy.nn.Flatten(),
-                elegy.nn.Linear(self.n1),
-                jax.nn.relu,
-                elegy.nn.Linear(self.n2),
-                jax.nn.relu,
-                elegy.nn.Linear(10),
-            )
+            x = elegy.nn.Linear(self.n1)(x)
+            x = jax.nn.relu(x)
+            x = elegy.nn.Linear(self.n2)(x)
+            x = jax.nn.relu(x)
+            x = elegy.nn.Linear(10)(x)
 
-            return mlp(image)
+            return x
 
     model = elegy.Model(
         module=MLP(n1=300, n2=100),
         loss=[
             elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-            elegy.regularizers.GlobalL2(l=1e-4),
+            elegy.regularizers.L2(l=1e-4),
         ],
-        metrics=elegy.metrics.SparseCategoricalAccuracy(),
+        metrics=elegy.metrics.Accuracy(),
         optimizer=optax.adamw(1e-3),
-        run_eagerly=eager,
+        eager=eager,
     )
 
     model.summary(X_train[:64])

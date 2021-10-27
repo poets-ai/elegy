@@ -57,7 +57,7 @@ def main(
         loss=crossentropy,
         metrics=accuracy,
         optimizer=optax.adam(1e-3),
-        run_eagerly=eager,
+        eager=eager,
     )
 
     model.init(X_train[:batch_size], y_train[:batch_size])

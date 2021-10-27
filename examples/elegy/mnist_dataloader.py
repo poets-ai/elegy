@@ -97,7 +97,7 @@ def main(
         ],
         metrics=elegy.metrics.SparseCategoricalAccuracy(),
         optimizer=optax.adamw(1e-3),
-        run_eagerly=eager,
+        eager=eager,
     )
 
     x_sample, y_sample = next(iter(train_loader))

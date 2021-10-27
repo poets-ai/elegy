@@ -96,7 +96,7 @@ def main(
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
 
-    model = Model(run_eagerly=eager)
+    model = Model(eager=eager)
 
     history = model.fit(
         inputs=X_train,

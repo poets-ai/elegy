@@ -19,7 +19,7 @@ class ResNetTest(TestCase):
         # FIXME: test succeeds if run alone or if run on the cpu-only version of jax
         # test fails with "DNN library is not found" if run on gpu with all other tests together
 
-        model = elegy.Model(elegy.nets.resnet.ResNet18(), run_eagerly=True)
+        model = elegy.Model(elegy.nets.resnet.ResNet18(), eager=True)
         assert isinstance(model.module, elegy.Module)
 
         x = np.random.random((2, 224, 224, 3)).astype(np.float32)
@@ -41,7 +41,7 @@ class ResNetTest(TestCase):
             )
 
             new_r18 = elegy.nets.resnet.ResNet18(weights=pklpath)
-            y2 = elegy.Model(new_r18, run_eagerly=True).predict(x, initialize=True)
+            y2 = elegy.Model(new_r18, eager=True).predict(x, initialize=True)
 
         assert np.allclose(y, y2, rtol=0.001)
 

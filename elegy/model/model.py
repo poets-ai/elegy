@@ -12,9 +12,10 @@ from elegy.model.model_core import GradStep, PredStep, TestStep, TrainStep
 from optax import GradientTransformation
 
 M = tp.TypeVar("M", bound="Model")
+A = tp.TypeVar("A", bound="tx.Module")
 
 
-class Model(ModelBase):
+class Model(tp.Generic[A], ModelBase):
     """
     Model is a framework-agnostic trainer interface that is tasked with performing training, evaluation, and inference.
     It provides 2 main APIs:
@@ -86,7 +87,7 @@ class Model(ModelBase):
     ...         lr_schedule=lambda step, epoch: 1 / (epoch * 100 + step),
     ...         steps_per_epoch=1000,
     ...     ),
-    ...     run_eagerly=True,
+    ...     eager=True,
     ... )
 
     ```
@@ -99,7 +100,7 @@ class Model(ModelBase):
     """
 
     # pytree
-    module: tp.Optional[tx.Module]
+    module: tp.Optional[A] = tx.node()
     loss_and_logs: tp.Optional[tx.LossAndLogs]
     optimizer: tp.Optional[tx.Optimizer]
 
@@ -108,7 +109,7 @@ class Model(ModelBase):
 
     def __init__(
         self,
-        module: tp.Optional[tx.Module] = None,
+        module: tp.Optional[A] = None,
         loss: tp.Any = None,
         metrics: tp.Any = None,
         optimizer: tp.Optional[tp.Union[tx.Optimizer, GradientTransformation]] = None,
@@ -140,7 +141,7 @@ class Model(ModelBase):
             optimizer: A `optax` optimizer instance. Optix is a very flexible library for defining
                 optimization pipelines with things like learning rate schedules, this means that
                 there is no need for a `LearningRateScheduler` callback in Elegy.
-            run_eagerly: Settable attribute indicating whether the model should run eagerly.
+            eager: Settable attribute indicating whether the model should run eagerly.
                 Running eagerly means that your model will be run step by step, like Python code, instead of
                 using Jax's `jit` to. Your model might run slower, but it should become easier for you to debug
                 it by stepping into individual layer calls.

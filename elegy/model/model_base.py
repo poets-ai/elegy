@@ -118,7 +118,7 @@ class ModelBase(ModelCore):
             lr_schedule=lambda step, epoch: 1 / (epoch * 100 + step),
             steps_per_epoch=1000,
         ),
-        run_eagerly=True,
+        eager=True,
     )
 
     history = model.fit(
@@ -430,10 +430,10 @@ class ModelBase(ModelCore):
                     and self._should_eval(epoch, validation_freq)
                     and not self.stop_training
                 ):
-                    # val_x, val_y, val_sample_weight = data.unpack_x_y_sample_weight(
-                    #     validation_data
-                    # )
-                    val_inputs, val_lables = validation_data
+                    val_inputs, val_lables, _ = data.unpack_x_y_sample_weight(
+                        validation_data
+                    )
+                    # val_inputs, val_lables = validation_data
                     try:
                         val_logs = self.evaluate(
                             x=val_inputs,

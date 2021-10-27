@@ -193,7 +193,7 @@ def main(
         loss=elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
         metrics=elegy.metrics.SparseCategoricalAccuracy(),
         optimizer=optax.adam(lr),
-        run_eagerly=eager,
+        eager=eager,
     )
 
     # show summary

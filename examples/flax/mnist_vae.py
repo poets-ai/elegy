@@ -142,7 +142,7 @@ def main(
         module=vae,
         loss=loss,
         optimizer=optax.adam(1e-3),
-        run_eagerly=eager,
+        eager=eager,
     )
 
     model.init(X_train[:batch_size])

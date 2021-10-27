@@ -71,7 +71,7 @@ def main(
         module=MLP(n1=256, n2=64),
         loss=MeanSquaredError(),
         optimizer=optax.rmsprop(0.001),
-        run_eagerly=eager,
+        eager=eager,
     )
 
     model.summary(X_train[:64])

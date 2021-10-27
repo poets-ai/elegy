@@ -1,23 +1,20 @@
-import einops
-from elegy import utils
-from tensorboardX.writer import SummaryWriter
-from elegy.callbacks.tensorboard import TensorBoard
 import os
-from datetime import datetime
 import typing as tp
+from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
 
 import dataget
-
+import einops
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
-import typer
 import optax
+import typer
+from tensorboardX.writer import SummaryWriter
 
-import elegy
-
+import elegy as eg
+from elegy import utils
 
 Batch = Mapping[str, np.ndarray]
 np.random.seed(42)
@@ -26,7 +23,7 @@ LATENT_SIZE = 32
 MNIST_IMAGE_SHAPE: tp.Sequence[int] = (28, 28)
 
 
-class KLDivergence(elegy.Loss):
+class KLDivergence(eg.Loss):
     def call(self, mean: jnp.ndarray, std: jnp.ndarray) -> jnp.ndarray:
         r"""Calculate KL divergence between given and standard gaussian distributions.
         KL(p, q) = H(p, q) - H(p) = -\int p(x)log(q(x))dx - -\int p(x)log(p(x))dx
@@ -41,24 +38,25 @@ class KLDivergence(elegy.Loss):
         return 0.5 * jnp.mean(-jnp.log(std ** 2) - 1.0 + std ** 2 + mean ** 2, axis=-1)
 
 
-class Encoder(elegy.Module):
+class Encoder(eg.Module):
     """Encoder model."""
 
-    kl_loss: jnp.ndarray = elegy.LossLog.node()
+    kl_loss: jnp.ndarray = eg.LossLog.node()
 
     def __init__(self, hidden_size: int = 512, latent_size: int = 128):
         self.hidden_size = hidden_size
         self.latent_size = latent_size
         self.kl_loss = jnp.array(0.0, dtype=jnp.float32)
-        self.next_key = elegy.KeySeq()
+        self.next_key = eg.KeySeq()
 
-    def call(self, x: jnp.ndarray) -> jnp.ndarray:
-        x = einops.rearrange(x, "... d -> (...) d")
-        x = elegy.nn.Linear(self.hidden_size)(x)
+    @eg.compact
+    def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
+        x = einops.rearrange(x, "batch height width -> batch (height width)")
+        x = eg.nn.Linear(self.hidden_size)(x)
         x = jax.nn.relu(x)
 
-        mean = elegy.nn.Linear(self.latent_size, name="linear_mean")(x)
-        log_stddev = elegy.nn.Linear(self.latent_size, name="linear_std")(x)
+        mean = eg.nn.Linear(self.latent_size, name="linear_mean")(x)
+        log_stddev = eg.nn.Linear(self.latent_size, name="linear_std")(x)
         stddev = jnp.exp(log_stddev)
 
         self.kl_loss = KLDivergence(weight=2e-1)(mean=mean, std=stddev)
@@ -68,7 +66,7 @@ class Encoder(elegy.Module):
         return z
 
 
-class Decoder(elegy.Module):
+class Decoder(eg.Module):
     """Decoder model."""
 
     def __init__(
@@ -80,22 +78,23 @@ class Decoder(elegy.Module):
         self.output_shape = output_shape
         self.hidden_size = hidden_size
 
-    def call(self, z: jnp.ndarray) -> np.ndarray:
-        z = elegy.nn.Linear(self.hidden_size)(z)
+    @eg.compact
+    def __call__(self, z: jnp.ndarray) -> np.ndarray:
+        z = eg.nn.Linear(self.hidden_size)(z)
         z = jax.nn.relu(z)
 
-        logits = elegy.nn.Linear(np.prod(self.output_shape))(z)
+        logits = eg.nn.Linear(np.prod(self.output_shape))(z)
         logits = jnp.reshape(logits, (-1, *self.output_shape))
 
         return logits
 
 
-class VariationalAutoEncoder(elegy.Module):
+class VariationalAutoEncoder(eg.Module):
     """Main VAE model class, uses Encoder & Decoder under the hood."""
 
     encoder: Encoder
     decoder: Decoder
-    next_key: elegy.KeySeq
+    next_key: eg.KeySeq
 
     def __init__(
         self,
@@ -106,28 +105,29 @@ class VariationalAutoEncoder(elegy.Module):
         self.hidden_size = hidden_size
         self.latent_size = latent_size
         self.output_shape = output_shape
-        self.next_key = elegy.KeySeq()
 
-    def call(self, x: np.ndarray) -> dict:
+    @eg.compact
+    def __call__(self, x: np.ndarray) -> dict:
+        next_key = eg.KeySeq()
         x = x.astype(jnp.float32)
 
         z = Encoder(self.hidden_size, self.latent_size)(x)
         logits = Decoder(self.hidden_size, self.output_shape)(z)
 
         p = jax.nn.sigmoid(logits)
-        image = jax.random.bernoulli(self.next_key(), p)
+        image = jax.random.bernoulli(next_key(), p)
 
         return dict(image=image, logits=logits, det_image=p)
 
 
-class BinaryCrossEntropy(elegy.losses.BinaryCrossentropy):
+class BinaryCrossEntropy(eg.losses.BinaryCrossentropy):
     def call(self, inputs: jnp.ndarray, preds: jnp.ndarray) -> jnp.ndarray:
         return super().call(target=inputs, preds=preds)
 
 
 def main(
-    steps_per_epoch: int = 200,
-    batch_size: int = 64,
+    steps_per_epoch: tp.Optional[int] = None,
+    batch_size: int = 32,
     epochs: int = 50,
     debug: bool = False,
     eager: bool = False,
@@ -152,14 +152,13 @@ def main(
     print("X_train:", X_train.shape, X_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
 
-    vae = VariationalAutoEncoder(latent_size=LATENT_SIZE)
-
-    model = elegy.Model(
-        module=vae,
+    model = eg.Model(
+        module=VariationalAutoEncoder(latent_size=LATENT_SIZE),
         loss=[BinaryCrossEntropy(from_logits=True, on="logits")],
         optimizer=optax.adam(1e-3),
-        run_eagerly=eager,
+        eager=eager,
     )
+    assert model.module is not None
 
     model.summary(X_train[:64])
 
@@ -171,7 +170,7 @@ def main(
         steps_per_epoch=steps_per_epoch,
         validation_data=(X_test,),
         shuffle=True,
-        callbacks=[TensorBoard(logdir)],
+        callbacks=[eg.callbacks.TensorBoard(logdir)],
     )
 
     print(
@@ -179,7 +178,7 @@ def main(
         f"\n \t\t\t tensorboard --logdir {logdir}",
     )
 
-    elegy.utils.plot_history(history)
+    eg.utils.plot_history(history)
 
     # get random samples
     idxs = np.random.randint(0, len(X_test), size=(5,))
@@ -198,17 +197,11 @@ def main(
             plt.imshow(y_pred["det_image"][i], cmap="gray")
         # tbwriter.add_figure("VAE Example", figure, epochs)
 
-    plt.show()
-
-    # call update_modules to enable parameter transfer
-    # for now only Elegy Modules support this
-    model.update_modules()
-
     # sample
-    model_decoder = elegy.Model(vae.decoder)
+    model_decoder = eg.Model(model.module.decoder)
 
     z_samples = np.random.normal(size=(12, LATENT_SIZE))
-    samples = model_decoder.predict(z_samples, initialize=True)
+    samples = model_decoder.predict(z_samples)
     samples = jax.nn.sigmoid(samples)
 
     # plot and save results

@@ -216,7 +216,7 @@ def main(
     model = VariationalAutoEncoder(
         latent_size=LATENT_SIZE,
         optimizer=optax.adam(1e-3),
-        run_eagerly=eager,
+        eager=eager,
     )
 
     # Fit with datasets in memory
