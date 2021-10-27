@@ -1,17 +1,16 @@
-from dataclasses import dataclass
 import os
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
 
 import dataget
-
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
-from tensorboardX.writer import SummaryWriter
-import typer
 import optax
+import typer
+from tensorboardX.writer import SummaryWriter
 
 import elegy as eg
 
@@ -77,12 +76,12 @@ def main(
         def __call__(self, x: jnp.ndarray):
             x = x.astype(jnp.float32) / 255.0
 
-            x = eg.nn.Flatten()(x)
-            x = eg.nn.Linear(self.n1)(x)
+            x = eg.Flatten()(x)
+            x = eg.Linear(self.n1)(x)
             x = jax.nn.relu(x)
-            x = eg.nn.Linear(self.n2)(x)
+            x = eg.Linear(self.n2)(x)
             x = jax.nn.relu(x)
-            x = eg.nn.Linear(10)(x)
+            x = eg.Linear(10)(x)
 
             return x
 

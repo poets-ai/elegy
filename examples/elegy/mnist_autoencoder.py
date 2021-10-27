@@ -3,14 +3,13 @@ from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
 
 import dataget
-
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
-from tensorboardX.writer import SummaryWriter
-import typer
 import optax
+import typer
+from tensorboardX.writer import SummaryWriter
 
 import elegy as eg
 
@@ -30,14 +29,14 @@ class MLP(eg.Module):
     @eg.compact
     def __call__(self, image: jnp.ndarray):
         x = image.astype(jnp.float32) / 255.0
-        x = eg.nn.Flatten()(x)
-        x = eg.nn.Linear(self.n1)(x)
+        x = eg.Flatten()(x)
+        x = eg.Linear(self.n1)(x)
         x = jax.nn.relu(x)
-        x = eg.nn.Linear(self.n2)(x)
+        x = eg.Linear(self.n2)(x)
         x = jax.nn.relu(x)
-        x = eg.nn.Linear(self.n1)(x)
+        x = eg.Linear(self.n1)(x)
         x = jax.nn.relu(x)
-        x = eg.nn.Linear(np.prod(image.shape[-2:]))(x)
+        x = eg.Linear(np.prod(image.shape[-2:]))(x)
         x = jax.nn.sigmoid(x) * 255
         x = x.reshape(image.shape)
 

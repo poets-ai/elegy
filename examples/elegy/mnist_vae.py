@@ -52,11 +52,11 @@ class Encoder(eg.Module):
     @eg.compact
     def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
         x = einops.rearrange(x, "batch height width -> batch (height width)")
-        x = eg.nn.Linear(self.hidden_size)(x)
+        x = eg.Linear(self.hidden_size)(x)
         x = jax.nn.relu(x)
 
-        mean = eg.nn.Linear(self.latent_size, name="linear_mean")(x)
-        log_stddev = eg.nn.Linear(self.latent_size, name="linear_std")(x)
+        mean = eg.Linear(self.latent_size, name="linear_mean")(x)
+        log_stddev = eg.Linear(self.latent_size, name="linear_std")(x)
         stddev = jnp.exp(log_stddev)
 
         self.kl_loss = KLDivergence(weight=2e-1)(mean=mean, std=stddev)
@@ -80,10 +80,10 @@ class Decoder(eg.Module):
 
     @eg.compact
     def __call__(self, z: jnp.ndarray) -> np.ndarray:
-        z = eg.nn.Linear(self.hidden_size)(z)
+        z = eg.Linear(self.hidden_size)(z)
         z = jax.nn.relu(z)
 
-        logits = eg.nn.Linear(np.prod(self.output_shape))(z)
+        logits = eg.Linear(np.prod(self.output_shape))(z)
         logits = jnp.reshape(logits, (-1, *self.output_shape))
 
         return logits

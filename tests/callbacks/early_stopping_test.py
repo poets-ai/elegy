@@ -1,30 +1,30 @@
 import logging
 from unittest import TestCase
 
-
+import jax
 import numpy as np
 import optax
-import jax
 
-import elegy
+import elegy as eg
 
 np.random.seed(42)
 
 
 class EarlyStoppingTest(TestCase):
     def test_example(self):
-        class MLP(elegy.Module):
+        class MLP(eg.Module):
+            @eg.compact
             def __call__(self, x):
-                x = elegy.nn.Linear(10)(x)
+                x = eg.Linear(10)(x)
                 x = jax.lax.stop_gradient(x)
                 return x
 
-        callback = elegy.callbacks.EarlyStopping(monitor="loss", patience=3)
+        callback = eg.callbacks.EarlyStopping(monitor="loss", patience=3)
         # This callback will stop the training when there is no improvement in
         # the for three consecutive epochs.
-        model = elegy.Model(
+        model = eg.Model(
             module=MLP(),
-            loss=elegy.losses.MeanSquaredError(),
+            loss=eg.losses.MeanSquaredError(),
             optimizer=optax.rmsprop(0.01),
         )
         history = model.fit(

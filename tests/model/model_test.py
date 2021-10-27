@@ -1,12 +1,11 @@
-from dataclasses import dataclass
 import typing as tp
 import unittest
+from dataclasses import dataclass
 from hashlib import new
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import cloudpickle
-import elegy as eg
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -14,6 +13,8 @@ import optax
 import pytest
 import sh
 import tensorflow as tf
+
+import elegy as eg
 
 
 @dataclass
@@ -23,18 +24,18 @@ class MLP(eg.Module):
 
     @eg.compact
     def __call__(self, x: jnp.ndarray):
-        x = eg.nn.Linear(self.dmid)(x)
-        x = eg.nn.BatchNorm()(x)
+        x = eg.Linear(self.dmid)(x)
+        x = eg.BatchNorm()(x)
         x = jax.nn.relu(x)
 
-        x = eg.nn.Linear(self.dout)(x)
+        x = eg.Linear(self.dout)(x)
         return x
 
 
 class ModelBasicTest(unittest.TestCase):
     def test_predict(self):
 
-        model = eg.Model(module=eg.nn.Linear(1))
+        model = eg.Model(module=eg.Linear(1))
 
         X = np.random.uniform(size=(5, 2))
         y = np.random.randint(10, size=(5, 1))
@@ -60,7 +61,7 @@ class ModelBasicTest(unittest.TestCase):
                 return self.value
 
         model = eg.Model(
-            module=eg.nn.Linear(1),
+            module=eg.Linear(1),
             loss=dict(a=mse()),
             metrics=dict(b=mae()),
             optimizer=optax.adamw(1e-3),
@@ -140,7 +141,7 @@ class ModelTest(unittest.TestCase):
 
         with TemporaryDirectory() as model_dir:
 
-            model = eg.Model(module=eg.nn.Linear(4))
+            model = eg.Model(module=eg.Linear(4))
 
             x = np.random.uniform(size=(5, 6))
 

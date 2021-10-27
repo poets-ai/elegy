@@ -54,6 +54,8 @@ flax = "^0.3.4"
 torch = "1.4.0+cpu"
 einops = "^0.3.0"
 sh = "^1.14.1"
+pre-commit = "^2.15.0"
+datasets = "^1.14.0"
 
 [build-system]
 requires = ["poetry>=0.12"]

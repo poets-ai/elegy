@@ -1,21 +1,23 @@
 import typing as tp
 from io import StringIO
 
+import flax
 import jax
 import jax.numpy as jnp
 import numpy as np
 import treex as tx
 import yaml
+from optax import GradientTransformation
+
 from elegy import types, utils
 from elegy.model.model_base import ModelBase
 from elegy.model.model_core import GradStep, PredStep, TestStep, TrainStep
-from optax import GradientTransformation
 
 M = tp.TypeVar("M", bound="Model")
-A = tp.TypeVar("A", bound="tx.Module")
+U = tp.TypeVar("U", bound="tx.Module")
 
 
-class Model(tp.Generic[A], ModelBase):
+class Model(tp.Generic[U], ModelBase):
     """
     Model is a framework-agnostic trainer interface that is tasked with performing training, evaluation, and inference.
     It provides 2 main APIs:
@@ -100,7 +102,7 @@ class Model(tp.Generic[A], ModelBase):
     """
 
     # pytree
-    module: tp.Optional[A] = tx.node()
+    module: tp.Optional[U] = tx.node()
     loss_and_logs: tp.Optional[tx.LossAndLogs]
     optimizer: tp.Optional[tx.Optimizer]
 
@@ -109,7 +111,7 @@ class Model(tp.Generic[A], ModelBase):
 
     def __init__(
         self,
-        module: tp.Optional[A] = None,
+        module: tp.Optional[U] = None,
         loss: tp.Any = None,
         metrics: tp.Any = None,
         optimizer: tp.Optional[tp.Union[tx.Optimizer, GradientTransformation]] = None,

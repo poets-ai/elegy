@@ -1,24 +1,20 @@
-from tensorboardX.writer import SummaryWriter
-from elegy.callbacks.tensorboard import TensorBoard
 import os
-from datetime import datetime
 import typing as tp
+from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
-
-import dataget
-
-from flax import linen as nn
-
 
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
-import typer
 import optax
+import typer
+from datasets import load_dataset
+from flax import linen as nn
+from tensorboardX.writer import SummaryWriter
 
 import elegy
-
+from elegy.callbacks.tensorboard import TensorBoard
 
 Batch = Mapping[str, np.ndarray]
 np.random.seed(42)
@@ -120,7 +116,9 @@ def main(
     current_time = datetime.now().strftime("%b%d_%H-%M-%S")
     logdir = os.path.join(logdir, current_time)
 
-    X_train, _1, X_test, _2 = dataget.image.mnist(global_cache=True).get()
+    dataset = load_dataset("mnist")
+    X_train = np.array(dataset["train"]["image"], dtype=np.uint8)
+    X_test = np.array(dataset["test"]["image"], dtype=np.uint8)
     # Now binarize data
     X_train = (X_train > 0).astype(jnp.float32)
     X_test = (X_test > 0).astype(jnp.float32)

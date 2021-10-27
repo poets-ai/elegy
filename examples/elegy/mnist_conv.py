@@ -1,6 +1,6 @@
-from dataclasses import dataclass
 import os
 import typing as tp
+from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
 from typing import Any, Generator, Mapping, Tuple
@@ -24,14 +24,14 @@ def ConvBlock(
     kernel: tp.Tuple[int, int],
     stride: int = 1,
 ):
-    x = eg.nn.Conv(
+    x = eg.Conv(
         units,
         kernel,
         strides=[stride, stride],
         padding="same",
     )(x)
-    x = eg.nn.BatchNorm()(x)
-    x = eg.nn.Dropout(0.2)(x)
+    x = eg.BatchNorm()(x)
+    x = eg.Dropout(0.2)(x)
     return jax.nn.relu(x)
 
 
@@ -52,7 +52,7 @@ class CNN(eg.Module):
         x = jnp.mean(x, axis=(1, 2))
 
         # 1x1 Conv
-        x = eg.nn.Linear(10)(x)
+        x = eg.Linear(10)(x)
 
         return x
 
