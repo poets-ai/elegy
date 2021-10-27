@@ -34,8 +34,6 @@ GradStep = tp.Tuple[
 
 TrainStep = tp.Tuple[types.Logs, M]
 
-TMP_TREEDEF = None
-
 
 class ModelMeta(to.TreeMeta):
     def __call__(self, *args, **kwargs) -> "ModelCore":
@@ -150,6 +148,11 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         else:
             model = self.init_step_jit(self, key, inputs)
 
+        if not isinstance(model, type(self)):
+            raise ValueError(
+                f"Model.init_step() must return an instance of {type(self)}."
+            )
+
         self._update_from(model)
         self._initialized = True
 
@@ -178,6 +181,11 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
             y_pred, model = self.pred_step(inputs)
         else:
             y_pred, model = self.pred_step_jit(self, inputs)
+
+        if not isinstance(model, type(self)):
+            raise ValueError(
+                f"Model.pred_step() must return an instance of {type(self)}."
+            )
 
         self._update_from(model)
 
@@ -232,6 +240,11 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
                 labels,
             )
 
+        if not isinstance(model, type(self)):
+            raise ValueError(
+                f"Model.test_step() must return an instance of {type(self)}."
+            )
+
         self._update_from(model)
 
         return logs
@@ -271,12 +284,6 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         Raises:
             ValueError: In case of invalid user-provided arguments.
         """
-        global TMP_TREEDEF
-
-        # if TMP_TREEDEF is None:
-        #     _, TMP_TREEDEF = jax.tree_flatten(self)
-        # else:
-        #     _, tree_def = jax.tree_flatten(self)
 
         if not self.initialized:
             self.init_on_batch(inputs)
@@ -290,6 +297,11 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
             logs, model = self.train_step(inputs, labels)
         else:
             logs, model = self.train_step_jit(self, inputs, labels)
+
+        if not isinstance(model, type(self)):
+            raise ValueError(
+                f"Model.train_step() must return an instance of {type(self)}."
+            )
 
         self._update_from(model)
 
