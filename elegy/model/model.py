@@ -172,10 +172,11 @@ class Model(ModelBase):
     def init_step(
         self: M,
         key: jnp.ndarray,
+        inputs: tp.Any,
     ) -> M:
 
         if self.module is not None:
-            self.module = self.module.init(key)
+            self.module = self.module.init(key, inputs=inputs)
 
         if self.optimizer is not None:
             params = self.parameters()
@@ -337,7 +338,7 @@ class Model(ModelBase):
         assert self.module is not None
 
         if not self.initialized:
-            self.init_on_batch()
+            self.init_on_batch(inputs)
 
         summary = self.module.tabulate(
             inputs=inputs,

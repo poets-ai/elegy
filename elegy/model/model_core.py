@@ -103,6 +103,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
     def init_step(
         self: M,
         key: jnp.ndarray,
+        inputs: tp.Any,
     ) -> M:
         raise types.MissingMethod()
 
@@ -140,13 +141,13 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
     # high-level methods
     # ----------------------------------------------------------------
 
-    def init_on_batch(self):
+    def init_on_batch(self, inputs: tp.Any):
         key = tx.Key(self.seed)
 
         if self.eager:
-            model = self.init_step(key)
+            model = self.init_step(key, inputs)
         else:
-            model = self.init_step_jit(self, key)
+            model = self.init_step_jit(self, key, inputs)
 
         self._update_from(model)
         self._initialized = True
@@ -168,9 +169,9 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
                 expectations of the model.
         """
         if not self._initialized:
-            self.init_on_batch()
+            self.init_on_batch(inputs)
 
-        self.train(inplace=True)
+        self.eval(inplace=True)
 
         if self.eager:
             y_pred, model = self.pred_step(inputs)
@@ -211,7 +212,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
             ValueError: In case of invalid user-provided arguments.
         """
         if not self._initialized:
-            self.init_on_batch()
+            self.init_on_batch(inputs)
 
         if not isinstance(labels, tp.Mapping):
             labels = dict(target=labels)
@@ -276,8 +277,8 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         # else:
         #     _, tree_def = jax.tree_flatten(self)
 
-        if not self._initialized:
-            self.init_on_batch()
+        if not self.initialized:
+            self.init_on_batch(inputs)
 
         self.train(inplace=True)
 
@@ -349,7 +350,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
 
     def saved_model(
         self,
-        x: types.Pytree,
+        inputs: tp.Any,
         path: tp.Union[str, pathlib.Path],
         batch_size: tp.Union[int, tp.Sequence[int]],
     ):
@@ -371,7 +372,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         """
 
         if not self.initialized:
-            self.init_on_batch()
+            self.init_on_batch(inputs)
 
         if model_utils.convert_and_save_model is None:
             raise ImportError(f"Could not import tensorflow.")
@@ -384,7 +385,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
 
         path.mkdir(parents=True, exist_ok=True)
 
-        x = jax.tree_map(jnp.asarray, x)
+        inputs = jax.tree_map(jnp.asarray, inputs)
 
         # polymorphic batch size currently not supported by jax: https://github.com/google/jax/issues/5915
         # -----------------------------------------
@@ -405,7 +406,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
                 lambda p: tf.TensorSpec(
                     shape=(batch_size,) + p.shape[1:], dtype=p.dtype
                 ),
-                x,
+                inputs,
             )
             for batch_size in batch_size
         ]
