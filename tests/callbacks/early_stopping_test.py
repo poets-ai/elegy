@@ -14,7 +14,7 @@ np.random.seed(42)
 class EarlyStoppingTest(TestCase):
     def test_example(self):
         class MLP(elegy.Module):
-            def call(self, x):
+            def __call__(self, x):
                 x = elegy.nn.Linear(10)(x)
                 x = jax.lax.stop_gradient(x)
                 return x

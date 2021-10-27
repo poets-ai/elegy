@@ -45,7 +45,7 @@
 #         self.n_filters = n_filters
 #         self.strides = strides
 
-#     def call(self, x: jnp.ndarray):
+#     def __call__(self, x: jnp.ndarray):
 #         x0 = x
 #         x = nn.Conv2D(
 #             self.n_filters,
@@ -75,7 +75,7 @@
 # class BottleneckResNetBlock(ResNetBlock):
 #     """ResNet Bottleneck block."""
 
-#     def call(self, x: jnp.ndarray):
+#     def __call__(self, x: jnp.ndarray):
 #         x0 = x
 #         x = nn.Conv2D(self.n_filters, (1, 1), with_bias=False, dtype=self.dtype)(x)
 #         x = nn.BatchNormalization(decay_rate=0.9, eps=1e-5)(x)
@@ -167,7 +167,7 @@
 
 #             self.set_default_parameters(parameters, collections)
 
-#     def call(self, x: jnp.ndarray):
+#     def __call__(self, x: jnp.ndarray):
 #         x = nn.Conv2D(
 #             64,
 #             (7, 7) if not self.lowres else (3, 3),

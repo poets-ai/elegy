@@ -22,7 +22,7 @@ class Generator(elegy.Module):
 # the discriminator architecture adapted from DCGAN
 # also called 'critic' in the WGAN paper
 class Discriminator(elegy.Module):
-    def call(self, x):
+    def __call__(self, x):
         for c in [128, 256, 512, 1024]:
             x = elegy.nn.conv.Conv2D(c, (4, 4), stride=(2, 2))(x)
             x = jax.nn.leaky_relu(x, negative_slope=0.2)

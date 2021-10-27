@@ -17,36 +17,36 @@ from tensorboardX.writer import SummaryWriter
 import elegy as eg
 
 
-@dataclass(unsafe_hash=True)
-class ConvBlock(eg.Module):
-    units: int
-    kernel: tp.Tuple[int, int]
-    stride: int = 1
-
-    @eg.compact
-    def __call__(self, x):
-        x = eg.nn.Conv(
-            self.units,
-            self.kernel,
-            strides=[self.stride, self.stride],
-            padding="same",
-        )(x)
-        x = eg.nn.BatchNorm()(x)
-        x = eg.nn.Dropout(0.2)(x)
-        return jax.nn.relu(x)
+@eg.compact_module
+def ConvBlock(
+    x,
+    units: int,
+    kernel: tp.Tuple[int, int],
+    stride: int = 1,
+):
+    x = eg.nn.Conv(
+        units,
+        kernel,
+        strides=[stride, stride],
+        padding="same",
+    )(x)
+    x = eg.nn.BatchNorm()(x)
+    x = eg.nn.Dropout(0.2)(x)
+    return jax.nn.relu(x)
 
 
 class CNN(eg.Module):
     @eg.compact
-    def __call__(self, image: jnp.ndarray):
+    def __call__(self, x: jnp.ndarray):
+
         # normalize
-        x: jnp.ndarray = image.astype(jnp.float32) / 255.0
+        x = x.astype(jnp.float32) / 255.0
 
         # base
-        x = ConvBlock(32, (3, 3))(x)
-        x = ConvBlock(64, (3, 3), stride=2)(x)
-        x = ConvBlock(64, (3, 3), stride=2)(x)
-        x = ConvBlock(128, (3, 3), stride=2)(x)
+        x = ConvBlock()(x, 32, (3, 3))
+        x = ConvBlock()(x, 64, (3, 3), stride=2)
+        x = ConvBlock()(x, 64, (3, 3), stride=2)
+        x = ConvBlock()(x, 128, (3, 3), stride=2)
 
         # GlobalAveragePooling2D
         x = jnp.mean(x, axis=(1, 2))

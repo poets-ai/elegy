@@ -35,7 +35,7 @@ class Model(tp.Generic[A], ModelBase):
     >>> import jax.numpy as jnp
 
     >>> class MLP(elegy.Module):
-    ...     def call(self, x: jnp.ndarray) -> jnp.ndarray:
+    ...     def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
     ...         x = elegy.nn.Linear(5)(x)
     ...         x = jax.nn.relu(x)
     ...         x = elegy.nn.Linear(2)(x)
@@ -50,9 +50,9 @@ class Model(tp.Generic[A], ModelBase):
     ...     module=MLP(),
     ...     loss=[
     ...         elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-    ...         elegy.regularizers.GlobalL2(l=1e-5),
+    ...         elegy.regularizers.L2(l=1e-5),
     ...     ],
-    ...     metrics=elegy.metrics.SparseCategoricalAccuracy(),
+    ...     metrics=elegy.metrics.Accuracy(),
     ...     optimizer=optax.rmsprop(1e-3),
     ... )
 
@@ -78,7 +78,7 @@ class Model(tp.Generic[A], ModelBase):
     >>> model = elegy.Model(
     ...     module=MLP(),
     ...     loss=elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-    ...     metrics=elegy.metrics.SparseCategoricalAccuracy(),
+    ...     metrics=elegy.metrics.Accuracy(),
     ...     optimizer=elegy.Optimizer(
     ...         # one or more optax optimizers as *args,
     ...         # these will be passed to optax.chain(...)

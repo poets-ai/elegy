@@ -70,7 +70,7 @@ class ModelBase(ModelCore):
     >>> import jax.numpy as jnp
 
     >>> class MLP(elegy.Module):
-    ...     def call(self, x: jnp.ndarray) -> jnp.ndarray:
+    ...     def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
     ...         x = elegy.nn.Flatten()(x)
     ...         x = elegy.nn.Linear(5)(x)
     ...         x = jax.nn.relu(x)
@@ -93,9 +93,9 @@ class ModelBase(ModelCore):
         module=MLP(),
         loss=[
             elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-            elegy.regularizers.GlobalL2(l=1e-5),
+            elegy.regularizers.L2(l=1e-5),
         ],
-        metrics=elegy.metrics.SparseCategoricalAccuracy(),
+        metrics=elegy.metrics.Accuracy(),
         optimizer=optax.rmsprop(1e-3),
     )
     ```
@@ -112,7 +112,7 @@ class ModelBase(ModelCore):
     model = elegy.Model(
         module=MLP(n1=3, n2=1),
         loss=elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics=elegy.metrics.SparseCategoricalAccuracy(),
+        metrics=elegy.metrics.Accuracy(),
         optimizer=elegy.Optimizer(
             optax.adam(1.0), # <---- important to set this to 1.0
             lr_schedule=lambda step, epoch: 1 / (epoch * 100 + step),

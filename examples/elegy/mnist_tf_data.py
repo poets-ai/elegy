@@ -74,7 +74,7 @@ def main(
     model = elegy.Model(
         module=CNN(),
         loss=elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics=elegy.metrics.SparseCategoricalAccuracy(),
+        metrics=elegy.metrics.Accuracy(),
         optimizer=optax.adam(1e-3),
         eager=eager,
     )
