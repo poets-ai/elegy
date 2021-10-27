@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import typing as tp
 import unittest
 from hashlib import new
@@ -15,35 +16,25 @@ import sh
 import tensorflow as tf
 
 
+@dataclass
 class MLP(eg.Module):
-    """Standard LeNet-300-100 MLP network."""
-
-    din: int
     dmid: int
     dout: int
 
-    def __init__(self, din: int, dmid: int = 3, dout: int = 4):
-        self.din = din
-        self.dmid = dmid
-        self.dout = dout
-        self.linear1 = eg.nn.Linear(din, dmid)
-        self.bn1 = eg.nn.BatchNorm(dmid)
-        self.linear2 = eg.nn.Linear(dmid, dout)
-
+    @eg.compact
     def __call__(self, x: jnp.ndarray):
-        x = self.linear1(x)
-        x = self.bn1(x)
+        x = eg.nn.Linear(self.dmid)(x)
+        x = eg.nn.BatchNorm()(x)
         x = jax.nn.relu(x)
 
-        x = self.linear2(x)
-
+        x = eg.nn.Linear(self.dout)(x)
         return x
 
 
 class ModelBasicTest(unittest.TestCase):
     def test_predict(self):
 
-        model = eg.Model(module=eg.nn.Linear(2, 1))
+        model = eg.Model(module=eg.nn.Linear(1))
 
         X = np.random.uniform(size=(5, 2))
         y = np.random.randint(10, size=(5, 1))
@@ -69,7 +60,7 @@ class ModelBasicTest(unittest.TestCase):
                 return self.value
 
         model = eg.Model(
-            module=eg.nn.Linear(2, 1),
+            module=eg.nn.Linear(1),
             loss=dict(a=mse()),
             metrics=dict(b=mae()),
             optimizer=optax.adamw(1e-3),
@@ -90,7 +81,7 @@ class ModelTest(unittest.TestCase):
     def test_evaluate(self):
 
         model = eg.Model(
-            module=MLP(din=2, dmid=3, dout=4),
+            module=MLP(dmid=3, dout=4),
             loss=[
                 eg.losses.SparseCategoricalCrossentropy(from_logits=True),
                 eg.regularizers.L2(l=1e-4),
@@ -123,7 +114,7 @@ class ModelTest(unittest.TestCase):
 
     def test_cloudpickle(self):
         model = eg.Model(
-            module=MLP(din=2, dmid=3, dout=1),
+            module=MLP(dmid=3, dout=1),
             loss=[
                 eg.losses.SparseCategoricalCrossentropy(from_logits=True),
                 eg.regularizers.L2(1e-4),

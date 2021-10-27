@@ -1,12 +1,12 @@
+import typing as tp
 import unittest
 
 import elegy as eg
 import jax.numpy as jnp
 import numpy as np
 import torch
-from torch.utils.data import DataLoader, TensorDataset
-
 from tests.model.model_core_test import ModelCoreTest
+from torch.utils.data import DataLoader, TensorDataset
 
 
 class TestModelBase(unittest.TestCase):
@@ -20,6 +20,7 @@ class TestModelBase(unittest.TestCase):
             def init_step(
                 self,
                 key: jnp.ndarray,
+                inputs: tp.Any,
             ) -> "Model":
                 self.a = jnp.array(0, dtype=jnp.int32)
                 return self
@@ -66,6 +67,7 @@ class TestModelBase(unittest.TestCase):
             def init_step(
                 self,
                 key: jnp.ndarray,
+                inputs: tp.Any,
             ) -> "Model":
                 self.a = jnp.array(0, dtype=jnp.int32)
                 return self
@@ -120,6 +122,7 @@ class TestModelBase(unittest.TestCase):
             def init_step(
                 self,
                 key: jnp.ndarray,
+                inputs: tp.Any,
             ) -> "Model":
                 self.a = jnp.array(0, dtype=jnp.int32)
                 return self
@@ -172,6 +175,7 @@ class TestModelBase(unittest.TestCase):
             def init_step(
                 self,
                 key: jnp.ndarray,
+                inputs: tp.Any,
             ) -> "Model":
                 self.a = jnp.array(0, dtype=jnp.int32)
                 return self

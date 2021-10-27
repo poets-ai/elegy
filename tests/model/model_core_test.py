@@ -23,6 +23,7 @@ class ModelCoreTest(unittest.TestCase):
             def init_step(
                 self,
                 key: jnp.ndarray,
+                inputs: tp.Any,
             ) -> "Model":
                 nonlocal N
 
@@ -31,39 +32,21 @@ class ModelCoreTest(unittest.TestCase):
                 print("JITTING")
                 return self
 
-            def pred_step(self, inputs) -> elegy.PredStep["Model"]:
-                self.a = jnp.array(1, dtype=jnp.int32)
-
-                return None, self
-
-            def test_step(self, inputs, labels) -> elegy.TestStep["Model"]:
-                _, model = self.pred_step(inputs)
-
-                model.a = jnp.array(2, dtype=jnp.int32)
-
-                return 0, {}, model
-
-            def train_step(self, inputs, labels) -> elegy.TrainStep["Model"]:
-                _, logs, model = self.test_step(inputs, labels)
-
-                model.a = jnp.array(3, dtype=jnp.int32)
-
-                return logs, model
-
         model = Model()
+        inputs = np.array(1.0)
 
         assert N == 0
         assert model.a == -1
 
-        model.init_on_batch()
+        model.init_on_batch(inputs)
         assert N == 1
 
         # jits again because _initialized changed
-        model.init_on_batch()
+        model.init_on_batch(inputs)
         assert N == 2
 
         # no jit change this time
-        model.init_on_batch()
+        model.init_on_batch(inputs)
         assert N == 2
 
     def test_pred_step(self):
@@ -75,6 +58,7 @@ class ModelCoreTest(unittest.TestCase):
             def init_step(
                 self,
                 key: jnp.ndarray,
+                inputs: tp.Any,
             ) -> "Model":
                 self.a = jnp.array(0, dtype=jnp.int32)
                 return self
@@ -115,6 +99,7 @@ class ModelCoreTest(unittest.TestCase):
             def init_step(
                 self,
                 key: jnp.ndarray,
+                inputs: tp.Any,
             ) -> "Model":
                 self.a = jnp.array(0, dtype=jnp.int32)
                 return self
@@ -155,6 +140,7 @@ class ModelCoreTest(unittest.TestCase):
             def init_step(
                 self,
                 key: jnp.ndarray,
+                inputs: tp.Any,
             ) -> "Model":
                 self.a = jnp.array(0, dtype=jnp.int32)
                 return self

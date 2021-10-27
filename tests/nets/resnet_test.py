@@ -14,6 +14,7 @@ from elegy import utils
 
 
 class ResNetTest(TestCase):
+    @pytest.mark.skip("pending fix")
     def test_basic_predict(self):
         # FIXME: test succeeds if run alone or if run on the cpu-only version of jax
         # test fails with "DNN library is not found" if run on gpu with all other tests together
@@ -44,6 +45,7 @@ class ResNetTest(TestCase):
 
         assert np.allclose(y, y2, rtol=0.001)
 
+    @pytest.mark.skip("pending fix")
     def test_autodownload_pretrained_r18(self):
         fname, _ = urllib.request.urlretrieve(
             "https://upload.wikimedia.org/wikipedia/commons/e/e4/A_French_Bulldog.jpg"
@@ -57,6 +59,7 @@ class ResNetTest(TestCase):
                 == 245
             )
 
+    @pytest.mark.skip("pending fix")
     def test_autodownload_pretrained_r50(self):
         fname, _ = urllib.request.urlretrieve(
             "https://upload.wikimedia.org/wikipedia/commons/e/e4/A_French_Bulldog.jpg"
