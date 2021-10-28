@@ -143,7 +143,6 @@ def main(
         eager=eager,
     )
 
-    model.init(X_train[:batch_size])
     model.summary(X_train[:batch_size])
 
     # Fit with datasets in memory

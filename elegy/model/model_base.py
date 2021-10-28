@@ -97,7 +97,7 @@ class ModelBase(ModelCore):
     model = elegy.Model(
         module=MLP(),
         loss=[
-            elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
+            elegy.losses.Crossentropy(),
             elegy.regularizers.L2(l=1e-5),
         ],
         metrics=elegy.metrics.Accuracy(),
@@ -116,7 +116,7 @@ class ModelBase(ModelCore):
     ```python
     model = elegy.Model(
         module=MLP(n1=3, n2=1),
-        loss=elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
+        loss=elegy.losses.Crossentropy(),
         metrics=elegy.metrics.Accuracy(),
         optimizer=elegy.Optimizer(
             optax.adam(1.0), # <---- important to set this to 1.0

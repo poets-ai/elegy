@@ -55,7 +55,7 @@ def main(
 
     model = elegy.Model(
         module=elegy.FlaxModule(LinearClassifier()),
-        loss=elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
+        loss=elegy.losses.Crossentropy(),
         metrics=elegy.metrics.Accuracy(),
         optimizer=optax.adam(1e-3),
         eager=eager,

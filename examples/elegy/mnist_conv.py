@@ -92,7 +92,7 @@ def main(
 
     model = eg.Model(
         module=CNN(),
-        loss=eg.losses.SparseCategoricalCrossentropy(from_logits=True),
+        loss=eg.losses.Crossentropy(),
         metrics=eg.metrics.Accuracy(),
         optimizer=optax.adam(1e-3),
         eager=eager,

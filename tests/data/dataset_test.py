@@ -99,7 +99,7 @@ class DataLoaderTestCase(TestCase):
 
         model = elegy.Model(
             Module(),
-            loss=elegy.losses.SparseCategoricalCrossentropy(),
+            loss=elegy.losses.Crossentropy(),
             optimizer=optax.sgd(0.1),
         )
         model.fit(loader_train, validation_data=loader_valid, epochs=3)

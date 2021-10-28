@@ -42,7 +42,7 @@ for file in $(find examples -name '*.py' -not -path '*/imagenet/*' -not -path '*
 done
 
 #WGAN example
-tmpdir=`mktemp -d`; rm -r $tmpdir
-cmd="python examples/WGAN-GP/main.py --epochs=2 --dataset=examples/WGAN-GP/images/*.png --output_dir=$tmpdir"
-echo RUNNING: $cmd
-DISPLAY="" $cmd > /dev/null
+# tmpdir=`mktemp -d`; rm -r $tmpdir
+# cmd="python examples/WGAN-GP/main.py --epochs=2 --dataset=examples/WGAN-GP/images/*.png --output_dir=$tmpdir"
+# echo RUNNING: $cmd
+# DISPLAY="" $cmd > /dev/null

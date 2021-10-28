@@ -67,7 +67,7 @@ def main(
     model = eg.Model(
         module=MLP(n1=300, n2=100),
         loss=[
-            eg.losses.SparseCategoricalCrossentropy(from_logits=True),
+            eg.losses.Crossentropy(),
             eg.regularizers.L2(l=1e-4),
         ],
         metrics=eg.metrics.Accuracy(),

@@ -144,9 +144,7 @@ def main(argv):
     model = elegy.Model(
         module,
         loss=[
-            elegy.losses.SparseCategoricalCrossentropy(
-                from_logits=True, weight=FLAGS.loss_scale
-            ),
+            elegy.losses.Crossentropy(from_logits=True, weight=FLAGS.loss_scale),
             elegy.regularizers.L2(FLAGS.L2_reg / 2 * FLAGS.loss_scale),
         ],
         metrics=elegy.metrics.Accuracy(),

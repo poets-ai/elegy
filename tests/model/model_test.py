@@ -84,7 +84,7 @@ class ModelTest(unittest.TestCase):
         model = eg.Model(
             module=MLP(dmid=3, dout=4),
             loss=[
-                eg.losses.SparseCategoricalCrossentropy(from_logits=True),
+                eg.losses.Crossentropy(),
                 eg.regularizers.L2(l=1e-4),
             ],
             metrics=eg.metrics.Accuracy(),
@@ -117,7 +117,7 @@ class ModelTest(unittest.TestCase):
         model = eg.Model(
             module=MLP(dmid=3, dout=1),
             loss=[
-                eg.losses.SparseCategoricalCrossentropy(from_logits=True),
+                eg.losses.Crossentropy(),
                 eg.regularizers.L2(1e-4),
             ],
             metrics=eg.metrics.Accuracy(),

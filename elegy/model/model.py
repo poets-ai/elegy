@@ -50,7 +50,7 @@ class Model(tp.Generic[U], ModelBase):
     >>> model = elegy.Model(
     ...     module=MLP(),
     ...     loss=[
-    ...         elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
+    ...         elegy.losses.Crossentropy(),
     ...         elegy.regularizers.L2(l=1e-5),
     ...     ],
     ...     metrics=elegy.metrics.Accuracy(),
@@ -78,7 +78,7 @@ class Model(tp.Generic[U], ModelBase):
     ```python
     >>> model = elegy.Model(
     ...     module=MLP(),
-    ...     loss=elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
+    ...     loss=elegy.losses.Crossentropy(),
     ...     metrics=elegy.metrics.Accuracy(),
     ...     optimizer=elegy.Optimizer(
     ...         # one or more optax optimizers as *args,
