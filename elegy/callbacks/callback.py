@@ -80,7 +80,25 @@ class Callback(object):
     def on_epoch_begin(
         self, epoch: int, logs: tp.Optional[tp.Dict[str, np.ndarray]] = None
     ):
-        """Called at the start of an epoch.
+        """Called at the def on_epoch_end(self, epoch, logs=None):
+        current = self.get_monitor_value(logs)
+        if current is None:
+            return
+        if self.monitor_op(current - self.min_delta, self.best):
+            self.best = current
+            self.wait = 0
+            if self.restore_best_weights:
+                # This will also save optimizer state
+                self.best_state = self.model.full_state
+        else:
+            self.wait += 1
+            if self.wait >= self.patience:
+                self.stopped_epoch = epoch
+                self.model.stop_training = True
+                if self.restore_best_weights:
+                    if self.verbose > 0:
+                        print("Restoring model weights from the end of the best epoch.")
+                    self.model.full_state = self.best_statestart of an epoch.
 
         Subclasses should override for any actions to run. This function should only
         be called during TRAIN mode.

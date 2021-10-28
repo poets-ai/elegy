@@ -2,13 +2,13 @@ import os
 from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
 
-import dataget
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
 import optax
 import typer
+from datasets.load import load_dataset
 from tensorboardX.writer import SummaryWriter
 
 import elegy as eg
@@ -62,7 +62,10 @@ def main(
     current_time = datetime.now().strftime("%b%d_%H-%M-%S")
     logdir = os.path.join(logdir, current_time)
 
-    X_train, _1, X_test, _2 = dataget.image.mnist(global_cache=True).get()
+    dataset = load_dataset("mnist")
+    dataset.set_format("np")
+    X_train = dataset["train"]["image"]
+    X_test = dataset["test"]["image"]
 
     print("X_train:", X_train.shape, X_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)

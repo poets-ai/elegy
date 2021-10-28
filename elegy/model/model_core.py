@@ -10,6 +10,7 @@ import treeo as to
 import treex as tx
 from jax._src.numpy.lax_numpy import ndarray
 from jax._src.tree_util import tree_flatten
+from jax.experimental import jax2tf
 from treeo.utils import Opaque
 
 from elegy import types, utils
@@ -365,7 +366,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         self,
         inputs: tp.Any,
         path: tp.Union[str, pathlib.Path],
-        batch_size: tp.Union[int, tp.Sequence[int]],
+        batch_size: tp.Union[int, tp.Sequence[int], None] = None,
     ):
         """
         Serializes the prediction function of the Model (`pred_step`) as a TensorFlow SavedModel via
@@ -400,30 +401,30 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
 
         inputs = jax.tree_map(jnp.asarray, inputs)
 
-        # polymorphic batch size currently not supported by jax: https://github.com/google/jax/issues/5915
-        # -----------------------------------------
-        # if batch_size is None:
-        #     input_signatures = [
-        #         jax.tree_map(
-        #             lambda p: tf.TensorSpec(shape=(None,) + p.shape[1:], dtype=p.dtype),
-        #             x,
-        #         )
-        #     ]
-        #     shape_polymorphic_input_spec = jax.tree_map(
-        #         lambda p: "(" + ", ".join(["batch"] + ["_"] * (len(p.shape) - 1)) + ")",
-        #         x,
-        #     )
-        # else:
-        input_signatures = [
-            jax.tree_map(
-                lambda p: tf.TensorSpec(
-                    shape=(batch_size,) + p.shape[1:], dtype=p.dtype
+        if batch_size is None:
+            input_signatures = [
+                jax.tree_map(
+                    lambda p: tf.TensorSpec(shape=(None,) + p.shape[1:], dtype=p.dtype),
+                    inputs,
+                )
+            ]
+            shape_polymorphic_input_spec = jax.tree_map(
+                lambda p: jax2tf.shape_poly.PolyShape(
+                    "batch", *(["_"] * (len(p.shape) - 1))
                 ),
                 inputs,
             )
-            for batch_size in batch_size
-        ]
-        shape_polymorphic_input_spec = None
+        else:
+            input_signatures = [
+                jax.tree_map(
+                    lambda p: tf.TensorSpec(
+                        shape=(batch_size,) + p.shape[1:], dtype=p.dtype
+                    ),
+                    inputs,
+                )
+                for batch_size in batch_size
+            ]
+            shape_polymorphic_input_spec = None
 
         flat_states, states_def = jax.tree_flatten(self)
 
@@ -444,6 +445,6 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
             shape_polymorphic_input_spec=shape_polymorphic_input_spec,
             with_gradient=False,
             enable_xla=True,
-            compile_model=True,
+            compile_model=False,
             save_model_options=None,
         )

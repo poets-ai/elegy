@@ -74,7 +74,7 @@ try:
         tf_fn = jax2tf.convert(
             jax_fn,
             with_gradient=with_gradient,
-            in_shapes=[None, shape_polymorphic_input_spec],
+            polymorphic_shapes=[None, shape_polymorphic_input_spec],
             enable_xla=enable_xla,
         )
 

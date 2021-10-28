@@ -16,6 +16,7 @@ import treex as tx
 
 from elegy import data, types, utils
 from elegy.callbacks import Callback, CallbackList, History, history
+from elegy.callbacks.sigint import SigIntMode
 from elegy.data import utils as data_utils
 from elegy.model.model_core import ModelCore, PredStep, TestStep
 
@@ -47,13 +48,16 @@ class _ModelContext(threading.local):
             yield
 
     @contextmanager
-    def callbacks_context(self, model: "ModelCore"):
-        with _MODEL_CONTEXT.update(
-            model=model,
-            history=None,
-            stop_training=False,
-        ):
+    def callbacks_context(self, model: tp.Optional["ModelCore"]):
+        if model is None:
             yield
+        else:
+            with _MODEL_CONTEXT.update(
+                model=model,
+                history=None,
+                stop_training=False,
+            ):
+                yield
 
 
 _MODEL_CONTEXT = _ModelContext()
@@ -346,6 +350,7 @@ class ModelBase(ModelCore):
             ValueError: In case of mismatch between the provided input data
                 and what the model expects.
         """
+
         with _MODEL_CONTEXT.callbacks_context(self):
             if inputs is None:
                 inputs = dict()
@@ -377,6 +382,7 @@ class ModelBase(ModelCore):
                     callbacks,
                     add_history=True,
                     add_progbar=verbose != 0,
+                    sigint_mode=SigIntMode.TRAIN,
                     model=self,
                     verbose=verbose,
                     epochs=epochs,
@@ -527,7 +533,9 @@ class ModelBase(ModelCore):
             ValueError: in case of invalid arguments.
         """
 
-        with _MODEL_CONTEXT.callbacks_context(self):
+        with _MODEL_CONTEXT.callbacks_context(
+            self if _MODEL_CONTEXT.model is None else None
+        ):
             if x is None:
                 x = {}
 
@@ -549,6 +557,7 @@ class ModelBase(ModelCore):
                     callbacks,
                     add_history=True,
                     add_progbar=verbose != 0,
+                    sigint_mode=SigIntMode.TEST,
                     model=self,
                     verbose=verbose,
                     epochs=1,
@@ -578,6 +587,11 @@ class ModelBase(ModelCore):
                         tmp_logs.update({"size": data_handler.batch_size})
                         logs = tmp_logs
                         callbacks.on_test_batch_end(step, logs)
+
+                        if self.stop_training:
+                            break
+                if self.stop_training:
+                    break
 
             callbacks.on_test_end()
 

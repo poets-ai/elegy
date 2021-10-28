@@ -136,7 +136,6 @@ class ModelTest(unittest.TestCase):
         y1 = newmodel.predict(X)
         assert np.all(y0 == y1)
 
-    @pytest.mark.skip("fix later")
     def test_saved_model(self):
 
         with TemporaryDirectory() as model_dir:
@@ -145,10 +144,6 @@ class ModelTest(unittest.TestCase):
 
             x = np.random.uniform(size=(5, 6))
 
-            with pytest.raises(eg.types.ModelNotInitialized):
-                model.saved_model(x, model_dir, batch_size=[1, 2, 4, 8])
-
-            model.init(x)
             model.saved_model(x, model_dir, batch_size=[1, 2, 4, 8])
 
             output = str(sh.ls(model_dir))
@@ -159,6 +154,29 @@ class ModelTest(unittest.TestCase):
             saved_model = tf.saved_model.load(model_dir)
 
             saved_model
+
+    def test_saved_model_poly(self):
+
+        with TemporaryDirectory() as model_dir:
+
+            model = eg.Model(module=eg.Linear(4))
+
+            x = np.random.uniform(size=(5, 6)).astype(np.float32)
+
+            model.saved_model(x, model_dir, batch_size=None)
+
+            output = str(sh.ls(model_dir))
+
+            assert "saved_model.pb" in output
+            assert "variables" in output
+
+            saved_model = tf.saved_model.load(model_dir)
+
+            # change batch
+            x = np.random.uniform(size=(3, 6)).astype(np.float32)
+            y = saved_model(x)
+
+            assert y.shape == (3, 4)
 
 
 if __name__ == "__main__":

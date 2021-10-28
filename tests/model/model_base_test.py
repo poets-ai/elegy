@@ -7,7 +7,6 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 
 import elegy as eg
-from tests.model.model_core_test import ModelCoreTest
 
 
 class TestModelBase(unittest.TestCase):

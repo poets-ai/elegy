@@ -3,13 +3,13 @@ import typing as tp
 from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
 
-import dataget
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
 import optax
 import typer
+from datasets.load import load_dataset
 from flax import linen as nn
 from tensorboardX.writer import SummaryWriter
 

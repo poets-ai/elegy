@@ -14,10 +14,7 @@ import jax
 import jax.numpy as jnp
 import jax.tree_util
 import numpy as np
-import toolz
 import treex as tx
-import yaml
-from rich.console import Console
 
 from elegy import types
 

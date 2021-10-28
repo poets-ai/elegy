@@ -3,7 +3,6 @@ import typing as tp
 from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
 
-import dataget
 import haiku as hk
 import jax
 import jax.numpy as jnp
@@ -11,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import optax
 import typer
+from datasets.load import load_dataset
 from tensorboardX.writer import SummaryWriter
 
 import elegy

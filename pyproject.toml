@@ -17,25 +17,17 @@ url = "https://vxlabs.com/pypi/"
 secondary = true
 
 [tool.poetry.dependencies]
-python = "^3.7" # we cant support 3.9 until dm-tree (used by optax) supports 3.9.
-numpy = "^1.0.0"
-jax = "^0.2.19"
-jaxlib = "^0.1.70"
-typing_extensions = { version = "^3.7.4", python = "<3.8" }
-dataclasses =  { version = "^0.7", python = ">=3.6,<3.7" }
+python = ">=3.7,<3.10"
 cloudpickle = "^1.5.0"
 tensorboardx = "^2.1"
-toolz = "^0.10.0"
-pyyaml = "^5.3.1"
-dm-haiku = "^0.0.4"
-optax = "^0.0.9"
-rich = "^10.8.0"
-dm-tree = "<=0.1.5"
 treex = {path = "../treex", develop = true}
 
 [tool.poetry.dev-dependencies]
+jax = "^0.2.24"
+jaxlib = "^0.1.73"
 pytest = "^5.4.3"
 pytest-cov = "^2.10.0"
+dm-haiku = "^0.0.4"
 mkdocs = "^1.1.2"
 mkdocs-material = "^6.2.7"
 mkdocstrings = "^0.14.0"
@@ -43,7 +35,6 @@ black = {version = "^20.8b1", allow-prereleases = true}
 typer = "^0.3.0"
 mkdocs-jupyter = { version = "^0.15.1", python = ">=3.7" }
 matplotlib = "^3.3.0"
-tensorflow-cpu = "^2.2.0"
 dataget = "^0.4.14"
 debugpy = "^1.0.0-beta.12"
 jupyter = { version = "^1.0.0", python = ">=3.7" }
@@ -56,6 +47,7 @@ einops = "^0.3.0"
 sh = "^1.14.1"
 pre-commit = "^2.15.0"
 datasets = "^1.14.0"
+tf-nightly-cpu = "^2.8.0-alpha.20211028"
 
 [build-system]
 requires = ["poetry>=0.12"]

@@ -19,7 +19,6 @@ class EarlyStoppingTest(TestCase):
                 x = jax.lax.stop_gradient(x)
                 return x
 
-        callback = eg.callbacks.EarlyStopping(monitor="loss", patience=3)
         # This callback will stop the training when there is no improvement in
         # the for three consecutive epochs.
         model = eg.Model(
@@ -32,7 +31,11 @@ class EarlyStoppingTest(TestCase):
             labels=np.zeros((5, 10)),
             epochs=10,
             batch_size=1,
-            callbacks=[callback],
+            callbacks=[
+                eg.callbacks.EarlyStopping(
+                    monitor="loss", patience=3, restore_best_weights=True
+                )
+            ],
             verbose=0,
         )
         assert len(history.history["loss"]) == 4  # Only 4 epochs are run.

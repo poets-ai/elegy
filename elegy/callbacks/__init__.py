@@ -6,6 +6,7 @@ from .history import History
 from .lambda_callback import LambdaCallback
 from .model_checkpoint import ModelCheckpoint
 from .remote_monitor import RemoteMonitor
+from .sigint import SigInt
 from .tensorboard import TensorBoard
 from .terminate_nan import TerminateOnNaN
 

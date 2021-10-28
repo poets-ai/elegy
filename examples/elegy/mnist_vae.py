@@ -3,7 +3,6 @@ import typing as tp
 from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
 
-import dataget
 import einops
 import jax
 import jax.numpy as jnp
@@ -11,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import optax
 import typer
+from datasets.load import load_dataset
 from tensorboardX.writer import SummaryWriter
 
 import elegy as eg
@@ -94,7 +94,6 @@ class VariationalAutoEncoder(eg.Module):
 
     encoder: Encoder
     decoder: Decoder
-    next_key: eg.KeySeq
 
     def __init__(
         self,
@@ -107,7 +106,7 @@ class VariationalAutoEncoder(eg.Module):
         self.output_shape = output_shape
 
     @eg.compact
-    def __call__(self, x: np.ndarray) -> dict:
+    def __call__(self, x: jnp.ndarray) -> dict:
         next_key = eg.KeySeq()
         x = x.astype(jnp.float32)
 
@@ -144,10 +143,13 @@ def main(
     current_time = datetime.now().strftime("%b%d_%H-%M-%S")
     logdir = os.path.join(logdir, current_time)
 
-    X_train, _1, X_test, _2 = dataget.image.mnist(global_cache=True).get()
+    dataset = load_dataset("fashion_mnist", format="np")
+    X_train = np.array(dataset["train"]["image"], dtype=np.uint8)
+    X_test = np.array(dataset["test"]["image"], dtype=np.uint8)
+
     # Now binarize data
-    X_train = (X_train > 0).astype(jnp.float32)
-    X_test = (X_test > 0).astype(jnp.float32)
+    X_train = (X_train / 255.0).astype(jnp.float32)
+    X_test = (X_test / 255.0).astype(jnp.float32)
 
     print("X_train:", X_train.shape, X_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)

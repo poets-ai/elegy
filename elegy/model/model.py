@@ -6,7 +6,6 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import treex as tx
-import yaml
 from optax import GradientTransformation
 
 from elegy import types, utils

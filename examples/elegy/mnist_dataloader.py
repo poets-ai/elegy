@@ -3,13 +3,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
 
-import dataget
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
 import optax
 import typer
+from datasets.load import load_dataset
 from tensorboardX.writer import SummaryWriter
 
 import elegy as eg
@@ -18,7 +18,12 @@ import elegy as eg
 class MNIST(eg.data.Dataset):
     def __init__(self, training: bool = True):
 
-        X_train, y_train, X_test, y_test = dataget.image.mnist(global_cache=True).get()
+        dataset = load_dataset("mnist")
+        dataset.set_format("np")
+        X_train = dataset["train"]["image"]
+        y_train = dataset["train"]["label"]
+        X_test = dataset["test"]["image"]
+        y_test = dataset["test"]["label"]
 
         if training:
             self.x = X_train

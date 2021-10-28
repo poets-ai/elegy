@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 
+import datasets
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -41,10 +42,11 @@ def main(
     logdir = os.path.join(logdir, current_time)
 
     dataset = load_dataset("mnist")
-    X_train = np.array(dataset["train"]["image"], dtype=np.uint8)
-    y_train = np.array(dataset["train"]["label"], dtype=np.uint32)
-    X_test = np.array(dataset["test"]["image"], dtype=np.uint8)
-    y_test = np.array(dataset["test"]["label"], dtype=np.uint32)
+    dataset.set_format("np")
+    X_train = dataset["train"]["image"]
+    y_train = dataset["train"]["label"]
+    X_test = dataset["test"]["image"]
+    y_test = dataset["test"]["label"]
 
     print("X_train:", X_train.shape, X_train.dtype)
     print("y_train:", y_train.shape, y_train.dtype)

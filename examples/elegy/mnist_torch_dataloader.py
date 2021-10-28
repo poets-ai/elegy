@@ -1,7 +1,6 @@
 import os
 from datetime import datetime
 
-import dataget
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -9,6 +8,7 @@ import numpy as np
 import optax
 import torch
 import typer
+from datasets.load import load_dataset
 from tensorboardX.writer import SummaryWriter
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -35,7 +35,12 @@ def main(
     current_time = datetime.now().strftime("%b%d_%H-%M-%S")
     logdir = os.path.join(logdir, current_time)
 
-    X_train, y_train, X_test, y_test = dataget.image.mnist(global_cache=True).get()
+    dataset = load_dataset("mnist")
+    dataset.set_format("np")
+    X_train = dataset["train"]["image"]
+    y_train = dataset["train"]["label"]
+    X_test = dataset["test"]["image"]
+    y_test = dataset["test"]["label"]
 
     X_train = X_train[..., None]
     X_test = X_test[..., None]
