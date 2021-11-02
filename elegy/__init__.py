@@ -17,6 +17,13 @@ from . import (
 
 from .model.model import Model
 from .model.model_base import ModelBase, load
-from .model.model_core import GradStep, PredStep, TestStep, TrainStep, ModelCore
+from .model.model_core import (
+    GradStep,
+    PredStep,
+    TestStep,
+    TrainStep,
+    LossStep,
+    ModelCore,
+)
 from .types import KeySeq
 from .utils import inject_dependencies

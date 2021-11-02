@@ -26,6 +26,7 @@ M = tp.TypeVar("M", bound="ModelCore")
 
 PredStep = tp.Tuple[tp.Any, M]
 TestStep = tp.Tuple[jnp.ndarray, types.Logs, M]
+LossStep = tp.Tuple[jnp.ndarray, tp.Tuple[types.Logs, M]]
 GradStep = tp.Tuple[
     M,
     types.Logs,

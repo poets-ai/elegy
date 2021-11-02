@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from typing import Tuple
 
 import jax
 import jax.numpy as jnp
@@ -8,7 +9,6 @@ import numpy as np
 import optax
 import tensorflow as tf
 import typer
-from tensorboardX.writer import SummaryWriter
 
 import elegy as eg
 
@@ -17,7 +17,7 @@ import elegy as eg
 def ConvBlock(
     x,
     units: int,
-    kernel: tp.Tuple[int, int],
+    kernel: Tuple[int, int],
     stride: int = 1,
 ):
     x = eg.Conv(
@@ -136,16 +136,14 @@ def main(
     y_pred = model.predict(x=x_sample)
 
     # plot results
-    with SummaryWriter(os.path.join(logdir, "val")) as tbwriter:
-        figure = plt.figure(figsize=(12, 12))
-        for i in range(3):
-            for j in range(3):
-                k = 3 * i + j
-                plt.subplot(3, 3, k + 1)
+    figure = plt.figure(figsize=(12, 12))
+    for i in range(3):
+        for j in range(3):
+            k = 3 * i + j
+            plt.subplot(3, 3, k + 1)
 
-                plt.title(f"{np.argmax(y_pred[k])}")
-                plt.imshow(x_sample[k], cmap="gray")
-        # tbwriter.add_figure("Conv classifier", figure, 100)
+            plt.title(f"{np.argmax(y_pred[k])}")
+            plt.imshow(x_sample[k], cmap="gray")
 
     plt.show()
 

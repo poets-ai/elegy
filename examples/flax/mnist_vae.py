@@ -1,5 +1,6 @@
 import os
 import typing as tp
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
 
@@ -11,34 +12,21 @@ import optax
 import typer
 from datasets import load_dataset
 from flax import linen as nn
+from jax._src.numpy.lax_numpy import ndarray
 from tensorboardX.writer import SummaryWriter
 
-import elegy
-from elegy.callbacks.tensorboard import TensorBoard
+import elegy as eg
 
-Batch = Mapping[str, np.ndarray]
+# TODO: fix, not learning on par with the elegy version
+
+Batch = Mapping[str, jnp.ndarray]
 np.random.seed(42)
 
 LATENT_SIZE = 32
 MNIST_IMAGE_SHAPE: tp.Sequence[int] = (28, 28)
 
 
-def kl_divergence(mean: np.ndarray, std: np.ndarray) -> np.ndarray:
-    r"""Calculate KL divergence between given and standard gaussian distributions.
-    KL(p, q) = H(p, q) - H(p) = -\int p(x)log(q(x))dx - -\int p(x)log(p(x))dx
-            = 0.5 * [log(|s2|/|s1|) - 1 + tr(s1/s2) + (m1-m2)^2/s2]
-            = 0.5 * [-log(|s1|) - 1 + tr(s1) + m1^2] (if m2 = 0, s2 = 1)
-    Args:
-        mean: mean vector of the first distribution
-        var: diagonal vector of covariance matrix of the first distribution
-    Returns:
-        A scalar representing KL divergence of the two Gaussian distributions.
-    """
-    return jnp.mean(
-        0.5 * jnp.mean(-jnp.log(std ** 2) - 1.0 + std ** 2 + mean ** 2, axis=-1)
-    )
-
-
+@dataclass
 class Encoder(nn.Module):
     """Encoder model."""
 
@@ -46,7 +34,9 @@ class Encoder(nn.Module):
     latent_size: int = 128
 
     @nn.compact
-    def __call__(self, x: np.ndarray, rng: elegy.KeySeq) -> np.ndarray:
+    def __call__(
+        self, x: jnp.ndarray
+    ) -> tp.Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
         x = x.reshape((x.shape[0], -1))  # flatten
         x = nn.Dense(self.hidden_size)(x)
         x = jax.nn.relu(x)
@@ -55,12 +45,13 @@ class Encoder(nn.Module):
         log_stddev = nn.Dense(self.latent_size, name="linear_std")(x)
         stddev = jnp.exp(log_stddev)
 
-        # friendly RNG interface: rng.next() == jax.random.split(...)
-        z = mean + stddev * jax.random.normal(rng.next(), mean.shape)
+        key = self.make_rng("dropout")
+        z = mean + stddev * jax.random.normal(key, mean.shape)
 
         return z, mean, stddev
 
 
+@dataclass
 class Decoder(nn.Module):
     """Decoder model."""
 
@@ -68,7 +59,7 @@ class Decoder(nn.Module):
     output_shape: tp.Sequence[int] = MNIST_IMAGE_SHAPE
 
     @nn.compact
-    def __call__(self, z: np.ndarray) -> np.ndarray:
+    def __call__(self, z: jnp.ndarray) -> jnp.ndarray:
         z = nn.Dense(self.hidden_size)(z)
         z = jax.nn.relu(z)
 
@@ -78,23 +69,41 @@ class Decoder(nn.Module):
         return logits
 
 
+@dataclass
 class VAE(nn.Module):
     hidden_size: int = 512
     latent_size: int = 512
     output_shape: tp.Sequence[int] = MNIST_IMAGE_SHAPE
 
     @nn.compact
-    def __call__(self, x, states: elegy.States):
-        z, mean, stddev = Encoder(
+    def __call__(self, x):
+        z, mean, std = Encoder(
             hidden_size=self.hidden_size, latent_size=self.latent_size
-        )(x, states.rng)
+        )(x)
         logits = Decoder(hidden_size=self.hidden_size, output_shape=self.output_shape)(
             z
         )
-        return logits, mean, stddev
+        return dict(logits=logits, mean=mean, std=std)
 
     def generate(self, z):
         return nn.sigmoid(self.decoder(z))
+
+
+def kl_divergence(mean: jnp.ndarray, std: jnp.ndarray) -> jnp.ndarray:
+    return 0.5 * (-jnp.log(std ** 2) - 1.0 + std ** 2 + mean ** 2).mean(axis=-1)
+
+
+class KL(eg.Loss):
+    def call(self, preds) -> jnp.ndarray:
+        return kl_divergence(preds["mean"], preds["std"])
+
+
+class BinaryCrossEntropy(eg.losses.Crossentropy):
+    def __init__(self, **kwargs):
+        super().__init__(binary=True, **kwargs)
+
+    def call(self, inputs: jnp.ndarray, preds: jnp.ndarray) -> jnp.ndarray:
+        return super().call(target=inputs, preds=preds)
 
 
 def main(
@@ -130,15 +139,12 @@ def main(
 
     # model = VariationalAutoEncoder(latent_size=LATENT_SIZE, optimizer=optax.adam(1e-3))
 
-    def loss(x, y_pred):
-        logits, mean, stddev = y_pred
-        ce_loss = elegy.losses.binary_crossentropy(x, logits, from_logits=True).mean()
-        kl_loss = 2e-1 * kl_divergence(mean, stddev)
-        return ce_loss + kl_loss
-
-    model = elegy.Model(
-        module=vae,
-        loss=loss,
+    model = eg.Model(
+        module=eg.FlaxModule(vae),
+        loss=[
+            BinaryCrossEntropy(on="logits"),
+            KL(),
+        ],
         optimizer=optax.adam(1e-3),
         eager=eager,
     )
@@ -161,15 +167,15 @@ def main(
         f"\n \t\t\t tensorboard --logdir {logdir}",
     )
 
-    elegy.utils.plot_history(history)
+    eg.utils.plot_history(history)
 
     # get random samples
     idxs = np.random.randint(0, len(X_test), size=(5,))
     x_sample = X_test[idxs]
 
     # get predictions
-    logits, mean, stddev = model.predict(x=x_sample)
-    y_pred = jax.nn.sigmoid(logits)
+    preds = model.predict(x=x_sample)
+    y_pred = jax.nn.sigmoid(preds["logits"])
 
     # plot and save results
     with SummaryWriter(os.path.join(logdir, "val")) as tbwriter:
@@ -185,7 +191,7 @@ def main(
 
     # TODO: implement parameter transfer to sample
     # sample
-    # model_decoder = elegy.Model(Decoder(latent_size=LATENT_SIZE))
+    # model_decoder = eg.Model(Decoder(latent_size=LATENT_SIZE))
 
     # z_samples = np.random.normal(size=(12, LATENT_SIZE))
     # samples = model_decoder.predict(z_samples)

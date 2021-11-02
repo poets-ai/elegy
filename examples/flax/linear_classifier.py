@@ -11,7 +11,7 @@ import typer
 from datasets import load_dataset
 from flax import linen
 
-import elegy
+import elegy as eg
 
 
 class LinearClassifier(linen.Module):
@@ -53,10 +53,10 @@ def main(
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
 
-    model = elegy.Model(
-        module=elegy.FlaxModule(LinearClassifier()),
-        loss=elegy.losses.Crossentropy(),
-        metrics=elegy.metrics.Accuracy(),
+    model = eg.Model(
+        module=eg.FlaxModule(LinearClassifier()),
+        loss=eg.losses.Crossentropy(),
+        metrics=eg.metrics.Accuracy(),
         optimizer=optax.adam(1e-3),
         eager=eager,
     )
@@ -71,10 +71,10 @@ def main(
         batch_size=batch_size,
         validation_data=(X_test, y_test),
         shuffle=True,
-        callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],
+        callbacks=[eg.callbacks.TensorBoard(logdir=logdir)],
     )
 
-    elegy.utils.plot_history(history)
+    eg.utils.plot_history(history)
 
     plt.show()
 

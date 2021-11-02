@@ -146,7 +146,7 @@ def main(
     current_time = datetime.now().strftime("%b%d_%H-%M-%S")
     logdir = os.path.join(logdir, current_time)
 
-    dataset = load_dataset("fashion_mnist")
+    dataset = load_dataset("mnist")
     dataset.set_format("np")
     X_train = np.array(dataset["train"]["image"], dtype=np.uint8)
     X_test = np.array(dataset["test"]["image"], dtype=np.uint8)
