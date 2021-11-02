@@ -41,7 +41,7 @@ class ModelMeta(to.TreeMeta):
     def __call__(self, *args, **kwargs) -> "ModelCore":
         model: ModelCore = super().__call__(*args, **kwargs)
 
-        model.jit_step()
+        model.create_jit_functions()
 
         return model
 
@@ -64,14 +64,14 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
     def initialized(self) -> bool:
         return self._initialized
 
-    def jit_step(self):
+    def create_jit_functions(self):
         cls = self.__class__
         self._jitted_members: tp.Set[str] = set()
 
-        self.init_step_jit = jax.jit(cls.init_step)
-        self.pred_step_jit = jax.jit(cls.pred_step)
-        self.test_step_jit = jax.jit(cls.test_step)
-        self.train_step_jit = jax.jit(cls.train_step)
+        self.init_step_jit = jax.jit(cls._static_init_step)
+        self.pred_step_jit = jax.jit(cls._static_pred_step)
+        self.train_step_jit = jax.jit(cls._static_train_step)
+        self.test_step_jit = jax.jit(cls._static_test_step)
 
         self._jitted_members |= {
             "init_step_jit",
@@ -82,7 +82,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self.jit_step()
+        self.create_jit_functions()
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -137,6 +137,41 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
 
     def reset_metrics(self) -> None:
         raise types.MissingMethod()
+
+    # ----------------------------------------------------------------
+    # static version
+    # ----------------------------------------------------------------
+
+    @staticmethod
+    def _static_init_step(
+        model: M,
+        key: jnp.ndarray,
+        inputs: tp.Any,
+    ) -> M:
+        return model.init_step(key, inputs)
+
+    @staticmethod
+    def _static_pred_step(
+        model: M,
+        inputs: tp.Any,
+    ) -> PredStep[M]:
+        return model.pred_step(inputs)
+
+    @staticmethod
+    def _static_test_step(
+        model: M,
+        inputs: tp.Any,
+        labels: tp.Mapping[str, tp.Any],
+    ) -> TestStep[M]:
+        return model.test_step(inputs, labels)
+
+    @staticmethod
+    def _static_train_step(
+        model: M,
+        inputs: tp.Any,
+        labels: tp.Mapping[str, tp.Any],
+    ) -> TrainStep[M]:
+        return model.train_step(inputs, labels)
 
     # ----------------------------------------------------------------
     # high-level methods

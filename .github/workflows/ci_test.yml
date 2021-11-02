@@ -46,5 +46,10 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v1
 
-      # - name: Test Examples
-      #   run: bash scripts/test-examples.sh
+      # test_cloudpickle is currently failing only within pytest on python 3.7.x
+      # so we run it independently here
+      - name: Test cloudpickle
+        run: python tests/model/model_test.py
+
+      - name: Test Examples
+        run: bash scripts/test-examples.sh
