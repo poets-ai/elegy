@@ -71,7 +71,7 @@ class Model(eg.Model):
 
         # crossentropy loss
         target = jax.nn.one_hot(labels["target"], self.features_out)
-        loss = jnp.mean(-jnp.sum(target * jax.nn.log_softmax(logits), axis=-1))
+        loss = optax.softmax_cross_entropy(logits, target).mean()
 
         # metrics
         logs = dict(
