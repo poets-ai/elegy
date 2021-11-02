@@ -1,7 +1,7 @@
 
-# elegy.nn.BatchNormalization
+# elegy.nn.BatchNorm
 
-::: elegy.nn.batch_normalization.BatchNormalization
+::: elegy.nn.batch_normalization.BatchNorm
     selection:
         inherited_members: true
         members:

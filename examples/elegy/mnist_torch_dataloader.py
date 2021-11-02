@@ -12,8 +12,46 @@ from datasets.load import load_dataset
 from tensorboardX.writer import SummaryWriter
 from torch.utils.data import DataLoader, TensorDataset
 
-import elegy
-from elegy.callbacks.tensorboard import TensorBoard
+import elegy as eg
+
+
+@eg.compact_module
+def ConvBlock(
+    x,
+    units: int,
+    kernel: tp.Tuple[int, int],
+    stride: int = 1,
+):
+    x = eg.Conv(
+        units,
+        kernel,
+        strides=[stride, stride],
+        padding="same",
+    )(x)
+    x = eg.BatchNorm()(x)
+    x = eg.Dropout(0.2)(x)
+    return jax.nn.relu(x)
+
+
+class CNN(eg.Module):
+    @eg.compact
+    def __call__(self, x: jnp.ndarray):
+        # normalize
+        x = x.astype(jnp.float32) / 255.0
+
+        # base
+        x = ConvBlock()(x, 32, (3, 3))
+        x = ConvBlock()(x, 64, (3, 3), stride=2)
+        x = ConvBlock()(x, 64, (3, 3), stride=2)
+        x = ConvBlock()(x, 128, (3, 3), stride=2)
+
+        # GlobalAveragePooling2D
+        x = jnp.mean(x, axis=(1, 2))
+
+        # 1x1 Conv
+        x = eg.Linear(10)(x)
+
+        return x
 
 
 def main(
@@ -50,35 +88,10 @@ def main(
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
 
-    class CNN(elegy.Module):
-        def call(self, image: jnp.ndarray, training: bool):
-            @elegy.to_module
-            def ConvBlock(x, units, kernel, stride=1):
-                x = elegy.nn.Conv2D(units, kernel, stride=stride, padding="same")(x)
-                x = elegy.nn.BatchNormalization()(x, training)
-                x = elegy.nn.Dropout(0.2)(x, training)
-                return jax.nn.relu(x)
-
-            x: np.ndarray = image.astype(jnp.float32) / 255.0
-
-            # base
-            x = ConvBlock()(x, 32, [3, 3])
-            x = ConvBlock()(x, 64, [3, 3], stride=2)
-            x = ConvBlock()(x, 64, [3, 3], stride=2)
-            x = ConvBlock()(x, 128, [3, 3], stride=2)
-
-            # GlobalAveragePooling2D
-            x = jnp.mean(x, axis=[1, 2])
-
-            # 1x1 Conv
-            x = elegy.nn.Linear(10)(x)
-
-            return x
-
-    model = elegy.Model(
+    model = eg.Model(
         module=CNN(),
-        loss=elegy.losses.Crossentropy(),
-        metrics=elegy.metrics.Accuracy(),
+        loss=eg.losses.Crossentropy(),
+        metrics=eg.metrics.Accuracy(),
         optimizer=optax.adam(1e-3),
         eager=eager,
     )
@@ -96,14 +109,14 @@ def main(
         epochs=epochs,
         steps_per_epoch=steps_per_epoch,
         validation_data=test_dataloader,
-        callbacks=[TensorBoard(logdir=logdir)],
+        callbacks=[eg.callbacks.TensorBoard(logdir=logdir)],
     )
 
-    elegy.utils.plot_history(history)
+    eg.utils.plot_history(history)
 
     model.save("models/conv")
 
-    model = elegy.load("models/conv")
+    model = eg.load("models/conv")
 
     print(model.evaluate(x=X_test, y=y_test))
 

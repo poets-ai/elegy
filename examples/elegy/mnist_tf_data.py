@@ -13,6 +13,45 @@ from tensorboardX.writer import SummaryWriter
 import elegy as eg
 
 
+@eg.compact_module
+def ConvBlock(
+    x,
+    units: int,
+    kernel: tp.Tuple[int, int],
+    stride: int = 1,
+):
+    x = eg.Conv(
+        units,
+        kernel,
+        strides=[stride, stride],
+        padding="same",
+    )(x)
+    x = eg.BatchNorm()(x)
+    x = eg.Dropout(0.2)(x)
+    return jax.nn.relu(x)
+
+
+class CNN(eg.Module):
+    @eg.compact
+    def __call__(self, x: jnp.ndarray):
+        # normalize
+        x = x.astype(jnp.float32) / 255.0
+
+        # base
+        x = ConvBlock()(x, 32, (3, 3))
+        x = ConvBlock()(x, 64, (3, 3), stride=2)
+        x = ConvBlock()(x, 64, (3, 3), stride=2)
+        x = ConvBlock()(x, 128, (3, 3), stride=2)
+
+        # GlobalAveragePooling2D
+        x = jnp.mean(x, axis=(1, 2))
+
+        # 1x1 Conv
+        x = eg.Linear(10)(x)
+
+        return x
+
+
 def main(
     debug: bool = False,
     eager: bool = False,
@@ -45,37 +84,6 @@ def main(
     print("y_train:", y_train.shape, y_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
-
-    class CNN(eg.Module):
-        @eg.compact
-        def __call__(self, image: jnp.ndarray):
-            @eg.compact_module
-            def ConvBlock(x, units, kernel, stride=1):
-                x = eg.nn.Conv(
-                    units,
-                    kernel,
-                    strides=[stride, stride],
-                    padding="SAME",
-                )(x)
-                x = eg.nn.BatchNorm()(x)
-                x = eg.nn.Dropout(0.2)(x)
-                return jax.nn.relu(x)
-
-            x = image.astype(jnp.float32) / 255.0
-
-            # base
-            x = ConvBlock()(x, 32, [3, 3])
-            x = ConvBlock()(x, 64, [3, 3], stride=2)
-            x = ConvBlock()(x, 64, [3, 3], stride=2)
-            x = ConvBlock()(x, 128, [3, 3], stride=2)
-
-            # GlobalAveragePooling2D
-            x = jnp.mean(x, axis=(1, 2))
-
-            # 1x1 Conv
-            x = eg.nn.Linear(10)(x)
-
-            return x
 
     model = eg.Model(
         module=CNN(),

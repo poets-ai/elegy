@@ -103,7 +103,7 @@ nav:
       MeanSquaredError: api/losses/MeanSquaredError.md
       MeanSquaredLogarithmicError: api/losses/MeanSquaredLogarithmicError.md
       Reduction: api/losses/Reduction.md
-      SparseCategoricalCrossentropy: api/losses/SparseCategoricalCrossentropy.md
+      Crossentropy: api/losses/Crossentropy.md
       binary_crossentropy: api/losses/binary_crossentropy.md
       cosine_similarity: api/losses/cosine_similarity.md
       huber: api/losses/huber.md
@@ -151,9 +151,9 @@ nav:
       ResNet50: api/nets/ResNet50.md
     nn:
       AvgPool: api/nn/AvgPool.md
-      BatchNormalization: api/nn/BatchNormalization.md
+      BatchNorm: api/nn/BatchNorm.md
       Conv1D: api/nn/Conv1D.md
-      Conv2D: api/nn/Conv2D.md
+      Conv: api/nn/Conv.md
       Conv3D: api/nn/Conv3D.md
       ConvND: api/nn/ConvND.md
       Dropout: api/nn/Dropout.md
@@ -178,7 +178,7 @@ nav:
       GlobalL1: api/regularizers/GlobalL1.md
       GlobalL1L2: api/regularizers/GlobalL1L2.md
       GlobalL2: api/regularizers/GlobalL2.md
-    to_module: api/to_module.md
+    compact_module: api/compact_module.md
 extra:
   search:
     language: en

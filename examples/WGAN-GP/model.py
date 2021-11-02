@@ -12,12 +12,12 @@ class Generator(elegy.Module):
         x = elegy.nn.Reshape([1, 1, z.shape[-1]])(z)
         for i, c in enumerate([1024, 512, 256, 128]):
             padding = "VALID" if i == 0 else "SAME"
-            x = elegy.nn.conv.Conv2DTranspose(
-                c, (4, 4), stride=(2, 2), padding=padding
-            )(x)
-            x = elegy.nn.BatchNormalization(decay_rate=0.9)(x)
+            x = elegy.nn.conv.ConvTranspose(c, (4, 4), stride=(2, 2), padding=padding)(
+                x
+            )
+            x = elegy.nn.BatchNorm(decay_rate=0.9)(x)
             x = jax.nn.leaky_relu(x, negative_slope=0.2)
-        x = elegy.nn.conv.Conv2DTranspose(3, (4, 4), stride=(2, 2))(x)
+        x = elegy.nn.conv.ConvTranspose(3, (4, 4), stride=(2, 2))(x)
         x = jax.nn.sigmoid(x)
         return x
 
@@ -27,7 +27,7 @@ class Generator(elegy.Module):
 class Discriminator(elegy.Module):
     def __call__(self, x):
         for c in [128, 256, 512, 1024]:
-            x = elegy.nn.conv.Conv2D(c, (4, 4), stride=(2, 2))(x)
+            x = elegy.nn.conv.Conv(c, (4, 4), stride=(2, 2))(x)
             x = jax.nn.leaky_relu(x, negative_slope=0.2)
         x = elegy.nn.Flatten()(x)
         x = elegy.nn.Linear(1)(x)

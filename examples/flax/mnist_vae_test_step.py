@@ -223,7 +223,7 @@ def main(
         steps_per_epoch=steps_per_epoch,
         validation_data=(X_test,),
         shuffle=True,
-        callbacks=[TensorBoard(logdir)],
+        callbacks=[eg.callbacks.TensorBoard(logdir)],
     )
 
     print(

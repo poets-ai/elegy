@@ -58,7 +58,7 @@ import elegy, optax
 model = elegy.Model(
     module=MLP(),
     loss=[
-        elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
+        elegy.losses.Crossentropy(),
         elegy.regularizers.GlobalL2(l=1e-5),
     ],
     metrics=elegy.metrics.SparseCategoricalAccuracy(),

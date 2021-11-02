@@ -53,7 +53,7 @@ class LinearClassifier(elegy.Model):
 
 model = LinearClassifier(
     optimizer=optax.adam(1e-3),
-    loss=elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
+    loss=elegy.losses.Crossentropy(),
     metrics=elegy.metrics.SparseCategoricalAccuracy(),
 )
 
