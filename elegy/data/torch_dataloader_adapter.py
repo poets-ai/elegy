@@ -2,7 +2,7 @@ from jax._src.lax.lax import remaining
 from torch.utils.data import DataLoader
 
 from .data_adapter import DataAdapter
-from .utils import is_none_or_empty, map_structure, list_to_tuple
+from .utils import is_none_or_empty, list_to_tuple, map_structure
 
 
 class TorchDataLoaderAdapter(DataAdapter):

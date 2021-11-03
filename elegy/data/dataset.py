@@ -1,11 +1,13 @@
-import numpy as np
-import jax, jax.numpy as jnp
 import multiprocessing.pool
+import os
 import typing as tp
+
+import jax
+import jax.numpy as jnp
+import numpy as np
+
 from .data_adapter import DataAdapter
 from .utils import is_none_or_empty
-import os
-
 
 __all__ = ["Dataset", "DataLoader"]
 

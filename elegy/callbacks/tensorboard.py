@@ -5,6 +5,7 @@
 import os
 import typing as tp
 from typing import Any, Dict, Optional, Union
+
 from tensorboardX.writer import SummaryWriter
 
 from .callback import Callback
@@ -106,6 +107,9 @@ class TensorBoard(Callback):
         self.current_epoch = epoch
 
     def on_epoch_end(self, epoch, logs=None):
+        # if self.model.stop_training:
+        #     return
+
         logs = logs or {}
 
         if self.keys is None:
@@ -122,8 +126,8 @@ class TensorBoard(Callback):
 
         elif epoch % self.update_freq == 0:
 
-            for key in self.keys:
-                if "val" in key:
+            for key in logs:
+                if "val" in key and key:
                     self.val_writer.add_scalar(
                         key.replace("val_", ""), logs[key], epoch
                     )

@@ -11,10 +11,12 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import six
+import typing_extensions as tpe
+
 from elegy import types, utils
 
 
-class Multimap(types.Protocol):
+class Multimap(tpe.Protocol):
     def __call__(self, *args: types.np.ndarray) -> types.T:
         ...
 

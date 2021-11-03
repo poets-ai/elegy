@@ -1,24 +1,19 @@
 import pathlib
-import pickle
-import threading
 import typing as tp
-from contextlib import contextmanager
-from copy import copy
-from dataclasses import dataclass
-from enum import Enum
-from io import StringIO
+from abc import abstractmethod
 
 import cloudpickle
 import jax
 import jax.numpy as jnp
 import numpy as np
-import optax
-import toolz
-import yaml
-from elegy import hooks, module, types, utils
-from elegy.losses.loss import Loss
-from elegy.metrics.metric import Metric
-from tabulate import tabulate
+import treeo as to
+import treex as tx
+from jax._src.numpy.lax_numpy import ndarray
+from jax._src.tree_util import tree_flatten
+from jax.experimental import jax2tf
+from treeo.utils import Opaque
+
+from elegy import types, utils
 
 from . import utils as model_utils
 
@@ -27,265 +22,178 @@ try:
 except ImportError:
     tf = None
 
+M = tp.TypeVar("M", bound="ModelCore")
 
-class PredStep(tp.NamedTuple):
-    y_pred: tp.Any
-    states: types.States
-
-
-class TestStep(tp.NamedTuple):
-    loss: types.Scalar
-    logs: types.Logs
-    states: types.States
-
-
-class GradStep(tp.NamedTuple):
-    loss: types.Scalar
-    logs: types.Logs
-    states: types.States
-    grads: types.Grads
+PredStep = tp.Tuple[tp.Any, M]
+TestStep = tp.Tuple[jnp.ndarray, types.Logs, M]
+LossStep = tp.Tuple[jnp.ndarray, tp.Tuple[types.Logs, M]]
+GradStep = tp.Tuple[
+    M,
+    types.Logs,
+    M,
+]
 
 
-class TrainStep(tp.NamedTuple):
-    logs: types.Logs
-    states: types.States
+TrainStep = tp.Tuple[types.Logs, M]
 
 
-class ModelCore:
-    states: types.States
-    initial_states: types.States
-    history: tp.Dict[str, tp.Any]
-    run_eagerly: bool = False
-    initialized: bool = False
+class ModelMeta(to.TreeMeta):
+    def __call__(self, *args, **kwargs) -> "ModelCore":
+        model: ModelCore = super().__call__(*args, **kwargs)
+
+        model.create_jit_functions()
+
+        return model
+
+
+class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
+
+    seed: tp.Union[int, jnp.ndarray] = 42
+    eager: bool = False
+    _initialized: bool = tx.static(default=False)
 
     def __init__(
         self,
-        states: tp.Optional[types.States] = None,
-        run_eagerly: bool = False,
-        initialized: bool = False,
+        eager: bool = False,
+        seed: int = 42,
     ):
+        self.eager = eager
+        self.seed = seed
 
-        if states is None:
-            states = types.States()
+    @property
+    def initialized(self) -> bool:
+        return self._initialized
 
-        self.initial_states = states
-        self.states = states.copy()  # explicity do this to copy RNGSeq
-        self.run_eagerly = run_eagerly
-        self.history = {}
-        self.initialized = initialized
-        self.jitted_members: tp.Set[str] = set()
+    def create_jit_functions(self):
+        cls = self.__class__
+        self._jitted_members: tp.Set[str] = set()
 
-        self.jit_step()
+        self.init_step_jit = jax.jit(cls._static_init_step)
+        self.pred_step_jit = jax.jit(cls._static_pred_step)
+        self.train_step_jit = jax.jit(cls._static_train_step)
+        self.test_step_jit = jax.jit(cls._static_test_step)
 
-    def jit_step(self):
-        self.call_pred_step_jit = jax.jit(
-            self.call_pred_step,
-            static_argnums=[2, 3],
-        )
-        self.call_test_step_jit = jax.jit(
-            self.call_test_step,
-            static_argnums=[5, 6],
-        )
-        self.call_train_step_jit = jax.jit(
-            self.call_train_step,
-            static_argnums=[5, 6],
-        )
-        self.call_init_step_jit = jax.jit(
-            self.call_init_step,
-            static_argnums=[],
-        )
-
-        self.jitted_members |= {
-            "call_pred_step_jit",
-            "call_test_step_jit",
-            "call_train_step_jit",
-            "call_init_step_jit",
+        self._jitted_members |= {
+            "init_step_jit",
+            "pred_step_jit",
+            "test_step_jit",
+            "train_step_jit",
         }
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self.jit_step()
+        self.create_jit_functions()
 
     def __getstate__(self):
         d = self.__dict__.copy()
 
-        # remove states
-        del d["states"]
-        del d["initial_states"]
-
         # remove jitted functions
-        for member in self.jitted_members:
+        for member in self._jitted_members:
             if member in d:
                 del d[member]
 
         return d
 
+    def _update_from(self: M, other: M):
+        self.__dict__.update(other.__dict__)
+
     # ----------------------------------------------------------------
     # Abstract API
     # ----------------------------------------------------------------
 
-    def update_modules(self):
-        pass
-
-    def states_step(self) -> types.States:
-        return types.States()
-
     def init_step(
-        self,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-        states: types.States,
-    ) -> types.States:
+        self: M,
+        key: jnp.ndarray,
+        inputs: tp.Any,
+    ) -> M:
         raise types.MissingMethod()
-
-    def call_init_step(
-        self,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-        states: types.States,
-    ) -> types.States:
-        return utils.inject_dependencies(self.init_step)(
-            x=x,
-            y_true=y_true,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            states=states,
-        )
 
     def pred_step(
-        self,
-        x: tp.Any,
-        states: types.States,
-        initializing: bool,
-        training: bool,
-    ) -> PredStep:
+        self: M,
+        inputs: tp.Any,
+    ) -> PredStep[M]:
         raise types.MissingMethod()
-
-    def call_pred_step(
-        self,
-        x: tp.Any,
-        states: types.States,
-        initializing: bool,
-        training: bool,
-    ) -> PredStep:
-        return utils.inject_dependencies(self.pred_step)(
-            x=x,
-            states=states,
-            initializing=initializing,
-            training=training,
-        )
 
     def test_step(
-        self,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-        states: types.States,
-        initializing: bool,
-        training: bool,
-    ) -> TestStep:
+        self: M,
+        inputs: tp.Any,
+        labels: tp.Mapping[str, tp.Any],
+    ) -> TestStep[M]:
         raise types.MissingMethod()
 
-    def call_test_step(
-        self,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-        states: types.States,
-        initializing: bool,
-        training: bool,
-    ) -> TestStep:
-        return utils.inject_dependencies(self.test_step)(
-            x=x,
-            y_true=y_true,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            states=states,
-            initializing=initializing,
-            training=training,
-        )
-
     def grad_step(
-        self,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-        states: types.States,
-        initializing: bool,
-        training: bool,
-    ) -> GradStep:
+        self: M,
+        inputs: tp.Any,
+        labels: tp.Mapping[str, tp.Any],
+    ) -> GradStep[M]:
         raise types.MissingMethod()
 
     def train_step(
-        self,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-        states: types.States,
-        initializing: bool,
-        training: bool,
-    ) -> TrainStep:
+        self: M,
+        inputs: tp.Any,
+        labels: tp.Mapping[str, tp.Any],
+    ) -> TrainStep[M]:
         raise types.MissingMethod()
 
-    def call_train_step(
-        self,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-        states: types.States,
-        initializing: bool,
-        training: bool,
-    ) -> TrainStep:
-        return utils.inject_dependencies(self.train_step)(
-            x=x,
-            y_true=y_true,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            states=states,
-            initializing=initializing,
-            training=training,
-        )
+    def reset_metrics(self) -> None:
+        raise types.MissingMethod()
+
+    # ----------------------------------------------------------------
+    # static version
+    # ----------------------------------------------------------------
+
+    @staticmethod
+    def _static_init_step(
+        model: M,
+        key: jnp.ndarray,
+        inputs: tp.Any,
+    ) -> M:
+        return model.init_step(key, inputs)
+
+    @staticmethod
+    def _static_pred_step(
+        model: M,
+        inputs: tp.Any,
+    ) -> PredStep[M]:
+        return model.pred_step(inputs)
+
+    @staticmethod
+    def _static_test_step(
+        model: M,
+        inputs: tp.Any,
+        labels: tp.Mapping[str, tp.Any],
+    ) -> TestStep[M]:
+        return model.test_step(inputs, labels)
+
+    @staticmethod
+    def _static_train_step(
+        model: M,
+        inputs: tp.Any,
+        labels: tp.Mapping[str, tp.Any],
+    ) -> TrainStep[M]:
+        return model.train_step(inputs, labels)
 
     # ----------------------------------------------------------------
     # high-level methods
     # ----------------------------------------------------------------
 
-    def init_on_batch(
-        self,
-        x: tp.Any = (),
-        y_true: tp.Any = None,
-        sample_weight: tp.Optional[np.ndarray] = None,
-        class_weight: tp.Optional[tp.Any] = None,
-    ):
+    def init_on_batch(self, inputs: tp.Any):
+        key = tx.Key(self.seed)
 
-        if self.initialized:
-            return
+        if self.eager:
+            model = self.init_step(key, inputs)
+        else:
+            model = self.init_step_jit(self, key, inputs)
 
-        method = self.call_init_step if self.run_eagerly else self.call_init_step_jit
-        states = self.states.copy() if self.run_eagerly else self.states
+        if not isinstance(model, type(self)):
+            raise ValueError(
+                f"Model.init_step() must return an instance of {type(self)}."
+            )
 
-        state_updates = method(
-            x,
-            y_true,
-            sample_weight,
-            class_weight,
-            states,
-        )
+        self._update_from(model)
+        self._initialized = True
 
-        self.states = self.states.maybe_update(**state_updates)
-        self.initial_states = self.initial_states.maybe_update(**state_updates)
-        self.initialized = True
-
-    def predict_on_batch(self, x: tp.Any) -> tp.Any:
+    def predict_on_batch(self, inputs: tp.Any) -> tp.Any:
         """
         Returns predictions for a single batch of samples.
 
@@ -301,31 +209,29 @@ class ModelCore:
             ValueError: In case of mismatch between given number of inputs and
                 expectations of the model.
         """
-        if not self.initialized:
-            raise types.ModelNotInitialized(
-                f"Model not initialized, please execute `init` or `init_on_batch` before running this method."
+        if not self._initialized:
+            self.init_on_batch(inputs)
+
+        self.eval(inplace=True)
+
+        if self.eager:
+            y_pred, model = self.pred_step(inputs)
+        else:
+            y_pred, model = self.pred_step_jit(self, inputs)
+
+        if not isinstance(model, type(self)):
+            raise ValueError(
+                f"Model.pred_step() must return an instance of {type(self)}."
             )
-        initializing = False
-        training = False
 
-        method = self.call_pred_step if self.run_eagerly else self.call_pred_step_jit
-        states = self.states.copy() if self.run_eagerly else self.states
-
-        y_pred, self.states = method(
-            x,
-            states,
-            initializing,
-            training,
-        )
+        self._update_from(model)
 
         return y_pred
 
     def test_on_batch(
         self,
-        x: tp.Any,
-        y: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
-        sample_weight: tp.Optional[np.ndarray] = None,
-        class_weight: tp.Optional[np.ndarray] = None,
+        inputs: tp.Any,
+        labels: tp.Any,
     ) -> types.Logs:
         """
         Test the model on a single batch of samples.
@@ -351,37 +257,39 @@ class ModelCore:
         Raises:
             ValueError: In case of invalid user-provided arguments.
         """
-        self.init_on_batch(
-            x=x,
-            y_true=y,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-        )
+        if not self._initialized:
+            self.init_on_batch(inputs)
 
-        initializing = False
-        training = False
+        if not isinstance(labels, tp.Mapping):
+            labels = dict(target=labels)
 
-        method = self.call_test_step if self.run_eagerly else self.call_test_step_jit
-        states = self.states.copy() if self.run_eagerly else self.states
+        self.eval(inplace=True)
 
-        loss, logs, self.states = method(
-            x,
-            y,
-            sample_weight,
-            class_weight,
-            states,
-            initializing,
-            training,
-        )
+        if self.eager:
+            loss, logs, model = self.test_step(
+                inputs,
+                labels,
+            )
+        else:
+            loss, logs, model = self.test_step_jit(
+                self,
+                inputs,
+                labels,
+            )
+
+        if not isinstance(model, type(self)):
+            raise ValueError(
+                f"Model.test_step() must return an instance of {type(self)}."
+            )
+
+        self._update_from(model)
 
         return logs
 
     def train_on_batch(
         self,
-        x: tp.Any,
-        y: tp.Union[np.ndarray, tp.Mapping[str, tp.Any], tp.Tuple, None] = None,
-        sample_weight: tp.Optional[np.ndarray] = None,
-        class_weight: tp.Optional[tp.Any] = None,
+        inputs: tp.Any,
+        labels: tp.Any,
     ) -> types.Logs:
         """
         Runs a single gradient update on a single batch of data.
@@ -413,48 +321,28 @@ class ModelCore:
         Raises:
             ValueError: In case of invalid user-provided arguments.
         """
-        self.init_on_batch(
-            x=x,
-            y_true=y,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-        )
 
-        initializing = False
-        training = True
+        if not self.initialized:
+            self.init_on_batch(inputs)
 
-        method = self.call_train_step if self.run_eagerly else self.call_train_step_jit
-        states = self.states.copy() if self.run_eagerly else self.states
+        self.train(inplace=True)
 
-        logs, self.states = method(
-            x,
-            y,
-            sample_weight,
-            class_weight,
-            states,
-            initializing,
-            training,
-        )
+        if not isinstance(labels, tp.Mapping):
+            labels = dict(target=labels)
+
+        if self.eager:
+            logs, model = self.train_step(inputs, labels)
+        else:
+            logs, model = self.train_step_jit(self, inputs, labels)
+
+        if not isinstance(model, type(self)):
+            raise ValueError(
+                f"Model.train_step() must return an instance of {type(self)}."
+            )
+
+        self._update_from(model)
 
         return logs
-
-    def summary(
-        self,
-        x: tp.Optional[tp.Any] = None,
-        depth: int = 2,
-        return_repr: bool = False,
-        initialize: bool = False,
-        eval_shape: bool = True,
-    ) -> tp.Optional[str]:
-        """
-        Prints a summary of the network.
-        Arguments:
-            x: A sample of inputs to the network.
-            depth: The level number of nested level which will be showed.
-                Information about summaries from modules deeper than `depth`
-                will be aggregated together.
-        """
-        raise NotImplementedError()
 
     def save(
         self,
@@ -467,8 +355,6 @@ class ModelCore:
 
         - `{path}/model.pkl`: The `Model` object instance serialized with `pickle`,
             this allows you to re-instantiate the model later.
-        - `{path}/states.pkl`: The `Model.states` serialized with `pickle`.
-        - `{path}/initial_states.pkl`: The `Model.initial_states` serialized with `pickle`.
 
         This allows you to save the entirety of the states of a model
         in a directory structure which can be fully restored via
@@ -492,12 +378,6 @@ class ModelCore:
 
         path.mkdir(parents=True, exist_ok=True)
 
-        with open(path / "states.pkl", "wb") as f:
-            cloudpickle.dump(self.states, f)
-
-        with open(path / "initial_states.pkl", "wb") as f:
-            cloudpickle.dump(self.initial_states, f)
-
         with open(path / "model.pkl", "wb") as f:
             cloudpickle.dump(self, f)
 
@@ -516,19 +396,13 @@ class ModelCore:
         Arguments:
             path: path to a saved model's directory.
         """
-        if isinstance(path, str):
-            path = pathlib.Path(path)
-
-        self.states = cloudpickle.loads((path / "states.pkl").read_bytes())
-        self.initial_states = cloudpickle.loads(
-            (path / "initial_states.pkl").read_bytes()
-        )
+        pass
 
     def saved_model(
         self,
-        x: types.Pytree,
+        inputs: tp.Any,
         path: tp.Union[str, pathlib.Path],
-        batch_size: tp.Union[int, tp.Sequence[int]],
+        batch_size: tp.Union[int, tp.Sequence[int], None] = None,
     ):
         """
         Serializes the prediction function of the Model (`pred_step`) as a TensorFlow SavedModel via
@@ -548,9 +422,7 @@ class ModelCore:
         """
 
         if not self.initialized:
-            raise types.ModelNotInitialized(
-                f"Model not initialized, please execute `init` or `init_on_batch` before running this method."
-            )
+            self.init_on_batch(inputs)
 
         if model_utils.convert_and_save_model is None:
             raise ImportError(f"Could not import tensorflow.")
@@ -563,43 +435,40 @@ class ModelCore:
 
         path.mkdir(parents=True, exist_ok=True)
 
-        x = jax.tree_map(jnp.asarray, x)
+        inputs = jax.tree_map(jnp.asarray, inputs)
 
-        # polymorphic batch size currently not supported by jax: https://github.com/google/jax/issues/5915
-        # -----------------------------------------
-        # if batch_size is None:
-        #     input_signatures = [
-        #         jax.tree_map(
-        #             lambda p: tf.TensorSpec(shape=(None,) + p.shape[1:], dtype=p.dtype),
-        #             x,
-        #         )
-        #     ]
-        #     shape_polymorphic_input_spec = jax.tree_map(
-        #         lambda p: "(" + ", ".join(["batch"] + ["_"] * (len(p.shape) - 1)) + ")",
-        #         x,
-        #     )
-        # else:
-        input_signatures = [
-            jax.tree_map(
-                lambda p: tf.TensorSpec(
-                    shape=(batch_size,) + p.shape[1:], dtype=p.dtype
+        if batch_size is None:
+            input_signatures = [
+                jax.tree_map(
+                    lambda p: tf.TensorSpec(shape=(None,) + p.shape[1:], dtype=p.dtype),
+                    inputs,
+                )
+            ]
+            shape_polymorphic_input_spec = jax.tree_map(
+                lambda p: jax2tf.shape_poly.PolyShape(
+                    "batch", *(["_"] * (len(p.shape) - 1))
                 ),
-                x,
+                inputs,
             )
-            for batch_size in batch_size
-        ]
-        shape_polymorphic_input_spec = None
+        else:
+            input_signatures = [
+                jax.tree_map(
+                    lambda p: tf.TensorSpec(
+                        shape=(batch_size,) + p.shape[1:], dtype=p.dtype
+                    ),
+                    inputs,
+                )
+                for batch_size in batch_size
+            ]
+            shape_polymorphic_input_spec = None
 
-        states = types.States(
-            {field: value for field, value in self.states.items() if value is not None}
-        )
-        flat_states, states_def = jax.tree_flatten(states)
+        flat_states, states_def = jax.tree_flatten(self)
 
         def jax_fn(flat_states, inputs):
-            states = jax.tree_unflatten(states_def, flat_states)
+            model: ModelCore = jax.tree_unflatten(states_def, flat_states)
 
-            y_pred, _ = utils.inject_dependencies(self.pred_step)(
-                x=inputs, states=states, initializing=False, training=False
+            y_pred, _ = model.pred_step(
+                inputs=inputs,
             )
 
             return y_pred
@@ -612,15 +481,6 @@ class ModelCore:
             shape_polymorphic_input_spec=shape_polymorphic_input_spec,
             with_gradient=False,
             enable_xla=True,
-            compile_model=True,
+            compile_model=False,
             save_model_options=None,
         )
-
-    def reset(self):
-        self.states = self.initial_states.copy()
-
-    def reset_metrics(self):
-        if hasattr(self.initial_states, "metrics_states"):
-            self.states = self.states.update(
-                metrics_states=self.initial_states.metrics_states
-            )

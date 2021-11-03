@@ -6,7 +6,7 @@ from tensorflow.python.data.experimental.ops import cardinality
 from tensorflow.python.data.ops import dataset_ops
 
 from .data_adapter import DataAdapter
-from .utils import is_none_or_empty, map_structure, flatten
+from .utils import flatten, is_none_or_empty, map_structure
 
 
 class TFDatasetAdapter(DataAdapter):

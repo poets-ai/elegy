@@ -1,14 +1,25 @@
 import os
 from datetime import datetime
 
-import dataget
-from flax import linen
-import elegy
+import datasets
 import jax
 import jax.numpy as jnp
+import matplotlib.pyplot as plt
 import numpy as np
 import optax
 import typer
+from datasets import load_dataset
+from flax import linen
+
+import elegy as eg
+
+
+class LinearClassifier(linen.Module):
+    @linen.compact
+    def __call__(self, x):
+        x = jnp.reshape(x, (x.shape[0], -1)) / 255.0
+        x = linen.Dense(10)(x)
+        return x
 
 
 def main(
@@ -30,51 +41,42 @@ def main(
     current_time = datetime.now().strftime("%b%d_%H-%M-%S")
     logdir = os.path.join(logdir, current_time)
 
-    X_train, y_train, X_test, y_test = dataget.image.mnist(global_cache=True).get()
+    dataset = load_dataset("mnist")
+    dataset.set_format("np")
+    X_train = dataset["train"]["image"]
+    y_train = dataset["train"]["label"]
+    X_test = dataset["test"]["image"]
+    y_test = dataset["test"]["label"]
 
     print("X_train:", X_train.shape, X_train.dtype)
     print("y_train:", y_train.shape, y_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
 
-    def crossentropy(y_true, y_pred):
-        labels = jax.nn.one_hot(y_true, 10)
-        loss = -jnp.sum(labels * jax.nn.log_softmax(y_pred), axis=-1)
-        return jnp.mean(loss)
-
-    def accuracy(y_true, y_pred):
-        return jnp.mean(jnp.argmax(y_pred, axis=-1) == y_true)
-
-    class LinearClassifier(linen.Module):
-        @linen.compact
-        def __call__(self, x):
-            x = jnp.reshape(x, (x.shape[0], -1)) / 255.0
-            x = linen.Dense(10)(x)
-            return x
-
-    model = elegy.Model(
-        module=LinearClassifier(),
-        loss=crossentropy,
-        metrics=accuracy,
+    model = eg.Model(
+        module=eg.FlaxModule(LinearClassifier()),
+        loss=eg.losses.Crossentropy(),
+        metrics=eg.metrics.Accuracy(),
         optimizer=optax.adam(1e-3),
-        run_eagerly=eager,
+        eager=eager,
     )
 
-    model.init(X_train[:batch_size], y_train[:batch_size])
     model.summary(X_train[:batch_size])
 
     history = model.fit(
-        x=X_train,
-        y=y_train,
+        inputs=X_train,
+        labels=y_train,
         epochs=epochs,
         steps_per_epoch=steps_per_epoch,
         batch_size=batch_size,
         validation_data=(X_test, y_test),
         shuffle=True,
-        callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],
+        callbacks=[eg.callbacks.TensorBoard(logdir=logdir)],
     )
 
-    elegy.utils.plot_history(history)
+    eg.utils.plot_history(history)
+
+    plt.show()
 
 
 if __name__ == "__main__":

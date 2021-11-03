@@ -1,6 +1,6 @@
 # Elegy
 
-[![PyPI Status Badge](https://badge.fury.io/py/elegy.svg)](https://pypi.org/project/elegy/)
+[![PyPI Status Badge](https://badge.fury.io/py/eg.svg)](https://pypi.org/project/elegy/)
 [![Coverage](https://img.shields.io/codecov/c/github/poets-ai/elegy?color=%2334D058)](https://codecov.io/gh/poets-ai/elegy)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/elegy)](https://pypi.org/project/elegy/)
 [![Documentation](https://img.shields.io/badge/api-reference-blue.svg)](https://poets-ai.github.io/elegy/)
@@ -35,33 +35,34 @@ For Windows users, we recommend the Windows subsystem for Linux 2 [WSL2](https:/
 
 Elegy's high-level API provides a straightforward interface you can use by implementing the following steps:
 
-**1.** Define the architecture inside a `Module`. We will use Flax Linen for this example:
+**1.** Define the architecture inside a `Module`:
 
 ```python
-import flax.linen as nn
 import jax
+import elegy as eg
 
-class MLP(nn.Module):
-    @nn.compact
+class MLP(eg.Module):
+    @eg.compact
     def __call__(self, x):
-        x = nn.Dense(300)(x)
+        x = eg.Linear(300)(x)
         x = jax.nn.relu(x)
-        x = nn.Dense(10)(x)
+        x = eg.Linear(10)(x)
         return x
 ```
 
 **2.** Create a `Model` from this module and specify additional things like losses, metrics, and optimizers:
 
 ```python
-import elegy, optax
+import optax optax
+import elegy as eg
 
-model = elegy.Model(
+model = eg.Model(
     module=MLP(),
     loss=[
-        elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-        elegy.regularizers.GlobalL2(l=1e-5),
+        eg.losses.Crossentropy(),
+        eg.regularizers.L2(l=1e-5),
     ],
-    metrics=elegy.metrics.SparseCategoricalAccuracy(),
+    metrics=eg.metrics.Accuracy(),
     optimizer=optax.rmsprop(1e-3),
 )
 ```
@@ -77,7 +78,7 @@ model.fit(
     batch_size=64,
     validation_data=(X_test, y_test),
     shuffle=True,
-    callbacks=[elegy.callbacks.TensorBoard("summaries")]
+    callbacks=[eg.callbacks.TensorBoard("summaries")]
 )
 ```
 
@@ -88,39 +89,50 @@ Elegy's low-level API lets you explicitly define what goes on during training, t
 **1.** Calculate our loss, logs, and states:
 
 ```python
-class LinearClassifier(elegy.Model):
-    # request parameters by name via depending injection.
-    # names: x, y_true, sample_weight, class_weight, states, initializing
+class LinearClassifier(eg.Model):
+    # use Treeo's API to define parameter nodes
+    w: jnp.ndarray = eg.Parameter.node()
+    b: jnp.ndarray = eg.Parameter.node()
+
+    def init_step(self, key: jnp.ndarray, inputs: jnp.ndarray):
+        self.w = jax.random.uniform(
+            key=key,
+            shape=[features_in, 10],
+        )
+        self.b = jnp.zeros([10])
+
+        self.optimizer = self.optimizer.init(self)
+
+        return self
+
+    def pred_step(self, inputs: tp.Any):
+        # forward
+        logits = jnp.dot(inputs, self.w) + self.b
+        return logits, self
+
     def test_step(
         self,
-        x, # inputs
-        y_true, # labels
-        states: elegy.States, # model state
-        initializing: bool, # if True, we should initialize our parameters
-    ):  
-        rng: elegy.RNGSeq = states.rng
+        inputs,
+        labels,
+    ):
         # flatten + scale
-        x = jnp.reshape(x, (x.shape[0], -1)) / 255
-        # initialize or use existing parameters
-        if initializing:
-            w = jax.random.uniform(
-                rng.next(), shape=[np.prod(x.shape[1:]), 10]
-            )
-            b = jax.random.uniform(rng.next(), shape=[1])
-        else:
-            w, b = states.net_params
-        # model
-        logits = jnp.dot(x, w) + b
-        # categorical crossentropy loss
-        labels = jax.nn.one_hot(y_true, 10)
-        loss = jnp.mean(-jnp.sum(labels * jax.nn.log_softmax(logits), axis=-1))
-        accuracy=jnp.mean(jnp.argmax(logits, axis=-1) == y_true)
+        inputs = jnp.reshape(inputs, (inputs.shape[0], -1)) / 255
+
+        # forward
+        logits, _ = self.pred_step(inputs)
+
+        # crossentropy loss
+        target = jax.nn.one_hot(labels["target"], 10)
+        loss = optax.softmax_cross_entropy(logits, target).mean()
+
         # metrics
         logs = dict(
-            accuracy=accuracy,
+            acc=jnp.mean(jnp.argmax(logits, axis=-1) == labels["target"]),
             loss=loss,
         )
-        return loss, logs, states.update(net_params=(w, b))
+
+        return loss, logs, self
+        
 ```
 
 **2.** Instantiate our `LinearClassifier` with an optimizer:
@@ -142,40 +154,58 @@ model.fit(
     batch_size=64,
     validation_data=(X_test, y_test),
     shuffle=True,
-    callbacks=[elegy.callbacks.TensorBoard("summaries")]
+    callbacks=[eg.callbacks.TensorBoard("summaries")]
 )
 ```
 
 #### Using Jax Frameworks
 
 It is straightforward to integrate other functional JAX libraries with this
-low-level API:
+low-level API, here is an example with Flax:
 
 ```python
-class LinearClassifier(elegy.Model):
-    def test_step(
-        self, x, y_true, states: elegy.States, initializing: bool
-    ):
-        rng: elegy.RNGSeq = states.rng
-        x = jnp.reshape(x, (x.shape[0], -1)) / 255
-        if initializing:
-            logits, variables = self.module.init_with_output(
-                {"params": rng.next(), "dropout": rng.next()}, x
-            )
-        else:
-            variables = dict(params=states.net_params, **states.net_states)
-            logits, variables = self.module.apply(
-                variables, x, rngs={"dropout": rng.next()}, mutable=True
-            )
-        net_states, net_params = variables.pop("params")
-        
-        labels = jax.nn.one_hot(y_true, 10)
-        loss = jnp.mean(-jnp.sum(labels * jax.nn.log_softmax(logits), axis=-1))
-        accuracy = jnp.mean(jnp.argmax(logits, axis=-1) == y_true)
+class LinearClassifier(eg.Model):
+    paramsapping[str, Any] = eg.Parameter.node()
+    batch_statsapping[str, Any] = eg.BatchStat.node()
+    next_key: eg.KeySeq
 
-        logs = dict(accuracy=accuracy, loss=loss)
-        return loss, logs, states.update(net_params=net_params, net_states=net_states)
+    def init_step(self, key, inputs):
+        self.next_key = eg.KeySeq(key)
+
+        _, variables = self.module.init_with_output(
+            {"params": self.next_key(), "dropout": self.next_key()}, x
+        )
+        self.params = variables["params"]
+        self.batch_stats = variables["batch_stats"]
+
+        self.optimizer = self.optimizer.init(self.parameters())
+
+    def test_step(self, inputs, labels):
+        # forward
+        variables = dict(
+            params=self.params,
+            batch_stats=self.batch_stats,
+        )
+        logits, variables = self.module.apply(
+            variables,
+            inputs, 
+            rngs={"dropout": self.next_key()}, 
+            mutable=True,
+        )
+        self.batch_stats = variables["batch_stats"]
+        
+        # loss
+        target = jax.nn.one_hot(labels["target"], 10)
+        loss = optax.softmax_cross_entropy(logits, target).mean()
+
+        # logs
+        logs = dict(
+            accuracy=accuracy,
+            loss=loss,
+        )
+        return loss, logs, self
 ```
+Here `module` is a `flax.linen.Module` 
 
 ## More Info
 

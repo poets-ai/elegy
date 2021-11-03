@@ -1,12 +1,10 @@
 from .data_handler import DataHandler
+from .dataset import DataLoader, Dataset
 from .utils import (
-    unpack_x_y_sample_weight,
-    train_validation_split,
-    map_structure,
     map_append,
+    map_structure,
+    train_validation_split,
+    unpack_x_y_sample_weight,
 )
-
-from .dataset import Dataset, DataLoader
-
 
 __all__ = ["Dataset", "DataLoader"]

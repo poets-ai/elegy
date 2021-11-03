@@ -8,6 +8,7 @@ from operator import itemgetter
 
 import jax.numpy as jnp
 import numpy as np
+
 from elegy import types
 
 from .data_adapter import DataAdapter

@@ -1,6 +1,9 @@
-import jax, jax.numpy as jnp
-import elegy
+import jax
+import jax.numpy as jnp
 import optax
+
+import elegy
+
 
 # the generator architecture adapted from DCGAN
 class Generator(elegy.Module):
@@ -9,12 +12,12 @@ class Generator(elegy.Module):
         x = elegy.nn.Reshape([1, 1, z.shape[-1]])(z)
         for i, c in enumerate([1024, 512, 256, 128]):
             padding = "VALID" if i == 0 else "SAME"
-            x = elegy.nn.conv.Conv2DTranspose(
-                c, (4, 4), stride=(2, 2), padding=padding
-            )(x)
-            x = elegy.nn.BatchNormalization(decay_rate=0.9)(x)
+            x = elegy.nn.conv.ConvTranspose(c, (4, 4), stride=(2, 2), padding=padding)(
+                x
+            )
+            x = elegy.nn.BatchNorm(decay_rate=0.9)(x)
             x = jax.nn.leaky_relu(x, negative_slope=0.2)
-        x = elegy.nn.conv.Conv2DTranspose(3, (4, 4), stride=(2, 2))(x)
+        x = elegy.nn.conv.ConvTranspose(3, (4, 4), stride=(2, 2))(x)
         x = jax.nn.sigmoid(x)
         return x
 
@@ -22,9 +25,9 @@ class Generator(elegy.Module):
 # the discriminator architecture adapted from DCGAN
 # also called 'critic' in the WGAN paper
 class Discriminator(elegy.Module):
-    def call(self, x):
+    def __call__(self, x):
         for c in [128, 256, 512, 1024]:
-            x = elegy.nn.conv.Conv2D(c, (4, 4), stride=(2, 2))(x)
+            x = elegy.nn.conv.Conv(c, (4, 4), stride=(2, 2))(x)
             x = jax.nn.leaky_relu(x, negative_slope=0.2)
         x = elegy.nn.Flatten()(x)
         x = elegy.nn.Linear(1)(x)
@@ -54,7 +57,7 @@ class WGAN_GP(elegy.Model):
         self.d_optimizer = optax.adam(2e-4, b1=0.5)
 
     def init_step(self, x):
-        rng = elegy.RNGSeq(0)
+        rng = elegy.KeySeq(0)
         gx, g_params, g_states = self.generator.init(rng=rng)(x)
         dx, d_params, d_states = self.discriminator.init(rng=rng)(gx)
 

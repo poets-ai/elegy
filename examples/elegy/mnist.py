@@ -1,18 +1,36 @@
 import os
 from datetime import datetime
+from functools import partial
 from typing import Any, Generator, Mapping, Tuple
 
-import dataget
-
+import einops
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
-from tensorboardX.writer import SummaryWriter
-import typer
 import optax
+import typer
+from datasets.load import load_dataset
+from tensorboardX.writer import SummaryWriter
 
-import elegy
+import elegy as eg
+
+
+class MLP(eg.Module):
+    def __init__(self, n1: int = 300, n2: int = 100):
+        self.n1 = n1
+        self.n2 = n2
+
+    @eg.compact
+    def __call__(self, x: jnp.ndarray):
+        x = x.astype(jnp.float32) / 255.0
+        x = einops.rearrange(x, "batch ... -> batch (...)")
+        x = eg.nn.Linear(self.n1)(x)
+        x = jax.nn.relu(x)
+        x = eg.nn.Linear(self.n2)(x)
+        x = jax.nn.relu(x)
+        x = eg.nn.Linear(10)(x)
+        return x
 
 
 def main(
@@ -34,60 +52,43 @@ def main(
     current_time = datetime.now().strftime("%b%d_%H-%M-%S")
     logdir = os.path.join(logdir, current_time)
 
-    X_train, y_train, X_test, y_test = dataget.image.mnist(global_cache=True).get()
+    dataset = load_dataset("mnist")
+    dataset.set_format("np")
+    X_train = dataset["train"]["image"]
+    y_train = dataset["train"]["label"]
+    X_test = dataset["test"]["image"]
+    y_test = dataset["test"]["label"]
 
     print("X_train:", X_train.shape, X_train.dtype)
     print("y_train:", y_train.shape, y_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
 
-    class MLP(elegy.Module):
-        """Standard LeNet-300-100 MLP network."""
-
-        def __init__(self, n1: int = 300, n2: int = 100, **kwargs):
-            super().__init__(**kwargs)
-            self.n1 = n1
-            self.n2 = n2
-
-        def call(self, image: jnp.ndarray):
-            image = image.astype(jnp.float32) / 255.0
-
-            mlp = elegy.nn.sequential(
-                elegy.nn.Flatten(),
-                elegy.nn.Linear(self.n1),
-                jax.nn.relu,
-                elegy.nn.Linear(self.n2),
-                jax.nn.relu,
-                elegy.nn.Linear(10),
-            )
-
-            return mlp(image)
-
-    model = elegy.Model(
+    model = eg.Model(
         module=MLP(n1=300, n2=100),
         loss=[
-            elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-            elegy.regularizers.GlobalL2(l=1e-4),
+            eg.losses.Crossentropy(),
+            eg.regularizers.L2(l=1e-4),
         ],
-        metrics=elegy.metrics.SparseCategoricalAccuracy(),
+        metrics=eg.metrics.Accuracy(),
         optimizer=optax.adamw(1e-3),
-        run_eagerly=eager,
+        eager=eager,
     )
 
     model.summary(X_train[:64])
 
     history = model.fit(
-        x=X_train,
-        y=y_train,
+        inputs=X_train,
+        labels=y_train,
         epochs=epochs,
         steps_per_epoch=steps_per_epoch,
         batch_size=batch_size,
         validation_data=(X_test, y_test),
         shuffle=True,
-        callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],
+        callbacks=[eg.callbacks.TensorBoard(logdir=logdir)],
     )
 
-    elegy.utils.plot_history(history)
+    eg.utils.plot_history(history)
 
     # get random samples
     idxs = np.random.randint(0, 10000, size=(9,))

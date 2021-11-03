@@ -1,73 +1,110 @@
 import os
+import typing as tp
 from datetime import datetime
 
-import dataget
-import elegy
 import jax
 import jax.numpy as jnp
 import numpy as np
 import optax
 import typer
+from datasets.load import load_dataset
+
+import elegy as eg
+
+M = tp.TypeVar("M", bound="Model")
 
 
-class Model(elegy.Model):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.optim = optax.adam(1e-3)
+class Model(eg.Model):
+    w: jnp.ndarray = eg.Parameter.node()
+    b: jnp.ndarray = eg.Parameter.node()
 
-    # request parameters by name via depending injection.
-    # possible: initializing, net_params, x, y_true, net_states, metrics_states, optimizer_states, sample_weight, class_weight, rng
-    def train_step(self, x, y_true, initializing, states: elegy.States):
-        def loss_fn(net_params, x, y_true):
-            assert isinstance(states.rng, elegy.RNGSeq)
+    def __init__(
+        self,
+        features_out: int,
+        loss: tp.Any = None,
+        metrics: tp.Any = None,
+        optimizer=None,
+        seed: int = 42,
+        eager: bool = False,
+    ):
+        self.features_out = features_out
+        super().__init__(
+            loss=loss,
+            metrics=metrics,
+            optimizer=optimizer,
+            seed=seed,
+            eager=eager,
+        )
 
-            # flatten + scale
-            x = jnp.reshape(x, (x.shape[0], -1)) / 255
+    def init_step(self: M, key: jnp.ndarray, inputs: jnp.ndarray) -> M:
+        features_in = np.prod(inputs.shape[1:])
 
-            # model
-            w, b = net_params
-            logits = jnp.dot(x, w) + b
+        self.w = jax.random.uniform(
+            key,
+            shape=[
+                features_in,
+                self.features_out,
+            ],
+        )
+        self.b = jnp.zeros([self.features_out])
 
-            # crossentropy loss
-            labels = jax.nn.one_hot(y_true, 10)
-            sample_loss = -jnp.sum(labels * jax.nn.log_softmax(logits), axis=-1)
-            loss = jnp.mean(sample_loss)
+        assert self.optimizer is not None
+        self.optimizer = self.optimizer.init(self)
 
-            # metrics
-            logs = dict(
-                accuracy=jnp.mean(jnp.argmax(logits, axis=-1) == y_true),
-                loss=loss,
-            )
+        return self
 
-            return loss, logs
+    def pred_step(self: M, inputs: tp.Any) -> eg.PredStep[M]:
+        logits = jnp.dot(inputs, self.w) + self.b
+        return logits, self
 
-        if initializing:
-            w = jax.random.uniform(
-                states.rng.next(), shape=[np.prod(x.shape[1:]), 10], minval=-1, maxval=1
-            )
-            b = jax.random.uniform(states.rng.next(), shape=[1], minval=-1, maxval=1)
-            states = states.update(net_params=(w, b))
+    def test_step(
+        self: M,
+        inputs,
+        labels,
+    ) -> eg.TestStep[M]:
+        model: M = self
+        # flatten + scale
+        inputs = jnp.reshape(inputs, (inputs.shape[0], -1)) / 255
 
+        # forward
+        logits, model = model.pred_step(inputs)
+
+        # crossentropy loss
+        target = jax.nn.one_hot(labels["target"], self.features_out)
+        loss = optax.softmax_cross_entropy(logits, target).mean()
+
+        # metrics
+        logs = dict(
+            acc=jnp.mean(jnp.argmax(logits, axis=-1) == labels["target"]),
+            loss=loss,
+        )
+
+        return loss, logs, model
+
+    @staticmethod
+    def loss_fn(params: M, model: M, inputs, labels) -> eg.LossStep[M]:
+        model = model.merge(params)
+        loss, logs, model = model.test_step(inputs, labels)
+        return loss, (logs, model)
+
+    def train_step(self: M, inputs, labels) -> eg.TrainStep[M]:
+        model: M = self
+
+        params = model.parameters()
         # train
-        (loss, logs), grads = jax.value_and_grad(loss_fn, has_aux=True)(
-            states.net_params,  # gradients target
-            x,
-            y_true,
+        grads, (logs, model) = jax.grad(Model.loss_fn, has_aux=True)(
+            params,
+            model,
+            inputs,
+            labels,
         )
 
-        if initializing:
-            optimizer_states = self.optim.init(states.net_params)
-            net_params = states.net_params
-        else:
-            grads, optimizer_states = self.optim.update(
-                grads, states.optimizer_states, states.net_params
-            )
-            net_params = optax.apply_updates(states.net_params, grads)
+        assert model.optimizer is not None
 
-        return logs, states.update(
-            net_params=net_params,
-            optimizer_states=optimizer_states,
-        )
+        params = model.optimizer.update(grads, params)
+        model = model.merge(params)
+
+        return logs, model
 
 
 def main(
@@ -89,27 +126,36 @@ def main(
     current_time = datetime.now().strftime("%b%d_%H-%M-%S")
     logdir = os.path.join(logdir, current_time)
 
-    X_train, y_train, X_test, y_test = dataget.image.mnist(global_cache=True).get()
+    dataset = load_dataset("mnist")
+    dataset.set_format("np")
+    X_train = dataset["train"]["image"]
+    y_train = dataset["train"]["label"]
+    X_test = dataset["test"]["image"]
+    y_test = dataset["test"]["label"]
 
     print("X_train:", X_train.shape, X_train.dtype)
     print("y_train:", y_train.shape, y_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
 
-    model = Model(run_eagerly=eager)
+    model = Model(
+        features_out=10,
+        optimizer=optax.adam(1e-3),
+        eager=eager,
+    )
 
     history = model.fit(
-        x=X_train,
-        y=y_train,
+        inputs=X_train,
+        labels=y_train,
         epochs=epochs,
         steps_per_epoch=steps_per_epoch,
         batch_size=batch_size,
         validation_data=(X_test, y_test),
         shuffle=True,
-        callbacks=[elegy.callbacks.TensorBoard(logdir=logdir)],
+        callbacks=[eg.callbacks.TensorBoard(logdir=logdir)],
     )
 
-    elegy.utils.plot_history(history)
+    eg.utils.plot_history(history)
 
 
 if __name__ == "__main__":

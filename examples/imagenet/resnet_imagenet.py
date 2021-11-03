@@ -7,10 +7,9 @@ if "miniconda3/envs" in os.__file__:
     )
 
 
-from absl import flags, app
-
-
-import jax, jax.numpy as jnp
+import jax
+import jax.numpy as jnp
+from absl import app, flags
 
 # importing tensorflow_datasets before performing any jax convolutions gives me a 'DNN Library not found' error later
 # workaround: do a dummy convolution before importing tfds
@@ -19,10 +18,11 @@ _x1 = jnp.zeros((1, 1, 1, 1))
 jax.lax.conv(_x0, _x1, (1, 1), "SAME").block_until_ready()
 
 
-import elegy
+import input_pipeline
 import optax
 import tensorflow_datasets as tfds
-import input_pipeline
+
+import elegy
 
 print("JAX version:", jax.__version__)
 print("Elegy version:", elegy.__version__)
@@ -144,12 +144,10 @@ def main(argv):
     model = elegy.Model(
         module,
         loss=[
-            elegy.losses.SparseCategoricalCrossentropy(
-                from_logits=True, weight=FLAGS.loss_scale
-            ),
-            elegy.regularizers.GlobalL2(FLAGS.L2_reg / 2 * FLAGS.loss_scale),
+            elegy.losses.Crossentropy(from_logits=True, weight=FLAGS.loss_scale),
+            elegy.regularizers.L2(FLAGS.L2_reg / 2 * FLAGS.loss_scale),
         ],
-        metrics=elegy.metrics.SparseCategoricalAccuracy(),
+        metrics=elegy.metrics.Accuracy(),
         optimizer=build_optimizer(
             FLAGS.base_lr / FLAGS.loss_scale,
             FLAGS.momentum,
@@ -161,7 +159,7 @@ def main(argv):
 
     # training
     model.fit(
-        x=tfds2jax_generator(ds_train),
+        inputs=tfds2jax_generator(ds_train),
         validation_data=tfds2jax_generator(ds_valid),
         epochs=FLAGS.epochs,
         verbose=2,

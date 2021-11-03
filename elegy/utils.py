@@ -14,26 +14,12 @@ import jax
 import jax.numpy as jnp
 import jax.tree_util
 import numpy as np
-import toolz
-import yaml
-from rich.console import Console
+import treex as tx
 
 from elegy import types
 
 F = tp.TypeVar("F", bound=tp.Callable)
 T = tp.TypeVar("T")
-
-
-def maybe_expand_dims(a: np.ndarray, b: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
-    assert np.prod(a.shape) == np.prod(b.shape)
-
-    if a.ndim < b.ndim:
-        a = a[..., None]
-
-    if b.ndim < a.ndim:
-        b = b[..., None]
-
-    return a, b
 
 
 def wraps(f, docs: bool = True):
@@ -113,7 +99,7 @@ def get_function_args(f) -> tp.List[inspect.Parameter]:
 def get_input_args(
     x: tp.Union[np.ndarray, jnp.ndarray, tp.Dict[str, tp.Any], tp.Tuple],
     *,
-    states: types.States,
+    model: tx.Module,
     initializing: bool,
     training: bool,
 ) -> tp.Tuple[tp.Tuple, tp.Dict[str, tp.Any]]:
@@ -129,7 +115,7 @@ def get_input_args(
         kwargs = {}
 
     apply_kwargs = dict(
-        states=states,
+        model=model,
         initializing=initializing,
         training=training,
     )
@@ -243,16 +229,6 @@ def _merge_with_unique_names(
     return output
 
 
-def parameters_count(params: tp.Any) -> int:
-    leaves = (x for x in jax.tree_leaves(params))
-    return sum(x.size for x in leaves)
-
-
-def parameters_bytes(params: tp.Any) -> int:
-    leaves = (x for x in jax.tree_leaves(params))
-    return sum(x.size * x.dtype.itemsize for x in leaves)
-
-
 def download_file(url, cache="~/.elegy/downloads", sha256=None):
     if cache.startswith("~/"):
         cache = os.path.join(os.path.expanduser("~"), cache[2:])
@@ -300,16 +276,6 @@ def merge_params(a: tp.Any, b: tp.Any):
         raise ValueError(f"Cannot merge structs:\na={a}\nb={b}")
 
 
-def get_path_params(path: types.Path, params: tp.Any) -> tp.Any:
-    for key in path:
-        try:
-            params = params[key]
-        except BaseException as e:
-            return None
-
-    return params
-
-
 # def merge_collections(collections: types.ParameterCollection) -> tp.Dict[str, tp.Any]:
 #     output_parameters = {}
 
@@ -320,71 +286,6 @@ def get_path_params(path: types.Path, params: tp.Any) -> tp.Any:
 #     assert isinstance(output_parameters, dict)
 
 #     return output_parameters
-
-
-def get_parameter(collections: types.ParameterCollection, name: str) -> types.Parameter:
-
-    parameters = [
-        (collection, parameters[name])
-        for collection, parameters in collections.items()
-        if name in parameters
-    ]
-
-    if len(parameters) == 0:
-        raise ValueError(f"No parameters named {name} in collections {collections}")
-    elif len(parameters) >= 2:
-        raise ValueError(
-            f"Multiple parameters named {name} in collections {collections}"
-        )
-
-    [(collection, value)] = parameters
-
-    return types.Parameter(collection=collection, value=value)
-
-
-def get_submodule_colletions(
-    collections: types.ParameterCollection, name: str
-) -> types.ParameterCollection:
-    return {
-        collection: parameters[name]
-        for collection, parameters in collections.items()
-        if name in parameters
-    }
-
-
-def split_into_collections(
-    parameters: tp.Dict[str, tp.Any]
-) -> types.ParameterCollection:
-    all_collections = set()
-
-    def find_collections(parameter: types.Parameter):
-        all_collections.add(parameter.collection)
-
-    jax.tree_map(find_collections, parameters)
-
-    return {
-        collection: unwrap_filter(
-            lambda p: p.collection == collection,
-            parameters,
-        )
-        for collection in all_collections
-    }
-
-
-def unwrap_filter(
-    f: tp.Callable[[types.Parameter], bool], parameters: tp.Dict[str, tp.Any]
-) -> tp.Dict[str, tp.Any]:
-    outputs = {}
-
-    for name, parameter in parameters.items():
-
-        if isinstance(parameter, types.Parameter):
-            if f(parameter):
-                outputs[name] = parameter.value
-        else:
-            outputs[name] = unwrap_filter(f, parameter)
-
-    return outputs
 
 
 def plot_history(history):
@@ -416,84 +317,10 @@ def plot_history(history):
         plt.ylabel(key)
         plt.title(title)
 
-    plt.show()
 
+def _walk_treedef(a, b):
+    if a != b:
+        print("false")
 
-def get_grouped_entry(
-    entry: types.SummaryTableEntry,
-    depth_groups: tp.Dict[str, tp.List[types.SummaryTableEntry]],
-) -> types.SummaryTableEntry:
-    group = depth_groups[entry.path]
-
-    return types.SummaryTableEntry(
-        path=entry.path,
-        module_type_name=entry.module_type_name,
-        output_value=entry.output_value,
-        trainable_params_count=sum(entry_.trainable_params_count for entry_ in group),
-        trainable_params_size=sum(entry_.trainable_params_size for entry_ in group),
-        non_trainable_params_count=sum(
-            entry_.non_trainable_params_count for entry_ in group
-        ),
-        non_trainable_params_size=sum(
-            entry_.non_trainable_params_size for entry_ in group
-        ),
-    )
-
-
-def format_output(value) -> str:
-    file = io.StringIO()
-    outputs = jax.tree_map(
-        lambda x: f"{x.shape}" + f"{{pad}}  [dim]{x.dtype}[/]", value
-    )
-    yaml.safe_dump(
-        outputs, file, default_flow_style=False, indent=2, explicit_end=False
-    )
-    return file.getvalue().replace("\n...", "").replace("'", "")
-
-
-def format_count_and_size(params, add_padding: bool = True) -> str:
-
-    padding = r"{pad}" if add_padding else ""
-    count = parameters_count(params)
-    size = parameters_bytes(params)
-
-    return f"[green]{count:,}[/]{padding}    {format_size(size)}" if count > 0 else ""
-
-
-def format_size(size):
-    count, units = (
-        (f"{size / 1e9 :,.1f}", "GB")
-        if size > 1e9
-        else (f"{size / 1e6 :,.1f}", "MB")
-        if size > 1e6
-        else (f"{size / 1e3 :,.1f}", "KB")
-        if size > 1e3
-        else (f"{size:,}", "B")
-    )
-
-    return f"[dim]{count} {units}[/dim]"
-
-
-def add_padding(rows):
-    n_cols = len(rows[0])
-
-    for col in range(n_cols):
-        max_length = max(
-            len(line.split("{pad}")[0]) for row in rows for line in row[col].split("\n")
-        )
-
-        for row in rows:
-            row[col] = "\n".join(
-                line.format(
-                    pad=" " * (max_length - len(line.rstrip().split("{pad}")[0]))
-                )
-                for line in row[col].rstrip().split("\n")
-            )
-
-
-def get_table_repr(table):
-    f = io.StringIO()
-    console = Console(file=f, force_terminal=True)
-    console.print(table)
-
-    return f.getvalue()
+    for ca, cb in zip(a.children(), b.children()):
+        _walk_treedef(ca, cb)

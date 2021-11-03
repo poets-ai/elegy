@@ -1,24 +1,20 @@
-from tensorboardX.writer import SummaryWriter
-from elegy.callbacks.tensorboard import TensorBoard
 import os
-from datetime import datetime
 import typing as tp
+from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
 
-import dataget
-
 import haiku as hk
-
-
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
-import typer
 import optax
+import typer
+from datasets.load import load_dataset
+from tensorboardX.writer import SummaryWriter
 
 import elegy
-
+from elegy.callbacks.tensorboard import TensorBoard
 
 Batch = Mapping[str, np.ndarray]
 np.random.seed(42)
@@ -52,7 +48,7 @@ class Encoder(hk.Module):
         self.latent_size = latent_size
 
     def __call__(
-        self, x: np.ndarray, rng: elegy.RNGSeq
+        self, x: np.ndarray, rng: elegy.KeySeq
     ) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
         x = x.reshape((x.shape[0], -1))  # flatten
         x = hk.Linear(self.hidden_size)(x)
@@ -157,7 +153,7 @@ def main(
         module=vae,
         loss=loss,
         optimizer=optax.adam(1e-3),
-        run_eagerly=eager,
+        eager=eager,
     )
 
     model.init(X_train[:batch_size])
@@ -165,13 +161,13 @@ def main(
 
     # Fit with datasets in memory
     history = model.fit(
-        x=X_train,
+        inputs=X_train,
         epochs=epochs,
         batch_size=batch_size,
         steps_per_epoch=steps_per_epoch,
         validation_data=(X_test,),
         shuffle=True,
-        callbacks=[TensorBoard(logdir)],
+        callbacks=[eg.callbacks.TensorBoard(logdir)],
     )
 
     print(

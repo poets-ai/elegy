@@ -55,14 +55,14 @@ other areas like web development have proven valuable, React Hooks being a recen
 In Elegy we have the following list of hooks:
 
 
-| Hook                 | Description                                                                                           |
-| -------------------- | ----------------------------------------------------------------------------------------------------- |
-| `self.add_parameter` | Gives us access to trainable and non-trainable parameters.                                            |
-| `elegy.hooks.add_loss`     | Lets us declare a loss from some intermediate module.                                                 |
-| `elegy.hooks.add_metric`   | Lets us declare a metric in some intermediate module.                                                 |
-| `elegy.hooks.add_summary`  | Lets us declare a summary in some intermediate module.                                                |
-| `elegy.training`     | Tells us whether training is currently happening or not.                                              |
-| `elegy.next_key` | Gives us access to a unique `PRNGKey` we can pass to functions like `jax.random.uniform` and friends. |
+| Hook                      | Description                                                                                           |
+| ------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `self.add_parameter`      | Gives us access to trainable and non-trainable parameters.                                            |
+| `elegy.hooks.add_loss`    | Lets us declare a loss from some intermediate module.                                                 |
+| `elegy.hooks.add_metric`  | Lets us declare a metric in some intermediate module.                                                 |
+| `elegy.hooks.add_summary` | Lets us declare a summary in some intermediate module.                                                |
+| `elegy.training`          | Tells us whether training is currently happening or not.                                              |
+| `elegy.next_key`          | Gives us access to a unique `PRNGKey` we can pass to functions like `jax.random.uniform` and friends. |
 
 !!! Note
     If you use existing `Module`s you might not need to worry much about these hooks, but keep them in mind
@@ -154,20 +154,20 @@ of hooks, and for module hooks specifically they must be called in the same orde
 ```python
 def call(self, x):
     if x.shape[0] > 5:
-        x = elegy.nn.Conv2D(32, [3, 3])(x)
+        x = elegy.nn.Conv(32, [3, 3])(x)
         x = elegy.nn.Linear(48, [3, 3])(x)
     else:
         x = elegy.nn.Linear(48, [3, 3])(x)
-        x = elegy.nn.Conv2D(32, [3, 3])(x)
+        x = elegy.nn.Conv(32, [3, 3])(x)
     return x
 ```
-Here `Linear` and `Conv2D` are dangerously swapped based on some condition. If you want to
+Here `Linear` and `Conv` are dangerously swapped based on some condition. If you want to
 do this you can just clare them unconditionally and use them inside the condition:
 
 ```python
 def call(self, x):
     linear = elegy.nn.Linear(48, [3, 3])
-    conv2d = elegy.nn.Conv2D(32, [3, 3])
+    conv2d = elegy.nn.Conv(32, [3, 3])
 
     if x.shape[0] > 5:
         x = conv2d(x)

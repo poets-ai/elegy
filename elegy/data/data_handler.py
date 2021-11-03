@@ -6,9 +6,9 @@ import contextlib
 import logging
 
 from .array_adapter import ArrayDataAdapter
+from .dataset import DataLoaderAdapter
 from .generator_adapter import GeneratorDataAdapter
 from .list_adapter import ListsOfScalarsDataAdapter
-from .dataset import DataLoaderAdapter
 
 try:
     from .tf_dataset_adapter import TFDatasetAdapter

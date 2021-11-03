@@ -2,17 +2,45 @@ import os
 from datetime import datetime
 from typing import Any, Generator, Mapping, Tuple
 
-import dataget
-
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
-from tensorboardX.writer import SummaryWriter
-import typer
 import optax
+import typer
+from datasets.load import load_dataset
+from tensorboardX.writer import SummaryWriter
 
-import elegy
+import elegy as eg
+
+
+class MeanSquaredError(eg.losses.MeanSquaredError):
+    # we request `x` instead of `y_true` since we are don't require labels in autoencoders
+    def call(self, inputs, preds):
+        return super().call(target=inputs, preds=preds) / 255
+
+
+class MLP(eg.Module):
+    def __init__(self, n1: int = 300, n2: int = 100, **kwargs):
+        super().__init__(**kwargs)
+        self.n1 = n1
+        self.n2 = n2
+
+    @eg.compact
+    def __call__(self, image: jnp.ndarray):
+        x = image.astype(jnp.float32) / 255.0
+        x = eg.Flatten()(x)
+        x = eg.Linear(self.n1)(x)
+        x = jax.nn.relu(x)
+        x = eg.Linear(self.n2)(x)
+        x = jax.nn.relu(x)
+        x = eg.Linear(self.n1)(x)
+        x = jax.nn.relu(x)
+        x = eg.Linear(np.prod(image.shape[-2:]))(x)
+        x = jax.nn.sigmoid(x) * 255
+        x = x.reshape(image.shape)
+
+        return x
 
 
 def main(
@@ -34,60 +62,35 @@ def main(
     current_time = datetime.now().strftime("%b%d_%H-%M-%S")
     logdir = os.path.join(logdir, current_time)
 
-    X_train, _1, X_test, _2 = dataget.image.mnist(global_cache=True).get()
+    dataset = load_dataset("mnist")
+    dataset.set_format("np")
+    X_train = dataset["train"]["image"]
+    X_test = dataset["test"]["image"]
 
     print("X_train:", X_train.shape, X_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
 
-    class MLP(elegy.Module):
-        """Standard LeNet-300-100 MLP network."""
-
-        def __init__(self, n1: int = 300, n2: int = 100, **kwargs):
-            super().__init__(**kwargs)
-            self.n1 = n1
-            self.n2 = n2
-
-        def call(self, image: jnp.ndarray):
-            image = image.astype(jnp.float32) / 255.0
-            x = elegy.nn.Flatten()(image)
-            x = elegy.nn.sequential(
-                elegy.nn.Linear(self.n1),
-                jax.nn.relu,
-                elegy.nn.Linear(self.n2),
-                jax.nn.relu,
-                elegy.nn.Linear(self.n1),
-                jax.nn.relu,
-                elegy.nn.Linear(x.shape[-1]),
-                jax.nn.sigmoid,
-            )(x)
-            return x.reshape(image.shape) * 255
-
-    class MeanSquaredError(elegy.losses.MeanSquaredError):
-        # we request `x` instead of `y_true` since we are don't require labels in autoencoders
-        def call(self, x, y_pred):
-            return super().call(x, y_pred)
-
-    model = elegy.Model(
+    model = eg.Model(
         module=MLP(n1=256, n2=64),
         loss=MeanSquaredError(),
         optimizer=optax.rmsprop(0.001),
-        run_eagerly=eager,
+        eager=eager,
     )
 
     model.summary(X_train[:64])
 
     # Notice we are not passing `y`
     history = model.fit(
-        x=X_train,
+        inputs=X_train,
         epochs=epochs,
         steps_per_epoch=steps_per_epoch,
         batch_size=batch_size,
         validation_data=(X_test,),
         shuffle=True,
-        callbacks=[elegy.callbacks.TensorBoard(logdir=logdir, update_freq=300)],
+        callbacks=[eg.callbacks.TensorBoard(logdir=logdir, update_freq=300)],
     )
 
-    elegy.utils.plot_history(history)
+    eg.utils.plot_history(history)
 
     # get random samples
     idxs = np.random.randint(0, 10000, size=(5,))
@@ -106,14 +109,7 @@ def main(
             plt.subplot(2, 5, 5 + i + 1)
             plt.imshow(y_pred[i], cmap="gray")
 
-        # # tbwriter.add_figure("AutoEncoder images", figure, 20)
-
     plt.show()
-
-    print(
-        "\n\n\nMetrics and images can be explored using tensorboard using:",
-        f"\n \t\t\t tensorboard --logdir {logdir}",
-    )
 
 
 if __name__ == "__main__":

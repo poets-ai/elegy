@@ -1,27 +1,22 @@
 import typing as tp
 from io import StringIO
 
+import flax
 import jax
 import jax.numpy as jnp
 import numpy as np
-import yaml
-from elegy import hooks, module, types, utils
-from elegy.model import model_core
-from elegy.generalized_module.generalized_module import (
-    GeneralizedModule,
-    generalize,
-    is_generalizable,
-)
-from elegy.generalized_optimizer.generalized_optimizer import (
-    GeneralizedOptimizer,
-    generalize_optimizer,
-)
+import treex as tx
+from optax import GradientTransformation
+
+from elegy import types, utils
 from elegy.model.model_base import ModelBase
-from elegy.optimizer import Optimizer
-from tabulate import tabulate
+from elegy.model.model_core import GradStep, PredStep, TestStep, TrainStep
+
+M = tp.TypeVar("M", bound="Model")
+U = tp.TypeVar("U", bound="tx.Module")
 
 
-class Model(ModelBase):
+class Model(tp.Generic[U], ModelBase):
     """
     Model is a framework-agnostic trainer interface that is tasked with performing training, evaluation, and inference.
     It provides 2 main APIs:
@@ -41,7 +36,7 @@ class Model(ModelBase):
     >>> import jax.numpy as jnp
 
     >>> class MLP(elegy.Module):
-    ...     def call(self, x: jnp.ndarray) -> jnp.ndarray:
+    ...     def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
     ...         x = elegy.nn.Linear(5)(x)
     ...         x = jax.nn.relu(x)
     ...         x = elegy.nn.Linear(2)(x)
@@ -55,10 +50,10 @@ class Model(ModelBase):
     >>> model = elegy.Model(
     ...     module=MLP(),
     ...     loss=[
-    ...         elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-    ...         elegy.regularizers.GlobalL2(l=1e-5),
+    ...         elegy.losses.Crossentropy(),
+    ...         elegy.regularizers.L2(l=1e-5),
     ...     ],
-    ...     metrics=elegy.metrics.SparseCategoricalAccuracy(),
+    ...     metrics=elegy.metrics.Accuracy(),
     ...     optimizer=optax.rmsprop(1e-3),
     ... )
 
@@ -83,8 +78,8 @@ class Model(ModelBase):
     ```python
     >>> model = elegy.Model(
     ...     module=MLP(),
-    ...     loss=elegy.losses.SparseCategoricalCrossentropy(from_logits=True),
-    ...     metrics=elegy.metrics.SparseCategoricalAccuracy(),
+    ...     loss=elegy.losses.Crossentropy(),
+    ...     metrics=elegy.metrics.Accuracy(),
     ...     optimizer=elegy.Optimizer(
     ...         # one or more optax optimizers as *args,
     ...         # these will be passed to optax.chain(...)
@@ -93,7 +88,7 @@ class Model(ModelBase):
     ...         lr_schedule=lambda step, epoch: 1 / (epoch * 100 + step),
     ...         steps_per_epoch=1000,
     ...     ),
-    ...     run_eagerly=True,
+    ...     eager=True,
     ... )
 
     ```
@@ -105,25 +100,22 @@ class Model(ModelBase):
 
     """
 
-    module: tp.Any = None
-    loss: tp.Any = None
-    metrics: tp.Any = None
-    optimizer: tp.Any = None
-    seed: int = 42
+    # pytree
+    module: tp.Optional[U] = tx.node()
+    loss_and_logs: tp.Optional[tx.LossAndLogs]
+    optimizer: tp.Optional[tx.Optimizer]
 
-    api_module: tp.Optional[GeneralizedModule]
-    api_loss: "Losses"
-    api_metrics: "Metrics"
-    api_optimizer: tp.Optional[GeneralizedOptimizer]
+    # static
+    seed: int = 42
 
     def __init__(
         self,
-        module: tp.Any = None,
+        module: tp.Optional[U] = None,
         loss: tp.Any = None,
         metrics: tp.Any = None,
-        optimizer: tp.Any = None,
+        optimizer: tp.Optional[tp.Union[tx.Optimizer, GradientTransformation]] = None,
         seed: int = 42,
-        **kwargs,
+        eager: bool = False,
     ):
         """
 
@@ -150,319 +142,173 @@ class Model(ModelBase):
             optimizer: A `optax` optimizer instance. Optix is a very flexible library for defining
                 optimization pipelines with things like learning rate schedules, this means that
                 there is no need for a `LearningRateScheduler` callback in Elegy.
-            run_eagerly: Settable attribute indicating whether the model should run eagerly.
+            eager: Settable attribute indicating whether the model should run eagerly.
                 Running eagerly means that your model will be run step by step, like Python code, instead of
                 using Jax's `jit` to. Your model might run slower, but it should become easier for you to debug
                 it by stepping into individual layer calls.
         """
-        if "rng" in kwargs and not isinstance(kwargs["rng"], (int, types.RNGSeq)):
-            raise ValueError(
-                f"rng must be one of the following types: int, types.RNGSeq. Got {kwargs['rng']}"
-            )
-
-        super().__init__(**kwargs)
-
-        # maybe add rng if initialized
-        if self.initialized and (
-            not hasattr(self.states, "rng") or self.states.rng is None
-        ):
-            self.states = self.states.update(rng=types.RNGSeq(seed))
+        super().__init__(seed=seed, eager=eager)
 
         self.module = module
-        self.loss = loss
-        self.metrics = metrics
-        self.optimizer = optimizer
-
-        if loss is None:
-            loss = {}
-
-        if metrics is None:
-            metrics = {}
-
-        self.api_module = generalize(module) if module is not None else None
-        self.api_loss = Losses(loss)
-        self.api_metrics = Metrics(metrics)
-        self.api_optimizer = (
-            generalize_optimizer(optimizer) if optimizer is not None else None
+        self.optimizer = (
+            tx.Optimizer(optimizer)
+            if isinstance(optimizer, GradientTransformation)
+            else optimizer
         )
-        self.seed = seed
+        self.loss_and_logs = None
 
-    def __call__(self, *args, **kwargs):
-        assert isinstance(self.states.rng, types.RNGSeq)
+        self._losses_and_metrics = lambda: (
+            loss,
+            metrics,
+        )
+
+    def __call__(self, *args, **kwargs) -> tp.Any:
         assert self.module is not None
 
-        return self.module.apply(
-            self.states.net_params,
-            self.states.net_states,
-            self.states.rng,
-        )(*args, **kwargs)
-
-    def update_modules(self):
-        if self.api_module is not None:
-            self.api_module.update(
-                params=self.states.net_params,
-                states=self.states.net_states,
-            )
+        return self.module(*args, **kwargs)
 
     # ----------------------------------------------------------------
     # implement low-level API methods
     # ----------------------------------------------------------------
-    def states_step(self) -> types.States:
-        states = super().states_step()
-        return states.update(
-            rng=types.RNGSeq(self.seed),
-            net_params=None,
-            net_states=None,
-            metrics_states=None,
-            optimizer_states=None,
-        )
 
     def init_step(
-        self,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-        states: types.States,
-    ) -> types.States:
+        self: M,
+        key: jnp.ndarray,
+        inputs: tp.Any,
+    ) -> M:
 
-        states = states.maybe_update(**self.states_step())
-        training = True
-        initializing = True
+        if self.module is not None:
+            self.module = self.module.init(key, inputs=inputs)
 
-        _, states = utils.inject_dependencies(self.train_step)(
-            x=x,
-            y_true=y_true,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            states=states,
-            initializing=initializing,
-            training=training,
+        if self.optimizer is not None:
+            params = self.parameters()
+            self.optimizer = self.optimizer.init(params)
+
+        losses, metrics = self._losses_and_metrics()
+        aux_losses = self.loss_logs()
+        aux_metrics = self.metric_logs()
+
+        self.loss_and_logs = tx.LossAndLogs(
+            losses=losses,
+            metrics=metrics,
+            aux_losses=aux_losses,
+            aux_metrics=aux_metrics,
         )
 
-        return states
+        return self
 
     def pred_step(
-        self,
-        x: tp.Any,
-        states: types.States,
-        initializing: bool,
-        training: bool,
-    ) -> model_core.PredStep:
+        self: M,
+        inputs: tp.Any,
+    ) -> PredStep[M]:
+        model: M = self
 
-        if self.module is None:
+        if model.module is None:
             raise types.MissingModule(
-                "Trying run default `pred_step` on a Model with no `module`, try overriding `pred_step`."
+                "Trying to run default `pred_step` on a Model with no `module`, try overriding `pred_step` or set `module`"
             )
 
-        assert self.api_module is not None
+        inputs_obj = tx.Inputs.from_value(inputs)
 
-        # [DI]
-        x_args, x_kwargs = utils.get_input_args(
-            x,
-            states=states,
-            initializing=initializing,
-            training=training,
-        )
+        preds = model.module(*inputs_obj.args, **inputs_obj.kwargs)
 
-        assert isinstance(states.rng, types.RNGSeq)
-
-        if initializing:
-            module_fn = self.api_module.init(states.rng)
-        else:
-            module_fn = self.api_module.apply(
-                params=states.net_params,
-                states=states.net_states,
-                training=training,
-                rng=states.rng,
-            )
-
-        y_pred, net_params, net_states = module_fn(*x_args, **x_kwargs)
-
-        return model_core.PredStep(
-            y_pred=y_pred,
-            states=states.update(net_states=net_states, net_params=net_params),
-        )
+        return preds, model
 
     def test_step(
-        self,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-        states: types.States,
-        initializing: bool,
-        training: bool,
-    ) -> model_core.TestStep:
+        self: M,
+        inputs: tp.Any,
+        labels: tp.Mapping[str, tp.Any],
+    ) -> TestStep[M]:
+        model: M = self
 
-        with hooks.context(losses=True, summaries=True):
-            y_pred, states = utils.inject_dependencies(self.pred_step)(
-                x=x,
-                states=states,
-                initializing=initializing,
-                training=training,
+        if model.module is None:
+            raise types.MissingModule(
+                "Trying to run default `test_step` on a Model with no `loss_and_logs`, try overriding `test_step` or set `loss_and_logs`"
             )
 
-            aux_losses = hooks.get_losses()
-            aux_metrics = hooks.get_metrics()
+        preds, model = model.pred_step(inputs)
+        assert model.loss_and_logs is not None
 
-        assert isinstance(states.rng, types.RNGSeq)
+        aux_losses = model.loss_logs()
+        aux_metrics = model.metric_logs()
 
-        if initializing:
-            metrics_fn = self.api_metrics.init(aux_metrics, states.rng)
-            losses_fn = self.api_loss.init(aux_losses, states.rng)
+        extended_labels = {
+            "inputs": inputs,
+            "preds": preds,
+            "model": model,
+            "parameters": model.parameters(),
+            "batch_stats": model.batch_stats(),
+            "rngs": model.rngs(),
+            "model_states": model.model_states(),
+            "states": model.states(),
+            "metric_logs": model.metric_logs(),
+            "loss_logs": model.loss_logs(),
+            "logs": model.logs(),
+            **labels,
+        }
+
+        losses_kwargs = extended_labels
+        metrics_kwargs = extended_labels
+
+        loss, losses_logs, metrics_logs = model.loss_and_logs.batch_loss_epoch_logs(
+            **losses_kwargs,
+            metrics_kwargs=metrics_kwargs,
+            aux_losses=aux_losses,
+            aux_metrics=aux_metrics,
+        )
+
+        logs = {**losses_logs, **metrics_logs}
+
+        return loss, logs, model
+
+    @staticmethod
+    def loss_fn(
+        params: M,
+        model: M,
+        inputs: tp.Any,
+        labels: tp.Mapping[str, tp.Any],
+    ) -> tp.Tuple[jnp.ndarray, tp.Tuple[types.Logs, M]]:
+        model = model.merge(params)
+        loss, logs, model = model.test_step(inputs, labels)
+        return loss, (logs, model)
+
+    @staticmethod
+    def _is_trainable(field_info: tx.FieldInfo) -> bool:
+        if isinstance(field_info.module, tx.Module):
+            return not field_info.module.frozen and field_info.module.training
         else:
-            metrics_states, loss_states = states.metrics_states
-            metrics_fn = self.api_metrics.apply(
-                aux_metrics,
-                states.rng,
-                metrics_states,
-            )
-            losses_fn = self.api_loss.apply(aux_losses, loss_states)
-
-        # [DI]metrics_states
-        metrics_logs, metrics_states = metrics_fn(
-            x=x,
-            y_true=y_true,
-            y_pred=y_pred,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            initializing=initializing,
-            states=states,
-            training=training,
-        )
-
-        # [DI]
-        loss, loss_logs, loss_states = losses_fn(
-            x=x,
-            y_true=y_true,
-            y_pred=y_pred,
-            sample_weight=sample_weight,
-            class_weight=class_weight,
-            initializing=initializing,
-            states=states,
-            training=training,
-        )
-
-        logs = utils.merge_with_unique_names(metrics_logs, loss_logs)
-        states = states.update(metrics_states=(metrics_states, loss_states))
-
-        return model_core.TestStep(loss, logs, states)
-
-    def grad_step(
-        self,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-        states: types.States,
-        initializing: bool,
-        training: bool,
-    ) -> model_core.GradStep:
-        def loss_fn(
-            net_params: tp.Any,
-            states: types.States,
-            x: tp.Any,
-            y_true: tp.Any,
-            sample_weight: tp.Optional[np.ndarray],
-            class_weight: tp.Optional[np.ndarray],
-        ):
-            states = states.update(net_params=net_params)
-            loss, logs, states = utils.inject_dependencies(self.test_step)(
-                x=x,
-                y_true=y_true,
-                states=states,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                initializing=initializing,
-                training=training,
-            )
-
-            return loss, (logs, states)
-
-        (loss, (logs, states)), grads = jax.value_and_grad(loss_fn, has_aux=True)(
-            states.net_params,
-            states,
-            x,
-            y_true,
-            sample_weight,
-            class_weight,
-        )
-
-        return model_core.GradStep(loss, logs, states, grads)
+            return True
 
     def train_step(
-        self,
-        x: tp.Any,
-        y_true: tp.Any,
-        sample_weight: tp.Optional[np.ndarray],
-        class_weight: tp.Optional[np.ndarray],
-        states: types.States,
-        initializing: bool,
-        training: bool,
-    ) -> model_core.TrainStep:
+        self: M,
+        inputs: tp.Any,
+        labels: tp.Mapping[str, tp.Any],
+    ) -> TrainStep[M]:
+        model: M = self
+        grads: M
+        logs: types.Logs
+        model: M = self
 
-        if initializing:
-            loss, logs, states = utils.inject_dependencies(self.test_step)(
-                x=x,
-                y_true=y_true,
-                states=states,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                initializing=initializing,
-                training=training,
-            )
-            grads = None
-
-        else:
-            loss, logs, states, grads = utils.inject_dependencies(self.grad_step)(
-                x=x,
-                y_true=y_true,
-                states=states,
-                sample_weight=sample_weight,
-                class_weight=class_weight,
-                initializing=initializing,
-                training=training,
+        if model.optimizer is None:
+            raise types.MissingModule(
+                "Trying to run default `train_step` on a Model with no `optimizer`, try overriding `train_step` or set `optimizer`"
             )
 
-        if initializing and self.optimizer is None:
-            return model_core.TrainStep(logs, states)
-        elif self.optimizer is None:
-            raise types.MissingOptimizer(
-                "Trying to run `train_step` without an optimizer, "
-                "please provide an optimizer to the Model(...) constructor or "
-                "override `train_step`."
-            )
-        assert isinstance(states.rng, types.RNGSeq)
-        assert self.api_optimizer is not None
+        params = model.parameters(self._is_trainable)
 
-        # calculate current lr before update
-        if initializing:
-            optimizer_states = self.api_optimizer.init(states.rng, states.net_params)
-            net_params = states.net_params
-        else:
-            assert grads is not None
+        grad_fn = jax.grad(self.loss_fn, has_aux=True)
+        grads, (logs, model) = grad_fn(params, model, inputs, labels)
 
-            # TODO: add current_lr this to GeneralizedOptimizer and do this generically
-            if isinstance(self.optimizer, Optimizer):
-                lr = self.optimizer.current_lr(self.states.optimizer_states)
+        assert model.optimizer is not None
 
-                if lr is not None:
-                    logs["lr"] = lr
+        params = model.optimizer.update(grads, params)
+        model = model.merge(params)
 
-            net_params, optimizer_states = self.api_optimizer.apply(
-                states.net_params,
-                grads,
-                states.optimizer_states,
-                states.rng,
-            )
+        return logs, model
 
-        states = states.update(
-            net_params=net_params,
-            optimizer_states=optimizer_states,
-        )
-
-        return model_core.TrainStep(logs, states)
+    def reset_metrics(self) -> None:
+        if self.loss_and_logs is not None:
+            self.loss_and_logs.reset()
 
     # ----------------------------------------------------------------
     # Model-only methods
@@ -470,10 +316,9 @@ class Model(ModelBase):
 
     def summary(
         self,
-        x: tp.Optional[tp.Any] = None,
+        inputs: tp.Any = tx.MISSING,
         depth: int = 2,
         return_repr: bool = False,
-        eval_shape: bool = True,
     ) -> tp.Optional[str]:
         """
         Prints a summary of the network. The representation is module dependent,
@@ -489,257 +334,17 @@ class Model(ModelBase):
             eval_shape: If True, jax.eval_shape is used to calculate all shapes, this avoids actually
                 running the computation as only shapes are calculated (turn off if trying to debug).
         """
+        assert self.module is not None
 
-        if self.api_module is None:
-            return
+        if not self.initialized:
+            self.init_on_batch(inputs)
 
-        if x is None:
-            x = {}
-
-        summary = self.api_module.summary(
-            x,
+        summary = self.module.tabulate(
+            inputs=inputs,
             depth=depth,
-            run_eagerly=self.run_eagerly,
-            eval_shape=eval_shape,
         )
 
         if return_repr:
             return summary
         else:
             print(summary)
-
-
-class Metrics:
-    metrics: tp.Dict[str, GeneralizedModule]
-
-    def __init__(self, modules: tp.Any):
-        names: tp.Set[str] = set()
-
-        def get_name(module, path):
-            name = utils.get_name(module)
-            return f"{path}/{name}" if path else name
-
-        self.metrics = {
-            utils.get_unique_name(names, get_name(module, path)): generalize(
-                module,
-                callable_default=AvgMetric,
-            )
-            for path, module in utils.flatten_names(modules)
-        }
-
-    def calculate_metrics(
-        self,
-        aux_metrics: types.Logs,
-        callback: tp.Callable[[str, GeneralizedModule], types.OutputStates],
-    ) -> tp.Tuple[types.Logs, tp.Any]:
-
-        states = {}
-
-        for name, module in self.metrics.items():
-            y_pred, _, states[name] = callback(name, module)
-
-            names = set()
-            for inner_name, inner_value in utils.flatten_names(y_pred):
-                inner_name = f"{name}/{inner_name}" if inner_name else name
-                inner_name = utils.get_unique_name(names, inner_name)
-
-                aux_metrics[inner_name] = inner_value
-
-        return aux_metrics, states
-
-    def init(
-        self,
-        aux_metrics: types.Logs,
-        rng: types.RNGSeq,
-    ) -> tp.Callable[..., tp.Tuple[types.Logs, tp.Any]]:
-        def lambda_(*args, **kwargs):
-            def callback(name, module):
-                kwargs_ = kwargs.copy()
-                kwargs_["metrics_states"] = None
-                return module.init(rng)(*args, **kwargs_)
-
-            return self.calculate_metrics(aux_metrics, callback)
-
-        return lambda_
-
-    def apply(
-        self,
-        aux_metrics: types.Logs,
-        rng: types.RNGSeq,
-        states: tp.Any,
-    ) -> tp.Callable[..., tp.Tuple[types.Logs, tp.Any]]:
-        assert states is not None
-
-        def lambda_(*args, **kwargs):
-            def callback(name, module: GeneralizedModule):
-                kwargs_ = kwargs.copy()
-                kwargs_["metrics_states"] = states[name]
-
-                return module.apply(
-                    params=None, states=states[name], training=True, rng=rng
-                )(*args, **kwargs_)
-
-            return self.calculate_metrics(aux_metrics, callback)
-
-        return lambda_
-
-
-class AvgMetric(GeneralizedModule):
-    def __init__(self, f: tp.Callable):
-        self.f = f
-
-    def init(self, rng: types.RNGSeq) -> tp.Callable[..., types.OutputStates]:
-        def _lambda(*args, **kwargs) -> types.OutputStates:
-
-            preds = utils.inject_dependencies(self.f)(*args, **kwargs)
-
-            if isinstance(preds, types.OutputStates):
-                return preds
-
-            n = 0
-            total = jax.tree_map(lambda x: jnp.zeros_like(x), preds)
-            return types.OutputStates(
-                preds=preds,
-                params=None,
-                states=(n, total),
-            )
-
-        return _lambda
-
-    def apply(
-        self,
-        params: tp.Any,
-        states: tp.Any,
-        training: bool,
-        rng: types.RNGSeq,
-    ) -> tp.Callable[..., types.OutputStates]:
-        def _lambda(*args, **kwargs) -> types.OutputStates:
-
-            preds = utils.inject_dependencies(self.f)(*args, **kwargs)
-
-            if isinstance(preds, types.OutputStates):
-                return preds
-
-            n, total = states
-            n += 1
-            total = jax.tree_multimap(lambda a, b: a + b, preds, total)
-            preds = jax.tree_map(lambda total: total / n, total)
-            return types.OutputStates(
-                preds=preds,
-                params=None,
-                states=(n, total),
-            )
-
-        return _lambda
-
-    def summary(
-        self, x: tp.Any, depth: int, run_eagerly: bool, eval_shape: bool
-    ) -> str:
-        raise NotImplementedError("AvgMetric has no summaries")
-
-
-class Losses:
-    losses: tp.Dict[str, tp.Callable]
-    loss_metrics: "LossMetrics"
-
-    def __init__(self, losses: tp.Any):
-        names: tp.Set[str] = set()
-
-        def get_name(loss_fn, path):
-            name = utils.get_name(loss_fn)
-            return f"{path}/{name}" if path else name
-
-        self.losses = {
-            utils.get_unique_name(names, get_name(loss_fn, path)): loss_fn
-            for path, loss_fn in utils.flatten_names(losses)
-        }
-        self.loss_metrics = LossMetrics()
-
-    def calculate_losses(self, *args, **kwargs) -> types.Logs:
-        logs: types.Logs = {}
-
-        for name, loss_fn in self.losses.items():
-            losses = utils.inject_dependencies(loss_fn)(*args, **kwargs)
-
-            names = set()
-            for inner_name, loss in utils.flatten_names(losses):
-                inner_name = f"{name}/{inner_name}" if inner_name else name
-                inner_name = utils.get_unique_name(names, inner_name)
-
-                logs[inner_name] = loss
-
-        return logs
-
-    def init(
-        self,
-        aux_losses: types.Logs,
-        rng: types.RNGSeq,
-    ) -> tp.Callable[..., tp.Tuple[types.Scalar, types.Logs, tp.Any]]:
-        def _lambda(*args, **kwargs):
-            module_logs = self.calculate_losses(*args, **kwargs)
-
-            loss = sum(aux_losses.values(), 0.0) + sum(module_logs.values(), 0.0)
-            loss_logs = dict(loss=loss)
-
-            logs = utils.merge_with_unique_names(loss_logs, aux_losses, module_logs)
-
-            names = set()
-            logs = {
-                utils.get_unique_name(names, f"{name}_loss")
-                if "loss" not in name
-                else utils.get_unique_name(names, name): value
-                for name, value in logs.items()
-            }
-
-            logs, _, states = self.loss_metrics.init(rng=rng)(logs)
-
-            return loss, logs, states
-
-        return _lambda
-
-    def apply(
-        self,
-        aux_losses: types.Logs,
-        states: tp.Any,
-    ) -> tp.Callable[..., tp.Tuple[types.Scalar, types.Logs, tp.Any]]:
-        def _lambda(*args, **kwargs):
-            module_logs = self.calculate_losses(*args, **kwargs)
-
-            loss = sum(aux_losses.values(), 0.0) + sum(module_logs.values(), 0.0)
-            loss_logs = dict(loss=loss)
-
-            logs = utils.merge_with_unique_names(loss_logs, aux_losses, module_logs)
-
-            names = set()
-            logs = {
-                utils.get_unique_name(names, f"{name}_loss")
-                if "loss" not in name
-                else utils.get_unique_name(names, name): value
-                for name, value in logs.items()
-            }
-
-            parameters = None
-            logs, _, states_ = self.loss_metrics.apply(parameters, states)(logs)
-
-            return loss, logs, states_
-
-        return _lambda
-
-
-class LossMetrics(module.Module):
-    def call(self, logs):
-
-        count = self.add_parameter(
-            "count", lambda: jnp.array(0, dtype=jnp.int32), trainable=False
-        )
-        total = self.add_parameter(
-            "total", lambda: jax.tree_map(jnp.zeros_like, logs), trainable=False
-        )
-
-        count = count + 1
-        total = jax.tree_multimap(lambda a, b: a + b, total, logs)
-
-        self.update_parameter("count", count)
-        self.update_parameter("total", total)
-
-        return jax.tree_map(lambda total: total / count, total)

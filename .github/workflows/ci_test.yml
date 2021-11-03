@@ -8,28 +8,19 @@ on:
       - master
   pull_request:
 jobs:
-  black-test:
-    if: ${{ !contains(github.event.pull_request.title, 'WIP') }}
-    name: Black Python code format
+  pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install "black~=20.8b1"
-      - name: Ensure contributor used ("black ./") before commit
-        run: black --check .
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+    - uses: pre-commit/action@v2.0.3
   test:
     if: ${{ !contains(github.event.pull_request.title, 'WIP') }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        # python-version: [3.9]
+        python-version: [3.7, 3.8, 3.9]
     steps:
       - name: Check out the code
         uses: actions/checkout@v2
@@ -56,5 +47,10 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v1
 
-      # - name: Test Examples
-      #   run: bash scripts/test-examples.sh
+      # test_cloudpickle is currently failing only within pytest on python 3.7.x
+      # so we run it independently here
+      - name: Test cloudpickle
+        run: python tests/model/model_test.py
+
+      - name: Test Examples
+        run: bash scripts/test-examples.sh

@@ -1,8 +1,8 @@
 import typing as tp
 
 try:
-    from jax.experimental import jax2tf  # type: ignore[import]
     import tensorflow as tf  # type: ignore[import]
+    from jax.experimental import jax2tf  # type: ignore[import]
 
     def convert_and_save_model(
         jax_fn: tp.Callable[[tp.Any, tp.Any], tp.Any],
@@ -74,7 +74,7 @@ try:
         tf_fn = jax2tf.convert(
             jax_fn,
             with_gradient=with_gradient,
-            in_shapes=[None, shape_polymorphic_input_spec],
+            polymorphic_shapes=[None, shape_polymorphic_input_spec],
             enable_xla=enable_xla,
         )
 
