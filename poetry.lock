@@ -2229,7 +2229,7 @@ python-versions = "*"
 
 [[package]]
 name = "tf-nightly-cpu"
-version = "2.8.0.dev20211028"
+version = "2.8.0.dev20211103"
 description = "TensorFlow is an open source machine learning framework for everyone."
 category = "dev"
 optional = false
@@ -2522,7 +2522,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7,<3.10"
-content-hash = "dbf5cbac85fa5e3b055e5aaea7a60472cd9cd67ebfb6268e39bf40ae9207ed66"
+content-hash = "64837b9623448c6199312c33109be3c7d0595eb845bcda70f18844e7168d1380"
 
 [metadata.files]
 absl-py = [
@@ -4115,9 +4115,12 @@ tf-estimator-nightly = [
     {file = "tf_estimator_nightly-2.8.0.dev2021110308-py2.py3-none-any.whl", hash = "sha256:4703660ccb0a004253bb107ea44377dbf57e5faa1f30e7510fe9ff75019b2c12"},
 ]
 tf-nightly-cpu = [
-    {file = "tf_nightly_cpu-2.8.0.dev20211028-cp37-cp37m-manylinux2010_x86_64.whl", hash = "sha256:a13fae053b3f5f84f1911d0b1cf9a5f4b686e5be606639be79a9b7a2288d5c4e"},
-    {file = "tf_nightly_cpu-2.8.0.dev20211028-cp38-cp38-manylinux2010_x86_64.whl", hash = "sha256:5429e7fbf952ededfbc4dcfebb11f4dbf74313426e7033254ae76c8247a7e333"},
-    {file = "tf_nightly_cpu-2.8.0.dev20211028-cp39-cp39-manylinux2010_x86_64.whl", hash = "sha256:479ede63edb33d8e98d2e3bc6d4c8f9fb83256ae0093bfffe58f545e602d8978"},
+    {file = "tf_nightly_cpu-2.8.0.dev20211103-cp37-cp37m-manylinux2010_x86_64.whl", hash = "sha256:536a8a3d709865494099fa153a6f423e795d788f97d3cc640ae0c927a6d4935a"},
+    {file = "tf_nightly_cpu-2.8.0.dev20211103-cp37-cp37m-win_amd64.whl", hash = "sha256:277aeb225550d385798bbb4eb614db0bcafab075d7c5fbe2cfdfa45b02afb48b"},
+    {file = "tf_nightly_cpu-2.8.0.dev20211103-cp38-cp38-manylinux2010_x86_64.whl", hash = "sha256:ccc7091d1b64a0a236e531697a9c3e04bd1f19ec451afc2fc7b1e5a964be95c9"},
+    {file = "tf_nightly_cpu-2.8.0.dev20211103-cp38-cp38-win_amd64.whl", hash = "sha256:78ca56d9018854d4097cb214d5acfddbdf169842822b0db19bbc099f8beb4d58"},
+    {file = "tf_nightly_cpu-2.8.0.dev20211103-cp39-cp39-manylinux2010_x86_64.whl", hash = "sha256:8c538ff4d09472303567385eb777d81824aa9dba0804d5b0179b5f7ad73f0a72"},
+    {file = "tf_nightly_cpu-2.8.0.dev20211103-cp39-cp39-win_amd64.whl", hash = "sha256:ae086b6f5bd19898ce42e44f0c81202d9512d644dd6f388cfbd9e87d14786c69"},
 ]
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},

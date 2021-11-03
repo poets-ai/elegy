@@ -47,7 +47,7 @@ einops = "^0.3.0"
 sh = "^1.14.1"
 pre-commit = "^2.15.0"
 datasets = "^1.14.0"
-tf-nightly-cpu = "2.8.0-alpha.20211028"
+tf-nightly-cpu = "2.8.0.dev20211103"
 
 [build-system]
 requires = ["poetry>=0.12"]
