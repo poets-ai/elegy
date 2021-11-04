@@ -1,29 +1,43 @@
 # Elegy
 
-[![PyPI Status Badge](https://badge.fury.io/py/eg.svg)](https://pypi.org/project/elegy/)
+<!-- [![PyPI Status Badge](https://badge.fury.io/py/eg.svg)](https://pypi.org/project/elegy/) -->
+<!-- [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/elegy)](https://pypi.org/project/elegy/) -->
+<!-- [![Documentation](https://img.shields.io/badge/api-reference-blue.svg)](https://poets-ai.github.io/elegy/) -->
+<!-- [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) -->
 [![Coverage](https://img.shields.io/codecov/c/github/poets-ai/elegy?color=%2334D058)](https://codecov.io/gh/poets-ai/elegy)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/elegy)](https://pypi.org/project/elegy/)
-[![Documentation](https://img.shields.io/badge/api-reference-blue.svg)](https://poets-ai.github.io/elegy/)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/poets-ai/elegy/issues)
 [![Status](https://github.com/poets-ai/elegy/workflows/GitHub%20CI/badge.svg)](https://github.com/poets-ai/elegy/actions?query=workflow%3A%22GitHub+CI%22)
+[![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/poets-ai/elegy/issues)
 
 ______________________________________________________________________
 
-_Elegy is a framework-agnostic Trainer interface for the Jax ecosystem._
+_A High Level API for Deep Learning in JAX_
 
 #### Main Features
 
-- **Easy-to-use**: Elegy provides a Keras-like high-level API that makes it very easy to do common tasks.
-- **Flexible**: Elegy provides a functional Pytorch Lightning-like low-level API that maximizes flexibility when needed.
-- **Agnostic**: Elegy supports various frameworks, including Flax, Haiku, and Optax on the high-level API, and it is 100% framework-agnostic on the low-level API.
-- **Compatible**: Elegy can consume many familiar data sources, including TensorFlow Datasets, Pytorch DataLoaders, Python generators, and Numpy pytrees.
+- 😀 **Easy-to-use**: Elegy provides a Keras-like high-level API that makes it very easy to do common tasks.
+- 💪‍ **Flexible**: Elegy provides a Pytorch Lightning-like low-level API that offers maximum flexibility when needed.
+- 🔌 **Compatible**: Elegy can consume many familiar data sources, including TensorFlow Datasets, Pytorch DataLoaders, Python generators, and Array Pytrees.
+<!-- - **Agnostic**: Elegy supports various frameworks, including Flax, Haiku, and Optax on the high-level API, and it is 100% framework-agnostic on the low-level API. -->
 
-For more information, take a look at the [Documentation](https://poets-ai.github.io/elegy).
+Elegy is built on top of [Treex](https://github.com/cgarciae/treex) and [Treeo](https://github.com/cgarciae/treeo) and reexports their APIs for convenience. 
+
+
+[Getting Started](https://poets-ai.github.io/elegy/getting-started/high-level-api) | <!--[User Guide](https://cgarciae.github.io/treex/user-guide/intro)--> | [Examples](#examples) | [Documentation](https://poets-ai.github.io/elegy)
+
+
+## What is included?
+* A `Model` class with an Estimator-like API.
+* A `callbacks` module with common Keras callbacks.
+
+##### From Treex
+* A `Module` class.
+* A `nn` module for with common layers.
+* A `losses` module with common loss functions.
+* A `metrics` module with common metrics.
 
 ## Installation
 
-Install Elegy using pip:
+Install using pip:
 
 ```bash
 pip install elegy
@@ -84,13 +98,13 @@ model.fit(
 
 ## Quick Start: Low-level API
 
-Elegy's low-level API lets you explicitly define what goes on during training, testing, and inference. Let's define the `test_step` to implement a linear classifier in pure jax:
+Elegy's low-level API lets you explicitly define what goes on during training, testing, and inference. Let's define our own custom `Model` to implement a `LinearClassifier` with pure JAX:
 
-**1.** Calculate our loss, logs, and states:
+**1.** Define a custom `init_step` method:
 
 ```python
 class LinearClassifier(eg.Model):
-    # use Treeo's API to define parameter nodes
+    # use treex's API to declare parameter nodes
     w: jnp.ndarray = eg.Parameter.node()
     b: jnp.ndarray = eg.Parameter.node()
 
@@ -104,12 +118,11 @@ class LinearClassifier(eg.Model):
         self.optimizer = self.optimizer.init(self)
 
         return self
+```
+Here we declared the parameters `w` and `b` using Treex's `Parameter.node()` for pedagogical reasons, however normally you don't have to do this since you typically use a sub-`Module` instead.
 
-    def pred_step(self, inputs: tp.Any):
-        # forward
-        logits = jnp.dot(inputs, self.w) + self.b
-        return logits, self
-
+**2.** Define a custom `test_step` method:
+```python
     def test_step(
         self,
         inputs,
@@ -119,7 +132,7 @@ class LinearClassifier(eg.Model):
         inputs = jnp.reshape(inputs, (inputs.shape[0], -1)) / 255
 
         # forward
-        logits, _ = self.pred_step(inputs)
+        logits = jnp.dot(inputs, self.w) + self.b
 
         # crossentropy loss
         target = jax.nn.one_hot(labels["target"], 10)
@@ -132,10 +145,9 @@ class LinearClassifier(eg.Model):
         )
 
         return loss, logs, self
-        
 ```
 
-**2.** Instantiate our `LinearClassifier` with an optimizer:
+**3.** Instantiate our `LinearClassifier` with an optimizer:
 
 ```python
 model = LinearClassifier(
@@ -143,7 +155,7 @@ model = LinearClassifier(
 )
 ```
 
-**3.** Train the model using the `fit` method:
+**4.** Train the model using the `fit` method:
 
 ```python
 model.fit(
@@ -165,8 +177,8 @@ low-level API, here is an example with Flax:
 
 ```python
 class LinearClassifier(eg.Model):
-    paramsapping[str, Any] = eg.Parameter.node()
-    batch_statsapping[str, Any] = eg.BatchStat.node()
+    params: Mapping[str, Any] = eg.Parameter.node()
+    batch_stats: Mapping[str, Any] = eg.BatchStat.node()
     next_key: eg.KeySeq
 
     def init_step(self, key, inputs):
@@ -207,13 +219,6 @@ class LinearClassifier(eg.Model):
 ```
 Here `module` is a `flax.linen.Module` 
 
-## More Info
-
-- [Getting Started: High-level API](https://poets-ai.github.io/elegy/getting-started-high-level-api/) tutorial.
-- [Getting Started: Low-level API](https://poets-ai.github.io/elegy/getting-started-low-level-api/) tutorial.
-- Elegy's [Documentation](https://poets-ai.github.io/elegy).
-- The [examples](https://github.com/poets-ai/elegy/tree/master/examples) directory.
-- [What is Jax?](https://github.com/google/jax#what-is-jax)
 
 ### Examples
 
@@ -250,10 +255,10 @@ To cite this project:
 ```
 @software{elegy2020repository,
 author = {PoetsAI},
-title = {Elegy: A framework-agnostic Trainer interface for the Jax ecosystem},
+title = {Elegy: A High Level API for Deep Learning in JAX},
 url = {https://github.com/poets-ai/elegy},
 version = {0.7.4},
-year = {2020},
+year = {2021},
 }
 ```
 
