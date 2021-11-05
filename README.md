@@ -19,10 +19,10 @@ _A High Level API for Deep Learning in JAX_
 - 🔌 **Compatible**: Elegy various frameworks and data sources including Flax & Haiku Modules, Optax Optimizers, TensorFlow Datasets, Pytorch DataLoaders, and more.
 <!-- - 🤷 **Agnostic**: Elegy supports various frameworks, including Flax, Haiku, and Optax on the high-level API, and it is 100% framework-agnostic on the low-level API. -->
 
-Elegy is built on top of [Treex](https://github.com/cgarciae/treex) and [Treeo](https://github.com/cgarciae/treeo) and reexports their APIs for convenience. Elegy currently supports Flax modules via Treex's the `FlaxModule` wrapper (Haiku comming soon!)
+Elegy is built on top of [Treex](https://github.com/cgarciae/treex) and [Treeo](https://github.com/cgarciae/treeo) and reexports their APIs for convenience.
 
 
-[Getting Started](https://poets-ai.github.io/elegy/getting-started/high-level-api) | <!--[User Guide](https://cgarciae.github.io/treex/user-guide/intro)--> | [Examples](#examples) | [Documentation](https://poets-ai.github.io/elegy)
+[Getting Started](https://poets-ai.github.io/elegy/getting-started/high-level-api) | [Examples](/examples) | [Documentation](https://poets-ai.github.io/elegy)
 
 
 ## What is included?
