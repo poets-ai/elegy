@@ -1,47 +1,45 @@
 import os
 import typing as tp
-from dataclasses import dataclass
 from datetime import datetime
-from functools import partial
-from typing import Any, Generator, Mapping, Tuple
 
+import datasets
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
 import optax
 import typer
-from datasets.load import load_dataset
-from tensorboardX.writer import SummaryWriter
+from datasets import load_dataset
+from flax import linen
 
 import elegy as eg
 
 
-class CNN(eg.Module):
-    @eg.compact
-    def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
+class CNN(linen.module.Module):
+    @linen.compact
+    def __call__(self, x: jnp.ndarray, training: bool) -> jnp.ndarray:
         # Normalize the input
         x = x.astype(jnp.float32) / 255.0
 
         # Block 1
-        x = eg.Conv(32, [3, 3], strides=[2, 2])(x)
-        x = eg.Dropout(0.05)(x)
+        x = linen.Conv(32, [3, 3], strides=[2, 2])(x)
+        x = linen.Dropout(0.05, deterministic=not training)(x)
         x = jax.nn.relu(x)
 
         # Block 2
-        x = eg.Conv(64, [3, 3], strides=[2, 2])(x)
-        x = eg.BatchNorm()(x)
-        x = eg.Dropout(0.1)(x)
+        x = linen.Conv(64, [3, 3], strides=[2, 2])(x)
+        x = linen.BatchNorm(use_running_average=not training)(x)
+        x = linen.Dropout(0.1, deterministic=not training)(x)
         x = jax.nn.relu(x)
 
         # Block 3
-        x = eg.Conv(128, [3, 3], strides=[2, 2])(x)
+        x = linen.Conv(128, [3, 3], strides=[2, 2])(x)
 
         # Global average pooling
         x = x.mean(axis=(1, 2))
 
         # Classification layer
-        x = eg.Linear(10)(x)
+        x = linen.Dense(10)(x)
 
         return x
 
@@ -85,8 +83,7 @@ def main(
         eager=eager,
     )
 
-    # show model summary
-    model.summary(X_train[:64], depth=1)
+    model.summary(X_train[:batch_size])
 
     history = model.fit(
         inputs=X_train,

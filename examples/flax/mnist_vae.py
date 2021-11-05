@@ -89,13 +89,12 @@ class VAE(nn.Module):
         return nn.sigmoid(self.decoder(z))
 
 
-def kl_divergence(mean: jnp.ndarray, std: jnp.ndarray) -> jnp.ndarray:
-    return 0.5 * (-jnp.log(std ** 2) - 1.0 + std ** 2 + mean ** 2).mean(axis=-1)
-
-
 class KL(eg.Loss):
     def call(self, preds) -> jnp.ndarray:
-        return kl_divergence(preds["mean"], preds["std"])
+        mean = preds["mean"]
+        std = preds["std"]
+
+        return 0.5 * jnp.mean(-jnp.log(std ** 2) - 1.0 + std ** 2 + mean ** 2, axis=-1)
 
 
 class BinaryCrossEntropy(eg.losses.Crossentropy):
@@ -135,15 +134,11 @@ def main(
     print("X_train:", X_train.shape, X_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
 
-    vae = VAE(latent_size=LATENT_SIZE)
-
-    # model = VariationalAutoEncoder(latent_size=LATENT_SIZE, optimizer=optax.adam(1e-3))
-
     model = eg.Model(
-        module=eg.FlaxModule(vae),
+        module=VAE(latent_size=LATENT_SIZE),
         loss=[
             BinaryCrossEntropy(on="logits"),
-            KL(),
+            KL(weight=0.1),
         ],
         optimizer=optax.adam(1e-3),
         eager=eager,
