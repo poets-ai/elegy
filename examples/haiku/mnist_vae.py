@@ -13,30 +13,13 @@ import typer
 from datasets.load import load_dataset
 from tensorboardX.writer import SummaryWriter
 
-import elegy
-from elegy.callbacks.tensorboard import TensorBoard
+import elegy as eg
 
-Batch = Mapping[str, np.ndarray]
+Batch = Mapping[str, jnp.ndarray]
 np.random.seed(42)
 
 LATENT_SIZE = 32
 MNIST_IMAGE_SHAPE: tp.Sequence[int] = (28, 28)
-
-
-def kl_divergence(mean: np.ndarray, std: np.ndarray) -> np.ndarray:
-    r"""Calculate KL divergence between given and standard gaussian distributions.
-    KL(p, q) = H(p, q) - H(p) = -\int p(x)log(q(x))dx - -\int p(x)log(p(x))dx
-            = 0.5 * [log(|s2|/|s1|) - 1 + tr(s1/s2) + (m1-m2)^2/s2]
-            = 0.5 * [-log(|s1|) - 1 + tr(s1) + m1^2] (if m2 = 0, s2 = 1)
-    Args:
-        mean: mean vector of the first distribution
-        var: diagonal vector of covariance matrix of the first distribution
-    Returns:
-        A scalar representing KL divergence of the two Gaussian distributions.
-    """
-    return jnp.mean(
-        0.5 * jnp.mean(-jnp.log(std ** 2) - 1.0 + std ** 2 + mean ** 2, axis=-1)
-    )
 
 
 class Encoder(hk.Module):
@@ -48,8 +31,8 @@ class Encoder(hk.Module):
         self.latent_size = latent_size
 
     def __call__(
-        self, x: np.ndarray, rng: elegy.KeySeq
-    ) -> tp.Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        self, x: jnp.ndarray
+    ) -> tp.Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
         x = x.reshape((x.shape[0], -1))  # flatten
         x = hk.Linear(self.hidden_size)(x)
         x = jax.nn.relu(x)
@@ -58,8 +41,7 @@ class Encoder(hk.Module):
         log_stddev = hk.Linear(self.latent_size, name="linear_std")(x)
         stddev = jnp.exp(log_stddev)
 
-        # friendly RNG interface: rng.next() == jax.random.split(...)
-        z = mean + stddev * jax.random.normal(rng.next(), mean.shape)
+        z = mean + stddev * jax.random.normal(hk.next_rng_key(), mean.shape)
 
         return z, mean, stddev
 
@@ -74,7 +56,7 @@ class Decoder(hk.Module):
         self.hidden_size = hidden_size
         self.output_shape = output_shape
 
-    def __call__(self, z: np.ndarray) -> np.ndarray:
+    def __call__(self, z: jnp.ndarray) -> jnp.ndarray:
         z = hk.Linear(self.hidden_size)(z)
         z = jax.nn.relu(z)
 
@@ -103,13 +85,29 @@ class VAE(hk.Module):
             hidden_size=self.hidden_size, output_shape=self.output_shape
         )
 
-    def __call__(self, x, states: elegy.States):
-        z, mean, stddev = self.encoder(x, states.rng)
+    def __call__(self, x):
+        z, mean, std = self.encoder(x)
         logits = self.decoder(z)
-        return logits, mean, stddev
+        return dict(logits=logits, mean=mean, std=std)
 
     def generate(self, z):
         return jax.nn.sigmoid(self.decoder(z))
+
+
+class KL(eg.Loss):
+    def call(self, preds) -> jnp.ndarray:
+        mean = preds["mean"]
+        std = preds["std"]
+
+        return 0.5 * jnp.mean(-jnp.log(std ** 2) - 1.0 + std ** 2 + mean ** 2, axis=-1)
+
+
+class BinaryCrossEntropy(eg.losses.Crossentropy):
+    def __init__(self, **kwargs):
+        super().__init__(binary=True, **kwargs)
+
+    def call(self, inputs: jnp.ndarray, preds: jnp.ndarray) -> jnp.ndarray:
+        return super().call(target=inputs, preds=preds)
 
 
 def main(
@@ -131,7 +129,10 @@ def main(
     current_time = datetime.now().strftime("%b%d_%H-%M-%S")
     logdir = os.path.join(logdir, current_time)
 
-    X_train, _1, X_test, _2 = dataget.image.mnist(global_cache=True).get()
+    dataset = load_dataset("mnist")
+    dataset.set_format("np")
+    X_train = dataset["train"]["image"]
+    X_test = dataset["test"]["image"]
     # Now binarize data
     X_train = (X_train > 0).astype(jnp.float32)
     X_test = (X_test > 0).astype(jnp.float32)
@@ -139,24 +140,19 @@ def main(
     print("X_train:", X_train.shape, X_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
 
-    vae = elegy.HaikuModule(lambda x, states: VAE(latent_size=LATENT_SIZE)(x, states))
+    def forward(x: jnp.ndarray):
+        return VAE(latent_size=LATENT_SIZE)(x)
 
-    # model = VariationalAutoEncoder(latent_size=LATENT_SIZE, optimizer=optax.adam(1e-3))
-
-    def loss(x, y_pred):
-        logits, mean, stddev = y_pred
-        ce_loss = elegy.losses.binary_crossentropy(x, logits, from_logits=True).mean()
-        kl_loss = 2e-1 * kl_divergence(mean, stddev)
-        return ce_loss + kl_loss
-
-    model = elegy.Model(
-        module=vae,
-        loss=loss,
+    model = eg.Model(
+        module=hk.transform_with_state(forward),
+        loss=[
+            BinaryCrossEntropy(on="logits"),
+            KL(weight=0.1),
+        ],
         optimizer=optax.adam(1e-3),
         eager=eager,
     )
 
-    model.init(X_train[:batch_size])
     model.summary(X_train[:batch_size])
 
     # Fit with datasets in memory
@@ -175,31 +171,29 @@ def main(
         f"\n \t\t\t tensorboard --logdir {logdir}",
     )
 
-    elegy.utils.plot_history(history)
+    eg.utils.plot_history(history)
 
     # get random samples
     idxs = np.random.randint(0, len(X_test), size=(5,))
     x_sample = X_test[idxs]
 
     # get predictions
-    logits, mean, stddev = model.predict(x=x_sample)
-    y_pred = jax.nn.sigmoid(logits)
+    preds = model.predict(x=x_sample)
+    y_pred = jax.nn.sigmoid(preds["logits"])
 
     # plot and save results
-    with SummaryWriter(os.path.join(logdir, "val")) as tbwriter:
-        figure = plt.figure(figsize=(12, 12))
-        for i in range(5):
-            plt.subplot(2, 5, i + 1)
-            plt.imshow(x_sample[i], cmap="gray")
-            plt.subplot(2, 5, 5 + i + 1)
-            plt.imshow(y_pred[i], cmap="gray")
-        # # tbwriter.add_figure("VAE Example", figure, epochs)
+    figure = plt.figure(figsize=(12, 12))
+    for i in range(5):
+        plt.subplot(2, 5, i + 1)
+        plt.imshow(x_sample[i], cmap="gray")
+        plt.subplot(2, 5, 5 + i + 1)
+        plt.imshow(y_pred[i], cmap="gray")
 
     plt.show()
 
     # TODO: implement parameter transfer to sample
     # sample
-    # model_decoder = elegy.Model(Decoder(latent_size=LATENT_SIZE))
+    # model_decoder = eg.Model(Decoder(latent_size=LATENT_SIZE))
 
     # z_samples = np.random.normal(size=(12, LATENT_SIZE))
     # samples = model_decoder.predict(z_samples)

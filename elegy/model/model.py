@@ -7,6 +7,7 @@ import jax.numpy as jnp
 import numpy as np
 import treex as tx
 from optax import GradientTransformation
+from treex.nn.haiku_module import HaikuModule
 
 from elegy import types, utils
 from elegy.model.model_base import ModelBase
@@ -15,89 +16,18 @@ from elegy.model.model_core import GradStep, PredStep, TestStep, TrainStep
 M = tp.TypeVar("M", bound="Model")
 U = tp.TypeVar("U", bound="tx.Module")
 
+try:
+    import haiku as hk
+
+    TransformedWithState = hk.TransformedWithState
+except ImportError:
+    hk = None
+    TransformedWithState = type(None)
+
 
 class Model(tp.Generic[U], ModelBase):
     """
-    Model is a framework-agnostic trainer interface that is tasked with performing training, evaluation, and inference.
-    It provides 2 main APIs:
-
-    * The high-level API provides the Keras-like experience of simplicity and speed. The user provides things like the
-        a modules, losses, metrics, and callbacks and Elegy takes care of the rest.
-    * The low-level API provides the Pytorch Lightning-like experience of experisiveness and power. The user can
-        override methods like `pred_step`, `test_step`, and `train_step` to perform jax-based computation with very
-        few restrictions.
-
-    ## High-level API
-    To use the high-level API you first have to define a network architecture in a Module, currently we support Modules from
-    Flax, Haiku, Elegy, and pure jax functions. Using `elegy.Module` this could look like this:
-
-    ```python
-    >>> import elegy, jax, optax
-    >>> import jax.numpy as jnp
-
-    >>> class MLP(elegy.Module):
-    ...     def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
-    ...         x = elegy.nn.Linear(5)(x)
-    ...         x = jax.nn.relu(x)
-    ...         x = elegy.nn.Linear(2)(x)
-    ...         return x
-
-    ```
-
-
-    You can pass this architecture to the Model API along with losses, metrics, optimizer, etc:
-    ```python
-    >>> model = elegy.Model(
-    ...     module=MLP(),
-    ...     loss=[
-    ...         elegy.losses.Crossentropy(),
-    ...         elegy.regularizers.L2(l=1e-5),
-    ...     ],
-    ...     metrics=elegy.metrics.Accuracy(),
-    ...     optimizer=optax.rmsprop(1e-3),
-    ... )
-
-    ```
-
-    Once the model is created, you can train the model with `model.fit()`, or use the model
-    to do prediction with `model.predict()`.
-    Checkout [Getting Started](https://poets-ai.github.io/elegy/getting-started) for
-    additional details.
-
-    ```python
-    >>> x = jnp.ones(shape=[12, 10])
-    >>> y = jnp.ones(shape=[12])
-
-    >>> history = model.fit(x, y) # doctest: +SKIP
-
-    ```
-
-    Model supports optax optimizers as well as `elegy.Optimizer` which has a feature for definint + monitoring
-    custom learning rate schedules, it is implemented on top of optax and you can use it like this:
-
-    ```python
-    >>> model = elegy.Model(
-    ...     module=MLP(),
-    ...     loss=elegy.losses.Crossentropy(),
-    ...     metrics=elegy.metrics.Accuracy(),
-    ...     optimizer=elegy.Optimizer(
-    ...         # one or more optax optimizers as *args,
-    ...         # these will be passed to optax.chain(...)
-    ...         optax.adam(1.0), # <---- important to set this to 1.0
-    ...
-    ...         lr_schedule=lambda step, epoch: 1 / (epoch * 100 + step),
-    ...         steps_per_epoch=1000,
-    ...     ),
-    ...     eager=True,
-    ... )
-
-    ```
-    Notice how we set the learning rate parameter of the `adam` optimizer to `1.0`, this is necessary if you want the logged `lr`
-    be closer to the "actual" learning rate since this feature was implemented by chaining an additional `optax.scale_by_schedule`
-    at the end.
-
-    ## High-level API
-
+    Model provides an Estimator-like API similar to Keras.
     """
 
     # pytree
@@ -108,9 +38,51 @@ class Model(tp.Generic[U], ModelBase):
     # static
     seed: int = 42
 
+    @tp.overload
+    def __init__(
+        self: "Model[tx.FlaxModule]",
+        module: flax.linen.module.Module,
+        loss: tp.Any = None,
+        metrics: tp.Any = None,
+        optimizer: tp.Optional[tp.Union[tx.Optimizer, GradientTransformation]] = None,
+        seed: int = 42,
+        eager: bool = False,
+    ):
+        ...
+
+    if hk is not None:
+
+        @tp.overload
+        def __init__(
+            self: "Model[tx.HaikuModule]",
+            module: hk.TransformedWithState,
+            loss: tp.Any = None,
+            metrics: tp.Any = None,
+            optimizer: tp.Optional[
+                tp.Union[tx.Optimizer, GradientTransformation]
+            ] = None,
+            seed: int = 42,
+            eager: bool = False,
+        ):
+            ...
+
+    @tp.overload
+    def __init__(
+        self: "Model[U]",
+        module: U,
+        loss: tp.Any = None,
+        metrics: tp.Any = None,
+        optimizer: tp.Optional[tp.Union[tx.Optimizer, GradientTransformation]] = None,
+        seed: int = 42,
+        eager: bool = False,
+    ):
+        ...
+
     def __init__(
         self,
-        module: tp.Optional[U] = None,
+        module: tp.Union[
+            flax.linen.module.Module, TransformedWithState, tx.Module, None
+        ] = None,
         loss: tp.Any = None,
         metrics: tp.Any = None,
         optimizer: tp.Optional[tp.Union[tx.Optimizer, GradientTransformation]] = None,
@@ -118,7 +90,6 @@ class Model(tp.Generic[U], ModelBase):
         eager: bool = False,
     ):
         """
-
         Arguments:
             module: A `Module` instance.
             loss: A `elegy.Loss` or `Callable` instance representing the loss function of the network.
@@ -149,7 +120,16 @@ class Model(tp.Generic[U], ModelBase):
         """
         super().__init__(seed=seed, eager=eager)
 
-        self.module = module
+        if isinstance(module, flax.linen.module.Module):
+            self.module = tx.FlaxModule(module)
+
+        elif TransformedWithState is not None and isinstance(
+            module, TransformedWithState
+        ):
+            self.module = tx.HaikuModule(module)
+        else:
+            self.module = module
+
         self.optimizer = (
             tx.Optimizer(optimizer)
             if isinstance(optimizer, GradientTransformation)
