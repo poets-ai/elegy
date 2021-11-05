@@ -202,11 +202,7 @@ Here we declared the parameters `w` and `b` using Treex's `Parameter.node()` for
 
 **2.** Define a custom `test_step` method:
 ```python
-    def test_step(
-        self,
-        inputs,
-        labels,
-    ):
+    def test_step(self, inputs, labels):
         # flatten + scale
         inputs = jnp.reshape(inputs, (inputs.shape[0], -1)) / 255
 
