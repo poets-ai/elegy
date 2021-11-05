@@ -17,40 +17,30 @@ from tensorboardX.writer import SummaryWriter
 import elegy as eg
 
 
-@eg.compact_module
-def ConvBlock(
-    x,
-    units: int,
-    kernel: tp.Tuple[int, int],
-    stride: int = 1,
-):
-    x = eg.Conv(
-        units,
-        kernel,
-        strides=[stride, stride],
-        padding="same",
-    )(x)
-    x = eg.BatchNorm()(x)
-    x = eg.Dropout(0.2)(x)
-    return jax.nn.relu(x)
-
-
 class CNN(eg.Module):
     @eg.compact
-    def __call__(self, x: jnp.ndarray):
-        # normalize
+    def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
+        # Normalize the input
         x = x.astype(jnp.float32) / 255.0
 
-        # base
-        x = ConvBlock()(x, 32, (3, 3))
-        x = ConvBlock()(x, 64, (3, 3), stride=2)
-        x = ConvBlock()(x, 64, (3, 3), stride=2)
-        x = ConvBlock()(x, 128, (3, 3), stride=2)
+        # Block 1
+        x = eg.Conv(32, [3, 3], strides=[2, 2])(x)
+        x = eg.Dropout(0.05)(x)
+        x = jax.nn.relu(x)
 
-        # GlobalAveragePooling2D
-        x = jnp.mean(x, axis=(1, 2))
+        # Block 2
+        x = eg.Conv(64, [3, 3], strides=[2, 2])(x)
+        x = eg.BatchNorm()(x)
+        x = eg.Dropout(0.1)(x)
+        x = jax.nn.relu(x)
 
-        # 1x1 Conv
+        # Block 3
+        x = eg.Conv(128, [3, 3], strides=[2, 2])(x)
+
+        # Global average pooling
+        x = x.mean(axis=(1, 2))
+
+        # Classification layer
         x = eg.Linear(10)(x)
 
         return x
@@ -77,13 +67,10 @@ def main(
 
     dataset = load_dataset("mnist")
     dataset.set_format("np")
-    X_train = dataset["train"]["image"]
+    X_train = dataset["train"]["image"][..., None]
     y_train = dataset["train"]["label"]
-    X_test = dataset["test"]["image"]
+    X_test = dataset["test"]["image"][..., None]
     y_test = dataset["test"]["label"]
-
-    X_train = X_train[..., None]
-    X_test = X_test[..., None]
 
     print("X_train:", X_train.shape, X_train.dtype)
     print("y_train:", y_train.shape, y_train.dtype)
@@ -114,10 +101,6 @@ def main(
 
     eg.utils.plot_history(history)
 
-    model.save("models/conv")
-
-    model = eg.load("models/conv")
-
     print(model.evaluate(x=X_test, y=y_test))
 
     # get random samples
@@ -128,16 +111,14 @@ def main(
     y_pred = model.predict(x=x_sample)
 
     # plot results
-    with SummaryWriter(os.path.join(logdir, "val")) as tbwriter:
-        figure = plt.figure(figsize=(12, 12))
-        for i in range(3):
-            for j in range(3):
-                k = 3 * i + j
-                plt.subplot(3, 3, k + 1)
+    figure = plt.figure(figsize=(12, 12))
+    for i in range(3):
+        for j in range(3):
+            k = 3 * i + j
+            plt.subplot(3, 3, k + 1)
 
-                plt.title(f"{np.argmax(y_pred[k])}")
-                plt.imshow(x_sample[k], cmap="gray")
-        # tbwriter.add_figure("Conv classifier", figure, 100)
+            plt.title(f"{np.argmax(y_pred[k])}")
+            plt.imshow(x_sample[k], cmap="gray")
 
     plt.show()
 
