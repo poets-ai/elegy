@@ -101,7 +101,7 @@ model.fit(
 <details>
 <summary>Show</summary>
 
-To use Flax just create a `flax.linen.Module` and pass it to `Model`.
+To use Flax with Elegy just create a `flax.linen.Module` and pass it to `Model`.
 
 ```python
 import jax
@@ -138,13 +138,13 @@ As shown here, Flax Modules can optionally request a `training` argument to `__c
 <details>
 <summary>Show</summary>
 
-To use Haiku do the following: 
+To use Haiku with Elegy do the following: 
 
 * Create a `forward` function.
 * Create a `TransformedWithState` object by feeding `forward` to `hk.transform_with_state`.
 * Pass your `TransformedWithState`  to `Model`.
 
-You can also optionally create your own `hk.Module` if needed. Putting everything together should look like this:
+You can also optionally create your own `hk.Module` and use it in `forward` if needed. Putting everything together should look like this:
 
 ```python
 import jax
@@ -202,11 +202,7 @@ Here we declared the parameters `w` and `b` using Treex's `Parameter.node()` for
 
 **2.** Define a custom `test_step` method:
 ```python
-    def test_step(
-        self,
-        inputs,
-        labels,
-    ):
+    def test_step(self, inputs, labels):
         # flatten + scale
         inputs = jnp.reshape(inputs, (inputs.shape[0], -1)) / 255
 
