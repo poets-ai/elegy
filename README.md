@@ -16,10 +16,10 @@ _A High Level API for Deep Learning in JAX_
 
 - 😀 **Easy-to-use**: Elegy provides a Keras-like high-level API that makes it very easy to do common tasks.
 - 💪‍ **Flexible**: Elegy provides a Pytorch Lightning-like low-level API that offers maximum flexibility when needed.
-- 🔌 **Compatible**: Elegy can consume many familiar data sources, including TensorFlow Datasets, Pytorch DataLoaders, Python generators, and Array Pytrees.
-<!-- - **Agnostic**: Elegy supports various frameworks, including Flax, Haiku, and Optax on the high-level API, and it is 100% framework-agnostic on the low-level API. -->
+- 🔌 **Compatible**: Elegy various frameworks and data sources including Flax & Haiku Modules, Optax Optimizers, TensorFlow Datasets, Pytorch DataLoaders, and more.
+<!-- - 🤷 **Agnostic**: Elegy supports various frameworks, including Flax, Haiku, and Optax on the high-level API, and it is 100% framework-agnostic on the low-level API. -->
 
-Elegy is built on top of [Treex](https://github.com/cgarciae/treex) and [Treeo](https://github.com/cgarciae/treeo) and reexports their APIs for convenience. 
+Elegy is built on top of [Treex](https://github.com/cgarciae/treex) and [Treeo](https://github.com/cgarciae/treeo) and reexports their APIs for convenience. Elegy currently supports Flax modules via Treex's the `FlaxModule` wrapper (Haiku comming soon!)
 
 
 [Getting Started](https://poets-ai.github.io/elegy/getting-started/high-level-api) | <!--[User Guide](https://cgarciae.github.io/treex/user-guide/intro)--> | [Examples](#examples) | [Documentation](https://poets-ai.github.io/elegy)
@@ -29,7 +29,8 @@ Elegy is built on top of [Treex](https://github.com/cgarciae/treex) and [Treeo](
 * A `Model` class with an Estimator-like API.
 * A `callbacks` module with common Keras callbacks.
 
-##### From Treex
+**From Treex**
+
 * A `Module` class.
 * A `nn` module for with common layers.
 * A `losses` module with common loss functions.
@@ -85,8 +86,8 @@ model = eg.Model(
 
 ```python
 model.fit(
-    x=X_train,
-    y=y_train,
+    inputs=X_train,
+    labels=y_train,
     epochs=100,
     steps_per_epoch=200,
     batch_size=64,
@@ -95,6 +96,84 @@ model.fit(
     callbacks=[eg.callbacks.TensorBoard("summaries")]
 )
 ```
+#### Using Flax
+
+<details>
+<summary>Show</summary>
+
+To use Flax just create a `flax.linen.Module` and pass it to `Model`.
+
+```python
+import jax
+import elegy as eg
+import optax optax
+import flax.linen as nn
+
+class MLP(nn.Module):
+    @nn.compact
+    def __call__(self, x, training: bool):
+        x = nn.Dense(300)(x)
+        x = jax.nn.relu(x)
+        x = nn.Dense(10)(x)
+        return x
+
+
+model = eg.Model(
+    module=MLP(),
+    loss=[
+        eg.losses.Crossentropy(),
+        eg.regularizers.L2(l=1e-5),
+    ],
+    metrics=eg.metrics.Accuracy(),
+    optimizer=optax.rmsprop(1e-3),
+)
+```
+
+As shown here, Flax Modules can optionally request a `training` argument to `__call__` which will be provided by Elegy / Treex. 
+
+</details>
+
+#### Using Haiku
+
+<details>
+<summary>Show</summary>
+
+To use Haiku do the following: 
+
+* Create a `forward` function.
+* Create a `TransformedWithState` object by feeding `forward` to `hk.transform_with_state`.
+* Pass your `TransformedWithState`  to `Model`.
+
+You can also optionally create your own `hk.Module` if needed. Putting everything together should look like this:
+
+```python
+import jax
+import elegy as eg
+import optax optax
+import haiku as hk
+
+
+def forward(x, training: bool):
+    x = hk.Linear(300)(x)
+    x = jax.nn.relu(x)
+    x = hk.Linear(10)(x)
+    return x
+
+
+model = eg.Model(
+    module=hk.transform_with_state(forward),
+    loss=[
+        eg.losses.Crossentropy(),
+        eg.regularizers.L2(l=1e-5),
+    ],
+    metrics=eg.metrics.Accuracy(),
+    optimizer=optax.rmsprop(1e-3),
+)
+```
+
+As shown here, `forward` can optionally request a `training` argument which will be provided by Elegy / Treex. 
+
+</details>
 
 ## Quick Start: Low-level API
 
@@ -159,8 +238,8 @@ model = LinearClassifier(
 
 ```python
 model.fit(
-    x=X_train,
-    y=y_train,
+    inputs=X_train,
+    labels=y_train,
     epochs=100,
     steps_per_epoch=200,
     batch_size=64,
@@ -170,7 +249,10 @@ model.fit(
 )
 ```
 
-#### Using Jax Frameworks
+#### Using other JAX Frameworks
+
+<details>
+<summary>Show</summary>
 
 It is straightforward to integrate other functional JAX libraries with this
 low-level API, here is an example with Flax:
@@ -219,47 +301,40 @@ class LinearClassifier(eg.Model):
 ```
 Here `module` is a `flax.linen.Module` 
 
+</details>
 
 ### Examples
 
-To run the examples, first install some required packages:
+Check out the [/example](/examples) directory for some inspiration. To run an example, first install some requirements:
 
 ```bash
 pip install -r examples/requirements.txt
 ```
 
-Now run the example:
+And the run it normally with python e.g.
 
 ```bash
-python examples/flax_mnist_vae.py
+python examples/flax/mnist_vae.py
 ```
 
 ## Contributing
 
-Deep Learning is evolving at an incredible pace, and there is so much to do and so few hands. If you wish to contribute anything from a loss or metric to a new awesome feature for Elegy, open an issue or send a PR! For more information, check out our [Contributing Guide](https://poets-ai.github.io/elegy/guides/contributing).
+If your are interested in helping improve Elegy check out the [Contributing Guide](https://poets-ai.github.io/elegy/guides/contributing).
 
-## About Us
-
-We are some friends passionate about ML.
-
-## License
-
-This project is [licensed under the Apache v2.0 License](LICENSE).
+## Sponsors 💚
+* [Quansight](https://www.quansight.com) - paid development time
 
 ## Citing Elegy
 
-To cite this project:
 
 **BibTeX**
 
 ```
 @software{elegy2020repository,
-author = {PoetsAI},
-title = {Elegy: A High Level API for Deep Learning in JAX},
-url = {https://github.com/poets-ai/elegy},
-version = {0.7.4},
-year = {2021},
+	title        = {Elegy: A High Level API for Deep Learning in JAX},
+	author       = {PoetsAI},
+	year         = 2021,
+	url          = {https://github.com/poets-ai/elegy},
+	version      = {0.7.4}
 }
 ```
-
-The current *version* may be retrieved either from the `Release` tag or the file [elegy/\_\_init\_\_.py](https://github.com/poets-ai/elegy/blob/master/elegy/__init__.py) and the *year* corresponds to the project's release year.
