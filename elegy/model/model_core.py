@@ -1,3 +1,4 @@
+import enum
 import pathlib
 import typing as tp
 from abc import abstractmethod
@@ -24,17 +25,22 @@ except ImportError:
 
 M = tp.TypeVar("M", bound="ModelCore")
 
-PredStep = tp.Tuple[tp.Any, M]
-TestStep = tp.Tuple[jnp.ndarray, types.Logs, M]
-LossStep = tp.Tuple[jnp.ndarray, tp.Tuple[types.Logs, M]]
-GradStep = tp.Tuple[
-    M,
-    types.Logs,
-    M,
-]
+PredStepOutput = tp.Tuple[tp.Any, M]
+TestStepOutput = tp.Tuple[jnp.ndarray, types.Logs, M]
+LossStepOutput = tp.Tuple[jnp.ndarray, tp.Tuple[types.Logs, M]]
+GradStepOutput = tp.Tuple[M, types.Logs, M]
+TrainStepOutput = tp.Tuple[types.Logs, M]
+
+InitStep = tp.Callable[[M, jnp.ndarray, tp.Any], M]
+PredStep = tp.Callable[[M, tp.Any], PredStepOutput[M]]
+TestStep = tp.Callable[[M, tp.Any, types.Labels], TestStepOutput[M]]
+GradStep = tp.Callable[[M, tp.Any, types.Labels], GradStepOutput[M]]
+TrainStep = tp.Callable[[M, tp.Any, types.Labels], TrainStepOutput[M]]
 
 
-TrainStep = tp.Tuple[types.Logs, M]
+class DistributedStrategy(enum.Enum):
+    LOCAL = enum.auto()
+    DATA_PARALLEL = enum.auto()
 
 
 class ModelMeta(to.TreeMeta):
@@ -51,6 +57,14 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
     seed: tp.Union[int, jnp.ndarray] = 42
     eager: bool = False
     _initialized: bool = tx.static(default=False)
+    _distributed_strategy: DistributedStrategy = tx.static(
+        default=DistributedStrategy.LOCAL
+    )
+
+    init_step_jit: tp.Dict[DistributedStrategy, InitStep]
+    pred_step_jit: tp.Dict[DistributedStrategy, PredStep]
+    test_step_jit: tp.Dict[DistributedStrategy, TestStep]
+    train_step_jit: tp.Dict[DistributedStrategy, TrainStep]
 
     def __init__(
         self,
@@ -64,14 +78,23 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
     def initialized(self) -> bool:
         return self._initialized
 
+    @property
+    def is_distributed(self) -> bool:
+        return self._distributed_strategy != DistributedStrategy.LOCAL
+
     def create_jit_functions(self):
         cls = self.__class__
         self._jitted_members: tp.Set[str] = set()
 
-        self.init_step_jit = jax.jit(cls._static_init_step)
-        self.pred_step_jit = jax.jit(cls._static_pred_step)
-        self.train_step_jit = jax.jit(cls._static_train_step)
-        self.test_step_jit = jax.jit(cls._static_test_step)
+        self.init_step_jit = {}
+        self.pred_step_jit = {}
+        self.test_step_jit = {}
+        self.train_step_jit = {}
+
+        self.init_step_jit[DistributedStrategy.LOCAL] = jax.jit(cls._static_init_step)
+        self.pred_step_jit[DistributedStrategy.LOCAL] = jax.jit(cls._static_pred_step)
+        self.test_step_jit[DistributedStrategy.LOCAL] = jax.jit(cls._static_test_step)
+        self.train_step_jit[DistributedStrategy.LOCAL] = jax.jit(cls._static_train_step)
 
         self._jitted_members |= {
             "init_step_jit",
@@ -111,28 +134,28 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
     def pred_step(
         self: M,
         inputs: tp.Any,
-    ) -> PredStep[M]:
+    ) -> PredStepOutput[M]:
         raise types.MissingMethod()
 
     def test_step(
         self: M,
         inputs: tp.Any,
         labels: tp.Mapping[str, tp.Any],
-    ) -> TestStep[M]:
+    ) -> TestStepOutput[M]:
         raise types.MissingMethod()
 
     def grad_step(
         self: M,
         inputs: tp.Any,
         labels: tp.Mapping[str, tp.Any],
-    ) -> GradStep[M]:
+    ) -> GradStepOutput[M]:
         raise types.MissingMethod()
 
     def train_step(
         self: M,
         inputs: tp.Any,
         labels: tp.Mapping[str, tp.Any],
-    ) -> TrainStep[M]:
+    ) -> TrainStepOutput[M]:
         raise types.MissingMethod()
 
     def reset_metrics(self) -> None:
@@ -154,7 +177,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
     def _static_pred_step(
         model: M,
         inputs: tp.Any,
-    ) -> PredStep[M]:
+    ) -> PredStepOutput[M]:
         return model.pred_step(inputs)
 
     @staticmethod
@@ -162,7 +185,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         model: M,
         inputs: tp.Any,
         labels: tp.Mapping[str, tp.Any],
-    ) -> TestStep[M]:
+    ) -> TestStepOutput[M]:
         return model.test_step(inputs, labels)
 
     @staticmethod
@@ -170,8 +193,32 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         model: M,
         inputs: tp.Any,
         labels: tp.Mapping[str, tp.Any],
-    ) -> TrainStep[M]:
+    ) -> TrainStepOutput[M]:
         return model.train_step(inputs, labels)
+
+    # ----------------------------------------------------------------
+    # distributed API
+    # ----------------------------------------------------------------
+
+    def distributed(
+        self: M,
+        strategy: tp.Union[
+            str,
+            DistributedStrategy,
+        ] = DistributedStrategy.DATA_PARALLEL,
+        inplace: bool = False,
+    ) -> M:
+        if not inplace:
+            model = self.copy()
+        else:
+            model = self
+
+        if isinstance(strategy, str):
+            strategy = DistributedStrategy[strategy.upper()]
+
+        model._distributed_strategy = strategy
+
+        return model
 
     # ----------------------------------------------------------------
     # high-level methods
@@ -183,7 +230,8 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         if self.eager:
             model = self.init_step(key, inputs)
         else:
-            model = self.init_step_jit(self, key, inputs)
+            init_step_jit = self.init_step_jit[self._distributed_strategy]
+            model = init_step_jit(self, key, inputs)
 
         if not isinstance(model, type(self)):
             raise ValueError(
@@ -217,7 +265,8 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         if self.eager:
             y_pred, model = self.pred_step(inputs)
         else:
-            y_pred, model = self.pred_step_jit(self, inputs)
+            pred_step_jit = self.pred_step_jit[self._distributed_strategy]
+            y_pred, model = pred_step_jit(self, inputs)
 
         if not isinstance(model, type(self)):
             raise ValueError(
@@ -271,7 +320,8 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
                 labels,
             )
         else:
-            loss, logs, model = self.test_step_jit(
+            test_step_jit = self.test_step_jit[self._distributed_strategy]
+            loss, logs, model = test_step_jit(
                 self,
                 inputs,
                 labels,
@@ -333,7 +383,8 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         if self.eager:
             logs, model = self.train_step(inputs, labels)
         else:
-            logs, model = self.train_step_jit(self, inputs, labels)
+            train_step_jit = self.train_step_jit[self._distributed_strategy]
+            logs, model = train_step_jit(self, inputs, labels)
 
         if not isinstance(model, type(self)):
             raise ValueError(

@@ -11,7 +11,12 @@ from treex.nn.haiku_module import HaikuModule
 
 from elegy import types, utils
 from elegy.model.model_base import ModelBase
-from elegy.model.model_core import GradStep, PredStep, TestStep, TrainStep
+from elegy.model.model_core import (
+    GradStepOutput,
+    PredStepOutput,
+    TestStepOutput,
+    TrainStepOutput,
+)
 
 M = tp.TypeVar("M", bound="Model")
 U = tp.TypeVar("U", bound="tx.Module")
@@ -180,7 +185,7 @@ class Model(tp.Generic[U], ModelBase):
     def pred_step(
         self: M,
         inputs: tp.Any,
-    ) -> PredStep[M]:
+    ) -> PredStepOutput[M]:
         model: M = self
 
         if model.module is None:
@@ -198,7 +203,7 @@ class Model(tp.Generic[U], ModelBase):
         self: M,
         inputs: tp.Any,
         labels: tp.Mapping[str, tp.Any],
-    ) -> TestStep[M]:
+    ) -> TestStepOutput[M]:
         model: M = self
 
         if model.module is None:
@@ -263,7 +268,7 @@ class Model(tp.Generic[U], ModelBase):
         self: M,
         inputs: tp.Any,
         labels: tp.Mapping[str, tp.Any],
-    ) -> TrainStep[M]:
+    ) -> TrainStepOutput[M]:
         model: M = self
         grads: M
         logs: types.Logs

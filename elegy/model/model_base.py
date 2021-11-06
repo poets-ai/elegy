@@ -18,7 +18,7 @@ from elegy import data, types, utils
 from elegy.callbacks import Callback, CallbackList, History, history
 from elegy.callbacks.sigint import SigIntMode
 from elegy.data import utils as data_utils
-from elegy.model.model_core import ModelCore, PredStep, TestStep
+from elegy.model.model_core import ModelCore, PredStepOutput, TestStepOutput
 
 __all__ = ["ModelBase", "load"]
 

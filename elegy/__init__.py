@@ -18,11 +18,11 @@ from . import (
 from .model.model import Model
 from .model.model_base import ModelBase, load
 from .model.model_core import (
-    GradStep,
-    PredStep,
-    TestStep,
-    TrainStep,
-    LossStep,
+    GradStepOutput,
+    PredStepOutput,
+    TestStepOutput,
+    TrainStepOutput,
+    LossStepOutput,
     ModelCore,
 )
 from .types import KeySeq
