@@ -1,11 +1,14 @@
 import typing as tp
 from io import StringIO
 
+import einops
 import flax
 import jax
+import jax.experimental.host_callback as hcb
 import jax.numpy as jnp
 import numpy as np
 import treex as tx
+from jax._src.tree_util import tree_map
 from optax import GradientTransformation
 from treex.nn.haiku_module import HaikuModule
 
@@ -14,6 +17,7 @@ from elegy.model.model_base import ModelBase
 from elegy.model.model_core import (
     GradStepOutput,
     PredStepOutput,
+    Strategy,
     TestStepOutput,
     TrainStepOutput,
 )
@@ -180,6 +184,14 @@ class Model(tp.Generic[U], ModelBase):
             aux_metrics=aux_metrics,
         )
 
+        if self.distributed_strategy == Strategy.DATA_PARALLEL:
+            # make PRNGKeys different for each device
+            self.map(
+                lambda key: jax.random.fold_in(key, jax.lax.axis_index("device")),
+                tx.Rng,
+                inplace=True,
+            )
+
         return self
 
     def pred_step(
@@ -235,12 +247,27 @@ class Model(tp.Generic[U], ModelBase):
         losses_kwargs = extended_labels
         metrics_kwargs = extended_labels
 
+        if self.distributed_strategy == Strategy.DATA_PARALLEL:
+            metrics_kwargs = jax.tree_map(
+                lambda x: einops.rearrange(x, "device batch ... -> (device batch) ...")
+                if x.ndim > 1
+                else x,
+                jax.lax.all_gather(metrics_kwargs, axis_name="device"),
+            )
+
         loss, losses_logs, metrics_logs = model.loss_and_logs.batch_loss_epoch_logs(
             **losses_kwargs,
             metrics_kwargs=metrics_kwargs,
             aux_losses=aux_losses,
             aux_metrics=aux_metrics,
         )
+
+        if self.distributed_strategy == Strategy.DATA_PARALLEL:
+            # losses_logs = jax.tree_map(
+            #     lambda x: x.mean(axis=0),
+            #     jax.lax.all_gather(losses_logs, axis_name="device"),
+            # )
+            losses_logs = jax.lax.pmean(losses_logs, axis_name="device")
 
         logs = {**losses_logs, **metrics_logs}
 
@@ -283,6 +310,12 @@ class Model(tp.Generic[U], ModelBase):
 
         grad_fn = jax.grad(self.loss_fn, has_aux=True)
         grads, (logs, model) = grad_fn(params, model, inputs, labels)
+
+        if self.distributed_strategy == Strategy.DATA_PARALLEL:
+            grads = jax.lax.pmean(grads, axis_name="device")
+            model = model.map(
+                lambda x: jax.lax.pmean(x, axis_name="device"), tx.BatchStat
+            )
 
         assert model.optimizer is not None
 

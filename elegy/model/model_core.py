@@ -1,18 +1,14 @@
 import enum
 import pathlib
 import typing as tp
-from abc import abstractmethod
 
 import cloudpickle
+import einops
 import jax
 import jax.numpy as jnp
 import numpy as np
-import treeo as to
 import treex as tx
-from jax._src.numpy.lax_numpy import ndarray
-from jax._src.tree_util import tree_flatten
 from jax.experimental import jax2tf
-from treeo.utils import Opaque
 
 from elegy import types, utils
 
@@ -38,12 +34,12 @@ GradStep = tp.Callable[[M, tp.Any, types.Labels], GradStepOutput[M]]
 TrainStep = tp.Callable[[M, tp.Any, types.Labels], TrainStepOutput[M]]
 
 
-class DistributedStrategy(enum.Enum):
+class Strategy(enum.IntEnum):
     LOCAL = enum.auto()
     DATA_PARALLEL = enum.auto()
 
 
-class ModelMeta(to.TreeMeta):
+class ModelMeta(tx.TreeMeta):
     def __call__(self, *args, **kwargs) -> "ModelCore":
         model: ModelCore = super().__call__(*args, **kwargs)
 
@@ -57,14 +53,12 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
     seed: tp.Union[int, jnp.ndarray] = 42
     eager: bool = False
     _initialized: bool = tx.static(default=False)
-    _distributed_strategy: DistributedStrategy = tx.static(
-        default=DistributedStrategy.LOCAL
-    )
+    _distributed_strategy: Strategy = tx.static(default=Strategy.LOCAL)
 
-    init_step_jit: tp.Dict[DistributedStrategy, InitStep]
-    pred_step_jit: tp.Dict[DistributedStrategy, PredStep]
-    test_step_jit: tp.Dict[DistributedStrategy, TestStep]
-    train_step_jit: tp.Dict[DistributedStrategy, TrainStep]
+    init_step_jit: tp.Dict[Strategy, InitStep]
+    pred_step_jit: tp.Dict[Strategy, PredStep]
+    test_step_jit: tp.Dict[Strategy, TestStep]
+    train_step_jit: tp.Dict[Strategy, TrainStep]
 
     def __init__(
         self,
@@ -80,7 +74,11 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
 
     @property
     def is_distributed(self) -> bool:
-        return self._distributed_strategy != DistributedStrategy.LOCAL
+        return self._distributed_strategy != Strategy.LOCAL
+
+    @property
+    def distributed_strategy(self) -> Strategy:
+        return self._distributed_strategy
 
     def create_jit_functions(self):
         cls = self.__class__
@@ -91,10 +89,27 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         self.test_step_jit = {}
         self.train_step_jit = {}
 
-        self.init_step_jit[DistributedStrategy.LOCAL] = jax.jit(cls._static_init_step)
-        self.pred_step_jit[DistributedStrategy.LOCAL] = jax.jit(cls._static_pred_step)
-        self.test_step_jit[DistributedStrategy.LOCAL] = jax.jit(cls._static_test_step)
-        self.train_step_jit[DistributedStrategy.LOCAL] = jax.jit(cls._static_train_step)
+        self.init_step_jit[Strategy.LOCAL] = jax.jit(cls._static_init_step)
+        self.pred_step_jit[Strategy.LOCAL] = jax.jit(cls._static_pred_step)
+        self.test_step_jit[Strategy.LOCAL] = jax.jit(cls._static_test_step)
+        self.train_step_jit[Strategy.LOCAL] = jax.jit(cls._static_train_step)
+
+        self.init_step_jit[Strategy.DATA_PARALLEL] = jax.pmap(
+            cls._static_init_step, axis_name="device"
+        )
+        self.pred_step_jit[Strategy.DATA_PARALLEL] = jax.pmap(
+            cls._static_pred_step, axis_name="device"
+        )
+        self.test_step_jit[Strategy.DATA_PARALLEL] = jax.pmap(
+            cls._static_test_step,
+            axis_name="device",
+            out_axes=(0, None, 0),
+        )
+        self.train_step_jit[Strategy.DATA_PARALLEL] = jax.pmap(
+            cls._static_train_step,
+            axis_name="device",
+            out_axes=(None, 0),
+        )
 
         self._jitted_members |= {
             "init_step_jit",
@@ -204,28 +219,92 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         self: M,
         strategy: tp.Union[
             str,
-            DistributedStrategy,
-        ] = DistributedStrategy.DATA_PARALLEL,
+            Strategy,
+        ] = Strategy.DATA_PARALLEL,
+        *,
         inplace: bool = False,
     ) -> M:
+        model: M
+
         if not inplace:
             model = self.copy()
         else:
             model = self
 
         if isinstance(strategy, str):
-            strategy = DistributedStrategy[strategy.upper()]
+            strategy = Strategy[strategy.upper()]
+
+        if strategy == model.distributed_strategy:
+            return model
+
+        if model.distributed_strategy != Strategy.LOCAL and strategy != Strategy.LOCAL:
+            model = model.local(inplace=inplace)
+
+        if self.distributed_strategy == Strategy.LOCAL:
+            if strategy == Strategy.DATA_PARALLEL:
+                idxs = jnp.arange(jax.device_count())
+                model = jax.pmap(
+                    lambda x, idx: x,
+                    in_axes=(None, 0),
+                    out_axes=0,
+                )(model, idxs)
+            else:
+                raise ValueError(
+                    f"Cannot convert from '{self.distributed_strategy}' to '{strategy}'"
+                )
+        elif self.distributed_strategy == Strategy.DATA_PARALLEL:
+            if strategy == Strategy.LOCAL:
+                model = jax.tree_map(lambda x: x[0], model)
+            else:
+                raise ValueError(
+                    f"Cannot convert from '{self.distributed_strategy}' to '{strategy}'"
+                )
+        else:
+            raise ValueError(
+                f"Unknown distributed strategy: {self.distributed_strategy}"
+            )
 
         model._distributed_strategy = strategy
 
         return model
 
+    def local(self: M, inplace: bool = False) -> M:
+        return self.distributed(Strategy.LOCAL, inplace=inplace)
+
     # ----------------------------------------------------------------
     # high-level methods
     # ----------------------------------------------------------------
 
+    def _data_in_strategy(self, data: tp.Any) -> tp.Any:
+        if self._distributed_strategy == Strategy.LOCAL:
+            pass
+        elif self._distributed_strategy == Strategy.DATA_PARALLEL:
+            data = jax.tree_map(
+                lambda x: einops.rearrange(
+                    x,
+                    "(device batch) ... -> device batch ...",
+                    device=jax.device_count(),
+                ),
+                data,
+            )
+        else:
+            raise ValueError(
+                f"Unknown distributed strategy: {self.distributed_strategy}"
+            )
+
+        return data
+
     def init_on_batch(self, inputs: tp.Any):
+
+        inputs = self._data_in_strategy(inputs)
         key = tx.Key(self.seed)
+
+        if self._distributed_strategy == Strategy.DATA_PARALLEL:
+            key = einops.repeat(
+                key,
+                "... -> device ...",
+                device=jax.device_count(),
+            )
 
         if self.eager:
             model = self.init_step(key, inputs)
@@ -259,6 +338,9 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         """
         if not self._initialized:
             self.init_on_batch(inputs)
+
+        # do this after init_on_batch()
+        inputs = self._data_in_strategy(inputs)
 
         self.eval(inplace=True)
 
@@ -308,6 +390,9 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         """
         if not self._initialized:
             self.init_on_batch(inputs)
+
+        # do this after init_on_batch()
+        inputs, labels = self._data_in_strategy((inputs, labels))
 
         if not isinstance(labels, tp.Mapping):
             labels = dict(target=labels)
@@ -374,6 +459,9 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
 
         if not self.initialized:
             self.init_on_batch(inputs)
+
+        # do this after init_on_batch()
+        inputs, labels = self._data_in_strategy((inputs, labels))
 
         self.train(inplace=True)
 
