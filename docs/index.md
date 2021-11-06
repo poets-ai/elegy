@@ -252,6 +252,6 @@ Deep Learning is evolving at an incredible pace, and there is so much to do and 
 	author       = {PoetsAI},
 	year         = 2021,
 	url          = {https://github.com/poets-ai/elegy},
-	version      = {0.7.4}
+	version      = {0.8.0}
 }
 ```
