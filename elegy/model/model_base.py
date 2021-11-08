@@ -183,7 +183,7 @@ class ModelBase(ModelCore):
     ]
 
     def _batch_size_in_strategy(self, batch_size: int) -> int:
-        if self._distributed_strategy == Strategy.LOCAL:
+        if self._distributed_strategy in (Strategy.EAGER, Strategy.LOCAL):
             pass
         elif self._distributed_strategy == Strategy.DATA_PARALLEL:
             batch_size = batch_size * jax.device_count()

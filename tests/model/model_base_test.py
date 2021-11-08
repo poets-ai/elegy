@@ -51,7 +51,7 @@ class TestModelBase(unittest.TestCase):
         assert model.a == 4
         assert N == 1
 
-        model.eager = True
+        model = model.eager()
 
         y = model.predict(x, batch_size=50)
         assert np.allclose(y, x + 1.0)
@@ -106,7 +106,7 @@ class TestModelBase(unittest.TestCase):
         assert N == 2
         assert model.a == 5
 
-        model.eager = True
+        model = model.eager()
 
         logs = model.evaluate(x, batch_size=50)
         assert np.allclose(logs["loss"], np.sum(x[50:]))
@@ -159,7 +159,7 @@ class TestModelBase(unittest.TestCase):
         assert N == 2
         assert model.a == 5
 
-        model.eager = True
+        model = model.eager()
 
         history = model.fit(x, batch_size=50, shuffle=False)
         assert np.allclose(history.history["loss"], np.sum(x[50:]))
