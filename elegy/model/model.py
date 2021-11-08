@@ -145,10 +145,7 @@ class Model(tp.Generic[U], ModelBase):
         )
         self.loss_and_logs = None
 
-        self._losses_and_metrics = lambda: (
-            loss,
-            metrics,
-        )
+        self._losses_and_metrics = tx.Hashable((loss, metrics))
 
     def __call__(self, *args, **kwargs) -> tp.Any:
         assert self.module is not None
@@ -173,7 +170,7 @@ class Model(tp.Generic[U], ModelBase):
             params = model.parameters()
             model.optimizer = model.optimizer.init(params)
 
-        losses, metrics = model._losses_and_metrics()
+        losses, metrics = model._losses_and_metrics.value
         aux_losses = model.loss_logs()
         aux_metrics = model.metric_logs()
 
@@ -335,12 +332,19 @@ class Model(tp.Generic[U], ModelBase):
             eval_shape: If True, jax.eval_shape is used to calculate all shapes, this avoids actually
                 running the computation as only shapes are calculated (turn off if trying to debug).
         """
-        assert self.module is not None
+        model = self.local()
 
-        if not self.initialized:
-            self.init_on_batch(inputs)
+        assert model.module is not None
 
-        summary = self.module.tabulate(
+        if not model.initialized:
+            if inputs is tx.MISSING:
+                raise ValueError(
+                    "`inputs` is required to print the summary of uninitialized Models"
+                )
+
+            model.init_on_batch(inputs)
+
+        summary = model.module.tabulate(
             inputs=inputs,
             depth=depth,
         )
