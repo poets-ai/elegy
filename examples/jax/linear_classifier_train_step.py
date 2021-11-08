@@ -29,6 +29,7 @@ class Model(eg.Model):
     ):
         self.features_out = features_out
         super().__init__(
+            module=None,
             loss=loss,
             metrics=metrics,
             optimizer=optimizer,
@@ -53,7 +54,7 @@ class Model(eg.Model):
 
         return self
 
-    def pred_step(self: M, inputs: tp.Any) -> eg.PredStep[M]:
+    def pred_step(self: M, inputs: tp.Any) -> eg.PredStepOutput[M]:
         logits = jnp.dot(inputs, self.w) + self.b
         return logits, self
 
@@ -61,7 +62,7 @@ class Model(eg.Model):
         self: M,
         inputs,
         labels,
-    ) -> eg.TestStep[M]:
+    ) -> eg.TestStepOutput[M]:
         model: M = self
         # flatten + scale
         inputs = jnp.reshape(inputs, (inputs.shape[0], -1)) / 255
@@ -82,12 +83,12 @@ class Model(eg.Model):
         return loss, logs, model
 
     @staticmethod
-    def loss_fn(params: M, model: M, inputs, labels) -> eg.LossStep[M]:
+    def loss_fn(params: M, model: M, inputs, labels) -> eg.LossStepOutput[M]:
         model = model.merge(params)
         loss, logs, model = model.test_step(inputs, labels)
         return loss, (logs, model)
 
-    def train_step(self: M, inputs, labels) -> eg.TrainStep[M]:
+    def train_step(self: M, inputs, labels) -> eg.TrainStepOutput[M]:
         model: M = self
 
         params = model.parameters()

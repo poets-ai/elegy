@@ -18,7 +18,7 @@ from elegy import data, types, utils
 from elegy.callbacks import Callback, CallbackList, History, history
 from elegy.callbacks.sigint import SigIntMode
 from elegy.data import utils as data_utils
-from elegy.model.model_core import ModelCore, PredStep, TestStep
+from elegy.model.model_core import ModelCore, PredStepOutput, TestStepOutput
 
 __all__ = ["ModelBase", "load"]
 
@@ -186,7 +186,7 @@ class ModelBase(ModelCore):
         self,
         inputs: tp.Optional[tp.Any] = None,
         labels: tp.Optional[tp.Any] = None,
-        batch_size: tp.Optional[int] = None,
+        batch_size: tp.Optional[int] = 32,
         epochs: int = 1,
         verbose: int = 1,
         callbacks: tp.Union[tp.List[Callback], CallbackList, None] = None,
@@ -351,6 +351,9 @@ class ModelBase(ModelCore):
                 and what the model expects.
         """
 
+        if batch_size is not None:
+            batch_size = self._distributed_strategy.lift_batch_size(batch_size)
+
         with _MODEL_CONTEXT.callbacks_context(self):
             if inputs is None:
                 inputs = dict()
@@ -475,7 +478,7 @@ class ModelBase(ModelCore):
         x: tp.Optional[tp.Any] = None,
         y: tp.Optional[tp.Any] = None,
         verbose: int = 1,
-        batch_size: tp.Optional[int] = None,
+        batch_size: tp.Optional[int] = 32,
         sample_weight: tp.Optional[np.ndarray] = None,
         class_weight: tp.Optional[tp.Mapping[str, float]] = None,
         steps: tp.Optional[int] = None,
@@ -532,6 +535,8 @@ class ModelBase(ModelCore):
         Raises:
             ValueError: in case of invalid arguments.
         """
+        if batch_size is not None:
+            batch_size = self._distributed_strategy.lift_batch_size(batch_size)
 
         with _MODEL_CONTEXT.callbacks_context(
             self if _MODEL_CONTEXT.model is None else None
@@ -601,7 +606,7 @@ class ModelBase(ModelCore):
         self,
         x: tp.Optional[tp.Any] = None,
         verbose: int = 0,
-        batch_size: tp.Optional[int] = None,
+        batch_size: tp.Optional[int] = 32,
         steps: tp.Optional[int] = None,
         callbacks: tp.Union[tp.List[Callback], CallbackList, None] = None,
         drop_remaining: bool = False,
@@ -648,6 +653,9 @@ class ModelBase(ModelCore):
                 or in case a stateful model receives a number of samples
                 that is not a multiple of the batch size.
         """
+        if batch_size is not None:
+            batch_size = self._distributed_strategy.lift_batch_size(batch_size)
+
         with _MODEL_CONTEXT.callbacks_context(self):
             if x is None:
                 x = {}

@@ -105,7 +105,7 @@ class ModelCoreTest(unittest.TestCase):
                 self.a = jnp.array(0, dtype=jnp.int32)
                 return self
 
-            def test_step(self, inputs, labels) -> elegy.TestStep["Model"]:
+            def test_step(self, inputs, labels) -> elegy.TestStepOutput["Model"]:
                 nonlocal N
                 N += 1
                 self.a += 1
@@ -146,7 +146,7 @@ class ModelCoreTest(unittest.TestCase):
                 self.a = jnp.array(0, dtype=jnp.int32)
                 return self
 
-            def train_step(self, inputs, labels) -> elegy.TrainStep["Model"]:
+            def train_step(self, inputs, labels) -> elegy.TrainStepOutput["Model"]:
                 nonlocal N
                 N += 1
                 self.a += 1

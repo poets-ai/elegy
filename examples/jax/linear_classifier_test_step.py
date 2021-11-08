@@ -53,7 +53,7 @@ class Model(eg.Model):
 
         return self
 
-    def pred_step(self: M, inputs: tp.Any) -> eg.PredStep[M]:
+    def pred_step(self: M, inputs: tp.Any) -> eg.PredStepOutput[M]:
         logits = jnp.dot(inputs, self.w) + self.b
         return logits, self
 

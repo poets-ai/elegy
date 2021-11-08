@@ -13,6 +13,7 @@ import optax
 import pytest
 import sh
 import tensorflow as tf
+from treex.nn.linear import Linear
 
 import elegy as eg
 
@@ -121,6 +122,8 @@ class ModelTest(unittest.TestCase):
 
             x = np.random.uniform(size=(5, 6))
 
+            model.merge
+
             model.saved_model(x, model_dir, batch_size=[1, 2, 4, 8])
 
             output = str(sh.ls(model_dir))
@@ -180,6 +183,29 @@ class ModelTest(unittest.TestCase):
         y1 = newmodel.predict(X)
         assert np.all(y0 == y1)
 
+    def test_distributed_init(self):
+        n_devices = jax.device_count()
+        batch_size = 5 * n_devices
+
+        x = np.random.uniform(size=(batch_size, 1))
+        y = 1.4 * x + 0.1 * np.random.uniform(size=(batch_size, 2))
+
+        model = eg.Model(
+            eg.Linear(2),
+            loss=[eg.losses.MeanSquaredError()],
+        )
+
+        model = model.distributed()
+
+        model.init_on_batch(x)
+
+        assert model.module.kernel.shape == (n_devices, 1, 2)
+        assert model.module.bias.shape == (n_devices, 2)
+
+
+# DELETE THIS
+if __name__ == "__main__":
+    ModelTest().test_distributed_init()
 
 # DONT REMOVE THIS, CI WILL RUN THIS
 if __name__ == "__main__":

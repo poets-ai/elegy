@@ -1,17 +1,25 @@
 import typing as tp
 from io import StringIO
 
+import einops
 import flax
 import jax
+import jax.experimental.host_callback as hcb
 import jax.numpy as jnp
 import numpy as np
 import treex as tx
+from jax._src.tree_util import tree_map
 from optax import GradientTransformation
 from treex.nn.haiku_module import HaikuModule
 
 from elegy import types, utils
 from elegy.model.model_base import ModelBase
-from elegy.model.model_core import GradStep, PredStep, TestStep, TrainStep
+from elegy.model.model_core import (
+    GradStepOutput,
+    PredStepOutput,
+    TestStepOutput,
+    TrainStepOutput,
+)
 
 M = tp.TypeVar("M", bound="Model")
 U = tp.TypeVar("U", bound="tx.Module")
@@ -137,10 +145,7 @@ class Model(tp.Generic[U], ModelBase):
         )
         self.loss_and_logs = None
 
-        self._losses_and_metrics = lambda: (
-            loss,
-            metrics,
-        )
+        self._losses_and_metrics = tx.Hashable((loss, metrics))
 
     def __call__(self, *args, **kwargs) -> tp.Any:
         assert self.module is not None
@@ -156,31 +161,34 @@ class Model(tp.Generic[U], ModelBase):
         key: jnp.ndarray,
         inputs: tp.Any,
     ) -> M:
+        model: M = self
 
-        if self.module is not None:
-            self.module = self.module.init(key, inputs=inputs)
+        if model.module is not None:
+            model.module = model.module.init(key, inputs=inputs)
 
-        if self.optimizer is not None:
-            params = self.parameters()
-            self.optimizer = self.optimizer.init(params)
+        if model.optimizer is not None:
+            params = model.parameters()
+            model.optimizer = model.optimizer.init(params)
 
-        losses, metrics = self._losses_and_metrics()
-        aux_losses = self.loss_logs()
-        aux_metrics = self.metric_logs()
+        losses, metrics = model._losses_and_metrics.value
+        aux_losses = model.loss_logs()
+        aux_metrics = model.metric_logs()
 
-        self.loss_and_logs = tx.LossAndLogs(
+        model.loss_and_logs = tx.LossAndLogs(
             losses=losses,
             metrics=metrics,
             aux_losses=aux_losses,
             aux_metrics=aux_metrics,
         )
 
-        return self
+        model = model.distributed_strategy.handle_post_init(model)
+
+        return model
 
     def pred_step(
         self: M,
         inputs: tp.Any,
-    ) -> PredStep[M]:
+    ) -> PredStepOutput[M]:
         model: M = self
 
         if model.module is None:
@@ -198,7 +206,7 @@ class Model(tp.Generic[U], ModelBase):
         self: M,
         inputs: tp.Any,
         labels: tp.Mapping[str, tp.Any],
-    ) -> TestStep[M]:
+    ) -> TestStepOutput[M]:
         model: M = self
 
         if model.module is None:
@@ -230,11 +238,19 @@ class Model(tp.Generic[U], ModelBase):
         losses_kwargs = extended_labels
         metrics_kwargs = extended_labels
 
+        losses_kwargs, metrics_kwargs = model.distributed_strategy.handle_lm_kwargs(
+            losses_kwargs, metrics_kwargs
+        )
+
         loss, losses_logs, metrics_logs = model.loss_and_logs.batch_loss_epoch_logs(
             **losses_kwargs,
             metrics_kwargs=metrics_kwargs,
             aux_losses=aux_losses,
             aux_metrics=aux_metrics,
+        )
+
+        losses_logs, metrics_logs = model.distributed_strategy.handle_lm_logs(
+            losses_logs, metrics_logs
         )
 
         logs = {**losses_logs, **metrics_logs}
@@ -263,7 +279,7 @@ class Model(tp.Generic[U], ModelBase):
         self: M,
         inputs: tp.Any,
         labels: tp.Mapping[str, tp.Any],
-    ) -> TrainStep[M]:
+    ) -> TrainStepOutput[M]:
         model: M = self
         grads: M
         logs: types.Logs
@@ -278,6 +294,8 @@ class Model(tp.Generic[U], ModelBase):
 
         grad_fn = jax.grad(self.loss_fn, has_aux=True)
         grads, (logs, model) = grad_fn(params, model, inputs, labels)
+
+        model, grads = model.distributed_strategy.handle_model_and_grads(model, grads)
 
         assert model.optimizer is not None
 
@@ -314,12 +332,19 @@ class Model(tp.Generic[U], ModelBase):
             eval_shape: If True, jax.eval_shape is used to calculate all shapes, this avoids actually
                 running the computation as only shapes are calculated (turn off if trying to debug).
         """
-        assert self.module is not None
+        model = self.local()
 
-        if not self.initialized:
-            self.init_on_batch(inputs)
+        assert model.module is not None
 
-        summary = self.module.tabulate(
+        if not model.initialized:
+            if inputs is tx.MISSING:
+                raise ValueError(
+                    "`inputs` is required to print the summary of uninitialized Models"
+                )
+
+            model.init_on_batch(inputs)
+
+        summary = model.module.tabulate(
             inputs=inputs,
             depth=depth,
         )

@@ -39,6 +39,7 @@ PadFn = tp.Callable[[int], tp.Tuple[int, int]]
 PadFnOrFns = tp.Union[PadFn, tp.Sequence[PadFn]]
 PRNGKey = np.ndarray
 Parameters = tp.Dict[str, tp.Any]
+Labels = tp.Mapping[str, tp.Any]
 ParameterCollection = tp.Dict[str, Parameters]
 Logs = tp.Dict[str, jnp.ndarray]
 Index = tp.Union[int, str]
