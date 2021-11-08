@@ -331,6 +331,6 @@ If your are interested in helping improve Elegy check out the [Contributing Guid
 	author       = {PoetsAI},
 	year         = 2021,
 	url          = {https://github.com/poets-ai/elegy},
-	version      = {0.8.0}
+	version      = {0.8.1}
 }
 ```

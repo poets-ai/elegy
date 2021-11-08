@@ -1,13 +1,23 @@
 # Changelog
 
+## [Unreleased](https://github.com/poets-ai/elegy/tree/HEAD)
+
+[Full Changelog](https://github.com/poets-ai/elegy/compare/0.7.4...HEAD)
+
+**Merged pull requests:**
+
+- Distributed API [\#194](https://github.com/poets-ai/elegy/pull/194) ([cgarciae](https://github.com/cgarciae))
+- Toy examples [\#193](https://github.com/poets-ai/elegy/pull/193) ([cgarciae](https://github.com/cgarciae))
+- Fix examples [\#192](https://github.com/poets-ai/elegy/pull/192) ([cgarciae](https://github.com/cgarciae))
+- Support Haiku [\#191](https://github.com/poets-ai/elegy/pull/191) ([cgarciae](https://github.com/cgarciae))
+- Refactor Elegy using Treex [\#190](https://github.com/poets-ai/elegy/pull/190) ([cgarciae](https://github.com/cgarciae))
+- \(maint\): update README.md [\#187](https://github.com/poets-ai/elegy/pull/187) ([vladdoster](https://github.com/vladdoster))
+- New summary API [\#185](https://github.com/poets-ai/elegy/pull/185) ([cgarciae](https://github.com/cgarciae))
+- Fix Embedding module [\#184](https://github.com/poets-ai/elegy/pull/184) ([cgarciae](https://github.com/cgarciae))
+
 ## [0.7.4](https://github.com/poets-ai/elegy/tree/0.7.4) (2021-06-01)
 
 [Full Changelog](https://github.com/poets-ai/elegy/compare/0.7.2...0.7.4)
-
-**Implemented enhancements:**
-
-- Relaxing/updating `optax` version requirement? [\#176](https://github.com/poets-ai/elegy/issues/176)
-- \[Feature Request\] Elegy SimCLR implementation [\#175](https://github.com/poets-ai/elegy/issues/175)
 
 **Merged pull requests:**
 
@@ -47,10 +57,6 @@
 
 [Full Changelog](https://github.com/poets-ai/elegy/compare/0.5.0...0.6.0)
 
-**Fixed bugs:**
-
-- \[Bug\] Classifier with BinaryCrossentropy loss not learning [\#160](https://github.com/poets-ai/elegy/issues/160)
-
 **Merged pull requests:**
 
 - More Steps: adds additional \*\_step methods [\#163](https://github.com/poets-ai/elegy/pull/163) ([cgarciae](https://github.com/cgarciae))
@@ -80,10 +86,6 @@
 
 [Full Changelog](https://github.com/poets-ai/elegy/compare/0.3.0...0.4.0)
 
-**Implemented enhancements:**
-
-- \[Feature Request\] Monitoring learning rates [\#124](https://github.com/poets-ai/elegy/issues/124)
-
 **Merged pull requests:**
 
 - Update Getting Started + README [\#152](https://github.com/poets-ai/elegy/pull/152) ([cgarciae](https://github.com/cgarciae))
@@ -106,25 +108,6 @@
 ## [0.3.0](https://github.com/poets-ai/elegy/tree/0.3.0) (2020-12-17)
 
 [Full Changelog](https://github.com/poets-ai/elegy/compare/0.2.2...0.3.0)
-
-**Implemented enhancements:**
-
-- elegy.nn.Sequential docs not clear [\#107](https://github.com/poets-ai/elegy/issues/107)
-- \[Feature Request\] Community example repo. [\#98](https://github.com/poets-ai/elegy/issues/98)
-
-**Fixed bugs:**
-
-- \[Bug\] Accuracy from Model.evaluate\(\) is inconsistent with manually computed accuracy [\#109](https://github.com/poets-ai/elegy/issues/109)
-- Exceptions in "Getting Started" colab notebook [\#104](https://github.com/poets-ai/elegy/issues/104)
-
-**Closed issues:**
-
-- l2\_normalize [\#102](https://github.com/poets-ai/elegy/issues/102)
-- Need some help for contributing new losses. [\#93](https://github.com/poets-ai/elegy/issues/93)
-- Document Sum [\#62](https://github.com/poets-ai/elegy/issues/62)
-- Binary Accuracy Metric [\#58](https://github.com/poets-ai/elegy/issues/58)
-- Automate generation of API Reference folder structure [\#19](https://github.com/poets-ai/elegy/issues/19)
-- Implement Model.summary [\#3](https://github.com/poets-ai/elegy/issues/3)
 
 **Merged pull requests:**
 
@@ -180,10 +163,6 @@
 
 [Full Changelog](https://github.com/poets-ai/elegy/compare/0.1.4...0.1.5)
 
-**Implemented enhancements:**
-
-- Change Tensorboard callback behavior to tf2 [\#47](https://github.com/poets-ai/elegy/issues/47)
-
 **Merged pull requests:**
 
 - feature/improve-hooks [\#84](https://github.com/poets-ai/elegy/pull/84) ([cgarciae](https://github.com/cgarciae))
@@ -203,19 +182,6 @@
 
 [Full Changelog](https://github.com/poets-ai/elegy/compare/0.1.3...0.1.4)
 
-**Implemented enhancements:**
-
-- Tensorboard Callback [\#20](https://github.com/poets-ai/elegy/issues/20)
-
-**Closed issues:**
-
-- Document Loss [\#60](https://github.com/poets-ai/elegy/issues/60)
-- Document Metric [\#59](https://github.com/poets-ai/elegy/issues/59)
-- Specific Requirements for losses and metrics [\#54](https://github.com/poets-ai/elegy/issues/54)
-- Document Metric and Loss "on" parameter [\#50](https://github.com/poets-ai/elegy/issues/50)
-- Add how to build the docs instructions [\#49](https://github.com/poets-ai/elegy/issues/49)
-- Binary Crossentropy + Accuracy [\#22](https://github.com/poets-ai/elegy/issues/22)
-
 **Merged pull requests:**
 
 - feature/dropout-and-batchnorm [\#70](https://github.com/poets-ai/elegy/pull/70) ([cgarciae](https://github.com/cgarciae))
@@ -234,25 +200,6 @@
 **Implemented enhancements:**
 
 - Updated docs to allow eventual BibTeX citations for the project [\#55](https://github.com/poets-ai/elegy/pull/55) ([sebasarango1180](https://github.com/sebasarango1180))
-
-**Closed issues:**
-
-- Change favicon in Mkdocs [\#41](https://github.com/poets-ai/elegy/issues/41)
-- Callbacks Documentation [\#31](https://github.com/poets-ai/elegy/issues/31)
-- Fix Docs [\#28](https://github.com/poets-ai/elegy/issues/28)
-- Checkpoint Callback [\#26](https://github.com/poets-ai/elegy/issues/26)
-- Make state/params objects public in Model [\#24](https://github.com/poets-ai/elegy/issues/24)
-- Add atleast 3 examples [\#23](https://github.com/poets-ai/elegy/issues/23)
-- Document Model [\#21](https://github.com/poets-ai/elegy/issues/21)
-- Support label smoothing in CategoricalCrossentropy [\#18](https://github.com/poets-ai/elegy/issues/18)
-- \[RFC\] How to properly define the model function? [\#17](https://github.com/poets-ai/elegy/issues/17)
-- Fix predict\_on\_batch when y is None and unintialized model [\#15](https://github.com/poets-ai/elegy/issues/15)
-- Make Model\(..., loss\) Optional [\#13](https://github.com/poets-ai/elegy/issues/13)
-- Document Loss.weight [\#12](https://github.com/poets-ai/elegy/issues/12)
-- Fix license [\#11](https://github.com/poets-ai/elegy/issues/11)
-- Port some Metrics and Losses [\#5](https://github.com/poets-ai/elegy/issues/5)
-- Implement Callback API [\#4](https://github.com/poets-ai/elegy/issues/4)
-- Finish training loop [\#2](https://github.com/poets-ai/elegy/issues/2)
 
 **Merged pull requests:**
 
