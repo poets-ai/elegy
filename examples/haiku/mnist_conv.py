@@ -54,6 +54,7 @@ def main(
     steps_per_epoch: tp.Optional[int] = None,
     epochs: int = 100,
     batch_size: int = 32,
+    distributed: bool = False,
 ):
 
     if debug:
@@ -86,6 +87,9 @@ def main(
         eager=eager,
     )
 
+    if distributed:
+        model = model.distributed()
+
     model.summary(X_train[:batch_size])
 
     history = model.fit(
@@ -108,6 +112,7 @@ def main(
     x_sample = X_test[idxs]
 
     # get predictions
+    model = model.local()
     y_pred = model.predict(x=x_sample)
 
     # plot results
