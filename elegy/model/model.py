@@ -17,7 +17,6 @@ from elegy.model.model_base import ModelBase
 from elegy.model.model_core import (
     GradStepOutput,
     PredStepOutput,
-    Strategy,
     TestStepOutput,
     TrainStepOutput,
 )
@@ -165,34 +164,29 @@ class Model(tp.Generic[U], ModelBase):
         key: jnp.ndarray,
         inputs: tp.Any,
     ) -> M:
+        model: M = self
 
-        if self.module is not None:
-            self.module = self.module.init(key, inputs=inputs)
+        if model.module is not None:
+            model.module = model.module.init(key, inputs=inputs)
 
-        if self.optimizer is not None:
-            params = self.parameters()
-            self.optimizer = self.optimizer.init(params)
+        if model.optimizer is not None:
+            params = model.parameters()
+            model.optimizer = model.optimizer.init(params)
 
-        losses, metrics = self._losses_and_metrics()
-        aux_losses = self.loss_logs()
-        aux_metrics = self.metric_logs()
+        losses, metrics = model._losses_and_metrics()
+        aux_losses = model.loss_logs()
+        aux_metrics = model.metric_logs()
 
-        self.loss_and_logs = tx.LossAndLogs(
+        model.loss_and_logs = tx.LossAndLogs(
             losses=losses,
             metrics=metrics,
             aux_losses=aux_losses,
             aux_metrics=aux_metrics,
         )
 
-        if self.distributed_strategy == Strategy.DATA_PARALLEL:
-            # make PRNGKeys different for each device
-            self.map(
-                lambda key: jax.random.fold_in(key, jax.lax.axis_index("device")),
-                tx.Rng,
-                inplace=True,
-            )
+        model = model.distributed_strategy.handle_post_init(model)
 
-        return self
+        return model
 
     def pred_step(
         self: M,
@@ -247,13 +241,9 @@ class Model(tp.Generic[U], ModelBase):
         losses_kwargs = extended_labels
         metrics_kwargs = extended_labels
 
-        if self.distributed_strategy == Strategy.DATA_PARALLEL:
-            metrics_kwargs = jax.tree_map(
-                lambda x: einops.rearrange(x, "device batch ... -> (device batch) ...")
-                if x.ndim > 1
-                else x,
-                jax.lax.all_gather(metrics_kwargs, axis_name="device"),
-            )
+        losses_kwargs, metrics_kwargs = model.distributed_strategy.handle_lm_kwargs(
+            losses_kwargs, metrics_kwargs
+        )
 
         loss, losses_logs, metrics_logs = model.loss_and_logs.batch_loss_epoch_logs(
             **losses_kwargs,
@@ -262,12 +252,9 @@ class Model(tp.Generic[U], ModelBase):
             aux_metrics=aux_metrics,
         )
 
-        if self.distributed_strategy == Strategy.DATA_PARALLEL:
-            # losses_logs = jax.tree_map(
-            #     lambda x: x.mean(axis=0),
-            #     jax.lax.all_gather(losses_logs, axis_name="device"),
-            # )
-            losses_logs = jax.lax.pmean(losses_logs, axis_name="device")
+        losses_logs, metrics_logs = model.distributed_strategy.handle_lm_logs(
+            losses_logs, metrics_logs
+        )
 
         logs = {**losses_logs, **metrics_logs}
 
@@ -311,11 +298,7 @@ class Model(tp.Generic[U], ModelBase):
         grad_fn = jax.grad(self.loss_fn, has_aux=True)
         grads, (logs, model) = grad_fn(params, model, inputs, labels)
 
-        if self.distributed_strategy == Strategy.DATA_PARALLEL:
-            grads = jax.lax.pmean(grads, axis_name="device")
-            model = model.map(
-                lambda x: jax.lax.pmean(x, axis_name="device"), tx.BatchStat
-            )
+        model, grads = model.distributed_strategy.handle_model_and_grads(model, grads)
 
         assert model.optimizer is not None
 

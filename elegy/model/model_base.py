@@ -18,7 +18,7 @@ from elegy import data, types, utils
 from elegy.callbacks import Callback, CallbackList, History, history
 from elegy.callbacks.sigint import SigIntMode
 from elegy.data import utils as data_utils
-from elegy.model.model_core import ModelCore, PredStepOutput, Strategy, TestStepOutput
+from elegy.model.model_core import ModelCore, PredStepOutput, TestStepOutput
 
 __all__ = ["ModelBase", "load"]
 
@@ -181,18 +181,6 @@ class ModelBase(ModelCore):
         "parameters",
         "states",
     ]
-
-    def _batch_size_in_strategy(self, batch_size: int) -> int:
-        if self._distributed_strategy in (Strategy.EAGER, Strategy.LOCAL):
-            pass
-        elif self._distributed_strategy == Strategy.DATA_PARALLEL:
-            batch_size = batch_size * jax.device_count()
-        else:
-            raise ValueError(
-                f"Unknown distributed strategy: {self.distributed_strategy}"
-            )
-
-        return batch_size
 
     def fit(
         self,
@@ -364,7 +352,7 @@ class ModelBase(ModelCore):
         """
 
         if batch_size is not None:
-            batch_size = self._batch_size_in_strategy(batch_size)
+            batch_size = self._distributed_strategy.lift_batch_size(batch_size)
 
         with _MODEL_CONTEXT.callbacks_context(self):
             if inputs is None:
@@ -548,7 +536,7 @@ class ModelBase(ModelCore):
             ValueError: in case of invalid arguments.
         """
         if batch_size is not None:
-            batch_size = self._batch_size_in_strategy(batch_size)
+            batch_size = self._distributed_strategy.lift_batch_size(batch_size)
 
         with _MODEL_CONTEXT.callbacks_context(
             self if _MODEL_CONTEXT.model is None else None
@@ -666,7 +654,7 @@ class ModelBase(ModelCore):
                 that is not a multiple of the batch size.
         """
         if batch_size is not None:
-            batch_size = self._batch_size_in_strategy(batch_size)
+            batch_size = self._distributed_strategy.lift_batch_size(batch_size)
 
         with _MODEL_CONTEXT.callbacks_context(self):
             if x is None:
