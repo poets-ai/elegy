@@ -450,7 +450,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         if strategy == model.distributed_strategy:
             return model
 
-        model = strategy.to_local(model)
+        model = self._distributed_strategy.to_local(model)
         model = strategy.from_local(model)
 
         model._distributed_strategy = strategy
@@ -670,13 +670,15 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         Arguments:
             path: path where model structure will be saved.
         """
+        model = self.local()
+
         if isinstance(path, str):
             path = pathlib.Path(path)
 
         path.mkdir(parents=True, exist_ok=True)
 
         with open(path / "model.pkl", "wb") as f:
-            cloudpickle.dump(self, f)
+            cloudpickle.dump(model, f)
 
     def load(
         self,
@@ -717,9 +719,10 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
                 dimension of each of the resulting SavedModel's signatures.
 
         """
+        model = self.local()
 
-        if not self.initialized:
-            self.init_on_batch(inputs)
+        if not model.initialized:
+            model.init_on_batch(inputs)
 
         if model_utils.convert_and_save_model is None:
             raise ImportError(f"Could not import tensorflow.")
@@ -759,7 +762,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
             ]
             shape_polymorphic_input_spec = None
 
-        flat_states, states_def = jax.tree_flatten(self)
+        flat_states, states_def = jax.tree_flatten(model)
 
         def jax_fn(flat_states, inputs):
             model: ModelCore = jax.tree_unflatten(states_def, flat_states)
