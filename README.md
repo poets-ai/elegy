@@ -254,15 +254,22 @@ It is straightforward to integrate other functional JAX libraries with this
 low-level API, here is an example with Flax:
 
 ```python
+import elegy as eg
+import flax.linen as nn
+
 class LinearClassifier(eg.Model):
     params: Mapping[str, Any] = eg.Parameter.node()
     batch_stats: Mapping[str, Any] = eg.BatchStat.node()
     next_key: eg.KeySeq
 
+    def __init__(self, module: nn.Module, **kwargs):
+        self.flax_module = module
+        super().__init__(**kwargs)
+
     def init_step(self, key, inputs):
         self.next_key = eg.KeySeq(key)
 
-        _, variables = self.module.init_with_output(
+        _, variables = self.flax_module.init_with_output(
             {"params": self.next_key(), "dropout": self.next_key()}, x
         )
         self.params = variables["params"]
@@ -276,7 +283,7 @@ class LinearClassifier(eg.Model):
             params=self.params,
             batch_stats=self.batch_stats,
         )
-        logits, variables = self.module.apply(
+        logits, variables = self.flax_module.apply(
             variables,
             inputs, 
             rngs={"dropout": self.next_key()}, 
@@ -295,7 +302,6 @@ class LinearClassifier(eg.Model):
         )
         return loss, logs, self
 ```
-Here `module` is a `flax.linen.Module` 
 
 </details>
 
