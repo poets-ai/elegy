@@ -269,7 +269,7 @@ class LinearClassifier(eg.Model):
     def init_step(self, key, inputs):
         self.next_key = eg.KeySeq(key)
 
-        _, variables = self.flax_module.init_with_output(
+        variables = self.flax_module.init(
             {"params": self.next_key(), "dropout": self.next_key()}, x
         )
         self.params = variables["params"]
