@@ -16,7 +16,7 @@ _A High Level API for Deep Learning in JAX_
 
 - 😀 **Easy-to-use**: Elegy provides a Keras-like high-level API that makes it very easy to use for most common tasks.
 - 💪‍ **Flexible**: Elegy provides a Pytorch Lightning-like low-level API that offers maximum flexibility when needed.
-- 🔌 **Compatible**: Elegy various frameworks and data sources including Flax & Haiku Modules, Optax Optimizers, TensorFlow Datasets, Pytorch DataLoaders, and more.
+- 🔌 **Compatible**: Elegy supports various frameworks and data sources including Flax & Haiku Modules, Optax Optimizers, TensorFlow Datasets, Pytorch DataLoaders, and more.
 <!-- - 🤷 **Agnostic**: Elegy supports various frameworks, including Flax, Haiku, and Optax on the high-level API, and it is 100% framework-agnostic on the low-level API. -->
 
 Elegy is built on top of [Treex](https://github.com/cgarciae/treex) and [Treeo](https://github.com/cgarciae/treeo) and reexports their APIs for convenience.
