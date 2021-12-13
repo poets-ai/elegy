@@ -23,8 +23,8 @@ try:
     import haiku as hk
 
     TransformedWithState = hk.TransformedWithState
-    HaikuModule = tx.Module
-except (ImportError, ModuleNotFoundError, tx.OptionalDependencyNotFound):
+    HaikuModule = tx.HaikuModule
+except (ImportError, ModuleNotFoundError):
     hk = None
     TransformedWithState = type(None)
     HaikuModule = tp.cast(tp.Any, None)
