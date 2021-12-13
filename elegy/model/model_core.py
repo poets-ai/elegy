@@ -10,7 +10,6 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import treex as tx
-from jax.experimental import jax2tf
 
 from elegy import types, utils
 
@@ -18,8 +17,10 @@ from . import utils as model_utils
 
 try:
     import tensorflow as tf
+    from jax.experimental import jax2tf
 except ImportError:
     tf = None
+    jax2tf = None
 
 A = tp.TypeVar("A")
 M = tp.TypeVar("M", bound="ModelCore")
@@ -726,6 +727,8 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
 
         if model_utils.convert_and_save_model is None:
             raise ImportError(f"Could not import tensorflow.")
+
+        assert jax2tf is not None
 
         if isinstance(batch_size, int):
             batch_size = [batch_size]
