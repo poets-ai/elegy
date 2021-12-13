@@ -1,16 +1,11 @@
 import typing as tp
-from io import StringIO
 
-import einops
 import flax
 import jax
-import jax.experimental.host_callback as hcb
 import jax.numpy as jnp
 import numpy as np
 import treex as tx
-from jax._src.tree_util import tree_map
 from optax import GradientTransformation
-from treex.nn.haiku_module import HaikuModule
 
 from elegy import types, utils
 from elegy.model.model_base import ModelBase
@@ -28,9 +23,11 @@ try:
     import haiku as hk
 
     TransformedWithState = hk.TransformedWithState
-except ImportError:
+    HaikuModule = tx.HaikuModule
+except (ImportError, ModuleNotFoundError):
     hk = None
     TransformedWithState = type(None)
+    HaikuModule = tp.cast(tp.Any, None)
 
 
 class Model(tp.Generic[U], ModelBase):
@@ -62,7 +59,7 @@ class Model(tp.Generic[U], ModelBase):
 
         @tp.overload
         def __init__(
-            self: "Model[tx.HaikuModule]",
+            self: "Model[HaikuModule]",
             module: hk.TransformedWithState,
             loss: tp.Any = None,
             metrics: tp.Any = None,
@@ -134,7 +131,7 @@ class Model(tp.Generic[U], ModelBase):
         elif TransformedWithState is not None and isinstance(
             module, TransformedWithState
         ):
-            self.module = tx.HaikuModule(module)
+            self.module = HaikuModule(module)
         else:
             self.module = module
 
