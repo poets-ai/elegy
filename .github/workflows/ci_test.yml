@@ -54,3 +54,34 @@ jobs:
 
       - name: Test Examples
         run: bash scripts/test-examples.sh
+
+  test-import:
+    name: Test Import without Dev Dependencies
+    if: ${{ !contains(github.event.pull_request.title, 'WIP') }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # python-version: [3.9]
+        python-version: [3.7, 3.8, 3.9]
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1.1.1
+        with:
+          version: 1.1.4
+
+      - name: Install Dependencies
+        run: |
+          poetry config virtualenvs.create false
+          poetry install --no-dev
+
+      - name: Import Elegy
+        run: python -c "import elegy"
