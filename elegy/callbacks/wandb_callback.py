@@ -14,9 +14,13 @@ class WandbCallback(Callback):
     Callback that streams epoch results to a [Weights & Biases](https://wandb.ai/) run.
     """
 
-    def __init__(self, run: Union[None, wandb_run.Run], update_freq: Union[str, int] = "epoch"):
+    def __init__(
+        self, run: Union[None, wandb_run.Run], update_freq: Union[str, int] = "epoch"
+    ):
         super().__init__()
-        assert run is not None, "Weights and Biases run has not been initialilzed, please initialize a run using wandb.init()"
+        assert (
+            run is not None
+        ), "Weights and Biases run has not been initialilzed, please initialize a run using wandb.init()"
         self.run = run
         self.keys = None
         self.write_per_batch = True
@@ -30,11 +34,11 @@ class WandbCallback(Callback):
                 self.write_per_batch = False
             else:
                 raise e
-    
+
     def on_train_begin(self, logs=None):
         self.steps = self.params["steps"]
         self.global_step = 0
-    
+
     def on_train_batch_end(self, batch: int, logs=None):
         if not self.write_per_batch:
             return
@@ -45,23 +49,20 @@ class WandbCallback(Callback):
                 self.keys = logs.keys()
             for key in self.keys:
                 self.run.log({key: logs[key]}, step=self.global_step)
-    
+
     def on_epoch_begin(self, epoch: int, logs=None):
         self.current_epoch = epoch
-    
+
     def on_epoch_end(self, epoch: int, logs=None):
         logs = logs or {}
         if self.keys is None:
             self.keys = logs.keys()
-        
+
         if self.write_per_batch:
             for key in logs:
                 self.run.log({key: logs[key]}, step=self.global_step)
             return
-        
+
         elif epoch % self.update_freq == 0:
             for key in logs:
                 self.run.log({key: logs[key]}, step=epoch)
-    
-    def on_train_end(self, logs = None):
-        self.run.finish()
