@@ -12,15 +12,29 @@ from .callback import Callback
 class WandbCallback(Callback):
     """
     Callback that streams epoch results to a [Weights & Biases](https://wandb.ai/) run.
+
+    ```python
+    run = wandb.init(project="sample-wandb-project")
+    wandb_logger = WandbCallback(run=run)
+    model.fit(X_train, Y_train, callbacks=[wandb_logger])
+    ```
     """
 
     def __init__(
-        self, run: Union[None, wandb_run.Run], update_freq: Union[str, int] = "epoch"
+        self, run: wandb_run.Run, update_freq: Union[str, int] = "epoch"
     ):
+        """
+        Arguments:
+            run: Weights and Biases Run of type `wandb.sdk.wandb_run.Run`. The Run
+                object can be initialized by invoking `wandb.init()`.
+            update_freq: `'batch'` or `'epoch'` or integer. When using `'batch'`,
+                writes the losses and metrics to TensorBoard after each batch. The same
+                applies for `'epoch'`. If using an integer, let's say `1000`, the
+                callback will write the metrics and losses to TensorBoard every 1000
+                batches. Note that writing too frequently to TensorBoard can slow down
+                your training.
+        """
         super().__init__()
-        assert (
-            run is not None
-        ), "Weights and Biases run has not been initialilzed, please initialize a run using wandb.init()"
         self.run = run
         self.keys = None
         self.write_per_batch = True
