@@ -1,0 +1,67 @@
+# Implementation based on tf.keras.callbacks.py and elegy.callbacks.TensorBoard
+# https://github.com/tensorflow/tensorflow/blob/v2.2.0/tensorflow/python/keras/callbacks.py
+# https://github.com/poets-ai/elegy/blob/master/elegy/callbacks/tensorboard.py
+
+
+from typing import Union
+from wandb.sdk import wandb_run
+
+from .callback import Callback
+
+
+class WandbCallback(Callback):
+    """
+    Callback that streams epoch results to a [Weights & Biases](https://wandb.ai/) run.
+    """
+
+    def __init__(self, run: Union[None, wandb_run.Run], update_freq: Union[str, int] = "epoch"):
+        super().__init__()
+        assert run is not None, "Weights and Biases run has not been initialilzed, please initialize a run using wandb.init()"
+        self.run = run
+        self.keys = None
+        self.write_per_batch = True
+        try:
+            self.update_freq = int(update_freq)
+        except ValueError as e:
+            self.update_freq = 1
+            if update_freq == "batch":
+                self.write_per_batch = True
+            elif update_freq == "epoch":
+                self.write_per_batch = False
+            else:
+                raise e
+    
+    def on_train_begin(self, logs=None):
+        self.steps = self.params["steps"]
+        self.global_step = 0
+    
+    def on_train_batch_end(self, batch: int, logs=None):
+        if not self.write_per_batch:
+            return
+        logs = logs or {}
+        self.global_step = batch + self.current_epoch * (self.steps)
+        if self.global_step % self.update_freq == 0:
+            if self.keys is None:
+                self.keys = logs.keys()
+            for key in self.keys:
+                self.run.log({key: logs[key]}, step=self.global_step)
+    
+    def on_epoch_begin(self, epoch: int, logs=None):
+        self.current_epoch = epoch
+    
+    def on_epoch_end(self, epoch: int, logs=None):
+        logs = logs or {}
+        if self.keys is None:
+            self.keys = logs.keys()
+        
+        if self.write_per_batch:
+            for key in logs:
+                self.run.log({key: logs[key]}, step=self.global_step)
+            return
+        
+        elif epoch % self.update_freq == 0:
+            for key in logs:
+                self.run.log({key: logs[key]}, step=epoch)
+    
+    def on_train_end(self, logs = None):
+        self.run.finish()
