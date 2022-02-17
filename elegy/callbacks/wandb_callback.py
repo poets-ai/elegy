@@ -3,7 +3,7 @@
 # https://github.com/poets-ai/elegy/blob/master/elegy/callbacks/tensorboard.py
 
 
-from typing import Union
+from typing import Union, Optional, Dict
 from wandb.sdk import wandb_run
 
 from .callback import Callback
@@ -14,28 +14,68 @@ class WandbCallback(Callback):
     Callback that streams epoch results to a [Weights & Biases](https://wandb.ai/) run.
 
     ```python
-    run = wandb.init(project="sample-wandb-project")
-    wandb_logger = WandbCallback(run=run)
+    wandb.login()
+    wandb_logger = WandbCallback(
+        project="sample-wandb-project",
+        entity="myself",
+        job_type="train"
+    )
     model.fit(X_train, Y_train, callbacks=[wandb_logger])
     ```
     """
 
     def __init__(
-        self, run: wandb_run.Run, update_freq: Union[str, int] = "epoch"
+        self,
+        project: Optional[str] = None,
+        name: Optional[str] = None,
+        entity: Optional[str] = None,
+        job_type: Optional[str] = None,
+        config: Union[Dict, str, None] = None,
+        run: Optional[wandb_run.Run] = None,
+        update_freq: Union[str, int] = "epoch",
+        **kwargs
     ):
         """
         Arguments:
-            run: Weights and Biases Run of type `wandb.sdk.wandb_run.Run`. The Run
-                object can be initialized by invoking `wandb.init()`.
-            update_freq: `'batch'` or `'epoch'` or integer. When using `'batch'`,
-                writes the losses and metrics to TensorBoard after each batch. The same
-                applies for `'epoch'`. If using an integer, let's say `1000`, the
-                callback will write the metrics and losses to TensorBoard every 1000
-                batches. Note that writing too frequently to TensorBoard can slow down
-                your training.
+            project: (str, optional) The name of the project where you're sending the new run.
+                If the project is not specified, the run is put in an "Uncategorized" project.
+            name: (str, optional) A short display name for this run, which is how you'll
+                identify this run in the UI. By default we generate a random two-word name that
+                lets you easily cross-reference runs from the table to charts. Keeping these run
+                names short makes the chart legends and tables easier to read. If you're looking
+                for a place to save your hyperparameters, we recommend saving those in config.
+            entity: (str, optional) An entity is a username or team name where you're sending runs.
+                This entity must exist before you can send runs there, so make sure to create your
+                account or team in the UI before starting to log runs. If you don't specify an entity,
+                the run will be sent to your default entity, which is usually your username.
+            job_type: (str, optional) Specify the type of run, which is useful when you're grouping
+                runs together into larger experiments using group. For example, you might have multiple
+                jobs in a group, with job types like train and eval. Setting this makes it easy to
+                filter and group similar runs together in the UI so you can compare apples to apples.
+            config: (dict, argparse, absl.flags, str, optional) This sets `wandb.config`, a dictionary-like
+                object for saving inputs to your job, like hyperparameters for a model or settings for a
+                data preprocessing job. The config will show up in a table in the UI that you can use to
+                group, filter, and sort runs. Keys should not contain . in their names, and values should
+                be under 10 MB. If dict, argparse or `absl.flags`: will load the key value pairs into the
+                wandb.config object. If str: will look for a yaml file by that name, and load config from
+                that file into the `wandb.config` object.
+            run: (wandb.sdk.wandb_run.Run, str, optional) Weights and Biases Run. The Run object can be
+                initialized by invoking `wandb.init()`. 
+            update_freq: (str, int)`'batch'` or `'epoch'` or integer. When using `'batch'`, writes the
+                losses and metrics to TensorBoard after each batch. The same applies for `'epoch'`. If
+                using an integer, let's say `1000`, the callback will write the metrics and losses to
+                TensorBoard every 1000 batches. Note that writing too frequently to TensorBoard can slow
+                down your training.
         """
         super().__init__()
-        self.run = run
+        self.run = run if run else wandb.init(
+            project=project,
+            name=name,
+            entity=entity,
+            job_type=job_type,
+            config=config,
+            **kwargs
+        )
         self.keys = None
         self.write_per_batch = True
         try:
@@ -80,3 +120,6 @@ class WandbCallback(Callback):
         elif epoch % self.update_freq == 0:
             for key in logs:
                 self.run.log({key: logs[key]}, step=epoch)
+    
+    def on_train_end(self):
+        self.run.finish()
