@@ -3,8 +3,8 @@
 # https://github.com/poets-ai/elegy/blob/master/elegy/callbacks/tensorboard.py
 
 
+import wandb
 from typing import Union, Optional, Dict
-from wandb.sdk import wandb_run
 
 from .callback import Callback
 
