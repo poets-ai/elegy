@@ -118,5 +118,5 @@ class WandbCallback(Callback):
             for key in logs:
                 self.run.log({key: logs[key]}, step=epoch)
     
-    def on_train_end(self):
+    def on_train_end(self, logs=None):
         self.run.finish()
