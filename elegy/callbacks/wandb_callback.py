@@ -31,7 +31,6 @@ class WandbCallback(Callback):
         entity: Optional[str] = None,
         job_type: Optional[str] = None,
         config: Union[Dict, str, None] = None,
-        run: Optional[wandb_run.Run] = None,
         update_freq: Union[str, int] = "epoch",
         **kwargs
     ):
@@ -59,8 +58,6 @@ class WandbCallback(Callback):
                 be under 10 MB. If dict, argparse or `absl.flags`: will load the key value pairs into the
                 wandb.config object. If str: will look for a yaml file by that name, and load config from
                 that file into the `wandb.config` object.
-            run: (wandb.sdk.wandb_run.Run, str, optional) Weights and Biases Run. The Run object can be
-                initialized by invoking `wandb.init()`. 
             update_freq: (str, int)`'batch'` or `'epoch'` or integer. When using `'batch'`, writes the
                 losses and metrics to TensorBoard after each batch. The same applies for `'epoch'`. If
                 using an integer, let's say `1000`, the callback will write the metrics and losses to
@@ -68,14 +65,14 @@ class WandbCallback(Callback):
                 down your training.
         """
         super().__init__()
-        self.run = run if run else wandb.init(
+        self.run = wandb.init(
             project=project,
             name=name,
             entity=entity,
             job_type=job_type,
             config=config,
             **kwargs
-        )
+        ) if wandb.run is None else wandb.run
         self.keys = None
         self.write_per_batch = True
         try:
