@@ -24,6 +24,7 @@ except ImportError:
 
 A = tp.TypeVar("A")
 M = tp.TypeVar("M", bound="ModelCore")
+Me = tp.TypeVar("Me", bound="tx.Metric")
 
 PredStepOutput = tp.Tuple[tp.Any, M]
 TestStepOutput = tp.Tuple[jnp.ndarray, types.Logs, M]
@@ -62,19 +63,11 @@ class DistributedStrategy(ABC):
     def handle_post_init(self, model: M) -> M:
         return model
 
-    def handle_lm_kwargs(
+    def handle_metrics(
         self,
-        losses_kwargs: types.Logs,
-        metrics_kwargs: types.Logs,
-    ) -> tp.Tuple[types.Logs, types.Logs]:
-        return losses_kwargs, metrics_kwargs
-
-    def handle_lm_logs(
-        self,
-        losses_logs: types.Logs,
-        metrics_logs: types.Logs,
-    ) -> tp.Tuple[types.Logs, types.Logs]:
-        return losses_logs, metrics_logs
+        metrics: Me,
+    ) -> Me:
+        return metrics
 
     def handle_model_and_grads(
         self,
@@ -189,28 +182,13 @@ class DataParallel(DistributedStrategy):
             inplace=True,
         )
 
-    def handle_lm_kwargs(
+    def handle_metrics(
         self,
-        losses_kwargs: types.Logs,
-        metrics_kwargs: types.Logs,
-    ) -> tp.Tuple[types.Logs, types.Logs]:
-        metrics_kwargs = jax.tree_map(
-            lambda x: einops.rearrange(x, "device batch ... -> (device batch) ...")
-            if x.ndim > 1
-            else x,
-            jax.lax.all_gather(metrics_kwargs, axis_name="device"),
-        )
-
-        return losses_kwargs, metrics_kwargs
-
-    def handle_lm_logs(
-        self,
-        losses_logs: types.Logs,
-        metrics_logs: types.Logs,
-    ) -> tp.Tuple[types.Logs, types.Logs]:
-        losses_logs = jax.lax.pmean(losses_logs, axis_name="device")
-
-        return losses_logs, metrics_logs
+        metrics: Me,
+    ) -> Me:
+        metrics = jax.lax.stop_gradient(metrics)
+        metrics = jax.lax.psum(metrics, axis_name="device")
+        return metrics
 
     def handle_model_and_grads(
         self,
