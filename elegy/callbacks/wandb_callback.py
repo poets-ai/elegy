@@ -82,6 +82,7 @@ class WandbCallback(Callback):
         self._monitor = monitor
         self._mode = mode
         self._monitor_metric_val = math.inf if mode == "min" else -math.inf
+        self._model_path = f"model-best-0"
         try:
             self.update_freq = int(update_freq)
         except ValueError as e:
@@ -154,10 +155,11 @@ class WandbCallback(Callback):
                     log_key = "train_" + log_key
                 self.run.log({log_key: logs[key]}, step=epoch)
         
-        self._model_path = f"model-best-{epoch}-{self.run.name}"
         if self._mode == "min" and logs[self._monitor] < self._monitor_metric_val:
+            self._model_path = f"model-best-{epoch + 1}-{self.run.name}"
             self.model.save(self._model_path)
         elif self._mode == "max" and logs[self._monitor] > self._monitor_metric_val:
+            self._model_path = f"model-best-{epoch + 1}-{self.run.name}"
             self.model.save(self._model_path)
     
     def on_train_end(self, logs=None):
