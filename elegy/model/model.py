@@ -235,20 +235,33 @@ class Model(tp.Generic[U], ModelBase):
         losses_kwargs = extended_labels
         metrics_kwargs = extended_labels
 
-        losses_kwargs, metrics_kwargs = model.distributed_strategy.handle_lm_kwargs(
-            losses_kwargs, metrics_kwargs
-        )
+        # loss, *_ = model.loss_and_logs(
+        #     **losses_kwargs,
+        #     metrics_kwargs=metrics_kwargs,
+        #     aux_losses=aux_losses,
+        #     aux_metrics=aux_metrics,
+        # )
 
-        loss, losses_logs, metrics_logs = model.loss_and_logs.batch_loss_epoch_logs(
+        # TODO: could be refactored as reset_update in treex?
+        batch_loss_and_logs = model.loss_and_logs.copy()
+        batch_loss_and_logs.reset()
+        batch_loss_and_logs.update(
             **losses_kwargs,
             metrics_kwargs=metrics_kwargs,
             aux_losses=aux_losses,
             aux_metrics=aux_metrics,
         )
+        loss, *_ = batch_loss_and_logs.compute()
 
-        losses_logs, metrics_logs = model.distributed_strategy.handle_lm_logs(
-            losses_logs, metrics_logs
+        batch_loss_and_logs = model.distributed_strategy.handle_metrics(
+            batch_loss_and_logs
         )
+
+        self.loss_and_logs = jax.tree_map(
+            lambda a, b: a + b, self.loss_and_logs, batch_loss_and_logs
+        )
+
+        _, losses_logs, metrics_logs = model.loss_and_logs.compute()
 
         logs = {**losses_logs, **metrics_logs}
 
