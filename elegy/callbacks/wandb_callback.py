@@ -28,6 +28,8 @@ class WandbCallback(Callback):
         job_type: Optional[str] = None,
         config: Union[Dict, str, None] = None,
         update_freq: Union[str, int] = "epoch",
+        monitor: str = "val_loss",
+        mode: str = "min"
         **kwargs
     ):
         """
@@ -58,7 +60,10 @@ class WandbCallback(Callback):
                 losses and metrics to TensorBoard after each batch. The same applies for `'epoch'`. If
                 using an integer, let's say `1000`, the callback will write the metrics and losses to
                 TensorBoard every 1000 batches. Note that writing too frequently to TensorBoard can slow
-                down your training.
+                down your training. 
+            monitor: (str) name of metric to monitor. Defaults to `'val_loss'`.
+            mode: (str) one of {`'min'`, `'max'`}. `'min'` - save model when monitor is minimized.
+                `'max'` - save model when monitor is maximized. Defaults to `'min'`.
         """
         super().__init__()
         self.run = wandb.init(
