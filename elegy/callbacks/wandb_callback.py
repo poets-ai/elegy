@@ -109,6 +109,8 @@ class WandbCallback(Callback):
                 self.keys = logs.keys()
             for key in self.keys:
                 log_key = key
+                if log_key[:4] != "val_":
+                    log_key = "train_" + log_key
                 self.run.log({log_key: logs[key]}, step=self.global_step)
 
     def on_epoch_begin(self, epoch: int, logs=None):
@@ -127,12 +129,16 @@ class WandbCallback(Callback):
         if self.write_per_batch:
             for key in logs:
                 log_key = key
+                if log_key[:4] != "val_":
+                    log_key = "train_" + log_key
                 self.run.log({log_key: logs[key]}, step=self.global_step)
             return
 
         elif epoch % self.update_freq == 0:
             for key in logs:
                 log_key = key
+                if log_key[:4] != "val_":
+                    log_key = "train_" + log_key
                 self.run.log({log_key: logs[key]}, step=epoch)
     
     def on_train_end(self, logs=None):
