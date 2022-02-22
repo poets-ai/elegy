@@ -1,0 +1,76 @@
+name: Create Release
+
+on:
+  create
+
+jobs:
+  create-release:
+    if: startsWith(github.ref_name, 'version-') && endsWith(github.ref_name, '-create-release')
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Setup
+        id: setup
+        run: |
+          # install python dependencies
+          pip install typer==0.4.0
+
+          # variables
+          RELEASE_VERSION='${{ github.ref_name }}'
+          RELEASE_VERSION=${RELEASE_VERSION//version-/}
+          RELEASE_VERSION=${RELEASE_VERSION//-create-release/}
+          echo "::set-output name=RELEASE_VERSION::${RELEASE_VERSION}"
+
+
+      - name: Test Environment
+        run: |
+          RELEASE_VERSION='${{ steps.setup.outputs.RELEASE_VERSION }}'
+
+          # setup git
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          # switch to master
+          git pull origin master
+          git checkout master
+
+          # update version
+          python scripts/update_version.py $RELEASE_VERSION
+          git commit -am "Update version to $RELEASE_VERSION"
+
+          # create tag
+          git fetch --tags
+          git tag $RELEASE_VERSION
+
+          # push to master
+          git push
+          git push --tags
+
+          # delete branch
+          git push -d origin ${{ github.ref_name }}
+        
+      - name: Build Changelog
+        id: github_release
+        uses: mikepenz/release-changelog-builder-action@v2.9.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          toTag: ${{ steps.setup.outputs.RELEASE_VERSION }}
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ steps.setup.outputs.RELEASE_VERSION }}
+          release_name: ${{ steps.setup.outputs.RELEASE_VERSION }}
+          body: ${{ steps.github_release.outputs.changelog }}
+          draft: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

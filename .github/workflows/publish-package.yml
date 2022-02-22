@@ -1,0 +1,46 @@
+name: Publish Package
+on:
+  release:
+    types: [published]
+jobs:
+  publish-docs-and-package:
+    name: Publish Docs and Package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install Poetry 📖
+        uses: snok/install-poetry@v1.1.1
+        with:
+          version: 1.1.4
+
+      - name: Install Dependencies
+        run: |
+          poetry config virtualenvs.create false
+          pip install -U certifi
+          poetry install
+      
+      - name: Build Docs 🔨
+        run: |
+          cp README.md docs/index.md
+          python scripts/update_docs.py
+          mkdocs build
+        
+      - name: Deploy Page 🚀
+        uses: JamesIves/github-pages-deploy-action@4.1.6
+        with:
+          branch: gh-pages
+          folder: site
+
+      - name: Publish to PyPI
+        run: |
+          poetry build
+          poetry publish \
+            --username ${{ secrets.PYPI_USERNAME }} \
+            --password ${{ secrets.PYPI_PASSWORD }}

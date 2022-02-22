@@ -1,10 +1,8 @@
 # Checks that we can build and validate the Unittest
-name: GitHub CI
+name: Run Tests
 on:
   push:
-    # Sequence of patterns matched against refs/heads
     branches:
-      # Push events on master branch
       - master
   pull_request:
 jobs:
@@ -15,11 +13,11 @@ jobs:
     - uses: actions/setup-python@v2
     - uses: pre-commit/action@v2.0.3
   test:
+    name: Run Tests
     if: ${{ !contains(github.event.pull_request.title, 'WIP') }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # python-version: [3.9]
         python-version: [3.7, 3.8, 3.9]
     steps:
       - name: Check out the code
@@ -39,6 +37,7 @@ jobs:
       - name: Install Dependencies
         run: |
           poetry config virtualenvs.create false
+          pip install -U certifi
           poetry install
 
       - name: Run Tests
@@ -46,11 +45,6 @@ jobs:
 
       - name: Upload coverage
         uses: codecov/codecov-action@v1
-
-      # test_cloudpickle is currently failing only within pytest on python 3.7.x
-      # so we run it independently here
-      - name: Test cloudpickle
-        run: python tests/model/model_test.py
 
       - name: Test Examples
         run: bash scripts/test-examples.sh
@@ -61,7 +55,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # python-version: [3.9]
         python-version: [3.7, 3.8, 3.9]
     steps:
       - name: Check out the code
@@ -80,8 +73,9 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          pip install -U certifi
           poetry config virtualenvs.create false
           poetry install --no-dev
-
-      - name: Import Elegy
+        
+      - name: Test Import Elegy
         run: python -c "import elegy"
