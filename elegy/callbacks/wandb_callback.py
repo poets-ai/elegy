@@ -134,5 +134,5 @@ class WandbCallback(Callback):
     
     def on_train_end(self, logs=None):
         for key in self._constant_fields:
-            wandb.config[key] = self._constants[key]
+            wandb.run.summary[key] = self._constants[key]
         self.run.finish()
