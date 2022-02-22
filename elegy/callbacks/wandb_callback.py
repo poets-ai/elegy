@@ -29,7 +29,7 @@ class WandbCallback(Callback):
         config: Union[Dict, str, None] = None,
         update_freq: Union[str, int] = "epoch",
         monitor: str = "val_loss",
-        mode: str = "min"
+        mode: str = "min",
         **kwargs
     ):
         """
