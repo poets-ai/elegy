@@ -131,5 +131,5 @@ class WandbCallback(Callback):
     
     def on_train_end(self, logs=None):
         for key in self._constant_fields:
-            wandb.run.summary[key] = logs[key]
+            wandb.summary[key] = logs[key]
         self.run.finish()
