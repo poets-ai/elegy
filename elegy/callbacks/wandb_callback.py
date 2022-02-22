@@ -75,7 +75,7 @@ class WandbCallback(Callback):
         ) if wandb.run is None else wandb.run
         self.keys = None
         self.write_per_batch = True
-        self._ignore_fields = ["size"]
+        self._constant_fields = ["size"]
         try:
             self.update_freq = int(update_freq)
         except ValueError as e:
@@ -95,7 +95,7 @@ class WandbCallback(Callback):
         if not self.write_per_batch:
             return
         logs = logs or {}
-        for key in self._ignore_fields:
+        for key in self._constant_fields:
             logs.pop(key, None)
             logs.pop("val_" + key, None)
         self.global_step = batch + self.current_epoch * (self.steps)
@@ -111,7 +111,7 @@ class WandbCallback(Callback):
 
     def on_epoch_end(self, epoch: int, logs=None):
         logs = logs or {}
-        for key in self._ignore_fields:
+        for key in self._constant_fields:
             logs.pop(key, None)
             logs.pop("val_" + key, None)
         
@@ -130,4 +130,6 @@ class WandbCallback(Callback):
                 self.run.log({log_key: logs[key]}, step=epoch)
     
     def on_train_end(self, logs=None):
+        for key in self._constant_fields:
+            wandb.run.summary[key] = logs[key]
         self.run.finish()
