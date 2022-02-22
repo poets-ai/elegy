@@ -87,10 +87,17 @@ class WandbCallback(Callback):
                 self.write_per_batch = False
             else:
                 raise e
+    
+    def _gather_configs(self):
+        module_attributes = vars(vars(model)["module"])
+        for _var in module_attributes:
+            if type(module_attributes[_var]) == str or type(module_attributes[_var]) == int:
+                wandb.run.config[_var] = module_attributes[_var]
 
     def on_train_begin(self, logs=None):
         self.steps = self.params["steps"]
         self.global_step = 0
+        self._gather_configs()
 
     def on_train_batch_end(self, batch: int, logs=None):
         if not self.write_per_batch:
