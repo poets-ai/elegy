@@ -3,6 +3,7 @@
 # https://github.com/poets-ai/elegy/blob/master/elegy/callbacks/tensorboard.py
 
 
+import math
 import wandb
 from typing import Union, Optional, Dict
 
@@ -78,6 +79,9 @@ class WandbCallback(Callback):
         self.write_per_batch = True
         self._constant_fields = ["size"]
         self._constants = {}
+        self._monitor = monitor
+        self._mode = mode
+        self._monitor_metric_val = math.inf if mode == "min" else -math.inf
         try:
             self.update_freq = int(update_freq)
         except ValueError as e:
@@ -94,6 +98,11 @@ class WandbCallback(Callback):
         for _var in module_attributes:
             if type(module_attributes[_var]) == str or type(module_attributes[_var]) == int:
                 wandb.run.config[_var] = module_attributes[_var]
+    
+    def _add_model_as_artifact(self, model_path: str):
+        artifact = wandb.Artifact(model_path, type='model')
+        artifact.add_dir(model_path)
+        self.run.log_artifact(artifact)
 
     def on_train_begin(self, logs=None):
         self.steps = self.params["steps"]
@@ -144,8 +153,15 @@ class WandbCallback(Callback):
                 if log_key[:4] != "val_":
                     log_key = "train_" + log_key
                 self.run.log({log_key: logs[key]}, step=epoch)
+        
+        self._model_path = f"model-best-{epoch}-{self.run.name}"
+        if self._mode == "min" and logs[self._monitor] < self._monitor_metric_val:
+            self.model.save(self._model_path)
+        elif self._mode == "max" and logs[self._monitor] > self._monitor_metric_val:
+            self.model.save(self._model_path)
     
     def on_train_end(self, logs=None):
+        self._add_model_as_artifact(self._model_path)
         for key in self._constant_fields:
             wandb.run.summary[key] = self._constants[key]
         self.run.finish()
