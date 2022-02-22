@@ -89,7 +89,7 @@ class WandbCallback(Callback):
                 raise e
     
     def _gather_configs(self):
-        module_attributes = vars(vars(model)["module"])
+        module_attributes = vars(vars(self.model)["module"])
         for _var in module_attributes:
             if type(module_attributes[_var]) == str or type(module_attributes[_var]) == int:
                 wandb.run.config[_var] = module_attributes[_var]
