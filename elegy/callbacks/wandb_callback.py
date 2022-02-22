@@ -95,14 +95,15 @@ class WandbCallback(Callback):
         if not self.write_per_batch:
             return
         logs = logs or {}
+        for key in self._ignore_fields:
+            logs.pop(key, None)
+            logs.pop("val_" + key, None)
         self.global_step = batch + self.current_epoch * (self.steps)
         if self.global_step % self.update_freq == 0:
             if self.keys is None:
                 self.keys = logs.keys()
             for key in self.keys:
-                if key in self._ignore_fields or "val_" + key in self._ignore_fields:
-                    continue
-                log_key = "train_" + key if key[:4] != "val_" else key
+                log_key = key
                 self.run.log({log_key: logs[key]}, step=self.global_step)
 
     def on_epoch_begin(self, epoch: int, logs=None):
@@ -110,22 +111,22 @@ class WandbCallback(Callback):
 
     def on_epoch_end(self, epoch: int, logs=None):
         logs = logs or {}
+        for key in self._ignore_fields:
+            logs.pop(key, None)
+            logs.pop("val_" + key, None)
+        
         if self.keys is None:
             self.keys = logs.keys()
-
+        
         if self.write_per_batch:
             for key in logs:
-                if key in self._ignore_fields or "val_" + key in self._ignore_fields:
-                    continue
-                log_key = "train_" + key if key[:4] != "val_" else key
+                log_key = key
                 self.run.log({log_key: logs[key]}, step=self.global_step)
             return
 
         elif epoch % self.update_freq == 0:
             for key in logs:
-                if key in self._ignore_fields or "val_" + key in self._ignore_fields:
-                    continue
-                log_key = "train_" + key if key[:4] != "val_" else key
+                log_key = key
                 self.run.log({log_key: logs[key]}, step=epoch)
     
     def on_train_end(self, logs=None):
