@@ -132,7 +132,6 @@ class WandbCallback(Callback):
                 if log_key[:4] != "val_":
                     log_key = "train_" + log_key
                 self.run.log({log_key: logs[key]}, step=self.global_step)
-            return
 
         elif epoch % self.update_freq == 0:
             for key in logs:
