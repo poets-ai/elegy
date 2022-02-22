@@ -15,11 +15,7 @@ class WandbCallback(Callback):
 
     ```python
     wandb.login()
-    wandb_logger = WandbCallback(
-        project="sample-wandb-project",
-        entity="myself",
-        job_type="train"
-    )
+    wandb_logger = WandbCallback(project="sample-wandb-project", job_type="train")
     model.fit(X_train, Y_train, callbacks=[wandb_logger])
     ```
     """
