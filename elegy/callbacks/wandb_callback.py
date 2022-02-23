@@ -91,6 +91,7 @@ class WandbCallback(Callback):
         self._mode = mode
         self._monitor_metric_val = math.inf if mode == "min" else -math.inf
         self._model_path = f"model-best-0"
+        self._model_checkpoint = self.model
         try:
             self.update_freq = int(update_freq)
         except ValueError as e:
@@ -170,14 +171,16 @@ class WandbCallback(Callback):
             if self._mode == "every":
                 self._model_path = f"model-{epoch + 1}-{self.run.name}"
                 print(f"Saving Model at {self._model_path}")
-                self.model.save(self._model_path)
+                self._model_checkpoint = self.model
+                self._model_checkpoint.save(self._model_path)
 
             elif self._mode == "min" and logs[self._monitor] < self._monitor_metric_val:
                 self._model_path = f"model-best-{epoch + 1}-{self.run.name}"
                 print(
                     f"{self._monitor} decreased at epoch {epoch}. Saving Model at {self._model_path}"
                 )
-                self.model.save(self._model_path)
+                self._model_checkpoint = self.model
+                self._model_checkpoint.save(self._model_path)
                 self._monitor_metric_val = logs[self._monitor]
 
             elif self._mode == "max" and logs[self._monitor] > self._monitor_metric_val:
@@ -185,7 +188,8 @@ class WandbCallback(Callback):
                 print(
                     f"{self._monitor} increased at epoch {epoch}. Saving Model at {self._model_path}"
                 )
-                self.model.save(self._model_path)
+                self._model_checkpoint = self.model
+                self._model_checkpoint.save(self._model_path)
                 self._monitor_metric_val = logs[self._monitor]
             
             self._add_model_as_artifact(self._model_path)
