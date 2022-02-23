@@ -158,9 +158,11 @@ class WandbCallback(Callback):
         if self._mode == "min" and logs[self._monitor] < self._monitor_metric_val:
             self._model_path = f"model-best-{epoch + 1}-{self.run.name}"
             self.model.save(self._model_path)
+            self._monitor_metric_val = logs[self._monitor]
         elif self._mode == "max" and logs[self._monitor] > self._monitor_metric_val:
             self._model_path = f"model-best-{epoch + 1}-{self.run.name}"
             self.model.save(self._model_path)
+            self._monitor_metric_val = logs[self._monitor]
     
     def on_train_end(self, logs=None):
         self._add_model_as_artifact(self._model_path)
