@@ -3,6 +3,7 @@
 # https://github.com/poets-ai/elegy/blob/master/elegy/callbacks/tensorboard.py
 
 
+import math
 import wandb
 from typing import Union, Optional, Dict
 
@@ -28,6 +29,8 @@ class WandbCallback(Callback):
         job_type: Optional[str] = None,
         config: Union[Dict, str, None] = None,
         update_freq: Union[str, int] = "epoch",
+        monitor: str = "val_loss",
+        mode: str = "min",
         **kwargs
     ):
         """
@@ -58,7 +61,10 @@ class WandbCallback(Callback):
                 losses and metrics to TensorBoard after each batch. The same applies for `'epoch'`. If
                 using an integer, let's say `1000`, the callback will write the metrics and losses to
                 TensorBoard every 1000 batches. Note that writing too frequently to TensorBoard can slow
-                down your training.
+                down your training. 
+            monitor: (str) name of metric to monitor. Defaults to `'val_loss'`.
+            mode: (str) one of {`'min'`, `'max'`}. `'min'` - save model when monitor is minimized.
+                `'max'` - save model when monitor is maximized. Defaults to `'min'`.
         """
         super().__init__()
         self.run = wandb.init(
@@ -73,6 +79,10 @@ class WandbCallback(Callback):
         self.write_per_batch = True
         self._constant_fields = ["size"]
         self._constants = {}
+        self._monitor = monitor
+        self._mode = mode
+        self._monitor_metric_val = math.inf if mode == "min" else -math.inf
+        self._model_path = f"model-best-0"
         try:
             self.update_freq = int(update_freq)
         except ValueError as e:
@@ -89,6 +99,11 @@ class WandbCallback(Callback):
         for _var in module_attributes:
             if type(module_attributes[_var]) == str or type(module_attributes[_var]) == int:
                 wandb.run.config[_var] = module_attributes[_var]
+    
+    def _add_model_as_artifact(self, model_path: str):
+        artifact = wandb.Artifact(model_path, type='model')
+        artifact.add_dir(model_path)
+        self.run.log_artifact(artifact)
 
     def on_train_begin(self, logs=None):
         self.steps = self.params["steps"]
@@ -132,7 +147,6 @@ class WandbCallback(Callback):
                 if log_key[:4] != "val_":
                     log_key = "train_" + log_key
                 self.run.log({log_key: logs[key]}, step=self.global_step)
-            return
 
         elif epoch % self.update_freq == 0:
             for key in logs:
@@ -140,8 +154,20 @@ class WandbCallback(Callback):
                 if log_key[:4] != "val_":
                     log_key = "train_" + log_key
                 self.run.log({log_key: logs[key]}, step=epoch)
+        
+        if self._mode == "min" and logs[self._monitor] < self._monitor_metric_val:
+            self._model_path = f"model-best-{epoch + 1}-{self.run.name}"
+            print(f"{self._monitor} decreased at epoch {epoch}. Saving Model at {self._model_path}")
+            self.model.save(self._model_path)
+            self._monitor_metric_val = logs[self._monitor]
+        elif self._mode == "max" and logs[self._monitor] > self._monitor_metric_val:
+            self._model_path = f"model-best-{epoch + 1}-{self.run.name}"
+            print(f"{self._monitor} increased at epoch {epoch}. Saving Model at {self._model_path}")
+            self.model.save(self._model_path)
+            self._monitor_metric_val = logs[self._monitor]
     
     def on_train_end(self, logs=None):
+        self._add_model_as_artifact(self._model_path)
         for key in self._constant_fields:
             wandb.run.summary[key] = self._constants[key]
         self.run.finish()
