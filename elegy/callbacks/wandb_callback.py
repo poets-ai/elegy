@@ -90,6 +90,7 @@ class WandbCallback(Callback):
         self._monitor = monitor
         self._mode = mode
         self._monitor_metric_val = math.inf if mode == "min" else -math.inf
+        self._best_epoch = 0
         self._model_path = f"model-best-0"
         self._model_checkpoint = self.model
         try:
@@ -112,8 +113,15 @@ class WandbCallback(Callback):
             ):
                 wandb.run.config[_var] = module_attributes[_var]
 
-    def _add_model_as_artifact(self, model_path: str):
-        artifact = wandb.Artifact(f"model-{self.run.name}", type="model")
+    def _add_model_as_artifact(self, model_path: str, epoch: int):
+        artifact = wandb.Artifact(
+            f"model-{self.run.name}",
+            type="model",
+            metadata={
+                "epoch": epoch,
+                "model_path": model_path
+            }
+        )
         artifact.add_dir(model_path)
         self.run.log_artifact(artifact)
 
@@ -169,12 +177,14 @@ class WandbCallback(Callback):
 
         if self._save_model:
             if self._mode == "every":
+                self._best_epoch = epoch
                 self._model_path = f"model-{epoch + 1}-{self.run.name}"
                 print(f"Saving Model at {self._model_path}")
                 self._model_checkpoint = self.model
                 self._model_checkpoint.save(self._model_path)
 
             elif self._mode == "min" and logs[self._monitor] < self._monitor_metric_val:
+                self._best_epoch = epoch
                 self._model_path = f"model-best-{epoch + 1}-{self.run.name}"
                 print(
                     f"{self._monitor} decreased at epoch {epoch}. Saving Model at {self._model_path}"
@@ -184,6 +194,7 @@ class WandbCallback(Callback):
                 self._monitor_metric_val = logs[self._monitor]
 
             elif self._mode == "max" and logs[self._monitor] > self._monitor_metric_val:
+                self._best_epoch = epoch
                 self._model_path = f"model-best-{epoch + 1}-{self.run.name}"
                 print(
                     f"{self._monitor} increased at epoch {epoch}. Saving Model at {self._model_path}"
@@ -192,7 +203,7 @@ class WandbCallback(Callback):
                 self._model_checkpoint.save(self._model_path)
                 self._monitor_metric_val = logs[self._monitor]
             
-            self._add_model_as_artifact(self._model_path)
+            self._add_model_as_artifact(self._model_path, epoch=self._best_epoch)
 
     def on_train_end(self, logs=None):
         for key in self._constant_fields:
