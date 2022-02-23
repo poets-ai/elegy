@@ -112,7 +112,7 @@ class WandbCallback(Callback):
                 wandb.run.config[_var] = module_attributes[_var]
 
     def _add_model_as_artifact(self, model_path: str):
-        artifact = wandb.Artifact(model_path, type="model")
+        artifact = wandb.Artifact(f"model-{self.run}", type="model")
         artifact.add_dir(model_path)
         self.run.log_artifact(artifact)
 
