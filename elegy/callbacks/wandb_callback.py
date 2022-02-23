@@ -32,7 +32,7 @@ class WandbCallback(Callback):
         save_model: bool = False,
         monitor: str = "val_loss",
         mode: str = "min",
-        **kwargs
+        **kwargs,
     ):
         """
         Arguments:
@@ -66,18 +66,22 @@ class WandbCallback(Callback):
             save_model: (bool) Save a model when monitor beats all previous epochs if set to `True` otherwise
                 don't save models.
             monitor: (str) name of metric to monitor. Defaults to `'val_loss'`.
-            mode: (str) one of {`'min'`, `'max'`}. `'min'` - save model when monitor is minimized.
-                `'max'` - save model when monitor is maximized. Defaults to `'min'`.
+            mode: (str) one of {`'min'`, `'max'`, `'every'`}. `'min'` - save model when monitor is minimized.
+                `'max'` - save model when monitor is maximized. `'every'` - save model after every epoch.
         """
         super().__init__()
-        self.run = wandb.init(
-            project=project,
-            name=name,
-            entity=entity,
-            job_type=job_type,
-            config=config,
-            **kwargs
-        ) if wandb.run is None else wandb.run
+        self.run = (
+            wandb.init(
+                project=project,
+                name=name,
+                entity=entity,
+                job_type=job_type,
+                config=config,
+                **kwargs,
+            )
+            if wandb.run is None
+            else wandb.run
+        )
         self.keys = None
         self.write_per_batch = True
         self._constant_fields = ["size"]
@@ -97,15 +101,18 @@ class WandbCallback(Callback):
                 self.write_per_batch = False
             else:
                 raise e
-    
+
     def _gather_configs(self):
         module_attributes = vars(vars(self.model)["module"])
         for _var in module_attributes:
-            if type(module_attributes[_var]) == str or type(module_attributes[_var]) == int:
+            if (
+                type(module_attributes[_var]) == str
+                or type(module_attributes[_var]) == int
+            ):
                 wandb.run.config[_var] = module_attributes[_var]
-    
+
     def _add_model_as_artifact(self, model_path: str):
-        artifact = wandb.Artifact(model_path, type='model')
+        artifact = wandb.Artifact(model_path, type="model")
         artifact.add_dir(model_path)
         self.run.log_artifact(artifact)
 
@@ -141,10 +148,10 @@ class WandbCallback(Callback):
             self._constants[key] = logs[key]
             logs.pop(key, None)
             logs.pop("val_" + key, None)
-        
+
         if self.keys is None:
             self.keys = logs.keys()
-        
+
         if self.write_per_batch:
             for key in logs:
                 log_key = key
@@ -158,22 +165,32 @@ class WandbCallback(Callback):
                 if log_key[:4] != "val_":
                     log_key = "train_" + log_key
                 self.run.log({log_key: logs[key]}, step=epoch)
-        
+
         if self._save_model:
-            if self._mode == "min" and logs[self._monitor] < self._monitor_metric_val:
+            if self._mode == "every":
+                self._model_path = f"model-{epoch + 1}-{self.run.name}"
+                print(f"Saving Model at {self._model_path}")
+                self.model.save(self._model_path)
+
+            elif self._mode == "min" and logs[self._monitor] < self._monitor_metric_val:
                 self._model_path = f"model-best-{epoch + 1}-{self.run.name}"
-                print(f"{self._monitor} decreased at epoch {epoch}. Saving Model at {self._model_path}")
+                print(
+                    f"{self._monitor} decreased at epoch {epoch}. Saving Model at {self._model_path}"
+                )
                 self.model.save(self._model_path)
                 self._monitor_metric_val = logs[self._monitor]
+
             elif self._mode == "max" and logs[self._monitor] > self._monitor_metric_val:
                 self._model_path = f"model-best-{epoch + 1}-{self.run.name}"
-                print(f"{self._monitor} increased at epoch {epoch}. Saving Model at {self._model_path}")
+                print(
+                    f"{self._monitor} increased at epoch {epoch}. Saving Model at {self._model_path}"
+                )
                 self.model.save(self._model_path)
                 self._monitor_metric_val = logs[self._monitor]
-    
-    def on_train_end(self, logs=None):
-        if self._save_model:
+            
             self._add_model_as_artifact(self._model_path)
+
+    def on_train_end(self, logs=None):
         for key in self._constant_fields:
             wandb.run.summary[key] = self._constants[key]
         self.run.finish()
