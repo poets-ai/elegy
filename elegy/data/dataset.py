@@ -114,7 +114,7 @@ class DataLoader:
             np.random.shuffle(indices)
 
         batched_indices = [
-            indices[i:][: self.batch_size]
+            indices[i:][: self.batch_size].tolist()
             for i in range(0, len(indices), self.batch_size)
         ]
 
