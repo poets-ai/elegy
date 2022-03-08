@@ -162,7 +162,7 @@ def call(self, x):
     return x
 ```
 Here `Linear` and `Conv` are dangerously swapped based on some condition. If you want to
-do this you can just clare them unconditionally and use them inside the condition:
+do this you can just declare them unconditionally and use them inside the condition:
 
 ```python
 def call(self, x):
@@ -207,8 +207,8 @@ customize this name by using the `name` argument available in the `Module`'s con
 
 A big theme in Jax is that state and computation are separate, this is a requirement
 because in order for combinators like `jax.grad` and `jax.jit` to work you need pure functions. 
-Elegy as you've seen is object oriented so additional effort ir required to properly convert all 
-the global states and `Module` parameters an inputs to a function so Jax can track them. To achieve 
+Elegy as you've seen is object oriented so additional effort is required to properly convert all 
+the global states and `Module` parameters as inputs to a function so Jax can track them. To achieve 
 Elegy implements its own `jit` and `value_and_grad` function wrappers that handle this for you.
 
 Lets create a low level training loop using the previous definition `MLP` along with these functions:
@@ -258,7 +258,7 @@ def update(x, y):
 ```
 
 After that we just use `tree_multimap` to implement Gradient Descent 
-and get our `new_parameters` and then use the `set_parameters` method our 
+and get our `new_parameters` and then use the `set_parameters` method in our 
 `Module` to update its state.
 
 ```python hl_lines="4 5 6 8"
