@@ -124,17 +124,18 @@ class Eager(DistributedStrategy):
 
 @dataclass(unsafe_hash=True)
 class JIT(DistributedStrategy):
+    # donate 'model' memory buffer since we return an updated model
     def init_step_fn(self, model: M) -> InitStep[M]:
-        return jax.jit(model.__class__._static_init_step)
+        return jax.jit(model.__class__._static_init_step, donate_argnums=0)
 
     def pred_step_fn(self, model: M) -> PredStep[M]:
-        return jax.jit(model.__class__._static_pred_step)
+        return jax.jit(model.__class__._static_pred_step, donate_argnums=0)
 
     def test_step_fn(self, model: M) -> TestStep[M]:
-        return jax.jit(model.__class__._static_test_step)
+        return jax.jit(model.__class__._static_test_step, donate_argnums=0)
 
     def train_step_fn(self, model: M) -> TrainStep[M]:
-        return jax.jit(model.__class__._static_train_step)
+        return jax.jit(model.__class__._static_train_step, donate_argnums=0)
 
 
 @dataclass(unsafe_hash=True)
@@ -204,12 +205,14 @@ class DataParallel(DistributedStrategy):
         return jax.pmap(
             model.__class__._static_init_step,
             axis_name="device",
+            donate_argnums=0,
         )
 
     def pred_step_fn(self, model: M) -> PredStep[M]:
         return jax.pmap(
             model.__class__._static_pred_step,
             axis_name="device",
+            donate_argnums=0,
         )
 
     def test_step_fn(self, model: M) -> TestStep[M]:
@@ -217,6 +220,7 @@ class DataParallel(DistributedStrategy):
             model.__class__._static_test_step,
             axis_name="device",
             out_axes=(0, None, 0),  # None = logs not replicated
+            donate_argnums=0,
         )
 
     def train_step_fn(self, model: M) -> TrainStep[M]:
@@ -224,6 +228,7 @@ class DataParallel(DistributedStrategy):
             model.__class__._static_train_step,
             axis_name="device",
             out_axes=(None, 0),  # None = logs not replicated
+            donate_argnums=0,
         )
 
 
