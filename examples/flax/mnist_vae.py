@@ -125,8 +125,8 @@ def main(
     logdir = os.path.join(logdir, current_time)
 
     dataset = load_dataset("mnist")
-    X_train = np.array(dataset["train"]["image"], dtype=np.uint8)
-    X_test = np.array(dataset["test"]["image"], dtype=np.uint8)
+    X_train = np.array(np.stack(dataset["train"]["image"]), dtype=np.uint8)
+    X_test = np.array(np.stack(dataset["test"]["image"]), dtype=np.uint8)
     # Now binarize data
     X_train = (X_train > 0).astype(jnp.float32)
     X_test = (X_test > 0).astype(jnp.float32)

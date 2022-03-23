@@ -131,8 +131,8 @@ def main(
 
     dataset = load_dataset("mnist")
     dataset.set_format("np")
-    X_train = dataset["train"]["image"]
-    X_test = dataset["test"]["image"]
+    X_train = np.stack(dataset["train"]["image"])
+    X_test = np.stack(dataset["test"]["image"])
     # Now binarize data
     X_train = (X_train > 0).astype(jnp.float32)
     X_test = (X_test > 0).astype(jnp.float32)
