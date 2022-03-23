@@ -68,9 +68,9 @@ def main(
 
     dataset = load_dataset("mnist")
     dataset.set_format("np")
-    X_train = dataset["train"]["image"][..., None]
+    X_train = np.stack(dataset["train"]["image"])[..., None]
     y_train = dataset["train"]["label"]
-    X_test = dataset["test"]["image"][..., None]
+    X_test = np.stack(dataset["test"]["image"])[..., None]
     y_test = dataset["test"]["label"]
 
     print("X_train:", X_train.shape, X_train.dtype)
