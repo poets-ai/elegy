@@ -4,8 +4,9 @@
 
 
 import math
+from typing import Dict, Optional, Union
+
 import wandb
-from typing import Union, Optional, Dict
 
 from .callback import Callback
 
@@ -117,10 +118,7 @@ class WandbCallback(Callback):
         artifact = wandb.Artifact(
             f"model-{self.run.name}",
             type="model",
-            metadata={
-                "epoch": epoch,
-                "model_path": model_path
-            }
+            metadata={"epoch": epoch, "model_path": model_path},
         )
         artifact.add_dir(model_path)
         self.run.log_artifact(artifact)
@@ -202,7 +200,7 @@ class WandbCallback(Callback):
                 self._model_checkpoint = self.model
                 self._model_checkpoint.save(self._model_path)
                 self._monitor_metric_val = logs[self._monitor]
-            
+
             self._add_model_as_artifact(self._model_path, epoch=self._best_epoch)
 
     def on_train_end(self, logs=None):
