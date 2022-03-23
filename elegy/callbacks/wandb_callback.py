@@ -6,18 +6,16 @@
 import math
 from typing import Dict, Optional, Union
 
-import wandb
-
 from .callback import Callback
 
 
 class WandbCallback(Callback):
     """
-    Callback that streams epoch results to a [Weights & Biases](https://wandb.ai/) run.
+    Callback that streams epoch results to a [Weights & Biases](https://self.wandb.ai/) run.
 
     ```python
-    wandb.login()
-    wandb_logger = WandbCallback(project="sample-wandb-project", job_type="train")
+    self.wandb.login()
+    wandb_logger = WandbCallback(project="sample-self.wandb-project", job_type="train")
     model.fit(X_train, Y_train, callbacks=[wandb_logger])
     ```
     """
@@ -52,13 +50,13 @@ class WandbCallback(Callback):
                 runs together into larger experiments using group. For example, you might have multiple
                 jobs in a group, with job types like train and eval. Setting this makes it easy to
                 filter and group similar runs together in the UI so you can compare apples to apples.
-            config: (dict, argparse, absl.flags, str, optional) This sets `wandb.config`, a dictionary-like
+            config: (dict, argparse, absl.flags, str, optional) This sets `self.wandb.config`, a dictionary-like
                 object for saving inputs to your job, like hyperparameters for a model or settings for a
                 data preprocessing job. The config will show up in a table in the UI that you can use to
                 group, filter, and sort runs. Keys should not contain . in their names, and values should
                 be under 10 MB. If dict, argparse or `absl.flags`: will load the key value pairs into the
-                wandb.config object. If str: will look for a yaml file by that name, and load config from
-                that file into the `wandb.config` object.
+                self.wandb.config object. If str: will look for a yaml file by that name, and load config from
+                that file into the `self.wandb.config` object.
             update_freq: (str, int)`'batch'` or `'epoch'` or integer. When using `'batch'`, writes the
                 losses and metrics to TensorBoard after each batch. The same applies for `'epoch'`. If
                 using an integer, let's say `1000`, the callback will write the metrics and losses to
@@ -70,9 +68,12 @@ class WandbCallback(Callback):
             mode: (str) one of {`'min'`, `'max'`, `'every'`}. `'min'` - save model when monitor is minimized.
                 `'max'` - save model when monitor is maximized. `'every'` - save model after every epoch.
         """
+        import wandb
+
+        self.wandb = wandb
         super().__init__()
         self.run = (
-            wandb.init(
+            self.wandb.init(
                 project=project,
                 name=name,
                 entity=entity,
@@ -80,8 +81,8 @@ class WandbCallback(Callback):
                 config=config,
                 **kwargs,
             )
-            if wandb.run is None
-            else wandb.run
+            if self.wandb.run is None
+            else self.wandb.run
         )
         self.keys = None
         self.write_per_batch = True
@@ -106,16 +107,18 @@ class WandbCallback(Callback):
                 raise e
 
     def _gather_configs(self):
+
         module_attributes = vars(vars(self.model)["module"])
         for _var in module_attributes:
             if (
                 type(module_attributes[_var]) == str
                 or type(module_attributes[_var]) == int
             ):
-                wandb.run.config[_var] = module_attributes[_var]
+                self.wandb.run.config[_var] = module_attributes[_var]
 
     def _add_model_as_artifact(self, model_path: str, epoch: int):
-        artifact = wandb.Artifact(
+
+        artifact = self.wandb.Artifact(
             f"model-{self.run.name}",
             type="model",
             metadata={"epoch": epoch, "model_path": model_path},
@@ -204,6 +207,7 @@ class WandbCallback(Callback):
             self._add_model_as_artifact(self._model_path, epoch=self._best_epoch)
 
     def on_train_end(self, logs=None):
+
         for key in self._constant_fields:
-            wandb.run.summary[key] = self._constants[key]
+            self.wandb.run.summary[key] = self._constants[key]
         self.run.finish()
