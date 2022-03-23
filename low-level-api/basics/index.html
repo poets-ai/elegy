@@ -398,7 +398,7 @@
     <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">test_step</span>(<span style="color: #008000">self</span>, x, y_true, states, initializing):  
         x <span style="color: #666666">=</span> jnp<span style="color: #666666">.</span>reshape(x, (x<span style="color: #666666">.</span>shape[<span style="color: #666666">0</span>], <span style="color: #666666">-1</span>)) <span style="color: #666666">/</span> <span style="color: #666666">255</span>
 
-        <span style="color: #408080; font-style: italic"># initialize or use existing parameters</span>
+        <span style="color: #3D7B7B; font-style: italic"># initialize or use existing parameters</span>
         <span style="color: #008000; font-weight: bold">if</span> initializing:
             w <span style="color: #666666">=</span> jax<span style="color: #666666">.</span>random<span style="color: #666666">.</span>uniform(
                 jax<span style="color: #666666">.</span>random<span style="color: #666666">.</span>PRNGKey(<span style="color: #666666">42</span>), shape<span style="color: #666666">=</span>[np<span style="color: #666666">.</span>prod(x<span style="color: #666666">.</span>shape[<span style="color: #666666">1</span>:]), <span style="color: #666666">10</span>]
@@ -407,18 +407,18 @@
         <span style="color: #008000; font-weight: bold">else</span>:
             w, b <span style="color: #666666">=</span> states<span style="color: #666666">.</span>net_params
 
-        <span style="color: #408080; font-style: italic"># model</span>
+        <span style="color: #3D7B7B; font-style: italic"># model</span>
         logits <span style="color: #666666">=</span> jnp<span style="color: #666666">.</span>dot(x, w) <span style="color: #666666">+</span> b
 
-        <span style="color: #408080; font-style: italic"># categorical crossentropy loss</span>
+        <span style="color: #3D7B7B; font-style: italic"># categorical crossentropy loss</span>
         labels <span style="color: #666666">=</span> jax<span style="color: #666666">.</span>nn<span style="color: #666666">.</span>one_hot(y_true, <span style="color: #666666">10</span>)
         loss <span style="color: #666666">=</span> jnp<span style="color: #666666">.</span>mean(<span style="color: #666666">-</span>jnp<span style="color: #666666">.</span>sum(labels <span style="color: #666666">*</span> jax<span style="color: #666666">.</span>nn<span style="color: #666666">.</span>log_softmax(logits), axis<span style="color: #666666">=-1</span>))
         accuracy<span style="color: #666666">=</span>jnp<span style="color: #666666">.</span>mean(jnp<span style="color: #666666">.</span>argmax(logits, axis<span style="color: #666666">=-1</span>) <span style="color: #666666">==</span> y_true)
 
-        <span style="color: #408080; font-style: italic"># metrics</span>
+        <span style="color: #3D7B7B; font-style: italic"># metrics</span>
         logs <span style="color: #666666">=</span> <span style="color: #008000">dict</span>(accuracy<span style="color: #666666">=</span>accuracy, loss<span style="color: #666666">=</span>loss)
 
-        <span style="color: #408080; font-style: italic"># update states</span>
+        <span style="color: #3D7B7B; font-style: italic"># update states</span>
         states <span style="color: #666666">=</span> states<span style="color: #666666">.</span>update(net_params<span style="color: #666666">=</span>(w, b))
 
         <span style="color: #008000; font-weight: bold">return</span> loss, logs, states

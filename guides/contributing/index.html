@@ -396,8 +396,8 @@ poetry install
 
 <p>In order for Jax to recognize your GPU, you will probably have to install it again using the command below.</p>
 <div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #19177C">PYTHON_VERSION</span><span style="color: #666666">=</span>cp38  
-<span style="color: #19177C">CUDA_VERSION</span><span style="color: #666666">=</span>cuda101  <span style="color: #408080; font-style: italic"># alternatives: cuda100, cuda101, cuda102, cuda110, check your cuda version</span>
-<span style="color: #19177C">PLATFORM</span><span style="color: #666666">=</span>manylinux2010_x86_64  <span style="color: #408080; font-style: italic"># alternatives: manylinux2010_x86_64</span>
+<span style="color: #19177C">CUDA_VERSION</span><span style="color: #666666">=</span>cuda101  <span style="color: #3D7B7B; font-style: italic"># alternatives: cuda100, cuda101, cuda102, cuda110, check your cuda version</span>
+<span style="color: #19177C">PLATFORM</span><span style="color: #666666">=</span>manylinux2010_x86_64  <span style="color: #3D7B7B; font-style: italic"># alternatives: manylinux2010_x86_64</span>
 <span style="color: #19177C">BASE_URL</span><span style="color: #666666">=</span><span style="color: #BA2121">&#39;https://storage.googleapis.com/jax-releases&#39;</span>
 pip install --upgrade <span style="color: #19177C">$BASE_URL</span>/<span style="color: #19177C">$CUDA_VERSION</span>/jaxlib-0.1.55-<span style="color: #19177C">$PYTHON_VERSION</span>-none-<span style="color: #19177C">$PLATFORM</span>.whl
 pip install --upgrade jax  

@@ -547,7 +547,7 @@ of hooks, and for module hooks specifically they must be called in the same orde
 </code></pre></div>
 
 <p>Here <code>Linear</code> and <code>Conv</code> are dangerously swapped based on some condition. If you want to
-do this you can just clare them unconditionally and use them inside the condition:</p>
+do this you can just declare them unconditionally and use them inside the condition:</p>
 <div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">call</span>(<span style="color: #008000">self</span>, x):
     linear <span style="color: #666666">=</span> elegy<span style="color: #666666">.</span>nn<span style="color: #666666">.</span>Linear(<span style="color: #666666">48</span>, [<span style="color: #666666">3</span>, <span style="color: #666666">3</span>])
     conv2d <span style="color: #666666">=</span> elegy<span style="color: #666666">.</span>nn<span style="color: #666666">.</span>Conv(<span style="color: #666666">32</span>, [<span style="color: #666666">3</span>, <span style="color: #666666">3</span>])
@@ -586,8 +586,8 @@ customize this name by using the <code>name</code> argument available in the <co
 <h3 id="low-level-training-loop">Low-level Training Loop</h3>
 <p>A big theme in Jax is that state and computation are separate, this is a requirement
 because in order for combinators like <code>jax.grad</code> and <code>jax.jit</code> to work you need pure functions. 
-Elegy as you've seen is object oriented so additional effort ir required to properly convert all 
-the global states and <code>Module</code> parameters an inputs to a function so Jax can track them. To achieve 
+Elegy as you've seen is object oriented so additional effort is required to properly convert all 
+the global states and <code>Module</code> parameters as inputs to a function so Jax can track them. To achieve 
 Elegy implements its own <code>jit</code> and <code>value_and_grad</code> function wrappers that handle this for you.</p>
 <p>Lets create a low level training loop using the previous definition <code>MLP</code> along with these functions:</p>
 <div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>x <span style="color: #666666">=</span> np<span style="color: #666666">.</span>random<span style="color: #666666">.</span>uniform(size<span style="color: #666666">=</span>(<span style="color: #666666">15</span>, <span style="color: #666666">3</span>))
@@ -632,7 +632,7 @@ of the loss with respect to the trainable parameters of <code>mlp</code>.</p>
 </code></pre></div>
 
 <p>After that we just use <code>tree_multimap</code> to implement Gradient Descent 
-and get our <code>new_parameters</code> and then use the <code>set_parameters</code> method our 
+and get our <code>new_parameters</code> and then use the <code>set_parameters</code> method in our 
 <code>Module</code> to update its state.</p>
 <div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">update</span>(x, y):
     loss, gradients <span style="color: #666666">=</span> elegy<span style="color: #666666">.</span>value_and_grad(loss_fn, modules<span style="color: #666666">=</span>mlp)(x, y)

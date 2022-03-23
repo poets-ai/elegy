@@ -720,7 +720,7 @@ As shown here, `forward` can optionally request a `training` argument which will
 <p>Elegy's low-level API lets you explicitly define what goes on during training, testing, and inference. Let's define our own custom <code>Model</code> to implement a <code>LinearClassifier</code> with pure JAX:</p>
 <p><strong>1.</strong> Define a custom <code>init_step</code> method:</p>
 <div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">LinearClassifier</span>(eg<span style="color: #666666">.</span>Model):
-    <span style="color: #408080; font-style: italic"># use treex&#39;s API to declare parameter nodes</span>
+    <span style="color: #3D7B7B; font-style: italic"># use treex&#39;s API to declare parameter nodes</span>
     w: jnp<span style="color: #666666">.</span>ndarray <span style="color: #666666">=</span> eg<span style="color: #666666">.</span>Parameter<span style="color: #666666">.</span>node()
     b: jnp<span style="color: #666666">.</span>ndarray <span style="color: #666666">=</span> eg<span style="color: #666666">.</span>Parameter<span style="color: #666666">.</span>node()
 
@@ -739,17 +739,17 @@ As shown here, `forward` can optionally request a `training` argument which will
 <p>Here we declared the parameters <code>w</code> and <code>b</code> using Treex's <code>Parameter.node()</code> for pedagogical reasons, however normally you don't have to do this since you typically use a sub-<code>Module</code> instead.</p>
 <p><strong>2.</strong> Define a custom <code>test_step</code> method:</p>
 <div class="codehilite" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">test_step</span>(<span style="color: #008000">self</span>, inputs, labels):
-        <span style="color: #408080; font-style: italic"># flatten + scale</span>
+        <span style="color: #3D7B7B; font-style: italic"># flatten + scale</span>
         inputs <span style="color: #666666">=</span> jnp<span style="color: #666666">.</span>reshape(inputs, (inputs<span style="color: #666666">.</span>shape[<span style="color: #666666">0</span>], <span style="color: #666666">-1</span>)) <span style="color: #666666">/</span> <span style="color: #666666">255</span>
 
-        <span style="color: #408080; font-style: italic"># forward</span>
+        <span style="color: #3D7B7B; font-style: italic"># forward</span>
         logits <span style="color: #666666">=</span> jnp<span style="color: #666666">.</span>dot(inputs, <span style="color: #008000">self</span><span style="color: #666666">.</span>w) <span style="color: #666666">+</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>b
 
-        <span style="color: #408080; font-style: italic"># crossentropy loss</span>
+        <span style="color: #3D7B7B; font-style: italic"># crossentropy loss</span>
         target <span style="color: #666666">=</span> jax<span style="color: #666666">.</span>nn<span style="color: #666666">.</span>one_hot(labels[<span style="color: #BA2121">&quot;target&quot;</span>], <span style="color: #666666">10</span>)
         loss <span style="color: #666666">=</span> optax<span style="color: #666666">.</span>softmax_cross_entropy(logits, target)<span style="color: #666666">.</span>mean()
 
-        <span style="color: #408080; font-style: italic"># metrics</span>
+        <span style="color: #3D7B7B; font-style: italic"># metrics</span>
         logs <span style="color: #666666">=</span> <span style="color: #008000">dict</span>(
             acc<span style="color: #666666">=</span>jnp<span style="color: #666666">.</span>mean(jnp<span style="color: #666666">.</span>argmax(logits, axis<span style="color: #666666">=-1</span>) <span style="color: #666666">==</span> labels[<span style="color: #BA2121">&quot;target&quot;</span>]),
             loss<span style="color: #666666">=</span>loss,
@@ -809,7 +809,7 @@ low-level API, here is an example with Flax:
         <span style="color: #008000">self</span><span style="color: #666666">.</span>optimizer <span style="color: #666666">=</span> <span style="color: #008000">self</span><span style="color: #666666">.</span>optimizer<span style="color: #666666">.</span>init(<span style="color: #008000">self</span><span style="color: #666666">.</span>parameters())
 
     <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">test_step</span>(<span style="color: #008000">self</span>, inputs, labels):
-        <span style="color: #408080; font-style: italic"># forward</span>
+        <span style="color: #3D7B7B; font-style: italic"># forward</span>
         variables <span style="color: #666666">=</span> <span style="color: #008000">dict</span>(
             params<span style="color: #666666">=</span><span style="color: #008000">self</span><span style="color: #666666">.</span>params,
             batch_stats<span style="color: #666666">=</span><span style="color: #008000">self</span><span style="color: #666666">.</span>batch_stats,
@@ -822,11 +822,11 @@ low-level API, here is an example with Flax:
         )
         <span style="color: #008000">self</span><span style="color: #666666">.</span>batch_stats <span style="color: #666666">=</span> variables[<span style="color: #BA2121">&quot;batch_stats&quot;</span>]
 
-        <span style="color: #408080; font-style: italic"># loss</span>
+        <span style="color: #3D7B7B; font-style: italic"># loss</span>
         target <span style="color: #666666">=</span> jax<span style="color: #666666">.</span>nn<span style="color: #666666">.</span>one_hot(labels[<span style="color: #BA2121">&quot;target&quot;</span>], <span style="color: #666666">10</span>)
         loss <span style="color: #666666">=</span> optax<span style="color: #666666">.</span>softmax_cross_entropy(logits, target)<span style="color: #666666">.</span>mean()
 
-        <span style="color: #408080; font-style: italic"># logs</span>
+        <span style="color: #3D7B7B; font-style: italic"># logs</span>
         logs <span style="color: #666666">=</span> <span style="color: #008000">dict</span>(
             accuracy<span style="color: #666666">=</span>accuracy,
             loss<span style="color: #666666">=</span>loss,

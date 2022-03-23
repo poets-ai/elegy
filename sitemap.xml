@@ -2,67 +2,67 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://poets-ai.github.io/elegy/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <lastmod>2022-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://poets-ai.github.io/elegy/contributing/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <lastmod>2022-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://poets-ai.github.io/elegy/elegy-module/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <lastmod>2022-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://poets-ai.github.io/elegy/na/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <lastmod>2022-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://poets-ai.github.io/elegy/basic-api/modules-losses-metrics/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <lastmod>2022-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://poets-ai.github.io/elegy/getting-started/high-level-api/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <lastmod>2022-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://poets-ai.github.io/elegy/getting-started/low-level-api/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <lastmod>2022-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://poets-ai.github.io/elegy/guides/contributing/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <lastmod>2022-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://poets-ai.github.io/elegy/low-level-api/basics/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <lastmod>2022-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://poets-ai.github.io/elegy/low-level-api/default-implementation/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <lastmod>2022-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://poets-ai.github.io/elegy/low-level-api/states/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <lastmod>2022-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://poets-ai.github.io/elegy/low-level-api/methods/pred_step/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <lastmod>2022-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://poets-ai.github.io/elegy/low-level-api/methods/test_step/</loc>
-         <lastmod>2022-02-23</lastmod>
+         <lastmod>2022-03-23</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
