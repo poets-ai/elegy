@@ -15,7 +15,7 @@ jobs:
   test:
     name: Run Tests
     if: ${{ !contains(github.event.pull_request.title, 'WIP') }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest 
     strategy:
       matrix:
         python-version: [3.7, 3.8, 3.9]
