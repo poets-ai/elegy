@@ -9,6 +9,7 @@ from .remote_monitor import RemoteMonitor
 from .sigint import SigInt
 from .tensorboard import TensorBoard
 from .terminate_nan import TerminateOnNaN
+from .wandb_callback import WandbCallback
 
 __all__ = [
     "CallbackList",
@@ -21,4 +22,5 @@ __all__ = [
     "RemoteMonitor",
     "CSVLogger",
     "TensorBoard",
+    "WandbCallback"
 ]

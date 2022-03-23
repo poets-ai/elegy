@@ -49,6 +49,8 @@ pre-commit = "^2.15.0"
 datasets = "^1.14.0"
 tf-nightly-cpu = "2.8.0.dev20211103"
 livereload = "^2.6.3"
+wandb = "^0.12.10"
+libclang = "^13.0.0"
 
 [build-system]
 requires = ["poetry>=0.12"]
