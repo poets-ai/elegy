@@ -143,10 +143,18 @@ class DataParallel(DistributedStrategy):
     def from_local(self, model: M) -> M:
         # device_idxs used to inform pmap about the number of devices
         device_idxs = jnp.arange(jax.device_count())
+
+        def device_fn(idx: int, model: M) -> M:
+            # fold rng state so its unique for each device
+            return model.map(
+                lambda key: jax.random.fold_in(key, idx),
+                tx.Rng,
+                inplace=True,
+            )
+
         model = jax.pmap(
-            lambda idx, model: model,
+            device_fn,
             in_axes=(0, None),
-            out_axes=0,
         )(device_idxs, model)
 
         return model
@@ -166,22 +174,13 @@ class DataParallel(DistributedStrategy):
         return data
 
     def lift_key(self, key: jnp.ndarray) -> jnp.ndarray:
-        key = einops.repeat(
-            key,
-            "... -> device ...",
-            device=jax.device_count(),
-        )
-        return key
+        return jax.random.split(key, jax.device_count())
 
     def lift_batch_size(self, batch_size: int) -> int:
         return batch_size * jax.device_count()
 
     def handle_post_init(self, model: M) -> M:
-        return model.map(
-            lambda key: jax.random.fold_in(key, jax.lax.axis_index("device")),
-            tx.Rng,
-            inplace=True,
-        )
+        return model
 
     def handle_metrics(
         self,
