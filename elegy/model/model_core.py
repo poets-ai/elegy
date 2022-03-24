@@ -174,13 +174,22 @@ class DataParallel(DistributedStrategy):
         return data
 
     def lift_key(self, key: jnp.ndarray) -> jnp.ndarray:
-        return jax.random.split(key, jax.device_count())
+        key = einops.repeat(
+            key,
+            "... -> device ...",
+            device=jax.device_count(),
+        )
+        return key
 
     def lift_batch_size(self, batch_size: int) -> int:
         return batch_size * jax.device_count()
 
     def handle_post_init(self, model: M) -> M:
-        return model
+        return model.map(
+            lambda key: jax.random.fold_in(key, jax.lax.axis_index("device")),
+            tx.Rng,
+            inplace=True,
+        )
 
     def handle_metrics(
         self,
