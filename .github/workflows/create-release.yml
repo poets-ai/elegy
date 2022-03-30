@@ -21,7 +21,7 @@ jobs:
         id: setup
         run: |
           # install python dependencies
-          pip install typer==0.4.0
+          pip install typer==0.4.0 click==8.0.3
 
           # variables
           RELEASE_VERSION='${{ github.ref_name }}'
