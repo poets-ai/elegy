@@ -33,8 +33,8 @@ dm-haiku = "^0.0.5"
 mkdocs = "^1.1.2"
 mkdocs-material = "^6.2.7"
 mkdocstrings = "^0.14.0"
-black = {version = "^20.8b1", allow-prereleases = true}
-typer = "^0.3.0"
+black = "^22.3.0"
+typer = "^0.4.1"
 mkdocs-jupyter = { version = "^0.15.1", python = ">=3.7" }
 matplotlib = "^3.3.0"
 debugpy = "^1.0.0-beta.12"
@@ -51,6 +51,7 @@ tf-nightly-cpu = "2.8.0.dev20211103"
 livereload = "^2.6.3"
 libclang = "^13.0.0"
 wandb = "^0.12.10"
+isort = "^5.10.1"
 
 [tool.poetry.extras]
 wandb = ["all"]
