@@ -246,7 +246,7 @@ class ModelMeta(tx.TreeMeta):
         return model
 
 
-class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
+class ModelCore:
 
     seed: tp.Union[int, jnp.ndarray] = 42
     _initialized: bool = False

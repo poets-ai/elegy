@@ -37,7 +37,7 @@ class Model(tp.Generic[U], ModelBase):
 
     # pytree
     module: tp.Optional[U] = tx.node()
-    loss_and_logs: tp.Optional[tx.LossAndLogs]
+    loss_and_logs: tp.Optional[tx.LossesAndMetrics]
     optimizer: tp.Optional[tx.Optimizer]
 
     # static
@@ -315,8 +315,7 @@ class Model(tp.Generic[U], ModelBase):
         return logs, model
 
     def reset_metrics(self) -> None:
-        if self.loss_and_logs is not None:
-            self.loss_and_logs.reset()
+        self.module = self.module.reset_step()
 
     # ----------------------------------------------------------------
     # Model-only methods
@@ -342,22 +341,19 @@ class Model(tp.Generic[U], ModelBase):
             eval_shape: If True, jax.eval_shape is used to calculate all shapes, this avoids actually
                 running the computation as only shapes are calculated (turn off if trying to debug).
         """
-        model = self.local()
+        # model = self.local()
 
-        assert model.module is not None
+        # assert model.module is not None
 
-        if not model.initialized:
-            if inputs is tx.MISSING:
-                raise ValueError(
-                    "`inputs` is required to print the summary of uninitialized Models"
-                )
+        # if not model.initialized:
+        #     if inputs is tx.MISSING:
+        #         raise ValueError(
+        #             "`inputs` is required to print the summary of uninitialized Models"
+        #         )
 
-            model.init_on_batch(inputs)
+        #     model.init_on_batch(inputs)
 
-        summary = model.module.tabulate(
-            inputs=inputs,
-            depth=depth,
-        )
+        summary = self.module.module.tabulate(inputs, summary_depth=depth)
 
         if return_repr:
             return summary

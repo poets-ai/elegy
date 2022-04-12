@@ -472,6 +472,17 @@ python-versions = "*"
 six = ">=1.4.0"
 
 [[package]]
+name = "einop"
+version = "0.0.1"
+description = ""
+category = "main"
+optional = false
+python-versions = ">=3.7,<4.0"
+
+[package.dependencies]
+einops = ">=0.4.0"
+
+[[package]]
 name = "einops"
 version = "0.4.1"
 description = "A new flavour of deep learning operations"
@@ -2719,7 +2730,7 @@ wandb = []
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7,<3.10"
-content-hash = "00340e445da59aa30a1907e1810efaabbd9461d0e59da2fdac6679d0d742aee7"
+content-hash = "3391b03d6c2800e321217af23999799f1c6263592ffdd986ffc7918176405355"
 
 [metadata.files]
 absl-py = [
@@ -3108,6 +3119,10 @@ dm-tree = [
 docker-pycreds = [
     {file = "docker-pycreds-0.4.0.tar.gz", hash = "sha256:6ce3270bcaf404cc4c3e27e4b6c70d3521deae82fb508767870fdbf772d584d4"},
     {file = "docker_pycreds-0.4.0-py2.py3-none-any.whl", hash = "sha256:7266112468627868005106ec19cd0d722702d2b7d5912a28e19b826c3d37af49"},
+]
+einop = [
+    {file = "einop-0.0.1-py3-none-any.whl", hash = "sha256:edff8c3916cf4a22eccd31254d752ec7959388bd6877eb5285eed6ca5170e36b"},
+    {file = "einop-0.0.1.tar.gz", hash = "sha256:15add3732a54eb6c49618be0c59b97163e46ae87aeb5e387d9c418402ea33178"},
 ]
 einops = [
     {file = "einops-0.4.1-py3-none-any.whl", hash = "sha256:932b12bb3176caef629cc513fc8a442338fdbfe1e560794a6e7306dcee65a8af"},

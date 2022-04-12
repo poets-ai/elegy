@@ -13,9 +13,10 @@ import typer
 from datasets.load import load_dataset
 from tqdm import tqdm
 from treex import metrics
-from treex.utils import _check_rejit
 
 import elegy as eg
+from elegy.model.model_full import Model
+from elegy.modules.elegy_module_core import ElegyModuleCore
 
 Batch = tp.Mapping[str, np.ndarray]
 Module = tx.Sequential
@@ -29,7 +30,25 @@ C = tp.TypeVar("C", bound="tp.Callable")
 # LowLevel (jax) -> Intermediate (pt lightning) -> HighLevel (specialized)
 
 
-class ElegyModule(to.Tree, to.Immutable, to.Map, to.Copy):
+def set_training(**fields: bool):
+    def decorator(f: C) -> C:
+        @functools.wraps(f)
+        def wrapper(self: "ElegyModule", *args: tp.Any, **kwargs: tp.Any) -> tp.Any:
+            self = self.replace(
+                **{
+                    field: getattr(self, field).train(mode)
+                    for field, mode in fields.items()
+                }
+            )
+
+            return f(self, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+class ElegyModule(ElegyModuleCore):
     key: jnp.ndarray = tx.node()
 
     def __init__(
@@ -39,6 +58,7 @@ class ElegyModule(to.Tree, to.Immutable, to.Map, to.Copy):
         losses: tp.Any,
         metrics: tp.Any,
     ) -> None:
+        super().__init__()
         self.key = tx.Key(key)
         self.module = tx.Sequential(
             tx.Conv(32, [3, 3], strides=[2, 2]),
@@ -62,20 +82,22 @@ class ElegyModule(to.Tree, to.Immutable, to.Map, to.Copy):
     def __call__(self, *args, **kwargs) -> tp.Any:
         return self.module(*args, **kwargs)
 
+    @set_training(module=True)
     @jax.jit
     @tx.toplevel_mutable
-    def init_step(self: M, x: tp.Any) -> M:
+    def init_on_batch(self: M, key: jnp.ndarray, inputs: tp.Any) -> M:
 
-        init_key, self.key = jax.random.split(self.key)
-        self.module = self.module.init(init_key, x)
+        init_key, self.key = jax.random.split(key)
+        self.module = self.module.init(init_key, inputs)
         self.optimizer = self.optimizer.init(self.module.parameters())
         self.losses_and_metrics = self.losses_and_metrics.reset()
 
         return self
 
+    @set_training(module=True)
     @jax.jit
     @tx.toplevel_mutable
-    def reset_step(self: M) -> M:
+    def reset_metrics(self: M) -> M:
         self.losses_and_metrics = self.losses_and_metrics.reset()
         return self
 
@@ -84,65 +106,78 @@ class ElegyModule(to.Tree, to.Immutable, to.Map, to.Copy):
         self: "ElegyModule",
         params: tp.Optional[Module],
         key: tp.Optional[jnp.ndarray],
-        x: jnp.ndarray,
-        y: jnp.ndarray,
+        inputs: jnp.ndarray,
+        labels: jnp.ndarray,
     ) -> tp.Tuple[jnp.ndarray, "ElegyModule"]:
 
         if params is not None:
             self.module = self.module.merge(params)
 
-        preds, self.module = self.module.apply(key, x)
+        preds, self.module = self.module.apply(key, inputs)
 
         loss, self.losses_and_metrics = self.losses_and_metrics.loss_and_update(
-            target=y,
+            target=labels,
             preds=preds,
         )
 
         return loss, self
 
+    @set_training(module=True)
     @jax.jit
     @tx.toplevel_mutable
-    def train_step(
-        self: M,
-        x: jnp.ndarray,
-        y: jnp.ndarray,
-    ) -> M:
+    def train_on_batch(
+        self: M, inputs: jnp.ndarray, labels: jnp.ndarray
+    ) -> tp.Tuple[Logs, M]:
         print("JITTTTING")
-        self.module = self.module.train()
 
         params = self.module.parameters()
         loss_key, self.key = jax.random.split(self.key)
 
-        grads, self = jax.grad(self.loss_fn, has_aux=True)(params, loss_key, x, y)
+        grads, self = jax.grad(self.loss_fn, has_aux=True)(
+            params, loss_key, inputs, labels
+        )
 
         params, self.optimizer = self.optimizer.update(grads, params)
         self.module = self.module.merge(params)
 
-        return self
+        logs = self.losses_and_metrics.compute_logs()
 
+        return logs, self
+
+    @set_training(module=False)
     @jax.jit
     @tx.toplevel_mutable
-    def test_step(
-        self: M,
-        x: jnp.ndarray,
-        y: jnp.ndarray,
-    ) -> M:
-        self.module = self.module.eval()
-        loss, self = self.loss_fn(None, None, x, y)
+    def test_on_batch(
+        self: M, inputs: jnp.ndarray, labels: jnp.ndarray
+    ) -> tp.Tuple[Logs, M]:
 
-        return self
+        loss, self = self.loss_fn(None, None, inputs, labels)
 
+        logs = self.losses_and_metrics.compute_logs()
+
+        return logs, self
+
+    @set_training(module=False)
     @jax.jit
-    def predict(self, x: jnp.ndarray) -> jnp.ndarray:
+    def predict_on_batch(self: M, inputs: jnp.ndarray) -> tp.Tuple[tp.Any, M]:
         module = self.module.eval()
-        return module(x).argmax(axis=1)
+        outputs = module(inputs).argmax(axis=1)
+
+        return outputs, self
+
+    def tabulate(
+        self,
+        inputs,
+        summary_depth: int = 2,
+    ) -> str:
+        return self.module.tabulate(inputs, summary_depth=summary_depth)
 
 
 # define parameters
 def main(
-    epochs: int = 5,
-    batch_size: int = 64,
-    steps_per_epoch: int = -1,
+    epochs: int = 2,
+    batch_size: int = 32,
+    steps_per_epoch: tp.Optional[int] = None,
     seed: int = 420,
 ):
 
@@ -162,37 +197,34 @@ def main(
         metrics=tx.metrics.Accuracy(),
     )
 
-    module: ElegyModule = module.init_step(X_train[:batch_size])
-
     print("X_train:", X_train.shape, X_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
 
-    model = eg.Model(module)
+    model = Model(module)
 
     model.summary(X_train[:64])
 
     history = model.fit(
         inputs=X_train,
         labels=y_train,
-        epochs=10,
-        steps_per_epoch=100,
-        batch_size=64,
+        epochs=epochs,
+        steps_per_epoch=steps_per_epoch,
+        batch_size=batch_size,
         validation_data=(X_test, y_test),
         shuffle=True,
-        callbacks=[eg.callbacks.TensorBoard("summaries")],
+        callbacks=[eg.callbacks.TensorBoard("summaries/prototype")],
     )
 
     eg.utils.plot_history(history)
 
-    print(model.evaluate(x=X_test, y=y_test))
+    print(model.evaluate(X_test, y_test))
 
     # get random samples
     idxs = np.random.randint(0, 10000, size=(9,))
     x_sample = X_test[idxs]
 
     # get predictions
-    # model = model.local()
-    y_pred = model.predict(x=x_sample)
+    y_pred = model.predict(x_sample)
 
     # plot results
     figure = plt.figure(figsize=(12, 12))

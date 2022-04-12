@@ -23,6 +23,7 @@ tensorboardx = "^2.1"
 wandb = { version = "^0.12.10", optional = true }
 # treex = "^0.6.5"
 treex = {path = "../treex", develop = true}
+einop = "^0.0.1"
 
 [tool.poetry.dev-dependencies]
 jax = "^0.2.24"
