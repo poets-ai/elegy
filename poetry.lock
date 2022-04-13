@@ -378,13 +378,13 @@ xxhash = "*"
 apache-beam = ["apache-beam (>=2.26.0)"]
 audio = ["librosa"]
 benchmarks = ["numpy (==1.18.5)", "tensorflow (==2.3.0)", "torch (==1.6.0)", "transformers (==3.0.2)"]
-dev = ["absl-py", "pytest", "pytest-datadir", "pytest-xdist", "apache-beam (>=2.26.0)", "elasticsearch (<8.0.0)", "aiobotocore", "boto3", "botocore", "faiss-cpu (>=1.6.4)", "fsspec", "moto[server,s3] (==2.0.4)", "rarfile (>=4.0)", "s3fs (==2021.08.1)", "tensorflow (>=2.3,!=2.6.0,!=2.6.1)", "torch", "torchaudio", "soundfile", "transformers", "bs4", "conllu", "h5py", "langdetect", "lxml", "mwparserfromhell", "nltk", "openpyxl", "py7zr", "tldextract", "zstandard", "bert-score (>=0.3.6)", "rouge-score", "sacrebleu", "scipy", "seqeval", "scikit-learn", "jiwer", "sentencepiece", "torchmetrics (==0.6.0)", "mauve-text", "toml (>=0.10.1)", "requests-file (>=1.5.1)", "tldextract (>=3.1.0)", "texttable (>=1.6.3)", "Werkzeug (>=1.0.1)", "six (>=1.15.0,<1.16.0)", "Pillow (>=6.2.1)", "librosa", "wget (>=3.2)", "pytorch-nlp (==0.5.0)", "pytorch-lightning", "fastBPE (==0.1.0)", "fairseq", "black (>=22.0,<23.0)", "flake8 (>=3.8.3)", "isort (>=5.0.0)", "pyyaml (>=5.3.1)", "importlib-resources"]
+dev = ["absl-py", "pytest", "pytest-datadir", "pytest-xdist", "apache-beam (>=2.26.0)", "elasticsearch (<8.0.0)", "aiobotocore", "boto3", "botocore", "faiss-cpu (>=1.6.4)", "fsspec", "moto[s3,server] (==2.0.4)", "rarfile (>=4.0)", "s3fs (==2021.08.1)", "tensorflow (>=2.3,!=2.6.0,!=2.6.1)", "torch", "torchaudio", "soundfile", "transformers", "bs4", "conllu", "h5py", "langdetect", "lxml", "mwparserfromhell", "nltk", "openpyxl", "py7zr", "tldextract", "zstandard", "bert-score (>=0.3.6)", "rouge-score", "sacrebleu", "scipy", "seqeval", "scikit-learn", "jiwer", "sentencepiece", "torchmetrics (==0.6.0)", "mauve-text", "toml (>=0.10.1)", "requests-file (>=1.5.1)", "tldextract (>=3.1.0)", "texttable (>=1.6.3)", "Werkzeug (>=1.0.1)", "six (>=1.15.0,<1.16.0)", "Pillow (>=6.2.1)", "librosa", "wget (>=3.2)", "pytorch-nlp (==0.5.0)", "pytorch-lightning", "fastBPE (==0.1.0)", "fairseq", "black (>=22.0,<23.0)", "flake8 (>=3.8.3)", "isort (>=5.0.0)", "pyyaml (>=5.3.1)", "importlib-resources"]
 docs = ["docutils (==0.16.0)", "recommonmark", "sphinx (==3.1.2)", "sphinx-markdown-tables", "sphinx-rtd-theme (==0.4.3)", "sphinxext-opengraph (==0.4.1)", "sphinx-copybutton", "fsspec (<2021.9.0)", "s3fs", "sphinx-panels", "sphinx-inline-tabs", "myst-parser", "Markdown (!=3.3.5)"]
 quality = ["black (>=22.0,<23.0)", "flake8 (>=3.8.3)", "isort (>=5.0.0)", "pyyaml (>=5.3.1)"]
 s3 = ["fsspec", "boto3", "botocore", "s3fs"]
 tensorflow = ["tensorflow (>=2.2.0,!=2.6.0,!=2.6.1)"]
 tensorflow_gpu = ["tensorflow-gpu (>=2.2.0,!=2.6.0,!=2.6.1)"]
-tests = ["absl-py", "pytest", "pytest-datadir", "pytest-xdist", "apache-beam (>=2.26.0)", "elasticsearch (<8.0.0)", "aiobotocore", "boto3", "botocore", "faiss-cpu (>=1.6.4)", "fsspec", "moto[server,s3] (==2.0.4)", "rarfile (>=4.0)", "s3fs (==2021.08.1)", "tensorflow (>=2.3,!=2.6.0,!=2.6.1)", "torch", "torchaudio", "soundfile", "transformers", "bs4", "conllu", "h5py", "langdetect", "lxml", "mwparserfromhell", "nltk", "openpyxl", "py7zr", "tldextract", "zstandard", "bert-score (>=0.3.6)", "rouge-score", "sacrebleu", "scipy", "seqeval", "scikit-learn", "jiwer", "sentencepiece", "torchmetrics (==0.6.0)", "mauve-text", "toml (>=0.10.1)", "requests-file (>=1.5.1)", "tldextract (>=3.1.0)", "texttable (>=1.6.3)", "Werkzeug (>=1.0.1)", "six (>=1.15.0,<1.16.0)", "Pillow (>=6.2.1)", "librosa", "wget (>=3.2)", "pytorch-nlp (==0.5.0)", "pytorch-lightning", "fastBPE (==0.1.0)", "fairseq", "importlib-resources"]
+tests = ["absl-py", "pytest", "pytest-datadir", "pytest-xdist", "apache-beam (>=2.26.0)", "elasticsearch (<8.0.0)", "aiobotocore", "boto3", "botocore", "faiss-cpu (>=1.6.4)", "fsspec", "moto[s3,server] (==2.0.4)", "rarfile (>=4.0)", "s3fs (==2021.08.1)", "tensorflow (>=2.3,!=2.6.0,!=2.6.1)", "torch", "torchaudio", "soundfile", "transformers", "bs4", "conllu", "h5py", "langdetect", "lxml", "mwparserfromhell", "nltk", "openpyxl", "py7zr", "tldextract", "zstandard", "bert-score (>=0.3.6)", "rouge-score", "sacrebleu", "scipy", "seqeval", "scikit-learn", "jiwer", "sentencepiece", "torchmetrics (==0.6.0)", "mauve-text", "toml (>=0.10.1)", "requests-file (>=1.5.1)", "tldextract (>=3.1.0)", "texttable (>=1.6.3)", "Werkzeug (>=1.0.1)", "six (>=1.15.0,<1.16.0)", "Pillow (>=6.2.1)", "librosa", "wget (>=3.2)", "pytorch-nlp (==0.5.0)", "pytorch-lightning", "fastBPE (==0.1.0)", "fairseq", "importlib-resources"]
 torch = ["torch"]
 vision = ["Pillow (>=6.2.1)"]
 
@@ -913,22 +913,17 @@ tpu = ["jaxlib (==0.1.76)", "libtpu-nightly (==0.1.dev20220128)", "requests"]
 
 [[package]]
 name = "jax-metrics"
-version = "0.0.0"
+version = "0.1.0a0"
 description = ""
 category = "main"
 optional = false
 python-versions = ">=3.7,<3.11"
-develop = true
 
 [package.dependencies]
-certifi = "^2021.10.8"
-einops = "^0.4.0"
-optax = "^0.1.1"
-treeo = "^0.1.2"
-
-[package.source]
-type = "directory"
-url = "../jax-metrics"
+certifi = ">=2021.10.8,<2022.0.0"
+einops = ">=0.4.0,<0.5.0"
+optax = ">=0.1.1,<0.2.0"
+treeo = ">=0.1.2,<0.2.0"
 
 [[package]]
 name = "jaxlib"
@@ -2489,26 +2484,21 @@ typing-extensions = ">=3.7.0"
 
 [[package]]
 name = "treex"
-version = "0.6.10"
+version = "0.7.0a0"
 description = ""
 category = "main"
 optional = false
 python-versions = ">=3.7,<3.11"
-develop = true
 
 [package.dependencies]
-certifi = "^2021.10.8"
-einops = "^0.4.0"
-flax = "^0.4.0"
-jax_metrics = {path = "../jax-metrics", develop = true}
-optax = "^0.1.1"
-PyYAML = "^6.0"
-rich = "^11.2.0"
-treeo = "^0.1.2"
-
-[package.source]
-type = "directory"
-url = "../treex"
+certifi = ">=2021.10.8,<2022.0.0"
+einops = ">=0.4.0,<0.5.0"
+flax = ">=0.4.0,<0.5.0"
+jax_metrics = "0.1.0.a0"
+optax = ">=0.1.1,<0.2.0"
+PyYAML = ">=6.0,<7.0"
+rich = ">=11.2.0,<12.0.0"
+treeo = ">=0.1.2,<0.2.0"
 
 [[package]]
 name = "typed-ast"
@@ -2730,7 +2720,7 @@ wandb = []
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7,<3.10"
-content-hash = "3391b03d6c2800e321217af23999799f1c6263592ffdd986ffc7918176405355"
+content-hash = "9dbec1fb65c3f5a310b76949216fb6e28c9ce5716fe91a305dafce6ef46eb9d6"
 
 [metadata.files]
 absl-py = [
@@ -3349,7 +3339,10 @@ isort = [
 jax = [
     {file = "jax-0.2.28.tar.gz", hash = "sha256:6568f39b00c9eea883c59f334d637e5da44030181094013875aabb702e055b87"},
 ]
-jax-metrics = []
+jax-metrics = [
+    {file = "jax_metrics-0.1.0a0-py3-none-any.whl", hash = "sha256:38920dbcffef4d892878c420ab4801202798e9966c197dea4486975fa8f98a22"},
+    {file = "jax_metrics-0.1.0a0.tar.gz", hash = "sha256:464c9c4154a9e0f7a2e626b785d57fb9366a5907f9bcaed15754f71f3b10b30e"},
+]
 jaxlib = [
     {file = "jaxlib-0.1.76-cp310-none-macosx_10_9_x86_64.whl", hash = "sha256:d910947a9542d76b04c8b04c0c3112dfcbc46cc7735c4393d86917371cea3323"},
     {file = "jaxlib-0.1.76-cp310-none-macosx_11_0_arm64.whl", hash = "sha256:675d608db5d1ee7cbe204bcc236077133e67eb0e17342d03782f6a039b2cbea9"},
@@ -4451,7 +4444,10 @@ treeo = [
     {file = "treeo-0.1.2-py3-none-any.whl", hash = "sha256:e45f020f5d3949745f2a80baf03cdd627f1e37cbbf78283f8710fcb721ebc93d"},
     {file = "treeo-0.1.2.tar.gz", hash = "sha256:fc11b010f0f692946dc5326e99e6b5abad7d0c8e63efbe9042a488d7ee44a7b4"},
 ]
-treex = []
+treex = [
+    {file = "treex-0.7.0a0-py3-none-any.whl", hash = "sha256:fc799bb6216474f516193f9b8af933bbffafc4e093ef1c31f99bfd20460b1af1"},
+    {file = "treex-0.7.0a0.tar.gz", hash = "sha256:986d26c0c68d6ab5f0a647c800964ecbe7742fe1b13f580df8a3ebca78e09958"},
+]
 typed-ast = [
     {file = "typed_ast-1.5.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:183b183b7771a508395d2cbffd6db67d6ad52958a5fdc99f450d954003900266"},
     {file = "typed_ast-1.5.2-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:676d051b1da67a852c0447621fdd11c4e104827417bf216092ec3e286f7da596"},

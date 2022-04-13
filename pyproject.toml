@@ -5,7 +5,7 @@ authors = ["Cristian Garcia <cgarcia.e88@gmail.com>",
            "Carlos Alvarez <candres.alv@gmail.com>",
            "David Cardozo <davidcardozo@berkeley.edu>",
            "Sebastian Arango"]
-version = "0.8.6"
+version = "0.9.0.dev0"
 license = "APACHE"
 readme = "README.md"
 repository = "https://github.com/poets-ai/elegy"
@@ -22,7 +22,7 @@ cloudpickle = "^1.5.0"
 tensorboardx = "^2.1"
 wandb = { version = "^0.12.10", optional = true }
 # treex = "^0.6.5"
-treex = {path = "../treex", develop = true}
+treex = "^0.7.0.a0"
 einop = "^0.0.1"
 
 [tool.poetry.dev-dependencies]

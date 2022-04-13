@@ -14,7 +14,7 @@ from elegy import data, types, utils
 from elegy.callbacks import Callback, CallbackList, History
 from elegy.callbacks.sigint import SigIntMode
 from elegy.data import utils as data_utils
-from elegy.modules.elegy_module_core import ElegyModuleCore
+from elegy.modules.elegy_module_core import CoreModule
 
 M = tp.TypeVar("M", bound="Model")
 U = tp.TypeVar("U", bound="tx.Module")
@@ -36,14 +36,14 @@ class Model:
     Model provides an Estimator-like API similar to Keras.
     """
 
-    module: ElegyModuleCore
+    module: CoreModule
     seed: tp.Union[int, jnp.ndarray]
     history: tp.Optional[History]
     stop_training: bool
 
     def __init__(
         self,
-        module: ElegyModuleCore,
+        module: CoreModule,
         loss: tp.Any = None,
         metrics: tp.Any = None,
         optimizer: tp.Optional[tp.Union[tx.Optimizer, GradientTransformation]] = None,
@@ -84,7 +84,7 @@ class Model:
         self.history = None
         self.stop_training = False
 
-        # TODO: ElegyModuleCore should have a method to set this
+        # TODO: CoreModule should have a method to set this
         # self.optimizer = (
         #     tx.Optimizer(optimizer)
         #     if isinstance(optimizer, GradientTransformation)
@@ -112,7 +112,7 @@ class Model:
 
         if not isinstance(module, type(self.module)):
             raise ValueError(
-                f"`ElegyModuleCore.init_on_batch` must return an instance of {type(self.module)}, got {type(module)}."
+                f"`CoreModule.init_on_batch` must return an instance of {type(self.module)}, got {type(module)}."
             )
 
         self.module = module.mark_initialized()
@@ -143,7 +143,7 @@ class Model:
 
         if not isinstance(module, type(self.module)):
             raise ValueError(
-                f"'ElegyModuleCore.predict_on_batch' must return an instance of {type(self.module)}, got {type(module)}."
+                f"'CoreModule.predict_on_batch' must return an instance of {type(self.module)}, got {type(module)}."
             )
 
         self.module = module
@@ -189,7 +189,7 @@ class Model:
 
         if not isinstance(module, type(self.module)):
             raise ValueError(
-                f"'ElegyModuleCore.test_on_batch' must return an instance of {type(self.module)}, got: {type(module)}"
+                f"'CoreModule.test_on_batch' must return an instance of {type(self.module)}, got: {type(module)}"
             )
 
         self.module = module
@@ -242,7 +242,7 @@ class Model:
 
         if not isinstance(module, type(self.module)):
             raise ValueError(
-                f"`ElegyModuleCore.train_on_batch` must return an instance of {type(self.module)}, got {type(module)}."
+                f"`CoreModule.train_on_batch` must return an instance of {type(self.module)}, got {type(module)}."
             )
 
         self.module = module

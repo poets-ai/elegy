@@ -11,6 +11,8 @@ import treeo as to
 import treex as tx
 import typer
 from datasets.load import load_dataset
+from tqdm import tqdm
+from treex import metrics
 
 import elegy as eg
 from elegy.model.model_full import Model
@@ -84,7 +86,7 @@ class ElegyModule(CoreModule):
     @set_training(module=True)
     @jax.jit
     @tx.toplevel_mutable
-    def init_on_batch(self: M, key: jnp.ndarray, inputs: tp.Any) -> M:
+    def _init_on_batch(self: M, key: jnp.ndarray, inputs: tp.Any) -> M:
 
         init_key, self.key = jax.random.split(key)
         self.module = self.module.init(init_key, inputs)
@@ -92,6 +94,11 @@ class ElegyModule(CoreModule):
         self.losses_and_metrics = self.losses_and_metrics.reset()
 
         return self
+
+    def init_on_batch(self: M, key: jnp.ndarray, inputs: tp.Any) -> M:
+        inputs = ...
+
+        return self._init_on_batch(key, inputs)
 
     @set_training(module=True)
     @jax.jit

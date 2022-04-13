@@ -9,7 +9,7 @@ import treex as tx
 from elegy import types
 
 A = tp.TypeVar("A")
-M = tp.TypeVar("M", bound="ElegyModuleCore")
+M = tp.TypeVar("M", bound="CoreModule")
 Me = tp.TypeVar("Me", bound="tx.Metric")
 
 
@@ -19,7 +19,7 @@ TestStep = tp.Callable[[M, types.Inputs, types.Labels], tp.Tuple[types.Logs, M]]
 TrainStep = tp.Callable[[M, types.Inputs, types.Labels], tp.Tuple[types.Logs, M]]
 
 
-class ElegyModuleCore(to.Tree, to.Immutable, to.Map, to.Copy):
+class CoreModule(to.Tree, to.Immutable, to.Map, to.Copy):
 
     initialized: bool
     distributed_strategy: "DistributedStrategy"
