@@ -246,7 +246,7 @@ class ModelMeta(tx.TreeMeta):
         return model
 
 
-class ModelCore:
+class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
 
     seed: tp.Union[int, jnp.ndarray] = 42
     _initialized: bool = False
@@ -286,22 +286,23 @@ class ModelCore:
         return self._distributed_strategy
 
     def create_jit_functions(self):
-        cls = self.__class__
-        self._jitted_members: tp.Set[str] = set()
+        with tx.make_mutable(self, toplevel_only=True):
+            cls = self.__class__
+            self._jitted_members: tp.Set[str] = set()
 
-        self.init_step_fn = {}
-        self.pred_step_fn = {}
-        self.test_step_fn = {}
-        self.train_step_fn = {}
+            self.init_step_fn = {}
+            self.pred_step_fn = {}
+            self.test_step_fn = {}
+            self.train_step_fn = {}
 
-        self._maybe_build_strategy()
+            self._maybe_build_strategy()
 
-        self._jitted_members |= {
-            "init_step_fn",
-            "pred_step_fn",
-            "test_step_fn",
-            "train_step_fn",
-        }
+            self._jitted_members |= {
+                "init_step_fn",
+                "pred_step_fn",
+                "test_step_fn",
+                "train_step_fn",
+            }
 
     def _maybe_build_strategy(self):
         strategy = self._distributed_strategy
@@ -319,8 +320,9 @@ class ModelCore:
             self.train_step_fn[strategy] = strategy.train_step_fn(self)
 
     def __setstate__(self, d):
-        self.__dict__ = d
-        self.create_jit_functions()
+        with tx.make_mutable(self, toplevel_only=True):
+            self.__dict__ = d
+            self.create_jit_functions()
 
     def __getstate__(self):
         d = self.__dict__.copy()

@@ -161,7 +161,7 @@ class Model(tp.Generic[U], ModelBase):
         model: M = self
 
         if model.module is not None:
-            model.module = model.module.init(key, inputs=inputs)
+            model.module = model.module.init(key, inputs)
 
         if model.optimizer is not None:
             params = model.parameters()
@@ -171,7 +171,7 @@ class Model(tp.Generic[U], ModelBase):
         aux_losses = model.loss_logs()
         aux_metrics = model.metric_logs()
 
-        model.loss_and_logs = tx.LossAndLogs(
+        model.loss_and_logs = tx.LossesAndMetrics(
             losses=losses,
             metrics=metrics,
             aux_losses=aux_losses,
@@ -353,7 +353,22 @@ class Model(tp.Generic[U], ModelBase):
 
         #     model.init_on_batch(inputs)
 
-        summary = self.module.module.tabulate(inputs, summary_depth=depth)
+        model = self.local()
+
+        assert model.module is not None
+
+        if not model.initialized:
+            if inputs is tx.MISSING:
+                raise ValueError(
+                    "`inputs` is required to print the summary of uninitialized Models"
+                )
+
+            model.init_on_batch(inputs)
+
+        summary = model.module.tabulate(
+            inputs=inputs,
+            depth=depth,
+        )
 
         if return_repr:
             return summary

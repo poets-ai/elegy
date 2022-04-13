@@ -352,7 +352,7 @@ class ModelBase(ModelCore):
         """
 
         if batch_size is not None:
-            batch_size = self.module.distributed_strategy.lift_batch_size(batch_size)
+            batch_size = self._distributed_strategy.lift_batch_size(batch_size)
 
         with _MODEL_CONTEXT.callbacks_context(self):
             if inputs is None:
@@ -414,8 +414,10 @@ class ModelBase(ModelCore):
                         ):
                             continue
 
-                        self.module = self.module.train_step(inputs, labels)
-                        tmp_logs = self.module.losses_and_metrics.compute_logs()
+                        tmp_logs = self.train_on_batch(
+                            inputs=inputs,
+                            labels=labels,
+                        )
                         tmp_logs.update({"size": data_handler.batch_size})
 
                         logs = tmp_logs
@@ -583,8 +585,10 @@ class ModelBase(ModelCore):
                         ):
                             continue
 
-                        self.module = self.module.test_step(inputs, labels)
-                        tmp_logs = self.module.losses_and_metrics.compute_logs()
+                        tmp_logs = self.test_on_batch(
+                            inputs=inputs,
+                            labels=labels,
+                        )
                         tmp_logs.update({"size": data_handler.batch_size})
                         logs = tmp_logs
                         callbacks.on_test_batch_end(step, logs)
@@ -693,7 +697,7 @@ class ModelBase(ModelCore):
                         ):
                             continue
 
-                        tmp_batch_outputs = self.module.predict(batch[0])
+                        tmp_batch_outputs = self.predict_on_batch(inputs=batch[0])
                         batch_outputs = tmp_batch_outputs
 
                         if outputs is None:
