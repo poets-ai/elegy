@@ -99,7 +99,7 @@ class KL(eg.Loss):
         mean = preds["mean"]
         std = preds["std"]
 
-        return 0.5 * jnp.mean(-jnp.log(std ** 2) - 1.0 + std ** 2 + mean ** 2, axis=-1)
+        return 0.5 * jnp.mean(-jnp.log(std**2) - 1.0 + std**2 + mean**2, axis=-1)
 
 
 class BinaryCrossEntropy(eg.losses.Crossentropy):
