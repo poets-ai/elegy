@@ -347,3 +347,23 @@ def _walk_treedef(a, b):
 
     for ca, cb in zip(a.children(), b.children()):
         _walk_treedef(ca, cb)
+
+
+def _function_argument_names(f) -> tp.Optional[tp.List[str]]:
+    """
+    Returns:
+        A list of keyword argument names or None if variable keyword arguments (`**kwargs`) are present.
+    """
+    kwarg_names = []
+
+    for k, v in inspect.signature(f).parameters.items():
+        if v.kind == inspect.Parameter.VAR_KEYWORD:
+            return None
+
+        kwarg_names.append(k)
+
+    return kwarg_names
+
+
+def Key(seed: tp.Union[int, jnp.ndarray]) -> jnp.ndarray:
+    return jax.random.PRNGKey(seed) if isinstance(seed, int) else seed

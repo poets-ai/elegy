@@ -51,6 +51,7 @@ RNG = tp.Union[KeySeq, np.ndarray]
 Scalar = tp.Union[np.ndarray, float, int]
 SummaryModule = tp.Any
 SummaryValue = tp.Any
+KeyLike = tp.Union[int, jnp.ndarray]
 
 NetParams = tp.Any
 NetStates = tp.Any

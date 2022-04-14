@@ -14,7 +14,7 @@ from elegy import data, types, utils
 from elegy.callbacks import Callback, CallbackList, History
 from elegy.callbacks.sigint import SigIntMode
 from elegy.data import utils as data_utils
-from elegy.modules.elegy_module_core import CoreModule
+from elegy.modules.core_module import CoreModule
 
 M = tp.TypeVar("M", bound="Model")
 U = tp.TypeVar("U", bound="tx.Module")
@@ -101,8 +101,8 @@ class Model:
     # Model-only methods
     # ----------------------------------------------------------------
 
-    def reset_metrics(self):
-        self.module = self.module.reset_metrics()
+    def reset_step(self):
+        self.module = self.module.reset_step()
 
     def init_on_batch(self, inputs: tp.Any):
 
@@ -332,7 +332,7 @@ class Model:
         callbacks.on_predict_begin()
 
         for _, iterator in data_handler.enumerate_epochs():
-            self.reset_metrics()
+            self.reset_step()
             with data_handler.catch_stop_iteration():
                 for step in data_handler.steps():
                     callbacks.on_predict_batch_begin(step)
@@ -465,7 +465,7 @@ class Model:
 
         logs = {}
         for _, iterator in data_handler.enumerate_epochs():
-            self.reset_metrics()
+            self.reset_step()
             with data_handler.catch_stop_iteration():
                 for step in data_handler.steps():
                     callbacks.on_test_batch_begin(step)
@@ -706,7 +706,7 @@ class Model:
         epoch_logs = {}
 
         for epoch, iterator in data_handler.enumerate_epochs():
-            self.reset_metrics()
+            self.reset_step()
             callbacks.on_epoch_begin(epoch)
             logs = {}
             with data_handler.catch_stop_iteration():

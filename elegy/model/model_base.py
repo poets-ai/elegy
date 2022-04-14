@@ -172,7 +172,7 @@ class ModelBase(ModelCore):
         "predict",
         "predict_on_batch",
         "reset",
-        "reset_metrics",
+        "reset_step",
         "save",
         "summary",
         "test_on_batch",
@@ -398,7 +398,7 @@ class ModelBase(ModelCore):
             epoch_logs = {}
 
             for epoch, iterator in data_handler.enumerate_epochs():
-                self.reset_metrics()
+                self.reset_step()
                 callbacks.on_epoch_begin(epoch)
                 logs = {}
                 with data_handler.catch_stop_iteration():
@@ -573,7 +573,7 @@ class ModelBase(ModelCore):
 
             logs = {}
             for _, iterator in data_handler.enumerate_epochs():
-                self.reset_metrics()
+                self.reset_step()
                 with data_handler.catch_stop_iteration():
                     for step in data_handler.steps():
                         callbacks.on_test_batch_begin(step)
@@ -686,7 +686,7 @@ class ModelBase(ModelCore):
             callbacks.on_predict_begin()
 
             for _, iterator in data_handler.enumerate_epochs():
-                self.reset_metrics()
+                self.reset_step()
                 with data_handler.catch_stop_iteration():
                     for step in data_handler.steps():
                         callbacks.on_predict_batch_begin(step)

@@ -314,7 +314,7 @@ class Model(tp.Generic[U], ModelBase):
 
         return logs, model
 
-    def reset_metrics(self) -> None:
+    def reset_step(self) -> None:
         self.module = self.module.reset_step()
 
     # ----------------------------------------------------------------

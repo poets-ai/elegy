@@ -4,6 +4,7 @@ from functools import partial
 
 import jax
 import jax.numpy as jnp
+import jax_metrics as jm
 import matplotlib.pyplot as plt
 import numpy as np
 import optax
@@ -14,11 +15,11 @@ from datasets.load import load_dataset
 
 import elegy as eg
 from elegy.model.model_full import Model
-from elegy.modules.elegy_module_core import CoreModule
+from elegy.modules.core_module import CoreModule
 
 Batch = tp.Mapping[str, np.ndarray]
 Module = tx.Sequential
-Metric = tx.metrics.Accuracy
+Metric = jm.metrics.Accuracy
 Logs = tp.Mapping[str, jnp.ndarray]
 np.random.seed(420)
 
@@ -48,7 +49,7 @@ def set_training(**fields: bool):
 
 
 class ElegyModule(CoreModule):
-    key: jnp.ndarray = tx.node()
+    key: jnp.ndarray = eg.node()
 
     def __init__(
         self,
@@ -60,6 +61,7 @@ class ElegyModule(CoreModule):
         super().__init__()
         self.key = tx.Key(key)
         self.module = tx.Sequential(
+            lambda x: x.astype(jnp.float32) / 255.0,
             tx.Conv(32, [3, 3], strides=[2, 2]),
             tx.BatchNorm(),
             tx.Dropout(0.05),
@@ -73,7 +75,7 @@ class ElegyModule(CoreModule):
             tx.Linear(10),
         )
         self.optimizer = tx.Optimizer(optimizer)
-        self.losses_and_metrics = tx.LossesAndMetrics(
+        self.losses_and_metrics = jm.LossesAndMetrics(
             losses=losses,
             metrics=metrics,
         )
@@ -96,7 +98,7 @@ class ElegyModule(CoreModule):
     @set_training(module=True)
     @jax.jit
     @tx.toplevel_mutable
-    def reset_metrics(self: M) -> M:
+    def reset_step(self: M) -> M:
         self.losses_and_metrics = self.losses_and_metrics.reset()
         return self
 
@@ -193,7 +195,7 @@ def main(
         key=seed,
         optimizer=optax.adamw(1e-3),
         losses=tx.losses.Crossentropy(),
-        metrics=tx.metrics.Accuracy(),
+        metrics=jm.metrics.Accuracy(),
     )
 
     print("X_train:", X_train.shape, X_train.dtype)

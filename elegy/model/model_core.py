@@ -375,7 +375,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
     ) -> TrainStepOutput[M]:
         raise types.MissingMethod()
 
-    def reset_metrics(self) -> None:
+    def reset_step(self) -> None:
         raise types.MissingMethod()
 
     # ----------------------------------------------------------------

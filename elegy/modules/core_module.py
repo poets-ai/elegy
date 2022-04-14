@@ -41,7 +41,7 @@ class CoreModule(to.Tree, to.Immutable, to.Map, to.Copy):
     # API
     # ---------------------------------------------------------------------------
 
-    def reset_metrics(
+    def reset_step(
         self: M,
     ) -> M:
         raise types.MissingMethod()
