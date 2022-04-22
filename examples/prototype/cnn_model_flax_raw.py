@@ -82,7 +82,13 @@ class ElegyModule(CoreModule):
         return self._module.value
 
     @jax.jit
-    def init_on_batch(self: M, key: jnp.ndarray, inputs: tp.Any) -> M:
+    def init_step(
+        self: M,
+        key: jnp.ndarray,
+        batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
+    ) -> M:
+        inputs, labels = batch
+
         init_key, key = jax.random.split(key)
         variables = self.module.init(init_key, inputs, training=False)
         opt_state = self.optimizer.init(variables["params"])
@@ -151,12 +157,17 @@ class ElegyModule(CoreModule):
         )
 
     @jax.jit
-    def train_on_batch(
-        self: M, inputs: jnp.ndarray, labels: jnp.ndarray
+    def train_step(
+        self: M,
+        batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
+        batch_idx: int,
+        epoch_idx: int,
     ) -> tp.Tuple[Logs, M]:
         print("JITTTTING")
         assert self.key is not None
         assert self.variables is not None
+
+        inputs, labels = batch
 
         params = self.variables["params"]
         loss_key, key = jax.random.split(self.key)
@@ -178,15 +189,25 @@ class ElegyModule(CoreModule):
         )
 
     @jax.jit
-    def test_on_batch(
-        self: M, inputs: jnp.ndarray, labels: jnp.ndarray
+    def test_step(
+        self: M,
+        batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
+        batch_idx: int,
     ) -> tp.Tuple[Logs, M]:
+        inputs, labels = batch
+
         loss, (logs, self) = self.loss_fn(None, None, inputs, labels, training=False)
 
         return logs, self
 
     @jax.jit
-    def predict_on_batch(self: M, inputs: jnp.ndarray) -> tp.Tuple[tp.Any, M]:
+    def predict_step(
+        self: M,
+        batch: jnp.ndarray,
+        batch_idx: int,
+    ) -> tp.Tuple[tp.Any, M]:
+        inputs = batch
+
         outputs = self.module.apply(
             self.variables,
             inputs,
@@ -208,7 +229,7 @@ class ElegyModule(CoreModule):
 
 # define parameters
 def main(
-    epochs: int = 2,
+    epochs: int = 10,
     batch_size: int = 32,
     steps_per_epoch: tp.Optional[int] = None,
     seed: int = 420,
@@ -222,20 +243,15 @@ def main(
     X_test = np.stack(dataset["test"]["image"])[..., None]
     y_test = dataset["test"]["label"]
 
-    # define model
-    module = ElegyModule(
-        module=CNN(),
-        optimizer=optax.adamw(1e-3),
-        # losses=jm.losses.Crossentropy(),
-        # metrics=jm.metrics.Accuracy(),
-    )
-
     print("X_train:", X_train.shape, X_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
 
-    model = Model(module)
-
-    model.summary(X_train[:64])
+    model = Model(
+        ElegyModule(
+            module=CNN(),
+            optimizer=optax.adamw(1e-3),
+        )
+    )
 
     history = model.fit(
         inputs=X_train,

@@ -49,17 +49,16 @@ def set_training(**fields: bool):
 
 
 class ElegyModule(CoreModule):
-    key: jnp.ndarray = eg.node()
+    key: tp.Optional[jnp.ndarray] = eg.node()
 
     def __init__(
         self,
-        key: tp.Union[jnp.ndarray, int],
         optimizer: optax.GradientTransformation,
         losses: tp.Any,
         metrics: tp.Any,
     ) -> None:
         super().__init__()
-        self.key = tx.Key(key)
+        self.key = None
         self.module = tx.Sequential(
             lambda x: x.astype(jnp.float32) / 255.0,
             tx.Conv(32, [3, 3], strides=[2, 2]),
@@ -86,10 +85,18 @@ class ElegyModule(CoreModule):
     @set_training(module=True)
     @jax.jit
     @tx.toplevel_mutable
-    def init_on_batch(self: M, key: jnp.ndarray, inputs: tp.Any) -> M:
+    def init_step(
+        self: M,
+        key: jnp.ndarray,
+        batch: tp.Union[jnp.ndarray, tp.Tuple[jnp.ndarray, jnp.ndarray]],
+    ) -> M:
+        if isinstance(batch, tuple):
+            inputs, _ = batch
+        else:
+            inputs = batch
 
         init_key, self.key = jax.random.split(key)
-        self.module = self.module.init(init_key, inputs)
+        self.module = self.module.init(key=init_key)(inputs)
         self.optimizer = self.optimizer.init(self.module.parameters())
         self.losses_and_metrics = self.losses_and_metrics.reset()
 
@@ -114,7 +121,7 @@ class ElegyModule(CoreModule):
         if params is not None:
             self.module = self.module.merge(params)
 
-        preds, self.module = self.module.apply(key, inputs)
+        preds, self.module = self.module.apply(key=key)(inputs)
 
         loss, self.losses_and_metrics = self.losses_and_metrics.loss_and_update(
             target=labels,
@@ -126,10 +133,17 @@ class ElegyModule(CoreModule):
     @set_training(module=True)
     @jax.jit
     @tx.toplevel_mutable
-    def train_on_batch(
-        self: M, inputs: jnp.ndarray, labels: jnp.ndarray
+    def train_step(
+        self: M,
+        batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
+        batch_idx: int,
+        epoch_idx: int,
     ) -> tp.Tuple[Logs, M]:
         print("JITTTTING")
+
+        assert self.key is not None
+
+        inputs, labels = batch
 
         params = self.module.parameters()
         loss_key, self.key = jax.random.split(self.key)
@@ -148,9 +162,12 @@ class ElegyModule(CoreModule):
     @set_training(module=False)
     @jax.jit
     @tx.toplevel_mutable
-    def test_on_batch(
-        self: M, inputs: jnp.ndarray, labels: jnp.ndarray
+    def test_step(
+        self: M,
+        batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
+        batch_idx: int,
     ) -> tp.Tuple[Logs, M]:
+        inputs, labels = batch
 
         loss, self = self.loss_fn(None, None, inputs, labels)
 
@@ -160,7 +177,13 @@ class ElegyModule(CoreModule):
 
     @set_training(module=False)
     @jax.jit
-    def predict_on_batch(self: M, inputs: jnp.ndarray) -> tp.Tuple[tp.Any, M]:
+    def predict_step(
+        self: M,
+        batch: jnp.ndarray,
+        batch_idx: int,
+    ) -> tp.Tuple[tp.Any, M]:
+        inputs = batch
+
         module = self.module.eval()
         outputs = module(inputs).argmax(axis=1)
 
@@ -192,9 +215,8 @@ def main(
 
     # define model
     module = ElegyModule(
-        key=seed,
         optimizer=optax.adamw(1e-3),
-        losses=tx.losses.Crossentropy(),
+        losses=jm.losses.Crossentropy(),
         metrics=jm.metrics.Accuracy(),
     )
 

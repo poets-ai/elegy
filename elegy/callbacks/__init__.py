@@ -5,6 +5,7 @@ from .early_stopping import EarlyStopping
 from .history import History
 from .lambda_callback import LambdaCallback
 from .model_checkpoint import ModelCheckpoint
+from .module_callback import ModuleCallback
 from .remote_monitor import RemoteMonitor
 from .sigint import SigInt
 from .tensorboard import TensorBoard
@@ -23,4 +24,6 @@ __all__ = [
     "CSVLogger",
     "TensorBoard",
     "WandbCallback",
+    "SigInt",
+    "ModuleCallback",
 ]

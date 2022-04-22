@@ -19,7 +19,17 @@ TestStep = tp.Callable[[M, types.Inputs, types.Labels], tp.Tuple[types.Logs, M]]
 TrainStep = tp.Callable[[M, types.Inputs, types.Labels], tp.Tuple[types.Logs, M]]
 
 
-class CoreModule(to.Tree, to.Immutable, to.Map, to.Copy):
+class CoreModuleMeta(to.TreeMeta):
+    def construct(cls, obj: M, *args, **kwargs) -> M:
+        obj = super().construct(obj, *args, **kwargs)
+
+        if not hasattr(obj, "_called_init"):
+            CoreModule.__init__(obj)
+
+        return obj
+
+
+class CoreModule(to.Tree, to.Immutable, to.Map, to.Copy, metaclass=CoreModuleMeta):
 
     initialized: bool
     distributed_strategy: "DistributedStrategy"
@@ -36,6 +46,7 @@ class CoreModule(to.Tree, to.Immutable, to.Map, to.Copy):
         self.distributed_strategy = (
             distributed_strategy if distributed_strategy is not None else Eager()
         )
+        self._called_init = None
 
     # ---------------------------------------------------------------------------
     # API
@@ -46,30 +57,32 @@ class CoreModule(to.Tree, to.Immutable, to.Map, to.Copy):
     ) -> M:
         raise types.MissingMethod()
 
-    def init_on_batch(
+    def init_step(
         self: M,
         key: jnp.ndarray,
         inputs: tp.Any,
     ) -> M:
         raise types.MissingMethod()
 
-    def predict_on_batch(
+    def predict_step(
         self: M,
-        inputs: types.Inputs,
+        batch: tp.Any,
+        batch_idx: int,
     ) -> tp.Tuple[types.Outputs, M]:
         raise types.MissingMethod()
 
-    def test_on_batch(
+    def test_step(
         self: M,
-        inputs: types.Inputs,
-        labels: types.Labels,
+        batch: tp.Any,
+        batch_idx: int,
     ) -> tp.Tuple[types.Logs, M]:
         raise types.MissingMethod()
 
-    def train_on_batch(
+    def train_step(
         self: M,
-        inputs: types.Inputs,
-        labels: types.Labels,
+        batch: types.Inputs,
+        batch_idx: int,
+        epoch_idx: int,
     ) -> tp.Tuple[types.Logs, M]:
         raise types.MissingMethod()
 
@@ -95,6 +108,191 @@ class CoreModule(to.Tree, to.Immutable, to.Map, to.Copy):
         distributed_strategy: "DistributedStrategy",
     ) -> M:
         return self.replace(distributed_strategy=distributed_strategy)
+
+    # ---------------------------------------------------------------------------
+    # Callback Methods
+    # ---------------------------------------------------------------------------
+
+    def on_epoch_begin(self: M, epoch: int, logs: tp.Optional[types.Logs] = None) -> M:
+        """Called at the end of an epoch.
+
+        Subclasses should override for any actions to run. This function should only
+        be called during TRAIN mode.
+
+        Arguments:
+            epoch: integer, index of epoch.
+            logs: dict, metric results for this training epoch, and for the
+                validation epoch if validation is performed. Validation result keys
+                are prefixed with `val_`.
+        """
+        return self
+
+    def on_epoch_end(self: M, epoch: int, logs: tp.Optional[types.Logs] = None) -> M:
+        """Called at the end of an epoch.
+
+        Subclasses should override for any actions to run. This function should only
+        be called during TRAIN mode.
+
+        Arguments:
+            epoch: integer, index of epoch.
+            logs: dict, metric results for this training epoch, and for the
+                validation epoch if validation is performed. Validation result keys
+                are prefixed with `val_`.
+        """
+        return self
+
+    def on_train_batch_begin(
+        self: M, batch: int, logs: tp.Optional[types.Logs] = None
+    ) -> M:
+        """Called at the beginning of a training batch in `fit` methods.
+
+        Subclasses should override for any actions to run.
+
+        Arguments:
+            batch: integer, index of batch within the current epoch.
+            logs: dict. Has keys `batch` and `size` representing the current batch
+                number and the size of the batch.
+        """
+        return self
+
+    def on_train_batch_end(
+        self: M, batch: int, logs: tp.Optional[types.Logs] = None
+    ) -> M:
+        """Called at the end of a training batch in `fit` methods.
+
+        Subclasses should override for any actions to run.
+
+        Arguments:
+            batch: integer, index of batch within the current epoch.
+            logs: dict. Metric results for this batch.
+        """
+        return self
+
+    def on_test_batch_begin(
+        self: M, batch: int, logs: tp.Optional[types.Logs] = None
+    ) -> M:
+        """Called at the beginning of a batch in `evaluate` methods.
+
+        Also called at the beginning of a validation batch in the `fit`
+        methods, if validation data is provided.
+
+        Subclasses should override for any actions to run.
+
+        Arguments:
+            batch: integer, index of batch within the current epoch.
+            logs: dict. Has keys `batch` and `size` representing the current batch
+                number and the size of the batch.
+        """
+        return self
+
+    def on_test_batch_end(
+        self: M, batch: int, logs: tp.Optional[types.Logs] = None
+    ) -> M:
+        """Called at the end of a batch in `evaluate` methods.
+
+        Also called at the end of a validation batch in the `fit`
+        methods, if validation data is provided.
+
+        Subclasses should override for any actions to run.
+
+        Arguments:
+            batch: integer, index of batch within the current epoch.
+            logs: dict. Metric results for this batch.
+        """
+        return self
+
+    def on_predict_batch_begin(
+        self: M, batch: int, logs: tp.Optional[types.Logs] = None
+    ) -> M:
+        """Called at the beginning of a batch in `predict` methods.
+
+        Subclasses should override for any actions to run.
+
+        Arguments:
+            batch: integer, index of batch within the current epoch.
+            logs: dict. Has keys `batch` and `size` representing the current batch
+                number and the size of the batch.
+        """
+        return self
+
+    def on_predict_batch_end(
+        self: M, batch: int, logs: tp.Optional[types.Logs] = None
+    ) -> M:
+        """Called at the end of a batch in `predict` methods.
+
+        Subclasses should override for any actions to run.
+
+        Arguments:
+            batch: integer, index of batch within the current epoch.
+            logs: dict. Metric results for this batch.
+        """
+        return self
+
+    def on_train_begin(self: M, logs: tp.Optional[types.Logs] = None) -> M:
+        """Called at the beginning of training.
+
+        Subclasses should override for any actions to run.
+
+        Arguments:
+            logs: dict. Currently no data is passed to this argument for this method
+                but that may change in the future.
+        """
+        return self
+
+    def on_train_end(self: M, logs: tp.Optional[types.Logs] = None) -> M:
+        """Called at the end of training.
+
+        Subclasses should override for any actions to run.
+
+        Arguments:
+            logs: dict. Currently no data is passed to this argument for this method
+                but that may change in the future.
+        """
+        return self
+
+    def on_test_begin(self: M, logs: tp.Optional[types.Logs] = None) -> M:
+        """Called at the beginning of evaluation or validation.
+
+        Subclasses should override for any actions to run.
+
+        Arguments:
+            logs: dict. Currently no data is passed to this argument for this method
+                but that may change in the future.
+        """
+        return self
+
+    def on_test_end(self: M, logs: tp.Optional[types.Logs] = None) -> M:
+        """Called at the end of evaluation or validation.
+
+        Subclasses should override for any actions to run.
+
+        Arguments:
+            logs: dict. Currently no data is passed to this argument for this method
+                but that may change in the future.
+        """
+        return self
+
+    def on_predict_begin(self: M, logs: tp.Optional[types.Logs] = None) -> M:
+        """Called at the beginning of prediction.
+
+        Subclasses should override for any actions to run.
+
+        Arguments:
+            logs: dict. Currently no data is passed to this argument for this method
+                but that may change in the future.
+        """
+        return self
+
+    def on_predict_end(self: M, logs: tp.Optional[types.Logs] = None) -> M:
+        """Called at the end of prediction.
+
+        Subclasses should override for any actions to run.
+
+        Arguments:
+            logs: dict. Currently no data is passed to this argument for this method
+                but that may change in the future.
+        """
+        return self
 
 
 class DistributedStrategy(ABC):

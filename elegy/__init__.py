@@ -27,3 +27,5 @@ from .model.model_core import (
 )
 from .types import KeySeq
 from .utils import inject_dependencies
+from elegy.modules.core_module import CoreModule
+from elegy.model import model_full

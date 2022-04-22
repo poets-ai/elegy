@@ -12,32 +12,32 @@ import elegy.modules.core_module as cm
 @dataclass(unsafe_hash=True)
 class Eager(cm.DistributedStrategy):
     def init_step_fn(self, model: cm.M) -> cm.InitStep[cm.M]:
-        return model.__class__.init_on_batch
+        return model.__class__.init_step
 
     def pred_step_fn(self, model: cm.M) -> cm.PredStep[cm.M]:
-        return model.__class__.predict_on_batch
+        return model.__class__.predict_step
 
     def test_step_fn(self, model: cm.M) -> cm.TestStep[cm.M]:
-        return model.__class__.test_on_batch
+        return model.__class__.test_step
 
     def train_step_fn(self, model: cm.M) -> cm.TrainStep[cm.M]:
-        return model.__class__.train_on_batch
+        return model.__class__.train_step
 
 
 @dataclass(unsafe_hash=True)
 class JIT(cm.DistributedStrategy):
     # donate 'model' memory buffer since we return an updated model
     def init_step_fn(self, model: cm.M) -> cm.InitStep[cm.M]:
-        return jax.jit(model.__class__.init_on_batch, donate_argnums=0)
+        return jax.jit(model.__class__.init_step, donate_argnums=0)
 
     def pred_step_fn(self, model: cm.M) -> cm.PredStep[cm.M]:
-        return jax.jit(model.__class__.predict_on_batch, donate_argnums=0)
+        return jax.jit(model.__class__.predict_step, donate_argnums=0)
 
     def test_step_fn(self, model: cm.M) -> cm.TestStep[cm.M]:
-        return jax.jit(model.__class__.test_on_batch, donate_argnums=0)
+        return jax.jit(model.__class__.test_step, donate_argnums=0)
 
     def train_step_fn(self, model: cm.M) -> cm.TrainStep[cm.M]:
-        return jax.jit(model.__class__.train_on_batch, donate_argnums=0)
+        return jax.jit(model.__class__.train_step, donate_argnums=0)
 
 
 @dataclass(unsafe_hash=True)
@@ -105,21 +105,21 @@ class DataParallel(cm.DistributedStrategy):
 
     def init_step_fn(self, model: cm.M) -> cm.InitStep[cm.M]:
         return jax.pmap(
-            model.__class__.init_on_batch,
+            model.__class__.init_step,
             axis_name="device",
             donate_argnums=0,
         )
 
     def pred_step_fn(self, model: cm.M) -> cm.PredStep[cm.M]:
         return jax.pmap(
-            model.__class__.predict_on_batch,
+            model.__class__.predict_step,
             axis_name="device",
             donate_argnums=0,
         )
 
     def test_step_fn(self, model: cm.M) -> cm.TestStep[cm.M]:
         return jax.pmap(
-            model.__class__.test_on_batch,
+            model.__class__.test_step,
             axis_name="device",
             out_axes=(0, None, 0),  # None = logs not replicated
             donate_argnums=0,
@@ -127,7 +127,7 @@ class DataParallel(cm.DistributedStrategy):
 
     def train_step_fn(self, model: cm.M) -> cm.TrainStep[cm.M]:
         return jax.pmap(
-            model.__class__.train_on_batch,
+            model.__class__.train_step,
             axis_name="device",
             out_axes=(None, 0),  # None = logs not replicated
             donate_argnums=0,

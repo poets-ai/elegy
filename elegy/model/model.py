@@ -3,6 +3,7 @@ import typing as tp
 import flax
 import jax
 import jax.numpy as jnp
+import jax_metrics as jm
 import numpy as np
 import treex as tx
 from optax import GradientTransformation
@@ -37,7 +38,7 @@ class Model(tp.Generic[U], ModelBase):
 
     # pytree
     module: tp.Optional[U] = tx.node()
-    loss_and_logs: tp.Optional[tx.LossesAndMetrics]
+    loss_and_logs: tp.Optional[jm.LossesAndMetrics]
     optimizer: tp.Optional[tx.Optimizer]
 
     # static
@@ -171,7 +172,7 @@ class Model(tp.Generic[U], ModelBase):
         aux_losses = model.loss_logs()
         aux_metrics = model.metric_logs()
 
-        model.loss_and_logs = tx.LossesAndMetrics(
+        model.loss_and_logs = jm.LossesAndMetrics(
             losses=losses,
             metrics=metrics,
             aux_losses=aux_losses,

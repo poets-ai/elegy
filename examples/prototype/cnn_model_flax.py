@@ -84,7 +84,16 @@ class ElegyModule(CoreModule):
         self.optimizer = eg.Optimizer(optimizer)
 
     @jax.jit
-    def init_on_batch(self: M, key: jnp.ndarray, inputs: tp.Any) -> M:
+    def init_step(
+        self: M,
+        key: jnp.ndarray,
+        batch: tp.Union[jnp.ndarray, tp.Tuple[jnp.ndarray, jnp.ndarray]],
+    ) -> M:
+        if isinstance(batch, tuple):
+            inputs, _ = batch
+        else:
+            inputs = batch
+
         init_key, key = jax.random.split(key)
         module = self.module.init(init_key, inputs, training=False)
         optimizer = self.optimizer.init(module["params"])
@@ -134,11 +143,16 @@ class ElegyModule(CoreModule):
         )
 
     @jax.jit
-    def train_on_batch(
-        self: M, inputs: jnp.ndarray, labels: jnp.ndarray
+    def train_step(
+        self: M,
+        batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
+        batch_idx: int,
+        epoch_idx: int,
     ) -> tp.Tuple[Logs, M]:
         print("JITTTTING")
         assert self.key is not None
+
+        inputs, labels = batch
 
         params = self.module["params"]
         loss_key, key = jax.random.split(self.key)
@@ -159,9 +173,13 @@ class ElegyModule(CoreModule):
         )
 
     @jax.jit
-    def test_on_batch(
-        self: M, inputs: jnp.ndarray, labels: jnp.ndarray
+    def test_step(
+        self: M,
+        batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
+        batch_idx: int,
     ) -> tp.Tuple[Logs, M]:
+        inputs, labels = batch
+
         loss, self = self.loss_fn(None, None, inputs, labels, training=False)
 
         logs = self.losses_and_metrics.compute_logs()
@@ -169,7 +187,12 @@ class ElegyModule(CoreModule):
         return logs, self
 
     @jax.jit
-    def predict_on_batch(self: M, inputs: jnp.ndarray) -> tp.Tuple[tp.Any, M]:
+    def predict_step(
+        self: M,
+        batch: jnp.ndarray,
+        batch_idx: int,
+    ) -> tp.Tuple[tp.Any, M]:
+        inputs = batch
         outputs, module = self.module.apply(
             None,
             inputs,
@@ -189,7 +212,7 @@ class ElegyModule(CoreModule):
 
 # define parameters
 def main(
-    epochs: int = 2,
+    epochs: int = 10,
     batch_size: int = 32,
     steps_per_epoch: tp.Optional[int] = None,
     seed: int = 420,
@@ -205,7 +228,6 @@ def main(
 
     # define model
     module = ElegyModule(
-        key=jax.random.PRNGKey(seed),
         module=CNN(),
         optimizer=optax.adamw(1e-3),
         losses=jm.losses.Crossentropy(),
@@ -216,8 +238,6 @@ def main(
     print("X_test:", X_test.shape, X_test.dtype)
 
     model = Model(module)
-
-    model.summary(X_train[:64])
 
     history = model.fit(
         inputs=X_train,

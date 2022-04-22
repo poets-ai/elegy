@@ -104,11 +104,11 @@ class Model:
     def reset_step(self):
         self.module = self.module.reset_step()
 
-    def init_on_batch(self, inputs: tp.Any):
+    def init_on_batch(self, batch: tp.Any):
 
         key = tx.Key(self.seed)
 
-        module = self.module.init_on_batch(key, inputs)
+        module = self.module.init_step(key, batch)
 
         if not isinstance(module, type(self.module)):
             raise ValueError(
@@ -116,6 +116,25 @@ class Model:
             )
 
         self.module = module.mark_initialized()
+
+    def _make_predict_step(self, batch: tp.Any, batch_idx: int) -> tp.Any:
+
+        if not self.module.initialized:
+            self.init_on_batch(batch)
+
+        # do this after init_on_batch()
+        batch = self.module.distributed_strategy.lift_data(batch)
+
+        outputs, module = self.module.predict_step(batch, batch_idx)
+
+        if not isinstance(module, type(self.module)):
+            raise ValueError(
+                f"'CoreModule.predict_on_batch' must return an instance of {type(self.module)}, got {type(module)}."
+            )
+
+        self.module = module
+
+        return outputs
 
     def predict_on_batch(self, inputs: tp.Any) -> tp.Any:
         """
@@ -133,22 +152,30 @@ class Model:
             ValueError: In case of mismatch between given number of inputs and
                 expectations of the model.
         """
+        raise NotImplementedError()
+
+    def _make_test_step(
+        self,
+        batch: tp.Any,
+        batch_idx: int,
+    ) -> types.Logs:
+
         if not self.module.initialized:
-            self.init_on_batch(inputs)
+            self.init_on_batch(batch)
 
         # do this after init_on_batch()
-        inputs = self.module.distributed_strategy.lift_data(inputs)
+        batch = self.module.distributed_strategy.lift_data(batch)
 
-        outputs, module = self.module.predict_on_batch(inputs)
+        logs, module = self.module.test_step(batch, batch_idx)
 
         if not isinstance(module, type(self.module)):
             raise ValueError(
-                f"'CoreModule.predict_on_batch' must return an instance of {type(self.module)}, got {type(module)}."
+                f"'CoreModule.test_on_batch' must return an instance of {type(self.module)}, got: {type(module)}"
             )
 
         self.module = module
 
-        return outputs
+        return logs
 
     def test_on_batch(
         self,
@@ -179,17 +206,26 @@ class Model:
         Raises:
             ValueError: In case of invalid user-provided arguments.
         """
+        raise NotImplementedError()
+
+    def _make_train_step(
+        self,
+        batch: tp.Any,
+        batch_idx: int,
+        epoch_idx: int,
+    ) -> types.Logs:
+
         if not self.module.initialized:
-            self.init_on_batch(inputs)
+            self.init_on_batch(batch)
 
         # do this after init_on_batch()
-        inputs, labels = self.module.distributed_strategy.lift_data((inputs, labels))
+        batch = self.module.distributed_strategy.lift_data(batch)
 
-        logs, module = self.module.test_on_batch(inputs, labels)
+        logs, module = self.module.train_step(batch, batch_idx, epoch_idx)
 
         if not isinstance(module, type(self.module)):
             raise ValueError(
-                f"'CoreModule.test_on_batch' must return an instance of {type(self.module)}, got: {type(module)}"
+                f"`CoreModule.train_on_batch` must return an instance of {type(self.module)}, got {type(module)}."
             )
 
         self.module = module
@@ -231,23 +267,7 @@ class Model:
         Raises:
             ValueError: In case of invalid user-provided arguments.
         """
-
-        if not self.module.initialized:
-            self.init_on_batch(inputs)
-
-        # do this after init_on_batch()
-        inputs, labels = self.module.distributed_strategy.lift_data((inputs, labels))
-
-        logs, module = self.module.train_on_batch(inputs, labels)
-
-        if not isinstance(module, type(self.module)):
-            raise ValueError(
-                f"`CoreModule.train_on_batch` must return an instance of {type(self.module)}, got {type(module)}."
-            )
-
-        self.module = module
-
-        return logs
+        raise NotImplementedError()
 
     def predict(
         self,
@@ -323,6 +343,8 @@ class Model:
                 callbacks,
                 add_history=True,
                 add_progbar=verbose != 0,
+                sigint_mode=SigIntMode.PREDICT,
+                add_module=True,
                 model=self,
                 verbose=verbose,
                 epochs=1,
@@ -343,7 +365,10 @@ class Model:
                     ):
                         continue
 
-                    batch_outputs = self.predict_on_batch(batch[0])
+                    if isinstance(batch, (tuple, list)) and len(batch) == 1:
+                        batch = batch[0]
+
+                    batch_outputs = self._make_predict_step(batch, step)
 
                     if outputs is None:
                         outputs = data.map_structure(
@@ -362,6 +387,11 @@ class Model:
                         {"outputs": batch_outputs, "size": data_handler.batch_size},
                     )
 
+                    if self.stop_training:
+                        break
+                if self.stop_training:
+                    break
+
         callbacks.on_predict_end()
 
         all_outputs = data.map_structure(jnp.concatenate, outputs)
@@ -370,8 +400,8 @@ class Model:
 
     def evaluate(
         self,
-        x: tp.Optional[tp.Any] = None,
-        y: tp.Optional[tp.Any] = None,
+        inputs: tp.Optional[tp.Any] = None,
+        labels: tp.Optional[tp.Any] = None,
         verbose: int = 1,
         batch_size: tp.Optional[int] = 32,
         sample_weight: tp.Optional[np.ndarray] = None,
@@ -384,7 +414,7 @@ class Model:
         Computation is done in batches.
 
         Arguments:
-            x: Input data. It could be:
+            inputs: Input data. It could be:
 
                 - A Numpy or Jax array (or array-like), or a list of arrays
                     (in case the model has multiple inputs).
@@ -397,7 +427,7 @@ class Model:
                 unpacking behavior for iterator types generator
                 is given in the `Unpacking behavior for iterator-like inputs` section
                 of `Model.fit`.
-            y: Target data. Like the input data `x`,
+            labels: Target data. Like the input data `x`,
                 it could be either Numpy or Jax array(s).
                 It should be consistent with `x`. If `x` is a generator,
                 `y` should not be specified (since targets will be obtained from `x`).
@@ -433,12 +463,12 @@ class Model:
         if batch_size is not None:
             batch_size = self.module.distributed_strategy.lift_batch_size(batch_size)
 
-        if x is None:
-            x = {}
+        if inputs is None:
+            inputs = {}
 
         data_handler = data.DataHandler(
-            x=x,
-            y=y,
+            x=inputs,
+            y=labels,
             sample_weight=sample_weight,
             batch_size=batch_size,
             steps_per_epoch=steps,
@@ -455,6 +485,7 @@ class Model:
                 add_history=True,
                 add_progbar=verbose != 0,
                 sigint_mode=SigIntMode.TEST,
+                add_module=True,
                 model=self,
                 verbose=verbose,
                 epochs=1,
@@ -470,14 +501,17 @@ class Model:
                 for step in data_handler.steps():
                     callbacks.on_test_batch_begin(step)
                     batch = next(iterator)
-                    inputs, labels, _ = data.unpack_x_y_sample_weight(batch)
+                    # inputs, labels, _ = data.unpack_x_y_sample_weight(batch)
 
                     if drop_remaining and not data_utils.has_batch_size(
                         batch, data_handler.batch_size
                     ):
                         continue
 
-                    tmp_logs = self.test_on_batch(inputs, labels)
+                    if isinstance(batch, (tuple, list)) and len(batch) == 1:
+                        batch = batch[0]
+
+                    tmp_logs = self._make_test_step(batch, step)
                     tmp_logs.update({"size": data_handler.batch_size})
                     logs = tmp_logs
                     callbacks.on_test_batch_end(step, logs)
@@ -495,6 +529,7 @@ class Model:
         self,
         inputs: tp.Optional[tp.Any] = None,
         labels: tp.Optional[tp.Any] = None,
+        sample_weight: tp.Optional[tp.Any] = None,
         batch_size: tp.Optional[int] = 32,
         epochs: int = 1,
         verbose: int = 1,
@@ -679,7 +714,7 @@ class Model:
         data_handler = data.DataHandler(
             x=inputs,
             y=labels,
-            # sample_weight=sample_weight,
+            sample_weight=sample_weight,
             batch_size=batch_size,
             steps_per_epoch=steps_per_epoch,
             initial_epoch=initial_epoch,
@@ -694,6 +729,7 @@ class Model:
                 add_history=True,
                 add_progbar=verbose != 0,
                 sigint_mode=SigIntMode.TRAIN,
+                add_module=True,
                 model=self,
                 verbose=verbose,
                 epochs=epochs,
@@ -715,14 +751,16 @@ class Model:
 
                     callbacks.on_train_batch_begin(step)
                     batch = next(iterator)
-                    inputs, labels, _ = data.unpack_x_y_sample_weight(batch)
 
                     if drop_remaining and not data_utils.has_batch_size(
                         batch, data_handler.batch_size
                     ):
                         continue
 
-                    tmp_logs = self.train_on_batch(inputs, labels)
+                    if isinstance(batch, (tuple, list)) and len(batch) == 1:
+                        batch = batch[0]
+
+                    tmp_logs = self._make_train_step(batch, step, epoch)
                     tmp_logs.update({"size": data_handler.batch_size})
 
                     logs = tmp_logs
@@ -745,14 +783,17 @@ class Model:
                 and self._should_eval(epoch, validation_freq)
                 and not self.stop_training
             ):
-                val_inputs, val_lables, _ = data.unpack_x_y_sample_weight(
-                    validation_data
-                )
+                (
+                    val_inputs,
+                    val_lables,
+                    val_sample_weights,
+                ) = data.unpack_x_y_sample_weight(validation_data)
                 # val_inputs, val_lables = validation_data
                 try:
                     val_logs = self.evaluate(
-                        x=val_inputs,
-                        y=val_lables,
+                        inputs=val_inputs,
+                        labels=val_lables,
+                        sample_weight=val_sample_weights,
                         batch_size=validation_batch_size or batch_size,
                         steps=validation_steps,
                         callbacks=callbacks,
