@@ -81,7 +81,7 @@ class DistributedStrategy(ABC):
         ...
 
     @abstractmethod
-    def pred_step_fn(self, model: M) -> PredStep[M]:
+    def predict_step_fn(self, model: M) -> PredStep[M]:
         ...
 
     @abstractmethod
@@ -112,7 +112,7 @@ class Eager(DistributedStrategy):
     def init_step_fn(self, model: M) -> InitStep[M]:
         return model.__class__._static_init_step
 
-    def pred_step_fn(self, model: M) -> PredStep[M]:
+    def predict_step_fn(self, model: M) -> PredStep[M]:
         return model.__class__._static_pred_step
 
     def test_step_fn(self, model: M) -> TestStep[M]:
@@ -128,7 +128,7 @@ class JIT(DistributedStrategy):
     def init_step_fn(self, model: M) -> InitStep[M]:
         return jax.jit(model.__class__._static_init_step, donate_argnums=0)
 
-    def pred_step_fn(self, model: M) -> PredStep[M]:
+    def predict_step_fn(self, model: M) -> PredStep[M]:
         return jax.jit(model.__class__._static_pred_step, donate_argnums=0)
 
     def test_step_fn(self, model: M) -> TestStep[M]:
@@ -208,7 +208,7 @@ class DataParallel(DistributedStrategy):
             donate_argnums=0,
         )
 
-    def pred_step_fn(self, model: M) -> PredStep[M]:
+    def predict_step_fn(self, model: M) -> PredStep[M]:
         return jax.pmap(
             model.__class__._static_pred_step,
             axis_name="device",
@@ -253,7 +253,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
     _distributed_strategy: DistributedStrategy = JIT()
 
     init_step_fn: tp.Dict[DistributedStrategy, InitStep]
-    pred_step_fn: tp.Dict[DistributedStrategy, PredStep]
+    predict_step_fn: tp.Dict[DistributedStrategy, PredStep]
     test_step_fn: tp.Dict[DistributedStrategy, TestStep]
     train_step_fn: tp.Dict[DistributedStrategy, TrainStep]
 
@@ -291,7 +291,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
             self._jitted_members: tp.Set[str] = set()
 
             self.init_step_fn = {}
-            self.pred_step_fn = {}
+            self.predict_step_fn = {}
             self.test_step_fn = {}
             self.train_step_fn = {}
 
@@ -299,7 +299,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
 
             self._jitted_members |= {
                 "init_step_fn",
-                "pred_step_fn",
+                "predict_step_fn",
                 "test_step_fn",
                 "train_step_fn",
             }
@@ -309,13 +309,13 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
 
         if (
             strategy not in self.init_step_fn
-            or strategy not in self.pred_step_fn
+            or strategy not in self.predict_step_fn
             or strategy not in self.test_step_fn
             or strategy not in self.train_step_fn
         ):
             # build strategy functions
             self.init_step_fn[strategy] = strategy.init_step_fn(self)
-            self.pred_step_fn[strategy] = strategy.pred_step_fn(self)
+            self.predict_step_fn[strategy] = strategy.predict_step_fn(self)
             self.test_step_fn[strategy] = strategy.test_step_fn(self)
             self.train_step_fn[strategy] = strategy.train_step_fn(self)
 
@@ -500,8 +500,8 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
 
         self.eval(inplace=True)
 
-        pred_step_fn = self.pred_step_fn[self._distributed_strategy]
-        y_pred, model = pred_step_fn(self, inputs)
+        predict_step_fn = self.predict_step_fn[self._distributed_strategy]
+        y_pred, model = predict_step_fn(self, inputs)
 
         if not isinstance(model, type(self)):
             raise ValueError(

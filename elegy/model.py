@@ -1,20 +1,18 @@
-import pickle
 import typing as tp
-from copy import copy
-from dataclasses import dataclass
-from pathlib import Path
 
-import jax
 import jax.numpy as jnp
+import jax_metrics as jm
 import numpy as np
 import treex as tx
+import typing_extensions as tpe
 from optax import GradientTransformation
 
 from elegy import data, types, utils
 from elegy.callbacks import Callback, CallbackList, History
 from elegy.callbacks.sigint import SigIntMode
 from elegy.data import utils as data_utils
-from elegy.modules.core_module import CoreModule
+from elegy.modules.module import Module
+from elegy.strategies import Strategy
 
 M = tp.TypeVar("M", bound="Model")
 U = tp.TypeVar("U", bound="tx.Module")
@@ -31,24 +29,29 @@ except (ImportError, ModuleNotFoundError):
     HaikuModule = tp.cast(tp.Any, None)
 
 
+@tpe.runtime_checkable
+class HasDistributedStrategy(tpe.Protocol):
+    strategy: Strategy
+
+
 class Model:
     """
     Model provides an Estimator-like API similar to Keras.
     """
 
-    module: CoreModule
+    module: Module
     seed: tp.Union[int, jnp.ndarray]
     history: tp.Optional[History]
     stop_training: bool
 
     def __init__(
         self,
-        module: CoreModule,
-        loss: tp.Any = None,
-        metrics: tp.Any = None,
+        module: Module,
+        loss: tp.Optional[tp.Union[jm.Losses, tp.Any]] = None,
+        metrics: tp.Optional[tp.Union[jm.Metrics, tp.Any]] = None,
         optimizer: tp.Optional[tp.Union[tx.Optimizer, GradientTransformation]] = None,
         seed: int = 42,
-        eager: bool = False,
+        strategy: tp.Union[str, Strategy] = None,
     ):
         """
         Arguments:
@@ -80,30 +83,45 @@ class Model:
                 it by stepping into individual layer calls.
         """
         self.seed = seed
-        self.module = module
         self.history = None
         self.stop_training = False
 
         # TODO: CoreModule should have a method to set this
-        # self.optimizer = (
-        #     tx.Optimizer(optimizer)
-        #     if isinstance(optimizer, GradientTransformation)
-        #     else optimizer
-        # )
-        # self.loss_and_logs = None
 
-        # self._losses_and_metrics = tx.Hashable((loss, metrics))
+        self.module = module.set_trainer_params(
+            optimizer=(
+                tx.Optimizer(optimizer)
+                if isinstance(optimizer, GradientTransformation)
+                else optimizer
+            ),
+            losses_and_metrics=jm.LossesAndMetrics(
+                losses=loss,
+                metrics=metrics,
+            )
+            if loss is not None or metrics is not None
+            else None,
+        )
 
-    def __call__(self, *args, **kwargs) -> tp.Any:
-        return self.module(*args, **kwargs)
+        if strategy is not None:
+            self.set_strategy(strategy)
 
     # ----------------------------------------------------------------
-    # Model-only methods
+    # API
     # ----------------------------------------------------------------
 
+    # ----------------------------------------------------------------
+    # other
+    def set_strategy(self, strategy: tp.Union[str, Strategy]):
+        self.module = self.module.set_strategy(strategy)
+
+    # ----------------------------------------------------------------
+    # reset
     def reset_step(self):
-        self.module = self.module.reset_step()
+        if self.module.initialized:
+            self.module = self.module.reset_step()
 
+    # ----------------------------------------------------------------
+    # init
     def init_on_batch(self, batch: tp.Any):
 
         key = tx.Key(self.seed)
@@ -117,13 +135,12 @@ class Model:
 
         self.module = module.mark_initialized()
 
+    # ----------------------------------------------------------------
+    # predict
     def _make_predict_step(self, batch: tp.Any, batch_idx: int) -> tp.Any:
 
         if not self.module.initialized:
             self.init_on_batch(batch)
-
-        # do this after init_on_batch()
-        batch = self.module.distributed_strategy.lift_data(batch)
 
         outputs, module = self.module.predict_step(batch, batch_idx)
 
@@ -151,121 +168,6 @@ class Model:
         Raises:
             ValueError: In case of mismatch between given number of inputs and
                 expectations of the model.
-        """
-        raise NotImplementedError()
-
-    def _make_test_step(
-        self,
-        batch: tp.Any,
-        batch_idx: int,
-    ) -> types.Logs:
-
-        if not self.module.initialized:
-            self.init_on_batch(batch)
-
-        # do this after init_on_batch()
-        batch = self.module.distributed_strategy.lift_data(batch)
-
-        logs, module = self.module.test_step(batch, batch_idx)
-
-        if not isinstance(module, type(self.module)):
-            raise ValueError(
-                f"'CoreModule.test_on_batch' must return an instance of {type(self.module)}, got: {type(module)}"
-            )
-
-        self.module = module
-
-        return logs
-
-    def test_on_batch(
-        self,
-        inputs: tp.Any,
-        labels: tp.Any,
-    ) -> types.Logs:
-        """
-        Test the model on a single batch of samples.
-
-        Arguments:
-            x: Input data. It could be:
-
-                - A Numpy array (or array-like), or a list
-                    of arrays (in case the model has multiple inputs).
-                - A dict mapping input names to the corresponding arrays, if
-                    the model has named inputs.
-            y: Target data. Like the input data `x`, it could be either Numpy
-                array(s) or Jax array(s).
-            sample_weight: Optional array of the same length as x, containing
-                weights to apply to the model's loss for each sample. In the case of
-                temporal data, you can pass a 2D array with shape (samples,
-                sequence_length), to apply a different weight to every timestep of
-                every sample.
-
-        Returns:
-            A `logs` dictionary of containing the main `loss` as well as all
-            other losses and metrics.
-        Raises:
-            ValueError: In case of invalid user-provided arguments.
-        """
-        raise NotImplementedError()
-
-    def _make_train_step(
-        self,
-        batch: tp.Any,
-        batch_idx: int,
-        epoch_idx: int,
-    ) -> types.Logs:
-
-        if not self.module.initialized:
-            self.init_on_batch(batch)
-
-        # do this after init_on_batch()
-        batch = self.module.distributed_strategy.lift_data(batch)
-
-        logs, module = self.module.train_step(batch, batch_idx, epoch_idx)
-
-        if not isinstance(module, type(self.module)):
-            raise ValueError(
-                f"`CoreModule.train_on_batch` must return an instance of {type(self.module)}, got {type(module)}."
-            )
-
-        self.module = module
-
-        return logs
-
-    def train_on_batch(
-        self,
-        inputs: tp.Any,
-        labels: tp.Any,
-    ) -> types.Logs:
-        """
-        Runs a single gradient update on a single batch of data.
-
-        Arguments:
-            x: Input data. It could be:
-
-                - A Numpy array (or array-like), or a iterable of arrays
-                    (in case the model has multiple inputs).
-                - A dict mapping input names to the corresponding arrays,
-                    if the model has named inputs.
-            y: Target data. Like the input data `x`, it could be either Numpy
-                array(s) or Jax array(s). It should be consistent with `x`
-                (you cannot have Numpy inputs and array targets, or inversely).
-            sample_weight: Optional array of the same length as x, containing
-                weights to apply to the model's loss for each sample. In the case of
-                temporal data, you can pass a 2D array with shape (samples,
-                sequence_length), to apply a different weight to every timestep of
-                every sample.
-            class_weight: Optional dictionary mapping class indices (integers) to a
-                weight (float) to apply to the model's loss for the samples from this
-                class during training. This can be useful to tell the model to "pay
-                more attention" to samples from an under-represented class.
-
-        Returns:
-            A `logs` dictionary of containing the main `loss` as well as all
-            other losses and metrics.
-
-        Raises:
-            ValueError: In case of invalid user-provided arguments.
         """
         raise NotImplementedError()
 
@@ -320,8 +222,8 @@ class Model:
                 or in case a stateful model receives a number of samples
                 that is not a multiple of the batch size.
         """
-        if batch_size is not None:
-            batch_size = self.module.distributed_strategy.lift_batch_size(batch_size)
+        if batch_size is not None and isinstance(self.module, HasDistributedStrategy):
+            batch_size = self.module.strategy.lift_batch_size(batch_size)
 
         if x is None:
             x = {}
@@ -398,6 +300,59 @@ class Model:
 
         return all_outputs
 
+    # ----------------------------------------------------------------
+    # test
+    def _make_test_step(
+        self,
+        batch: tp.Any,
+        batch_idx: int,
+    ) -> types.Logs:
+
+        if not self.module.initialized:
+            self.init_on_batch(batch)
+
+        logs, module = self.module.test_step(batch, batch_idx)
+
+        if not isinstance(module, type(self.module)):
+            raise ValueError(
+                f"'CoreModule.test_on_batch' must return an instance of {type(self.module)}, got: {type(module)}"
+            )
+
+        self.module = module
+
+        return logs
+
+    def test_on_batch(
+        self,
+        inputs: tp.Any,
+        labels: tp.Any,
+    ) -> types.Logs:
+        """
+        Test the model on a single batch of samples.
+
+        Arguments:
+            x: Input data. It could be:
+
+                - A Numpy array (or array-like), or a list
+                    of arrays (in case the model has multiple inputs).
+                - A dict mapping input names to the corresponding arrays, if
+                    the model has named inputs.
+            y: Target data. Like the input data `x`, it could be either Numpy
+                array(s) or Jax array(s).
+            sample_weight: Optional array of the same length as x, containing
+                weights to apply to the model's loss for each sample. In the case of
+                temporal data, you can pass a 2D array with shape (samples,
+                sequence_length), to apply a different weight to every timestep of
+                every sample.
+
+        Returns:
+            A `logs` dictionary of containing the main `loss` as well as all
+            other losses and metrics.
+        Raises:
+            ValueError: In case of invalid user-provided arguments.
+        """
+        raise NotImplementedError()
+
     def evaluate(
         self,
         inputs: tp.Optional[tp.Any] = None,
@@ -460,8 +415,8 @@ class Model:
         Raises:
             ValueError: in case of invalid arguments.
         """
-        if batch_size is not None:
-            batch_size = self.module.distributed_strategy.lift_batch_size(batch_size)
+        if batch_size is not None and isinstance(self.module, HasDistributedStrategy):
+            batch_size = self.module.strategy.lift_batch_size(batch_size)
 
         if inputs is None:
             inputs = {}
@@ -524,6 +479,66 @@ class Model:
         callbacks.on_test_end()
 
         return logs
+
+    # ----------------------------------------------------------------
+    # train
+    def _make_train_step(
+        self,
+        batch: tp.Any,
+        batch_idx: int,
+        epoch_idx: int,
+    ) -> types.Logs:
+
+        if not self.module.initialized:
+            self.init_on_batch(batch)
+
+        logs, module = self.module.train_step(batch, batch_idx, epoch_idx)
+
+        if not isinstance(module, type(self.module)):
+            raise ValueError(
+                f"`CoreModule.train_on_batch` must return an instance of {type(self.module)}, got {type(module)}."
+            )
+
+        self.module = module
+
+        return logs
+
+    def train_on_batch(
+        self,
+        inputs: tp.Any,
+        labels: tp.Any,
+    ) -> types.Logs:
+        """
+        Runs a single gradient update on a single batch of data.
+
+        Arguments:
+            x: Input data. It could be:
+
+                - A Numpy array (or array-like), or a iterable of arrays
+                    (in case the model has multiple inputs).
+                - A dict mapping input names to the corresponding arrays,
+                    if the model has named inputs.
+            y: Target data. Like the input data `x`, it could be either Numpy
+                array(s) or Jax array(s). It should be consistent with `x`
+                (you cannot have Numpy inputs and array targets, or inversely).
+            sample_weight: Optional array of the same length as x, containing
+                weights to apply to the model's loss for each sample. In the case of
+                temporal data, you can pass a 2D array with shape (samples,
+                sequence_length), to apply a different weight to every timestep of
+                every sample.
+            class_weight: Optional dictionary mapping class indices (integers) to a
+                weight (float) to apply to the model's loss for the samples from this
+                class during training. This can be useful to tell the model to "pay
+                more attention" to samples from an under-represented class.
+
+        Returns:
+            A `logs` dictionary of containing the main `loss` as well as all
+            other losses and metrics.
+
+        Raises:
+            ValueError: In case of invalid user-provided arguments.
+        """
+        raise NotImplementedError()
 
     def fit(
         self,
@@ -695,8 +710,8 @@ class Model:
                 and what the model expects.
         """
 
-        if batch_size is not None:
-            batch_size = self.module.distributed_strategy.lift_batch_size(batch_size)
+        if batch_size is not None and isinstance(self.module, HasDistributedStrategy):
+            batch_size = self.module.strategy.lift_batch_size(batch_size)
 
         if inputs is None:
             inputs = dict()
@@ -737,8 +752,6 @@ class Model:
             )
 
         callbacks.on_train_begin()
-        # data_handler._initial_epoch = (  # pylint: disable=protected-access
-        #     self._maybe_load_initial_epoch_from_ckpt(initial_epoch))
         epoch_logs = {}
 
         for epoch, iterator in data_handler.enumerate_epochs():
@@ -747,7 +760,6 @@ class Model:
             logs = {}
             with data_handler.catch_stop_iteration():
                 for step in data_handler.steps():
-                    # prev_model = self.copy()
 
                     callbacks.on_train_batch_begin(step)
                     batch = next(iterator)
@@ -769,12 +781,7 @@ class Model:
                     if self.stop_training:
                         break
 
-                    # utils._walk_treedef(
-                    #     jax.tree_flatten(prev_model)[1],
-                    #     jax.tree_flatten(self)[1],
-                    # )
-
-            epoch_logs = copy(logs)
+            epoch_logs = logs.copy()
             epoch_logs.update({"size": data_handler.batch_size})
 
             # Run validation.
@@ -817,6 +824,8 @@ class Model:
 
         return self.history
 
+    # ---------------------------------------------------------------------------
+    # summary
     def summary(
         self,
         *args,

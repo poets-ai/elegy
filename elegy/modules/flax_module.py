@@ -5,6 +5,7 @@ import jax
 import jax.numpy as jnp
 import treeo as to
 from attr import mutable
+from flax import struct
 from flax.core.frozen_dict import FrozenDict
 
 from elegy import types, utils
@@ -13,20 +14,31 @@ FrozerVariables = FrozenDict[str, tp.Mapping[str, tp.Any]]
 Variables = tp.Mapping[str, tp.Mapping[str, tp.Any]]
 M = tp.TypeVar("M", bound="nn.module.Module")
 RNGDict = tp.Dict[str, jnp.ndarray]
+A = tp.TypeVar("A")
 
 
-class ModuleState(tp.Generic[M], to.Tree, to.Immutable):
-    variables: tp.Optional[FrozerVariables] = to.node()
+# ---------------------------------------------------
+# utils
+# ---------------------------------------------------
+class _Immutable:
+    def replace(self: A, **kwargs) -> A:
+        raise NotImplementedError()
 
-    hashable_module: to.Hashable[M] = to.static()
-    mutable_train: tp.Tuple[str] = to.static()
-    mutable_eval: tp.Tuple[str] = to.static()
-    rngs_init: tp.Tuple[str] = to.static()
-    rngs_apply: tp.Tuple[str] = to.static()
-    method_init: str = to.static()
 
-    def __init__(
-        self,
+@struct.dataclass
+class ModuleState(tp.Generic[M], _Immutable):
+    variables: tp.Optional[FrozerVariables] = struct.field()
+
+    hashable_module: to.Hashable[M] = struct.field(pytree_node=False)
+    mutable_train: tp.Tuple[str] = struct.field(pytree_node=False)
+    mutable_eval: tp.Tuple[str] = struct.field(pytree_node=False)
+    rngs_init: tp.Tuple[str] = struct.field(pytree_node=False)
+    rngs_apply: tp.Tuple[str] = struct.field(pytree_node=False)
+    method_init: str = struct.field(pytree_node=False)
+
+    @classmethod
+    def new(
+        cls,
         module: M,
         variables: tp.Optional[Variables] = None,
         mutable_train: tp.Sequence[str] = ("batch_stats", "cache"),
@@ -36,15 +48,19 @@ class ModuleState(tp.Generic[M], to.Tree, to.Immutable):
         method_init: str = "__call__",
     ):
 
-        self.hashable_module = to.Hashable(module)
-        self.variables = FrozenDict(variables) if variables is not None else None
-        self.mutable_train = tuple(mutable_train)
-        self.mutable_eval = (
-            tuple(mutable_eval) if mutable_eval is not None else tuple(mutable_train)
+        return cls(
+            hashable_module=to.Hashable(module),
+            variables=FrozenDict(variables) if variables is not None else None,
+            mutable_train=tuple(mutable_train),
+            mutable_eval=(
+                tuple(mutable_eval)
+                if mutable_eval is not None
+                else tuple(mutable_train)
+            ),
+            rngs_init=tuple(rngs_init),
+            rngs_apply=tuple(rngs_apply),
+            method_init=method_init,
         )
-        self.rngs_init = tuple(rngs_init)
-        self.rngs_apply = tuple(rngs_apply)
-        self.method_init = method_init
 
     @property
     def module(self: "ModuleState[M]") -> M:
@@ -66,10 +82,8 @@ class ModuleState(tp.Generic[M], to.Tree, to.Immutable):
         Initialize the module.
         """
 
-        module_manager: ModuleState[M] = self
-
         if "method" not in kwargs:
-            method = getattr(module_manager.module, self.method_init)
+            method = getattr(self.module, self.method_init)
         else:
             method = kwargs.pop("method")
 
@@ -94,7 +108,7 @@ class ModuleState(tp.Generic[M], to.Tree, to.Immutable):
             else:
                 rngs = {}
 
-        variables = module_manager.module.init(
+        variables = self.module.init(
             rngs,
             *args,
             method=method,
@@ -104,12 +118,12 @@ class ModuleState(tp.Generic[M], to.Tree, to.Immutable):
         if not isinstance(variables, FrozenDict):
             variables = FrozenDict(variables)
 
-        module_manager = module_manager.replace(
+        self = self.replace(
             variables=variables,
-            hashable_module=to.Hashable(module_manager.module),
+            hashable_module=to.Hashable(self.module),
         )
 
-        return module_manager
+        return self
 
     def apply(
         self: "ModuleState[M]",

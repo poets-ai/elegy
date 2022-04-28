@@ -3,49 +3,52 @@ from abc import ABC, abstractmethod
 
 import jax
 import jax.numpy as jnp
+import jax_metrics as jm
 import treeo as to
 import treex as tx
+import typing_extensions as tpe
 
+import elegy as eg
 from elegy import types
 
 A = tp.TypeVar("A")
-M = tp.TypeVar("M", bound="CoreModule")
-Me = tp.TypeVar("Me", bound="tx.Metric")
+M = tp.TypeVar("M", bound="Module")
 
 
-InitStep = tp.Callable[[M, jnp.ndarray, types.Inputs], M]
-PredStep = tp.Callable[[M, types.Inputs], tp.Tuple[types.Outputs, M]]
-TestStep = tp.Callable[[M, types.Inputs, types.Labels], tp.Tuple[types.Logs, M]]
-TrainStep = tp.Callable[[M, types.Inputs, types.Labels], tp.Tuple[types.Logs, M]]
+@tpe.runtime_checkable
+class HasOptimizer(tp.Protocol):
+    optimizer: tp.Optional[tx.Optimizer]
 
 
-class CoreModuleMeta(to.TreeMeta):
+@tpe.runtime_checkable
+class HasLossesAndMetrics(tp.Protocol):
+    losses_and_metrics: tp.Optional[jm.LossesAndMetrics]
+
+
+class ModuleMeta(to.TreeMeta):
     def construct(cls, obj: M, *args, **kwargs) -> M:
         obj = super().construct(obj, *args, **kwargs)
 
         if not hasattr(obj, "_called_init"):
-            CoreModule.__init__(obj)
+            raise RuntimeError(
+                f"CoreModule '{type(obj)}' not properly initialized. "
+                "Make sure to call `super().__init__(...)` to propagate initialization."
+            )
 
         return obj
 
 
-class CoreModule(to.Tree, to.Immutable, to.Map, to.Copy, metaclass=CoreModuleMeta):
+class Module(to.Tree, to.Immutable, to.Map, to.Copy, metaclass=ModuleMeta):
 
     initialized: bool
-    distributed_strategy: "DistributedStrategy"
 
     def __init__(
         self,
         *,
         initialized: bool = False,
-        distributed_strategy: tp.Optional["DistributedStrategy"] = None,
     ) -> None:
-        from elegy.distributed_strategies import Eager
 
         self.initialized = initialized
-        self.distributed_strategy = (
-            distributed_strategy if distributed_strategy is not None else Eager()
-        )
         self._called_init = None
 
     # ---------------------------------------------------------------------------
@@ -60,7 +63,7 @@ class CoreModule(to.Tree, to.Immutable, to.Map, to.Copy, metaclass=CoreModuleMet
     def init_step(
         self: M,
         key: jnp.ndarray,
-        inputs: tp.Any,
+        batch: tp.Any,
     ) -> M:
         raise types.MissingMethod()
 
@@ -80,7 +83,7 @@ class CoreModule(to.Tree, to.Immutable, to.Map, to.Copy, metaclass=CoreModuleMet
 
     def train_step(
         self: M,
-        batch: types.Inputs,
+        batch: types.Batch,
         batch_idx: int,
         epoch_idx: int,
     ) -> tp.Tuple[types.Logs, M]:
@@ -98,16 +101,53 @@ class CoreModule(to.Tree, to.Immutable, to.Map, to.Copy, metaclass=CoreModuleMet
     # Base methods
     # ---------------------------------------------------------------------------
 
+    def set_trainer_params(
+        self: M,
+        *,
+        losses_and_metrics: tp.Optional[jm.LossesAndMetrics] = None,
+        optimizer: tp.Optional[tx.Optimizer] = None,
+    ) -> M:
+        field_updates = {}
+        if optimizer is not None:
+            if isinstance(self, HasOptimizer):
+                if self.optimizer is not None:
+                    raise RuntimeError(
+                        f"Trying to set optimizer for {type(self)} but it already has one."
+                    )
+                else:
+                    field_updates["optimizer"] = optimizer
+            else:
+                raise RuntimeError(
+                    f"Trying to set optimizer for {type(self)} but has not field 'optimizer'."
+                )
+
+        if losses_and_metrics is not None:
+            if isinstance(self, HasLossesAndMetrics):
+                if self.losses_and_metrics is not None:
+                    raise RuntimeError(
+                        f"Trying to set losses_and_metrics for {type(self)} but it already has one."
+                    )
+                else:
+                    field_updates["losses_and_metrics"] = losses_and_metrics
+            else:
+                raise RuntimeError(
+                    f"Trying to set losses_and_metrics for {type(self)} but has not field 'losses_and_metrics'."
+                )
+
+        self = tp.cast(M, self)
+
+        return self.replace(**field_updates)
+
+    def set_strategy(
+        self: M,
+        strategy: tp.Union[str, "eg.Strategy"],
+    ) -> M:
+        return self
+
     def mark_initialized(
         self: M,
     ) -> M:
         return self.replace(initialized=True)
-
-    def set_distributed_strategy(
-        self: M,
-        distributed_strategy: "DistributedStrategy",
-    ) -> M:
-        return self.replace(distributed_strategy=distributed_strategy)
 
     # ---------------------------------------------------------------------------
     # Callback Methods
@@ -293,66 +333,3 @@ class CoreModule(to.Tree, to.Immutable, to.Map, to.Copy, metaclass=CoreModuleMet
                 but that may change in the future.
         """
         return self
-
-
-class DistributedStrategy(ABC):
-    def from_local(self, module: M) -> M:
-        return module
-
-    def to_local(self, module: M) -> M:
-        return module
-
-    def lift_data(self, data: A) -> A:
-        return data
-
-    def lift_key(self, key: jnp.ndarray) -> jnp.ndarray:
-        return key
-
-    def lift_batch_size(self, batch_size: int) -> int:
-        return batch_size
-
-    def handle_post_init(self, module: M) -> M:
-        return module
-
-    def handle_metrics(
-        self,
-        metrics: Me,
-    ) -> Me:
-        return metrics
-
-    def handle_mudule_and_grads(
-        self,
-        module: M,
-        grads: tp.Any,
-    ) -> tp.Tuple[M, tp.Any]:
-        return module, grads
-
-    @abstractmethod
-    def init_step_fn(self, module: M) -> InitStep[M]:
-        ...
-
-    @abstractmethod
-    def pred_step_fn(self, module: M) -> PredStep[M]:
-        ...
-
-    @abstractmethod
-    def test_step_fn(self, module: M) -> TestStep[M]:
-        ...
-
-    @abstractmethod
-    def train_step_fn(self, module: M) -> TrainStep[M]:
-        ...
-
-    # implement order methods, required so that DistributedStrategy can be
-    # used as a key in a dict
-    def __lt__(self, other):
-        return self.__class__.__name__ < other.__class__.__name__
-
-    def __le__(self, other):
-        return self.__class__.__name__ <= other.__class__.__name__
-
-    def __gt__(self, other):
-        return self.__class__.__name__ > other.__class__.__name__
-
-    def __ge__(self, other):
-        return self.__class__.__name__ >= other.__class__.__name__

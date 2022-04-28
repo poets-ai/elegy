@@ -18,8 +18,8 @@ from flax.training.train_state import TrainState
 
 import elegy as eg
 from elegy.model.model_full import Model
-from elegy.modules.core_module import CoreModule
 from elegy.modules.flax_module import ModuleState
+from elegy.modules.module import Module
 
 
 @dataclass
@@ -62,7 +62,7 @@ M = tp.TypeVar("M", bound="ElegyModule")
 C = tp.TypeVar("C", bound="tp.Callable")
 
 
-class ElegyModule(CoreModule):
+class ElegyModule(Module):
     key: tp.Optional[jnp.ndarray] = eg.node()
     variables: tp.Optional[FrozenDict[str, tp.Mapping[str, tp.Any]]] = eg.node()
     opt_state: tp.Optional[tp.Any] = eg.node()

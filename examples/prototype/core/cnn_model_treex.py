@@ -15,7 +15,7 @@ from datasets.load import load_dataset
 
 import elegy as eg
 from elegy.model.model_full import Model
-from elegy.modules.core_module import CoreModule
+from elegy.modules.module import Module
 
 Batch = tp.Mapping[str, np.ndarray]
 Module = tx.Sequential
@@ -48,7 +48,7 @@ def set_training(**fields: bool):
     return decorator
 
 
-class ElegyModule(CoreModule):
+class ElegyModule(Module):
     key: tp.Optional[jnp.ndarray] = eg.node()
 
     def __init__(
