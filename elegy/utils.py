@@ -197,7 +197,7 @@ def _flatten_names(
     if isinstance(inputs, (tp.Tuple, tp.List)):
         for i, value in enumerate(inputs):
             yield from _flatten_names(path, value)
-    elif isinstance(inputs, tp.Dict):
+    elif isinstance(inputs, tp.Mapping):
         for name, value in inputs.items():
             yield from _flatten_names(path + (name,), value)
     else:
@@ -208,6 +208,23 @@ def flatten_names(inputs: tp.Any) -> tp.List[tp.Tuple[str, tp.Any]]:
     return [
         ("/".join(map(str, path)), value) for path, value in _flatten_names((), inputs)
     ]
+
+
+def flatten_names_unique(
+    inputs: tp.Any, only_last: bool = False
+) -> tp.Dict[str, tp.Any]:
+    names: tp.Set[str] = set()
+
+    if only_last:
+        return {
+            get_unique_name(names, str(path[-1])): value
+            for path, value in _flatten_names((), inputs)
+        }
+    else:
+        return {
+            get_unique_name(names, "/".join(map(str, path))): value
+            for path, value in _flatten_names((), inputs)
+        }
 
 
 def get_unique_name(
@@ -367,3 +384,16 @@ def _function_argument_names(f) -> tp.Optional[tp.List[str]]:
 
 def Key(seed: tp.Union[int, jnp.ndarray]) -> jnp.ndarray:
     return jax.random.PRNGKey(seed) if isinstance(seed, int) else seed
+
+
+def _split_args_kwargs(
+    value: tp.Any,
+) -> tp.Tuple[tp.Tuple[tp.Any, ...], tp.Dict[str, tp.Any]]:
+    if isinstance(value, tuple):
+        return value, {}
+    elif isinstance(value, list):
+        return tuple(value), {}
+    elif isinstance(value, tp.Mapping):
+        return (), dict(value)
+    else:
+        return (value,), {}

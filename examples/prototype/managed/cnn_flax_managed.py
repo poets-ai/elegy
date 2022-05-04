@@ -57,51 +57,15 @@ np.random.seed(420)
 
 M = tp.TypeVar("M", bound="CNNModule")
 C = tp.TypeVar("C", bound="tp.Callable")
+F = tp.TypeVar("F", bound="nn.module.Module")
 
 
-class CNNModule(eg.ManagedModule):
-    variables: tp.Optional[FrozenDict[str, tp.Mapping[str, tp.Any]]] = eg.node()
-
-    def __init__(
-        self,
-        module: Module,
-        optimizer: optax.GradientTransformation,
-        strategy: tp.Union[str, eg.Strategy],
-    ) -> None:
-        super().__init__(optimizer=optimizer, strategy=strategy)
-        self._module = eg.Hashable(module)
-
-    @property
-    def module(self) -> Module:
-        return self._module.value
-
-    def get_params(self) -> tp.Any:
-        assert self.variables is not None
-        return self.variables["params"]
-
-    def set_params(self: M, params: tp.Any) -> M:
-        assert self.variables is not None
-        return self.replace(
-            variables=self.variables.copy({"params": params}),
-        )
-
-    def get_batch_stats(self) -> tp.Any:
-        assert self.variables is not None
-        return self.variables["batch_stats"]
-
-    def set_batch_stats(self: M, batch_stats: tp.Any) -> M:
-        assert self.variables is not None
-        return self.replace(
-            variables=self.variables.copy({"batch_stats": batch_stats}),
-        )
-
+class CNNModule(eg.ManagedFlaxModule[F]):
     def managed_init_step(
-        self: M,
+        self: "CNNModule[F]",
         key: jnp.ndarray,
         batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
-    ) -> M:
-        assert self.optimizer is not None
-
+    ) -> "CNNModule[F]":
         inputs, labels = batch
 
         variables = self.module.init(key, inputs, training=False)
@@ -111,11 +75,11 @@ class CNNModule(eg.ManagedModule):
         )
 
     def loss_fn(
-        self: M,
+        self: "CNNModule[F]",
         key: tp.Optional[jnp.ndarray],
         batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
         training: bool,
-    ) -> tp.Tuple[eg.types.Loss, M]:
+    ) -> tp.Tuple[eg.types.Loss, "CNNModule[F]"]:
         assert self.variables is not None
         inputs, labels = batch
         variables = self.variables
@@ -153,12 +117,12 @@ class CNNModule(eg.ManagedModule):
         )
 
     def managed_train_step(
-        self: M,
+        self: "CNNModule[F]",
         key: jnp.ndarray,
         batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
         batch_idx: jnp.ndarray,
         epoch_idx: jnp.ndarray,
-    ) -> tp.Tuple[eg.types.Loss, M]:
+    ) -> tp.Tuple[eg.types.Loss, "CNNModule[F]"]:
         print("JITTING")
 
         loss, self = self.loss_fn(key, batch, training=True)
@@ -166,15 +130,18 @@ class CNNModule(eg.ManagedModule):
         return loss, self
 
     def managed_test_step(
-        self: M, key: jnp.ndarray, batch: tp.Any, batch_idx: jnp.ndarray
-    ) -> M:
+        self: "CNNModule[F]", key: jnp.ndarray, batch: tp.Any, batch_idx: jnp.ndarray
+    ) -> "CNNModule[F]":
         loss, self = self.loss_fn(key, batch, training=False)
 
         return self
 
     def managed_predict_step(
-        self: M, key: jnp.ndarray, batch: jnp.ndarray, batch_idx: jnp.ndarray
-    ) -> tp.Tuple[eg.types.Outputs, M]:
+        self: "CNNModule[F]",
+        key: jnp.ndarray,
+        batch: jnp.ndarray,
+        batch_idx: jnp.ndarray,
+    ) -> tp.Tuple[eg.types.Outputs, "CNNModule[F]"]:
         assert self.variables is not None
         inputs = batch
 
@@ -217,11 +184,9 @@ def main(
     print("X_test:", X_test.shape, X_test.dtype)
 
     model = eg.Model(
-        CNNModule(
-            module=CNN(),
-            optimizer=optax.adamw(1e-3),
-            strategy="data_parallel",
-        )
+        module=CNNModule(CNN()),
+        optimizer=optax.adamw(1e-3),
+        strategy="data_parallel",
     )
 
     history = model.fit(

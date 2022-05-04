@@ -58,7 +58,7 @@ class Module(to.Tree, to.Immutable, to.Map, to.Copy, metaclass=ModuleMeta):
     def reset_step(
         self: M,
     ) -> M:
-        raise types.MissingMethod()
+        return self
 
     def init_step(
         self: M,
@@ -142,7 +142,7 @@ class Module(to.Tree, to.Immutable, to.Map, to.Copy, metaclass=ModuleMeta):
         self: M,
         strategy: tp.Union[str, "eg.Strategy"],
     ) -> M:
-        return self
+        raise types.MissingMethod()
 
     def mark_initialized(
         self: M,

@@ -5,18 +5,19 @@ import jax_metrics as jm
 import numpy as np
 import treex as tx
 import typing_extensions as tpe
+from flax import linen
 from optax import GradientTransformation
 
 from elegy import data, types, utils
 from elegy.callbacks import Callback, CallbackList, History
 from elegy.callbacks.sigint import SigIntMode
 from elegy.data import utils as data_utils
+from elegy.modules.high_level.flax_module import FlaxModule
 from elegy.modules.module import Module
 from elegy.strategies import Strategy
 
-M = tp.TypeVar("M", bound="Model")
-U = tp.TypeVar("U", bound="tx.Module")
-
+M = tp.TypeVar("M", bound="Module")
+F = tp.TypeVar("F", bound="linen.module.Module")
 
 try:
     import haiku as hk
@@ -34,24 +35,48 @@ class HasDistributedStrategy(tpe.Protocol):
     strategy: Strategy
 
 
-class Model:
+class Model(tp.Generic[M]):
     """
     Model provides an Estimator-like API similar to Keras.
     """
 
-    module: Module
+    module: M
     seed: tp.Union[int, jnp.ndarray]
     history: tp.Optional[History]
     stop_training: bool
 
+    @tp.overload
     def __init__(
-        self,
-        module: Module,
+        self: "Model[FlaxModule[F]]",
+        module: F,
         loss: tp.Optional[tp.Union[jm.Losses, tp.Any]] = None,
         metrics: tp.Optional[tp.Union[jm.Metrics, tp.Any]] = None,
         optimizer: tp.Optional[tp.Union[tx.Optimizer, GradientTransformation]] = None,
         seed: int = 42,
-        strategy: tp.Union[str, Strategy] = None,
+        strategy: tp.Optional[tp.Union[str, Strategy]] = None,
+    ):
+        ...
+
+    @tp.overload
+    def __init__(
+        self: "Model[M]",
+        module: M,
+        loss: tp.Optional[tp.Union[jm.Losses, tp.Any]] = None,
+        metrics: tp.Optional[tp.Union[jm.Metrics, tp.Any]] = None,
+        optimizer: tp.Optional[tp.Union[tx.Optimizer, GradientTransformation]] = None,
+        seed: int = 42,
+        strategy: tp.Optional[tp.Union[str, Strategy]] = None,
+    ):
+        ...
+
+    def __init__(
+        self,
+        module: tp.Any,
+        loss: tp.Optional[tp.Union[jm.Losses, tp.Any]] = None,
+        metrics: tp.Optional[tp.Union[jm.Metrics, tp.Any]] = None,
+        optimizer: tp.Optional[tp.Union[tx.Optimizer, GradientTransformation]] = None,
+        seed: int = 42,
+        strategy: tp.Optional[tp.Union[str, Strategy]] = None,
     ):
         """
         Arguments:
@@ -88,6 +113,11 @@ class Model:
 
         # TODO: CoreModule should have a method to set this
 
+        if isinstance(module, linen.module.Module):
+            module = FlaxModule(module)
+
+        assert isinstance(module, Module)
+
         self.module = module.set_trainer_params(
             optimizer=(
                 tx.Optimizer(optimizer)
@@ -97,6 +127,8 @@ class Model:
             losses_and_metrics=jm.LossesAndMetrics(
                 losses=loss,
                 metrics=metrics,
+                aux_losses=jm.AuxLosses(),
+                aux_metrics=jm.AuxMetrics(),
             )
             if loss is not None or metrics is not None
             else None,
@@ -106,22 +138,18 @@ class Model:
             self.set_strategy(strategy)
 
     # ----------------------------------------------------------------
-    # API
-    # ----------------------------------------------------------------
-
-    # ----------------------------------------------------------------
     # other
+    # ----------------------------------------------------------------
     def set_strategy(self, strategy: tp.Union[str, Strategy]):
         self.module = self.module.set_strategy(strategy)
 
-    # ----------------------------------------------------------------
-    # reset
     def reset_step(self):
         if self.module.initialized:
             self.module = self.module.reset_step()
 
     # ----------------------------------------------------------------
     # init
+    # ----------------------------------------------------------------
     def init_on_batch(self, batch: tp.Any):
 
         key = tx.Key(self.seed)
@@ -137,6 +165,7 @@ class Model:
 
     # ----------------------------------------------------------------
     # predict
+    # ----------------------------------------------------------------
     def _make_predict_step(self, batch: tp.Any, batch_idx: int) -> tp.Any:
 
         if not self.module.initialized:
@@ -302,6 +331,7 @@ class Model:
 
     # ----------------------------------------------------------------
     # test
+    # ----------------------------------------------------------------
     def _make_test_step(
         self,
         batch: tp.Any,
@@ -482,6 +512,7 @@ class Model:
 
     # ----------------------------------------------------------------
     # train
+    # ----------------------------------------------------------------
     def _make_train_step(
         self,
         batch: tp.Any,
@@ -544,6 +575,7 @@ class Model:
         self,
         inputs: tp.Optional[tp.Any] = None,
         labels: tp.Optional[tp.Any] = None,
+        *,
         sample_weight: tp.Optional[tp.Any] = None,
         batch_size: tp.Optional[int] = 32,
         epochs: int = 1,

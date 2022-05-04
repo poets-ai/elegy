@@ -1,7 +1,7 @@
-import functools
 import typing as tp
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from functools import partial
 
 import jax
 import jax.numpy as jnp
@@ -17,6 +17,11 @@ ME = tp.TypeVar("ME", bound="jm.Metric")
 A = tp.TypeVar("A")
 
 _REGISTRY: tp.Dict[str, StrategyConstructor] = {}
+
+
+# ----------------------------------------------------------------------------
+# utils
+# ----------------------------------------------------------------------------
 
 
 @tp.overload
@@ -73,6 +78,34 @@ def get_strategy(name: str) -> "Strategy":
     return _REGISTRY[name]()
 
 
+# ----------------------------------------------------------------------------
+# register strategies
+# ----------------------------------------------------------------------------
+
+register_strategy(
+    name="eager",
+    constructor=lambda: Eager(),
+)
+register_strategy(
+    name="jit",
+    constructor=lambda: JIT(donate_args=False),
+)
+register_strategy(
+    name="jit_donate",
+    constructor=lambda: JIT(donate_args=True),
+)
+register_strategy(
+    name="data_parallel",
+    constructor=lambda: DataParallel(donate_args=False),
+)
+register_strategy(
+    name="data_parallel_donate",
+    constructor=lambda: DataParallel(donate_args=True),
+)
+
+# ----------------------------------------------------------------------------
+# Strategy
+# ----------------------------------------------------------------------------
 class Strategy(ABC):
     def from_local(self, module: M) -> M:
         return module
@@ -88,6 +121,9 @@ class Strategy(ABC):
 
     def lift_batch_size(self, batch_size: int) -> int:
         return batch_size
+
+    def lower_outputs(self, outputs: A) -> A:
+        return outputs
 
     def handle_post_init(self, module: M) -> M:
         return module
@@ -112,32 +148,32 @@ class Strategy(ABC):
 
     @abstractmethod
     def init_step_fn(
-        self, module: "eg.modules.ManagedModule"
-    ) -> "eg.modules.InitStep[eg.modules.ManagedModule]":
+        self, module: "eg.ManagedModule"
+    ) -> "eg.modules.InitStep[eg.ManagedModule]":
         ...
 
     @abstractmethod
     def reset_step_fn(
-        self, module: "eg.modules.ManagedModule"
-    ) -> "eg.modules.ResetStep[eg.modules.ManagedModule]":
+        self, module: "eg.ManagedModule"
+    ) -> "eg.modules.ResetStep[eg.ManagedModule]":
         ...
 
     @abstractmethod
     def predict_step_fn(
-        self, module: "eg.modules.ManagedModule"
-    ) -> "eg.modules.PredStep[eg.modules.ManagedModule]":
+        self, module: "eg.ManagedModule"
+    ) -> "eg.modules.PredStep[eg.ManagedModule]":
         ...
 
     @abstractmethod
     def test_step_fn(
-        self, module: "eg.modules.ManagedModule"
-    ) -> "eg.modules.TestStep[eg.modules.ManagedModule]":
+        self, module: "eg.ManagedModule"
+    ) -> "eg.modules.TestStep[eg.ManagedModule]":
         ...
 
     @abstractmethod
     def train_step_fn(
-        self, module: "eg.modules.ManagedModule"
-    ) -> "eg.modules.TrainStep[eg.modules.ManagedModule]":
+        self, module: "eg.ManagedModule"
+    ) -> "eg.modules.TrainStep[eg.ManagedModule]":
         ...
 
     # implement order methods, required so that Strategy can be
@@ -155,7 +191,11 @@ class Strategy(ABC):
         return self.__class__.__name__ >= other.__class__.__name__
 
 
-@register_strategy("eager")
+# ----------------------------------------------------------------------------
+# EAGER
+# ----------------------------------------------------------------------------
+
+
 @dataclass(unsafe_hash=True)
 class Eager(Strategy):
     def init_step_fn(self, module: M) -> "eg.modules.InitStep[M]":
@@ -174,7 +214,11 @@ class Eager(Strategy):
         return module.__class__._train_step_manager
 
 
-@register_strategy("jit")
+# ----------------------------------------------------------------------------
+# JIT
+# ----------------------------------------------------------------------------
+
+
 @dataclass(unsafe_hash=True)
 class JIT(Strategy):
     donate_args: bool = False
@@ -210,7 +254,18 @@ class JIT(Strategy):
         )
 
 
-@register_strategy("data_parallel")
+# ----------------------------------------------------------------------------
+# Data Parallel
+# ----------------------------------------------------------------------------
+
+
+@partial(jax.pmap, in_axes=(None, 0), out_axes=0)
+def _lift_module(module: M, device_idx: jnp.ndarray) -> M:
+    return module.replace(
+        key=jax.random.fold_in(module.key, device_idx),
+    )
+
+
 @dataclass(unsafe_hash=True)
 class DataParallel(Strategy):
     axis_name: str = "device"
@@ -219,19 +274,7 @@ class DataParallel(Strategy):
     def from_local(self, module: M) -> M:
         # device_idxs used to inform pmap about the number of devices
         device_idxs = jnp.arange(jax.device_count())
-        module = jax.pmap(
-            lambda idx, module: module,
-            in_axes=(0, None),
-            out_axes=0,
-        )(device_idxs, module)
-
-        if module.key is not None:
-            # this is the same a handle_post_init, maybe use that?
-            # give unique key to each device
-            device_idx = jax.lax.axis_index(self.axis_name)
-            module = module.replace(
-                key=jax.random.fold_in(module.key, device_idx),
-            )
+        module = _lift_module(module, device_idxs)
 
         return module
 
@@ -249,6 +292,13 @@ class DataParallel(Strategy):
             data,
         )
         return data
+
+    def lower_outputs(self, outputs: A) -> A:
+        outputs = jax.tree_map(
+            lambda x: einop(x, "device batch ... -> (device batch) ..."),
+            outputs,
+        )
+        return outputs
 
     def lift_key(self, key: jnp.ndarray) -> jnp.ndarray:
         key = einop(

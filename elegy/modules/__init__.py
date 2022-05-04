@@ -1,9 +1,2 @@
-from .managed_module import (
-    InitStep,
-    ManagedModule,
-    PredStep,
-    ResetStep,
-    TestStep,
-    TrainStep,
-)
-from .module import Module
+# these symbols are used in strategies.py
+from .managed.managed_module import InitStep, PredStep, ResetStep, TestStep, TrainStep

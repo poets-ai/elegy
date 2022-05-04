@@ -14,8 +14,6 @@ import typer
 from datasets.load import load_dataset
 
 import elegy as eg
-from elegy.model.model_full import Model
-from elegy.modules.module import Module
 
 Batch = tp.Mapping[str, np.ndarray]
 Module = tx.Sequential
@@ -48,7 +46,7 @@ def set_training(**fields: bool):
     return decorator
 
 
-class ElegyModule(Module):
+class ElegyModule(eg.Module):
     key: tp.Optional[jnp.ndarray] = eg.node()
 
     def __init__(
@@ -98,7 +96,7 @@ class ElegyModule(Module):
         init_key, self.key = jax.random.split(key)
         self.module = self.module.init(key=init_key)(inputs)
         self.optimizer = self.optimizer.init(self.module.parameters())
-        self.losses_and_metrics = self.losses_and_metrics.reset()
+        self.losses_and_metrics = self.losses_and_metrics.init()
 
         return self
 
@@ -199,7 +197,7 @@ class ElegyModule(Module):
 
 # define parameters
 def main(
-    epochs: int = 2,
+    epochs: int = 10,
     batch_size: int = 32,
     steps_per_epoch: tp.Optional[int] = None,
     seed: int = 420,
@@ -213,17 +211,16 @@ def main(
     X_test = np.stack(dataset["test"]["image"])[..., None]
     y_test = dataset["test"]["label"]
 
-    # define model
-    module = ElegyModule(
-        optimizer=optax.adamw(1e-3),
-        losses=jm.losses.Crossentropy(),
-        metrics=jm.metrics.Accuracy(),
-    )
-
     print("X_train:", X_train.shape, X_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
 
-    model = Model(module)
+    model = eg.Model(
+        ElegyModule(
+            optimizer=optax.adamw(1e-3),
+            losses=jm.losses.Crossentropy(),
+            metrics=jm.metrics.Accuracy(),
+        )
+    )
 
     model.summary(X_train[:64])
 

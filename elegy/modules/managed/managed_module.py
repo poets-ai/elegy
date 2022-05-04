@@ -55,6 +55,7 @@ class ManagedModule(cm.Module):
 
         super().__init__(initialized=initialized)
 
+        self.key = None
         self.strategy = (
             get_strategy(strategy)
             if isinstance(strategy, str)
@@ -68,6 +69,7 @@ class ManagedModule(cm.Module):
             else optimizer
         )
         self._avg_loss = jm.metrics.Mean(name="loss")
+        self._logs = None
 
         self.strategy_init_step = {}
         self.strategy_reset_step = {}
@@ -89,10 +91,11 @@ class ManagedModule(cm.Module):
         if self.strategy == strategy:
             return self
 
-        # current strategy to local
-        self = self.strategy.to_local(self)
-        # new strategy from local
-        self = strategy.from_local(self)
+        if self.initialized:
+            # current strategy to local
+            self = self.strategy.to_local(self)
+            # new strategy from local
+            self = strategy.from_local(self)
 
         # update strategy
         self = self.replace(strategy=strategy)
@@ -223,7 +226,7 @@ class ManagedModule(cm.Module):
         self = self.replace(
             key=key,
             optimizer=optimizer,
-            _avg_loss=self._avg_loss.reset(),
+            _avg_loss=self._avg_loss.init(),
         )
 
         # do this last
@@ -251,6 +254,8 @@ class ManagedModule(cm.Module):
         batch = self.strategy.lift_data(batch)
 
         outputs, self = self.predict_step_fn(self, batch, jnp.array(batch_idx))
+
+        outputs = self.strategy.lower_outputs(outputs)
 
         return outputs, self
 
@@ -321,7 +326,9 @@ class ManagedModule(cm.Module):
     ) -> tp.Tuple[types.Logs, M]:
 
         if self.optimizer is None:
-            raise RuntimeError("Trying to run `managed_train_step` no `optimizer`")
+            raise RuntimeError(
+                "Trying to run `managed_train_step` but no `optimizer` was given"
+            )
 
         assert self.key is not None
         step_key, key = jax.random.split(self.key)
@@ -337,8 +344,7 @@ class ManagedModule(cm.Module):
 
         # add average loss metric
         assert self._logs is not None
-        if "loss" not in self._logs:
-            self = self.log("_avg_loss", self._avg_loss.batch_updates(values=loss))
+        self = self.log("_avg_loss", self._avg_loss.batch_updates(values=loss))
 
         # sync gradients
         grads = self.strategy.handle_grads(grads)
@@ -367,25 +373,28 @@ class ManagedModule(cm.Module):
     def _process_logs(self: M) -> tp.Tuple[types.Logs, M]:
         assert self._logs is not None
 
+        log_updates = self._logs.copy()
+        loss_updates: tp.Optional[jm.Metric] = log_updates.pop("_avg_loss", None)
+
         logs = {}
         names = set()
         field_updates: tp.Dict[str, jm.Metric] = {}
 
-        for name, value in self._logs.items():
+        def _update_metric(field: str, batch_updates: jm.Metric) -> types.Logs:
+            metric: jm.Metric = getattr(self, field)
+            batch_updates = self.strategy.handle_metrics(batch_updates)
+            metric = metric.merge(batch_updates)
+            metric_logs = metric.compute_logs()
+
+            field_updates[field] = metric
+
+            return metric_logs
+
+        for name, value in log_updates.items():
             if isinstance(value, jnp.ndarray):
                 metric_logs = {name: value}
             elif isinstance(value, jm.Metric):
-                field = name
-                batch_updates = value
-
-                metric: jm.Metric = getattr(self, field)
-                batch_updates = self.strategy.handle_metrics(batch_updates)
-
-                metric = metric.merge(batch_updates)
-                metric_logs = metric.compute_logs()
-
-                field_updates[field] = metric
-
+                metric_logs = _update_metric(field=name, batch_updates=value)
             else:
                 raise ValueError(
                     f"Unsupported metric type: {type(value)}, "
@@ -395,6 +404,10 @@ class ManagedModule(cm.Module):
             for metric_name, metric_value in metric_logs.items():
                 metric_name = utils.get_unique_name(names, metric_name)
                 logs[metric_name] = metric_value
+
+        if "loss" not in logs and loss_updates is not None:
+            metric_logs = _update_metric("_avg_loss", loss_updates)
+            logs["loss"] = metric_logs["loss"]
 
         return logs, self.replace(
             _logs=None,

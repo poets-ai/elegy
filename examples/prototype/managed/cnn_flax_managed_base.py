@@ -17,7 +17,6 @@ from flax.core.frozen_dict import FrozenDict
 from flax.training.train_state import TrainState
 
 import elegy as eg
-from elegy.extras.flax_module import ModuleState
 
 
 @dataclass
@@ -56,63 +55,67 @@ Metric = jm.metrics.Accuracy
 Logs = tp.Mapping[str, jnp.ndarray]
 np.random.seed(420)
 
-M = tp.TypeVar("M", bound="ElegyModule")
+M = tp.TypeVar("M", bound="CNNModule")
 C = tp.TypeVar("C", bound="tp.Callable")
 
 
-class ElegyModule(eg.Module):
-    key: tp.Optional[jnp.ndarray] = eg.node()
+class CNNModule(eg.ManagedModule):
     variables: tp.Optional[FrozenDict[str, tp.Mapping[str, tp.Any]]] = eg.node()
-    opt_state: tp.Optional[tp.Any] = eg.node()
 
     def __init__(
         self,
         module: Module,
-        optimizer: optax.GradientTransformation,
     ) -> None:
         super().__init__()
-        self.key = None
-        self.variables = None
-        self.opt_state = None
         self._module = eg.Hashable(module)
-        self.optimizer = optimizer
+        self.variables = None
 
     @property
     def module(self) -> Module:
         return self._module.value
 
-    @jax.jit
-    def init_step(
+    def get_params(self) -> tp.Any:
+        assert self.variables is not None
+        return self.variables["params"]
+
+    def set_params(self: M, params: tp.Any) -> M:
+        assert self.variables is not None
+        return self.replace(
+            variables=self.variables.copy({"params": params}),
+        )
+
+    def get_batch_stats(self) -> tp.Any:
+        assert self.variables is not None
+        return self.variables["batch_stats"]
+
+    def set_batch_stats(self: M, batch_stats: tp.Any) -> M:
+        assert self.variables is not None
+        return self.replace(
+            variables=self.variables.copy({"batch_stats": batch_stats}),
+        )
+
+    def managed_init_step(
         self: M,
         key: jnp.ndarray,
         batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
     ) -> M:
         inputs, labels = batch
 
-        init_key, key = jax.random.split(key)
-        variables = self.module.init(init_key, inputs, training=False)
-        opt_state = self.optimizer.init(variables["params"])
+        variables = self.module.init(key, inputs, training=False)
 
         return self.replace(
-            key=key,
             variables=variables,
-            opt_state=opt_state,
         )
 
     def loss_fn(
-        self: "ElegyModule",
-        params: tp.Optional[tp.Mapping[str, jnp.ndarray]],
+        self: M,
         key: tp.Optional[jnp.ndarray],
-        inputs: jnp.ndarray,
-        labels: jnp.ndarray,
+        batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
         training: bool,
-    ) -> tp.Tuple[jnp.ndarray, tp.Tuple[Logs, "ElegyModule"]]:
+    ) -> tp.Tuple[eg.types.Loss, M]:
         assert self.variables is not None
-
+        inputs, labels = batch
         variables = self.variables
-
-        if params is not None:
-            variables = variables.copy({"params": params})
 
         if training:
             rngs = {"dropout": key}
@@ -140,68 +143,35 @@ class ElegyModule(eg.Module):
         loss = jnp.mean(optax.softmax_cross_entropy(preds, oh_labels))
         accuracy = jnp.mean(jnp.argmax(preds, axis=-1) == labels)
 
-        logs = {"loss": loss, "accuracy": accuracy}
+        self = self.log("accuracy", accuracy)
 
-        return (
-            loss,
-            (
-                logs,
-                self.replace(
-                    variables=variables,
-                ),
-            ),
-        )
-
-    @jax.jit
-    def train_step(
-        self: M,
-        batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
-        batch_idx: int,
-        epoch_idx: int,
-    ) -> tp.Tuple[Logs, M]:
-        print("JITTTTING")
-        assert self.key is not None
-        assert self.variables is not None
-
-        inputs, labels = batch
-
-        params = self.variables["params"]
-        loss_key, key = jax.random.split(self.key)
-
-        grads, (logs, self) = jax.grad(self.loss_fn, has_aux=True)(
-            params, loss_key, inputs, labels, training=True
-        )
-
-        assert self.variables is not None
-
-        updates, opt_state = self.optimizer.update(grads, self.opt_state, params)
-        params = optax.apply_updates(params, updates)
-        variables = self.variables.copy({"params": params})
-
-        return logs, self.replace(
-            key=key,
+        return loss, self.replace(
             variables=variables,
-            opt_state=opt_state,
         )
 
-    @jax.jit
-    def test_step(
+    def managed_train_step(
         self: M,
+        key: jnp.ndarray,
         batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
-        batch_idx: int,
-    ) -> tp.Tuple[Logs, M]:
-        inputs, labels = batch
+        batch_idx: jnp.ndarray,
+        epoch_idx: jnp.ndarray,
+    ) -> tp.Tuple[eg.types.Loss, M]:
+        print("JITTING")
 
-        loss, (logs, self) = self.loss_fn(None, None, inputs, labels, training=False)
+        loss, self = self.loss_fn(key, batch, training=True)
 
-        return logs, self
+        return loss, self
 
-    @jax.jit
-    def predict_step(
-        self: M,
-        batch: jnp.ndarray,
-        batch_idx: int,
-    ) -> tp.Tuple[tp.Any, M]:
+    def managed_test_step(
+        self: M, key: jnp.ndarray, batch: tp.Any, batch_idx: jnp.ndarray
+    ) -> M:
+        loss, self = self.loss_fn(key, batch, training=False)
+
+        return self
+
+    def managed_predict_step(
+        self: M, key: jnp.ndarray, batch: jnp.ndarray, batch_idx: jnp.ndarray
+    ) -> tp.Tuple[eg.types.Outputs, M]:
         assert self.variables is not None
         inputs = batch
 
@@ -244,10 +214,9 @@ def main(
     print("X_test:", X_test.shape, X_test.dtype)
 
     model = eg.Model(
-        ElegyModule(
-            module=CNN(),
-            optimizer=optax.adamw(1e-3),
-        )
+        module=CNNModule(CNN()),
+        optimizer=optax.adamw(1e-3),
+        strategy="data_parallel",
     )
 
     history = model.fit(
@@ -264,6 +233,8 @@ def main(
     eg.utils.plot_history(history)
 
     print(model.evaluate(X_test, y_test))
+
+    model.set_strategy("jit")
 
     # get random samples
     idxs = np.random.randint(0, 10000, size=(9,))
