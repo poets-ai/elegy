@@ -60,7 +60,8 @@ C = tp.TypeVar("C", bound="tp.Callable")
 
 
 class CNNModule(eg.ManagedModule):
-    variables: tp.Optional[FrozenDict[str, tp.Mapping[str, tp.Any]]] = eg.node()
+    variables: tp.Optional[FrozenDict[str, tp.Mapping[str, tp.Any]]]
+    _module: eg.Hashable[Module] = eg.static_field()
 
     def __init__(
         self,
@@ -216,7 +217,8 @@ def main(
     model = eg.Model(
         module=CNNModule(CNN()),
         optimizer=optax.adamw(1e-3),
-        strategy="data_parallel",
+        strategy="jit",
+        seed=seed,
     )
 
     history = model.fit(

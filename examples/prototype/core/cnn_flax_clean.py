@@ -60,10 +60,10 @@ C = tp.TypeVar("C", bound="tp.Callable")
 
 
 class ElegyModule(eg.Module):
-    key: tp.Optional[jnp.ndarray] = eg.node()
-    module: ModuleState[Module] = eg.node()
-    optimizer: eg.Optimizer = eg.node()
-    losses_and_metrics: jm.LossesAndMetrics = eg.node()
+    key: tp.Optional[jnp.ndarray]
+    module: ModuleState[Module]
+    optimizer: eg.Optimizer
+    losses_and_metrics: jm.LossesAndMetrics
 
     def __init__(
         self,

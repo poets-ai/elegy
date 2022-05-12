@@ -5,6 +5,7 @@ import optax
 import treex as tx
 from flax.core.frozen_dict import FrozenDict
 
+import elegy.pytree as pytree_m
 from elegy.modules.high_level.flax_module import FlaxMixin
 from elegy.modules.managed.managed_module import ManagedModule
 
@@ -13,7 +14,7 @@ Variables = tp.Mapping[str, tp.Mapping[str, tp.Any]]
 
 
 class ManagedFlaxModule(tp.Generic[F], FlaxMixin, ManagedModule):
-    _module: tx.Hashable[F]
+    _module: tx.Hashable[F] = pytree_m.static_field()
 
     def __init__(
         self,

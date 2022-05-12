@@ -5,7 +5,7 @@ __version__ = "0.8.6"
 import elegy.types as types
 import elegy.utils as utils
 
-from treeo import field, node, static, Hashable
+from treeo import Hashable, compact
 from treex import Optimizer
 
 
@@ -36,3 +36,4 @@ from .modules.managed.managed_module import ManagedModule
 from .modules.module import Module
 from .modules.high_level.flax_module import FlaxModule
 from .modules.managed.managed_flax_module import ManagedFlaxModule
+from .pytree import PytreeObject, field, static_field

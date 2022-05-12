@@ -12,6 +12,7 @@ from flax.core.frozen_dict import FrozenDict
 from flax.core.scope import CollectionFilter, DenyList
 
 import elegy as eg
+import elegy.pytree as pytree_m
 from elegy import types, utils
 from elegy.modules.high_level.high_level_module import HighLevelModule
 
@@ -21,7 +22,7 @@ Variables = tp.Mapping[str, tp.Mapping[str, tp.Any]]
 
 
 class FlaxMixin:
-    variables: tp.Optional[FrozerVariables] = to.node()
+    variables: tp.Optional[FrozerVariables]
 
     def get_params(self) -> tp.Optional[FrozerVariables]:
 
@@ -54,21 +55,21 @@ class FlaxMixin:
 
 class FlaxModule(FlaxMixin, HighLevelModule):
     # nodes
-    variables: FrozerVariables = to.node()
+    variables: FrozerVariables
     # static
-    _module: to.Hashable[nn.module.Module] = to.static()
-    mutable_init: CollectionFilter = to.static()
-    mutable_train: CollectionFilter = to.static()
-    mutable_eval: CollectionFilter = to.static()
-    rngs_init: tp.Tuple[str, ...] = to.static()
-    rngs_train: tp.Tuple[str, ...] = to.static()
-    rngs_eval: tp.Tuple[str, ...] = to.static()
-    method_init: tp.Callable[..., tp.Any] = to.static()
-    method_train: tp.Callable[..., tp.Any] = to.static()
-    method_eval: tp.Callable[..., tp.Any] = to.static()
-    init_training_value: bool = to.static()
-    collection_keep: tp.Tuple[str, ...] = to.static()
-    logs_full_path: bool = to.static()
+    _module: to.Hashable[nn.module.Module] = pytree_m.static_field()
+    mutable_init: CollectionFilter = pytree_m.static_field()
+    mutable_train: CollectionFilter = pytree_m.static_field()
+    mutable_eval: CollectionFilter = pytree_m.static_field()
+    rngs_init: tp.Tuple[str, ...] = pytree_m.static_field()
+    rngs_train: tp.Tuple[str, ...] = pytree_m.static_field()
+    rngs_eval: tp.Tuple[str, ...] = pytree_m.static_field()
+    method_init: tp.Callable[..., tp.Any] = pytree_m.static_field()
+    method_train: tp.Callable[..., tp.Any] = pytree_m.static_field()
+    method_eval: tp.Callable[..., tp.Any] = pytree_m.static_field()
+    init_training_value: bool = pytree_m.static_field()
+    collection_keep: tp.Tuple[str, ...] = pytree_m.static_field()
+    logs_full_path: bool = pytree_m.static_field()
 
     def __init__(
         self,

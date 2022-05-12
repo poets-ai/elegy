@@ -10,7 +10,8 @@ import treeo as to
 import treex as tx
 
 import elegy as eg
-import elegy.modules.module as cm
+import elegy.modules.module as module_m
+import elegy.pytree as pytree_m
 from elegy import types, utils
 
 M = tp.TypeVar("M", bound="ManagedModule")
@@ -27,20 +28,31 @@ TrainStep = tp.Callable[
 ]
 
 
-class ManagedModule(cm.Module):
+class ManagedModule(module_m.Module):
     # nodes
-    key: tp.Optional[jnp.ndarray] = to.node()
-    optimizer: tp.Optional[tx.Optimizer] = to.node()
-    _logs: tp.Optional[tp.Dict[str, tp.Any]] = to.node()
-    _avg_loss: jm.metrics.Mean = to.node()
+    key: tp.Optional[jnp.ndarray]
+    optimizer: tp.Optional[tx.Optimizer]
+    _logs: tp.Optional[tp.Dict[str, tp.Any]]
+    _avg_loss: jm.metrics.Mean
 
     # statics
-    strategy: "eg.Strategy"
-    strategy_init_step: tp.Dict["eg.Strategy", InitStep["ManagedModule"]]
-    strategy_reset_step: tp.Dict["eg.Strategy", ResetStep["ManagedModule"]]
-    strategy_predict_step: tp.Dict["eg.Strategy", PredStep["ManagedModule"]]
-    streategy_test_step: tp.Dict["eg.Strategy", TestStep["ManagedModule"]]
-    strategy_train_step: tp.Dict["eg.Strategy", TrainStep["ManagedModule"]]
+    strategy: "eg.Strategy" = pytree_m.static_field()
+    strategy_init_step: tp.Dict[
+        "eg.Strategy",
+        InitStep["ManagedModule"],
+    ] = pytree_m.static_field()
+    strategy_reset_step: tp.Dict[
+        "eg.Strategy", ResetStep["ManagedModule"]
+    ] = pytree_m.static_field()
+    strategy_predict_step: tp.Dict[
+        "eg.Strategy", PredStep["ManagedModule"]
+    ] = pytree_m.static_field()
+    streategy_test_step: tp.Dict[
+        "eg.Strategy", TestStep["ManagedModule"]
+    ] = pytree_m.static_field()
+    strategy_train_step: tp.Dict[
+        "eg.Strategy", TrainStep["ManagedModule"]
+    ] = pytree_m.static_field()
 
     def __init__(
         self,

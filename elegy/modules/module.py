@@ -9,6 +9,7 @@ import treex as tx
 import typing_extensions as tpe
 
 import elegy as eg
+import elegy.pytree as pytree_m
 from elegy import types
 
 A = tp.TypeVar("A")
@@ -25,22 +26,23 @@ class HasLossesAndMetrics(tp.Protocol):
     losses_and_metrics: tp.Optional[jm.LossesAndMetrics]
 
 
-class ModuleMeta(to.TreeMeta):
+class ModuleMeta(pytree_m.PytreeObjectMeta):
     def construct(cls, obj: M, *args, **kwargs) -> M:
         obj = super().construct(obj, *args, **kwargs)
 
-        if not hasattr(obj, "_called_init"):
+        if not obj._called_init:
             raise RuntimeError(
-                f"CoreModule '{type(obj)}' not properly initialized. "
+                f"CoreModule '{type(obj).__name__}' not properly initialized. "
                 "Make sure to call `super().__init__(...)` to propagate initialization."
             )
 
         return obj
 
 
-class Module(to.Tree, to.Immutable, to.Map, to.Copy, metaclass=ModuleMeta):
+class Module(pytree_m.PytreeObject, metaclass=ModuleMeta):
 
-    initialized: bool
+    initialized: bool = pytree_m.field(node=False)
+    _called_init: bool = pytree_m.field(default=False, node=False)
 
     def __init__(
         self,
@@ -49,7 +51,7 @@ class Module(to.Tree, to.Immutable, to.Map, to.Copy, metaclass=ModuleMeta):
     ) -> None:
 
         self.initialized = initialized
-        self._called_init = None
+        self._called_init = True
 
     # ---------------------------------------------------------------------------
     # API

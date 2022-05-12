@@ -17,7 +17,7 @@ M = tp.TypeVar("M", bound="HighLevelModule")
 
 
 class HighLevelModule(ManagedModule):
-    losses_and_metrics: tp.Optional[jm.LossesAndMetrics] = to.node()
+    losses_and_metrics: tp.Optional[jm.LossesAndMetrics]
 
     def __init__(
         self,

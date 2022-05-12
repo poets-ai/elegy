@@ -17,6 +17,7 @@ from flax.core.frozen_dict import FrozenDict
 from flax.training.train_state import TrainState
 
 import elegy as eg
+from elegy.extras.flax_module import ModuleState
 
 
 @dataclass
@@ -55,59 +56,65 @@ Metric = jm.metrics.Accuracy
 Logs = tp.Mapping[str, jnp.ndarray]
 np.random.seed(420)
 
-M = tp.TypeVar("M", bound="CNNModule")
+M = tp.TypeVar("M", bound="ElegyModule")
 C = tp.TypeVar("C", bound="tp.Callable")
 
 
-class CNNModule(eg.HighLevelModule):
-    variables: tp.Optional[FrozenDict[str, tp.Mapping[str, tp.Any]]] = eg.node()
+class ElegyModule(eg.Module):
+    key: tp.Optional[jnp.ndarray]
+    variables: tp.Optional[FrozenDict[str, tp.Mapping[str, tp.Any]]]
+    opt_state: tp.Optional[tp.Any]
+    _module: eg.Hashable[Module] = eg.static_field()
+    optimizer: optax.GradientTransformation = eg.static_field()
 
     def __init__(
         self,
         module: Module,
+        optimizer: optax.GradientTransformation,
     ) -> None:
         super().__init__()
-        self._module = eg.Hashable(module)
+        self.key = None
         self.variables = None
+        self.opt_state = None
+        self._module = eg.Hashable(module)
+        self.optimizer = optimizer
 
     @property
     def module(self) -> Module:
         return self._module.value
 
-    def get_params(self) -> tp.Any:
-        assert self.variables is not None
-        return self.variables["params"]
+    @jax.jit
+    def init_step(
+        self: M,
+        key: jnp.ndarray,
+        batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
+    ) -> M:
+        inputs, labels = batch
 
-    def set_params(self: M, params: tp.Any) -> M:
-        assert self.variables is not None
-        return self.replace(
-            variables=self.variables.copy({"params": params}),
-        )
-
-    def get_batch_stats(self) -> tp.Any:
-        assert self.variables is not None
-        return self.variables["batch_stats"]
-
-    def set_batch_stats(self: M, batch_stats: tp.Any) -> M:
-        assert self.variables is not None
-        return self.replace(
-            variables=self.variables.copy({"batch_stats": batch_stats}),
-        )
-
-    def init(self: M, key: jnp.ndarray, inputs: tp.Any) -> M:
-
-        variables = self.module.init(key, inputs, training=False)
+        init_key, key = jax.random.split(key)
+        variables = self.module.init(init_key, inputs, training=False)
+        opt_state = self.optimizer.init(variables["params"])
 
         return self.replace(
+            key=key,
             variables=variables,
+            opt_state=opt_state,
         )
 
-    def apply(
-        self: M, key: jnp.ndarray, inputs: tp.Any, training: bool
-    ) -> tp.Tuple[eg.types.Outputs, M]:
-
+    def loss_fn(
+        self: "ElegyModule",
+        params: tp.Optional[tp.Mapping[str, jnp.ndarray]],
+        key: tp.Optional[jnp.ndarray],
+        inputs: jnp.ndarray,
+        labels: jnp.ndarray,
+        training: bool,
+    ) -> tp.Tuple[jnp.ndarray, tp.Tuple[Logs, "ElegyModule"]]:
         assert self.variables is not None
+
         variables = self.variables
+
+        if params is not None:
+            variables = variables.copy({"params": params})
 
         if training:
             rngs = {"dropout": key}
@@ -131,9 +138,85 @@ class CNNModule(eg.HighLevelModule):
         else:
             preds = outputs
 
-        return preds, self.replace(
-            variables=variables,
+        oh_labels = jax.nn.one_hot(labels, preds.shape[-1])
+        loss = jnp.mean(optax.softmax_cross_entropy(preds, oh_labels))
+        accuracy = jnp.mean(jnp.argmax(preds, axis=-1) == labels)
+
+        logs = {"loss": loss, "accuracy": accuracy}
+
+        return (
+            loss,
+            (
+                logs,
+                self.replace(
+                    variables=variables,
+                ),
+            ),
         )
+
+    @jax.jit
+    def train_step(
+        self: M,
+        batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
+        batch_idx: int,
+        epoch_idx: int,
+    ) -> tp.Tuple[Logs, M]:
+        print("JITTTTING")
+        assert self.key is not None
+        assert self.variables is not None
+
+        inputs, labels = batch
+
+        params = self.variables["params"]
+        loss_key, key = jax.random.split(self.key)
+
+        grads, (logs, self) = jax.grad(self.loss_fn, has_aux=True)(
+            params, loss_key, inputs, labels, training=True
+        )
+
+        assert self.variables is not None
+
+        updates, opt_state = self.optimizer.update(grads, self.opt_state, params)
+        params = optax.apply_updates(params, updates)
+        variables = self.variables.copy({"params": params})
+
+        return logs, self.replace(
+            key=key,
+            variables=variables,
+            opt_state=opt_state,
+        )
+
+    @jax.jit
+    def test_step(
+        self: M,
+        batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
+        batch_idx: int,
+    ) -> tp.Tuple[Logs, M]:
+        inputs, labels = batch
+
+        loss, (logs, self) = self.loss_fn(None, None, inputs, labels, training=False)
+
+        return logs, self
+
+    @jax.jit
+    def predict_step(
+        self: M,
+        batch: jnp.ndarray,
+        batch_idx: int,
+    ) -> tp.Tuple[tp.Any, M]:
+        assert self.variables is not None
+        inputs = batch
+
+        outputs = self.module.apply(
+            self.variables,
+            inputs,
+            training=False,
+            mutable=False,
+            rngs={},
+        )
+        outputs = jnp.argmax(outputs, axis=1)
+
+        return outputs, self
 
     def tabulate(
         self,
@@ -163,11 +246,10 @@ def main(
     print("X_test:", X_test.shape, X_test.dtype)
 
     model = eg.Model(
-        module=CNNModule(CNN()),
-        loss=jm.losses.Crossentropy(),
-        metrics=jm.metrics.Accuracy(),
-        optimizer=optax.adamw(1e-3),
-        strategy="jit",
+        ElegyModule(
+            module=CNN(),
+            optimizer=optax.adamw(1e-3),
+        )
     )
 
     history = model.fit(
@@ -185,15 +267,12 @@ def main(
 
     print(model.evaluate(X_test, y_test))
 
-    model.set_strategy("jit")
-
     # get random samples
     idxs = np.random.randint(0, 10000, size=(9,))
     x_sample = X_test[idxs]
 
     # get predictions
     y_pred = model.predict(x_sample)
-    y_pred = jnp.argmax(y_pred, axis=-1)
 
     # plot results
     figure = plt.figure(figsize=(12, 12))

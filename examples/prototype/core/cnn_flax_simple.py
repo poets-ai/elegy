@@ -61,9 +61,11 @@ C = tp.TypeVar("C", bound="tp.Callable")
 
 
 class ElegyModule(eg.Module):
-    key: tp.Optional[jnp.ndarray] = eg.node()
-    variables: tp.Optional[FrozenDict[str, tp.Mapping[str, tp.Any]]] = eg.node()
-    opt_state: tp.Optional[tp.Any] = eg.node()
+    key: tp.Optional[jnp.ndarray]
+    variables: tp.Optional[FrozenDict[str, tp.Mapping[str, tp.Any]]]
+    opt_state: tp.Optional[tp.Any]
+    _module: eg.Hashable[Module] = eg.static_field()
+    optimizer: optax.GradientTransformation = eg.static_field()
 
     def __init__(
         self,
@@ -212,8 +214,6 @@ def main(
     )
 
     eg.utils.plot_history(history)
-
-    print(model.evaluate(X_test, y_test))
 
     # get random samples
     idxs = np.random.randint(0, 10000, size=(9,))

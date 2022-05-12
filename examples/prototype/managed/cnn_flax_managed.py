@@ -186,7 +186,7 @@ def main(
     model = eg.Model(
         module=CNNModule(CNN()),
         optimizer=optax.adamw(1e-3),
-        strategy="data_parallel",
+        strategy="jit",
     )
 
     history = model.fit(
