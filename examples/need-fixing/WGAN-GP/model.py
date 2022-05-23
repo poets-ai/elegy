@@ -43,7 +43,7 @@ def gradient_penalty(x_real, x_fake, applied_discriminator_fn, rngkey):
     alpha = jax.random.uniform(rngkey, shape=[len(x_real), 1, 1, 1])
     x_hat = x_real * alpha + x_fake * (1 - alpha)
     grads = jax.grad(lambda x: applied_discriminator_fn(x)[0].mean())(x_hat)
-    norm = jnp.sqrt((grads ** 2).sum(axis=[1, 2, 3]))
+    norm = jnp.sqrt((grads**2).sum(axis=[1, 2, 3]))
     penalty = (norm - 1) ** 2
     return penalty.mean() * LAMBDA_GP
 

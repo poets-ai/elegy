@@ -132,6 +132,5 @@ try:
             self.regularization_losses = []
             self.__call__ = tf_fun
 
-
 except ImportError:
     convert_and_save_model = None
