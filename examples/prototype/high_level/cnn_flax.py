@@ -19,7 +19,6 @@ from flax.training.train_state import TrainState
 import elegy as eg
 
 
-@dataclass
 class CNN(nn.Module):
     @nn.compact
     def __call__(self, x: jnp.ndarray, training: bool) -> jnp.ndarray:
