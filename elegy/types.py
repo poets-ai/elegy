@@ -42,6 +42,9 @@ Parameters = tp.Dict[str, tp.Any]
 Labels = tp.Mapping[str, tp.Any]
 ParameterCollection = tp.Dict[str, Parameters]
 Logs = tp.Dict[str, jnp.ndarray]
+Outputs = tp.Any
+Loss = jnp.ndarray
+Batch = tp.Any
 Index = tp.Union[int, str]
 Path = tp.Tuple[Index, ...]
 Grads = tp.Any
@@ -49,6 +52,7 @@ RNG = tp.Union[KeySeq, np.ndarray]
 Scalar = tp.Union[np.ndarray, float, int]
 SummaryModule = tp.Any
 SummaryValue = tp.Any
+KeyLike = tp.Union[int, jnp.ndarray]
 
 NetParams = tp.Any
 NetStates = tp.Any

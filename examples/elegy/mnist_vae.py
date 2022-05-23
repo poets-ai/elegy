@@ -35,7 +35,7 @@ class KLDivergence(eg.Loss):
         Returns:
             A scalar representing KL divergence of the two Gaussian distributions.
         """
-        return 0.5 * jnp.mean(-jnp.log(std ** 2) - 1.0 + std ** 2 + mean ** 2, axis=-1)
+        return 0.5 * jnp.mean(-jnp.log(std**2) - 1.0 + std**2 + mean**2, axis=-1)
 
 
 class Encoder(eg.Module):

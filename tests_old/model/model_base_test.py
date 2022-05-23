@@ -34,7 +34,7 @@ class TestModelBase(unittest.TestCase):
 
                 return preds, self
 
-            def reset_metrics(self):
+            def reset_step(self):
                 pass
 
         model = Model()
@@ -84,7 +84,7 @@ class TestModelBase(unittest.TestCase):
 
                 return loss, logs, self
 
-            def reset_metrics(self):
+            def reset_step(self):
                 pass
 
         model = Model()
@@ -137,7 +137,7 @@ class TestModelBase(unittest.TestCase):
 
                 return logs, self
 
-            def reset_metrics(self):
+            def reset_step(self):
                 pass
 
         model = Model()
@@ -189,7 +189,7 @@ class TestModelBase(unittest.TestCase):
 
                 return preds, self
 
-            def reset_metrics(self):
+            def reset_step(self):
                 pass
 
         model = Model()

@@ -81,7 +81,7 @@ class DistributedStrategy(ABC):
         ...
 
     @abstractmethod
-    def pred_step_fn(self, model: M) -> PredStep[M]:
+    def predict_step_fn(self, model: M) -> PredStep[M]:
         ...
 
     @abstractmethod
@@ -112,7 +112,7 @@ class Eager(DistributedStrategy):
     def init_step_fn(self, model: M) -> InitStep[M]:
         return model.__class__._static_init_step
 
-    def pred_step_fn(self, model: M) -> PredStep[M]:
+    def predict_step_fn(self, model: M) -> PredStep[M]:
         return model.__class__._static_pred_step
 
     def test_step_fn(self, model: M) -> TestStep[M]:
@@ -128,7 +128,7 @@ class JIT(DistributedStrategy):
     def init_step_fn(self, model: M) -> InitStep[M]:
         return jax.jit(model.__class__._static_init_step, donate_argnums=0)
 
-    def pred_step_fn(self, model: M) -> PredStep[M]:
+    def predict_step_fn(self, model: M) -> PredStep[M]:
         return jax.jit(model.__class__._static_pred_step, donate_argnums=0)
 
     def test_step_fn(self, model: M) -> TestStep[M]:
@@ -208,7 +208,7 @@ class DataParallel(DistributedStrategy):
             donate_argnums=0,
         )
 
-    def pred_step_fn(self, model: M) -> PredStep[M]:
+    def predict_step_fn(self, model: M) -> PredStep[M]:
         return jax.pmap(
             model.__class__._static_pred_step,
             axis_name="device",
@@ -253,7 +253,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
     _distributed_strategy: DistributedStrategy = JIT()
 
     init_step_fn: tp.Dict[DistributedStrategy, InitStep]
-    pred_step_fn: tp.Dict[DistributedStrategy, PredStep]
+    predict_step_fn: tp.Dict[DistributedStrategy, PredStep]
     test_step_fn: tp.Dict[DistributedStrategy, TestStep]
     train_step_fn: tp.Dict[DistributedStrategy, TrainStep]
 
@@ -286,41 +286,43 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
         return self._distributed_strategy
 
     def create_jit_functions(self):
-        cls = self.__class__
-        self._jitted_members: tp.Set[str] = set()
+        with tx.make_mutable(self, toplevel_only=True):
+            cls = self.__class__
+            self._jitted_members: tp.Set[str] = set()
 
-        self.init_step_fn = {}
-        self.pred_step_fn = {}
-        self.test_step_fn = {}
-        self.train_step_fn = {}
+            self.init_step_fn = {}
+            self.predict_step_fn = {}
+            self.test_step_fn = {}
+            self.train_step_fn = {}
 
-        self._maybe_build_strategy()
+            self._maybe_build_strategy()
 
-        self._jitted_members |= {
-            "init_step_fn",
-            "pred_step_fn",
-            "test_step_fn",
-            "train_step_fn",
-        }
+            self._jitted_members |= {
+                "init_step_fn",
+                "predict_step_fn",
+                "test_step_fn",
+                "train_step_fn",
+            }
 
     def _maybe_build_strategy(self):
         strategy = self._distributed_strategy
 
         if (
             strategy not in self.init_step_fn
-            or strategy not in self.pred_step_fn
+            or strategy not in self.predict_step_fn
             or strategy not in self.test_step_fn
             or strategy not in self.train_step_fn
         ):
             # build strategy functions
             self.init_step_fn[strategy] = strategy.init_step_fn(self)
-            self.pred_step_fn[strategy] = strategy.pred_step_fn(self)
+            self.predict_step_fn[strategy] = strategy.predict_step_fn(self)
             self.test_step_fn[strategy] = strategy.test_step_fn(self)
             self.train_step_fn[strategy] = strategy.train_step_fn(self)
 
     def __setstate__(self, d):
-        self.__dict__ = d
-        self.create_jit_functions()
+        with tx.make_mutable(self, toplevel_only=True):
+            self.__dict__ = d
+            self.create_jit_functions()
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -373,7 +375,7 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
     ) -> TrainStepOutput[M]:
         raise types.MissingMethod()
 
-    def reset_metrics(self) -> None:
+    def reset_step(self) -> None:
         raise types.MissingMethod()
 
     # ----------------------------------------------------------------
@@ -498,8 +500,8 @@ class ModelCore(tx.Treex, tx.Filters, metaclass=ModelMeta):
 
         self.eval(inplace=True)
 
-        pred_step_fn = self.pred_step_fn[self._distributed_strategy]
-        y_pred, model = pred_step_fn(self, inputs)
+        predict_step_fn = self.predict_step_fn[self._distributed_strategy]
+        y_pred, model = predict_step_fn(self, inputs)
 
         if not isinstance(model, type(self)):
             raise ValueError(

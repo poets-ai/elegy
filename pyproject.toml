@@ -5,7 +5,7 @@ authors = ["Cristian Garcia <cgarcia.e88@gmail.com>",
            "Carlos Alvarez <candres.alv@gmail.com>",
            "David Cardozo <davidcardozo@berkeley.edu>",
            "Sebastian Arango"]
-version = "0.8.6"
+version = "0.9.0.dev1"
 license = "APACHE"
 readme = "README.md"
 repository = "https://github.com/poets-ai/elegy"
@@ -21,36 +21,43 @@ python = ">=3.7,<3.10"
 cloudpickle = "^1.5.0"
 tensorboardx = "^2.1"
 wandb = { version = "^0.12.10", optional = true }
-treex = "^0.6.5"
-# treex = {path = "../treex", develop = true}
+treex = "^0.7.0.a0"
+# treex = { path = "../treex", develop = true }
+jax_metrics = "^0.1.0.a2"
+# jax_metrics = { path = "../jax-metrics", develop = true }
+einop = "^0.0.1"
 
 [tool.poetry.dev-dependencies]
-jax = "^0.2.24"
-jaxlib = "^0.1.73"
+jax = "^0.3.10"
+jaxlib = "^0.3.10"
 pytest = "^5.4.3"
 pytest-cov = "^2.10.0"
 dm-haiku = "^0.0.5"
 mkdocs = "^1.1.2"
 mkdocs-material = "^6.2.7"
 mkdocstrings = "^0.14.0"
-black = {version = "^20.8b1", allow-prereleases = true}
-typer = "^0.3.0"
+black = "^22.3.0"
+typer = "^0.4.1"
 mkdocs-jupyter = { version = "^0.15.1", python = ">=3.7" }
 matplotlib = "^3.3.0"
 debugpy = "^1.0.0-beta.12"
 jupyter = { version = "^1.0.0", python = ">=3.7" }
 jupyterlab = { version = "^3.0.6", python = ">=3.7" }
 ipython = { version = "^7.20.0", python = ">=3.7" }
-flax = "^0.3.6"
+flax = "^0.4.2"
 torch = "1.9.1+cpu"
-einops = "^0.3.0"
+einops = "^0.4.0"
 sh = "^1.14.1"
 pre-commit = "^2.15.0"
 datasets = "^1.14.0"
-tf-nightly-cpu = "2.8.0.dev20211103"
+# tf-nightly-cpu = "2.8.0.dev20211103"
 livereload = "^2.6.3"
 libclang = "^13.0.0"
 wandb = "^0.12.10"
+isort = "^5.10.1"
+tensorflow = "^2.8.0"
+optax = "^0.1.2"
+chex = "^0.1.3"
 
 [tool.poetry.extras]
 wandb = ["all"]

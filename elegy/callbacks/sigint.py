@@ -15,6 +15,7 @@ ORIGINAL_HANDLER = signal.getsignal(signal.SIGINT)
 class SigIntMode(enum.Enum):
     TRAIN = enum.auto()
     TEST = enum.auto()
+    PREDICT = enum.auto()
 
 
 class SigInt(Callback):
@@ -39,4 +40,11 @@ class SigInt(Callback):
 
     def on_test_end(self, logs=None):
         if self.mode == SigIntMode.TEST:
+            signal.signal(signal.SIGINT, ORIGINAL_HANDLER)
+
+    def on_predict_begin(self, logs=None):
+        signal.signal(signal.SIGINT, self.signal_handler)
+
+    def on_predict_end(self, logs=None):
+        if self.mode == SigIntMode.PREDICT:
             signal.signal(signal.SIGINT, ORIGINAL_HANDLER)

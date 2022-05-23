@@ -3,7 +3,9 @@
 
 import typing as tp
 
-import numpy as np
+import jax.numpy as jnp
+
+import elegy
 
 
 def default(method):
@@ -45,6 +47,8 @@ class Callback(object):
         model (elegy.model.Model): Reference of the model being trained.
     """
 
+    model: tp.Optional["elegy.model_full.Model"]
+
     __all__ = [
         "on_epoch_begin",
         "on_epoch_end",
@@ -78,41 +82,20 @@ class Callback(object):
 
     # @doc_controls.for_subclass_implementers
     def on_epoch_begin(
-        self, epoch: int, logs: tp.Optional[tp.Dict[str, np.ndarray]] = None
+        self, epoch: int, logs: tp.Optional[tp.Dict[str, jnp.ndarray]] = None
     ):
-        """Called at the def on_epoch_end(self, epoch, logs=None):
-        current = self.get_monitor_value(logs)
-        if current is None:
-            return
-        if self.monitor_op(current - self.min_delta, self.best):
-            self.best = current
-            self.wait = 0
-            if self.restore_best_weights:
-                # This will also save optimizer state
-                self.best_state = self.model.full_state
-        else:
-            self.wait += 1
-            if self.wait >= self.patience:
-                self.stopped_epoch = epoch
-                self.model.stop_training = True
-                if self.restore_best_weights:
-                    if self.verbose > 0:
-                        print("Restoring model weights from the end of the best epoch.")
-                    self.model.full_state = self.best_statestart of an epoch.
-
-        Subclasses should override for any actions to run. This function should only
-        be called during TRAIN mode.
-
-        Arguments:
-            epoch: integer, index of epoch.
-            logs: dict. Currently no data is passed to this argument for this method but
-                that may change in the future.
+        """Calls the `on_epoch_begin` methods of its callbacks.
+        This function should only be called during TRAIN mode.
+        Args:
+            epoch: Integer, index of epoch.
+            logs: Dict. Currently no data is passed to this argument for this method
+              but that may change in the future.
         """
         pass
 
     # @doc_controls.for_subclass_implementers
     def on_epoch_end(
-        self, epoch: int, logs: tp.Optional[tp.Dict[str, np.ndarray]] = None
+        self, epoch: int, logs: tp.Optional[tp.Dict[str, jnp.ndarray]] = None
     ):
         """Called at the end of an epoch.
 
@@ -130,7 +113,7 @@ class Callback(object):
     # @doc_controls.for_subclass_implementers
     @default
     def on_train_batch_begin(
-        self, batch: int, logs: tp.Optional[tp.Dict[str, np.ndarray]] = None
+        self, batch: int, logs: tp.Optional[tp.Dict[str, jnp.ndarray]] = None
     ):
         """Called at the beginning of a training batch in `fit` methods.
 
@@ -146,7 +129,7 @@ class Callback(object):
     # @doc_controls.for_subclass_implementers
     @default
     def on_train_batch_end(
-        self, batch: int, logs: tp.Optional[tp.Dict[str, np.ndarray]] = None
+        self, batch: int, logs: tp.Optional[tp.Dict[str, jnp.ndarray]] = None
     ):
         """Called at the end of a training batch in `fit` methods.
 
@@ -161,7 +144,7 @@ class Callback(object):
     # @doc_controls.for_subclass_implementers
     @default
     def on_test_batch_begin(
-        self, batch: int, logs: tp.Optional[tp.Dict[str, np.ndarray]] = None
+        self, batch: int, logs: tp.Optional[tp.Dict[str, jnp.ndarray]] = None
     ):
         """Called at the beginning of a batch in `evaluate` methods.
 
@@ -180,7 +163,7 @@ class Callback(object):
     # @doc_controls.for_subclass_implementers
     @default
     def on_test_batch_end(
-        self, batch: int, logs: tp.Optional[tp.Dict[str, np.ndarray]] = None
+        self, batch: int, logs: tp.Optional[tp.Dict[str, jnp.ndarray]] = None
     ):
         """Called at the end of a batch in `evaluate` methods.
 
@@ -198,7 +181,7 @@ class Callback(object):
     # @doc_controls.for_subclass_implementers
     @default
     def on_predict_batch_begin(
-        self, batch: int, logs: tp.Optional[tp.Dict[str, np.ndarray]] = None
+        self, batch: int, logs: tp.Optional[tp.Dict[str, jnp.ndarray]] = None
     ):
         """Called at the beginning of a batch in `predict` methods.
 
@@ -214,7 +197,7 @@ class Callback(object):
     # @doc_controls.for_subclass_implementers
     @default
     def on_predict_batch_end(
-        self, batch: int, logs: tp.Optional[tp.Dict[str, np.ndarray]] = None
+        self, batch: int, logs: tp.Optional[tp.Dict[str, jnp.ndarray]] = None
     ):
         """Called at the end of a batch in `predict` methods.
 
@@ -227,7 +210,7 @@ class Callback(object):
         pass
 
     # @doc_controls.for_subclass_implementers
-    def on_train_begin(self, logs: tp.Optional[tp.Dict[str, np.ndarray]] = None):
+    def on_train_begin(self, logs: tp.Optional[tp.Dict[str, jnp.ndarray]] = None):
         """Called at the beginning of training.
 
         Subclasses should override for any actions to run.
@@ -239,7 +222,7 @@ class Callback(object):
         pass
 
     # @doc_controls.for_subclass_implementers
-    def on_train_end(self, logs: tp.Optional[tp.Dict[str, np.ndarray]] = None):
+    def on_train_end(self, logs: tp.Optional[tp.Dict[str, jnp.ndarray]] = None):
         """Called at the end of training.
 
         Subclasses should override for any actions to run.
@@ -251,7 +234,7 @@ class Callback(object):
         pass
 
     # @doc_controls.for_subclass_implementers
-    def on_test_begin(self, logs: tp.Optional[tp.Dict[str, np.ndarray]] = None):
+    def on_test_begin(self, logs: tp.Optional[tp.Dict[str, jnp.ndarray]] = None):
         """Called at the beginning of evaluation or validation.
 
         Subclasses should override for any actions to run.
@@ -263,7 +246,7 @@ class Callback(object):
         pass
 
     # @doc_controls.for_subclass_implementers
-    def on_test_end(self, logs: tp.Optional[tp.Dict[str, np.ndarray]] = None):
+    def on_test_end(self, logs: tp.Optional[tp.Dict[str, jnp.ndarray]] = None):
         """Called at the end of evaluation or validation.
 
         Subclasses should override for any actions to run.
@@ -275,7 +258,7 @@ class Callback(object):
         pass
 
     # @doc_controls.for_subclass_implementers
-    def on_predict_begin(self, logs: tp.Optional[tp.Dict[str, np.ndarray]] = None):
+    def on_predict_begin(self, logs: tp.Optional[tp.Dict[str, jnp.ndarray]] = None):
         """Called at the beginning of prediction.
 
         Subclasses should override for any actions to run.
@@ -287,7 +270,7 @@ class Callback(object):
         pass
 
     # @doc_controls.for_subclass_implementers
-    def on_predict_end(self, logs: tp.Optional[tp.Dict[str, np.ndarray]] = None):
+    def on_predict_end(self, logs: tp.Optional[tp.Dict[str, jnp.ndarray]] = None):
         """Called at the end of prediction.
 
         Subclasses should override for any actions to run.

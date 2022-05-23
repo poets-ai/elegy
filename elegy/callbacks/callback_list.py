@@ -12,6 +12,7 @@ from elegy.callbacks.sigint import SigInt, SigIntMode
 
 from .callback import Callback
 from .history import History
+from .module_callback import ModuleCallback
 from .progbar_logger import ProgbarLogger
 
 
@@ -39,6 +40,7 @@ class CallbackList(object):
         add_history: bool = False,
         add_progbar: bool = False,
         sigint_mode: tp.Optional[SigIntMode] = None,
+        add_module: bool = False,
         model: tp.Optional[tp.Any] = None,
         **params
     ):
@@ -55,7 +57,7 @@ class CallbackList(object):
             `Callback.set_params`.
         """
         self.callbacks = callbacks if callbacks else []
-        self._add_default_callbacks(add_history, add_progbar, sigint_mode)
+        self._add_default_callbacks(add_history, add_progbar, sigint_mode, add_module)
 
         if model:
             self.set_model(model)
@@ -81,7 +83,11 @@ class CallbackList(object):
         # pylint: enable=protected-access
 
     def _add_default_callbacks(
-        self, add_history, add_progbar, sigint_mode: tp.Optional[SigIntMode]
+        self,
+        add_history,
+        add_progbar,
+        sigint_mode: tp.Optional[SigIntMode],
+        add_module: bool,
     ):
         """Adds `Callback`s that are always present."""
         self._progbar = None
@@ -103,6 +109,9 @@ class CallbackList(object):
 
         if sigint_mode is not None:
             self.callbacks.append(SigInt(sigint_mode))
+
+        if add_module:
+            self.callbacks.append(ModuleCallback())
 
     def _reset_batch_timing(self):
         self._delta_t_batch = 0.0

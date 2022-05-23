@@ -3,6 +3,7 @@ import typing as tp
 import flax
 import jax
 import jax.numpy as jnp
+import jax_metrics as jm
 import numpy as np
 import treex as tx
 from optax import GradientTransformation
@@ -37,7 +38,7 @@ class Model(tp.Generic[U], ModelBase):
 
     # pytree
     module: tp.Optional[U] = tx.node()
-    loss_and_logs: tp.Optional[tx.LossAndLogs]
+    loss_and_logs: tp.Optional[jm.LossesAndMetrics]
     optimizer: tp.Optional[tx.Optimizer]
 
     # static
@@ -161,7 +162,7 @@ class Model(tp.Generic[U], ModelBase):
         model: M = self
 
         if model.module is not None:
-            model.module = model.module.init(key, inputs=inputs)
+            model.module = model.module.init(key, inputs)
 
         if model.optimizer is not None:
             params = model.parameters()
@@ -171,7 +172,7 @@ class Model(tp.Generic[U], ModelBase):
         aux_losses = model.loss_logs()
         aux_metrics = model.metric_logs()
 
-        model.loss_and_logs = tx.LossAndLogs(
+        model.loss_and_logs = jm.LossesAndMetrics(
             losses=losses,
             metrics=metrics,
             aux_losses=aux_losses,
@@ -314,9 +315,8 @@ class Model(tp.Generic[U], ModelBase):
 
         return logs, model
 
-    def reset_metrics(self) -> None:
-        if self.loss_and_logs is not None:
-            self.loss_and_logs.reset()
+    def reset_step(self) -> None:
+        self.module = self.module.reset_step()
 
     # ----------------------------------------------------------------
     # Model-only methods
@@ -342,6 +342,18 @@ class Model(tp.Generic[U], ModelBase):
             eval_shape: If True, jax.eval_shape is used to calculate all shapes, this avoids actually
                 running the computation as only shapes are calculated (turn off if trying to debug).
         """
+        # model = self.local()
+
+        # assert model.module is not None
+
+        # if not model.initialized:
+        #     if inputs is tx.MISSING:
+        #         raise ValueError(
+        #             "`inputs` is required to print the summary of uninitialized Models"
+        #         )
+
+        #     model.init_on_batch(inputs)
+
         model = self.local()
 
         assert model.module is not None
