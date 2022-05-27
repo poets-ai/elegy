@@ -68,7 +68,7 @@ class MLP(eg.Module):
 **2.** Create a `Model` from this module and specify additional things like losses, metrics, and optimizers:
 
 ```python
-import optax optax
+import optax
 import elegy as eg
 
 model = eg.Model(
@@ -106,7 +106,7 @@ To use Flax with Elegy just create a `flax.linen.Module` and pass it to `Model`.
 ```python
 import jax
 import elegy as eg
-import optax optax
+import optax
 import flax.linen as nn
 
 class MLP(nn.Module):
@@ -149,7 +149,7 @@ You can also optionally create your own `hk.Module` and use it in `forward` if n
 ```python
 import jax
 import elegy as eg
-import optax optax
+import optax
 import haiku as hk
 
 
