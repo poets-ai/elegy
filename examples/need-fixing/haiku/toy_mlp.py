@@ -3,7 +3,8 @@
 import jax, optax
 import numpy as np
 import elegy as eg
-import treex as tx
+import haiku as hk
+
 
 
 # 1. create some data
@@ -13,19 +14,17 @@ y = 1.3 * x ** 2 - 0.3 + 0.1 * np.random.normal(size=x.shape)
 
 
 # 2. define the architecture
-class MLP(tx.Module):
-    @eg.compact
-    def __call__(self, x):
-        x = tx.Linear(64)(x)
-        x = jax.nn.relu(x)
-        x = tx.Linear(1)(x)
-        return x
+def forward(x):
+    x = hk.Linear(64)(x)
+    x = jax.nn.relu(x)
+    x = hk.Linear(1)(x)
+    return x
 
 
 
 # 3. create the Model
-model = eg.Model(
-    module=MLP(),
+model = eg.Trainer(
+    module=hk.transform_with_state(forward),
     loss=[
         eg.losses.MeanSquaredError(),
         eg.regularizers.L2(0.001),
@@ -40,7 +39,7 @@ model.fit(
     inputs=x,
     labels=y,
     epochs=100,
-    callbacks=[eg.callbacks.TensorBoard("models/mlp/treex")],
+    callbacks=[eg.callbacks.TensorBoard("models/mlp/haiku")],
 )
 
 
@@ -56,6 +55,7 @@ plt.plot(X_test, y_pred)
 plt.show()
 
 
+
 # 6. save the model
-model.save("models/mlp/treex/model")
-model.saved_model(x, "models/mlp/treex/saved_model")
+model.save("models/mlp/haiku/model")
+model.saved_model(x, "models/mlp/haiku/saved_model")

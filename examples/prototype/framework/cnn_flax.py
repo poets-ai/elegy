@@ -75,7 +75,7 @@ def main(
     print("X_train:", X_train.shape, X_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
 
-    model = eg.Model(
+    model = eg.Trainer(
         module=CNN(),
         loss=jm.losses.Crossentropy(),
         metrics=jm.metrics.Accuracy(),

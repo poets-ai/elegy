@@ -27,10 +27,10 @@ def field(
     else:
         metadata = dict(metadata)
 
-    if "node" in metadata:
+    if "pytree_node" in metadata:
         raise ValueError("node is already in metadata")
 
-    metadata["node"] = node
+    metadata["pytree_node"] = node
 
     return dataclasses.field(
         default=default,
@@ -146,7 +146,9 @@ class PytreeObject(metaclass=PytreeObjectMeta):
 
                 # extract metadata
                 if value.metadata is not None:
-                    cls._pytree__field_is_node[field] = value.metadata.get("node", True)
+                    cls._pytree__field_is_node[field] = value.metadata.get(
+                        "pytree_node", True
+                    )
                 else:
                     cls._pytree__field_is_node[field] = True
             elif not _is_descriptor(value):

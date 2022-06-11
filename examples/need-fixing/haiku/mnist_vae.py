@@ -143,7 +143,7 @@ def main(
     def forward(x: jnp.ndarray):
         return VAE(latent_size=LATENT_SIZE)(x)
 
-    model = eg.Model(
+    model = eg.Trainer(
         module=hk.transform_with_state(forward),
         loss=[
             BinaryCrossEntropy(on="logits"),

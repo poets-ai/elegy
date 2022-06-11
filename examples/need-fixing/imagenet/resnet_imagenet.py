@@ -141,7 +141,7 @@ def main(argv):
         return optimizer
 
     module = getattr(elegy.nets.resnet, FLAGS.model)(dtype=FLAGS.dtype)
-    model = elegy.Model(
+    model = elegy.Trainer(
         module,
         loss=[
             elegy.losses.Crossentropy(from_logits=True, weight=FLAGS.loss_scale),

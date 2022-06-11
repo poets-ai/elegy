@@ -18,7 +18,7 @@ from . import (
     strategies,
 )
 
-from .model import Model
+from .model import Trainer, Model
 from .strategies import Strategy
 
 # from .model.model_base import ModelBase, load
@@ -33,7 +33,7 @@ from .strategies import Strategy
 from .types import KeySeq
 from .modules.high_level.high_level_module import HighLevelModule
 from .modules.managed.managed_module import ManagedModule
-from .modules.module import Module
+from .modules.module import CoreModule
 from .modules.high_level.flax_module import FlaxModule
 from .modules.managed.managed_flax_module import ManagedFlaxModule
 from .pytree import PytreeObject, field, static_field

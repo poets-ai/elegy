@@ -1,3 +1,4 @@
+import dataclasses
 import typing as tp
 from abc import ABC, abstractmethod
 
@@ -30,6 +31,16 @@ class ModuleMeta(pytree_m.PytreeObjectMeta):
     def construct(cls, obj: M, *args, **kwargs) -> M:
         obj = super().construct(obj, *args, **kwargs)
 
+        if dataclasses.is_dataclass(obj) and not obj._called_init:
+            try:
+                super(type(obj), obj).__init__()
+            except BaseException as e:
+                raise RuntimeError(
+                    f"Failed to initialize dataclass Module '{obj.__class__.__name__}'. "
+                    f"Dataclass CoreModule's automatically call `super().__init__()` with no arguments but "
+                    f"this failed with the following error:"
+                ) from e
+
         if not obj._called_init:
             raise RuntimeError(
                 f"CoreModule '{type(obj).__name__}' not properly initialized. "
@@ -39,7 +50,7 @@ class ModuleMeta(pytree_m.PytreeObjectMeta):
         return obj
 
 
-class Module(pytree_m.PytreeObject, metaclass=ModuleMeta):
+class CoreModule(pytree_m.PytreeObject, metaclass=ModuleMeta):
 
     initialized: bool = pytree_m.field(node=False)
     _called_init: bool = pytree_m.field(default=False, node=False)

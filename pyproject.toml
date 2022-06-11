@@ -55,7 +55,7 @@ livereload = "^2.6.3"
 libclang = "^13.0.0"
 wandb = "^0.12.10"
 isort = "^5.10.1"
-tensorflow = "^2.8.0"
+tensorflow-cpu = "^2.9.0"
 optax = "^0.1.2"
 chex = "^0.1.3"
 

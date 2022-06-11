@@ -1,9 +1,7 @@
 import os
 from datetime import datetime
-from functools import partial
 from typing import Any, Generator, Mapping, Tuple
 
-import einops
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -16,20 +14,32 @@ from tensorboardX.writer import SummaryWriter
 import elegy as eg
 
 
-class MLP(eg.Module):
-    def __init__(self, n1: int = 300, n2: int = 100):
+class MeanSquaredError(eg.losses.MeanSquaredError):
+    # we request `x` instead of `y_true` since we are don't require labels in autoencoders
+    def call(self, inputs, preds):
+        return super().call(target=inputs, preds=preds) / 255
+
+
+class MLP(eg.CoreModule):
+    def __init__(self, n1: int = 300, n2: int = 100, **kwargs):
+        super().__init__(**kwargs)
         self.n1 = n1
         self.n2 = n2
 
     @eg.compact
-    def __call__(self, x: jnp.ndarray):
-        x = x.astype(jnp.float32) / 255.0
-        x = einops.rearrange(x, "batch ... -> batch (...)")
-        x = eg.nn.Linear(self.n1)(x)
+    def __call__(self, image: jnp.ndarray):
+        x = image.astype(jnp.float32) / 255.0
+        x = eg.Flatten()(x)
+        x = eg.Linear(self.n1)(x)
         x = jax.nn.relu(x)
-        x = eg.nn.Linear(self.n2)(x)
+        x = eg.Linear(self.n2)(x)
         x = jax.nn.relu(x)
-        x = eg.nn.Linear(10)(x)
+        x = eg.Linear(self.n1)(x)
+        x = jax.nn.relu(x)
+        x = eg.Linear(np.prod(image.shape[-2:]))(x)
+        x = jax.nn.sigmoid(x) * 255
+        x = x.reshape(image.shape)
+
         return x
 
 
@@ -38,8 +48,8 @@ def main(
     eager: bool = False,
     logdir: str = "runs",
     steps_per_epoch: int = 200,
-    batch_size: int = 64,
     epochs: int = 100,
+    batch_size: int = 64,
 ):
 
     if debug:
@@ -55,43 +65,35 @@ def main(
     dataset = load_dataset("mnist")
     dataset.set_format("np")
     X_train = np.stack(dataset["train"]["image"])
-    y_train = dataset["train"]["label"]
     X_test = np.stack(dataset["test"]["image"])
-    y_test = dataset["test"]["label"]
 
     print("X_train:", X_train.shape, X_train.dtype)
-    print("y_train:", y_train.shape, y_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
-    print("y_test:", y_test.shape, y_test.dtype)
 
-    model = eg.Model(
-        module=MLP(n1=300, n2=100),
-        loss=[
-            eg.losses.Crossentropy(),
-            eg.regularizers.L2(l=1e-4),
-        ],
-        metrics=eg.metrics.Accuracy(),
-        optimizer=optax.adamw(1e-3),
+    model = eg.Trainer(
+        module=MLP(n1=256, n2=64),
+        loss=MeanSquaredError(),
+        optimizer=optax.rmsprop(0.001),
         eager=eager,
     )
 
     model.summary(X_train[:64])
 
+    # Notice we are not passing `y`
     history = model.fit(
         inputs=X_train,
-        labels=y_train,
         epochs=epochs,
         steps_per_epoch=steps_per_epoch,
         batch_size=batch_size,
-        validation_data=(X_test, y_test),
+        validation_data=(X_test,),
         shuffle=True,
-        callbacks=[eg.callbacks.TensorBoard(logdir=logdir)],
+        callbacks=[eg.callbacks.TensorBoard(logdir=logdir, update_freq=300)],
     )
 
     eg.utils.plot_history(history)
 
     # get random samples
-    idxs = np.random.randint(0, 10000, size=(9,))
+    idxs = np.random.randint(0, 10000, size=(5,))
     x_sample = X_test[idxs]
 
     # get predictions
@@ -99,21 +101,15 @@ def main(
 
     # plot and save results
     with SummaryWriter(os.path.join(logdir, "val")) as tbwriter:
+
         figure = plt.figure(figsize=(12, 12))
-        for i in range(3):
-            for j in range(3):
-                k = 3 * i + j
-                plt.subplot(3, 3, k + 1)
-                plt.title(f"{np.argmax(y_pred[k])}")
-                plt.imshow(x_sample[k], cmap="gray")
-        # tbwriter.add_figure("Predictions", figure, 100)
+        for i in range(5):
+            plt.subplot(2, 5, i + 1)
+            plt.imshow(x_sample[i], cmap="gray")
+            plt.subplot(2, 5, 5 + i + 1)
+            plt.imshow(y_pred[i], cmap="gray")
 
     plt.show()
-
-    print(
-        "\n\n\nMetrics and images can be explored using tensorboard using:",
-        f"\n \t\t\t tensorboard --logdir {logdir}",
-    )
 
 
 if __name__ == "__main__":

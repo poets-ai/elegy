@@ -71,7 +71,7 @@ def main(
     print("y_test:", test_dataset.y.shape, test_dataset.y.dtype)
 
     @dataclass(unsafe_hash=True, repr=False)
-    class MLP(eg.Module):
+    class MLP(eg.CoreModule):
         """Standard LeNet-300-100 MLP network."""
 
         n1: int = 300
@@ -90,7 +90,7 @@ def main(
 
             return x
 
-    model = eg.Model(
+    model = eg.Trainer(
         module=MLP(n1=300, n2=100),
         loss=[
             eg.losses.Crossentropy(),

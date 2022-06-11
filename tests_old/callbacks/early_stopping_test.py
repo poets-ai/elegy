@@ -12,7 +12,7 @@ np.random.seed(42)
 
 class EarlyStoppingTest(TestCase):
     def test_example(self):
-        class MLP(eg.Module):
+        class MLP(eg.CoreModule):
             @eg.compact
             def __call__(self, x):
                 x = eg.Linear(10)(x)
@@ -21,7 +21,7 @@ class EarlyStoppingTest(TestCase):
 
         # This callback will stop the training when there is no improvement in
         # the for three consecutive epochs.
-        model = eg.Model(
+        model = eg.Trainer(
             module=MLP(),
             loss=eg.losses.MeanSquaredError(),
             optimizer=optax.rmsprop(0.01),
@@ -43,7 +43,7 @@ class EarlyStoppingTest(TestCase):
 
     @pytest.mark.skip("fix later")
     def test_example_restore(self):
-        class MLP(eg.Module):
+        class MLP(eg.CoreModule):
             @eg.compact
             def __call__(self, x):
                 x = eg.Linear(10)(x)
@@ -52,7 +52,7 @@ class EarlyStoppingTest(TestCase):
 
         # This callback will stop the training when there is no improvement in
         # the for three consecutive epochs.
-        model = eg.Model(
+        model = eg.Trainer(
             module=MLP(),
             loss=eg.losses.MeanSquaredError(),
             optimizer=optax.rmsprop(0.01),

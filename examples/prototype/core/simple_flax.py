@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import optax
 import typer
+from attr import mutable
 from datasets.load import load_dataset
 from flax.core.frozen_dict import FrozenDict
 from flax.training.train_state import TrainState
@@ -53,6 +54,7 @@ Batch = tp.Mapping[str, np.ndarray]
 Module = CNN
 Metric = jm.metrics.Accuracy
 Logs = tp.Mapping[str, jnp.ndarray]
+Variables = FrozenDict[str, tp.Mapping[str, tp.Any]]
 np.random.seed(420)
 
 M = tp.TypeVar("M", bound="ElegyModule")
@@ -61,84 +63,65 @@ C = tp.TypeVar("C", bound="tp.Callable")
 
 class ElegyModule(eg.CoreModule):
     key: tp.Optional[jnp.ndarray]
-    module: ModuleState[Module]
-    optimizer: eg.Optimizer
-    losses_and_metrics: jm.LossesAndMetrics
+    variables: tp.Optional[FrozenDict[str, tp.Mapping[str, tp.Any]]]
+    opt_state: tp.Optional[tp.Any]
+    init_fn: tp.Callable[..., Variables]
+    apply_fn: tp.Callable[..., tp.Tuple[tp.Any, Variables]]
+    optimizer: optax.GradientTransformation = eg.static_field()
 
     def __init__(
         self,
         module: Module,
         optimizer: optax.GradientTransformation,
-        losses: tp.Any,
-        metrics: tp.Any,
     ) -> None:
         super().__init__()
         self.key = None
-        self.losses_and_metrics = jm.LossesAndMetrics(
-            losses=losses,
-            metrics=metrics,
-        )
-        self.module = ModuleState.new(module)
-        self.optimizer = eg.Optimizer(optimizer)
+        self.variables = None
+        self.opt_state = None
+        self.init_fn = module.init
+        self.apply_fn = module.apply
+        self.optimizer = optimizer
 
     @jax.jit
     def init_step(
         self: M,
         key: jnp.ndarray,
-        batch: tp.Union[jnp.ndarray, tp.Tuple[jnp.ndarray, jnp.ndarray]],
+        batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
     ) -> M:
-        if isinstance(batch, tuple):
-            inputs, _ = batch
-        else:
-            inputs = batch
+        inputs, labels = batch
 
         init_key, key = jax.random.split(key)
-        module = self.module.init(init_key, inputs, training=False)
-        optimizer = self.optimizer.init(module["params"])
-        losses_and_metrics = self.losses_and_metrics.init()
+        variables = self.init_fn(init_key, inputs, training=False)
+        opt_state = self.optimizer.init(variables["params"])
 
-        return self.replace(
-            key=key,
-            module=module,
-            optimizer=optimizer,
-            losses_and_metrics=losses_and_metrics,
-        )
-
-    @jax.jit
-    def reset_step(self: M) -> M:
-        return self.replace(
-            losses_and_metrics=self.losses_and_metrics.reset(),
-        )
+        return self.replace(key=key, variables=variables, opt_state=opt_state)
 
     def loss_fn(
         self: "ElegyModule",
-        params: tp.Optional[tp.Mapping[str, jnp.ndarray]],
+        params: tp.Mapping[str, jnp.ndarray],
         key: tp.Optional[jnp.ndarray],
         inputs: jnp.ndarray,
         labels: jnp.ndarray,
-        training: bool,
     ) -> tp.Tuple[jnp.ndarray, "ElegyModule"]:
+        assert self.variables is not None
 
-        module = self.module
+        variables = self.variables.copy({"params": params})
 
-        if params is not None:
-            module = module.update(params=params)
-
-        preds, module = module.apply(
-            key,
+        preds, updates = self.apply_fn(
+            variables,
             inputs,
-            training=training,
+            training=True,
+            rngs={"dropout": key},
+            mutable=["batch_stats"],
         )
+        variables = variables.copy(updates)
 
-        loss, losses_and_metrics = self.losses_and_metrics.loss_and_update(
-            target=labels,
-            preds=preds,
-        )
+        loss = optax.softmax_cross_entropy(
+            preds,
+            jax.nn.one_hot(labels, preds.shape[-1]),
+        ).mean()
 
-        return loss, self.replace(
-            module=module,
-            losses_and_metrics=losses_and_metrics,
-        )
+        return loss, self.replace(variables=variables)
 
     @jax.jit
     def train_step(
@@ -147,65 +130,24 @@ class ElegyModule(eg.CoreModule):
         batch_idx: int,
         epoch_idx: int,
     ) -> tp.Tuple[Logs, M]:
-        print("JITTTTING")
-        assert self.key is not None
-
         inputs, labels = batch
 
-        params = self.module["params"]
+        params = self.variables["params"]
         loss_key, key = jax.random.split(self.key)
 
-        grads, self = jax.grad(self.loss_fn, has_aux=True)(
-            params, loss_key, inputs, labels, training=True
+        (loss, self), grads = jax.value_and_grad(self.loss_fn, has_aux=True)(
+            params, loss_key, inputs, labels
         )
 
-        params, optimizer = self.optimizer.update(grads, params)
-        module = self.module.update(params=params)
+        assert self.variables is not None
 
-        logs = self.losses_and_metrics.compute_logs()
+        updates, opt_state = self.optimizer.update(grads, self.opt_state, params)
+        params = optax.apply_updates(params, updates)
+        variables = self.variables.copy({"params": params})
 
-        return logs, self.replace(
-            key=key,
-            module=module,
-            optimizer=optimizer,
-        )
+        logs = {"loss": loss}
 
-    @jax.jit
-    def test_step(
-        self: M,
-        batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
-        batch_idx: int,
-    ) -> tp.Tuple[Logs, M]:
-        inputs, labels = batch
-
-        loss, self = self.loss_fn(None, None, inputs, labels, training=False)
-
-        logs = self.losses_and_metrics.compute_logs()
-
-        return logs, self
-
-    @jax.jit
-    def predict_step(
-        self: M,
-        batch: jnp.ndarray,
-        batch_idx: int,
-    ) -> tp.Tuple[tp.Any, M]:
-        inputs = batch
-        outputs, module = self.module.apply(
-            None,
-            inputs,
-            training=False,
-        )
-        outputs = jnp.argmax(outputs, axis=1)
-
-        return outputs, self.replace(module=module)
-
-    def tabulate(
-        self,
-        inputs,
-        summary_depth: int = 2,
-    ) -> str:
-        return "TODO"
+        return logs, self.replace(key=key, variables=variables, opt_state=opt_state)
 
 
 # define parameters
@@ -231,9 +173,8 @@ def main(
         ElegyModule(
             module=CNN(),
             optimizer=optax.adamw(1e-3),
-            losses=jm.losses.Crossentropy(),
-            metrics=jm.metrics.Accuracy(),
-        )
+        ),
+        seed=seed,
     )
 
     history = model.fit(
@@ -248,8 +189,6 @@ def main(
     )
 
     eg.utils.plot_history(history)
-
-    print(model.evaluate(X_test, y_test))
 
     # get random samples
     idxs = np.random.randint(0, 10000, size=(9,))

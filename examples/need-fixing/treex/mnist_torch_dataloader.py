@@ -34,7 +34,7 @@ def ConvBlock(
     return jax.nn.relu(x)
 
 
-class CNN(eg.Module):
+class CNN(eg.CoreModule):
     @eg.compact
     def __call__(self, x: jnp.ndarray):
         # normalize
@@ -86,7 +86,7 @@ def main(
     print("X_test:", X_test.shape, X_test.dtype)
     print("y_test:", y_test.shape, y_test.dtype)
 
-    model = eg.Model(
+    model = eg.Trainer(
         module=CNN(),
         loss=eg.losses.Crossentropy(),
         metrics=eg.metrics.Accuracy(),

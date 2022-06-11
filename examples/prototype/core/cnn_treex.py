@@ -46,7 +46,7 @@ def set_training(**fields: bool):
     return decorator
 
 
-class ElegyModule(eg.Module):
+class ElegyModule(eg.CoreModule):
     key: tp.Optional[jnp.ndarray] = eg.node()
 
     def __init__(
@@ -214,7 +214,7 @@ def main(
     print("X_train:", X_train.shape, X_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
 
-    model = eg.Model(
+    model = eg.Trainer(
         ElegyModule(
             optimizer=optax.adamw(1e-3),
             losses=jm.losses.Crossentropy(),

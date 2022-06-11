@@ -28,7 +28,7 @@ TrainStep = tp.Callable[
 ]
 
 
-class ManagedModule(module_m.Module):
+class ManagedModule(module_m.CoreModule):
     # nodes
     key: tp.Optional[jnp.ndarray]
     optimizer: tp.Optional[tx.Optimizer]

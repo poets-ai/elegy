@@ -19,7 +19,7 @@ import elegy as eg
 
 
 @dataclass
-class MLP(eg.Module):
+class MLP(eg.CoreModule):
     dmid: int
     dout: int
 
@@ -36,7 +36,7 @@ class MLP(eg.Module):
 class ModelBasicTest(unittest.TestCase):
     def test_predict(self):
 
-        model = eg.Model(module=eg.Linear(1))
+        model = eg.Trainer(module=eg.Linear(1))
 
         X = np.random.uniform(size=(5, 2))
         y = np.random.randint(10, size=(5, 1))
@@ -61,7 +61,7 @@ class ModelBasicTest(unittest.TestCase):
             def compute(self) -> tp.Any:
                 return self.value
 
-        model = eg.Model(
+        model = eg.Trainer(
             module=eg.Linear(1),
             loss=dict(a=mse()),
             metrics=dict(b=mae()),
@@ -82,7 +82,7 @@ class ModelBasicTest(unittest.TestCase):
 class ModelTest(unittest.TestCase):
     def test_evaluate(self):
 
-        model = eg.Model(
+        model = eg.Trainer(
             module=MLP(dmid=3, dout=4),
             loss=[
                 eg.losses.Crossentropy(),
@@ -118,7 +118,7 @@ class ModelTest(unittest.TestCase):
 
         with TemporaryDirectory() as model_dir:
 
-            model = eg.Model(module=eg.Linear(4))
+            model = eg.Trainer(module=eg.Linear(4))
 
             x = np.random.uniform(size=(5, 6))
 
@@ -139,7 +139,7 @@ class ModelTest(unittest.TestCase):
 
         with TemporaryDirectory() as model_dir:
 
-            model = eg.Model(module=eg.Linear(4))
+            model = eg.Trainer(module=eg.Linear(4))
 
             x = np.random.uniform(size=(5, 6)).astype(np.float32)
 
@@ -160,7 +160,7 @@ class ModelTest(unittest.TestCase):
 
     @pytest.mark.skip("only failing within pytest for some reason")
     def test_cloudpickle(self):
-        model = eg.Model(
+        model = eg.Trainer(
             module=eg.Linear(10),
             loss=[
                 eg.losses.Crossentropy(),
@@ -190,7 +190,7 @@ class ModelTest(unittest.TestCase):
         x = np.random.uniform(size=(batch_size, 1))
         y = 1.4 * x + 0.1 * np.random.uniform(size=(batch_size, 2))
 
-        model = eg.Model(
+        model = eg.Trainer(
             eg.Linear(2),
             loss=[eg.losses.MeanSquaredError()],
         )

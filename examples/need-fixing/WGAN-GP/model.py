@@ -6,7 +6,7 @@ import elegy
 
 
 # the generator architecture adapted from DCGAN
-class Generator(elegy.Module):
+class Generator(elegy.CoreModule):
     def call(self, z):
         assert len(z.shape) == 2
         x = elegy.nn.Reshape([1, 1, z.shape[-1]])(z)
@@ -24,7 +24,7 @@ class Generator(elegy.Module):
 
 # the discriminator architecture adapted from DCGAN
 # also called 'critic' in the WGAN paper
-class Discriminator(elegy.Module):
+class Discriminator(elegy.CoreModule):
     def __call__(self, x):
         for c in [128, 256, 512, 1024]:
             x = elegy.nn.conv.Conv(c, (4, 4), stride=(2, 2))(x)
@@ -48,7 +48,7 @@ def gradient_penalty(x_real, x_fake, applied_discriminator_fn, rngkey):
     return penalty.mean() * LAMBDA_GP
 
 
-class WGAN_GP(elegy.Model):
+class WGAN_GP(elegy.Trainer):
     def __init__(self):
         super().__init__()
         self.generator = Generator()

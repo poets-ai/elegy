@@ -13,7 +13,7 @@ from elegy.callbacks import Callback, CallbackList, History
 from elegy.callbacks.sigint import SigIntMode
 from elegy.data import utils as data_utils
 from elegy.modules.high_level.flax_module import FlaxModule
-from elegy.modules.module import Module
+from elegy.modules.module import CoreModule
 from elegy.strategies import Strategy
 
 M = tp.TypeVar("M", bound="Module")
@@ -35,7 +35,7 @@ class HasDistributedStrategy(tpe.Protocol):
     strategy: Strategy
 
 
-class Model(tp.Generic[M]):
+class Trainer(tp.Generic[M]):
     """
     Model provides an Estimator-like API similar to Keras.
     """
@@ -47,7 +47,7 @@ class Model(tp.Generic[M]):
 
     @tp.overload
     def __init__(
-        self: "Model[FlaxModule[F]]",
+        self: "Trainer[FlaxModule[F]]",
         module: F,
         loss: tp.Optional[tp.Union[jm.Losses, tp.Any]] = None,
         metrics: tp.Optional[tp.Union[jm.Metrics, tp.Any]] = None,
@@ -59,7 +59,7 @@ class Model(tp.Generic[M]):
 
     @tp.overload
     def __init__(
-        self: "Model[M]",
+        self: "Trainer[M]",
         module: M,
         loss: tp.Optional[tp.Union[jm.Losses, tp.Any]] = None,
         metrics: tp.Optional[tp.Union[jm.Metrics, tp.Any]] = None,
@@ -116,7 +116,7 @@ class Model(tp.Generic[M]):
         if isinstance(module, linen.module.Module):
             module = FlaxModule(module)
 
-        assert isinstance(module, Module)
+        assert isinstance(module, CoreModule)
 
         self.module = module.set_trainer_params(
             optimizer=(
@@ -906,3 +906,7 @@ class Model(tp.Generic[M]):
             return epoch in validation_freq
         else:
             raise ValueError("Expected `validation_freq` to be a list or int.")
+
+
+class Model(Trainer):
+    """DEPRECATED. Kept for backwards compatibility, use `Trainer` instead."""

@@ -20,8 +20,8 @@ class ResNetTest(TestCase):
         # FIXME: test succeeds if run alone or if run on the cpu-only version of jax
         # test fails with "DNN library is not found" if run on gpu with all other tests together
 
-        model = elegy.Model(elegy.nets.resnet.ResNet18(), eager=True)
-        assert isinstance(model.module, elegy.Module)
+        model = elegy.Trainer(elegy.nets.resnet.ResNet18(), eager=True)
+        assert isinstance(model.module, elegy.CoreModule)
 
         x = np.random.random((2, 224, 224, 3)).astype(np.float32)
 
@@ -42,7 +42,7 @@ class ResNetTest(TestCase):
             )
 
             new_r18 = elegy.nets.resnet.ResNet18(weights=pklpath)
-            y2 = elegy.Model(new_r18, eager=True).predict(x, initialize=True)
+            y2 = elegy.Trainer(new_r18, eager=True).predict(x, initialize=True)
 
         assert np.allclose(y, y2, rtol=0.001)
 
@@ -56,7 +56,7 @@ class ResNetTest(TestCase):
         r18 = elegy.nets.resnet.ResNet18(weights="imagenet")
         with jax.disable_jit():
             assert (
-                elegy.Model(r18).predict(im[np.newaxis], initialize=True).argmax()
+                elegy.Trainer(r18).predict(im[np.newaxis], initialize=True).argmax()
                 == 245
             )
 
@@ -70,6 +70,6 @@ class ResNetTest(TestCase):
         r50 = elegy.nets.resnet.ResNet50(weights="imagenet")
         with jax.disable_jit():
             assert (
-                elegy.Model(r50).predict(im[np.newaxis], initialize=True).argmax()
+                elegy.Trainer(r50).predict(im[np.newaxis], initialize=True).argmax()
                 == 245
             )

@@ -14,7 +14,7 @@ import elegy as eg
 M = tp.TypeVar("M", bound="Model")
 
 
-class Model(eg.Model):
+class Model(eg.Trainer):
     w: jnp.ndarray = eg.Parameter.node()
     b: jnp.ndarray = eg.Parameter.node()
 
@@ -29,6 +29,7 @@ class Model(eg.Model):
     ):
         self.features_out = features_out
         super().__init__(
+            module=None,
             loss=loss,
             metrics=metrics,
             optimizer=optimizer,
@@ -58,11 +59,11 @@ class Model(eg.Model):
         return logits, self
 
     def test_step(
-        self,
+        self: M,
         inputs,
         labels,
-    ):
-        model = self
+    ) -> eg.TestStepOutput[M]:
+        model: M = self
         # flatten + scale
         inputs = jnp.reshape(inputs, (inputs.shape[0], -1)) / 255
 
@@ -81,14 +82,39 @@ class Model(eg.Model):
 
         return loss, logs, model
 
+    @staticmethod
+    def loss_fn(params: M, model: M, inputs, labels) -> eg.LossStepOutput[M]:
+        model = model.merge(params)
+        loss, logs, model = model.test_step(inputs, labels)
+        return loss, (logs, model)
+
+    def train_step(self: M, inputs, labels) -> eg.TrainStepOutput[M]:
+        model: M = self
+
+        params = model.parameters()
+        # train
+        grads, (logs, model) = jax.grad(Model.loss_fn, has_aux=True)(
+            params,
+            model,
+            inputs,
+            labels,
+        )
+
+        assert model.optimizer is not None
+
+        params = model.optimizer.update(grads, params)
+        model = model.merge(params)
+
+        return logs, model
+
 
 def main(
     debug: bool = False,
     eager: bool = False,
     logdir: str = "runs",
     steps_per_epoch: int = 200,
-    batch_size: int = 64,
     epochs: int = 100,
+    batch_size: int = 64,
 ):
 
     if debug:

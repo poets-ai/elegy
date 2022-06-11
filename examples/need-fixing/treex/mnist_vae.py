@@ -38,7 +38,7 @@ class KLDivergence(eg.Loss):
         return 0.5 * jnp.mean(-jnp.log(std**2) - 1.0 + std**2 + mean**2, axis=-1)
 
 
-class Encoder(eg.Module):
+class Encoder(eg.CoreModule):
     """Encoder model."""
 
     kl_loss: jnp.ndarray = eg.LossLog.node()
@@ -66,7 +66,7 @@ class Encoder(eg.Module):
         return z
 
 
-class Decoder(eg.Module):
+class Decoder(eg.CoreModule):
     """Decoder model."""
 
     def __init__(
@@ -89,7 +89,7 @@ class Decoder(eg.Module):
         return logits
 
 
-class VariationalAutoEncoder(eg.Module):
+class VariationalAutoEncoder(eg.CoreModule):
     """Main VAE model class, uses Encoder & Decoder under the hood."""
 
     encoder: Encoder
@@ -158,7 +158,7 @@ def main(
     print("X_train:", X_train.shape, X_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
 
-    model = eg.Model(
+    model = eg.Trainer(
         module=VariationalAutoEncoder(latent_size=LATENT_SIZE),
         loss=[BinaryCrossEntropy(from_logits=True, on="logits")],
         optimizer=optax.adam(1e-3),
@@ -204,7 +204,7 @@ def main(
         # tbwriter.add_figure("VAE Example", figure, epochs)
 
     # sample
-    model_decoder = eg.Model(model.module.decoder)
+    model_decoder = eg.Trainer(model.module.decoder)
 
     z_samples = np.random.normal(size=(12, LATENT_SIZE))
     samples = model_decoder.predict(z_samples)

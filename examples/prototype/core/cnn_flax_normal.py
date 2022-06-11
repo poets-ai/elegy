@@ -60,7 +60,7 @@ M = tp.TypeVar("M", bound="ElegyModule")
 C = tp.TypeVar("C", bound="tp.Callable")
 
 
-class ElegyModule(eg.Module):
+class ElegyModule(eg.CoreModule):
     key: tp.Optional[jnp.ndarray]
     variables: tp.Optional[FrozenDict[str, tp.Mapping[str, tp.Any]]]
     opt_state: tp.Optional[tp.Any]
@@ -245,7 +245,7 @@ def main(
     print("X_train:", X_train.shape, X_train.dtype)
     print("X_test:", X_test.shape, X_test.dtype)
 
-    model = eg.Model(
+    model = eg.Trainer(
         ElegyModule(
             module=CNN(),
             optimizer=optax.adamw(1e-3),
