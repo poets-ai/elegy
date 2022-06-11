@@ -1,20 +1,23 @@
 import typing as tp
 
-import flax.linen as nn
 import jax
 import jax.numpy as jnp
 import jax_metrics as jm
 import optax
-import treeo as to
-import treex as tx
-from attr import mutable
-from flax.core.frozen_dict import FrozenDict
-from flax.core.scope import CollectionFilter, DenyList
 
 import elegy as eg
 import elegy.pytree as pytree_m
 from elegy import types, utils
 from elegy.modules.high_level.high_level_module import HighLevelModule
+from elegy.optimizer import Optimizer
+
+try:
+    import flax.linen as nn
+    from flax.core.frozen_dict import FrozenDict
+    from flax.core.scope import CollectionFilter, DenyList
+except (ImportError, ModuleNotFoundError):
+    raise types.DependencyUnavailable("Flax not avialable.")
+
 
 M = tp.TypeVar("M", bound="FlaxModule")
 FrozerVariables = FrozenDict[str, tp.Mapping[str, tp.Any]]
@@ -57,7 +60,7 @@ class FlaxModule(FlaxMixin, HighLevelModule):
     # nodes
     variables: FrozerVariables
     # static
-    _module: to.Hashable[nn.module.Module] = pytree_m.static_field()
+    _module: tp.Callable[[], nn.module.Module] = pytree_m.static_field()
     mutable_init: CollectionFilter = pytree_m.static_field()
     mutable_train: CollectionFilter = pytree_m.static_field()
     mutable_eval: CollectionFilter = pytree_m.static_field()
@@ -93,7 +96,7 @@ class FlaxModule(FlaxMixin, HighLevelModule):
         # super
         losses_and_metrics: tp.Optional[jm.LossesAndMetrics] = None,
         optimizer: tp.Optional[
-            tp.Union[optax.GradientTransformation, tx.Optimizer]
+            tp.Union[optax.GradientTransformation, Optimizer]
         ] = None,
         initialized: bool = False,
         strategy: tp.Optional[tp.Union[str, "eg.Strategy"]] = None,
@@ -105,7 +108,7 @@ class FlaxModule(FlaxMixin, HighLevelModule):
             losses_and_metrics=losses_and_metrics,
         )
         # module
-        self._module = tx.Hashable(module)
+        self._module = lambda: module
         # node
         self.variables = (
             FrozenDict(variables) if variables is not None else FrozenDict()
@@ -126,7 +129,7 @@ class FlaxModule(FlaxMixin, HighLevelModule):
 
     @property
     def module(self) -> nn.module.Module:
-        return self._module.value
+        return self._module()
 
     # ---------------------------------------------------------------------------------
     # HighLevel API helpers

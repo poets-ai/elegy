@@ -3,8 +3,6 @@ import typing as tp
 import flax.linen as nn
 import jax
 import jax.numpy as jnp
-import treeo as to
-from attr import mutable
 from flax import struct
 from flax.core.frozen_dict import FrozenDict
 
@@ -29,7 +27,7 @@ class _Immutable:
 class ModuleState(tp.Generic[M], _Immutable):
     variables: tp.Optional[FrozerVariables] = struct.field()
 
-    hashable_module: to.Hashable[M] = struct.field(pytree_node=False)
+    _module: tp.Callable[[], M] = struct.field(pytree_node=False)
     mutable_train: tp.Tuple[str] = struct.field(pytree_node=False)
     mutable_eval: tp.Tuple[str] = struct.field(pytree_node=False)
     rngs_init: tp.Tuple[str] = struct.field(pytree_node=False)
@@ -49,7 +47,7 @@ class ModuleState(tp.Generic[M], _Immutable):
     ):
 
         return cls(
-            hashable_module=to.Hashable(module),
+            _module=lambda: module,
             variables=FrozenDict(variables) if variables is not None else None,
             mutable_train=tuple(mutable_train),
             mutable_eval=(
@@ -63,8 +61,8 @@ class ModuleState(tp.Generic[M], _Immutable):
         )
 
     @property
-    def module(self: "ModuleState[M]") -> M:
-        return self.hashable_module.value
+    def module(self) -> nn.module.Module:
+        return self._module()
 
     @property
     def initialized(self: "ModuleState[M]") -> bool:
@@ -118,10 +116,7 @@ class ModuleState(tp.Generic[M], _Immutable):
         if not isinstance(variables, FrozenDict):
             variables = FrozenDict(variables)
 
-        self = self.replace(
-            variables=variables,
-            hashable_module=to.Hashable(self.module),
-        )
+        self = self.replace(variables=variables)
 
         return self
 

@@ -25,27 +25,21 @@ class CNN(nn.Module):
     def __call__(self, x: jnp.ndarray, training: bool) -> jnp.ndarray:
         # Normalize the input
         x = x.astype(jnp.float32) / 255.0
-
         # Block 1
         x = nn.Conv(32, [3, 3], strides=[2, 2])(x)
         x = nn.Dropout(0.05, deterministic=not training)(x)
         x = jax.nn.relu(x)
-
         # Block 2
         x = nn.Conv(64, [3, 3], strides=[2, 2])(x)
         x = nn.BatchNorm(use_running_average=not training)(x)
         x = nn.Dropout(0.1, deterministic=not training)(x)
         x = jax.nn.relu(x)
-
         # Block 3
         x = nn.Conv(128, [3, 3], strides=[2, 2])(x)
-
         # Global average pooling
         x = x.mean(axis=(1, 2))
-
         # Classification layer
         x = nn.Dense(10)(x)
-
         return x
 
 
@@ -61,19 +55,15 @@ C = tp.TypeVar("C", bound="tp.Callable")
 
 class CNNModule(eg.ManagedModule):
     variables: tp.Optional[FrozenDict[str, tp.Mapping[str, tp.Any]]]
-    _module: eg.Hashable[Module] = eg.static_field()
+    module: tp.Callable[[], Module] = eg.static_field()
 
     def __init__(
         self,
         module: Module,
     ) -> None:
         super().__init__()
-        self._module = eg.Hashable(module)
+        self.module = lambda: module
         self.variables = None
-
-    @property
-    def module(self) -> Module:
-        return self._module.value
 
     def get_params(self) -> tp.Any:
         assert self.variables is not None
@@ -102,11 +92,9 @@ class CNNModule(eg.ManagedModule):
     ) -> M:
         inputs, labels = batch
 
-        variables = self.module.init(key, inputs, training=False)
+        variables = self.module().init(key, inputs, training=False)
 
-        return self.replace(
-            variables=variables,
-        )
+        return self.replace(variables=variables)
 
     def loss_fn(
         self: M,
@@ -125,7 +113,7 @@ class CNNModule(eg.ManagedModule):
             rngs = {}
             mutable = False
 
-        outputs = self.module.apply(
+        outputs = self.module().apply(
             variables,
             inputs,
             training=training,
@@ -146,9 +134,7 @@ class CNNModule(eg.ManagedModule):
 
         self = self.log("accuracy", accuracy)
 
-        return loss, self.replace(
-            variables=variables,
-        )
+        return loss, self.replace(variables=variables)
 
     def managed_train_step(
         self: M,
@@ -158,10 +144,7 @@ class CNNModule(eg.ManagedModule):
         epoch_idx: jnp.ndarray,
     ) -> tp.Tuple[eg.types.Loss, M]:
         print("JITTING")
-
-        loss, self = self.loss_fn(key, batch, training=True)
-
-        return loss, self
+        return self.loss_fn(key, batch, training=True)
 
     def managed_test_step(
         self: M, key: jnp.ndarray, batch: tp.Any, batch_idx: jnp.ndarray
@@ -176,12 +159,8 @@ class CNNModule(eg.ManagedModule):
         assert self.variables is not None
         inputs = batch
 
-        outputs = self.module.apply(
-            self.variables,
-            inputs,
-            training=False,
-            mutable=False,
-            rngs={},
+        outputs = self.module().apply(
+            self.variables, inputs, training=False, mutable=False, rngs={}
         )
         outputs = jnp.argmax(outputs, axis=1)
 
@@ -217,7 +196,7 @@ def main(
     model = eg.Trainer(
         module=CNNModule(CNN()),
         optimizer=optax.adamw(1e-3),
-        strategy="jit",
+        strategy="data-parallel",
         seed=seed,
     )
 

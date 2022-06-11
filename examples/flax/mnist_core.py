@@ -10,8 +10,6 @@ import jax_metrics as jm
 import matplotlib.pyplot as plt
 import numpy as np
 import optax
-import typer
-from attr import mutable
 from datasets.load import load_dataset
 from flax.core.frozen_dict import FrozenDict
 from flax.training.train_state import TrainState
@@ -65,7 +63,7 @@ C = tp.TypeVar("C", bound="tp.Callable")
 
 
 @dataclass
-class CNNModule(eg.CoreModule):
+class CNNModule(eg.CoreModule):  # pytree
     module: CNN = eg.static_field()
     optimizer: optax.GradientTransformation = eg.static_field()
     key: tp.Optional[jnp.ndarray] = None
@@ -137,14 +135,9 @@ class CNNModule(eg.CoreModule):
 
 X_train, y_train, X_test, y_test = get_data()
 
-model = eg.Trainer(
-    CNNModule(
-        module=CNN(),
-        optimizer=optax.adamw(1e-3),
-    )
-)
+trainer = eg.Trainer(CNNModule(module=CNN(), optimizer=optax.adamw(1e-3)))
 
-history = model.fit(
+history = trainer.fit(
     inputs=X_train,
     labels=y_train,
     epochs=10,

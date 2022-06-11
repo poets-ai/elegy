@@ -3,31 +3,33 @@ import typing as tp
 import jax.numpy as jnp
 import jax_metrics as jm
 import numpy as np
-import treex as tx
 import typing_extensions as tpe
-from flax import linen
 from optax import GradientTransformation
 
 from elegy import data, types, utils
 from elegy.callbacks import Callback, CallbackList, History
 from elegy.callbacks.sigint import SigIntMode
 from elegy.data import utils as data_utils
-from elegy.modules.high_level.flax_module import FlaxModule
 from elegy.modules.module import CoreModule
+from elegy.optimizer import Optimizer
 from elegy.strategies import Strategy
 
 M = tp.TypeVar("M", bound="Module")
 F = tp.TypeVar("F", bound="linen.module.Module")
 
-try:
-    import haiku as hk
 
-    TransformedWithState = hk.TransformedWithState
-    HaikuModule = tx.HaikuModule
+try:
+    import treex as tx
 except (ImportError, ModuleNotFoundError):
-    hk = None
-    TransformedWithState = type(None)
-    HaikuModule = tp.cast(tp.Any, None)
+    tx = None
+
+try:
+    from flax import linen
+
+    from elegy.modules.high_level.flax_module import FlaxModule
+
+except (ImportError, ModuleNotFoundError):
+    linen = None
 
 
 @tpe.runtime_checkable
@@ -45,17 +47,19 @@ class Trainer(tp.Generic[M]):
     history: tp.Optional[History]
     stop_training: bool
 
-    @tp.overload
-    def __init__(
-        self: "Trainer[FlaxModule[F]]",
-        module: F,
-        loss: tp.Optional[tp.Union[jm.Losses, tp.Any]] = None,
-        metrics: tp.Optional[tp.Union[jm.Metrics, tp.Any]] = None,
-        optimizer: tp.Optional[tp.Union[tx.Optimizer, GradientTransformation]] = None,
-        seed: int = 42,
-        strategy: tp.Optional[tp.Union[str, Strategy]] = None,
-    ):
-        ...
+    if linen is not None:
+
+        @tp.overload
+        def __init__(
+            self: "Trainer[FlaxModule]",
+            module: linen.module.Module,
+            loss: tp.Optional[tp.Union[jm.Losses, tp.Any]] = None,
+            metrics: tp.Optional[tp.Union[jm.Metrics, tp.Any]] = None,
+            optimizer: tp.Optional[tp.Union[Optimizer, GradientTransformation]] = None,
+            seed: int = 42,
+            strategy: tp.Optional[tp.Union[str, Strategy]] = None,
+        ):
+            ...
 
     @tp.overload
     def __init__(
@@ -63,7 +67,7 @@ class Trainer(tp.Generic[M]):
         module: M,
         loss: tp.Optional[tp.Union[jm.Losses, tp.Any]] = None,
         metrics: tp.Optional[tp.Union[jm.Metrics, tp.Any]] = None,
-        optimizer: tp.Optional[tp.Union[tx.Optimizer, GradientTransformation]] = None,
+        optimizer: tp.Optional[tp.Union[Optimizer, GradientTransformation]] = None,
         seed: int = 42,
         strategy: tp.Optional[tp.Union[str, Strategy]] = None,
     ):
@@ -74,7 +78,7 @@ class Trainer(tp.Generic[M]):
         module: tp.Any,
         loss: tp.Optional[tp.Union[jm.Losses, tp.Any]] = None,
         metrics: tp.Optional[tp.Union[jm.Metrics, tp.Any]] = None,
-        optimizer: tp.Optional[tp.Union[tx.Optimizer, GradientTransformation]] = None,
+        optimizer: tp.Optional[tp.Union[Optimizer, GradientTransformation]] = None,
         seed: int = 42,
         strategy: tp.Optional[tp.Union[str, Strategy]] = None,
     ):
@@ -113,14 +117,14 @@ class Trainer(tp.Generic[M]):
 
         # TODO: CoreModule should have a method to set this
 
-        if isinstance(module, linen.module.Module):
+        if linen is not None and isinstance(module, linen.module.Module):
             module = FlaxModule(module)
 
         assert isinstance(module, CoreModule)
 
         self.module = module.set_trainer_params(
             optimizer=(
-                tx.Optimizer(optimizer)
+                Optimizer(optimizer)
                 if isinstance(optimizer, GradientTransformation)
                 else optimizer
             ),
@@ -151,8 +155,7 @@ class Trainer(tp.Generic[M]):
     # init
     # ----------------------------------------------------------------
     def init_on_batch(self, batch: tp.Any):
-
-        key = tx.Key(self.seed)
+        key = types.Key(self.seed)
 
         module = self.module.init_step(key, batch)
 

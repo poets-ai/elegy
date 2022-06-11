@@ -5,13 +5,12 @@ from abc import ABC, abstractmethod
 import jax
 import jax.numpy as jnp
 import jax_metrics as jm
-import treeo as to
-import treex as tx
 import typing_extensions as tpe
 
 import elegy as eg
 import elegy.pytree as pytree_m
 from elegy import types
+from elegy.optimizer import Optimizer
 
 A = tp.TypeVar("A")
 M = tp.TypeVar("M", bound="Module")
@@ -19,7 +18,7 @@ M = tp.TypeVar("M", bound="Module")
 
 @tpe.runtime_checkable
 class HasOptimizer(tp.Protocol):
-    optimizer: tp.Optional[tx.Optimizer]
+    optimizer: tp.Optional[Optimizer]
 
 
 @tpe.runtime_checkable
@@ -52,8 +51,8 @@ class ModuleMeta(pytree_m.PytreeObjectMeta):
 
 class CoreModule(pytree_m.PytreeObject, metaclass=ModuleMeta):
 
-    initialized: bool = pytree_m.field(node=False)
-    _called_init: bool = pytree_m.field(default=False, node=False)
+    initialized: bool = pytree_m.field(pytree_node=False)
+    _called_init: bool = pytree_m.field(default=False, pytree_node=False)
 
     def __init__(
         self,
@@ -118,7 +117,7 @@ class CoreModule(pytree_m.PytreeObject, metaclass=ModuleMeta):
         self: M,
         *,
         losses_and_metrics: tp.Optional[jm.LossesAndMetrics] = None,
-        optimizer: tp.Optional[tx.Optimizer] = None,
+        optimizer: tp.Optional[Optimizer] = None,
     ) -> M:
         field_updates = {}
         if optimizer is not None:

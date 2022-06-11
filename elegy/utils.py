@@ -15,7 +15,6 @@ import jax
 import jax.numpy as jnp
 import jax.tree_util
 import numpy as np
-import treex as tx
 
 from elegy import types
 
@@ -117,34 +116,6 @@ def inject_dependencies(
 
 def get_function_args(f) -> tp.List[inspect.Parameter]:
     return list(inspect.signature(f).parameters.values())
-
-
-def get_input_args(
-    x: tp.Union[np.ndarray, jnp.ndarray, tp.Dict[str, tp.Any], tp.Tuple],
-    *,
-    model: tx.Module,
-    initializing: bool,
-    training: bool,
-) -> tp.Tuple[tp.Tuple, tp.Dict[str, tp.Any]]:
-
-    if isinstance(x, tp.Tuple):
-        args = x
-        kwargs = {}
-    elif isinstance(x, tp.Dict):
-        args = ()
-        kwargs = x
-    else:
-        args = (x,)
-        kwargs = {}
-
-    apply_kwargs = dict(
-        model=model,
-        initializing=initializing,
-        training=training,
-    )
-    apply_kwargs.update(kwargs)
-
-    return args, apply_kwargs
 
 
 def lower_snake_case(s: str) -> str:

@@ -20,14 +20,14 @@ secondary = true
 python = ">=3.7,<3.10"
 cloudpickle = "^1.5.0"
 tensorboardx = "^2.1"
-wandb = { version = "^0.12.10", optional = true }
-treex = "^0.7.0.a0"
 # treex = { path = "../treex", develop = true }
 jax_metrics = "^0.1.0.a2"
 # jax_metrics = { path = "../jax-metrics", develop = true }
 einop = "^0.0.1"
+wandb = { version = "^0.12.10", optional = true }
 
 [tool.poetry.dev-dependencies]
+treex = "^0.7.0.a0"
 jax = "^0.3.10"
 jaxlib = "^0.3.10"
 pytest = "^5.4.3"

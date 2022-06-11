@@ -6,13 +6,12 @@ import jax
 import jax.numpy as jnp
 import jax_metrics as jm
 import optax
-import treeo as to
-import treex as tx
 
 import elegy as eg
 import elegy.modules.module as module_m
 import elegy.pytree as pytree_m
 from elegy import types, utils
+from elegy.optimizer import Optimizer
 
 M = tp.TypeVar("M", bound="ManagedModule")
 A = tp.TypeVar("A")
@@ -31,7 +30,7 @@ TrainStep = tp.Callable[
 class ManagedModule(module_m.CoreModule):
     # nodes
     key: tp.Optional[jnp.ndarray]
-    optimizer: tp.Optional[tx.Optimizer]
+    optimizer: tp.Optional[Optimizer]
     _logs: tp.Optional[tp.Dict[str, tp.Any]]
     _avg_loss: jm.metrics.Mean
 
@@ -58,7 +57,7 @@ class ManagedModule(module_m.CoreModule):
         self,
         *,
         optimizer: tp.Optional[
-            tp.Union[optax.GradientTransformation, tx.Optimizer]
+            tp.Union[optax.GradientTransformation, Optimizer]
         ] = None,
         initialized: bool = False,
         strategy: tp.Optional[tp.Union[str, "eg.Strategy"]] = None,
@@ -76,7 +75,7 @@ class ManagedModule(module_m.CoreModule):
             else Eager()
         )
         self.optimizer = (
-            tx.Optimizer(optimizer)
+            Optimizer(optimizer)
             if isinstance(optimizer, optax.GradientTransformation)
             else optimizer
         )

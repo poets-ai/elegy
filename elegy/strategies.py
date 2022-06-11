@@ -6,7 +6,6 @@ from functools import partial
 import jax
 import jax.numpy as jnp
 import jax_metrics as jm
-import treex as tx
 from einop import einop
 
 import elegy as eg

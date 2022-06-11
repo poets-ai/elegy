@@ -8,7 +8,7 @@ class TestPyTree:
     def test_pytree(self):
         class Tree(eg.PytreeObject):
             node: int
-            static: int = eg.field(node=False)
+            static: int = eg.field(pytree_node=False)
 
             def __init__(self, node: int, static: int):
                 self.node = node

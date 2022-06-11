@@ -13,7 +13,7 @@ P = tp.TypeVar("P", bound="PytreeObject")
 def field(
     default: tp.Any = dataclasses.MISSING,
     *,
-    node: bool = True,
+    pytree_node: bool = True,
     default_factory: tp.Any = dataclasses.MISSING,
     init: bool = True,
     repr: bool = True,
@@ -30,7 +30,7 @@ def field(
     if "pytree_node" in metadata:
         raise ValueError("node is already in metadata")
 
-    metadata["pytree_node"] = node
+    metadata["pytree_node"] = pytree_node
 
     return dataclasses.field(
         default=default,
@@ -55,7 +55,7 @@ def static_field(
 ) -> tp.Any:
     return field(
         default=default,
-        node=False,
+        pytree_node=False,
         default_factory=default_factory,
         init=init,
         repr=repr,

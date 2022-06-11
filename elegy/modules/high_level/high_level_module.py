@@ -5,13 +5,12 @@ import jax
 import jax.numpy as jnp
 import jax_metrics as jm
 import optax
-import treeo as to
-import treex as tx
 
 import elegy as eg
 from elegy import types
 from elegy.data import unpack_x_y_sample_weight
 from elegy.modules.managed.managed_module import ManagedModule
+from elegy.optimizer import Optimizer
 
 M = tp.TypeVar("M", bound="HighLevelModule")
 
@@ -24,7 +23,7 @@ class HighLevelModule(ManagedModule):
         *,
         losses_and_metrics: tp.Optional[jm.LossesAndMetrics] = None,
         optimizer: tp.Optional[
-            tp.Union[optax.GradientTransformation, tx.Optimizer]
+            tp.Union[optax.GradientTransformation, Optimizer]
         ] = None,
         initialized: bool = False,
         strategy: tp.Optional[tp.Union[str, "eg.Strategy"]] = None,
@@ -124,7 +123,7 @@ class HighLevelModule(ManagedModule):
             module=self,
             parameters=self.get_params(),
             batch_stats=self.get_batch_stats(),
-            key_seq=tx.KeySeq(seq_key),
+            key_seq=types.KeySeq(seq_key),
             aux_losses=self.get_aux_losses(),
             aux_metrics=self.get_aux_metrics(),
             batch_idx=batch_idx,

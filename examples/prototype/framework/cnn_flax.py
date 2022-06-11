@@ -25,27 +25,21 @@ class CNN(nn.Module):
     def __call__(self, x: jnp.ndarray, training: bool) -> jnp.ndarray:
         # Normalize the input
         x = x.astype(jnp.float32) / 255.0
-
         # Block 1
         x = nn.Conv(32, [3, 3], strides=[2, 2])(x)
         x = nn.Dropout(0.05, deterministic=not training)(x)
         x = jax.nn.relu(x)
-
         # Block 2
         x = nn.Conv(64, [3, 3], strides=[2, 2])(x)
         x = nn.BatchNorm(use_running_average=not training)(x)
         x = nn.Dropout(0.1, deterministic=not training)(x)
         x = jax.nn.relu(x)
-
         # Block 3
         x = nn.Conv(128, [3, 3], strides=[2, 2])(x)
-
         # Global average pooling
         x = x.mean(axis=(1, 2))
-
         # Classification layer
         x = nn.Dense(10)(x)
-
         return x
 
 
