@@ -69,45 +69,21 @@ class CNNModule(eg.ManagedModule):
         batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
     ) -> M:
         inputs, labels = batch
-
         variables = self.module.init(key, inputs, training=False)
-
         return self.replace(
             params=variables["params"],
             batch_stats=variables["batch_stats"],
         )
 
-    def loss_fn(
+    def loss_and_logs(
         self: M,
-        key: tp.Optional[jnp.ndarray],
-        batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
-        training: bool,
+        preds: jnp.ndarray,
+        labels: jnp.ndarray,
     ) -> tp.Tuple[eg.types.Loss, M]:
-        assert self.params is not None
-
-        inputs, labels = batch
-
-        outputs = self.module.apply(
-            {"params": self.params, "batch_stats": self.batch_stats},
-            inputs,
-            training=training,
-            rngs={"dropout": key} if training else {},
-            mutable=["batch_stats"] if training else False,
-        )
-
-        preds: jnp.ndarray
-        if training:
-            preds, updates = outputs
-            self = self.replace(batch_stats=updates["batch_stats"])
-        else:
-            preds = outputs
-
         oh_labels = jax.nn.one_hot(labels, preds.shape[-1])
         loss = jnp.mean(optax.softmax_cross_entropy(preds, oh_labels))
         accuracy = jnp.mean(jnp.argmax(preds, axis=-1) == labels)
-
         self = self.log("accuracy", accuracy)
-
         return loss, self
 
     def managed_train_step(
@@ -117,13 +93,37 @@ class CNNModule(eg.ManagedModule):
         batch_idx: jnp.ndarray,
         epoch_idx: jnp.ndarray,
     ) -> tp.Tuple[eg.types.Loss, M]:
+        assert self.params is not None and self.batch_stats is not None
         print("JITTING")
-        return self.loss_fn(key, batch, training=True)
+        inputs, labels = batch
+
+        preds, updates = self.module.apply(
+            {"params": self.params, "batch_stats": self.batch_stats},
+            inputs,
+            training=True,
+            rngs={"dropout": key},
+            mutable=["batch_stats"],
+        )
+        self = self.replace(batch_stats=updates["batch_stats"])
+
+        loss, self = self.loss_and_logs(preds, labels)
+
+        return loss, self
 
     def managed_test_step(
         self: M, key: jnp.ndarray, batch: tp.Any, batch_idx: jnp.ndarray
     ) -> M:
-        loss, self = self.loss_fn(key, batch, training=False)
+        assert self.params is not None and self.batch_stats is not None
+        inputs, labels = batch
+
+        preds = self.module.apply(
+            {"params": self.params, "batch_stats": self.batch_stats},
+            inputs,
+            training=False,
+        )
+
+        loss, self = self.loss_and_logs(preds, labels)
+
         return self
 
     def managed_predict_step(
@@ -132,15 +132,14 @@ class CNNModule(eg.ManagedModule):
         assert self.params is not None and self.batch_stats is not None
         inputs = batch
 
-        outputs = self.module.apply(
+        preds = self.module.apply(
             {"params": self.params, "batch_stats": self.batch_stats},
             inputs,
             training=False,
-            mutable=False,
-            rngs={},
         )
-        outputs = jnp.argmax(outputs, axis=1)
-        return outputs, self
+        preds = jnp.argmax(preds, axis=1)
+
+        return preds, self
 
     def tabulate(
         self,
@@ -170,7 +169,10 @@ def main(
     print("X_test:", X_test.shape, X_test.dtype)
 
     model = eg.Trainer(
-        module=CNNModule(CNN()), optimizer=optax.adamw(1e-3), strategy="jit", seed=seed
+        module=CNNModule(CNN()),
+        optimizer=optax.adamw(1e-3),
+        strategy="jit",
+        seed=seed,
     )
 
     history = model.fit(

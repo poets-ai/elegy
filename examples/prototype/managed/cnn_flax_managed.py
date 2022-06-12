@@ -57,104 +57,92 @@ np.random.seed(420)
 
 M = tp.TypeVar("M", bound="CNNModule")
 C = tp.TypeVar("C", bound="tp.Callable")
-F = tp.TypeVar("F", bound="nn.module.Module")
 
 
-class CNNModule(eg.ManagedFlaxModule[F]):
+class CNNModule(eg.ManagedFlaxModule):
     def managed_init_step(
-        self: "CNNModule[F]",
+        self: M,
         key: jnp.ndarray,
         batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
-    ) -> "CNNModule[F]":
+    ) -> M:
         inputs, labels = batch
 
         variables = self.module.init(key, inputs, training=False)
 
         return self.replace(
-            variables=variables,
+            params=variables["params"],
+            batch_stats=variables["batch_stats"],
         )
 
-    def loss_fn(
-        self: "CNNModule[F]",
-        key: tp.Optional[jnp.ndarray],
-        batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
-        training: bool,
-    ) -> tp.Tuple[eg.types.Loss, "CNNModule[F]"]:
-        assert self.variables is not None
-        inputs, labels = batch
-        variables = self.variables
-
-        if training:
-            rngs = {"dropout": key}
-            mutable = ["batch_stats"]
-        else:
-            rngs = {}
-            mutable = False
-
-        outputs = self.module.apply(
-            variables,
-            inputs,
-            training=training,
-            rngs=rngs,
-            mutable=mutable,
-        )
-
-        preds: jnp.ndarray
-        if mutable:
-            preds, updates = outputs
-            variables = variables.copy(updates)
-        else:
-            preds = outputs
-
+    def loss_and_logs(
+        self: M,
+        preds: jnp.ndarray,
+        labels: jnp.ndarray,
+    ) -> tp.Tuple[eg.types.Loss, M]:
         oh_labels = jax.nn.one_hot(labels, preds.shape[-1])
         loss = jnp.mean(optax.softmax_cross_entropy(preds, oh_labels))
         accuracy = jnp.mean(jnp.argmax(preds, axis=-1) == labels)
 
         self = self.log("accuracy", accuracy)
 
-        return loss, self.replace(
-            variables=variables,
-        )
+        return loss, self
 
     def managed_train_step(
-        self: "CNNModule[F]",
+        self: M,
         key: jnp.ndarray,
         batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
         batch_idx: jnp.ndarray,
         epoch_idx: jnp.ndarray,
-    ) -> tp.Tuple[eg.types.Loss, "CNNModule[F]"]:
+    ) -> tp.Tuple[eg.types.Loss, M]:
+        assert self.params is not None and self.batch_stats is not None
         print("JITTING")
+        inputs, labels = batch
 
-        loss, self = self.loss_fn(key, batch, training=True)
+        preds, updates = self.module.apply(
+            {"params": self.params, "batch_stats": self.batch_stats},
+            inputs,
+            training=True,
+            rngs={"dropout": key},
+            mutable=["batch_stats"],
+        )
+        self = self.replace(batch_stats=updates["batch_stats"])
+
+        loss, self = self.loss_and_logs(preds, labels)
 
         return loss, self
 
     def managed_test_step(
-        self: "CNNModule[F]", key: jnp.ndarray, batch: tp.Any, batch_idx: jnp.ndarray
-    ) -> "CNNModule[F]":
-        loss, self = self.loss_fn(key, batch, training=False)
+        self: M, key: jnp.ndarray, batch: tp.Any, batch_idx: jnp.ndarray
+    ) -> M:
+        assert self.params is not None and self.batch_stats is not None
+        inputs, labels = batch
+
+        preds = self.module.apply(
+            {"params": self.params, "batch_stats": self.batch_stats},
+            inputs,
+            training=False,
+        )
+
+        loss, self = self.loss_and_logs(preds, labels)
 
         return self
 
     def managed_predict_step(
-        self: "CNNModule[F]",
-        key: jnp.ndarray,
-        batch: jnp.ndarray,
-        batch_idx: jnp.ndarray,
-    ) -> tp.Tuple[eg.types.Outputs, "CNNModule[F]"]:
-        assert self.variables is not None
+        self: M, key: jnp.ndarray, batch: jnp.ndarray, batch_idx: jnp.ndarray
+    ) -> tp.Tuple[eg.types.Outputs, M]:
+        assert self.params is not None and self.batch_stats is not None
         inputs = batch
 
-        outputs = self.module.apply(
-            self.variables,
+        preds = self.module.apply(
+            {"params": self.params, "batch_stats": self.batch_stats},
             inputs,
             training=False,
             mutable=False,
             rngs={},
         )
-        outputs = jnp.argmax(outputs, axis=1)
+        preds = jnp.argmax(preds, axis=1)
 
-        return outputs, self
+        return preds, self
 
     def tabulate(
         self,

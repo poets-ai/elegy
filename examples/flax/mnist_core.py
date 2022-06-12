@@ -28,6 +28,16 @@ def get_data():
     return X_train, y_train, X_test, y_test
 
 
+Batch = tp.Mapping[str, np.ndarray]
+Metric = jm.metrics.Accuracy
+Logs = tp.Mapping[str, jnp.ndarray]
+Variables = FrozenDict[str, tp.Mapping[str, tp.Any]]
+np.random.seed(420)
+
+M = tp.TypeVar("M", bound="CNNModule")
+C = tp.TypeVar("C", bound="tp.Callable")
+
+
 @dataclass
 class CNN(nn.Module):
     @nn.compact
@@ -46,22 +56,13 @@ class CNN(nn.Module):
         return x
 
 
-Batch = tp.Mapping[str, np.ndarray]
-Metric = jm.metrics.Accuracy
-Logs = tp.Mapping[str, jnp.ndarray]
-Variables = FrozenDict[str, tp.Mapping[str, tp.Any]]
-np.random.seed(420)
-
-M = tp.TypeVar("M", bound="CNNModule")
-C = tp.TypeVar("C", bound="tp.Callable")
-
-
 @dataclass
-class CNNModule(eg.CoreModule):  # pytree
+class CNNModule(eg.CoreModule):
     module: CNN = eg.static_field()
     optimizer: optax.GradientTransformation = eg.static_field()
     key: tp.Optional[jnp.ndarray] = None
-    variables: tp.Optional[Variables] = None
+    params: tp.Optional[Variables] = None
+    batch_stats: tp.Optional[Variables] = None
     opt_state: tp.Optional[tp.Any] = None
 
     @jax.jit
@@ -71,12 +72,15 @@ class CNNModule(eg.CoreModule):  # pytree
         batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
     ) -> M:
         inputs, labels = batch
-
         init_key, key = jax.random.split(key)
         variables = self.module.init(init_key, inputs, training=False)
         opt_state = self.optimizer.init(variables["params"])
-
-        return self.replace(key=key, variables=variables, opt_state=opt_state)
+        return self.replace(
+            key=key,
+            params=variables["params"],
+            batch_stats=variables["batch_stats"],
+            opt_state=opt_state,
+        )
 
     def loss_fn(
         self: "CNNModule",
@@ -85,22 +89,17 @@ class CNNModule(eg.CoreModule):  # pytree
         inputs: jnp.ndarray,
         labels: jnp.ndarray,
     ) -> tp.Tuple[jnp.ndarray, "CNNModule"]:
-        variables = self.variables.copy({"params": params})
-
         preds, updates = self.module.apply(
-            variables,
+            {"params": params, "batch_stats": self.batch_stats},
             inputs,
             training=True,
             rngs={"dropout": key},
             mutable=["batch_stats"],
         )
-        variables = variables.copy(updates)
-
         loss = optax.softmax_cross_entropy(
             preds, jax.nn.one_hot(labels, preds.shape[-1])
         ).mean()
-
-        return loss, self.replace(variables=variables)
+        return loss, self.replace(batch_stats=updates["batch_stats"])
 
     @jax.jit
     def train_step(
@@ -110,26 +109,21 @@ class CNNModule(eg.CoreModule):  # pytree
         epoch_idx: int,
     ) -> tp.Tuple[Logs, M]:
         inputs, labels = batch
-
-        params = self.variables["params"]
         loss_key, key = jax.random.split(self.key)
-
         (loss, self), grads = jax.value_and_grad(self.loss_fn, has_aux=True)(
-            params, loss_key, inputs, labels
+            self.params, loss_key, inputs, labels
         )
-
-        updates, opt_state = self.optimizer.update(grads, self.opt_state, params)
-        params = optax.apply_updates(params, updates)
-        variables = self.variables.copy({"params": params})
-
+        updates, opt_state = self.optimizer.update(grads, self.opt_state, self.params)
+        params = optax.apply_updates(self.params, updates)
         logs = {"loss": loss}
-
-        return logs, self.replace(key=key, variables=variables, opt_state=opt_state)
+        return logs, self.replace(key=key, params=params, opt_state=opt_state)
 
 
 X_train, y_train, X_test, y_test = get_data()
 
-trainer = eg.Trainer(CNNModule(module=CNN(), optimizer=optax.adamw(1e-3)))
+trainer = eg.Trainer(
+    CNNModule(module=CNN(), optimizer=optax.adamw(1e-3)),
+)
 
 history = trainer.fit(
     inputs=X_train,

@@ -15,11 +15,11 @@ try:
 except (ImportError, ModuleNotFoundError):
     raise types.DependencyUnavailable("Flax not avialable.")
 
-F = tp.TypeVar("F", bound="nn.module.Module")
+F = nn.module.Module
 Variables = tp.Mapping[str, tp.Mapping[str, tp.Any]]
 
 
-class ManagedFlaxModule(tp.Generic[F], ManagedModule):
+class ManagedFlaxModule(ManagedModule):
     _module: tp.Callable[[], F] = pytree_m.static_field()
 
     def __init__(
@@ -37,7 +37,16 @@ class ManagedFlaxModule(tp.Generic[F], ManagedModule):
             optimizer=optimizer, initialized=initialized, strategy=strategy
         )
         self._module = lambda: module
-        self.variables = FrozenDict(variables) if variables is not None else None
+
+        if variables is not None:
+            variables = FrozenDict(variables)
+
+            if "params" in variables:
+                variables, self.params = variables.pop("params")
+            if "batch_stats" in variables:
+                variables, self.batch_stats = variables.pop("batch_stats")
+
+        self.variables = variables
 
     @property
     def module(self) -> F:
