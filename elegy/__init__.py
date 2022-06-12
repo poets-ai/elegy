@@ -5,8 +5,7 @@ __version__ = "0.8.6"
 import elegy.types as types
 import elegy.utils as utils
 
-from treeo import Hashable, compact
-
+from jax_metrics import *
 
 from . import (
     callbacks,
