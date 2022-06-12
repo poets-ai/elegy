@@ -45,7 +45,7 @@ class Optimizer(PytreeObject):
         optimizer: An optax optimizer.
     """
 
-    optimizer: optax.GradientTransformation
+    optimizer: optax.GradientTransformation = static_field()
     opt_state: tp.Optional[tp.Any] = None
     _n_params: tp.Optional[int] = static_field(None)
 

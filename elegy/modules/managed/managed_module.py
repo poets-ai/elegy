@@ -9,9 +9,9 @@ import optax
 
 import elegy as eg
 import elegy.modules.module as module_m
-import elegy.pytree as pytree_m
 from elegy import types, utils
 from elegy.optimizer import Optimizer
+from elegy.pytree import static_field
 
 M = tp.TypeVar("M", bound="ManagedModule")
 A = tp.TypeVar("A")
@@ -31,27 +31,28 @@ class ManagedModule(module_m.CoreModule):
     # nodes
     key: tp.Optional[jnp.ndarray]
     optimizer: tp.Optional[Optimizer]
+    params: tp.Union[tp.Any, None]
+    batch_stats: tp.Union[tp.Any, None]
     _logs: tp.Optional[tp.Dict[str, tp.Any]]
     _avg_loss: jm.metrics.Mean
 
     # statics
-    strategy: "eg.Strategy" = pytree_m.static_field()
+    strategy: "eg.Strategy" = static_field()
     strategy_init_step: tp.Dict[
-        "eg.Strategy",
-        InitStep["ManagedModule"],
-    ] = pytree_m.static_field()
+        "eg.Strategy", InitStep["ManagedModule"]
+    ] = static_field()
     strategy_reset_step: tp.Dict[
         "eg.Strategy", ResetStep["ManagedModule"]
-    ] = pytree_m.static_field()
+    ] = static_field()
     strategy_predict_step: tp.Dict[
         "eg.Strategy", PredStep["ManagedModule"]
-    ] = pytree_m.static_field()
+    ] = static_field()
     streategy_test_step: tp.Dict[
         "eg.Strategy", TestStep["ManagedModule"]
-    ] = pytree_m.static_field()
+    ] = static_field()
     strategy_train_step: tp.Dict[
         "eg.Strategy", TrainStep["ManagedModule"]
-    ] = pytree_m.static_field()
+    ] = static_field()
 
     def __init__(
         self,
@@ -81,6 +82,12 @@ class ManagedModule(module_m.CoreModule):
         )
         self._avg_loss = jm.metrics.Mean(name="loss")
         self._logs = None
+
+        # collections
+        self._pytree__param_fields: tp.Tuple[str, ...] = ("params",)
+        self._pytree__batch_stat_fields: tp.Tuple[str, ...] = ("batch_stats",)
+        self.params = None
+        self.batch_stats = None
 
         self.strategy_init_step = {}
         self.strategy_reset_step = {}
@@ -194,21 +201,25 @@ class ManagedModule(module_m.CoreModule):
     ) -> tp.Tuple[types.Loss, M]:
         raise types.MissingMethod()
 
-    @abstractmethod
-    def get_params(self) -> tp.Any:
-        ...
+    def _get_params(self) -> tp.Tuple[tp.Any, ...]:
+        params = []
+        for field in self._pytree__param_fields:
+            params.append(getattr(self, field))
+        return tuple(params)
 
-    @abstractmethod
-    def set_params(self: M, params: tp.Any) -> M:
-        ...
+    def _set_params(self: M, params: tp.Tuple[tp.Any, ...]) -> M:
+        updates = dict(zip(self._pytree__param_fields, params))
+        return self.replace(**updates)
 
-    @abstractmethod
-    def get_batch_stats(self) -> tp.Any:
-        ...
+    def _get_batch_stats(self) -> tp.Tuple[tp.Any, ...]:
+        batch_stats = []
+        for field in self._pytree__batch_stat_fields:
+            batch_stats.append(getattr(self, field))
+        return tuple(batch_stats)
 
-    @abstractmethod
-    def set_batch_stats(self: M, batch_stats: tp.Any) -> M:
-        ...
+    def _set_batch_stats(self: M, batch_stats: tp.Tuple[tp.Any, ...]) -> M:
+        updates = dict(zip(self._pytree__batch_stat_fields, batch_stats))
+        return self.replace(**updates)
 
     # ---------------------------------------------------------------------------
     # core methods
@@ -230,7 +241,7 @@ class ManagedModule(module_m.CoreModule):
         self = self.managed_init_step(init_key, batch)
 
         if self.optimizer is not None:
-            optimizer = self.optimizer.init(self.get_params())
+            optimizer = self.optimizer.init(self._get_params())
         else:
             optimizer = None
 
@@ -325,7 +336,7 @@ class ManagedModule(module_m.CoreModule):
         batch_idx: jnp.ndarray,
         epoch_idx: jnp.ndarray,
     ) -> tp.Tuple[types.Loss, M]:
-        self = self.set_params(params)
+        self = self._set_params(params)
         loss, self = self.managed_train_step(key, batch, batch_idx, epoch_idx)
         return loss, self
 
@@ -346,7 +357,7 @@ class ManagedModule(module_m.CoreModule):
 
         self = self.replace(_logs={})
 
-        params = self.get_params()
+        params = self._get_params()
 
         # caclulate gradients
         (loss, self), grads = jax.value_and_grad(self._loss_fn, has_aux=True)(
@@ -361,14 +372,14 @@ class ManagedModule(module_m.CoreModule):
         grads = self.strategy.handle_grads(grads)
 
         # sync batch stats
-        batch_stats = self.get_batch_stats()
+        batch_stats = self._get_batch_stats()
         batch_stats = self.strategy.handle_batch_stats(batch_stats)
-        self = self.set_batch_stats(batch_stats)
+        self = self._set_batch_stats(batch_stats)
 
         # run optimizer and update params
         assert self.optimizer is not None
         params, optimizer = self.optimizer.update(grads, params)
-        self = self.set_params(params)
+        self = self._set_params(params)
 
         # get logs
         logs, self = self._process_logs()

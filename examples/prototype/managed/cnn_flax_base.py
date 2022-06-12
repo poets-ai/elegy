@@ -54,36 +54,14 @@ C = tp.TypeVar("C", bound="tp.Callable")
 
 
 class CNNModule(eg.ManagedModule):
-    variables: tp.Optional[FrozenDict[str, tp.Mapping[str, tp.Any]]]
-    module: tp.Callable[[], Module] = eg.static_field()
+    module: Module = eg.static_field()
 
     def __init__(
         self,
         module: Module,
     ) -> None:
         super().__init__()
-        self.module = lambda: module
-        self.variables = None
-
-    def get_params(self) -> tp.Any:
-        assert self.variables is not None
-        return self.variables["params"]
-
-    def set_params(self: M, params: tp.Any) -> M:
-        assert self.variables is not None
-        return self.replace(
-            variables=self.variables.copy({"params": params}),
-        )
-
-    def get_batch_stats(self) -> tp.Any:
-        assert self.variables is not None
-        return self.variables["batch_stats"]
-
-    def set_batch_stats(self: M, batch_stats: tp.Any) -> M:
-        assert self.variables is not None
-        return self.replace(
-            variables=self.variables.copy({"batch_stats": batch_stats}),
-        )
+        self.module = module
 
     def managed_init_step(
         self: M,
@@ -92,9 +70,12 @@ class CNNModule(eg.ManagedModule):
     ) -> M:
         inputs, labels = batch
 
-        variables = self.module().init(key, inputs, training=False)
+        variables = self.module.init(key, inputs, training=False)
 
-        return self.replace(variables=variables)
+        return self.replace(
+            params=variables["params"],
+            batch_stats=variables["batch_stats"],
+        )
 
     def loss_fn(
         self: M,
@@ -102,29 +83,22 @@ class CNNModule(eg.ManagedModule):
         batch: tp.Tuple[jnp.ndarray, jnp.ndarray],
         training: bool,
     ) -> tp.Tuple[eg.types.Loss, M]:
-        assert self.variables is not None
+        assert self.params is not None
+
         inputs, labels = batch
-        variables = self.variables
 
-        if training:
-            rngs = {"dropout": key}
-            mutable = ["batch_stats"]
-        else:
-            rngs = {}
-            mutable = False
-
-        outputs = self.module().apply(
-            variables,
+        outputs = self.module.apply(
+            {"params": self.params, "batch_stats": self.batch_stats},
             inputs,
             training=training,
-            rngs=rngs,
-            mutable=mutable,
+            rngs={"dropout": key} if training else {},
+            mutable=["batch_stats"] if training else False,
         )
 
         preds: jnp.ndarray
-        if mutable:
+        if training:
             preds, updates = outputs
-            variables = variables.copy(updates)
+            self = self.replace(batch_stats=updates["batch_stats"])
         else:
             preds = outputs
 
@@ -134,7 +108,7 @@ class CNNModule(eg.ManagedModule):
 
         self = self.log("accuracy", accuracy)
 
-        return loss, self.replace(variables=variables)
+        return loss, self
 
     def managed_train_step(
         self: M,
@@ -150,20 +124,22 @@ class CNNModule(eg.ManagedModule):
         self: M, key: jnp.ndarray, batch: tp.Any, batch_idx: jnp.ndarray
     ) -> M:
         loss, self = self.loss_fn(key, batch, training=False)
-
         return self
 
     def managed_predict_step(
         self: M, key: jnp.ndarray, batch: jnp.ndarray, batch_idx: jnp.ndarray
     ) -> tp.Tuple[eg.types.Outputs, M]:
-        assert self.variables is not None
+        assert self.params is not None and self.batch_stats is not None
         inputs = batch
 
-        outputs = self.module().apply(
-            self.variables, inputs, training=False, mutable=False, rngs={}
+        outputs = self.module.apply(
+            {"params": self.params, "batch_stats": self.batch_stats},
+            inputs,
+            training=False,
+            mutable=False,
+            rngs={},
         )
         outputs = jnp.argmax(outputs, axis=1)
-
         return outputs, self
 
     def tabulate(
@@ -194,10 +170,7 @@ def main(
     print("X_test:", X_test.shape, X_test.dtype)
 
     model = eg.Trainer(
-        module=CNNModule(CNN()),
-        optimizer=optax.adamw(1e-3),
-        strategy="data-parallel",
-        seed=seed,
+        module=CNNModule(CNN()), optimizer=optax.adamw(1e-3), strategy="jit", seed=seed
     )
 
     history = model.fit(

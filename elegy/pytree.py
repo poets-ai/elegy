@@ -91,7 +91,10 @@ class PytreeObjectMeta(ABCMeta):
 
         for field, value in vars(obj).items():
             if field not in obj._pytree__field_is_node:
-                obj._pytree__field_is_node[field] = True
+                if field.startswith("_pytree__"):
+                    obj._pytree__field_is_node[field] = False
+                else:
+                    obj._pytree__field_is_node[field] = True
 
         missing_fields = set(obj._pytree__field_is_node) - set(vars(obj))
 

@@ -24,39 +24,7 @@ FrozerVariables = FrozenDict[str, tp.Mapping[str, tp.Any]]
 Variables = tp.Mapping[str, tp.Mapping[str, tp.Any]]
 
 
-class FlaxMixin:
-    variables: tp.Optional[FrozerVariables]
-
-    def get_params(self) -> tp.Optional[FrozerVariables]:
-
-        return self.variables["params"] if "params" in self.variables else None
-
-    def set_params(self: M, params: tp.Optional[FrozerVariables]) -> M:
-
-        if params is not None:
-            return self.replace(
-                variables=self.variables.copy({"params": params}),
-            )
-        else:
-            return self
-
-    def get_batch_stats(self) -> tp.Optional[FrozerVariables]:
-
-        return (
-            self.variables["batch_stats"] if "batch_stats" in self.variables else None
-        )
-
-    def set_batch_stats(self: M, batch_stats: tp.Optional[FrozerVariables]) -> M:
-
-        if batch_stats is not None:
-            return self.replace(
-                variables=self.variables.copy({"batch_stats": batch_stats}),
-            )
-        else:
-            return self
-
-
-class FlaxModule(FlaxMixin, HighLevelModule):
+class FlaxModule(HighLevelModule):
     # nodes
     variables: FrozerVariables
     # static
@@ -127,6 +95,12 @@ class FlaxModule(FlaxMixin, HighLevelModule):
         self.collection_keep = tuple(collection_keep)
         self.logs_full_path = logs_full_path
 
+        if variables is not None:
+            if "params" in variables:
+                self.params = variables["params"]
+            if "batch_stats" in variables:
+                self.batch_stats = variables["batch_stats"]
+
     @property
     def module(self) -> nn.module.Module:
         return self._module()
@@ -136,7 +110,6 @@ class FlaxModule(FlaxMixin, HighLevelModule):
     # ---------------------------------------------------------------------------------
 
     def get_aux_losses(self) -> types.Logs:
-
         if "losses" in self.variables:
             losses = utils.flatten_names_unique(
                 self.variables["losses"], only_last=not self.logs_full_path
@@ -146,7 +119,6 @@ class FlaxModule(FlaxMixin, HighLevelModule):
             return {}
 
     def get_aux_metrics(self) -> types.Logs:
-
         if "metrics" in self.variables:
             metrics = utils.flatten_names_unique(
                 self.variables["metrics"], only_last=not self.logs_full_path
@@ -210,8 +182,14 @@ class FlaxModule(FlaxMixin, HighLevelModule):
 
         rngs = _split_into_collection(key, rng_names)
 
+        variables = self.variables
+        if self.params is not None:
+            variables = variables.copy({"params": self.params})
+        if self.batch_stats is not None:
+            variables = variables.copy({"batch_stats": self.batch_stats})
+
         apply_output = self.module.apply(
-            self.variables,
+            variables,
             *args,
             rngs=rngs,
             mutable=mutable,
@@ -221,12 +199,15 @@ class FlaxModule(FlaxMixin, HighLevelModule):
 
         if mutable is False:
             outputs = apply_output
-            variables = self.variables
         else:
             outputs, variable_updates = apply_output
-            variables = self.variables.copy(variable_updates)
+            variables = variables.copy(variable_updates)
 
-        return outputs, self.replace(variables=variables)
+        return outputs, self.replace(
+            variables=variables,
+            params=variables.get("params", None),
+            batch_stats=variables.get("batch_stats", None),
+        )
 
     # ---------------------------------------------------------------------------------
     # filter variables overrides
@@ -263,7 +244,6 @@ class FlaxModule(FlaxMixin, HighLevelModule):
     # ---------------------------------------------------------------------------
 
     def _filter_variables(self: M) -> M:
-
         variables = FrozenDict(
             {
                 collection: self.variables[collection]

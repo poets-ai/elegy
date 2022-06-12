@@ -121,8 +121,8 @@ class HighLevelModule(ManagedModule):
         batch_updates = self.losses_and_metrics.batch_updates(
             preds=preds,
             module=self,
-            parameters=self.get_params(),
-            batch_stats=self.get_batch_stats(),
+            parameters=self._get_params(),
+            batch_stats=self._get_batch_stats(),
             key_seq=types.KeySeq(seq_key),
             aux_losses=self.get_aux_losses(),
             aux_metrics=self.get_aux_metrics(),

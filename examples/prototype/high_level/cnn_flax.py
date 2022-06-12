@@ -74,21 +74,21 @@ class CNNModule(eg.HighLevelModule):
     def module(self) -> Module:
         return self._module.value
 
-    def get_params(self) -> tp.Any:
+    def _get_params(self) -> tp.Any:
         assert self.variables is not None
         return self.variables["params"]
 
-    def set_params(self: M, params: tp.Any) -> M:
+    def _set_params(self: M, params: tp.Any) -> M:
         assert self.variables is not None
         return self.replace(
             variables=self.variables.copy({"params": params}),
         )
 
-    def get_batch_stats(self) -> tp.Any:
+    def _get_batch_stats(self) -> tp.Any:
         assert self.variables is not None
         return self.variables["batch_stats"]
 
-    def set_batch_stats(self: M, batch_stats: tp.Any) -> M:
+    def _set_batch_stats(self: M, batch_stats: tp.Any) -> M:
         assert self.variables is not None
         return self.replace(
             variables=self.variables.copy({"batch_stats": batch_stats}),
