@@ -106,7 +106,7 @@ To use Flax with Elegy just create a `flax.linen.Module` and pass it to `Model`.
 ```python
 import jax
 import elegy as eg
-import optax optax
+import optax
 import flax.linen as nn
 
 class MLP(nn.Module):
