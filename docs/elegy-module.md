@@ -225,7 +225,7 @@ def loss_fn(x, y):
 def update(x, y):
     loss, gradients = elegy.value_and_grad(loss_fn, modules=mlp)(x, y)
     parameters = mlp.get_parameters(trainable=True)
-    new_parameters = jax.tree_multimap(
+    new_parameters = jax.tree_util.tree_map(
         lambda p, g: p - 0.01 * g, parameters, gradients
     )
 
@@ -248,7 +248,7 @@ of the loss with respect to the trainable parameters of `mlp`.
 def update(x, y):
     loss, gradients = elegy.value_and_grad(loss_fn, modules=mlp)(x, y)
     parameters = mlp.get_parameters(trainable=True)
-    new_parameters = jax.tree_multimap(
+    new_parameters = jax.tree_util.tree_map(
         lambda p, g: p - 0.01 * g, parameters, gradients
     )
 
@@ -257,7 +257,7 @@ def update(x, y):
     return loss
 ```
 
-After that we just use `tree_multimap` to implement Gradient Descent 
+After that we just use `tree_util.tree_map` to implement Gradient Descent 
 and get our `new_parameters` and then use the `set_parameters` method in our 
 `Module` to update its state.
 
@@ -265,7 +265,7 @@ and get our `new_parameters` and then use the `set_parameters` method in our
 def update(x, y):
     loss, gradients = elegy.value_and_grad(loss_fn, modules=mlp)(x, y)
     parameters = mlp.get_parameters(trainable=True)
-    new_parameters = jax.tree_multimap(
+    new_parameters = jax.tree_util.tree_map(
         lambda p, g: p - 0.01 * g, parameters, gradients
     )
 

@@ -140,7 +140,7 @@ def default_batch_fn(
 ) -> tp.Union[jnp.ndarray, tp.Tuple[jnp.ndarray]]:
     """Batches individual data samples."""
     assert len(list_of_samples) > 0
-    return jax.tree_multimap(lambda *x: jnp.asarray(x), *list_of_samples)
+    return jax.tree_util.tree_map(lambda *x: jnp.asarray(x), *list_of_samples)
 
 
 def get_batch_fn(ds: tp.Any) -> tp.Callable:
