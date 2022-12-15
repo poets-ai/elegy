@@ -56,5 +56,5 @@ tensorflow-cpu = "^2.9.0"
 wandb = ["all"]
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
